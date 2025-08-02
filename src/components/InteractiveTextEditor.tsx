@@ -576,7 +576,6 @@ export const InteractiveTextEditor: React.FC<InteractiveTextEditorProps> = ({
         placeholder={placeholder}
         value={content}
         onChange={handleTextChange}
-        style={style}
         spellCheck="false" // Disable native spell check to rely on AI
       />
 
