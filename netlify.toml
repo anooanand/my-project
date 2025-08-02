@@ -1,0 +1,11 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+  functions = "netlify/functions"
+
+# SPA fallback - this should be the only redirect rule
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+

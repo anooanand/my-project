@@ -1,0 +1,341 @@
+/* CSS Styles for NSW API Enhancement Components */
+/* Add this code to your main CSS file (e.g., project/src/styles/consistent-design.css) */
+
+.text-type-analysis, .vocabulary-analysis, .progress-tracking, .coaching-tips {
+  margin: 20px 0;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.error-message {
+  background-color: #fee;
+  border: 1px solid #fcc;
+  padding: 10px;
+  border-radius: 4px;
+  color: #c00;
+  margin: 10px 0;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 20px;
+  background-color: #e0e0e0;
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 5px 0;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: #4caf50;
+  transition: width 0.3s ease;
+}
+
+.action-item, .tip-item, .exercise-item, .strategy-item {
+  margin: 15px 0;
+  padding: 15px;
+  background-color: #fff;
+  border-left: 4px solid #2196f3;
+  border-radius: 4px;
+}
+
+.motivation {
+  font-size: 18px;
+  font-weight: bold;
+  color: #2196f3;
+  text-align: center;
+  padding: 15px;
+  background-color: #e3f2fd;
+  border-radius: 8px;
+  margin: 15px 0;
+}
+
+.text-type-analysis button, 
+.vocabulary-analysis button, 
+.progress-tracking button, 
+.coaching-tips button {
+  background-color: #2196f3;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-bottom: 15px;
+}
+
+.text-type-analysis button:disabled, 
+.vocabulary-analysis button:disabled, 
+.progress-tracking button:disabled, 
+.coaching-tips button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.text-type-analysis button:hover:not(:disabled), 
+.vocabulary-analysis button:hover:not(:disabled), 
+.progress-tracking button:hover:not(:disabled), 
+.coaching-tips button:hover:not(:disabled) {
+  background-color: #1976d2;
+}
+
+.analysis-results, .vocabulary-results, .progress-results, .coaching-results {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #fff;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.adherence-score, .vocabulary-score {
+  font-size: 18px;
+  font-weight: bold;
+  color: #2196f3;
+  margin-bottom: 15px;
+}
+
+.text-type-features, .vocabulary-metrics, .vocabulary-strengths, .vocabulary-improvements {
+  margin: 15px 0;
+}
+
+.present-features, .missing-features {
+  margin: 10px 0;
+}
+
+.present-features h5 {
+  color: #4caf50;
+  margin-bottom: 5px;
+}
+
+.missing-features h5 {
+  color: #f44336;
+  margin-bottom: 5px;
+}
+
+.suggestions ul, .present-features ul, .missing-features ul {
+  list-style-type: disc;
+  margin-left: 20px;
+}
+
+.suggestions li, .present-features li, .missing-features li {
+  margin: 5px 0;
+}
+
+.replacement-suggestion {
+  background-color: #f5f5f5;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 4px;
+  border-left: 3px solid #ff9800;
+}
+
+.readiness-indicator {
+  background-color: #e8f5e8;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.readiness-indicator h4 {
+  color: #2e7d32;
+  margin-bottom: 10px;
+}
+
+.progress-item {
+  margin: 10px 0;
+}
+
+.progress-item label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.recommendations {
+  margin-top: 20px;
+}
+
+.focus-areas, .practice-activities {
+  margin: 15px 0;
+}
+
+.focus-areas h5, .practice-activities h5 {
+  color: #1976d2;
+  margin-bottom: 10px;
+}
+
+.immediate-actions, .strategic-tips, .practice-exercises, .exam-strategies {
+  margin: 20px 0;
+}
+
+.immediate-actions h4, .strategic-tips h4, .practice-exercises h4, .exam-strategies h4 {
+  color: #1976d2;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 5px;
+  margin-bottom: 15px;
+}
+
+.next-session {
+  background-color: #fff3e0;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 20px;
+  border-left: 4px solid #ff9800;
+}
+
+.next-session h4 {
+  color: #e65100;
+  margin-bottom: 10px;
+}
+
+/* NSW Analysis Tools Section */
+.nsw-analysis-tools {
+  margin-top: 20px;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.nsw-analysis-tools h3 {
+  margin-bottom: 20px;
+  color: #1976d2;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+/* Tab Interface Styles */
+.nsw-analysis-tabs {
+  margin-top: 20px;
+}
+
+.tab-buttons {
+  display: flex;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tab-buttons button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.tab-buttons button.active {
+  background-color: #2196f3;
+  color: white;
+}
+
+.tab-buttons button:not(.active) {
+  background-color: #f0f0f0;
+  color: black;
+}
+
+.tab-buttons button:hover:not(.active) {
+  background-color: #e0e0e0;
+}
+
+.tab-content {
+  padding: 20px;
+  background-color: white;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+/* Responsive design for mobile devices */
+@media (max-width: 768px) {
+  .text-type-analysis, .vocabulary-analysis, .progress-tracking, .coaching-tips {
+    margin: 10px 0;
+    padding: 15px;
+  }
+  
+  .analysis-results, .vocabulary-results, .progress-results, .coaching-results {
+    padding: 10px;
+  }
+  
+  .action-item, .tip-item, .exercise-item, .strategy-item {
+    padding: 10px;
+    margin: 10px 0;
+  }
+  
+  .text-type-analysis button, 
+  .vocabulary-analysis button, 
+  .progress-tracking button, 
+  .coaching-tips button {
+    width: 100%;
+    padding: 12px;
+    font-size: 14px;
+  }
+
+  .nsw-analysis-tools {
+    margin: 10px 0;
+    padding: 15px;
+  }
+
+  .tab-buttons {
+    flex-direction: column;
+  }
+
+  .tab-buttons button {
+    width: 100%;
+    margin-bottom: 5px;
+  }
+}
+
+/* Animation for loading states */
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+.text-type-analysis button:disabled, 
+.vocabulary-analysis button:disabled, 
+.progress-tracking button:disabled, 
+.coaching-tips button:disabled {
+  animation: pulse 1.5s infinite;
+}
+
+/* Additional styling for better visual hierarchy */
+.vocabulary-metrics p, .progress-item p {
+  margin: 5px 0;
+  font-size: 14px;
+}
+
+.vocabulary-strengths ul, .vocabulary-improvements ul {
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.coaching-results h3, .analysis-results h3, .vocabulary-results h3, .progress-results h3 {
+  color: #1976d2;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+}
+
+/* Success and error states */
+.success-message {
+  background-color: #e8f5e8;
+  border: 1px solid #4caf50;
+  padding: 10px;
+  border-radius: 4px;
+  color: #2e7d32;
+  margin: 10px 0;
+}
+
+.warning-message {
+  background-color: #fff3e0;
+  border: 1px solid #ff9800;
+  padding: 10px;
+  border-radius: 4px;
+  color: #e65100;
+  margin: 10px 0;
+}
