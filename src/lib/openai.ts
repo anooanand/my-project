@@ -4,16 +4,25 @@ import OpenAI from 'openai';
 let openai: OpenAI | null = null;
 
 try {
-  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+  // Try multiple possible API key environment variables
+  const apiKey = import.meta.env.VITE_OPENAI_API_KEY || 
+                 import.meta.env.OPENAI_API_KEY ||
+                 process.env.OPENAI_API_KEY;
   
-  if (apiKey && apiKey !== 'your_openai_api_key_here' && apiKey !== 'your-openai-api-key-here' && apiKey.trim() !== '') {
+  if (apiKey && 
+      apiKey !== 'your_openai_api_key_here' && 
+      apiKey !== 'your-openai-api-key-here' && 
+      apiKey !== 'sk-placeholder' &&
+      apiKey.trim() !== '' &&
+      apiKey.startsWith('sk-')) {
     openai = new OpenAI({
       apiKey: apiKey,
       dangerouslyAllowBrowser: true
     });
     console.log('[DEBUG] OpenAI client initialized successfully with GPT-4');
   } else {
-    console.log('[DEBUG] OpenAI API key not configured - AI features will be limited');
+    console.warn('[DEBUG] OpenAI API key not configured or invalid - AI features will be limited');
+    console.warn('[DEBUG] Expected format: sk-... but got:', apiKey ? `${apiKey.substring(0, 10)}...` : 'undefined');
   }
 } catch (error) {
   console.error('[DEBUG] Failed to initialize OpenAI client:', error);
@@ -21,43 +30,44 @@ try {
 }
 
 // Safe function to check if OpenAI is available
-export const isOpenAIAvailable = (): boolean => {
+const isOpenAIAvailable = (): boolean => {
   return openai !== null;
 };
 
 // Helper function to make API calls to the enhanced backend
 async function makeBackendCall(operation: string, data: any): Promise<any> {
   try {
-    // Check if we're in local development and backend functions aren't available
-    const isLocalDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    console.log(`[DEBUG] Making backend call for operation: ${operation}`);
     
-    const response = await fetch('/.netlify/functions/ai-operations', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        operation,
-        ...data
-      })
-    });
+    // Always try backend calls first, regardless of environment
+    try {
+      const response = await fetch('/.netlify/functions/ai-operations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          operation,
+          ...data
+        })
+      });
 
-    if (!response.ok) {
-      // If we get a 404 in local development, throw a specific error
-      if (response.status === 404 && isLocalDev) {
-        throw new Error('BACKEND_NOT_AVAILABLE');
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[DEBUG] Backend call failed: ${response.status} - ${errorText}`);
+        throw new Error(`Backend call failed: ${response.status}`);
       }
-      throw new Error(`Backend call failed: ${response.status}`);
-    }
 
-    return await response.json();
+      const result = await response.json();
+      console.log(`[DEBUG] Backend call successful for ${operation}`);
+      return result;
+    } catch (fetchError) {
+      console.error(`[DEBUG] Backend fetch failed for ${operation}:`, fetchError);
+      return { error: 'BACKEND_NOT_AVAILABLE' };
+    }
   } catch (error) {
     console.error('Backend call error:', error);
-    // If backend is not available, throw the specific error to trigger fallbacks
-    if (error instanceof Error && error.message === 'BACKEND_NOT_AVAILABLE') {
-      throw error;
-    }
-    throw error;
+    return { error: 'BACKEND_NOT_AVAILABLE' };
   }
 }
 
@@ -78,47 +88,72 @@ export async function getNSWSelectiveFeedback(
   } catch (error) {
     console.error('Error getting NSW Selective feedback:', error);
     
-    // Fallback response with NSW criteria structure
+    console.log('[DEBUG] Using enhanced NSW Selective fallback feedback');
+    
+    // Enhanced fallback response with detailed NSW criteria analysis
+    const analysis = analyzeContentStructure(content);
+    const estimatedScore = Math.min(30, Math.max(8, Math.round(analysis.wordCount / 15) + analysis.paragraphCount * 2));
+    const bandLevel = estimatedScore >= 27 ? 6 : estimatedScore >= 22 ? 5 : estimatedScore >= 17 ? 4 : estimatedScore >= 12 ? 3 : estimatedScore >= 7 ? 2 : 1;
+    
     return {
-      overallComment: "Your writing shows good effort and understanding of the narrative form. Let's work on developing it further using NSW Selective exam criteria.",
+      overallComment: `Your ${analysis.wordCount}-word ${textType} demonstrates ${bandLevel >= 4 ? 'solid' : 'developing'} understanding of NSW Selective requirements. You're currently showing Band ${bandLevel} characteristics. Let's work on reaching Band 5-6 level.`,
+      totalScore: estimatedScore,
+      overallBand: bandLevel,
+      bandDescription: bandLevel >= 5 ? "Proficient - Well-developed ideas" : bandLevel >= 4 ? "Sound - Adequate ideas" : "Developing - Simple ideas",
+      estimatedExamScore: `${estimatedScore}/30`,
       criteriaFeedback: {
         ideasAndContent: {
-          score: 6,
-          maxScore: 10,
-          strengths: ["You have attempted to create a narrative with a clear storyline"],
-          improvements: ["Develop your ideas with more specific details and depth"],
-          suggestions: ["Add more descriptive details about characters, setting, and emotions"],
-          nextSteps: ["Focus on expanding one key moment in your story with rich detail"]
+          score: Math.round(estimatedScore * 0.3),
+          maxScore: 9,
+          band: Math.min(6, Math.max(1, Math.round(estimatedScore * 0.3 / 1.5))),
+          strengths: analysis.wordCount > 100 ? [`You've developed a substantial ${textType} with ${analysis.wordCount} words`] : ["You've made a good start on your writing"],
+          improvements: analysis.wordCount < 150 ? ["Develop your ideas with more specific details and examples"] : ["Deepen your analysis and add more sophisticated insights"],
+          suggestions: [`Add more specific examples and evidence to support your ${textType} ideas`, "Show deeper thinking by explaining the 'why' behind your points"],
+          nextSteps: [`Expand your ${textType} with at least 2 more specific examples or details`]
         },
         textStructureAndOrganization: {
-          score: 6,
-          maxScore: 10,
-          strengths: ["Your writing has a clear beginning"],
-          improvements: ["Ensure smooth transitions between ideas"],
-          suggestions: ["Use connecting words like 'meanwhile', 'suddenly', 'after that' to link your ideas"],
-          nextSteps: ["Plan your story structure before writing - beginning, middle, end"]
+          score: Math.round(estimatedScore * 0.25),
+          maxScore: 7.5,
+          band: Math.min(6, Math.max(1, Math.round(estimatedScore * 0.25 / 1.25))),
+          strengths: analysis.paragraphCount > 1 ? [`Good paragraph organization with ${analysis.paragraphCount} paragraphs`] : ["You have a clear structure"],
+          improvements: analysis.paragraphCount === 1 ? ["Break your writing into multiple paragraphs for better organization"] : ["Strengthen transitions between paragraphs"],
+          suggestions: [`Use NSW Selective-appropriate structure for ${textType}: clear introduction, well-developed body, strong conclusion`, "Add transition words to connect your ideas smoothly"],
+          nextSteps: [`Review NSW Selective ${textType} structure requirements and apply them to your writing`]
         },
         languageFeaturesAndVocabulary: {
-          score: 6,
-          maxScore: 10,
-          strengths: ["You've used some descriptive words"],
-          improvements: ["Vary your sentence structure and use more sophisticated vocabulary"],
-          suggestions: ["Try starting sentences in different ways and use more specific adjectives"],
-          nextSteps: ["Practice using literary devices like similes or metaphors"]
+          score: Math.round(estimatedScore * 0.25),
+          maxScore: 7.5,
+          band: Math.min(6, Math.max(1, Math.round(estimatedScore * 0.25 / 1.25))),
+          strengths: analysis.descriptiveWords.length > 3 ? [`Good use of descriptive language: ${analysis.descriptiveWords.slice(0, 3).join(', ')}`] : ["You're developing your vocabulary"],
+          improvements: ["Use more sophisticated vocabulary appropriate for NSW Selective Band 5-6 level", "Vary your sentence structures for more engaging writing"],
+          suggestions: ["Replace simple words with more sophisticated alternatives (e.g., 'good' → 'exceptional')", "Use complex sentences with subordinate clauses"],
+          nextSteps: ["Practice using 5 new sophisticated vocabulary words in your next draft"]
         },
         spellingPunctuationGrammar: {
-          score: 7,
-          maxScore: 10,
-          strengths: ["Generally good control of basic grammar and spelling"],
-          improvements: ["Check for any minor errors and ensure consistent tense"],
-          suggestions: ["Proofread your work carefully, reading it aloud to catch errors"],
-          nextSteps: ["Focus on maintaining past tense throughout your narrative"]
+          score: Math.round(estimatedScore * 0.2),
+          maxScore: 6,
+          band: Math.min(6, Math.max(1, Math.round(estimatedScore * 0.2 / 1))),
+          strengths: ["Your basic grammar and spelling show good control"],
+          improvements: ["Check for any minor errors and ensure consistent tense throughout"],
+          suggestions: ["Proofread your work carefully, reading it aloud to catch errors", "Use varied punctuation to create more sophisticated sentences"],
+          nextSteps: [`Maintain consistent ${textType === 'narrative' ? 'past' : 'present'} tense throughout your writing`]
         }
       },
-      priorityFocus: ["Develop ideas with more specific details", "Improve sentence variety and vocabulary"],
-      examStrategies: ["Plan your story structure before writing", "Use the full time allocation for planning, writing, and checking"],
-      interactiveQuestions: ["What specific emotions does your main character feel?", "How can you make your setting more vivid for the reader?"],
-      revisionSuggestions: ["Choose one paragraph to expand with more sensory details", "Rewrite two sentences to start them differently"]
+      priorityFocus: [
+        estimatedScore < 20 ? "Develop ideas with more specific details and examples" : "Add sophisticated insights and analysis",
+        estimatedScore < 15 ? "Improve basic structure and organization" : "Enhance vocabulary and sentence variety"
+      ],
+      examStrategies: [
+        `Plan your ${textType} structure before writing (5 minutes planning time)`,
+        "Use sophisticated vocabulary appropriate for selective school entry",
+        "Leave time to check and improve your work (5 minutes checking time)"
+      ],
+      interactiveQuestions: getTextTypeQuestions(textType),
+      revisionSuggestions: [
+        `Add 2-3 more specific examples to strengthen your ${textType}`,
+        "Replace 3 simple words with more sophisticated alternatives",
+        "Check that each paragraph has one clear main idea"
+      ]
     };
   }
 }
@@ -172,36 +207,47 @@ export async function getWritingFeedback(content: string, textType: string, assi
   } catch (error) {
     console.error('Error getting writing feedback:', error);
     
-    // Provide contextual fallback based on content analysis
+    console.log('[DEBUG] Using enhanced fallback feedback for local development');
+    
+    // Enhanced contextual fallback based on content analysis
     const analysis = analyzeContentStructure(content);
+    const qualityScore = Math.min(10, Math.max(3, Math.round(analysis.wordCount / 20) + (analysis.paragraphCount > 1 ? 2 : 0)));
+    
     return {
-      overallComment: `Your ${analysis.wordCount}-word ${textType} piece shows good effort! I can see you're developing your ideas.`,
+      overallComment: `Your ${analysis.wordCount}-word ${textType} shows ${qualityScore >= 7 ? 'strong' : qualityScore >= 5 ? 'good' : 'developing'} effort for NSW Selective preparation! You're building important writing skills.`,
       feedbackItems: [
         {
           type: "praise",
-          area: "Effort",
-          text: `Great job writing ${analysis.wordCount} words and organizing them into ${analysis.sentenceCount} sentences!`,
+          area: "NSW Selective Preparation",
+          text: `Excellent effort writing ${analysis.wordCount} words! This shows dedication to your NSW Selective preparation.`,
           exampleFromText: analysis.firstSentence,
-          suggestionForImprovement: "Keep building on this foundation by adding more descriptive details."
+          suggestionForImprovement: "For NSW Selective success, continue building sophisticated vocabulary and varied sentence structures."
         },
         {
           type: "suggestion",
-          area: "Structure",
-          text: analysis.paragraphCount === 1 ? "Your writing is all in one paragraph." : `You've organized your writing into ${analysis.paragraphCount} paragraphs.`,
-          suggestionForImprovement: analysis.paragraphCount === 1 ? "Try breaking your writing into 2-3 paragraphs for better organization." : "Good paragraph organization! Keep this up."
+          area: "NSW Text Structure",
+          text: analysis.paragraphCount === 1 ? `Your ${textType} is currently in one paragraph.` : `You've organized your ${textType} into ${analysis.paragraphCount} paragraphs - good structure!`,
+          suggestionForImprovement: analysis.paragraphCount === 1 ? `For NSW Selective ${textType}, break your writing into 3-4 well-developed paragraphs.` : "Excellent paragraph organization for NSW Selective standards!"
+        },
+        {
+          type: "challenge",
+          area: "Vocabulary Enhancement",
+          text: `Your vocabulary shows ${analysis.descriptiveWords.length > 5 ? 'good variety' : 'room for growth'}.`,
+          suggestionForImprovement: "For Band 5-6 NSW Selective writing, use more sophisticated vocabulary that demonstrates language maturity."
         }
       ],
       focusForNextTime: [
-        analysis.averageSentenceLength < 8 ? "Try writing some longer, more detailed sentences" : "Good sentence variety!",
-        analysis.descriptiveWords.length < 3 ? "Add more describing words (adjectives)" : "Nice use of descriptive language",
-        "Read your work aloud to check if it flows well"
+        analysis.averageSentenceLength < 10 ? "Write longer, more complex sentences for NSW Selective standards" : "Excellent sentence complexity!",
+        analysis.descriptiveWords.length < 5 ? "Add more sophisticated vocabulary and descriptive language" : "Great use of descriptive language!",
+        `Ensure your ${textType} follows NSW Selective text type conventions`,
+        "Practice using literary devices appropriate for your age level"
       ]
     };
   }
 }
 
 // Enhanced function for specialized text type feedback with contextual analysis
-export async function getSpecializedTextTypeFeedback(content: string, textType: string): Promise<any> {
+async function getSpecializedTextTypeFeedback(content: string, textType: string): Promise<any> {
   try {
     return await makeBackendCall('getSpecializedTextTypeFeedback', {
       content,
@@ -267,26 +313,27 @@ export async function identifyCommonMistakes(content: string, textType: string) 
 export async function generatePrompt(textType: string): Promise<string> {
   try {
     const result = await makeBackendCall('generatePrompt', { textType });
+    if (result.error === 'BACKEND_NOT_AVAILABLE') {
+      console.log('[DEBUG] Using fallback prompts for local development');
+      
+      // Enhanced NSW Selective fallback prompts
+      const nswSelectiveFallbackPrompts: { [key: string]: string } = {
+        narrative: "Write a narrative about a time when you had to make a difficult decision. Show how this experience changed you as a person. Include dialogue, descriptive language, and a clear structure with beginning, middle, and end.",
+        persuasive: "Should students be allowed to use technology during class time? Write a persuasive essay arguing your position. Use specific examples, address counterarguments, and include a strong conclusion that calls your reader to action.",
+        creative: "Write a creative piece that begins with this line: 'The old photograph revealed a secret that changed everything.' Use sophisticated vocabulary, varied sentence structures, and engaging literary techniques.",
+        descriptive: "Describe your ideal learning environment using all five senses. Paint a vivid picture that helps the reader experience this space as if they were there. Use sophisticated adjectives and varied sentence beginnings.",
+        expository: "Explain how social media affects young people's friendships. Use specific examples, clear explanations, and organize your ideas logically. Include both positive and negative effects in your response.",
+        reflective: "Reflect on a challenge you overcame this year. Analyze what you learned about yourself and how this experience will help you in the future. Show deep thinking and personal insight.",
+        recount: "Recount a significant school event from this year. Include specific details about what happened, who was involved, and why this event was meaningful. Use chronological order and engaging language.",
+        default: "Write about a topic that interests you, demonstrating sophisticated vocabulary, clear structure, and well-developed ideas suitable for NSW Selective assessment."
+      };
+      
+      return nswSelectiveFallbackPrompts[textType.toLowerCase()] || nswSelectiveFallbackPrompts.default;
+    }
     return result.prompt || "Write about a memorable experience that taught you something important.";
   } catch (error) {
     console.error('Error generating prompt:', error);
-    
-    // If backend is not available (local development), use fallback prompts
-    if (error instanceof Error && error.message === 'BACKEND_NOT_AVAILABLE') {
-      console.log('Backend not available, using fallback prompts');
-    }
-    
-    // Fallback prompts if the API call fails
-    const fallbackPrompts: { [key: string]: string } = {
-      narrative: "Write a story about an unexpected adventure that changed someone's perspective on life.",
-      persuasive: "Write an essay arguing for or against allowing students to use smartphones in school.",
-      creative: "Write a creative piece about discovering a hidden talent you never knew you had.",
-      descriptive: "Describe a bustling marketplace using all five senses to bring the scene to life.",
-      informative: "Explain how climate change affects our daily lives and what we can do about it.",
-      default: "Write about a topic that interests you, focusing on clear expression of your ideas."
-    };
-    
-    return fallbackPrompts[textType.toLowerCase()] || fallbackPrompts.default;
+    return "Write about a memorable experience that taught you something important.";
   }
 }
 
@@ -386,7 +433,7 @@ export async function evaluateEssay(content: string, textType: string): Promise<
   }
 }
 
-export async function getWritingStructure(textType: string): Promise<string> {
+async function getWritingStructure(textType: string): Promise<string> {
   try {
     const result = await makeBackendCall('getWritingStructure', { textType });
     return result;
@@ -417,7 +464,7 @@ export async function getWritingStructure(textType: string): Promise<string> {
 }
 
 // New function for grammar and spelling check
-export async function checkGrammarAndSpelling(content: string): Promise<any> {
+async function checkGrammarAndSpelling(content: string): Promise<any> {
   try {
     return await makeBackendCall('checkGrammarAndSpelling', { content });
   } catch (error) {
@@ -429,7 +476,7 @@ export async function checkGrammarAndSpelling(content: string): Promise<any> {
 }
 
 // New function for sentence structure analysis
-export async function analyzeSentenceStructure(content: string): Promise<any> {
+async function analyzeSentenceStructure(content: string): Promise<any> {
   try {
     return await makeBackendCall('analyzeSentenceStructure', { content });
   } catch (error) {
@@ -441,7 +488,7 @@ export async function analyzeSentenceStructure(content: string): Promise<any> {
 }
 
 // New function for vocabulary enhancement
-export async function enhanceVocabulary(content: string): Promise<any> {
+async function enhanceVocabulary(content: string): Promise<any> {
   try {
     return await makeBackendCall('enhanceVocabulary', { content });
   } catch (error) {
