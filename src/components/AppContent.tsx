@@ -20,6 +20,7 @@ import { FAQPage } from './FAQPage';
 import { AboutPage } from './AboutPage';
 import { SettingsPage } from './SettingsPage';
 import { DemoPage } from './DemoPage';
+import { ErrorBoundary } from './ErrorBoundary';
 
 // Writing components
 import { SplitScreen } from './SplitScreen';
@@ -342,6 +343,45 @@ function AppContent() {
           <Route path="/settings" element={
             user ? <SettingsPage onBack={() => setActivePage('dashboard')} /> : <Navigate to="/" />
           } />
+          <Route path="/writing" element={
+  <WritingAccessCheck onNavigate={handleNavigation}>
+    <ErrorBoundary>
+      <div className="writing-route h-screen flex flex-col">
+        <EnhancedHeader 
+          textType={textType}
+          assistanceLevel={assistanceLevel}
+          onTextTypeChange={setTextType}
+          onAssistanceLevelChange={setAssistanceLevel}
+          onTimerStart={() => setTimerStarted(true)}
+          hideTextTypeSelector={popupFlowCompleted}
+        />
+        
+        {showExamMode ? (
+          <ExamSimulationMode 
+            onExit={() => setShowExamMode(false)}
+          />
+        ) : (
+          <div className="writing-layout-content flex-1 min-h-0">
+            <ErrorBoundary>
+              <EnhancedWritingLayout
+                content={content}
+                onChange={setContent}
+                textType={textType}
+                assistanceLevel={assistanceLevel}
+                selectedText={selectedText}
+                onTimerStart={setTimerStarted}
+                onSubmit={handleSubmit}
+                onTextTypeChange={handleTextTypeChange}
+                onPopupCompleted={handlePopupCompleted}
+                onNavigate={handleNavigation}
+              />
+            </ErrorBoundary>
+          </div>
+        )}
+      </div>
+    </ErrorBoundary>
+  </WritingAccessCheck>
+} />
           <Route path="/writing" element={
             <WritingAccessCheck onNavigate={handleNavigation}>
               <div className="writing-route h-screen flex flex-col">
