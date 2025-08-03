@@ -1,9 +1,27 @@
 const OpenAI = require("openai");
 
-// Initialize OpenAI with server-side API key
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
+// Initialize OpenAI with server-side API key - Enhanced error handling
+let openai = null;
+
+try {
+  const apiKey = process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY;
+  
+  if (apiKey && apiKey.startsWith('sk-')) {
+    openai = new OpenAI({
+      apiKey: apiKey
+    });
+    console.log('[AI-OPS] OpenAI client initialized successfully');
+  } else {
+    console.error('[AI-OPS] OpenAI API key not found or invalid format');
+  }
+} catch (error) {
+  console.error('[AI-OPS] Failed to initialize OpenAI:', error);
+}
+
+// Check if OpenAI is available
+function isOpenAIAvailable() {
+  return openai !== null;
+}
 
 // Helper function to analyze content structure
 function analyzeContentStructure(content) {
@@ -100,9 +118,124 @@ function calculateCriterionBand(score, maxScore) {
   return 1;
 }
 
+// Enhanced fallback feedback function
+function createEnhancedFallbackFeedback(content, textType, assistanceLevel) {
+  const analysis = analyzeContentStructure(content);
+  const wordCount = analysis.wordCount;
+  
+  console.log('[AI-OPS] Creating enhanced fallback feedback for', textType, 'with', wordCount, 'words');
+  
+  const feedbackItems = [];
+  
+  // Praise based on effort and progress
+  if (wordCount > 0) {
+    feedbackItems.push({
+      type: "praise",
+      area: "Writing Progress",
+      text: `Great work writing ${wordCount} words for your ${textType}! You're making excellent progress.`,
+      suggestionForImprovement: wordCount < 100 ? "Keep developing your ideas with more details." : "Your word count shows good development!"
+    });
+  }
+  
+  // Structure feedback
+  if (analysis.paragraphCount === 1 && wordCount > 50) {
+    feedbackItems.push({
+      type: "suggestion",
+      area: "Structure",
+      text: "Your writing is currently in one paragraph.",
+      suggestionForImprovement: `For ${textType} writing, try breaking your ideas into 3-4 paragraphs: introduction, body paragraphs, and conclusion.`
+    });
+  } else if (analysis.paragraphCount > 1) {
+    feedbackItems.push({
+      type: "praise",
+      area: "Structure", 
+      text: `Excellent paragraph organization with ${analysis.paragraphCount} paragraphs!`,
+      suggestionForImprovement: "Make sure each paragraph focuses on one main idea."
+    });
+  }
+  
+  // Content-specific feedback
+  if (textType === 'narrative') {
+    if (analysis.hasDialogue) {
+      feedbackItems.push({
+        type: "praise",
+        area: "Dialogue",
+        text: "Great use of dialogue in your narrative!",
+        suggestionForImprovement: "Dialogue brings characters to life and makes stories more engaging."
+      });
+    } else if (wordCount > 100) {
+      feedbackItems.push({
+        type: "suggestion",
+        area: "Character Development",
+        text: "Consider adding some dialogue to your narrative.",
+        suggestionForImprovement: "Dialogue helps readers connect with your characters. Try: 'I can't believe this!' she exclaimed."
+      });
+    }
+    
+    if (analysis.potentialCharacters.length > 0) {
+      feedbackItems.push({
+        type: "praise",
+        area: "Characters",
+        text: `I can see you've introduced characters: ${analysis.potentialCharacters.slice(0, 3).join(', ')}`,
+        suggestionForImprovement: "Develop your characters by showing their emotions and motivations."
+      });
+    }
+  }
+  
+  // Vocabulary feedback
+  if (analysis.descriptiveWords.length > 3) {
+    feedbackItems.push({
+      type: "praise",
+      area: "Vocabulary",
+      text: `Good use of descriptive language: ${analysis.descriptiveWords.slice(0, 3).join(', ')}`,
+      suggestionForImprovement: "Keep using varied and interesting vocabulary to make your writing more engaging."
+    });
+  } else if (wordCount > 50) {
+    feedbackItems.push({
+      type: "suggestion",
+      area: "Vocabulary",
+      text: "Try using more descriptive words to make your writing more vivid.",
+      suggestionForImprovement: "Instead of 'good', try 'excellent' or 'outstanding'. Instead of 'big', try 'enormous' or 'massive'."
+    });
+  }
+  
+  // Length-based feedback
+  const focusForNextTime = [];
+  if (wordCount < 150) {
+    focusForNextTime.push("Continue developing your ideas with more specific details and examples");
+  }
+  if (analysis.averageSentenceLength < 8) {
+    focusForNextTime.push("Try writing some longer, more complex sentences");
+  }
+  if (analysis.descriptiveWords.length < 3) {
+    focusForNextTime.push("Use more descriptive and sophisticated vocabulary");
+  }
+  
+  // Default focus items if none added
+  if (focusForNextTime.length === 0) {
+    focusForNextTime.push("Keep practicing your writing skills", "Focus on clear expression and good organization");
+  }
+  
+  return {
+    overallComment: `Your ${wordCount}-word ${textType} shows ${wordCount > 100 ? 'strong' : 'good'} development! You're building excellent writing skills for NSW Selective preparation.`,
+    feedbackItems,
+    focusForNextTime,
+    isEnhancedFallback: true,
+    wordCount: analysis.wordCount,
+    analysisData: analysis
+  };
+}
+
 // Enhanced NSW Selective Writing Exam Feedback Function with Band Scoring (UPDATED)
 async function getNSWSelectiveFeedback(content, textType, assistanceLevel = "medium", feedbackHistory = []) {
+  if (!isOpenAIAvailable()) {
+    console.log('[AI-OPS] OpenAI not available, using enhanced fallback');
+    return createEnhancedFallbackFeedback(content, textType, assistanceLevel);
+  }
+
   try {
+    console.log(`[AI-OPS] Getting NSW Selective feedback for ${textType} (${content.length} chars)`);
+    
     const analysis = analyzeContentStructure(content);
 
     const prompt = `You are an expert NSW Selective School writing assessor. Analyze this ${textType} writing sample and provide detailed, specific feedback based on NSW Selective criteria.
@@ -786,7 +919,15 @@ async function getWritingStructure(textType) {
       messages: [
         {
           role: "system",
-          content: `You are an expert writing teacher creating a guide for Year 5-6 students on ${textType} writing. Create a structured guide with sections covering key aspects of this writing type. Return the guide in this exact JSON format:\n{\n  "title": "Guide to ${textType} Writing",\n  "sections": [\n    {\n      "heading": "Structure",\n      "content": "Detailed explanation of the structure for this writing type"\n    },\n    {\n      "heading": "Language Features",\n      "content": "Explanation of key language features and techniques"\n    },\n    {\n      "heading": "Common Mistakes",\n      "content": "Common mistakes to avoid in this writing type"\n    },\n    {\n      "heading": "Planning Tips",\n      "content": "How to plan effectively for this writing type"\n    }\n  ]\n}`
+          content: `You are an expert NSW Selective School writing teacher creating a comprehensive guide for Year 5-6 students on ${textType} writing for selective school entrance exams.
+
+Include NSW-specific requirements:
+- Band descriptors and what each band requires
+- NSW Selective exam expectations
+- Age-appropriate but sophisticated techniques
+- Specific strategies for achieving Band 5-6 levels
+
+Return the guide in this exact JSON format:\n{\n  "title": "NSW Selective ${textType} Writing Guide",\n  "nswContext": "Brief explanation of NSW Selective requirements for this text type",\n  "bandRequirements": {\n    "band6": "What Band 6 ${textType} writing looks like",\n    "band5": "What Band 5 ${textType} writing looks like",\n    "band4": "What Band 4 ${textType} writing looks like"\n  },\n  "sections": [\n    {\n      "heading": "NSW Selective Structure Requirements",\n      "content": "Detailed explanation of structure requirements for NSW Selective ${textType}"\n    },\n    {\n      "heading": "Language Features for Band 5-6",\n      "content": "NSW-specific language features and sophisticated techniques"\n    },\n    {\n      "heading": "Common NSW Selective Mistakes",\n      "content": "Mistakes that prevent students from achieving higher bands"\n    },\n    {\n      "heading": "NSW Exam Strategies",\n      "content": "Specific strategies for NSW Selective exam success"\n    }\n  ]\n}`
         },
         {
           role: "user",
@@ -807,23 +948,29 @@ async function getWritingStructure(textType) {
   } catch (error) {
     console.error("OpenAI writing structure generation error:", error);
     return JSON.stringify({
-      title: `Guide to ${textType} Writing`,
+      title: `NSW Selective ${textType} Writing Guide`,
+      nswContext: `This guide focuses on ${textType} writing requirements for NSW Selective School entrance exams, targeting Band 5-6 achievement levels.`,
+      bandRequirements: {
+        band6: `Band 6 ${textType} writing demonstrates exceptional sophistication with highly original ideas, flawless execution, and sophisticated language features.`,
+        band5: `Band 5 ${textType} writing shows proficient skills with well-developed ideas, strong structure, and varied vocabulary appropriate for selective school entry.`,
+        band4: `Band 4 ${textType} writing displays sound understanding with adequate ideas and competent execution of basic requirements.`
+      },
       sections: [
         {
-          heading: "Structure",
-          content: "Every piece of writing should have a clear beginning, middle, and end. The beginning introduces your main idea, the middle develops it with details, and the end summarizes your key points."
+          heading: "NSW Selective Structure Requirements",
+          content: `For NSW Selective ${textType} writing: Clear introduction that engages the reader → Well-developed body with sophisticated ideas → Strong conclusion that leaves lasting impact. Each paragraph should have one main idea with supporting details.`
         },
         {
-          heading: "Language Features",
-          content: "Use descriptive language, varied sentence structures, and appropriate vocabulary for your topic."
+          heading: "Language Features for Band 5-6",
+          content: "Use sophisticated vocabulary appropriate for Year 5-6 level, vary sentence structures (simple, compound, complex), incorporate literary devices, and demonstrate precise word choice that enhances meaning."
         },
         {
-          heading: "Common Mistakes",
-          content: "Avoid rushing your writing, forgetting to proofread, and using repetitive words or phrases."
+          heading: "Common NSW Selective Mistakes",
+          content: "Avoid: repetitive vocabulary, simple sentence structures only, lack of text type features, insufficient development of ideas, and poor time management in exam conditions."
         },
         {
-          heading: "Planning Tips",
-          content: "Before you start writing, take time to brainstorm ideas, create a simple outline, and think about your audience."
+          heading: "NSW Exam Strategies",
+          content: "Plan for 5 minutes, write for 20 minutes, review for 5 minutes. Use sophisticated vocabulary, vary sentence beginnings, include text type features, and demonstrate original thinking appropriate for selective school entry."
         }
       ]
     });
@@ -969,8 +1116,13 @@ exports.handler = async (event) => {
   try {
     // Parse request body - UPDATED to include action and text
     const body = JSON.parse(event.body);
+    console.log(`[AI-OPS] Received request for operation: ${body.operation || body.action}`);
+    
     const { operation, content, textType, assistanceLevel, feedbackHistory, action, text } = body;
 
+    // Check if OpenAI is available and log status
+    console.log(`[AI-OPS] OpenAI available: ${isOpenAIAvailable()}`);
+    
     let result;
 
     // Route to appropriate function based on operation or action - UPDATED
