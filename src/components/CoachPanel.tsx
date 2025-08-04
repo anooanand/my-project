@@ -45,7 +45,7 @@ interface QuestionAnalysis {
   keywords: string[];
 }
 
-const extractResponseText = (response: any, questionType: string, userQuestion: string): string => {
+const extractResponseText = (response: any, questionType: string, userQuestion: string, textType: string): string => {
   // Handle different response formats from the backend
   if (typeof response === 'string') {
     return response;
@@ -203,7 +203,7 @@ const generateIntelligentLocalResponse = (question: string, analysis: QuestionAn
       if (textType === 'narrative' && !hasDialogue) {
         return `Great ${textType} development with ${wordCount} words! Consider adding some dialogue to bring your characters to life. For example: "I can't believe this is happening!" she exclaimed.`;
       }
-      return `Excellent content development with ${wordCount} words! Your ${textType} shows good understanding. Keep developing your ideas with specific examples and vivid details.`;
+      return `Excellent content development with ${wordType} words! Your ${textType} shows good understanding. Keep developing your ideas with specific examples and vivid details.`;
       
     default:
       if (wordCount === 0) {
@@ -263,7 +263,7 @@ export function CoachPanel({ content, textType, assistanceLevel }: CoachPanelPro
     };
     
     const maxScore = Math.max(...Object.values(scores));
-    const questionType = Object.keys(scores).find(key => scores[key] === maxScore) || 'general';
+    const questionType = Object.keys(scores).find(key => scores[key as keyof typeof scores] === maxScore) || 'general';
     
     // Map question types to operations
     const operationMap = {
@@ -285,7 +285,7 @@ export function CoachPanel({ content, textType, assistanceLevel }: CoachPanelPro
   // Enhanced API call routing function
   const routeQuestionToOperation = useCallback(async (question: string, analysis: QuestionAnalysis) => {
     try {
-      console.log(`[DEBUG] Routing question: "${question}" (type: ${analysis.type})`);
+      console.log(`[DEBUG] Routing question: "${question}" (type: ${analysis.type})");
       
       // Try to get real AI response first
       const response = await fetch('/.netlify/functions/ai-operations', {
@@ -295,95 +295,97 @@ export function CoachPanel({ content, textType, assistanceLevel }: CoachPanelPro
         },
         body: JSON.stringify({
           operation: analysis.operation,
-          text: content,
-          textType: textType,
           question: question,
-          conversationContext: conversationContext.map(msg => ({ role: msg.isUser ? 'user' : 'assistant', content: msg.text }))
+          content: content,
+          textType: textType, // Pass textType here
+          assistanceLevel: localAssistanceLevel,
+          conversationContext: conversationContext,
         }),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        console.error('AI operation failed:', errorData);
-        throw new Error(errorData.message || 'Failed to get AI response');
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
-      console.log('[DEBUG] AI response data:', data);
-      return { data, responseQuality: 'high' };
+      const result = await response.json();
+      console.log('[DEBUG] AI response data:', result);
 
-    } catch (apiError) {
-      console.error('API call failed, falling back to local response:', apiError);
-      // Fallback to local intelligent response if API fails
+      // If the response is a structured feedback, process it
+      if (result.structuredFeedback) {
+        setStructuredFeedback(result.structuredFeedback);
+        return { data: result.structuredFeedback, responseQuality: 'high' };
+      } else if (result.response) {
+        // For general text responses
+        return { data: result.response, responseQuality: 'high' };
+      } else if (result.suggestions) {
+        // For vocabulary suggestions
+        return { data: result, responseQuality: 'high' };
+      } else if (result.corrections) {
+        // For grammar corrections
+        return { data: result, responseQuality: 'high' };
+      } else if (result.structure) {
+        // For structure analysis
+        return { data: result, responseQuality: 'high' };
+      }
+      
+      // Fallback to local intelligent response if AI response is not as expected
+      return { data: generateIntelligentLocalResponse(question, analysis, content, textType), responseQuality: 'fallback' };
+
+    } catch (error) {
+      console.error('Error sending message:', error);
+      setError('Oops! I encountered an error: ' + (error as Error).message + '. Please try again or rephrase your question.');
+      // Fallback to local intelligent response on error
       return { data: generateIntelligentLocalResponse(question, analysis, content, textType), responseQuality: 'fallback' };
     }
-  }, [content, textType, conversationContext]);
+  }, [content, localAssistanceLevel, conversationContext, textType]); // Add textType to dependencies
 
-  const handleSendMessage = useCallback(async (question: string, operation?: string, questionType?: string) => {
-    if (!question.trim() && !operation) return;
+  const handleSendMessage = useCallback(async (messageText: string) => {
+    if (!messageText.trim()) return;
 
     const newUserMessage: ChatMessage = {
-      id: Date.now().toString(),
-      text: question,
+      id: `user-${Date.now()}`,
+      text: messageText,
       isUser: true,
       timestamp: new Date(),
-      questionType: questionType,
-      operation: operation,
     };
-
-    setChatMessages((prevMessages) => [...prevMessages, newUserMessage]);
+    setChatMessages((prev) => [...prev, newUserMessage]);
     setChatInput('');
     setIsChatLoading(true);
-    setShowPrompts(false); // Hide prompts after sending a message
+    setError(null);
 
     try {
-      const analysis = analyzeUserQuestion(question);
-      const { data: aiResponse, responseQuality } = await routeQuestionToOperation(question, analysis);
+      const analysis = analyzeUserQuestion(messageText);
+      const routedResponse = await routeQuestionToOperation(messageText, analysis);
+      
+      const aiResponseText = extractResponseText(routedResponse.data, analysis.type, messageText, textType); // Pass textType here
 
-      const assistantMessageText = extractResponseText(aiResponse, analysis.type, question);
-
-      setChatMessages((prevMessages) => [
-        ...prevMessages,
-        {
-          id: Date.now().toString() + '-ai',
-          text: assistantMessageText,
-          isUser: false,
-          timestamp: new Date(),
-          questionType: analysis.type,
-          operation: analysis.operation,
-          responseQuality: responseQuality,
-          nswSpecific: aiResponse.criteriaFeedback ? true : false,
-          conversationContext: aiResponse.conversationContext || undefined,
-        },
-      ]);
-
-      // Update conversation context for future turns
-      setConversationContext((prevContext) => [
-        ...prevContext,
-        { role: 'user', content: question },
-        { role: 'assistant', content: assistantMessageText }
-      ]);
+      const newAIMessage: ChatMessage = {
+        id: `ai-${Date.now()}`,
+        text: aiResponseText,
+        isUser: false,
+        timestamp: new Date(),
+        questionType: analysis.type,
+        operation: analysis.operation,
+        responseQuality: routedResponse.responseQuality,
+      };
+      setChatMessages((prev) => [...prev, newAIMessage]);
+      setConversationContext((prev) => [...prev, newUserMessage, newAIMessage]);
 
     } catch (err) {
-      console.error('Error sending message:', err);
-      setChatMessages((prevMessages) => [
-        ...prevMessages,
-        {
-          id: Date.now().toString() + '-error',
-          text: 'Oops! I encountered an error. Please try again or rephrase your question.',
-          isUser: false,
-          timestamp: new Date(),
-          responseQuality: 'fallback',
-        },
-      ]);
+      console.error('Error processing message:', err);
+      setError('Sorry, I could not process that request. Please try again.');
+      const errorMessage: ChatMessage = {
+        id: `error-${Date.now()}`,
+        text: 'Sorry, I could not process that request. Please try again.',
+        isUser: false,
+        timestamp: new Date(),
+        responseQuality: 'low',
+      };
+      setChatMessages((prev) => [...prev, errorMessage]);
     } finally {
       setIsChatLoading(false);
     }
-  }, [content, textType, analyzeUserQuestion, routeQuestionToOperation, conversationContext]);
-
-  const handleQuickPrompt = useCallback((promptText: string, operation?: string, questionType?: string) => {
-    handleSendMessage(promptText, operation, questionType);
-  }, [handleSendMessage]);
+  }, [analyzeUserQuestion, routeQuestionToOperation, textType]); // Add textType to dependencies
 
   useEffect(() => {
     if (chatMessagesEndRef.current) {
@@ -391,179 +393,62 @@ export function CoachPanel({ content, textType, assistanceLevel }: CoachPanelPro
     }
   }, [chatMessages]);
 
-  // Initial feedback generation (if content changes or on first load)
-  useEffect(() => {
-    const generateFeedback = async () => {
-      if (content && content !== lastProcessedContent && !isLoading) {
-        setIsLoading(true);
-        setError(null);
-        try {
-          const response = await fetch('/.netlify/functions/ai-operations', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              operation: 'getWritingFeedback',
-              text: content,
-              textType: textType,
-              assistanceLevel: localAssistanceLevel,
-            }),
-          });
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Failed to get initial feedback');
-          }
-
-          const data: StructuredFeedback = await response.json();
-          setStructuredFeedback(data);
-          setFeedbackHistory(data.feedbackItems);
-          setLastProcessedContent(content);
-        } catch (err: any) {
-          console.error('Error fetching initial feedback:', err);
-          setError(err.message || 'Failed to load initial feedback. Please try again.');
-          // Fallback to a generic message if API fails
-          setStructuredFeedback({
-            overallComment: 'I am ready to help you improve your writing! Please ask me a question or use one of the prompts below.',
-            feedbackItems: [],
-            focusForNextTime: [],
-          });
-        } finally {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    generateFeedback();
-  }, [content, textType, localAssistanceLevel, lastProcessedContent, isLoading]);
-
-  const toggleFeedbackItem = (index: number) => {
-    setHiddenFeedbackItems((prev) =>
-      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
-    );
-  };
-
-  const toggleOverallComment = () => {
-    setIsOverallCommentHidden((prev) => !prev);
-  };
-
-  const toggleFocusForNextTime = () => {
-    setIsFocusForNextTimeHidden((prev) => !prev);
-  };
-
-  const getIconForFeedbackType = (type: FeedbackItem['type']) => {
-    switch (type) {
-      case 'praise':
-        return <ThumbsUp size={18} className="text-green-500" />;
-      case 'suggestion':
-        return <Lightbulb size={18} className="text-blue-500" />;
-      case 'question':
-        return <HelpCircle size={18} className="text-yellow-500" />;
-      case 'challenge':
-        return <Target size={18} className="text-red-500" />;
-      default:
-        return <Sparkles size={18} className="text-gray-500" />;
+  const getMessageClass = (isUser: boolean, quality?: 'high' | 'medium' | 'low' | 'fallback') => {
+    let baseClass = isUser ? 'bg-blue-500 text-white self-end' : 'bg-gray-200 text-gray-800 self-start';
+    if (!isUser && quality === 'fallback') {
+      baseClass = 'bg-yellow-100 text-yellow-800 self-start border border-yellow-300';
     }
+    return `${baseClass} p-3 rounded-lg max-w-[80%]`;
   };
 
-  const getIconForQuestionType = (type: QuestionAnalysis['type']) => {
-    switch (type) {
-      case 'vocabulary':
-        return <Zap size={18} className="text-purple-500" />;
-      case 'structure':
-        return <Target size={18} className="text-orange-500" />;
-      case 'grammar':
-        return <Star size={18} className="text-green-500" />;
-      case 'content':
-        return <Gift size={18} className="text-pink-500" />;
-      default:
-        return <Sparkles size={18} className="text-gray-500" />;
-    }
-  };
-
-  const getMessageIcon = (isUser: boolean, responseQuality?: ChatMessage['responseQuality']) => {
-    if (isUser) return null; // No icon for user messages
-    if (responseQuality === 'fallback') return <AlertCircle size={18} className="text-red-500 mr-2" />;
-    if (responseQuality === 'high') return <Sparkles size={18} className="text-blue-500 mr-2" />;
+  const getMessageIcon = (isUser: boolean, quality?: 'high' | 'medium' | 'low' | 'fallback') => {
+    if (isUser) return null;
+    if (quality === 'high') return <Sparkles size={18} className="text-purple-500 mr-2" />;
+    if (quality === 'medium') return <Lightbulb size={18} className="text-orange-500 mr-2" />;
+    if (quality === 'low' || quality === 'fallback') return <AlertCircle size={18} className="text-red-500 mr-2" />;
     return <Bot size={18} className="text-gray-500 mr-2" />;
-  };
-
-  const getMessageClass = (isUser: boolean, responseQuality?: ChatMessage['responseQuality']) => {
-    let baseClass = "p-3 rounded-lg max-w-[80%]";
-    if (isUser) {
-      baseClass += " bg-blue-500 text-white self-end";
-    } else {
-      baseClass += " bg-gray-200 text-gray-800 self-start";
-      if (responseQuality === 'fallback') {
-        baseClass += " border border-red-400";
-      }
-    }
-    return baseClass;
   };
 
   return (
     <div className="coach-panel-container">
-      <div className="coach-panel-header">
-        <Sparkles size={24} className="header-icon" />
-        <h2>AI Writing Coach</h2>
-      </div>
-
-      {isLoading && (
-        <div className="loading-indicator">
-          <RefreshCw size={20} className="animate-spin mr-2" /> Generating feedback...
-        </div>
-      )}
-
-      {error && (
-        <div className="error-message">
-          <AlertCircle size={20} className="text-red-500 mr-2" /> {error}
-        </div>
-      )}
-
       {structuredFeedback && (
-        <div className="feedback-section">
-          <div className="feedback-toggle" onClick={toggleOverallComment}>
-            <h3>Overall Feedback</h3>
-            {isOverallCommentHidden ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
+        <div className="feedback-summary">
+          <div className="summary-header">
+            <h3 className="summary-title">Your Writing Feedback</h3>
+            <div className="toggle-buttons">
+              <button onClick={() => setIsOverallCommentHidden(!isOverallCommentHidden)}>
+                {isOverallCommentHidden ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
+                Overall Comment
+              </button>
+              <button onClick={() => setIsFocusForNextTimeHidden(!isFocusForNextTimeHidden)}>
+                {isFocusForNextTimeHidden ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
+                Focus for Next Time
+              </button>
+            </div>
           </div>
           {!isOverallCommentHidden && (
             <p className="overall-comment">{structuredFeedback.overallComment}</p>
           )}
-
-          {structuredFeedback.feedbackItems.length > 0 && (
-            <> 
-              <div className="feedback-items-list">
-                {structuredFeedback.feedbackItems.map((item, index) => (
-                  <div key={index} className="feedback-item">
-                    <div className="feedback-item-header" onClick={() => toggleFeedbackItem(index)}>
-                      {getIconForFeedbackType(item.type)}
-                      <h4>{item.area}</h4>
-                      {hiddenFeedbackItems.includes(index) ? <ChevronDown size={16} /> : <ChevronUp size={16} />}
-                    </div>
-                    {!hiddenFeedbackItems.includes(index) && (
-                      <div className="feedback-item-content">
-                        <p>{item.text}</p>
-                        {item.exampleFromText && (
-                          <p className="example-text">Example from your text: "{item.exampleFromText}"</p>
-                        )}
-                        {item.suggestionForImprovement && (
-                          <p className="suggestion-text">Suggestion: {item.suggestionForImprovement}</p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                ))}
+          <div className="feedback-items">
+            {structuredFeedback.feedbackItems.map((item, index) => (
+              <div key={index} className="feedback-item">
+                <div className="item-header">
+                  {item.type === 'praise' && <ThumbsUp size={18} className="text-green-500" />}
+                  {item.type === 'suggestion' && <Lightbulb size={18} className="text-blue-500" />}
+                  {item.type === 'question' && <HelpCircle size={18} className="text-purple-500" />}
+                  {item.type === 'challenge' && <Target size={18} className="text-red-500" />}
+                  <span className="item-area">{item.area}</span>
+                </div>
+                <p className="item-text">{item.text}</p>
+                {item.exampleFromText && (
+                  <p className="item-example">Example: "{item.exampleFromText}"</p>
+                )}
+                {item.suggestionForImprovement && (
+                  <p className="item-suggestion">Suggestion: {item.suggestionForImprovement}</p>
+                )}
               </div>
-            </>
-          )}
-
-          {structuredFeedback.focusForNextTime.length > 0 && (
-            <div className="feedback-toggle" onClick={toggleFocusForNextTime}>
-              <h3>Focus for Next Time</h3>
-              {isFocusForNextTimeHidden ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
-            </div>
-          )}
+            ))}
+          </div>
           {!isFocusForNextTimeHidden && structuredFeedback.focusForNextTime.length > 0 && (
             <ul className="focus-list">
               {structuredFeedback.focusForNextTime.map((focus, index) => (
