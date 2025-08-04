@@ -1,0 +1,225 @@
+/* Fixed Writing Area Styles */
+
+.writing-area-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.writing-content-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  position: relative;
+}
+
+.writing-textarea-wrapper {
+  flex: 1;
+  position: relative;
+  min-height: 0;
+}
+
+.writing-textarea {
+  width: 100% !important;
+  height: 100% !important;
+  padding: 20px !important;
+  border: none !important;
+  border-radius: 0 !important;
+  resize: none !important;
+  outline: none !important;
+  font-family: 'Comic Neue', 'Inter', sans-serif !important;
+  font-size: 16px !important;
+  line-height: 1.6 !important;
+  color: #374151 !important;
+  background: #ffffff !important;
+  box-sizing: border-box !important;
+  min-height: 400px !important;
+}
+
+.writing-textarea:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+.writing-textarea::placeholder {
+  color: #9ca3af;
+  font-style: italic;
+  opacity: 0.8;
+}
+
+/* Highlight layer for writing suggestions */
+.highlight-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 1;
+  padding: 20px;
+  font-family: 'Comic Neue', 'Inter', sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: transparent;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow: hidden;
+}
+
+/* Writing highlights */
+.writing-highlight {
+  position: relative;
+  border-radius: 3px;
+  padding: 1px 2px;
+}
+
+.writing-highlight-spelling {
+  background-color: rgba(239, 68, 68, 0.2);
+  border-bottom: 2px wavy #ef4444;
+}
+
+.writing-highlight-grammar {
+  background-color: rgba(59, 130, 246, 0.2);
+  border-bottom: 2px wavy #3b82f6;
+}
+
+.writing-highlight-vocabulary {
+  background-color: rgba(16, 185, 129, 0.2);
+  border-bottom: 2px wavy #10b981;
+}
+
+.writing-highlight-structure {
+  background-color: rgba(245, 158, 11, 0.2);
+  border-bottom: 2px wavy #f59e0b;
+}
+
+.writing-highlight-style {
+  background-color: rgba(139, 92, 246, 0.2);
+  border-bottom: 2px wavy #8b5cf6;
+}
+
+/* Status bar styles */
+.writing-status-bar {
+  flex-shrink: 0;
+  padding: 12px 20px;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.writing-status-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.writing-status-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.status-button {
+  padding: 4px 8px;
+  background: #e5e7eb;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #374151;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.status-button:hover {
+  background: #d1d5db;
+}
+
+.status-button.active {
+  background: #3b82f6;
+  color: white;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .writing-textarea {
+    padding: 16px !important;
+    font-size: 15px !important;
+  }
+  
+  .highlight-layer {
+    padding: 16px;
+    font-size: 15px;
+  }
+  
+  .writing-status-bar {
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+  
+  .writing-status-left,
+  .writing-status-right {
+    gap: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .writing-textarea {
+    padding: 12px !important;
+    font-size: 14px !important;
+  }
+  
+  .highlight-layer {
+    padding: 12px;
+    font-size: 14px;
+  }
+  
+  .writing-status-bar {
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+  }
+  
+  .writing-status-left,
+  .writing-status-right {
+    justify-content: center;
+    gap: 8px;
+  }
+}
+
+/* Ensure proper box-sizing */
+* {
+  box-sizing: border-box;
+}
+
+/* Fix for any conflicting styles */
+.writing-area-container * {
+  box-sizing: border-box;
+}
+
+/* Ensure the textarea is always visible and properly sized */
+.writing-textarea-wrapper {
+  position: relative;
+  overflow: hidden;
+}
+
+.writing-textarea-wrapper textarea {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
