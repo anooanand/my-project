@@ -76,6 +76,36 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
   const highlightLayerRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Common spelling mistakes
+  const spellingPatterns = {
+    'recieve': 'receive',
+    'seperate': 'separate',
+    'definately': 'definitely',
+    'occured': 'occurred',
+    'begining': 'beginning'
+  };
+
+  // Grammar patterns
+  const grammarPatterns = {
+    'i ': 'I ',
+    'dont': "don't",
+    'cant': "can't",
+    'wont': "won't",
+    'shouldnt': "shouldn't"
+  };
+
+  // Vocabulary enhancement patterns
+  const vocabularyPatterns = {
+    'good': 'excellent, outstanding, remarkable, exceptional',
+    'bad': 'terrible, awful, dreadful, appalling',
+    'big': 'enormous, massive, gigantic, colossal',
+    'small': 'tiny, minuscule, petite, compact',
+    'nice': 'pleasant, delightful, charming, wonderful',
+    'said': 'declared, announced, proclaimed, stated',
+    'went': 'traveled, journeyed, ventured, proceeded',
+    'got': 'obtained, acquired, received, secured'
+  };
+
   // Initialize popup flow when component mounts or when textType is empty
   useEffect(() => {
     const savedContent = localStorage.getItem('writingContent');
@@ -147,53 +177,6 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
 
   const analyzeText = useCallback((text: string) => {
     const newIssues: WritingIssue[] = [];
-    
-    // Common spelling mistakes (only incorrect spellings)
-    const spellingPatterns = {
-      'softley': 'softly',
-      'recieve': 'receive',
-      'seperate': 'separate',
-      'occured': 'occurred',
-      'accomodate': 'accommodate',
-      'alot': 'a lot',
-      'cant': "can't",
-      'dont': "don't",
-      'wont': "won't",
-      'im': "I'm",
-      'ive': "I've",
-      'id': "I'd",
-      'youre': "you're",
-      'theyre': "they're"
-    };
-
-    // Grammar patterns (only incorrect grammar)
-    const grammarPatterns = {
-      'i am': 'I am',
-      'i have': 'I have',
-      'i will': 'I will',
-      'i was': 'I was'
-    };
-
-    // Vocabulary improvements with multiple suggestions
-    const vocabularyPatterns = {
-      'good': 'excellent, outstanding, remarkable',
-      'bad': 'poor, inadequate, unsatisfactory',
-      'said': 'exclaimed, declared, announced',
-      'nice': 'pleasant, delightful, charming',
-      'big': 'enormous, massive, substantial',
-      'small': 'tiny, minute, compact',
-      'happy': 'joyful, delighted, cheerful',
-      'sad': 'unhappy, gloomy, melancholy',
-      'walk': 'stroll, amble, wander',
-      'run': 'dash, sprint, race',
-      'look': 'gaze, stare, observe',
-      'went': 'traveled, journeyed, ventured',
-      'saw': 'noticed, observed, spotted',
-      'got': 'received, obtained, acquired',
-      'make': 'create, produce, construct',
-      'think': 'believe, consider, ponder',
-      'started': 'began, commenced, initiated'
-    };
 
     // Check spelling
     Object.entries(spellingPatterns).forEach(([incorrect, correct]) => {
@@ -531,45 +514,26 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
   };
 
   return (
-    <div className="writing-area-container" ref={containerRef}>
-      <div className="writing-prompt-section">
-        <div className="writing-prompt-header">
-          <Sparkles className="writing-prompt-icon" />
-          <h3>Your Writing Prompt</h3>
-        </div>
-        <div className="writing-prompt-content">
-          {prompt ? (
-            <p>{prompt}</p>
-          ) : (
-            <p>Select a writing type to generate a prompt, or enter your own.</p>
-          )}
-          {isGenerating && <p>Generating prompt...</p>}
-        </div>
-      </div>
-
-      <div className="writing-controls">
-        <button className="control-button new-button" onClick={() => setShowWritingTypeModal(true)}>
-          + New
-        </button>
-        <button className="control-button save-button" onClick={saveContent} disabled={isSaving}>
-          Save {isSaving && '...'}
-        </button>
-        <button className="control-button export-button">Export</button>
-        <button className="control-button help-button">Help</button>
-      </div>
-
-      <div className="writing-content-section">
-        <div className="writing-textarea-wrapper">
+    <div className="writing-area-container h-full flex flex-col" ref={containerRef}>
+      {/* Main Writing Content - This is the key fix */}
+      <div className="writing-content-section flex-1 flex flex-col min-h-0">
+        <div className="writing-textarea-wrapper flex-1 relative">
           <textarea
             ref={textareaRef}
-            className="writing-textarea"
+            className="writing-textarea w-full h-full p-4 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base leading-relaxed"
             value={content}
             onChange={handleTextareaChange}
             onClick={handleTextareaClick}
             placeholder="Start writing your amazing story here! Let your creativity flow and bring your ideas to life... ✨"
+            style={{
+              fontFamily: 'Comic Neue, Inter, sans-serif',
+              fontSize: '16px',
+              lineHeight: '1.6',
+              minHeight: '400px'
+            }}
           />
           {showHighlights && (
-            <div className="highlight-layer" ref={highlightLayerRef}>
+            <div className="highlight-layer absolute inset-0 pointer-events-none p-4 text-transparent" ref={highlightLayerRef}>
               {renderHighlightedText()}
             </div>
           )}
@@ -588,6 +552,7 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
         )}
       </div>
 
+      {/* Status Bar */}
       <WritingStatusBar
         wordCount={wordCount}
         characterCount={content.length}
@@ -596,45 +561,7 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
         onToggleHighlights={() => setShowHighlights(!showHighlights)}
       />
 
-      <div className="nsw-analysis-section">
-        <div className="nsw-analysis-tabs">
-          <button
-            className={`nsw-analysis-tab ${activeTab === 'textType' ? 'active' : ''}`}
-            onClick={() => setActiveTab('textType')}
-          >
-            Text Type Analysis
-          </button>
-          <button
-            className={`nsw-analysis-tab ${activeTab === 'vocabulary' ? 'active' : ''}`}
-            onClick={() => setActiveTab('vocabulary')}
-          >
-            Vocabulary Sophistication
-          </button>
-          <button
-            className={`nsw-analysis-tab ${activeTab === 'progress' ? 'active' : ''}`}
-            onClick={() => setActiveTab('progress')}
-          >
-            Progress Tracking
-          </button>
-          <button
-            className={`nsw-analysis-tab ${activeTab === 'coaching' ? 'active' : ''}`}
-            onClick={() => setActiveTab('coaching')}
-          >
-            Coaching Tips
-          </button>
-        </div>
-        <div className="nsw-analysis-content">
-          {activeTab === 'textType' && <TextTypeAnalysisComponent content={content} textType={textType || selectedWritingType} />}
-          {activeTab === 'vocabulary' && <VocabularySophisticationComponent content={content} textType={textType || selectedWritingType} />}
-          {activeTab === 'progress' && <ProgressTrackingComponent content={content} textType={textType || selectedWritingType} />}
-          {activeTab === 'coaching' && <CoachingTipsComponent content={content} textType={textType || selectedWritingType} />}
-        </div>
-      </div>
-
-      <button className="submit-for-evaluation-button" onClick={handleEvaluationSubmit}>
-        Submit for Evaluation {wordCount} words
-      </button>
-
+      {/* Modals */}
       <WritingTypeSelectionModal
         isOpen={showWritingTypeModal}
         onClose={() => setShowWritingTypeModal(false)}
