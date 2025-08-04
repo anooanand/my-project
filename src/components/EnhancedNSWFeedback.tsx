@@ -118,7 +118,7 @@ export function EnhancedNSWFeedback({ essay, textType }) {
           <div className="text-center">
             <div className="mb-3">
               <div className={`inline-flex items-center justify-center w-20 h-20 rounded-full text-2xl font-bold ${getBandColor(feedback.overallBand)}`}>
-                Band {feedback.overallBand}
+                Band ${feedback.overallBand}
               </div>
             </div>
             <h3 className="text-lg font-semibold text-gray-800 mb-1">Overall Band Level</h3>
@@ -177,7 +177,7 @@ export function EnhancedNSWFeedback({ essay, textType }) {
                 </h4>
                 <div className="flex items-center space-x-2">
                   <div className={`px-3 py-1 rounded-full text-sm font-bold ${getBandColor(data.band)}`}>
-                    Band {data.band}
+                    Band ${data.band}
                   </div>
                   <div className="text-lg font-bold text-gray-700">
                     {data.score}/{data.maxScore}
@@ -193,7 +193,7 @@ export function EnhancedNSWFeedback({ essay, textType }) {
                     style={{ width: `${(data.score / data.maxScore) * 100}%` }}
                   ></div>
                 </div>
-              }
+              </div>
 
               {/* Strengths */}
               {data.strengths && data.strengths.length > 0 && (
