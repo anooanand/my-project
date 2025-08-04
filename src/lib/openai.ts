@@ -348,170 +348,112 @@ export async function getSynonyms(word: string): Promise<string[]> {
     const commonSynonyms: { [key: string]: string[] } = {
       good: ['excellent', 'great', 'wonderful', 'fantastic', 'amazing'],
       bad: ['poor', 'terrible', 'awful', 'dreadful', 'horrible'],
-      big: ['large', 'huge', 'enormous', 'massive', 'gigantic'],
-      small: ['tiny', 'little', 'miniature', 'petite', 'compact'],
-      happy: ['joyful', 'cheerful', 'delighted', 'pleased', 'content'],
-      sad: ['unhappy', 'sorrowful', 'melancholy', 'dejected', 'gloomy']
+      said: ['stated', 'remarked', 'uttered', 'expressed', 'declared'],
+      get: ['obtain', 'acquire', 'receive', 'procure', 'secure'],
+      make: ['create', 'produce', 'construct', 'build', 'form'],
+      go: ['proceed', 'travel', 'move', 'advance', 'depart'],
+      big: ['large', 'enormous', 'sizable', 'grand', ' विशाल'],
+      small: ['tiny', 'minute', 'petite', 'compact', 'little']
     };
-    
-    return commonSynonyms[word.toLowerCase()] || [`[Synonyms for "${word}" not available at the moment]`];
+    return commonSynonyms[word.toLowerCase()] || [];
   }
 }
 
 export async function rephraseSentence(sentence: string): Promise<string> {
   try {
     const result = await makeBackendCall('rephraseSentence', { content: sentence });
-    return result || `[Rephrasing not available at the moment] Original: ${sentence}`;
+    return result.rephrasedText || sentence;
   } catch (error) {
     console.error('Error rephrasing sentence:', error);
-    return `[Rephrasing not available at the moment] Original: ${sentence}`;
-  }
-}
-
-export async function getTextTypeVocabulary(textType: string, contentSample: string): Promise<any> {
-  try {
-    return await makeBackendCall('getTextTypeVocabulary', {
-      textType,
-      content: contentSample
-    });
-  } catch (error) {
-    console.error('Error getting text type vocabulary:', error);
-    return {
-      textType: textType,
-      categories: [
-        {
-          name: "General Words",
-          words: ["interesting", "important", "different", "special", "amazing"],
-          examples: ["This is an interesting topic.", "It's important to remember."]
-        }
-      ],
-      phrasesAndExpressions: [
-        "In my opinion",
-        "For example",
-        "In conclusion",
-        "On the other hand"
-      ],
-      transitionWords: [
-        "First", "Second", "Next", "Then", "Finally", "However", "Because", "Therefore"
-      ]
-    };
+    return sentence; // Fallback to original sentence
   }
 }
 
 export async function evaluateEssay(content: string, textType: string): Promise<any> {
   try {
-    return await makeBackendCall('evaluateEssay', {
-      content,
-      textType
-    });
-  } catch (error) {
-    console.error('Error evaluating essay:', error);
-    return {
-      overallScore: 6,
-      strengths: [
-        "Attempt at addressing the topic",
-        "Basic structure present",
-        "Shows understanding of the task"
-      ],
-      areasForImprovement: [
-        "Need more development of ideas",
-        "Work on grammar and spelling",
-        "Improve organization"
-      ],
-      specificFeedback: {
-        structure: "Your essay has a basic structure, but could benefit from clearer organization.",
-        language: "Consider using more varied vocabulary and sentence structures.",
-        ideas: "Your ideas are present but need more development and supporting details.",
-        mechanics: "Review your work for grammar and spelling errors."
-      },
-      nextSteps: [
-        "Review basic grammar and spelling rules",
-        "Practice organizing your ideas before writing",
-        "Read examples of strong essays in this style"
-      ]
-    };
-  }
-}
-
-async function getWritingStructure(textType: string): Promise<string> {
-  try {
-    const result = await makeBackendCall('getWritingStructure', { textType });
+    const result = await makeBackendCall('evaluateEssay', { content, textType });
     return result;
   } catch (error) {
-    console.error('Error getting writing structure:', error);
-    return JSON.stringify({
-      title: `Guide to ${textType} Writing`,
-      sections: [
-        {
-          heading: "Structure",
-          content: "Every piece of writing should have a clear beginning, middle, and end. The beginning introduces your main idea, the middle develops it with details, and the end summarizes your key points."
-        },
-        {
-          heading: "Language Features",
-          content: "Use descriptive language, varied sentence structures, and appropriate vocabulary for your topic."
-        },
-        {
-          heading: "Common Mistakes",
-          content: "Avoid rushing your writing, forgetting to proofread, and using repetitive words or phrases."
-        },
-        {
-          heading: "Planning Tips",
-          content: "Before you start writing, take time to brainstorm ideas, create a simple outline, and think about your audience."
-        }
-      ]
-    });
+    console.error('Error evaluating essay:', error);
+    return { score: 'N/A', feedback: 'Unable to evaluate essay at this time.' };
   }
 }
 
-// New function for grammar and spelling check
-async function checkGrammarAndSpelling(content: string): Promise<any> {
-  try {
-    return await makeBackendCall('checkGrammarAndSpelling', { content });
-  } catch (error) {
-    console.error('Error checking grammar and spelling:', error);
-    return {
-      corrections: []
-    };
-  }
+// New function to provide interactive questions based on text type
+export function getTextTypeQuestions(textType: string): string[] {
+  const questions: { [key: string]: string[] } = {
+    narrative: [
+      "What is the main conflict in your story?",
+      "How do your characters change throughout the narrative?",
+      "What sensory details can you add to make your setting more vivid?",
+      "Is the pacing effective? Are there parts that drag or feel rushed?"
+    ],
+    persuasive: [
+      "What is your strongest argument? How can you support it further?",
+      "Have you addressed potential counterarguments effectively?",
+      "Is your call to action clear and compelling?",
+      "How does your language persuade your audience?"
+    ],
+    expository: [
+      "Is your explanation clear and easy to understand?",
+      "Have you provided sufficient evidence or examples to support your points?",
+      "Is the information organized logically?",
+      "Have you defined any complex terms for your audience?"
+    ],
+    reflective: [
+      "What insights have you gained from this experience?",
+      "How has this challenge shaped your perspective?",
+      "What specific details can you add to illustrate your emotions or thoughts?",
+      "How will you apply what you've learned in the future?"
+    ],
+    descriptive: [
+      "What specific details can you add to appeal to each of the five senses?",
+      "Are your adjectives and adverbs vivid and precise?",
+      "How can you show, rather than just tell, your reader about the subject?",
+      "What mood or atmosphere are you trying to create?"
+    ],
+    recount: [
+      "Is the sequence of events clear and easy to follow?",
+      "Have you included enough specific details to make the event come alive?",
+      "What was the most significant moment, and have you highlighted it?",
+      "How did you feel during the event, and have you conveyed that?"
+    ],
+    discursive: [
+      "Have you presented a balanced view of the issue, considering multiple perspectives?",
+      "Are your arguments well-supported with evidence or examples?",
+      "Is your conclusion thoughtful and does it offer a clear stance or summary?",
+      "How do you maintain an objective tone while discussing complex ideas?"
+    ],
+    news_report: [
+      "Have you included all the key information (who, what, when, where, why, how)?",
+      "Is your language objective and factual?",
+      "Is the most important information presented first?",
+      "Have you quoted sources appropriately?"
+    ],
+    letter: [
+      "Is the purpose of your letter clear?",
+      "Have you used the appropriate tone and formality for your audience?",
+      "Is the structure of your letter correct (address, salutation, body, closing)?",
+      "Have you clearly stated any actions you expect from the recipient?"
+    ],
+    diary: [
+      "Does your diary entry sound authentic and personal?",
+      "Have you expressed your feelings and thoughts clearly?",
+      "Are there enough details to make the events vivid?",
+      "What insights or reflections have you included about your day?"
+    ],
+    speech: [
+      "Is your main message clear and compelling?",
+      "Have you considered your audience and tailored your language to them?",
+      "Does your speech have a strong opening and a memorable closing?",
+      "Have you used rhetorical devices effectively to engage your audience?"
+    ],
+    default: [
+      "What is the main purpose of your writing?",
+      "Who is your intended audience?",
+      "What is one area you'd like to improve in this piece?",
+      "What new vocabulary can you incorporate?"
+    ]
+  };
+  return questions[textType.toLowerCase()] || questions.default;
 }
-
-// New function for sentence structure analysis
-async function analyzeSentenceStructure(content: string): Promise<any> {
-  try {
-    return await makeBackendCall('analyzeSentenceStructure', { content });
-  } catch (error) {
-    console.error('Error analyzing sentence structure:', error);
-    return {
-      analysis: []
-    };
-  }
-}
-
-// New function for vocabulary enhancement
-async function enhanceVocabulary(content: string): Promise<any> {
-  try {
-    return await makeBackendCall('enhanceVocabulary', { content });
-  } catch (error) {
-    console.error('Error enhancing vocabulary:', error);
-    return {
-      suggestions: []
-    };
-  }
-}
-
-export default {
-  generatePrompt,
-  getWritingFeedback,
-  getNSWSelectiveFeedback,
-  getSpecializedTextTypeFeedback,
-  identifyCommonMistakes,
-  getSynonyms,
-  rephraseSentence,
-  getTextTypeVocabulary,
-  evaluateEssay,
-  getWritingStructure,
-  checkGrammarAndSpelling,
-  analyzeSentenceStructure,
-  enhanceVocabulary,
-  isOpenAIAvailable
-};
