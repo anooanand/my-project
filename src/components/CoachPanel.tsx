@@ -203,7 +203,7 @@ const generateIntelligentLocalResponse = (question: string, analysis: QuestionAn
       if (textType === 'narrative' && !hasDialogue) {
         return `Great ${textType} development with ${wordCount} words! Consider adding some dialogue to bring your characters to life. For example: "I can't believe this is happening!" she exclaimed.`;
       }
-      return `Excellent content development with ${wordType} words! Your ${textType} shows good understanding. Keep developing your ideas with specific examples and vivid details.`;
+      return `Excellent content development with ${wordCount} words! Your ${textType} shows good understanding. Keep developing your ideas with specific examples and vivid details.`;
       
     default:
       if (wordCount === 0) {
@@ -285,7 +285,7 @@ export function CoachPanel({ content, textType, assistanceLevel }: CoachPanelPro
   // Enhanced API call routing function
   const routeQuestionToOperation = useCallback(async (question: string, analysis: QuestionAnalysis) => {
     try {
-      console.log(`[DEBUG] Routing question: "${question}" (type: ${analysis.type})");
+      console.log(`[DEBUG] Routing question: "${question}" (type: ${analysis.type})`);
       
       // Try to get real AI response first
       const response = await fetch('/.netlify/functions/ai-operations', {
@@ -304,7 +304,9 @@ export function CoachPanel({ content, textType, assistanceLevel }: CoachPanelPro
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json();
+        console.error('AI operation failed:', errorData);
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
 
       const result = await response.json();
