@@ -60,6 +60,7 @@ class InputAnalyzer {
     writingStage: string;
     wordCount: number;
     conversationHistory: ConversationMessage[];
+    textType: string;
   }): {
     type: 'prompt' | 'question' | 'writing' | 'feedback_request';
     confidence: number;
@@ -157,7 +158,7 @@ class InputAnalyzer {
 
 // Context manager for conversation history
 class ContextManager {
-  static createSummary(messages: ConversationMessage[], currentContent: string): ContextSummary {
+  static createSummary(messages: ConversationMessage[], currentContent: string, textType: string): ContextSummary {
     const wordCount = currentContent.trim().split(/\s+/).filter(w => w.length > 0).length;
     
     // Determine writing stage based on word count and conversation
@@ -185,7 +186,7 @@ class ContextManager {
     const lastFeedbackType = lastAIMessage?.metadata?.operations?.[0] || 'general';
     
     return {
-      writingType: 'narrative', // This should be passed from props
+      writingType: textType,
       currentStage,
       wordCount,
       keyTopics,
@@ -462,7 +463,7 @@ export const EnhancedCoachPanel: React.FC<EnhancedCoachPanelProps> = ({
   
   // Update context summary when content or messages change
   useEffect(() => {
-    const summary = ContextManager.createSummary(messages, content);
+    const summary = ContextManager.createSummary(messages, content, textType);
     setContextSummary(summary);
     
     // Add summary message if conversation is getting long
@@ -506,12 +507,12 @@ export const EnhancedCoachPanel: React.FC<EnhancedCoachPanelProps> = ({
     setIsProcessing(true);
     
     try {
-      // Analyze input
-      const analysis = InputAnalyzer.analyzeInput(currentInput, {
-        writingStage: contextSummary?.currentStage || 'initial',
-        wordCount: contextSummary?.wordCount || 0,
-        conversationHistory: messages
-      });
+      // Analyze in    const { type, confidence, suggestedOperations } = InputAnalyzer.analyzeInput(currentInput, {
+      writingStage: contextSummary.currentStage,
+      wordCount: contextSummary.wordCount,
+      conversationHistory: messages,
+      textType: textType,
+    });
       
       // Update user message with metadata
       userMessage.metadata = {
