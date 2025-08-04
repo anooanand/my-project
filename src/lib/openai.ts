@@ -321,96 +321,110 @@ export async function generatePrompt(textType: string): Promise<string> {
         narrative: "Write a narrative about a time when you had to make a difficult decision. Show how this experience changed you as a person. Include dialogue, descriptive language, and a clear structure with beginning, middle, and end.",
         persuasive: "Should students be allowed to use technology during class time? Write a persuasive essay arguing your position. Use specific examples, address counterarguments, and include a strong conclusion that calls your reader to action.",
         creative: "Write a creative piece that begins with this line: 'The old photograph revealed a secret that changed everything.' Use sophisticated vocabulary, varied sentence structures, and engaging literary techniques.",
-        descriptive: "Describe your ideal learning environment using all five senses. Paint a vivid picture that helps the reader experience this space as if they were there. Use sophisticated adjectives and varied sentence beginnings.",
-        expository: "Explain how social media affects young people's friendships. Use specific examples, clear explanations, and organize your ideas logically. Include both positive and negative effects in your response.",
-        reflective: "Reflect on a challenge you overcame this year. Analyze what you learned about yourself and how this experience will help you in the future. Show deep thinking and personal insight.",
-        recount: "Recount a significant school event from this year. Include specific details about what happened, who was involved, and why this event was meaningful. Use chronological order and engaging language.",
-        default: "Write about a topic that interests you, demonstrating sophisticated vocabulary, clear structure, and well-developed ideas suitable for NSW Selective assessment."
+        descriptive: "Describe your ideal learning environment using all five senses. Paint a vivid picture that helps the reader experience this space as if it were real. Focus on sensory details and figurative language.",
+        recount: "Recount a significant event from your life. Describe what happened, your feelings, and the outcome. Ensure a clear chronological order and personal reflection.",
+        discursive: "Discuss the pros and cons of social media for teenagers. Present a balanced argument, considering various viewpoints, and conclude with your own reasoned perspective.",
+        news_report: "Write a news report about a recent local event. Include a catchy headline, lead paragraph (who, what, when, where, why, how), and factual details from reliable sources.",
+        letter: "Write a formal letter to your local council proposing a new community initiative. Clearly state your purpose, provide supporting reasons, and suggest next steps.",
+        diary: "Write a diary entry from the perspective of a historical figure on a pivotal day in their life. Express their thoughts, feelings, and observations.",
+        speech: "Prepare a speech for your school assembly on the importance of environmental conservation. Engage your audience with rhetorical devices and a clear call to action.",
+        default: "Write a short story about a magical object found in an unexpected place. Focus on character development and a surprising plot twist."
       };
-      
-      return nswSelectiveFallbackPrompts[textType.toLowerCase()] || nswSelectiveFallbackPrompts.default;
+      return nswSelectiveFallbackPrompts[textType] || nswSelectiveFallbackPrompts.default;
     }
-    return result.prompt || "Write about a memorable experience that taught you something important.";
+    return result.prompt;
   } catch (error) {
     console.error('Error generating prompt:', error);
-    return "Write about a memorable experience that taught you something important.";
+    return "An error occurred while generating the prompt. Please try again.";
   }
 }
 
 export async function getSynonyms(word: string): Promise<string[]> {
   try {
-    const result = await makeBackendCall('getSynonyms', { content: word });
-    return Array.isArray(result) ? result : [result];
+    const result = await makeBackendCall('getSynonyms', { word });
+    if (result.error === 'BACKEND_NOT_AVAILABLE') {
+      console.log('[DEBUG] Using fallback synonyms for local development');
+      const fallbackSynonyms: { [key: string]: string[] } = {
+        good: ['excellent', 'great', 'fine', 'superior', 'pleasant'],
+        bad: ['poor', 'terrible', 'awful', 'inferior', 'unpleasant'],
+        happy: ['joyful', 'cheerful', 'merry', 'glad', 'delighted'],
+        sad: ['unhappy', 'sorrowful', 'depressed', 'gloomy', 'miserable'],
+        big: ['large', 'huge', 'gigantic', 'enormous', 'massive'],
+        small: ['tiny', 'little', 'miniature', 'petite', 'minuscule']
+      };
+      return fallbackSynonyms[word.toLowerCase()] || [];
+    }
+    return result.synonyms;
   } catch (error) {
     console.error('Error getting synonyms:', error);
-    
-    // Basic synonym fallbacks for common words
-    const commonSynonyms: { [key: string]: string[] } = {
-      good: ['excellent', 'great', 'wonderful', 'fantastic', 'amazing'],
-      bad: ['poor', 'terrible', 'awful', 'dreadful', 'horrible'],
-      said: ['stated', 'remarked', 'uttered', 'expressed', 'declared'],
-      get: ['obtain', 'acquire', 'receive', 'procure', 'secure'],
-      make: ['create', 'produce', 'construct', 'build', 'form'],
-      go: ['proceed', 'travel', 'move', 'advance', 'depart'],
-      big: ['large', 'enormous', 'sizable', 'grand', ' विशाल'],
-      small: ['tiny', 'minute', 'petite', 'compact', 'little']
-    };
-    return commonSynonyms[word.toLowerCase()] || [];
+    return [];
   }
 }
 
 export async function rephraseSentence(sentence: string): Promise<string> {
   try {
-    const result = await makeBackendCall('rephraseSentence', { content: sentence });
-    return result.rephrasedText || sentence;
+    const result = await makeBackendCall('rephraseSentence', { sentence });
+    if (result.error === 'BACKEND_NOT_AVAILABLE') {
+      console.log('[DEBUG] Using fallback rephrased sentence for local development');
+      return `"${sentence}" rephrased: This is a rephrased version of your sentence.`;
+    }
+    return result.rephrasedSentence;
   } catch (error) {
     console.error('Error rephrasing sentence:', error);
-    return sentence; // Fallback to original sentence
+    return "An error occurred while rephrasing the sentence.";
   }
 }
 
 export async function evaluateEssay(content: string, textType: string): Promise<any> {
   try {
     const result = await makeBackendCall('evaluateEssay', { content, textType });
+    if (result.error === 'BACKEND_NOT_AVAILABLE') {
+      console.log('[DEBUG] Using fallback essay evaluation for local development');
+      return {
+        overallFeedback: "This is a fallback evaluation. Your essay shows good effort.",
+        score: 75,
+        areasForImprovement: ["Expand on your ideas", "Improve sentence structure"],
+        strengths: ["Clear topic", "Good vocabulary"]
+      };
+    }
     return result;
   } catch (error) {
     console.error('Error evaluating essay:', error);
-    return { score: 'N/A', feedback: 'Unable to evaluate essay at this time.' };
+    return { overallFeedback: "An error occurred during essay evaluation.", score: 0, areasForImprovement: [], strengths: [] };
   }
 }
 
-// New function to provide interactive questions based on text type
 export function getTextTypeQuestions(textType: string): string[] {
   const questions: { [key: string]: string[] } = {
     narrative: [
-      "What is the main conflict in your story?",
-      "How do your characters change throughout the narrative?",
-      "What sensory details can you add to make your setting more vivid?",
-      "Is the pacing effective? Are there parts that drag or feel rushed?"
+      "What is the main conflict in your story, and how is it resolved?",
+      "Have you shown, rather than told, your characters' emotions and motivations?",
+      "Is the pacing effective? Are there moments of tension and release?",
+      "How does your story's ending leave the reader feeling?"
     ],
     persuasive: [
-      "What is your strongest argument? How can you support it further?",
-      "Have you addressed potential counterarguments effectively?",
-      "Is your call to action clear and compelling?",
-      "How does your language persuade your audience?"
+      "Is your thesis statement clear and compelling?",
+      "Have you used strong evidence and logical reasoning to support each argument?",
+      "How effectively do you address and refute counterarguments?",
+      "Does your conclusion leave a lasting impression and call to action?"
     ],
     expository: [
-      "Is your explanation clear and easy to understand?",
-      "Have you provided sufficient evidence or examples to support your points?",
-      "Is the information organized logically?",
-      "Have you defined any complex terms for your audience?"
+      "Is your explanation clear and easy for the reader to understand?",
+      "Have you provided sufficient details and examples to illustrate your points?",
+      "Is the information organized logically, with clear topic sentences for each paragraph?",
+      "How do you ensure your writing remains objective and factual?"
     ],
     reflective: [
-      "What insights have you gained from this experience?",
-      "How has this challenge shaped your perspective?",
-      "What specific details can you add to illustrate your emotions or thoughts?",
-      "How will you apply what you've learned in the future?"
+      "Have you clearly articulated the experience you are reflecting on?",
+      "Do you delve deeply into your thoughts and feelings about the experience?",
+      "What insights or lessons have you gained from this experience?",
+      "How does your reflection connect to broader themes or ideas?"
     ],
     descriptive: [
-      "What specific details can you add to appeal to each of the five senses?",
-      "Are your adjectives and adverbs vivid and precise?",
-      "How can you show, rather than just tell, your reader about the subject?",
-      "What mood or atmosphere are you trying to create?"
+      "Have you used vivid sensory details (sight, sound, smell, taste, touch) to bring your subject to life?",
+      "Are your adjectives and adverbs precise and impactful?",
+      "Have you used figurative language (similes, metaphors) effectively?",
+      "Does your description create a clear and unified impression for the reader?"
     ],
     recount: [
       "Is the sequence of events clear and easy to follow?",
@@ -457,3 +471,66 @@ export function getTextTypeQuestions(textType: string): string[] {
   };
   return questions[textType.toLowerCase()] || questions.default;
 }
+
+// Function to get text type specific vocabulary
+export async function getTextTypeVocabulary(textType: string): Promise<any> {
+  try {
+    return await makeBackendCall('getTextTypeVocabulary', { textType });
+  } catch (error) {
+    console.error('Error getting text type vocabulary:', error);
+    
+    // Fallback vocabulary suggestions based on text type
+    const vocabularyMap: { [key: string]: any } = {
+      narrative: {
+        descriptive: ['vivid', 'captivating', 'mesmerizing', 'enchanting', 'breathtaking'],
+        emotions: ['elated', 'devastated', 'bewildered', 'triumphant', 'apprehensive'],
+        actions: ['sprinted', 'whispered', 'contemplated', 'discovered', 'transformed']
+      },
+      persuasive: {
+        strong_verbs: ['advocate', 'emphasize', 'demonstrate', 'establish', 'convince'],
+        connectives: ['furthermore', 'consequently', 'nevertheless', 'undoubtedly', 'ultimately'],
+        adjectives: ['compelling', 'crucial', 'significant', 'essential', 'imperative']
+      },
+      expository: {
+        academic: ['analyze', 'examine', 'investigate', 'demonstrate', 'illustrate'],
+        connectives: ['therefore', 'however', 'moreover', 'subsequently', 'specifically'],
+        precise: ['accurate', 'comprehensive', 'systematic', 'methodical', 'thorough']
+      }
+    };
+    
+    return vocabularyMap[textType] || vocabularyMap.narrative;
+  }
+}
+
+// Function to get writing structure guidance
+export async function getWritingStructure(textType: string): Promise<any> {
+  try {
+    return await makeBackendCall('getWritingStructure', { textType });
+  } catch (error) {
+    console.error('Error getting writing structure:', error);
+    
+    // Fallback structure guidance
+    const structureMap: { [key: string]: any } = {
+      narrative: {
+        introduction: "Set the scene with engaging opening",
+        body: "Develop plot with rising action, climax, and resolution",
+        conclusion: "Reflect on the experience and its significance"
+      },
+      persuasive: {
+        introduction: "Present your position clearly",
+        body: "Support arguments with evidence and address counterpoints",
+        conclusion: "Reinforce your position with a call to action"
+      },
+      expository: {
+        introduction: "Introduce the topic and thesis",
+        body: "Present information logically with supporting details",
+        conclusion: "Summarize key points and implications"
+      }
+    };
+    
+    return structureMap[textType] || structureMap.narrative;
+  }
+}
+
+
+export { openai };
