@@ -483,38 +483,28 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
     if (currentTextType) {
       localStorage.setItem(`${currentTextType}_prompt`, customPrompt);
     }
-    
-    // Pass the custom prompt to parent immediately
-    if (onPromptGenerated) {
-      onPromptGenerated(customPrompt);
-    }
-    
+    setIsGenerating(false);
     setShowCustomPromptModal(false);
-    
-    // Mark popup flow as completed
     setPopupFlowCompleted(true);
-    
-    // Call the callback to indicate popup flow is completed
     if (onPopupCompleted) {
       onPopupCompleted();
     }
   };
 
-  const handleEvaluateEssay = () => {
+  const handleEvaluationSubmit = () => {
     setShowEvaluationModal(true);
   };
 
+  const handleCloseEvaluationModal = () => {
+    setShowEvaluationModal(false);
+  };
+
+  const wordCount = countWords(content);
+
   const renderWritingTemplate = () => {
-    const currentTextType = textType || selectedWritingType;
-    
-    switch (currentTextType) {
+    switch (textType || selectedWritingType) {
       case 'narrative':
-        return <NarrativeWritingTemplateRedesigned 
-          content={content}
-          onChange={onChange}
-          onTimerStart={onTimerStart}
-          onSubmit={onSubmit}
-        />;
+        return <NarrativeWritingTemplateRedesigned />;
       case 'persuasive':
         return <PersuasiveWritingTemplate />;
       case 'expository':
@@ -527,11 +517,11 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
         return <RecountWritingTemplate />;
       case 'discursive':
         return <DiscursiveWritingTemplate />;
-      case 'news report':
+      case 'news_report':
         return <NewsReportWritingTemplate />;
       case 'letter':
         return <LetterWritingTemplate />;
-      case 'diary entry':
+      case 'diary':
         return <DiaryWritingTemplate />;
       case 'speech':
         return <SpeechWritingTemplate />;
@@ -540,115 +530,111 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
     }
   };
 
-  const currentTextType = textType || selectedWritingType;
-
   return (
-    <div ref={containerRef} className="writing-area-container h-full flex flex-col p-0 m-0">
-      {/* FIXED: Writing Template Section with Scrolling - Takes remaining space but allows submit button to be visible */}
-      {currentTextType && (
-        <div className="writing-template-section flex-1 overflow-y-auto min-h-0">
-          {renderWritingTemplate()}
+    <div className="writing-area-container" ref={containerRef}>
+      <div className="writing-prompt-section">
+        <div className="writing-prompt-header">
+          <Sparkles className="writing-prompt-icon" />
+          <h3>Your Writing Prompt</h3>
         </div>
-      )}
-
-      {/* NSW Analysis Tools Section - Add this before the status section */}
-      {(textType || selectedWritingType) && content && content.trim().length > 50 && (
-        <div className="nsw-analysis-tools">
-          <h3>NSW Selective Writing Analysis</h3>
-          
-          {/* Tab Navigation */}
-          <div className="tab-buttons">
-            <button 
-              onClick={() => setActiveTab('textType')}
-              className={activeTab === 'textType' ? 'active' : ''}
-            >
-              Text Type Analysis
-            </button>
-            <button 
-              onClick={() => setActiveTab('vocabulary')}
-              className={activeTab === 'vocabulary' ? 'active' : ''}
-            >
-              Vocabulary Analysis
-            </button>
-            <button 
-              onClick={() => setActiveTab('progress')}
-              className={activeTab === 'progress' ? 'active' : ''}
-            >
-              Progress Tracking
-            </button>
-            <button 
-              onClick={() => setActiveTab('coaching')}
-              className={activeTab === 'coaching' ? 'active' : ''}
-            >
-              Coaching Tips
-            </button>
-          </div>
-          
-          {/* Tab Content */}
-          <div className="tab-content">
-            {activeTab === 'textType' && (
-              <TextTypeAnalysisComponent 
-                content={content} 
-                textType={textType || selectedWritingType} 
-              />
-            )}
-            
-            {activeTab === 'vocabulary' && (
-              <VocabularySophisticationComponent 
-                content={content} 
-              />
-            )}
-            
-            {activeTab === 'progress' && state.user && (
-              <ProgressTrackingComponent 
-                userId={state.user.id} 
-                assessmentData={{
-                  totalScore: 0, // Replace with actual assessment score
-                  overallBand: 1, // Replace with actual band level
-                  criteriaFeedback: {} // Replace with actual criteria feedback
-                }} 
-              />
-            )}
-            
-            {activeTab === 'coaching' && (
-              <CoachingTipsComponent 
-                content={content}
-                textType={textType || selectedWritingType}
-                currentScore={0} // Replace with actual current score
-                focusArea="vocabulary" // Can be dynamic: "vocabulary", "structure", "grammar", etc.
-              />
-            )}
-          </div>
+        <div className="writing-prompt-content">
+          {prompt ? (
+            <p>{prompt}</p>
+          ) : (
+            <p>Select a writing type to generate a prompt, or enter your own.</p>
+          )}
+          {isGenerating && <p>Generating prompt...</p>}
         </div>
-      )}
-
-      {/* FIXED: Status Bar - Always visible at bottom */}
-      <div className="status-section py-1 px-2 flex-shrink-0 bg-white border-t border-gray-200">
-        <WritingStatusBar
-          content={content}
-          textType={currentTextType}
-        />
       </div>
 
-      {/* FIXED: Submit Button - Always visible at bottom */}
-      <div className="submit-section pt-2 px-2 pb-2 flex-shrink-0 bg-white">
-        <div className="flex justify-center">
+      <div className="writing-controls">
+        <button className="control-button new-button" onClick={() => setShowWritingTypeModal(true)}>
+          + New
+        </button>
+        <button className="control-button save-button" onClick={saveContent} disabled={isSaving}>
+          Save {isSaving && '...'}
+        </button>
+        <button className="control-button export-button">Export</button>
+        <button className="control-button help-button">Help</button>
+      </div>
+
+      <div className="writing-content-section">
+        <div className="writing-textarea-wrapper">
+          <textarea
+            ref={textareaRef}
+            className="writing-textarea"
+            value={content}
+            onChange={handleTextareaChange}
+            onClick={handleTextareaClick}
+            placeholder="Start writing your amazing story here! Let your creativity flow and bring your ideas to life... ✨"
+          />
+          {showHighlights && (
+            <div className="highlight-layer" ref={highlightLayerRef}>
+              {renderHighlightedText()}
+            </div>
+          )}
+        </div>
+        {selectedIssue && (
+          <InlineSuggestionPopup
+            issue={selectedIssue}
+            position={popupPosition}
+            onClose={() => setSelectedIssue(null)}
+            onApply={handleApplySuggestion}
+            onParaphrase={handleParaphrase}
+            onThesaurus={handleThesaurus}
+            isLoadingSuggestions={isLoadingSuggestions}
+            suggestions={suggestions}
+          />
+        )}
+      </div>
+
+      <WritingStatusBar
+        wordCount={wordCount}
+        characterCount={content.length}
+        lastSaved={lastSaved}
+        onShowPlanning={() => { /* Implement show planning logic */ }}
+        onToggleHighlights={() => setShowHighlights(!showHighlights)}
+      />
+
+      <div className="nsw-analysis-section">
+        <div className="nsw-analysis-tabs">
           <button
-            onClick={handleEvaluateEssay}
-            disabled={countWords(content) < 50}
-            className="px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 disabled:from-gray-400 disabled:to-gray-500 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 disabled:transform-none disabled:cursor-not-allowed flex items-center gap-2"
-            title={countWords(content) < 50 ? 'Write at least 50 words to submit for evaluation' : 'Submit your essay for detailed evaluation'}
+            className={`nsw-analysis-tab ${activeTab === 'textType' ? 'active' : ''}`}
+            onClick={() => setActiveTab('textType')}
           >
-            <Send className="w-4 h-4" />
-            Submit for Evaluation
-            <span className="text-xs opacity-80 bg-white/20 px-2 py-0.5 rounded-full">
-              {countWords(content)} words
-            </span>
+            Text Type Analysis
+          </button>
+          <button
+            className={`nsw-analysis-tab ${activeTab === 'vocabulary' ? 'active' : ''}`}
+            onClick={() => setActiveTab('vocabulary')}
+          >
+            Vocabulary Sophistication
+          </button>
+          <button
+            className={`nsw-analysis-tab ${activeTab === 'progress' ? 'active' : ''}`}
+            onClick={() => setActiveTab('progress')}
+          >
+            Progress Tracking
+          </button>
+          <button
+            className={`nsw-analysis-tab ${activeTab === 'coaching' ? 'active' : ''}`}
+            onClick={() => setActiveTab('coaching')}
+          >
+            Coaching Tips
           </button>
         </div>
+        <div className="nsw-analysis-content">
+          {activeTab === 'textType' && <TextTypeAnalysisComponent content={content} textType={textType || selectedWritingType} />}
+          {activeTab === 'vocabulary' && <VocabularySophisticationComponent content={content} textType={textType || selectedWritingType} />}
+          {activeTab === 'progress' && <ProgressTrackingComponent content={content} textType={textType || selectedWritingType} />}
+          {activeTab === 'coaching' && <CoachingTipsComponent content={content} textType={textType || selectedWritingType} />}
+        </div>
       </div>
 
-      {/* Popup Modals */}
+      <button className="submit-for-evaluation-button" onClick={handleEvaluationSubmit}>
+        Submit for Evaluation {wordCount} words
+      </button>
+
       <WritingTypeSelectionModal
         isOpen={showWritingTypeModal}
         onClose={() => setShowWritingTypeModal(false)}
@@ -660,21 +646,19 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
         onClose={() => setShowPromptOptionsModal(false)}
         onGeneratePrompt={handleGeneratePrompt}
         onCustomPrompt={handleCustomPromptOption}
-        textType={selectedWritingType}
       />
 
       <CustomPromptModal
         isOpen={showCustomPromptModal}
         onClose={() => setShowCustomPromptModal(false)}
         onSubmit={handleCustomPromptSubmit}
-        textType={selectedWritingType}
       />
 
       <EssayEvaluationModal
         isOpen={showEvaluationModal}
-        onClose={() => setShowEvaluationModal(false)}
+        onClose={handleCloseEvaluationModal}
         content={content}
-        textType={currentTextType}
+        textType={textType || selectedWritingType}
       />
     </div>
   );
