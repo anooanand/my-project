@@ -1,6 +1,6 @@
 import React from 'react';
 import { Award, Target, TrendingUp, CheckCircle, AlertCircle, Star } from 'lucide-react';
-import openai from '../lib/openai';
+import * as openai from '../lib/openai';
 
 // NSW text type guides for enhanced OpenAI prompts
 const NSW_TEXT_TYPE_GUIDES = {
