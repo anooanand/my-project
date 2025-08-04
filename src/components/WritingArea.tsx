@@ -24,7 +24,7 @@ import { SpeechWritingTemplate } from './SpeechWritingTemplate';
 import { TextTypeAnalysisComponent } from './TextTypeAnalysisComponent';
 import { VocabularySophisticationComponent } from './VocabularySophisticationComponent';
 import { ProgressTrackingComponent } from './ProgressTrackingComponent';
-import { CoachingTipsComponent } from './CoachingTipsComponent';
+import { CoachingTipsComponent }s from './CoachingTipsComponent';
 import './responsive.css';
 import './layout-fix.css';
 import './full-width-fix.css';
@@ -514,79 +514,90 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
   };
 
   return (
-    <div className="writing-area-container h-full flex flex-col" ref={containerRef}>
-      {/* Main Writing Content - This is the key fix */}
-      <div className="writing-content-section flex-1 flex flex-col min-h-0">
-        <div className="writing-textarea-wrapper flex-1 relative">
+    <div ref={containerRef} className="writing-area-container">
+      <div className="writing-content-section">
+        <div className="writing-textarea-wrapper">
           <textarea
             ref={textareaRef}
-            className="writing-textarea w-full h-full p-4 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base leading-relaxed"
+            className="writing-textarea"
             value={content}
             onChange={handleTextareaChange}
             onClick={handleTextareaClick}
-            placeholder="Start writing your amazing story here! Let your creativity flow and bring your ideas to life... ✨"
-            style={{
-              fontFamily: 'Comic Neue, Inter, sans-serif',
-              fontSize: '16px',
-              lineHeight: '1.6',
-              minHeight: '400px'
-            }}
+            placeholder={isGenerating ? "Generating prompt..." : prompt || "Start writing your amazing story here! Let your creativity flow and bring your ideas to life..."}
+            disabled={isGenerating}
           />
-          {showHighlights && (
-            <div className="highlight-layer absolute inset-0 pointer-events-none p-4 text-transparent" ref={highlightLayerRef}>
-              {renderHighlightedText()}
-            </div>
-          )}
+          <div
+            ref={highlightLayerRef}
+            className="highlight-layer"
+            dangerouslySetInnerHTML={{ __html: renderHighlightedText() as string }}
+          />
         </div>
-        {selectedIssue && (
-          <InlineSuggestionPopup
-            issue={selectedIssue}
-            position={popupPosition}
-            onClose={() => setSelectedIssue(null)}
-            onApply={handleApplySuggestion}
-            onParaphrase={handleParaphrase}
-            onThesaurus={handleThesaurus}
-            isLoadingSuggestions={isLoadingSuggestions}
-            suggestions={suggestions}
-          />
-        )}
       </div>
 
-      {/* Status Bar */}
       <WritingStatusBar
         wordCount={wordCount}
         characterCount={content.length}
         lastSaved={lastSaved}
-        onShowPlanning={() => { /* Implement show planning logic */ }}
-        onToggleHighlights={() => setShowHighlights(!showHighlights)}
+        onSave={saveContent}
+        isSaving={isSaving}
+        onSubmit={handleEvaluationSubmit}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
       />
 
-      {/* Modals */}
-      <WritingTypeSelectionModal
-        isOpen={showWritingTypeModal}
-        onClose={() => setShowWritingTypeModal(false)}
-        onSelectType={handleWritingTypeSelect}
-      />
+      {selectedIssue && (
+        <InlineSuggestionPopup
+          issue={selectedIssue}
+          position={popupPosition}
+          onClose={() => setSelectedIssue(null)}
+          onApply={handleApplySuggestion}
+          onParaphrase={handleParaphrase}
+          onThesaurus={handleThesaurus}
+          isLoadingSuggestions={isLoadingSuggestions}
+          suggestions={suggestions}
+        />
+      )}
 
-      <PromptOptionsModal
-        isOpen={showPromptOptionsModal}
-        onClose={() => setShowPromptOptionsModal(false)}
-        onGeneratePrompt={handleGeneratePrompt}
-        onCustomPrompt={handleCustomPromptOption}
-      />
+      {showWritingTypeModal && (
+        <WritingTypeSelectionModal
+          isOpen={showWritingTypeModal}
+          onClose={() => setShowWritingTypeModal(false)}
+          onSelectType={handleWritingTypeSelect}
+        />
+      )}
 
-      <CustomPromptModal
-        isOpen={showCustomPromptModal}
-        onClose={() => setShowCustomPromptModal(false)}
-        onSubmit={handleCustomPromptSubmit}
-      />
+      {showPromptOptionsModal && (
+        <PromptOptionsModal
+          isOpen={showPromptOptionsModal}
+          onClose={() => setShowPromptOptionsModal(false)}
+          onGeneratePrompt={handleGeneratePrompt}
+          onCustomPrompt={handleCustomPromptOption}
+        />
+      )}
 
-      <EssayEvaluationModal
-        isOpen={showEvaluationModal}
-        onClose={handleCloseEvaluationModal}
-        content={content}
-        textType={textType || selectedWritingType}
-      />
+      {showCustomPromptModal && (
+        <CustomPromptModal
+          isOpen={showCustomPromptModal}
+          onClose={() => setShowCustomPromptModal(false)}
+          onSubmit={handleCustomPromptSubmit}
+        />
+      )}
+
+      {showEvaluationModal && (
+        <EssayEvaluationModal
+          isOpen={showEvaluationModal}
+          onClose={handleCloseEvaluationModal}
+          essayContent={content}
+          textType={textType || selectedWritingType}
+        />
+      )}
+
+      {renderWritingTemplate()}
+
+      {activeTab === 'textType' && <TextTypeAnalysisComponent content={content} />}
+      {activeTab === 'vocabulary' && <VocabularySophisticationComponent content={content} />}
+      {activeTab === 'progress' && <ProgressTrackingComponent content={content} />}
+      {activeTab === 'coaching' && <CoachingTipsComponent content={content} />}
     </div>
   );
 }
