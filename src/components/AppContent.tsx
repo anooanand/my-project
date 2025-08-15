@@ -83,8 +83,8 @@ function AppContent() {
       setPopupFlowCompleted(false);
       
       // Clear localStorage to ensure fresh start
-      localStorage.removeItem('writingContent');
-      localStorage.removeItem('selectedWritingType');
+      // localStorage.removeItem('writingContent');
+      // localStorage.removeItem('selectedWritingType');
       
       // If we're on the writing page, this will trigger the writing type modal
       if (activePage === 'writing') {
