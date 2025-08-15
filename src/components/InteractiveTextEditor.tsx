@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { AlertCircle, CheckCircle, Lightbulb, Loader2, Star, Target, Zap, Settings, Eye, EyeOff } from 'lucide-react';
+import './fixed-writing-area.css';
 
 // Types for the enhanced text editor
 interface TextPosition {
