@@ -20,6 +20,7 @@ import { NewsReportWritingTemplate } from './NewsReportWritingTemplate';
 import { LetterWritingTemplate } from './LetterWritingTemplate';
 import { DiaryWritingTemplate } from './DiaryWritingTemplate';
 import { SpeechWritingTemplate } from './SpeechWritingTemplate';
+import './writing-area-fix.css';
 // NEW IMPORTS: NSW Analysis Components
 import { TextTypeAnalysisComponent } from './TextTypeAnalysisComponent';
 import { VocabularySophisticationComponent } from './VocabularySophisticationComponent';
