@@ -317,6 +317,8 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
     onChange(newContent);
     setSelectedIssue(null);
     setSuggestions([]);
+    // Re-analyze the text to update highlights after applying a suggestion
+    analyzeText(newContent);
   };
 
   const handleParaphrase = async () => {
@@ -517,9 +519,9 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
     <div className="writing-area-container" ref={containerRef}>
       <WritingTypeSelectionModal
         isOpen={showWritingTypeModal}
-        onSelectType={handleWritingTypeSelect}
-        onClose={() => setShowWritingTypeModal(false)}
+        onSelectWritingType={handleWritingTypeSelect}
       />
+
       <PromptOptionsModal
         isOpen={showPromptOptionsModal}
         onGeneratePrompt={handleGeneratePrompt}
@@ -527,112 +529,101 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
         onClose={() => setShowPromptOptionsModal(false)}
         isGenerating={isGenerating}
       />
+
       <CustomPromptModal
         isOpen={showCustomPromptModal}
         onSubmit={handleCustomPromptSubmit}
         onClose={() => setShowCustomPromptModal(false)}
       />
+
       <EssayEvaluationModal
         isOpen={showEvaluationModal}
         onClose={handleCloseEvaluationModal}
         essayContent={content}
       />
 
-      <div className="writing-prompt-section">
+      <div className="writing-area-header">
+        <h2 className="text-xl font-semibold">Your Writing</h2>
         {prompt && (
           <div className="prompt-display">
-            <Sparkles className="prompt-icon" />
-            <p>{prompt}</p>
+            <Sparkles className="inline-block mr-2 text-blue-500" size={18} />
+            <p className="inline-block font-medium">Prompt: {prompt}</p>
           </div>
         )}
       </div>
 
-      <div className="writing-content-section">
-        <div className="writing-editor-container">
-          <textarea
-            ref={textareaRef}
-            className="writing-textarea"
-            value={content}
-            onChange={handleTextareaChange}
-            onClick={handleTextareaClick}
-            placeholder="Start writing your adventure here..."
-          />
-          <div className="highlight-layer" ref={highlightLayerRef}>
-            {renderHighlightedText()}
-          </div>
+      <div className="writing-content-wrapper">
+        <textarea
+          ref={textareaRef}
+          className="writing-textarea"
+          value={content}
+          onChange={handleTextareaChange}
+          onClick={handleTextareaClick}
+          placeholder="Start writing your essay here..."
+        />
+        <div className="highlight-layer" ref={highlightLayerRef}>
+          {renderHighlightedText()}
         </div>
-        {selectedIssue && (
-          <InlineSuggestionPopup
-            issue={selectedIssue}
-            position={popupPosition}
-            onApplySuggestion={handleApplySuggestion}
-            onParaphrase={handleParaphrase}
-            onThesaurus={handleThesaurus}
-            isLoadingSuggestions={isLoadingSuggestions}
-            suggestions={suggestions}
-            onClose={() => setSelectedIssue(null)}
-          />
-        )}
       </div>
+
+      {selectedIssue && (
+        <InlineSuggestionPopup
+          issue={selectedIssue}
+          position={popupPosition}
+          onClose={() => setSelectedIssue(null)}
+          onApplySuggestion={handleApplySuggestion}
+          onParaphrase={handleParaphrase}
+          onThesaurus={handleThesaurus}
+          isLoadingSuggestions={isLoadingSuggestions}
+          suggestions={suggestions}
+        />
+      )}
 
       <WritingStatusBar
         wordCount={wordCount}
         lastSaved={lastSaved}
         isSaving={isSaving}
-        onEvaluate={handleEvaluationSubmit}
         onSubmit={onSubmit}
-        showHighlights={showHighlights}
-        setShowHighlights={setShowHighlights}
+        onEvaluate={handleEvaluationSubmit}
       />
 
       {/* NEW: NSW Analysis Tabs */}
       <div className="nsw-analysis-tabs">
-        <div className="tab-buttons">
-          <button
-            className={activeTab === 'textType' ? 'active' : ''}
-            onClick={() => setActiveTab('textType')}
-          >
-            Text Type Analysis
-          </button>
-          <button
-            className={activeTab === 'vocabulary' ? 'active' : ''}
-            onClick={() => setActiveTab('vocabulary')}
-          >
-            Vocabulary Sophistication
-          </button>
-          <button
-            className={activeTab === 'progress' ? 'active' : ''}
-            onClick={() => setActiveTab('progress')}
-          >
-            Progress Tracking
-          </button>
-          <button
-            className={activeTab === 'coaching' ? 'active' : ''}
-            onClick={() => setActiveTab('coaching')}
-          >
-            Coaching Tips
-          </button>
-        </div>
-        <div className="tab-content">
-          {activeTab === 'textType' && (
-            <TextTypeAnalysisComponent
-              text={content}
-              textType={textType || selectedWritingType}
-            />
-          )}
-          {activeTab === 'vocabulary' && (
-            <VocabularySophisticationComponent text={content} />
-          )}
-          {activeTab === 'progress' && (
-            <ProgressTrackingComponent />
-          )}
-          {activeTab === 'coaching' && (
-            <CoachingTipsComponent text={content} />
-          )}
-        </div>
+        <button
+          className={`tab-button ${activeTab === 'textType' ? 'active' : ''}`}
+          onClick={() => setActiveTab('textType')}
+        >
+          Text Type Analysis
+        </button>
+        <button
+          className={`tab-button ${activeTab === 'vocabulary' ? 'active' : ''}`}
+          onClick={() => setActiveTab('vocabulary')}
+        >
+          Vocabulary Sophistication
+        </button>
+        <button
+          className={`tab-button ${activeTab === 'progress' ? 'active' : ''}`}
+          onClick={() => setActiveTab('progress')}
+        >
+          Progress Tracking
+        </button>
+        <button
+          className={`tab-button ${activeTab === 'coaching' ? 'active' : ''}`}
+          onClick={() => setActiveTab('coaching')}
+        >
+          Coaching Tips
+        </button>
+      </div>
+
+      <div className="nsw-analysis-content">
+        {activeTab === 'textType' && <TextTypeAnalysisComponent essayContent={content} />}
+        {activeTab === 'vocabulary' && <VocabularySophisticationComponent essayContent={content} />}
+        {activeTab === 'progress' && <ProgressTrackingComponent userId={state.user?.id} />}
+        {activeTab === 'coaching' && <CoachingTipsComponent essayContent={content} />}
       </div>
 
       {renderWritingTemplate()}
     </div>
   );
 }
+
