@@ -236,7 +236,7 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
   }, [content, analyzeText]);
 
   const saveContent = useCallback(async () => {
-    if (!content.trim() || isSaving) return;
+    if (!content || !content.trim() || isSaving) return;
     
     setIsSaving(true);
     try {
@@ -514,90 +514,125 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
   };
 
   return (
-    <div ref={containerRef} className="writing-area-container">
+    <div className="writing-area-container" ref={containerRef}>
+      <WritingTypeSelectionModal
+        isOpen={showWritingTypeModal}
+        onSelectType={handleWritingTypeSelect}
+        onClose={() => setShowWritingTypeModal(false)}
+      />
+      <PromptOptionsModal
+        isOpen={showPromptOptionsModal}
+        onGeneratePrompt={handleGeneratePrompt}
+        onCustomPrompt={handleCustomPromptOption}
+        onClose={() => setShowPromptOptionsModal(false)}
+        isGenerating={isGenerating}
+      />
+      <CustomPromptModal
+        isOpen={showCustomPromptModal}
+        onSubmit={handleCustomPromptSubmit}
+        onClose={() => setShowCustomPromptModal(false)}
+      />
+      <EssayEvaluationModal
+        isOpen={showEvaluationModal}
+        onClose={handleCloseEvaluationModal}
+        essayContent={content}
+      />
+
+      <div className="writing-prompt-section">
+        {prompt && (
+          <div className="prompt-display">
+            <Sparkles className="prompt-icon" />
+            <p>{prompt}</p>
+          </div>
+        )}
+      </div>
+
       <div className="writing-content-section">
-        <div className="writing-textarea-wrapper">
+        <div className="writing-editor-container">
           <textarea
             ref={textareaRef}
             className="writing-textarea"
             value={content}
             onChange={handleTextareaChange}
             onClick={handleTextareaClick}
-            placeholder={isGenerating ? "Generating prompt..." : prompt || "Start writing your amazing story here! Let your creativity flow and bring your ideas to life..."}
-            disabled={isGenerating}
+            placeholder="Start writing your adventure here..."
           />
-          <div
-            ref={highlightLayerRef}
-            className="highlight-layer"
-            dangerouslySetInnerHTML={{ __html: renderHighlightedText() as string }}
-          />
+          <div className="highlight-layer" ref={highlightLayerRef}>
+            {renderHighlightedText()}
+          </div>
         </div>
+        {selectedIssue && (
+          <InlineSuggestionPopup
+            issue={selectedIssue}
+            position={popupPosition}
+            onApplySuggestion={handleApplySuggestion}
+            onParaphrase={handleParaphrase}
+            onThesaurus={handleThesaurus}
+            isLoadingSuggestions={isLoadingSuggestions}
+            suggestions={suggestions}
+            onClose={() => setSelectedIssue(null)}
+          />
+        )}
       </div>
 
       <WritingStatusBar
         wordCount={wordCount}
-        characterCount={content.length}
         lastSaved={lastSaved}
-        onSave={saveContent}
         isSaving={isSaving}
-        onSubmit={handleEvaluationSubmit}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        onEvaluate={handleEvaluationSubmit}
+        onSubmit={onSubmit}
+        showHighlights={showHighlights}
+        setShowHighlights={setShowHighlights}
       />
 
-      {selectedIssue && (
-        <InlineSuggestionPopup
-          issue={selectedIssue}
-          position={popupPosition}
-          onClose={() => setSelectedIssue(null)}
-          onApply={handleApplySuggestion}
-          onParaphrase={handleParaphrase}
-          onThesaurus={handleThesaurus}
-          isLoadingSuggestions={isLoadingSuggestions}
-          suggestions={suggestions}
-        />
-      )}
-
-      {showWritingTypeModal && (
-        <WritingTypeSelectionModal
-          isOpen={showWritingTypeModal}
-          onClose={() => setShowWritingTypeModal(false)}
-          onSelectType={handleWritingTypeSelect}
-        />
-      )}
-
-      {showPromptOptionsModal && (
-        <PromptOptionsModal
-          isOpen={showPromptOptionsModal}
-          onClose={() => setShowPromptOptionsModal(false)}
-          onGeneratePrompt={handleGeneratePrompt}
-          onCustomPrompt={handleCustomPromptOption}
-        />
-      )}
-
-      {showCustomPromptModal && (
-        <CustomPromptModal
-          isOpen={showCustomPromptModal}
-          onClose={() => setShowCustomPromptModal(false)}
-          onSubmit={handleCustomPromptSubmit}
-        />
-      )}
-
-      {showEvaluationModal && (
-        <EssayEvaluationModal
-          isOpen={showEvaluationModal}
-          onClose={handleCloseEvaluationModal}
-          essayContent={content}
-          textType={textType || selectedWritingType}
-        />
-      )}
+      {/* NEW: NSW Analysis Tabs */}
+      <div className="nsw-analysis-tabs">
+        <div className="tab-buttons">
+          <button
+            className={activeTab === 'textType' ? 'active' : ''}
+            onClick={() => setActiveTab('textType')}
+          >
+            Text Type Analysis
+          </button>
+          <button
+            className={activeTab === 'vocabulary' ? 'active' : ''}
+            onClick={() => setActiveTab('vocabulary')}
+          >
+            Vocabulary Sophistication
+          </button>
+          <button
+            className={activeTab === 'progress' ? 'active' : ''}
+            onClick={() => setActiveTab('progress')}
+          >
+            Progress Tracking
+          </button>
+          <button
+            className={activeTab === 'coaching' ? 'active' : ''}
+            onClick={() => setActiveTab('coaching')}
+          >
+            Coaching Tips
+          </button>
+        </div>
+        <div className="tab-content">
+          {activeTab === 'textType' && (
+            <TextTypeAnalysisComponent
+              text={content}
+              textType={textType || selectedWritingType}
+            />
+          )}
+          {activeTab === 'vocabulary' && (
+            <VocabularySophisticationComponent text={content} />
+          )}
+          {activeTab === 'progress' && (
+            <ProgressTrackingComponent />
+          )}
+          {activeTab === 'coaching' && (
+            <CoachingTipsComponent text={content} />
+          )}
+        </div>
+      </div>
 
       {renderWritingTemplate()}
-
-      {activeTab === 'textType' && <TextTypeAnalysisComponent content={content} />}
-      {activeTab === 'vocabulary' && <VocabularySophisticationComponent content={content} />}
-      {activeTab === 'progress' && <ProgressTrackingComponent content={content} />}
-      {activeTab === 'coaching' && <CoachingTipsComponent content={content} />}
     </div>
   );
 }
