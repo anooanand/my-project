@@ -24,7 +24,7 @@ import { SpeechWritingTemplate } from './SpeechWritingTemplate';
 import { TextTypeAnalysisComponent } from './TextTypeAnalysisComponent';
 import { VocabularySophisticationComponent } from './VocabularySophisticationComponent';
 import { ProgressTrackingComponent } from './ProgressTrackingComponent';
-import { CoachingTipsComponent }s from './CoachingTipsComponent';
+import { CoachingTipsComponent } from './CoachingTipsComponent';
 import './responsive.css';
 import './layout-fix.css';
 import './full-width-fix.css';
