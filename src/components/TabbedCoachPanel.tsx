@@ -3,6 +3,7 @@ import { Bot, RefreshCw, Sparkles, Wand, Star } from 'lucide-react';
 import { CoachPanel } from './CoachPanel';
 import { ParaphrasePanel } from './ParaphrasePanel';
 import './improved-layout.css';
+import './writing-area-fix.css';
 
 interface TabbedCoachPanelProps {
   content: string;
