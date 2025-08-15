@@ -14,6 +14,7 @@ interface TextHighlighterProps {
   text: string;
   highlights: HighlightedText[];
   onHighlightClick: (highlight: HighlightedText) => void;
+  onAcceptSuggestion?: (originalText: string, newText: string, highlight: HighlightedText) => void; // New prop
   className?: string;
 }
 
@@ -21,14 +22,14 @@ interface SuggestionBubbleProps {
   highlight: HighlightedText;
   position: { x: number; y: number };
   onClose: () => void;
-  onAccept?: (suggestion: string) => void;
+  onAccept?: (suggestion: string, highlight: HighlightedText) => void; // Modified to pass highlight
 }
 
-const SuggestionBubble: React.FC<SuggestionBubbleProps> = ({ 
-  highlight, 
-  position, 
-  onClose, 
-  onAccept 
+const SuggestionBubble: React.FC<SuggestionBubbleProps> = ({
+  highlight,
+  position,
+  onClose,
+  onAccept
 }) => {
   const getIcon = () => {
     switch (highlight.type) {
@@ -84,10 +85,10 @@ const SuggestionBubble: React.FC<SuggestionBubbleProps> = ({
       {highlight.suggestion && (
         <div className="mt-3 p-2 bg-white bg-opacity-50 rounded border-l-4 border-current">
           <p className="text-xs font-medium mb-1">Suggested improvement:</p>
-          <p className="text-sm italic">"{highlight.suggestion}"</p>
+          <p className="text-sm italic">\"{highlight.suggestion}\"</p>
           {onAccept && (
             <button
-              onClick={() => onAccept(highlight.suggestion!)}
+              onClick={() => onAccept(highlight.suggestion!, highlight)}
               className="mt-2 px-3 py-1 text-xs bg-white rounded border hover:bg-gray-50 transition-colors"
             >
               Apply Suggestion
@@ -113,6 +114,7 @@ export const TextHighlighter: React.FC<TextHighlighterProps> = ({
   text,
   highlights,
   onHighlightClick,
+  onAcceptSuggestion, // New prop
   className = ''
 }) => {
   const [activeBubble, setActiveBubble] = useState<{
@@ -230,9 +232,11 @@ export const TextHighlighter: React.FC<TextHighlighterProps> = ({
           highlight={activeBubble.highlight}
           position={activeBubble.position}
           onClose={() => setActiveBubble(null)}
-          onAccept={(suggestion) => {
-            // Handle suggestion acceptance
-            console.log('Accepting suggestion:', suggestion);
+          onAccept={(suggestion, acceptedHighlight) => {
+            if (onAcceptSuggestion) {
+              const originalText = text.substring(acceptedHighlight.start, acceptedHighlight.end);
+              onAcceptSuggestion(originalText, suggestion, acceptedHighlight);
+            }
             setActiveBubble(null);
           }}
         />
@@ -260,7 +264,7 @@ export const useTextHighlights = (
             highlights.push({
               start: startIndex,
               end: startIndex + item.exampleFromText.length,
-              type: item.type === 'praise' ? 'strength' : 
+              type: item.type === 'praise' ? 'strength' :
                     item.type === 'suggestion' ? 'suggestion' : 'improvement',
               feedback: item.text,
               suggestion: item.suggestionForImprovement,
@@ -300,7 +304,7 @@ export const useTextHighlights = (
               start: startIndex,
               end: startIndex + enhancement.original.length,
               type: 'suggestion',
-              feedback: `Consider using a stronger word: "${enhancement.suggestion}"`,
+              feedback: `Consider using a stronger word: \"${enhancement.suggestion}\" `,
               suggestion: enhancement.suggestion,
               category: 'Vocabulary Enhancement'
             });
@@ -314,3 +318,4 @@ export const useTextHighlights = (
 };
 
 export default TextHighlighter;
+
