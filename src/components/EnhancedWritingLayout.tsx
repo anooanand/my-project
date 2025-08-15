@@ -4,6 +4,7 @@ import { TabbedCoachPanel } from './TabbedCoachPanel';
 import { Lightbulb, Type, Save, Settings, Sparkles, Users, Target, Star, CheckCircle, PanelRightClose, PanelRightOpen, Plus, Download, HelpCircle, Bot } from 'lucide-react';
 import './layout-fix.css';
 import './full-width-fix.css';
+import './writing-area-fix.css';
 import './new-layout.css';
 import './space-optimization.css'; // <--- ADD THIS LINE
 
