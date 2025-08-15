@@ -508,102 +508,112 @@ export const InteractiveTextEditor: React.FC<InteractiveTextEditorProps> = ({
     const before = content.slice(0, highlight.start);
     const after = content.slice(highlight.end);
     const newContent = before + suggestion + after;
-
     onChange(newContent);
     setActiveTooltip(null);
-
-    // Remove the applied highlight
     setHighlights(prevHighlights => prevHighlights.filter(h => h.id !== highlight.id));
   }, [content, onChange]);
 
   // Calculate position for tooltip
   const getTooltipPosition = useCallback(() => {
-    if (!activeTooltip || !textareaRef.current) return { x: 0, y: 0 };
+    if (!textareaRef.current || !activeTooltip) return { x: 0, y: 0 };
 
     const textareaRect = textareaRef.current.getBoundingClientRect();
-    const highlightStart = activeTooltip.highlight.start;
-    const highlightEnd = activeTooltip.highlight.end;
-
-    // Create a temporary span to measure the position of the highlighted text
-    const tempSpan = document.createElement('span');
-    tempSpan.textContent = content.substring(highlightStart, highlightEnd);
-    tempSpan.style.position = 'absolute';
-    tempSpan.style.visibility = 'hidden';
-    tempSpan.style.left = `${textareaRect.left + textareaRef.current.scrollLeft}px`;
-    tempSpan.style.top = `${textareaRect.top + textareaRef.current.scrollTop}px`;
-    tempSpan.style.whiteSpace = 'pre-wrap';
-    tempSpan.style.font = window.getComputedStyle(textareaRef.current).font;
-    document.body.appendChild(tempSpan);
-
-    const spanRect = tempSpan.getBoundingClientRect();
-    document.body.removeChild(tempSpan);
-
-    return {
-      x: spanRect.left + spanRect.width / 2,
-      y: spanRect.top
+    const highlightRect = {
+      left: textareaRect.left + activeTooltip.highlight.start,
+      top: textareaRect.top,
+      width: activeTooltip.highlight.end - activeTooltip.highlight.start,
+      height: textareaRect.height
     };
-  }, [activeTooltip, content]);
 
-  const tooltipPosition = getTooltipPosition();
+    // Position the tooltip above the highlighted text
+    const x = highlightRect.left + highlightRect.width / 2;
+    const y = highlightRect.top;
 
-  return (
-    <div className="relative w-full h-full">
-      <div
-        ref={overlayRef}
-        className="absolute inset-0 p-4 font-sans text-lg leading-relaxed resize-none overflow-hidden pointer-events-none whitespace-pre-wrap break-words"
-        style={{
-          // This ensures the overlay text aligns perfectly with the textarea text
-          font: textareaRef.current ? window.getComputedStyle(textareaRef.current).font : 'inherit',
-          padding: textareaRef.current ? window.getComputedStyle(textareaRef.current).padding : '1rem',
-          lineHeight: textareaRef.current ? window.getComputedStyle(textareaRef.current).lineHeight : 'inherit',
-          boxSizing: 'border-box',
-          zIndex: 1,
-        }}
-      >
-        {createHighlightedSegments().map((segment, index) => (
+    return { x, y };
+  }, [activeTooltip]);
+
+  // Render overlay with highlights
+  const renderHighlights = () => {
+    const segments = createHighlightedSegments();
+    return segments.map((segment, index) => {
+      if (segment.isHighlighted) {
+        const highlightClass = `highlight-${segment.highlight?.type}`;
+        return (
           <span
             key={index}
-            className={segment.isHighlighted ? `relative cursor-pointer ${segment.highlight?.type === 'strength' ? 'bg-green-200 opacity-70' : 'bg-red-200 opacity-70'}` : ''}
-            onClick={segment.isHighlighted ? (e) => handleHighlightClick(e, segment.highlight!) : undefined}
+            className={`highlight ${highlightClass}`}
+            onClick={(e) => segment.highlight && handleHighlightClick(e, segment.highlight)}
           >
             {segment.text}
           </span>
-        ))}
-      </div>
+        );
+      } else {
+        return <span key={index}>{segment.text}</span>;
+      }
+    });
+  };
+
+  return (
+    <div className={`relative w-full h-full ${className}`}>
       <textarea
         ref={textareaRef}
-        className={`w-full h-full p-4 font-sans text-lg leading-relaxed bg-transparent z-10 relative resize-none focus:outline-none ${className}`}
-        placeholder={placeholder}
+        className="absolute inset-0 w-full h-full p-4 text-lg font-sans leading-relaxed resize-none overflow-auto bg-transparent z-10 outline-none focus:ring-0"
         value={content}
         onChange={handleTextChange}
-        spellCheck="false" // Disable native spell check to rely on AI
+        placeholder={placeholder}
+        spellCheck={false} // Disable native spell check
+        autoCorrect="off"
+        autoCapitalize="off"
       />
+
+      <div
+        ref={overlayRef}
+        className="absolute inset-0 w-full h-full p-4 text-lg font-sans leading-relaxed pointer-events-none whitespace-pre-wrap break-words z-0 opacity-70"
+        aria-hidden="true"
+      >
+        {renderHighlights()}
+      </div>
+
+      {isProcessing && (
+        <div className="absolute bottom-4 right-4 flex items-center space-x-2 text-gray-600 bg-white p-2 rounded-lg shadow-md z-20">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          <span className="text-sm">Analyzing...</span>
+        </div>
+      )}
 
       {activeTooltip && (
         <InteractiveTooltip
           highlight={activeTooltip.highlight}
-          position={tooltipPosition}
+          position={activeTooltip.position}
           onClose={() => setActiveTooltip(null)}
           onApplySuggestion={(suggestion) => applySuggestion(activeTooltip.highlight, suggestion)}
         />
       )}
 
-      {isProcessing && (
-        <div className="absolute bottom-4 left-4 flex items-center text-blue-500">
-          <Loader2 className="animate-spin mr-2" size={16} />
-          <span className="text-sm">Processing feedback...</span>
-        </div>
-      )}
-
-      <div className="absolute top-4 right-4 flex space-x-2">
+      {/* Highlight visibility toggle and type filters */}
+      <div className="absolute top-4 right-4 z-20 flex flex-col space-y-2">
         <button
           onClick={() => setShowHighlights(!showHighlights)}
-          className={`p-2 rounded-full shadow-md ${showHighlights ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'}`}
-          title="Toggle Highlights"
+          className="p-2 bg-white rounded-full shadow-md text-gray-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          title={showHighlights ? "Hide Highlights" : "Show Highlights"}
         >
-          {showHighlights ? <Eye size={20} /> : <EyeOff size={20} />}
+          {showHighlights ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
         </button>
-        {/* Add more controls for specific highlight types if needed */}
+        {showHighlights && (
+          <div className="bg-white p-3 rounded-lg shadow-md flex flex-col space-y-2">
+            {Object.entries(highlightTypes).map(([type, enabled]) => (
+              <label key={type} className="flex items-center space-x-2 text-sm cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={enabled}
+                  onChange={() => setHighlightTypes(prev => ({ ...prev, [type]: !prev[type as keyof typeof prev] }))}
+                  className="form-checkbox h-4 w-4 text-blue-600 rounded"
+                />
+                <span className="capitalize">{type.replace(/([A-Z])/g, ' $1').trim()}</span>
+              </label>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
