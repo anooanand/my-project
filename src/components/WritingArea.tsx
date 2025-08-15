@@ -317,8 +317,6 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
     onChange(newContent);
     setSelectedIssue(null);
     setSuggestions([]);
-    // Re-analyze the text to update highlights after applying a suggestion
-    analyzeText(newContent);
   };
 
   const handleParaphrase = async () => {
@@ -489,141 +487,154 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
   const renderWritingTemplate = () => {
     switch (textType || selectedWritingType) {
       case 'narrative':
-        return <NarrativeWritingTemplateRedesigned />;
+        return <NarrativeWritingTemplateRedesigned content={content} onChange={onChange} prompt={prompt} onPromptChange={setPrompt} />;
       case 'persuasive':
-        return <PersuasiveWritingTemplate />;
+        return <PersuasiveWritingTemplate content={content} onChange={onChange} prompt={prompt} onPromptChange={setPrompt} />;
       case 'expository':
-        return <ExpositoryWritingTemplate />;
+        return <ExpositoryWritingTemplate content={content} onChange={onChange} prompt={prompt} onPromptChange={setPrompt} />;
       case 'reflective':
-        return <ReflectiveWritingTemplate />;
+        return <ReflectiveWritingTemplate content={content} onChange={onChange} prompt={prompt} onPromptChange={setPrompt} />;
       case 'descriptive':
-        return <DescriptiveWritingTemplate />;
+        return <DescriptiveWritingTemplate content={content} onChange={onChange} prompt={prompt} onPromptChange={setPrompt} />;
       case 'recount':
-        return <RecountWritingTemplate />;
+        return <RecountWritingTemplate content={content} onChange={onChange} prompt={prompt} onPromptChange={setPrompt} />;
       case 'discursive':
-        return <DiscursiveWritingTemplate />;
+        return <DiscursiveWritingTemplate content={content} onChange={onChange} prompt={prompt} onPromptChange={setPrompt} />;
       case 'news_report':
-        return <NewsReportWritingTemplate />;
+        return <NewsReportWritingTemplate content={content} onChange={onChange} prompt={prompt} onPromptChange={setPrompt} />;
       case 'letter':
-        return <LetterWritingTemplate />;
+        return <LetterWritingTemplate content={content} onChange={onChange} prompt={prompt} onPromptChange={setPrompt} />;
       case 'diary':
-        return <DiaryWritingTemplate />;
+        return <DiaryWritingTemplate content={content} onChange={onChange} prompt={prompt} onPromptChange={setPrompt} />;
       case 'speech':
-        return <SpeechWritingTemplate />;
+        return <SpeechWritingTemplate content={content} onChange={onChange} prompt={prompt} onPromptChange={setPrompt} />;
       default:
-        return null;
+        return <div className="text-center text-gray-500">Please select a writing type to begin.</div>;
     }
   };
 
   return (
-    <div className="writing-area-container" ref={containerRef}>
-      <WritingTypeSelectionModal
-        isOpen={showWritingTypeModal}
-        onSelectWritingType={handleWritingTypeSelect}
-      />
-
-      <PromptOptionsModal
-        isOpen={showPromptOptionsModal}
-        onGeneratePrompt={handleGeneratePrompt}
-        onCustomPrompt={handleCustomPromptOption}
-        onClose={() => setShowPromptOptionsModal(false)}
-        isGenerating={isGenerating}
-      />
-
-      <CustomPromptModal
-        isOpen={showCustomPromptModal}
-        onSubmit={handleCustomPromptSubmit}
-        onClose={() => setShowCustomPromptModal(false)}
-      />
-
-      <EssayEvaluationModal
-        isOpen={showEvaluationModal}
-        onClose={handleCloseEvaluationModal}
-        essayContent={content}
-      />
-
-      <div className="writing-area-header">
-        <h2 className="text-xl font-semibold">Your Writing</h2>
-        {prompt && (
-          <div className="prompt-display">
-            <Sparkles className="inline-block mr-2 text-blue-500" size={18} />
-            <p className="inline-block font-medium">Prompt: {prompt}</p>
-          </div>
-        )}
-      </div>
-
-      <div className="writing-content-wrapper">
-        <textarea
-          ref={textareaRef}
-          className="writing-textarea"
-          value={content}
-          onChange={handleTextareaChange}
-          onClick={handleTextareaClick}
-          placeholder="Start writing your essay here..."
+    <div className="writing-area" ref={containerRef}>
+      {/* Modals */}
+      {showWritingTypeModal && (
+        <WritingTypeSelectionModal
+          onSelect={handleWritingTypeSelect}
+          onClose={() => setShowWritingTypeModal(false)}
         />
-        <div className="highlight-layer" ref={highlightLayerRef}>
-          {renderHighlightedText()}
-        </div>
-      </div>
+      )}
 
+      {showPromptOptionsModal && (
+        <PromptOptionsModal
+          onGeneratePrompt={handleGeneratePrompt}
+          onCustomPrompt={handleCustomPromptOption}
+          onClose={() => setShowPromptOptionsModal(false)}
+          isGenerating={isGenerating}
+        />
+      )}
+
+      {showCustomPromptModal && (
+        <CustomPromptModal
+          onSubmit={handleCustomPromptSubmit}
+          onClose={() => setShowCustomPromptModal(false)}
+        />
+      )}
+
+      {showEvaluationModal && (
+        <EssayEvaluationModal
+          content={content}
+          textType={textType || selectedWritingType}
+          onClose={handleCloseEvaluationModal}
+        />
+      )}
+
+      {/* Inline suggestion popup */}
       {selectedIssue && (
         <InlineSuggestionPopup
           issue={selectedIssue}
           position={popupPosition}
-          onClose={() => setSelectedIssue(null)}
+          suggestions={suggestions}
+          isLoading={isLoadingSuggestions}
           onApplySuggestion={handleApplySuggestion}
           onParaphrase={handleParaphrase}
           onThesaurus={handleThesaurus}
-          isLoadingSuggestions={isLoadingSuggestions}
-          suggestions={suggestions}
+          onClose={() => {
+            setSelectedIssue(null);
+            setSuggestions([]);
+          }}
         />
       )}
 
-      <WritingStatusBar
-        wordCount={wordCount}
-        lastSaved={lastSaved}
-        isSaving={isSaving}
-        onSubmit={onSubmit}
-        onEvaluate={handleEvaluationSubmit}
-      />
-
-      {/* NEW: NSW Analysis Tabs */}
-      <div className="nsw-analysis-tabs">
-        <button
-          className={`tab-button ${activeTab === 'textType' ? 'active' : ''}`}
-          onClick={() => setActiveTab('textType')}
-        >
-          Text Type Analysis
-        </button>
-        <button
-          className={`tab-button ${activeTab === 'vocabulary' ? 'active' : ''}`}
-          onClick={() => setActiveTab('vocabulary')}
-        >
-          Vocabulary Sophistication
-        </button>
-        <button
-          className={`tab-button ${activeTab === 'progress' ? 'active' : ''}`}
-          onClick={() => setActiveTab('progress')}
-        >
-          Progress Tracking
-        </button>
-        <button
-          className={`tab-button ${activeTab === 'coaching' ? 'active' : ''}`}
-          onClick={() => setActiveTab('coaching')}
-        >
-          Coaching Tips
-        </button>
-      </div>
-
-      <div className="nsw-analysis-content">
-        {activeTab === 'textType' && <TextTypeAnalysisComponent essayContent={content} />}
-        {activeTab === 'vocabulary' && <VocabularySophisticationComponent essayContent={content} />}
-        {activeTab === 'progress' && <ProgressTrackingComponent userId={state.user?.id} />}
-        {activeTab === 'coaching' && <CoachingTipsComponent essayContent={content} />}
-      </div>
-
+      {/* Writing template */}
       {renderWritingTemplate()}
+
+      {/* Main writing area */}
+      <div className="writing-container">
+        <div className="writing-input-container">
+          <div className="highlight-layer" ref={highlightLayerRef}>
+            {renderHighlightedText()}
+          </div>
+          <textarea
+            ref={textareaRef}
+            value={content}
+            onChange={handleTextareaChange}
+            onClick={handleTextareaClick}
+            placeholder={prompt || "Start writing here..."}
+            className="writing-textarea"
+            spellCheck={false}
+          />
+        </div>
+
+        <WritingStatusBar
+          wordCount={wordCount}
+          lastSaved={lastSaved}
+          isSaving={isSaving}
+          showHighlights={showHighlights}
+          onToggleHighlights={() => setShowHighlights(!showHighlights)}
+          onEvaluate={handleEvaluationSubmit}
+        />
+      </div>
+
+      {/* NSW Analysis Tabs */}
+      <div className="nsw-analysis-section">
+        <div className="nsw-tab-navigation">
+          <button
+            className={`nsw-tab-button ${activeTab === 'textType' ? 'active' : ''}`}
+            onClick={() => setActiveTab('textType')}
+          >
+            Text Type Analysis
+          </button>
+          <button
+            className={`nsw-tab-button ${activeTab === 'vocabulary' ? 'active' : ''}`}
+            onClick={() => setActiveTab('vocabulary')}
+          >
+            Vocabulary Sophistication
+          </button>
+          <button
+            className={`nsw-tab-button ${activeTab === 'progress' ? 'active' : ''}`}
+            onClick={() => setActiveTab('progress')}
+          >
+            Progress Tracking
+          </button>
+          <button
+            className={`nsw-tab-button ${activeTab === 'coaching' ? 'active' : ''}`}
+            onClick={() => setActiveTab('coaching')}
+          >
+            Coaching Tips
+          </button>
+        </div>
+        <div className="nsw-tab-content">
+          {activeTab === 'textType' && <TextTypeAnalysisComponent content={content} />}
+          {activeTab === 'vocabulary' && <VocabularySophisticationComponent content={content} />}
+          {activeTab === 'progress' && <ProgressTrackingComponent userId={state.user?.id} />}
+          {activeTab === 'coaching' && <CoachingTipsComponent content={content} />}
+        </div>
+      </div>
+
+      <div className="writing-actions">
+        <button onClick={onSubmit} className="submit-button" disabled={!content.trim()}>
+          <Send size={20} /> Submit Writing
+        </button>
+      </div>
     </div>
   );
 }
-
