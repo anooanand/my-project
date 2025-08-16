@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { WritingArea } from './WritingArea';
 import { TabbedCoachPanel } from './TabbedCoachPanel';
+import { DynamicPromptDisplay } from './DynamicPromptDisplay';
+import { StructuredPlanningSection } from './StructuredPlanningSection';
 import { Lightbulb, Type, Save, Settings, Sparkles, Users, Target, Star, CheckCircle, PanelRightClose, PanelRightOpen, Plus, Download, HelpCircle, Bot } from 'lucide-react';
 import './layout-fix.css';
 import './full-width-fix.css';
@@ -50,6 +52,8 @@ export function EnhancedWritingLayout({
   const [characterCount, setCharacterCount] = useState(0);
   const [writingStreak, setWritingStreak] = useState(3);
   const [timeSpent, setTimeSpent] = useState(0);
+  const [plan, setPlan] = useState<any>(null);
+  const [showPlanning, setShowPlanning] = useState(false);
   
   // State to store the generated prompt from WritingArea
   const [generatedPrompt, setGeneratedPrompt] = useState('');
@@ -62,17 +66,17 @@ export function EnhancedWritingLayout({
     }
     
     const prompts = {
-      'narrative': 'Write a compelling narrative story that engages your reader from beginning to end. Include vivid descriptions, interesting characters, and a clear plot structure.',
-      'persuasive': 'Write a persuasive piece that convinces your reader of your viewpoint. Use strong arguments, evidence, and persuasive techniques.',
-      'expository': 'Write an informative piece that explains a topic clearly and thoroughly. Use facts, examples, and logical organization.',
+      'narrative': 'Write a compelling narrative story that engages your reader from beginning to end. Include vivid descriptions, interesting characters, and a clear plot structure with a beginning, middle, and end.',
+      'persuasive': 'Write a persuasive piece that convinces your reader of your viewpoint. Use strong arguments, evidence, and persuasive techniques to support your position.',
+      'expository': 'Write an informative piece that explains a topic clearly and thoroughly. Use facts, examples, and logical organization to educate your reader.',
       'recount': 'Write a recount of an event or experience. Include details about what happened, when, where, and why it was significant.',
-      'reflective': 'Write a reflective piece about your thoughts, feelings, and experiences. Show personal growth and insight.',
-      'descriptive': 'Write a descriptive piece that paints a vivid picture with words. Use sensory details and figurative language.',
+      'reflective': 'Write a reflective piece about your thoughts, feelings, and experiences. Show personal growth and insight through your writing.',
+      'descriptive': 'Write a descriptive piece that paints a vivid picture with words. Use sensory details and figurative language to create imagery.',
       'discursive': 'Write a discursive piece that explores different perspectives on a topic. Present balanced arguments and analysis.',
       'news report': 'Write a news report that informs readers about current events. Use the 5 W\'s and H (Who, What, When, Where, Why, How).',
       'letter': 'Write a letter that communicates effectively with your intended audience. Use appropriate tone and format.',
       'diary entry': 'Write a diary entry that captures your personal thoughts and experiences. Be authentic and reflective.',
-      'speech': 'Write a speech that engages and and persuades your audience. Use rhetorical devices and clear structure.',
+      'speech': 'Write a speech that engages and persuades your audience. Use rhetorical devices and clear structure.',
       'default': 'Write a well-structured piece that demonstrates your writing skills. Focus on clear expression, good organization, and engaging content.'
     };
     
@@ -82,6 +86,12 @@ export function EnhancedWritingLayout({
   // Callback to receive generated prompt from WritingArea
   const handlePromptGenerated = (prompt: string) => {
     setGeneratedPrompt(prompt);
+  };
+
+  // Handle plan saving from planning section
+  const handleSavePlan = (savedPlan: any) => {
+    setPlan(savedPlan);
+    setShowPlanning(false);
   };
 
   // Calculate word and character count
@@ -109,8 +119,9 @@ export function EnhancedWritingLayout({
       onStartNewEssay();
     } else {
       onChange('');
-      // Clear generated prompt when starting new story
+      // Clear generated prompt and plan when starting new story
       setGeneratedPrompt('');
+      setPlan(null);
       if (onNavigate) {
         onNavigate('dashboard');
       }
@@ -120,6 +131,9 @@ export function EnhancedWritingLayout({
   const handleSave = () => {
     // Save functionality
     localStorage.setItem('writingContent', content);
+    if (plan) {
+      localStorage.setItem('writingPlan', JSON.stringify(plan));
+    }
   };
 
   const handleExport = () => {
@@ -143,23 +157,28 @@ export function EnhancedWritingLayout({
 
   return (
     <div className="enhanced-writing-layout space-optimized bg-gray-50 overflow-hidden min-h-0 h-full flex flex-row">
-      {/* Left Side - Writing Area with Toolbar and Prompt - 70% width */}
+      {/* Left Side - Writing Area with Toolbar, Prompt, and Planning - 70% width */}
       <div className="writing-left-section flex-1 flex flex-col min-h-0" style={{ flex: '0 0 70%' }}>
-        {/* Writing Prompt at Top - OPTIMIZED SPACING */}
-        {(textType || generatedPrompt) && (
-          <div className="writing-prompt-container bg-gradient-to-r from-blue-50 to-purple-50 border-b border-blue-200 shadow-lg flex-shrink-0">
-            <div className="px-4 py-3">
-              <div className="flex items-center space-x-3 mb-2">
-                <Sparkles className="w-5 h-5 text-blue-600" />
-                <h3 className="font-bold text-blue-800 text-base">Your Writing Prompt</h3>
-              </div>
-              {/* OPTIMIZED PROMPT STYLING */}
-              <div className="bg-white rounded-lg p-3 border border-blue-200">
-                <p className="text-gray-800 leading-relaxed text-base font-medium">
-                  {getWritingPrompt()}
-                </p>
-              </div>
-            </div>
+        
+        {/* Dynamic Prompt Display */}
+        {textType && (
+          <div className="flex-shrink-0">
+            <DynamicPromptDisplay 
+              prompt={getWritingPrompt()}
+              textType={textType}
+            />
+          </div>
+        )}
+
+        {/* Structured Planning Section */}
+        {textType && (
+          <div className="flex-shrink-0">
+            <StructuredPlanningSection
+              textType={textType}
+              onSavePlan={handleSavePlan}
+              isExpanded={showPlanning}
+              onToggle={() => setShowPlanning(!showPlanning)}
+            />
           </div>
         )}
 
@@ -247,6 +266,25 @@ export function EnhancedWritingLayout({
             />
           </div>
         </div>
+
+        {/* Plan Summary (if saved) */}
+        {plan && (
+          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 m-4 flex-shrink-0">
+            <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">
+              Your Plan Summary:
+            </h4>
+            <div className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
+              {plan.completedSteps?.map((step: any, index: number) => (
+                step.response && (
+                  <div key={index}>
+                    <strong>{step.title}:</strong> {step.response.substring(0, 100)}
+                    {step.response.length > 100 && '...'}
+                  </div>
+                )
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Right Sidebar - Writing Buddy Panel - 30% width */}
