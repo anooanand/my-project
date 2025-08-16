@@ -340,7 +340,7 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
 
   // Initialize popup flow
   useEffect(() => {
-    if (!textType) {
+    if (!textType && !popupFlowCompleted) {
       setShowWritingTypeModal(true);
     }
   }, [textType, popupFlowCompleted]);
@@ -386,8 +386,7 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
           onSubmit={handleCustomPromptSubmit}
           onClose={() => setShowCustomPromptModal(false)}
         />
-      )}
-
+      )}\n
       {showEvaluationModal && (
         <EssayEvaluationModal
           content={content}
@@ -425,6 +424,19 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
 
       {/* Main writing area */}
       <div className="writing-container">
+        {/* Prompt Display */}
+        {prompt && (
+          <div className="prompt-display">
+            <div className="prompt-header">
+              <Sparkles size={16} />
+              <span>Writing Prompt</span>
+            </div>
+            <div className="prompt-content">
+              {prompt}
+            </div>
+          </div>
+        )}
+        
         <div className="writing-input-container">
           <div className="highlight-layer" ref={highlightLayerRef}>
             <div dangerouslySetInnerHTML={{ __html: renderHighlightedText() }} />
