@@ -3,7 +3,7 @@ import { WritingArea } from './WritingArea';
 import { TabbedCoachPanel } from './TabbedCoachPanel';
 import { DynamicPromptDisplay } from './DynamicPromptDisplay';
 import { StructuredPlanningSection } from './StructuredPlanningSection';
-import { Lightbulb, Type, Save, Settings, Sparkles, Users, Target, Star, CheckCircle, PanelRightClose, PanelRightOpen, Plus, Download, HelpCircle, Bot, ArrowDown } from 'lucide-react';
+import { Lightbulb, Type, Save, Settings, Sparkles, Users, Target, Star, CheckCircle, PanelRightClose, PanelRightOpen, Plus, Download, HelpCircle, Bot, PenTool } from 'lucide-react';
 import './layout-fix.css';
 import './full-width-fix.css';
 import './writing-area-fix.css';
@@ -65,11 +65,6 @@ export function EnhancedWritingLayout({
       return generatedPrompt;
     }
     
-    // If no textType is selected, show a default prompt
-    if (!textType || textType.trim() === '') {
-      return 'Welcome to your writing adventure! Please select a story type from the dropdown above to get your specific writing prompt and planning tools. Each type has unique guidance to help you write your best work!';
-    }
-    
     const prompts = {
       'narrative': 'Write a compelling narrative story that engages your reader from beginning to end. Include vivid descriptions, interesting characters, and a clear plot structure with a beginning, middle, and end.',
       'persuasive': 'Write a persuasive piece that convinces your reader of your viewpoint. Use strong arguments, evidence, and persuasive techniques to support your position.',
@@ -127,6 +122,14 @@ export function EnhancedWritingLayout({
       // Clear generated prompt and plan when starting new story
       setGeneratedPrompt('');
       setPlan(null);
+      // Clear localStorage
+      localStorage.removeItem('writingContent');
+      localStorage.removeItem('selectedWritingType');
+      // Clear all saved prompts
+      const textTypes = ['narrative', 'persuasive', 'expository', 'recount', 'reflective', 'descriptive', 'discursive', 'news report', 'letter', 'diary entry', 'speech'];
+      textTypes.forEach(type => {
+        localStorage.removeItem(`${type}_prompt`);
+      });
       if (onNavigate) {
         onNavigate('dashboard');
       }
@@ -160,47 +163,36 @@ export function EnhancedWritingLayout({
     }
   };
 
-  // Determine the effective text type for components (use 'narrative' as default for planning)
-  const effectiveTextType = textType && textType.trim() !== '' ? textType : 'narrative';
+  const handleTogglePlanning = () => {
+    setShowPlanning(!showPlanning);
+  };
 
   return (
     <div className="enhanced-writing-layout space-optimized bg-gray-50 overflow-hidden min-h-0 h-full flex flex-row">
       {/* Left Side - Writing Area with Toolbar, Prompt, and Planning - 70% width */}
       <div className="writing-left-section flex-1 flex flex-col min-h-0" style={{ flex: '0 0 70%' }}>
         
-        {/* Always show Dynamic Prompt Display */}
-        <div className="flex-shrink-0">
-          <DynamicPromptDisplay 
-            prompt={getWritingPrompt()}
-            textType={effectiveTextType}
-          />
-        </div>
-
-        {/* Text Type Selection Reminder (when no type selected) */}
-        {(!textType || textType.trim() === '') && (
-          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 m-4 flex-shrink-0">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <ArrowDown className="h-5 w-5 text-yellow-400 animate-bounce" />
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-yellow-700">
-                  <strong>Choose your story type above</strong> to get specific writing guidance and planning tools!
-                </p>
-              </div>
-            </div>
+        {/* Dynamic Prompt Display - Only show when we have a generated prompt */}
+        {(textType && generatedPrompt) && (
+          <div className="flex-shrink-0">
+            <DynamicPromptDisplay 
+              prompt={generatedPrompt}
+              textType={textType}
+            />
           </div>
         )}
 
-        {/* Always show Structured Planning Section */}
-        <div className="flex-shrink-0">
-          <StructuredPlanningSection
-            textType={effectiveTextType}
-            onSavePlan={handleSavePlan}
-            isExpanded={showPlanning}
-            onToggle={() => setShowPlanning(!showPlanning)}
-          />
-        </div>
+        {/* Structured Planning Section - Only show when we have a text type */}
+        {textType && (
+          <div className="flex-shrink-0">
+            <StructuredPlanningSection
+              textType={textType}
+              onSavePlan={handleSavePlan}
+              isExpanded={showPlanning}
+              onToggle={handleTogglePlanning}
+            />
+          </div>
+        )}
 
         {/* Compact Toolbar - OPTIMIZED SPACING */}
         <div className="bg-white border-b border-gray-200 p-1 shadow-sm flex-shrink-0">
@@ -238,6 +230,21 @@ export function EnhancedWritingLayout({
                 <HelpCircle className="w-3 h-3" />
                 <span>Help</span>
               </button>
+
+              {/* Planning Toggle Button */}
+              {textType && (
+                <button
+                  onClick={handleTogglePlanning}
+                  className={`toolbar-button flex items-center space-x-1 px-2 py-1 rounded-lg transition-colors text-xs ${
+                    showPlanning 
+                      ? 'bg-indigo-600 text-white hover:bg-indigo-700' 
+                      : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
+                  }`}
+                >
+                  <PenTool className="w-3 h-3" />
+                  <span>Planning</span>
+                </button>
+              )}
 
               {/* Show Writing Buddy Button when hidden */}
               {!showWritingBuddy && (
