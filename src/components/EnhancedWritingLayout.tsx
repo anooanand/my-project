@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { WritingArea } from './WritingArea';
 import { TabbedCoachPanel } from './TabbedCoachPanel';
 import { DynamicPromptDisplay } from './DynamicPromptDisplay';
-import { StructuredPlanningSection } from './StructuredPlanningSection';
-import { Lightbulb, Type, Save, Settings, Sparkles, Users, Target, Star, CheckCircle, PanelRightClose, PanelRightOpen, Plus, Download, HelpCircle, Bot, PenTool } from 'lucide-react';
+import { PlanningToolModal } from './PlanningToolModal';
+import { Lightbulb, Type, Save, Settings, Sparkles, Users, Target, Star, CheckCircle, PanelRightClose, PanelRightOpen, Plus, Download, HelpCircle, Bot, PenTool, ToggleLeft, ToggleRight } from 'lucide-react';
 import './layout-fix.css';
 import './full-width-fix.css';
 import './writing-area-fix.css';
@@ -53,7 +53,9 @@ export function EnhancedWritingLayout({
   const [writingStreak, setWritingStreak] = useState(3);
   const [timeSpent, setTimeSpent] = useState(0);
   const [plan, setPlan] = useState<any>(null);
-  const [showPlanning, setShowPlanning] = useState(false);
+  
+  // RESTORED: Planning Tool Modal State (like in old version)
+  const [showPlanningTool, setShowPlanningTool] = useState(false);
   
   // State to store the generated prompt from WritingArea
   const [generatedPrompt, setGeneratedPrompt] = useState('');
@@ -88,10 +90,15 @@ export function EnhancedWritingLayout({
     setGeneratedPrompt(prompt);
   };
 
-  // Handle plan saving from planning section
+  // RESTORED: Handle plan saving from planning modal (like in old version)
   const handleSavePlan = (savedPlan: any) => {
     setPlan(savedPlan);
-    setShowPlanning(false);
+    setShowPlanningTool(false);
+    
+    // Save plan to localStorage
+    localStorage.setItem('writingPlan', JSON.stringify(savedPlan));
+    
+    console.log('Plan saved:', savedPlan);
   };
 
   // Calculate word and character count
@@ -110,6 +117,18 @@ export function EnhancedWritingLayout({
     return () => clearInterval(timer);
   }, []);
 
+  // Load saved plan on mount
+  useEffect(() => {
+    const savedPlan = localStorage.getItem('writingPlan');
+    if (savedPlan) {
+      try {
+        setPlan(JSON.parse(savedPlan));
+      } catch (error) {
+        console.error('Error loading saved plan:', error);
+      }
+    }
+  }, []);
+
   const toggleWritingBuddy = () => {
     setShowWritingBuddy(!showWritingBuddy);
   };
@@ -125,6 +144,7 @@ export function EnhancedWritingLayout({
       // Clear localStorage
       localStorage.removeItem('writingContent');
       localStorage.removeItem('selectedWritingType');
+      localStorage.removeItem('writingPlan');
       // Clear all saved prompts
       const textTypes = ['narrative', 'persuasive', 'expository', 'recount', 'reflective', 'descriptive', 'discursive', 'news report', 'letter', 'diary entry', 'speech'];
       textTypes.forEach(type => {
@@ -163,13 +183,14 @@ export function EnhancedWritingLayout({
     }
   };
 
+  // RESTORED: Toggle planning modal (like in old version)
   const handleTogglePlanning = () => {
-    setShowPlanning(!showPlanning);
+    setShowPlanningTool(!showPlanningTool);
   };
 
   return (
     <div className="enhanced-writing-layout space-optimized bg-gray-50 overflow-hidden min-h-0 h-full flex flex-row">
-      {/* Left Side - Writing Area with Toolbar, Prompt, and Planning - 70% width */}
+      {/* Left Side - Writing Area with Toolbar and Prompt - 70% width */}
       <div className="writing-left-section flex-1 flex flex-col min-h-0" style={{ flex: '0 0 70%' }}>
         
         {/* Dynamic Prompt Display - Only show when we have a generated prompt */}
@@ -178,18 +199,6 @@ export function EnhancedWritingLayout({
             <DynamicPromptDisplay 
               prompt={generatedPrompt}
               textType={textType}
-            />
-          </div>
-        )}
-
-        {/* Structured Planning Section - Only show when we have a text type */}
-        {textType && (
-          <div className="flex-shrink-0">
-            <StructuredPlanningSection
-              textType={textType}
-              onSavePlan={handleSavePlan}
-              isExpanded={showPlanning}
-              onToggle={handleTogglePlanning}
             />
           </div>
         )}
@@ -231,18 +240,22 @@ export function EnhancedWritingLayout({
                 <span>Help</span>
               </button>
 
-              {/* Planning Toggle Button */}
+              {/* RESTORED: Planning Toggle Button with Toggle Switch Icon */}
               {textType && (
                 <button
                   onClick={handleTogglePlanning}
-                  className={`toolbar-button flex items-center space-x-1 px-2 py-1 rounded-lg transition-colors text-xs ${
-                    showPlanning 
-                      ? 'bg-indigo-600 text-white hover:bg-indigo-700' 
-                      : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
+                  className={`toolbar-button flex items-center space-x-1 px-3 py-1 rounded-lg transition-all duration-200 text-xs font-medium ${
+                    showPlanningTool 
+                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg' 
+                      : 'bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-700 hover:from-indigo-200 hover:to-purple-200'
                   }`}
                 >
+                  {showPlanningTool ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
                   <PenTool className="w-3 h-3" />
                   <span>Planning</span>
+                  {plan && (
+                    <div className="w-2 h-2 bg-green-400 rounded-full ml-1"></div>
+                  )}
                 </button>
               )}
 
@@ -296,19 +309,46 @@ export function EnhancedWritingLayout({
 
         {/* Plan Summary (if saved) */}
         {plan && (
-          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4 m-4 flex-shrink-0">
-            <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">
-              Your Plan Summary:
-            </h4>
-            <div className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
-              {plan.completedSteps?.map((step: any, index: number) => (
-                step.response && (
-                  <div key={index}>
-                    <strong>{step.title}:</strong> {step.response.substring(0, 100)}
-                    {step.response.length > 100 && '...'}
-                  </div>
-                )
-              ))}
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-4 m-4 flex-shrink-0 border border-blue-200 dark:border-blue-700">
+            <div className="flex items-start space-x-3">
+              <div className="flex-shrink-0">
+                <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-2 flex items-center">
+                  <PenTool className="w-4 h-4 mr-2" />
+                  Your Writing Plan
+                </h4>
+                <div className="text-sm text-blue-700 dark:text-blue-300 space-y-2">
+                  {plan.structure && plan.structure.length > 0 && (
+                    <div>
+                      <strong>Structure:</strong>
+                      <ul className="list-disc list-inside ml-2 mt-1">
+                        {plan.structure.slice(0, 3).map((item: any, index: number) => (
+                          <li key={index} className="truncate">
+                            {item.section}: {item.content || 'Not filled'}
+                          </li>
+                        ))}
+                        {plan.structure.length > 3 && (
+                          <li className="text-gray-500">... and {plan.structure.length - 3} more sections</li>
+                        )}
+                      </ul>
+                    </div>
+                  )}
+                  {plan.keyPoints && plan.keyPoints.length > 0 && (
+                    <div>
+                      <strong>Key Points:</strong> {plan.keyPoints.slice(0, 2).join(', ')}
+                      {plan.keyPoints.length > 2 && '...'}
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={handleTogglePlanning}
+                  className="mt-2 text-xs text-blue-600 hover:text-blue-800 font-medium"
+                >
+                  Click to edit plan
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -346,6 +386,15 @@ export function EnhancedWritingLayout({
           </div>
         </div>
       )}
+
+      {/* RESTORED: Planning Tool Modal (like in old version) */}
+      <PlanningToolModal
+        isOpen={showPlanningTool}
+        onClose={() => setShowPlanningTool(false)}
+        onSavePlan={handleSavePlan}
+        textType={textType}
+        content={content}
+      />
     </div>
   );
 }
