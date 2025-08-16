@@ -23,6 +23,11 @@ function isOpenAIAvailable() {
   return openai !== null;
 }
 
+// Check OpenAI connection status
+function checkOpenAIConnection() {
+  return { is_connected: isOpenAIAvailable() };
+}
+
 // Helper function to analyze content structure
 function analyzeContentStructure(content) {
   const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 0);
@@ -1168,6 +1173,9 @@ exports.handler = async (event) => {
         break;
       case "enhanceVocabulary":
         result = await enhanceVocabulary(content);
+        break;
+      case "check_openai_connection":
+        result = checkOpenAIConnection();
         break;
       default:
         throw new Error(`Unknown operation: ${operation || action}`);
