@@ -3,7 +3,7 @@ import { WritingArea } from './WritingArea';
 import { TabbedCoachPanel } from './TabbedCoachPanel';
 import { DynamicPromptDisplay } from './DynamicPromptDisplay';
 import { StructuredPlanningSection } from './StructuredPlanningSection';
-import { Lightbulb, Type, Save, Settings, Sparkles, Users, Target, Star, CheckCircle, PanelRightClose, PanelRightOpen, Plus, Download, HelpCircle, Bot } from 'lucide-react';
+import { Lightbulb, Type, Save, Settings, Sparkles, Users, Target, Star, CheckCircle, PanelRightClose, PanelRightOpen, Plus, Download, HelpCircle, Bot, ArrowDown } from 'lucide-react';
 import './layout-fix.css';
 import './full-width-fix.css';
 import './writing-area-fix.css';
@@ -63,6 +63,11 @@ export function EnhancedWritingLayout({
     // Use generated prompt if available, otherwise use static prompts
     if (generatedPrompt) {
       return generatedPrompt;
+    }
+    
+    // If no textType is selected, show a default prompt
+    if (!textType || textType.trim() === '') {
+      return 'Welcome to your writing adventure! Please select a story type from the dropdown above to get your specific writing prompt and planning tools. Each type has unique guidance to help you write your best work!';
     }
     
     const prompts = {
@@ -141,7 +146,7 @@ export function EnhancedWritingLayout({
     const element = document.createElement('a');
     const file = new Blob([content], { type: 'text/plain' });
     element.href = URL.createObjectURL(file);
-    element.download = `writing-${textType}-${new Date().toISOString().split('T')[0]}.txt`;
+    element.download = `writing-${textType || 'story'}-${new Date().toISOString().split('T')[0]}.txt`;
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
@@ -155,58 +160,47 @@ export function EnhancedWritingLayout({
     }
   };
 
-  // Debug: Log textType to console
-  console.log('EnhancedWritingLayout - textType:', textType);
+  // Determine the effective text type for components (use 'narrative' as default for planning)
+  const effectiveTextType = textType && textType.trim() !== '' ? textType : 'narrative';
 
   return (
     <div className="enhanced-writing-layout space-optimized bg-gray-50 overflow-hidden min-h-0 h-full flex flex-row">
       {/* Left Side - Writing Area with Toolbar, Prompt, and Planning - 70% width */}
       <div className="writing-left-section flex-1 flex flex-col min-h-0" style={{ flex: '0 0 70%' }}>
         
-        {/* Debug: Show textType value */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className="bg-yellow-100 p-2 text-xs">
-            Debug: textType = "{textType}" (length: {textType?.length || 0})
-          </div>
-        )}
-        
-        {/* Dynamic Prompt Display */}
-        {textType && textType.trim() !== '' && (
-          <div className="flex-shrink-0">
-            <DynamicPromptDisplay 
-              prompt={getWritingPrompt()}
-              textType={textType}
-            />
-          </div>
-        )}
+        {/* Always show Dynamic Prompt Display */}
+        <div className="flex-shrink-0">
+          <DynamicPromptDisplay 
+            prompt={getWritingPrompt()}
+            textType={effectiveTextType}
+          />
+        </div>
 
-        {/* Structured Planning Section */}
-        {textType && textType.trim() !== '' && (
-          <div className="flex-shrink-0">
-            <StructuredPlanningSection
-              textType={textType}
-              onSavePlan={handleSavePlan}
-              isExpanded={showPlanning}
-              onToggle={() => setShowPlanning(!showPlanning)}
-            />
-          </div>
-        )}
-
-        {/* Fallback prompt display if no textType */}
+        {/* Text Type Selection Reminder (when no type selected) */}
         {(!textType || textType.trim() === '') && (
-          <div className="bg-blue-50 border-l-4 border-blue-400 p-4 m-4">
-            <div className="flex">
+          <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 m-4 flex-shrink-0">
+            <div className="flex items-center">
               <div className="flex-shrink-0">
-                <Lightbulb className="h-5 w-5 text-blue-400" />
+                <ArrowDown className="h-5 w-5 text-yellow-400 animate-bounce" />
               </div>
               <div className="ml-3">
-                <p className="text-sm text-blue-700">
-                  Please select a text type from the "Choose your story type" button to see your writing prompt and planning tools.
+                <p className="text-sm text-yellow-700">
+                  <strong>Choose your story type above</strong> to get specific writing guidance and planning tools!
                 </p>
               </div>
             </div>
           </div>
         )}
+
+        {/* Always show Structured Planning Section */}
+        <div className="flex-shrink-0">
+          <StructuredPlanningSection
+            textType={effectiveTextType}
+            onSavePlan={handleSavePlan}
+            isExpanded={showPlanning}
+            onToggle={() => setShowPlanning(!showPlanning)}
+          />
+        </div>
 
         {/* Compact Toolbar - OPTIMIZED SPACING */}
         <div className="bg-white border-b border-gray-200 p-1 shadow-sm flex-shrink-0">
