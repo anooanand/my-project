@@ -6,7 +6,8 @@ import './layout-fix.css';
 import './full-width-fix.css';
 import './writing-area-fix.css';
 import './new-layout.css';
-import './space-optimization.css'; // <--- ADD THIS LINE
+import './space-optimization.css';
+import './layout-fix-enhanced.css';
 
 interface EnhancedWritingLayoutProps {
   content: string;
