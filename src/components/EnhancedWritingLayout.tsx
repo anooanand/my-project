@@ -155,13 +155,23 @@ export function EnhancedWritingLayout({
     }
   };
 
+  // Debug: Log textType to console
+  console.log('EnhancedWritingLayout - textType:', textType);
+
   return (
     <div className="enhanced-writing-layout space-optimized bg-gray-50 overflow-hidden min-h-0 h-full flex flex-row">
       {/* Left Side - Writing Area with Toolbar, Prompt, and Planning - 70% width */}
       <div className="writing-left-section flex-1 flex flex-col min-h-0" style={{ flex: '0 0 70%' }}>
         
+        {/* Debug: Show textType value */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="bg-yellow-100 p-2 text-xs">
+            Debug: textType = "{textType}" (length: {textType?.length || 0})
+          </div>
+        )}
+        
         {/* Dynamic Prompt Display */}
-        {textType && (
+        {textType && textType.trim() !== '' && (
           <div className="flex-shrink-0">
             <DynamicPromptDisplay 
               prompt={getWritingPrompt()}
@@ -171,7 +181,7 @@ export function EnhancedWritingLayout({
         )}
 
         {/* Structured Planning Section */}
-        {textType && (
+        {textType && textType.trim() !== '' && (
           <div className="flex-shrink-0">
             <StructuredPlanningSection
               textType={textType}
@@ -179,6 +189,22 @@ export function EnhancedWritingLayout({
               isExpanded={showPlanning}
               onToggle={() => setShowPlanning(!showPlanning)}
             />
+          </div>
+        )}
+
+        {/* Fallback prompt display if no textType */}
+        {(!textType || textType.trim() === '') && (
+          <div className="bg-blue-50 border-l-4 border-blue-400 p-4 m-4">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <Lightbulb className="h-5 w-5 text-blue-400" />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-blue-700">
+                  Please select a text type from the "Choose your story type" button to see your writing prompt and planning tools.
+                </p>
+              </div>
+            </div>
           </div>
         )}
 
