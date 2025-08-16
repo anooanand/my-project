@@ -534,3 +534,15 @@ export async function getWritingStructure(textType: string): Promise<any> {
 
 
 export { openai };
+
+export async function checkOpenAIConnectionStatus(): Promise<{ is_connected: boolean }> {
+  try {
+    const result = await makeBackendCall("check_openai_connection", {});
+    return result;
+  } catch (error) {
+    console.error("Error checking OpenAI connection status:", error);
+    return { is_connected: false };
+  }
+}
+
+
