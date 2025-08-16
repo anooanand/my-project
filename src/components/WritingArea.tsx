@@ -427,7 +427,7 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
       <div className="writing-container">
         <div className="writing-input-container">
           <div className="highlight-layer" ref={highlightLayerRef}>
-            {renderHighlightedText()}
+            <div dangerouslySetInnerHTML={{ __html: renderHighlightedText() }} />
           </div>
           <textarea
             ref={textareaRef}
