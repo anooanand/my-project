@@ -340,7 +340,7 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
 
   // Initialize popup flow
   useEffect(() => {
-    if (!textType && !popupFlowCompleted) {
+    if (!textType) {
       setShowWritingTypeModal(true);
     }
   }, [textType, popupFlowCompleted]);
