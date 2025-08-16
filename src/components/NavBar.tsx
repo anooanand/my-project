@@ -3,7 +3,7 @@ import { User } from '@supabase/supabase-js';
 import { useLearning } from '../contexts/LearningContext';
 import { useAuth } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
-import { LogOut, Menu, X, ChevronDown, Home, Sparkles, Users, HelpCircle, BookOpen, Star, Brain, Target } from 'lucide-react';
+import { LogOut, Menu, X, ChevronDown, Home, Sparkles, Users, HelpCircle, BookOpen, Star, Brain, Target, CheckCircle } from 'lucide-react';
 
 interface NavBarProps {
   activePage: string;
@@ -12,6 +12,8 @@ interface NavBarProps {
   onSignInClick: () => void;
   onSignUpClick: () => void;
   onForceSignOut: () => void;
+  openAIConnected: boolean | null;
+  openAILoading: boolean;
 }
 
 export function NavBar({ 
@@ -19,8 +21,10 @@ export function NavBar({
   onNavigate, 
   user, 
   onSignInClick, 
-  onSignUpClick, 
-  onForceSignOut 
+  onSignUpClick,
+  onForceSignOut,
+  openAIConnected,
+  openAILoading
 }: NavBarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLearningMenuOpen, setIsLearningMenuOpen] = useState(false);
@@ -122,6 +126,22 @@ export function NavBar({
               </div>
               <span>InstaChat AI</span>
             </Link>
+            {openAILoading && (
+              <div className="ml-4 flex items-center text-sm text-gray-500">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400 mr-2"></div>
+                Checking AI connection...
+              </div>
+            )}
+            {openAIConnected !== null && !openAILoading && (
+              <div className={`ml-4 flex items-center text-sm ${openAIConnected ? 'text-green-600' : 'text-red-600'}`}>
+                {openAIConnected ? (
+                  <CheckCircle className="w-4 h-4 mr-1" />
+                ) : (
+                  <X className="w-4 h-4 mr-1" />
+                )}
+                AI {openAIConnected ? 'Connected' : 'Disconnected'}
+              </div>
+            )}
           </div>
 
           {/* Desktop Navigation */}
