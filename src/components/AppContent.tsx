@@ -41,7 +41,7 @@ import { PlanningToolModal } from './PlanningToolModal';
 import { EmailVerificationHandler } from './EmailVerificationHandler';
 import { FloatingChatWindow } from './FloatingChatWindow';
 import { WritingDemo } from './WritingDemo';
-import { CheckCircle } from 'lucide-react';
+import { checkOpenAIConnectionStatus } from '../lib/openai';
 import { AdminButton } from './AdminButton';
 
 function AppContent() {
@@ -69,7 +69,8 @@ function AppContent() {
   
   // Panel state for attached chat
   const [panelVisible, setPanelVisible] = useState(true);
-  const [panelCollapsed, setPanelCollapsed] = useState(false);
+  const [openAIConnected, setOpenAIConnected] = useState<boolean | null>(null);
+  const [openAILoading, setOpenAILoading] = useState<boolean>(true);
 
   // Handle sign-in behavior - clear content and show modal when user signs in
   useEffect(() => {
@@ -96,7 +97,15 @@ function AppContent() {
     }
   }, [user, hasSignedIn, activePage]);
 
-  // Check for payment success in URL on mount
+  useEffect(() => {
+    const fetchOpenAIStatus = async () => {
+      setOpenAILoading(true);
+      const status = await checkOpenAIConnectionStatus();
+      setOpenAIConnected(status.is_connected);
+      setOpenAILoading(false);
+    };
+    fetchOpenAIStatus();
+  }, []);
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const paymentSuccess = urlParams.get('paymentSuccess') === 'true' || urlParams.get('payment_success') === 'true';
@@ -318,6 +327,8 @@ function AppContent() {
                   setShowAuthModal(true);
                 }}
                 onForceSignOut={handleForceSignOut}
+                openAIConnected={openAIConnected}
+                openAILoading={openAILoading}
               />
               <div className="main-route-content">
                 <HeroSection onGetStarted={handleGetStarted} />
