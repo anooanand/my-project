@@ -9,17 +9,6 @@ import { WritingTypeSelectionModal } from './WritingTypeSelectionModal';
 import { PromptOptionsModal } from './PromptOptionsModal';
 import { CustomPromptModal } from './CustomPromptModal';
 import { EssayEvaluationModal } from './EssayEvaluationModal';
-import { NarrativeWritingTemplateRedesigned } from './NarrativeWritingTemplateRedesigned';
-import { PersuasiveWritingTemplate } from './PersuasiveWritingTemplate';
-import { ExpositoryWritingTemplate } from './ExpositoryWritingTemplate';
-import { ReflectiveWritingTemplate } from './ReflectiveWritingTemplate';
-import { DescriptiveWritingTemplate } from './DescriptiveWritingTemplate';
-import { RecountWritingTemplate } from './RecountWritingTemplate';
-import { DiscursiveWritingTemplate } from './DiscursiveWritingTemplate';
-import { NewsReportWritingTemplate } from './NewsReportWritingTemplate';
-import { LetterWritingTemplate } from './LetterWritingTemplate';
-import { DiaryWritingTemplate } from './DiaryWritingTemplate';
-import { SpeechWritingTemplate } from './SpeechWritingTemplate';
 import './writing-area-fix.css';
 // NEW IMPORTS: NSW Analysis Components
 import { TextTypeAnalysisComponent } from './TextTypeAnalysisComponent';
@@ -485,35 +474,6 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
 
   const wordCount = countWords(content);
 
-  const renderWritingTemplate = () => {
-    switch (textType || selectedWritingType) {
-      case 'narrative':
-        return <NarrativeWritingTemplateRedesigned content={content} onChange={onChange} prompt={prompt} onPromptChange={setPrompt} />;
-      case 'persuasive':
-        return <PersuasiveWritingTemplate content={content} onChange={onChange} prompt={prompt} onPromptChange={setPrompt} />;
-      case 'expository':
-        return <ExpositoryWritingTemplate content={content} onChange={onChange} prompt={prompt} onPromptChange={setPrompt} />;
-      case 'reflective':
-        return <ReflectiveWritingTemplate content={content} onChange={onChange} prompt={prompt} onPromptChange={setPrompt} />;
-      case 'descriptive':
-        return <DescriptiveWritingTemplate content={content} onChange={onChange} prompt={prompt} onPromptChange={setPrompt} />;
-      case 'recount':
-        return <RecountWritingTemplate content={content} onChange={onChange} prompt={prompt} onPromptChange={setPrompt} />;
-      case 'discursive':
-        return <DiscursiveWritingTemplate content={content} onChange={onChange} prompt={prompt} onPromptChange={setPrompt} />;
-      case 'news_report':
-        return <NewsReportWritingTemplate content={content} onChange={onChange} prompt={prompt} onPromptChange={setPrompt} />;
-      case 'letter':
-        return <LetterWritingTemplate content={content} onChange={onChange} prompt={prompt} onPromptChange={setPrompt} />;
-      case 'diary':
-        return <DiaryWritingTemplate content={content} onChange={onChange} prompt={prompt} onPromptChange={setPrompt} />;
-      case 'speech':
-        return <SpeechWritingTemplate content={content} onChange={onChange} prompt={prompt} onPromptChange={setPrompt} />;
-      default:
-        return <div className="text-center text-gray-500">Please select a writing type to begin.</div>;
-    }
-  };
-
   return (
     <div className="writing-area" ref={containerRef}>
       {/* Modals */}
@@ -565,10 +525,7 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
         />
       )}
 
-      {/* Writing template */}
-      {renderWritingTemplate()}
-
-      {/* Main writing area */}
+      {/* Main writing area - REMOVED TEMPLATE RENDERING TO PREVENT DUPLICATE PROMPTS */}
       <div className="writing-container">
         <div className="writing-input-container">
           <div className="highlight-layer" ref={highlightLayerRef}>
@@ -579,7 +536,7 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
             value={content}
             onChange={handleTextareaChange}
             onClick={handleTextareaClick}
-            placeholder={prompt || "Start writing here..."}
+            placeholder={prompt || "Start writing your amazing story here! Let your creativity flow and bring your ideas to life..."}
             className="writing-textarea"
             spellCheck={false}
           />
@@ -639,3 +596,4 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
     </div>
   );
 }
+
