@@ -1,42 +1,52 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Clock, FileText, AlertCircle, Zap, Star, Sparkles } from 'lucide-react';
+import { Save, Clock, FileText, AlertCircle, Zap, Star, Sparkles, PenTool } from 'lucide-react';
 import { AutoSave } from './AutoSave';
 
 interface WritingStatusBarProps {
-  content: string;
-  textType: string;
+  wordCount?: number;
+  lastSaved?: Date | null;
+  isSaving?: boolean;
+  showHighlights?: boolean;
+  onToggleHighlights?: () => void;
+  onEvaluate?: () => void;
+  onShowPlanning?: () => void;
+  content?: string;
+  textType?: string;
   onRestore?: (content: string, textType: string) => void;
-  examMode?: boolean; // New prop for exam mode
-  examDurationMinutes?: number; // New prop for exam duration
-  targetWordCountMin?: number; // New prop for target word count minimum
-  targetWordCountMax?: number; // New prop for target word count maximum
+  examMode?: boolean;
+  examDurationMinutes?: number;
+  targetWordCountMin?: number;
+  targetWordCountMax?: number;
 }
 
 export function WritingStatusBar({
-  content,
-  textType,
+  wordCount = 0,
+  lastSaved,
+  isSaving = false,
+  showHighlights = true,
+  onToggleHighlights,
+  onEvaluate,
+  onShowPlanning,
+  content = '',
+  textType = '',
   onRestore,
   examMode = false,
-  examDurationMinutes = 30, // Default to 30 minutes for demonstration
+  examDurationMinutes = 30,
   targetWordCountMin = 100,
   targetWordCountMax = 500,
 }: WritingStatusBarProps) {
-  const [wordCount, setWordCount] = useState(0);
   const [characterCount, setCharacterCount] = useState(0);
   const [readingTime, setReadingTime] = useState(0);
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [showWordCountWarning, setShowWordCountWarning] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(examDurationMinutes * 60); // Time left in seconds
+  const [timeLeft, setTimeLeft] = useState(examDurationMinutes * 60);
   const [timerActive, setTimerActive] = useState(false);
 
   // Calculate statistics
   useEffect(() => {
     const words = content && content.trim() ? content.trim().split(/\s+/).filter(Boolean) : [];
-    setWordCount(words.length);
     setCharacterCount(content ? content.length : 0);
-    setReadingTime(Math.ceil(words.length / 200)); // Average reading speed
+    setReadingTime(Math.ceil(words.length / 200));
     
-    // Show warning if word count is too low or too high based on target
     if (examMode) {
       setShowWordCountWarning(words.length < targetWordCountMin || words.length > targetWordCountMax);
     } else {
@@ -53,35 +63,21 @@ export function WritingStatusBar({
       }, 1000);
     } else if (timeLeft === 0) {
       setTimerActive(false);
-      // Optionally, trigger an action when time runs out, e.g., auto-submit
-      // onSubmit();
     }
     return () => clearInterval(timer);
   }, [examMode, timerActive, timeLeft]);
 
-  // Start timer when component mounts in exam mode
   useEffect(() => {
     if (examMode) {
       setTimerActive(true);
     }
   }, [examMode]);
 
-  // Format time for display
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
-
-  // Simulate auto-save
-  useEffect(() => {
-    if (content && content.trim().length > 0) {
-      const timer = setTimeout(() => {
-        setLastSaved(new Date());
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [content]);
 
   return (
     <div className="flex flex-wrap justify-between items-center p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-t-4 border-blue-200 dark:border-blue-800 rounded-b-xl text-sm">
@@ -127,16 +123,62 @@ export function WritingStatusBar({
             </div>
           )}
         </div>
+
+        {/* Planning Button */}
+        {onShowPlanning && (
+          <button
+            onClick={onShowPlanning}
+            className="flex items-center bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-3 py-1.5 rounded-full shadow-sm font-bold transition-colors duration-200"
+          >
+            <PenTool className="w-5 h-5 mr-2" />
+            Planning
+          </button>
+        )}
+
+        {/* Toggle Highlights Button */}
+        {onToggleHighlights && (
+          <button
+            onClick={onToggleHighlights}
+            className={`flex items-center px-3 py-1.5 rounded-full shadow-sm font-bold transition-colors duration-200 ${
+              showHighlights 
+                ? 'bg-yellow-100 hover:bg-yellow-200 text-yellow-700' 
+                : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+            }`}
+          >
+            <Sparkles className="w-5 h-5 mr-2" />
+            {showHighlights ? 'Hide' : 'Show'} Highlights
+          </button>
+        )}
+
+        {/* Evaluate Button */}
+        {onEvaluate && (
+          <button
+            onClick={onEvaluate}
+            className="flex items-center bg-green-100 hover:bg-green-200 text-green-700 px-3 py-1.5 rounded-full shadow-sm font-bold transition-colors duration-200"
+          >
+            <Star className="w-5 h-5 mr-2" />
+            Evaluate
+          </button>
+        )}
       </div>
       
       <div className="flex items-center">
-        <AutoSave 
-          content={content} 
-          textType={textType}
-          onRestore={onRestore}
-        />
+        {content && textType && onRestore && (
+          <AutoSave 
+            content={content} 
+            textType={textType}
+            onRestore={onRestore}
+          />
+        )}
         
-        {lastSaved && (
+        {isSaving && (
+          <div className="flex items-center bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full shadow-sm ml-4">
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-700 mr-2"></div>
+            <span className="font-bold">Saving...</span>
+          </div>
+        )}
+        
+        {lastSaved && !isSaving && (
           <div className="flex items-center bg-white bg-opacity-70 px-3 py-1.5 rounded-full shadow-sm ml-4">
             <Save className="w-5 h-5 mr-2 text-blue-500" />
             <span className="font-bold text-gray-700">Saved at: {lastSaved.toLocaleTimeString()}</span>
