@@ -73,7 +73,277 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
   const highlightLayerRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // ... (rest of existing logic like spellingPatterns, grammarPatterns, etc.)
+  // Spelling and grammar patterns for issue detection
+  const spellingPatterns = [
+    { pattern: /\bteh\b/gi, suggestion: 'the' },
+    { pattern: /\brecieve\b/gi, suggestion: 'receive' },
+    { pattern: /\boccured\b/gi, suggestion: 'occurred' },
+    { pattern: /\bseperate\b/gi, suggestion: 'separate' },
+    { pattern: /\bdefinately\b/gi, suggestion: 'definitely' },
+  ];
+
+  const grammarPatterns = [
+    { pattern: /\bi\b/g, suggestion: 'I' },
+    { pattern: /\bits\s+a\s+/gi, suggestion: "it's a " },
+    { pattern: /\byour\s+welcome\b/gi, suggestion: "you're welcome" },
+  ];
+
+  // Word count calculation
+  const wordCount = content.trim().split(/\s+/).filter(word => word.length > 0).length;
+
+  // Function to render highlighted text with issues
+  const renderHighlightedText = useCallback(() => {
+    if (!showHighlights || issues.length === 0) {
+      return content;
+    }
+
+    let highlightedContent = content;
+    let offset = 0;
+
+    issues.forEach((issue) => {
+      const start = issue.start + offset;
+      const end = issue.end + offset;
+      const originalText = highlightedContent.slice(start, end);
+      
+      const highlightClass = `highlight-${issue.type}`;
+      const highlightedText = `<span class="${highlightClass}" data-issue="${JSON.stringify(issue).replace(/"/g, '&quot;')}">${originalText}</span>`;
+      
+      highlightedContent = highlightedContent.slice(0, start) + highlightedText + highlightedContent.slice(end);
+      offset += highlightedText.length - originalText.length;
+    });
+
+    return highlightedContent;
+  }, [content, issues, showHighlights]);
+
+  // Detect writing issues
+  const detectIssues = useCallback((text: string): WritingIssue[] => {
+    const detectedIssues: WritingIssue[] = [];
+
+    // Check spelling
+    spellingPatterns.forEach(({ pattern, suggestion }) => {
+      let match;
+      while ((match = pattern.exec(text)) !== null) {
+        detectedIssues.push({
+          start: match.index,
+          end: match.index + match[0].length,
+          type: 'spelling',
+          message: `Possible spelling error: "${match[0]}"`,
+          suggestion: suggestion
+        });
+      }
+    });
+
+    // Check grammar
+    grammarPatterns.forEach(({ pattern, suggestion }) => {
+      let match;
+      while ((match = pattern.exec(text)) !== null) {
+        detectedIssues.push({
+          start: match.index,
+          end: match.index + match[0].length,
+          type: 'grammar',
+          message: `Grammar suggestion: "${match[0]}"`,
+          suggestion: suggestion
+        });
+      }
+    });
+
+    return detectedIssues;
+  }, []);
+
+  // Update issues when content changes
+  useEffect(() => {
+    const newIssues = detectIssues(content);
+    setIssues(newIssues);
+  }, [content, detectIssues]);
+
+  // Handle textarea changes
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newContent = e.target.value;
+    onChange(newContent);
+    
+    // Auto-save after 2 seconds of inactivity
+    const timeoutId = setTimeout(() => {
+      handleAutoSave(newContent);
+    }, 2000);
+
+    return () => clearTimeout(timeoutId);
+  };
+
+  // Handle textarea clicks for issue selection
+  const handleTextareaClick = (e: React.MouseEvent<HTMLTextAreaElement>) => {
+    const textarea = e.currentTarget;
+    const cursorPosition = textarea.selectionStart;
+    
+    // Find if cursor is on an issue
+    const clickedIssue = issues.find(issue => 
+      cursorPosition >= issue.start && cursorPosition <= issue.end
+    );
+
+    if (clickedIssue) {
+      const rect = textarea.getBoundingClientRect();
+      setPopupPosition({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      });
+      setSelectedIssue(clickedIssue);
+      loadSuggestions(clickedIssue);
+    } else {
+      setSelectedIssue(null);
+      setSuggestions([]);
+    }
+  };
+
+  // Auto-save functionality
+  const handleAutoSave = async (content: string) => {
+    if (!content.trim()) return;
+    
+    setIsSaving(true);
+    try {
+      // Save to localStorage
+      localStorage.setItem('writingContent', content);
+      localStorage.setItem('lastSaved', new Date().toISOString());
+      setLastSaved(new Date());
+      
+      // Save to database if user is logged in
+      if (state.user) {
+        await dbOperations.saveWriting({
+          content,
+          textType: textType || selectedWritingType,
+          userId: state.user.id,
+          timestamp: new Date()
+        });
+      }
+    } catch (error) {
+      console.error('Auto-save failed:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Load suggestions for an issue
+  const loadSuggestions = async (issue: WritingIssue) => {
+    setIsLoadingSuggestions(true);
+    try {
+      const text = content.slice(issue.start, issue.end);
+      const suggestions = await getSynonyms(text);
+      setSuggestions(suggestions);
+    } catch (error) {
+      console.error('Failed to load suggestions:', error);
+      setSuggestions([issue.suggestion]);
+    } finally {
+      setIsLoadingSuggestions(false);
+    }
+  };
+
+  // Apply suggestion
+  const handleApplySuggestion = (suggestion: string) => {
+    if (!selectedIssue) return;
+    
+    const newContent = content.slice(0, selectedIssue.start) + 
+                      suggestion + 
+                      content.slice(selectedIssue.end);
+    onChange(newContent);
+    setSelectedIssue(null);
+    setSuggestions([]);
+  };
+
+  // Handle paraphrase
+  const handleParaphrase = async () => {
+    if (!selectedIssue) return;
+    
+    setIsLoadingSuggestions(true);
+    try {
+      const text = content.slice(selectedIssue.start, selectedIssue.end);
+      const paraphrased = await rephraseSentence(text);
+      setSuggestions([paraphrased]);
+    } catch (error) {
+      console.error('Paraphrase failed:', error);
+    } finally {
+      setIsLoadingSuggestions(false);
+    }
+  };
+
+  // Handle thesaurus
+  const handleThesaurus = async () => {
+    if (!selectedIssue) return;
+    
+    setIsLoadingSuggestions(true);
+    try {
+      const text = content.slice(selectedIssue.start, selectedIssue.end);
+      const synonyms = await getSynonyms(text);
+      setSuggestions(synonyms);
+    } catch (error) {
+      console.error('Thesaurus failed:', error);
+    } finally {
+      setIsLoadingSuggestions(false);
+    }
+  };
+
+  // Writing type selection handlers
+  const handleWritingTypeSelect = (type: string) => {
+    setSelectedWritingType(type);
+    setShowWritingTypeModal(false);
+    setShowPromptOptionsModal(true);
+    if (onTextTypeChange) {
+      onTextTypeChange(type);
+    }
+  };
+
+  // Prompt generation handlers
+  const handleGeneratePrompt = async () => {
+    setIsGenerating(true);
+    try {
+      const generatedPrompt = await generatePrompt(selectedWritingType);
+      setPrompt(generatedPrompt);
+      if (onPromptGenerated) {
+        onPromptGenerated(generatedPrompt);
+      }
+      setShowPromptOptionsModal(false);
+      setPopupFlowCompleted(true);
+      if (onPopupCompleted) {
+        onPopupCompleted();
+      }
+    } catch (error) {
+      console.error('Failed to generate prompt:', error);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleCustomPromptOption = () => {
+    setShowPromptOptionsModal(false);
+    setShowCustomPromptModal(true);
+  };
+
+  const handleCustomPromptSubmit = (customPrompt: string) => {
+    setPrompt(customPrompt);
+    if (onPromptGenerated) {
+      onPromptGenerated(customPrompt);
+    }
+    setShowCustomPromptModal(false);
+    setPopupFlowCompleted(true);
+    if (onPopupCompleted) {
+      onPopupCompleted();
+    }
+  };
+
+  // Evaluation handlers
+  const handleEvaluationSubmit = () => {
+    if (content.trim()) {
+      setShowEvaluationModal(true);
+    }
+  };
+
+  const handleCloseEvaluationModal = () => {
+    setShowEvaluationModal(false);
+  };
+
+  // Initialize popup flow
+  useEffect(() => {
+    if (!textType && !popupFlowCompleted) {
+      setShowWritingTypeModal(true);
+    }
+  }, [textType, popupFlowCompleted]);
 
   // C) Planning phase handlers
   const handleShowPlanning = () => {
@@ -91,8 +361,6 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
       localStorage.setItem(`${currentTextType}_planning_data`, JSON.stringify(plan));
     }
   };
-
-  // ... (other handlers and logic)
 
   return (
     <div className="writing-area" ref={containerRef}>
