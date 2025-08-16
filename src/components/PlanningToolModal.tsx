@@ -54,16 +54,16 @@ export function PlanningToolModal({
               onClick={() => {
                 onSavePlan({
                   // Sample plan data - this should ideally come from the PlanningTool component
-                  mainIdeas: [\'Introduction\', \'Main arguments\', \'Conclusion\'],
+                  mainIdeas: ['Introduction', 'Main arguments', 'Conclusion'],
                   structure: [
-                    { section: \'Introduction\', content: \'Set up the topic and state position\' },
-                    { section: \'Body Paragraph 1\', content: \'First main argument with evidence\' },
-                    { section: \'Body Paragraph 2\', content: \'Second main argument with evidence\' },
-                    { section: \'Body Paragraph 3\', content: \'Third main argument with evidence\' },
-                    { section: \'Conclusion\', content: \'Restate position and summarize arguments\' }
+                    { section: 'Introduction', content: 'Set up the topic and state position' },
+                    { section: 'Body Paragraph 1', content: 'First main argument with evidence' },
+                    { section: 'Body Paragraph 2', content: 'Second main argument with evidence' },
+                    { section: 'Body Paragraph 3', content: 'Third main argument with evidence' },
+                    { section: 'Conclusion', content: 'Restate position and summarize arguments' }
                   ],
-                  keyPoints: [\'Use persuasive language\', \'Include evidence\', \'Address counterarguments\'],
-                  vocabulary: [\'Consequently\', \'Furthermore\', \'Undoubtedly\', \'Compelling\']
+                  keyPoints: ["Use persuasive language", "Include evidence", "Address counterarguments"],
+                  vocabulary: ["Consequently", "Furthermore", "Undoubtedly", "Compelling"]
                 });
                 onClose();
               }}
