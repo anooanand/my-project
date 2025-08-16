@@ -146,7 +146,7 @@ export function EnhancedWritingLayout({
       {/* Left Side - Writing Area with Toolbar and Prompt - 70% width */}
       <div className="writing-left-section flex-1 flex flex-col min-h-0" style={{ flex: '0 0 70%' }}>
         {/* Writing Prompt at Top - OPTIMIZED SPACING */}
-        {(textType && (generatedPrompt || getWritingPrompt())) && (
+        {(textType || generatedPrompt) && (
           <div className="writing-prompt-container bg-gradient-to-r from-blue-50 to-purple-50 border-b border-blue-200 shadow-lg flex-shrink-0">
             <div className="px-4 py-3">
               <div className="flex items-center space-x-3 mb-2">
