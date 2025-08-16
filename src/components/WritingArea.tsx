@@ -429,6 +429,20 @@ export function WritingArea({
         }}
       />
 
+      {/* RESTORED: Submit Button Section */}
+      {content.trim() && prompt && (
+        <div className="writing-actions bg-white border-t border-gray-200 p-4 flex justify-center">
+          <button 
+            onClick={onSubmit} 
+            className="submit-button flex items-center space-x-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            disabled={!content.trim()}
+          >
+            <Send size={20} />
+            <span>Submit Writing for Evaluation</span>
+          </button>
+        </div>
+      )}
+
       {/* Modals */}
       <WritingTypeSelectionModal
         isOpen={showWritingTypeModal}
