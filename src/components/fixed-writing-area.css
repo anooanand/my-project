@@ -1,225 +1,114 @@
-/* Fixed Writing Area Styles */
-
-.writing-area-container {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  overflow: hidden;
+/* Enhanced Writing Area Styles */
+.enhanced-interactive-text-editor {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
 }
 
-.writing-content-section {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  position: relative;
-}
-
-.writing-textarea-wrapper {
-  flex: 1;
-  position: relative;
-  min-height: 0;
-}
-
-.writing-textarea {
-  width: 100% !important;
-  height: 100% !important;
-  padding: 20px !important;
-  border: none !important;
-  border-radius: 0 !important;
-  resize: none !important;
-  outline: none !important;
-  font-family: 'Comic Neue', 'Inter', sans-serif !important;
-  font-size: 16px !important;
-  line-height: 1.6 !important;
-  color: #374151 !important;
-  background: #ffffff !important;
-  box-sizing: border-box !important;
-  min-height: 400px !important;
-}
-
-.writing-textarea:focus {
-  outline: none !important;
-  box-shadow: none !important;
-  border: none !important;
-}
-
-.writing-textarea::placeholder {
-  color: #9ca3af;
-  font-style: italic;
-  opacity: 0.8;
-}
-
-/* Highlight layer for writing suggestions */
-.highlight-layer {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-  z-index: 1;
-  padding: 20px;
-  font-family: 'Comic Neue', 'Inter', sans-serif;
-  font-size: 16px;
+.enhanced-interactive-text-editor textarea {
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
   line-height: 1.6;
-  color: transparent;
-  white-space: pre-wrap;
+  letter-spacing: 0.025em;
+}
+
+.enhanced-interactive-text-editor .highlight-overlay {
+  font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  line-height: 1.6;
+  letter-spacing: 0.025em;
   word-wrap: break-word;
-  overflow: hidden;
+  white-space: pre-wrap;
 }
 
-/* Writing highlights */
-.writing-highlight {
-  position: relative;
-  border-radius: 3px;
-  padding: 1px 2px;
+/* Highlight animations */
+.enhanced-interactive-text-editor .highlight-overlay span {
+  transition: all 0.2s ease-in-out;
 }
 
-.writing-highlight-spelling {
-  background-color: rgba(239, 68, 68, 0.2);
-  border-bottom: 2px wavy #ef4444;
+.enhanced-interactive-text-editor .highlight-overlay span:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.writing-highlight-grammar {
-  background-color: rgba(59, 130, 246, 0.2);
-  border-bottom: 2px wavy #3b82f6;
+/* Control panel styles */
+.enhanced-interactive-text-editor .control-panel {
+  backdrop-filter: blur(10px);
+  background-color: rgba(249, 250, 251, 0.95);
 }
 
-.writing-highlight-vocabulary {
-  background-color: rgba(16, 185, 129, 0.2);
-  border-bottom: 2px wavy #10b981;
+/* Tooltip animations */
+.enhanced-interactive-text-editor .tooltip {
+  animation: fadeInUp 0.2s ease-out;
 }
 
-.writing-highlight-structure {
-  background-color: rgba(245, 158, 11, 0.2);
-  border-bottom: 2px wavy #f59e0b;
-}
-
-.writing-highlight-style {
-  background-color: rgba(139, 92, 246, 0.2);
-  border-bottom: 2px wavy #8b5cf6;
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Status bar styles */
-.writing-status-bar {
-  flex-shrink: 0;
-  padding: 12px 20px;
-  background: #f9fafb;
-  border-top: 1px solid #e5e7eb;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 14px;
+.enhanced-interactive-text-editor .status-bar {
+  font-size: 0.875rem;
   color: #6b7280;
 }
 
-.writing-status-left {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+/* Error count badges */
+.enhanced-interactive-text-editor .error-badge {
+  animation: pulse 2s infinite;
 }
 
-.writing-status-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.status-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.status-button {
-  padding: 4px 8px;
-  background: #e5e7eb;
-  border: none;
-  border-radius: 6px;
-  font-size: 12px;
-  color: #374151;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.status-button:hover {
-  background: #d1d5db;
-}
-
-.status-button.active {
-  background: #3b82f6;
-  color: white;
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
 }
 
 /* Responsive design */
 @media (max-width: 768px) {
-  .writing-textarea {
-    padding: 16px !important;
-    font-size: 15px !important;
-  }
-  
-  .highlight-layer {
-    padding: 16px;
-    font-size: 15px;
-  }
-  
-  .writing-status-bar {
-    padding: 10px 16px;
-    font-size: 13px;
-  }
-  
-  .writing-status-left,
-  .writing-status-right {
-    gap: 12px;
-  }
-}
-
-@media (max-width: 480px) {
-  .writing-textarea {
-    padding: 12px !important;
-    font-size: 14px !important;
-  }
-  
-  .highlight-layer {
-    padding: 12px;
-    font-size: 14px;
-  }
-  
-  .writing-status-bar {
+  .enhanced-interactive-text-editor .control-panel {
     flex-direction: column;
-    gap: 8px;
-    padding: 12px;
+    gap: 0.75rem;
   }
   
-  .writing-status-left,
-  .writing-status-right {
-    justify-content: center;
-    gap: 8px;
+  .enhanced-interactive-text-editor .control-panel .button-group {
+    flex-wrap: wrap;
+    gap: 0.5rem;
   }
 }
 
-/* Ensure proper box-sizing */
-* {
-  box-sizing: border-box;
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .enhanced-interactive-text-editor {
+    color-scheme: dark;
+  }
+  
+  .enhanced-interactive-text-editor textarea {
+    background-color: #1f2937;
+    color: #f9fafb;
+    border-color: #374151;
+  }
+  
+  .enhanced-interactive-text-editor .control-panel {
+    background-color: rgba(31, 41, 55, 0.95);
+    border-color: #374151;
+  }
 }
 
-/* Fix for any conflicting styles */
-.writing-area-container * {
-  box-sizing: border-box;
-}
-
-/* Ensure the textarea is always visible and properly sized */
-.writing-textarea-wrapper {
-  position: relative;
-  overflow: hidden;
-}
-
-.writing-textarea-wrapper textarea {
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
+/* Print styles */
+@media print {
+  .enhanced-interactive-text-editor .control-panel,
+  .enhanced-interactive-text-editor .status-bar {
+    display: none;
+  }
+  
+  .enhanced-interactive-text-editor textarea {
+    border: none;
+    background: transparent;
+  }
 }
