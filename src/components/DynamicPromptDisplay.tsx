@@ -183,22 +183,6 @@ export function DynamicPromptDisplay({ prompt, textType, promptImage }: DynamicP
 
         {showGuidance && (
           <div className="mt-4 space-y-4">
-            {/* Writing Tips */}
-            <div>
-              <div className="flex items-center mb-2">
-                <Lightbulb className="w-4 h-4 text-yellow-500 mr-2" />
-                <h4 className="font-semibold text-gray-700 dark:text-gray-300">Key Tips</h4>
-              </div>
-              <ul className="space-y-1">
-                {currentGuidance.tips.map((tip, index) => (
-                  <li key={index} className="flex items-start text-sm text-gray-600 dark:text-gray-400">
-                    <span className="w-2 h-2 bg-yellow-400 rounded-full mt-2 mr-2 flex-shrink-0"></span>
-                    {tip}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
             {/* Planning Checklist */}
             <div>
               <div className="flex items-center mb-2">
@@ -210,6 +194,22 @@ export function DynamicPromptDisplay({ prompt, textType, promptImage }: DynamicP
                   <li key={index} className="flex items-start text-sm text-gray-600 dark:text-gray-400">
                     <span className="w-2 h-2 bg-green-400 rounded-full mt-2 mr-2 flex-shrink-0"></span>
                     {item}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Writing Tips */}
+            <div>
+              <div className="flex items-center mb-2">
+                <Lightbulb className="w-4 h-4 text-yellow-500 mr-2" />
+                <h4 className="font-semibold text-gray-700 dark:text-gray-300">Key Tips</h4>
+              </div>
+              <ul className="space-y-1">
+                {currentGuidance.tips.map((tip, index) => (
+                  <li key={index} className="flex items-start text-sm text-gray-600 dark:text-gray-400">
+                    <span className="w-2 h-2 bg-yellow-400 rounded-full mt-2 mr-2 flex-shrink-0"></span>
+                    {tip}
                   </li>
                 ))}
               </ul>
