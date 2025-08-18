@@ -19,6 +19,39 @@ const FALLBACK_PROMPTS = {
   recount: "Write about an important event or experience in your life, telling what happened in the order it occurred. Include details about who was involved, where it happened, when it took place, and why it was significant to you. Use descriptive language to help your reader visualize the events and understand their importance."
 };
 
+// OpenAI client configuration (for components that expect it)
+export const openai = {
+  chat: {
+    completions: {
+      create: async (params: any) => {
+        try {
+          if (!OPENAI_API_KEY) {
+            throw new Error('OpenAI API key not configured');
+          }
+
+          const response = await fetch(`${OPENAI_API_BASE}/chat/completions`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${OPENAI_API_KEY}`,
+            },
+            body: JSON.stringify(params),
+          });
+
+          if (!response.ok) {
+            throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
+          }
+
+          return await response.json();
+        } catch (error) {
+          console.error('OpenAI API call failed:', error);
+          throw error;
+        }
+      }
+    }
+  }
+};
+
 // FIXED: Enhanced prompt generation with proper error handling
 export const generatePrompt = async (textType: string): Promise<string> => {
   console.log('🔄 OpenAI: Generating prompt for text type:', textType);
@@ -417,10 +450,20 @@ const getBasicNSWFeedback = (content: string, textType: string) => {
   };
 };
 
+// Additional exports that might be expected by other components
+export const getEnhancedFeedback = getNSWSelectiveFeedback;
+export const analyzeText = evaluateEssay;
+export const improveWriting = rephraseSentence;
+
+// Default export with all functions
 export default {
+  openai,
   generatePrompt,
   getSynonyms,
   rephraseSentence,
   evaluateEssay,
-  getNSWSelectiveFeedback
+  getNSWSelectiveFeedback,
+  getEnhancedFeedback,
+  analyzeText,
+  improveWriting
 };
