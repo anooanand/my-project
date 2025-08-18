@@ -87,71 +87,52 @@ export function NarrativeWritingTemplateRedesigned({
 
   return (
     <div className="h-full flex flex-col bg-gray-50">
-
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col">
-        {/* Writing Toolbar */}
-        <div className="bg-white border-b border-gray-200 p-4 shadow-sm">
-          <div className="max-w-4xl mx-auto flex items-center justify-between">
-            <div className="flex items-center space-x-6">
-              {/* Planning Toggle */}
-              <div className="flex items-center space-x-3">
-                <label className="flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={showPlanning}
-                    onChange={togglePlanning}
-                    className="sr-only"
-                  />
-                  <div className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    showPlanning ? 'bg-blue-600' : 'bg-gray-300'
-                  }`}>
-                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      showPlanning ? 'translate-x-6' : 'translate-x-1'
-                    }`} />
-                  </div>
-                  <span className="ml-2 text-sm font-medium text-gray-700">
-                    {showPlanning ? 'Hide Planning' : 'Show Planning'}
-                  </span>
-                </label>
+      {/* FIXED: Show prompt if available */}
+      {prompt && (
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200 p-4">
+          <div className="max-w-4xl mx-auto">
+            <div className="flex items-start space-x-3">
+              <div className="flex-shrink-0 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                <Sparkles className="w-4 h-4 text-white" />
               </div>
-
-              {/* Word Count */}
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
-                <Type className="w-4 h-4" />
-                <span className="font-medium">{wordCount} words</span>
-                <span>•</span>
-                <span>{characterCount} characters</span>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-blue-900 mb-2">Your Writing Prompt</h3>
+                <p className="text-blue-800 leading-relaxed">{prompt}</p>
               </div>
-
-              {/* Progress (if planning is shown) */}
-              {showPlanning && (
-                <div className="flex items-center space-x-2 text-sm text-gray-600">
-                  <span>Planning Progress:</span>
-                  <span className="font-medium text-blue-600">{getProgressPercentage()}%</span>
-                </div>
-              )}
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <button className="flex items-center space-x-2 px-3 py-2 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors">
-                <Save className="w-4 h-4" />
-                <span>Auto-save</span>
-              </button>
             </div>
           </div>
         </div>
+      )}
 
-        {/* Planning Section (Collapsible) */}
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col">
+        {/* REMOVED: Duplicate planning toggle from toolbar - it's handled by parent layout */}
+        
+        {/* Planning Section - Only show if toggled */}
         {showPlanning && (
-          <div className="bg-white border-b border-gray-200 p-4 shadow-sm">
+          <div className="bg-white border-b border-gray-200 p-6">
             <div className="max-w-4xl mx-auto">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Story Planning</h3>
+                <div className="flex items-center space-x-2">
+                  <div className="text-sm text-gray-600">
+                    Progress: {getProgressPercentage()}%
+                  </div>
+                  <div className="w-20 bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${getProgressPercentage()}%` }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+              
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {writingSteps.map((step) => (
                   <div key={step.id} className="space-y-2">
                     <div className="flex items-center space-x-2">
                       {completedSteps.includes(step.id) ? (
-                        <CheckCircle className="w-5 h-5 text-green-600" />
+                        <CheckCircle className="w-5 h-5 text-green-500" />
                       ) : (
                         <step.icon className="w-5 h-5 text-gray-400" />
                       )}
