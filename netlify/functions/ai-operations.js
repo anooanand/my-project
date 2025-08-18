@@ -1,13 +1,12 @@
-const { Configuration, OpenAIApi } = require('openai');
+const OpenAI = require('openai');
 
 // Initialize OpenAI with error handling
 let openai = null;
 try {
   if (process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.startsWith('sk-')) {
-    const configuration = new Configuration({
+    openai = new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     });
-    openai = new OpenAIApi(configuration);
   }
 } catch (error) {
   console.error('Failed to initialize OpenAI:', error);
@@ -102,7 +101,7 @@ exports.handler = async (event, context) => {
     
     if (openai && operation === 'getNSWSelectiveFeedback') {
       try {
-        const response = await openai.createChatCompletion({
+        const response = await openai.chat.completions.create({
           model: 'gpt-4',
           messages: [
             {
@@ -118,7 +117,7 @@ exports.handler = async (event, context) => {
           temperature: 0.7
         });
 
-        const content = response.data.choices[0].message.content;
+        const content = response.choices[0].message.content;
         
         try {
           result = JSON.parse(content);
