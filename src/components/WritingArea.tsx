@@ -247,13 +247,14 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
     setShowPromptOptionsModal(false);
     setIsGenerating(true);
     
-    const newPrompt = await generatePrompt(selectedWritingType);
+    const currentTextType = textType || selectedWritingType;
+    const newPrompt = await generatePrompt(currentTextType);
     
     if (newPrompt) {
       setPrompt(newPrompt);
       
       // Save prompt to localStorage
-      localStorage.setItem(`${selectedWritingType}_prompt`, newPrompt);
+      localStorage.setItem(`${currentTextType}_prompt`, newPrompt);
       
       // Pass the generated prompt to parent immediately
       if (onPromptGenerated) {
@@ -286,7 +287,8 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
     setPrompt(customPrompt);
     
     // Save custom prompt to localStorage
-    localStorage.setItem(`${selectedWritingType}_prompt`, customPrompt);
+    const currentTextType = textType || selectedWritingType;
+    localStorage.setItem(`${currentTextType}_prompt`, customPrompt);
     
     // Pass the custom prompt to parent
     if (onPromptGenerated) {
@@ -308,6 +310,7 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
     setShowEvaluationModal(true);
   };
 
+  // FIXED: Updated renderWritingTemplate to pass prompt to templates
   const renderWritingTemplate = () => {
     const currentTextType = textType || selectedWritingType;
     
@@ -316,29 +319,79 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
         return <NarrativeWritingTemplateRedesigned 
           content={content}
           onChange={onChange}
-          onTimerStart={onTimerStart}
-          onSubmit={onSubmit}
+          prompt={prompt}  // FIXED: Pass prompt to template
+          onPromptChange={setPrompt}  // Allow template to update prompt if needed
         />;
       case 'persuasive':
-        return <PersuasiveWritingTemplate />;
+        return <PersuasiveWritingTemplate 
+          content={content}
+          onChange={onChange}
+          prompt={prompt}
+          onPromptChange={setPrompt}
+        />;
       case 'expository':
-        return <ExpositoryWritingTemplate />;
+        return <ExpositoryWritingTemplate 
+          content={content}
+          onChange={onChange}
+          prompt={prompt}
+          onPromptChange={setPrompt}
+        />;
       case 'reflective':
-        return <ReflectiveWritingTemplate />;
+        return <ReflectiveWritingTemplate 
+          content={content}
+          onChange={onChange}
+          prompt={prompt}
+          onPromptChange={setPrompt}
+        />;
       case 'descriptive':
-        return <DescriptiveWritingTemplate />;
+        return <DescriptiveWritingTemplate 
+          content={content}
+          onChange={onChange}
+          prompt={prompt}
+          onPromptChange={setPrompt}
+        />;
       case 'recount':
-        return <RecountWritingTemplate />;
+        return <RecountWritingTemplate 
+          content={content}
+          onChange={onChange}
+          prompt={prompt}
+          onPromptChange={setPrompt}
+        />;
       case 'discursive':
-        return <DiscursiveWritingTemplate />;
+        return <DiscursiveWritingTemplate 
+          content={content}
+          onChange={onChange}
+          prompt={prompt}
+          onPromptChange={setPrompt}
+        />;
       case 'news report':
-        return <NewsReportWritingTemplate />;
+        return <NewsReportWritingTemplate 
+          content={content}
+          onChange={onChange}
+          prompt={prompt}
+          onPromptChange={setPrompt}
+        />;
       case 'letter':
-        return <LetterWritingTemplate />;
+        return <LetterWritingTemplate 
+          content={content}
+          onChange={onChange}
+          prompt={prompt}
+          onPromptChange={setPrompt}
+        />;
       case 'diary entry':
-        return <DiaryWritingTemplate />;
+        return <DiaryWritingTemplate 
+          content={content}
+          onChange={onChange}
+          prompt={prompt}
+          onPromptChange={setPrompt}
+        />;
       case 'speech':
-        return <SpeechWritingTemplate />;
+        return <SpeechWritingTemplate 
+          content={content}
+          onChange={onChange}
+          prompt={prompt}
+          onPromptChange={setPrompt}
+        />;
       default:
         return null;
     }
