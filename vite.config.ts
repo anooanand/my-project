@@ -6,6 +6,10 @@ export default defineConfig({
   plugins: [react( )],
   server: {
     host: '0.0.0.0',
+    hmr: {
+      protocol: 'wss',
+      clientPort: 443
+    },
     proxy: {
       '/auth/v1': {
         target: 'https://rvlotczavccreigdzczo.supabase.co',
