@@ -14,7 +14,7 @@ const FALLBACK_PROMPTS = {
   
   reflective: "Think about a meaningful experience in your life and write a reflective piece exploring what you learned from it. Show your thoughts and feelings, and explain how this experience changed or influenced you. Be honest and thoughtful in your reflection, using specific details to help your reader understand the significance of this experience.",
   
-  descriptive: "Choose a place, person, or object that is special to you and write a descriptive piece that brings it to life for your reader. Use sensory details (sight, sound, smell, touch, taste) and figurative language like metaphors and similes to create vivid imagery. Paint a picture with words that allows your reader to experience what you're describing.",
+  descriptive: "Choose a place, person, or object that is special to you and write a descriptive piece that brings it to life for your reader. Use sensory details (sight, sound, smell, touch, taste ) and figurative language like metaphors and similes to create vivid imagery. Paint a picture with words that allows your reader to experience what you're describing.",
   
   recount: "Write about an important event or experience in your life, telling what happened in the order it occurred. Include details about who was involved, where it happened, when it took place, and why it was significant to you. Use descriptive language to help your reader visualize the events and understand their importance."
 };
@@ -418,52 +418,220 @@ export const getNSWSelectiveFeedback = async (content: string, textType: string,
 // Basic NSW feedback fallback
 const getBasicNSWFeedback = (content: string, textType: string) => {
   const wordCount = content.trim().split(/\s+/).length;
-  const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 0);
-  const avgSentenceLength = sentences.length > 0 ? wordCount / sentences.length : 0;
-  
-  const baseScore = Math.min(10, Math.max(1, Math.round(wordCount / 30)));
-  
+  const hasGoodLength = wordCount >= 150;
+
   return {
-    score: baseScore,
+    score: hasGoodLength ? 7 : 5,
     criteria: {
-      ideas: Math.min(10, baseScore + 1),
-      organization: baseScore,
-      voice: Math.max(1, baseScore - 1),
-      wordChoice: baseScore,
-      sentenceFluency: avgSentenceLength > 8 ? Math.min(10, baseScore + 1) : Math.max(1, baseScore - 1),
-      conventions: baseScore
+      ideas: hasGoodLength ? 7 : 5,
+      organization: 6,
+      voice: 6,
+      wordChoice: 7,
+      sentenceFluency: 6,
+      conventions: 6,
     },
     strengths: [
-      wordCount >= 100 ? "Good development of ideas" : "Clear communication",
-      sentences.length > 3 ? "Uses varied sentence structures" : "Shows understanding of the task"
+      "Good attempt at addressing the prompt.",
+      "Shows understanding of the text type.",
     ],
     improvements: [
-      wordCount < 150 ? "Expand your ideas with more details" : "Consider adding more sophisticated vocabulary",
-      avgSentenceLength < 8 ? "Try using longer, more complex sentences" : "Check for spelling and punctuation"
+      "Expand on your ideas with more detail and examples.",
+      "Vary your sentence structure for better flow.",
+      "Proofread carefully for grammar and spelling errors.",
     ],
-    detailedFeedback: `Your ${textType} writing demonstrates ${wordCount >= 150 ? 'good' : 'developing'} understanding of the task requirements. ${wordCount >= 100 ? 'You have provided sufficient detail to support your ideas.' : 'Consider expanding your ideas with more specific examples and details.'} Your sentence structure ${avgSentenceLength > 8 ? 'shows good variety' : 'could benefit from more complexity'}.`,
+    detailedFeedback: `Your ${textType} writing is a good start. Focus on developing your ideas more fully and ensuring your sentences flow smoothly. Remember to always check for errors before submitting.`, 
     suggestions: [
-      "Use more descriptive adjectives and adverbs",
-      "Include specific examples to support your main points",
-      "Read your work aloud to check for flow and clarity"
-    ]
+      "Practice writing regularly to improve fluency.",
+      "Read widely to expand your vocabulary and understanding of different writing styles.",
+      "Seek feedback from teachers or peers to identify areas for improvement.",
+    ],
   };
 };
 
-// Additional exports that might be expected by other components
-export const getEnhancedFeedback = getNSWSelectiveFeedback;
-export const analyzeText = evaluateEssay;
-export const improveWriting = rephraseSentence;
+// Placeholder for getTextTypeVocabulary function
+export const getTextTypeVocabulary = async (text: string): Promise<string[]> => {
+  console.log('🔄 OpenAI: Getting text type vocabulary for:', text);
+  try {
+    if (!OPENAI_API_KEY) {
+      return []; // Return empty array if no API key
+    }
 
-// Default export with all functions
-export default {
-  openai,
-  generatePrompt,
-  getSynonyms,
-  rephraseSentence,
-  evaluateEssay,
-  getNSWSelectiveFeedback,
-  getEnhancedFeedback,
-  analyzeText,
-  improveWriting
+    const response = await fetch(`${OPENAI_API_BASE}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a helpful assistant that extracts key vocabulary from text.'
+          },
+          {
+            role: 'user',
+            content: `Extract key vocabulary words from the following text, separated by commas: "${text}"`
+          }
+        ],
+        max_tokens: 100,
+        temperature: 0.3,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    if (data.choices && data.choices[0] && data.choices[0].message) {
+      const vocabulary = data.choices[0].message.content
+        .trim()
+        .split(',')
+        .map((s: string) => s.trim())
+        .filter((s: string) => s.length > 0);
+      
+      console.log('✅ OpenAI: Vocabulary extracted successfully');
+      return vocabulary;
+    } else {
+      throw new Error('Invalid response format');
+    }
+    
+  } catch (error) {
+    console.error('❌ OpenAI: Error getting text type vocabulary:', error);
+    return [];
+  }
 };
+
+// Enhanced mistake identification with fallback
+export const identifyCommonMistakes = async (content: string, textType: string): Promise<any> => {
+  console.log("🔄 OpenAI: Identifying common mistakes");
+
+  try {
+    if (!OPENAI_API_KEY) {
+      return getBasicMistakeAnalysis(content, textType);
+    }
+
+    const response = await fetch(`${OPENAI_API_BASE}/chat/completions`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: "gpt-3.5-turbo",
+        messages: [
+          {
+            role: "system",
+            content: `You are an expert writing tutor for Year 6 students (ages 11-12) preparing for NSW Selective School entrance exams. Analyze the provided ${textType} writing piece and identify common mistakes related to grammar, spelling, punctuation, sentence structure, vocabulary, and overall coherence. Provide constructive feedback.`,
+          },
+          {
+            role: "user",
+            content: `Analyze the following ${textType} writing piece and provide a detailed mistake analysis in JSON format. The JSON should have the following structure:
+            {
+              "overallAssessment": "A brief overall assessment of the writing.",
+              "mistakesIdentified": [
+                {
+                  "category": "e.g., Grammar, Spelling, Punctuation, Sentence Structure, Vocabulary, Coherence",
+                  "issue": "Specific issue identified (e.g., Subject-verb agreement, Misspelled word, Run-on sentence)",
+                  "example": "An example sentence or phrase from the user's writing that demonstrates the mistake.",
+                  "impact": "Explanation of how this mistake impacts the writing's clarity or effectiveness.",
+                  "correction": "How to correct this specific mistake.",
+                  "preventionTip": "A tip to prevent this mistake in future writing."
+                }
+              ],
+              "patternAnalysis": "Identify any recurring patterns of mistakes.",
+              "priorityFixes": ["List 3-5 most important areas for the student to focus on improving."],
+              "positiveElements": ["List 3-5 positive aspects of the writing."]
+            }
+
+            Writing piece:
+            "${content}"
+
+            Ensure all fields are populated and the example is directly from the provided text.`,
+          },
+        ],
+        max_tokens: 1000,
+        temperature: 0.3,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    if (data.choices && data.choices[0] && data.choices[0].message) {
+      try {
+        const analysis = JSON.parse(data.choices[0].message.content);
+        console.log("✅ OpenAI: Mistake analysis generated successfully");
+        return analysis;
+      } catch (parseError) {
+        console.error("Error parsing mistake analysis JSON:", parseError);
+        return getBasicMistakeAnalysis(content, textType);
+      }
+    } else {
+      throw new Error("Invalid response format");
+    }
+  } catch (error) {
+    console.error("❌ OpenAI: Error identifying common mistakes:", error);
+    return getBasicMistakeAnalysis(content, textType);
+  }
+};
+
+// Basic mistake analysis fallback
+const getBasicMistakeAnalysis = (content: string, textType: string) => {
+  const wordCount = content.trim().split(/\s+/).length;
+  const hasGoodLength = wordCount >= 50;
+
+  return {
+    overallAssessment: `Your ${textType} writing shows good effort! While I can't provide detailed analysis right now, keep practicing the key elements of ${textType} writing.`,
+    mistakesIdentified: [],
+    patternAnalysis: `Focus on the main features of ${textType} writing: clear structure, appropriate vocabulary, and engaging content for your NSW Selective preparation.`,
+    priorityFixes: [
+      `Review the key requirements for ${textType} writing`,
+      "Check your spelling and grammar carefully",
+      "Make sure your writing has a clear beginning, middle, and end",
+      "Use varied sentence structures to make your writing more interesting",
+    ],
+    positiveElements: [
+      "You're practicing regularly, which is great!",
+      "Your writing shows understanding of the task",
+      "Keep working on developing your ideas",
+      "You're building important writing skills",
+    ],
+  };
+};
+
+// Function to check OpenAI API connection status
+export const checkOpenAIConnectionStatus = async (): Promise<{ is_connected: boolean }> => {
+  console.log("🔄 OpenAI: Checking connection status");
+  try {
+    if (!OPENAI_API_KEY) {
+      console.warn("⚠️ OpenAI API key not found for connection status check.");
+      return { is_connected: false };
+    }
+
+    // Attempt a lightweight API call, e.g., listing models, or a simple completion
+    const response = await fetch(`${OPENAI_API_BASE}/models`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${OPENAI_API_KEY}`,
+      },
+    });
+
+    if (response.ok) {
+      console.log("✅ OpenAI: Connection successful.");
+      return { is_connected: true };
+    } else {
+      console.warn(`❌ OpenAI: Connection failed with status ${response.status}: ${response.statusText}`);
+      return { is_connected: false };
+    }
+  } catch (error) {
+    console.error("❌ OpenAI: Error checking connection status:", error);
+    return { is_connected: false };
+  }
+};```
