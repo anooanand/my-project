@@ -2,29 +2,15 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { generatePrompt, getSynonyms, rephraseSentence, evaluateEssay } from '../lib/openai';
 import { dbOperations } from '../lib/database';
 import { useApp } from '../contexts/AppContext';
-import { AlertCircle, Send, Sparkles } from 'lucide-react';
+import { AlertCircle, Send, Sparkles, Lightbulb, Type, Save, Settings, Users, Target, Star, CheckCircle } from 'lucide-react';
 import { InlineSuggestionPopup } from './InlineSuggestionPopup';
 import { WritingStatusBar } from './WritingStatusBar';
 import { WritingTypeSelectionModal } from './WritingTypeSelectionModal';
 import { PromptOptionsModal } from './PromptOptionsModal';
 import { CustomPromptModal } from './CustomPromptModal';
 import { EssayEvaluationModal } from './EssayEvaluationModal';
-import { NarrativeWritingTemplateRedesigned } from './NarrativeWritingTemplateRedesigned';
-import { PersuasiveWritingTemplate } from './PersuasiveWritingTemplate';
-import { ExpositoryWritingTemplate } from './ExpositoryWritingTemplate';
-import { ReflectiveWritingTemplate } from './ReflectiveWritingTemplate';
-import { DescriptiveWritingTemplate } from './DescriptiveWritingTemplate';
-import { RecountWritingTemplate } from './RecountWritingTemplate';
-import { DiscursiveWritingTemplate } from './DiscursiveWritingTemplate';
-import { NewsReportWritingTemplate } from './NewsReportWritingTemplate';
-import { LetterWritingTemplate } from './LetterWritingTemplate';
-import { DiaryWritingTemplate } from './DiaryWritingTemplate';
-import { SpeechWritingTemplate } from './SpeechWritingTemplate';
-// NSW Analysis Components
-import { TextTypeAnalysisComponent } from './TextTypeAnalysisComponent';
-import { VocabularySophisticationComponent } from './VocabularySophisticationComponent';
-import { ProgressTrackingComponent } from './ProgressTrackingComponent';
-import { CoachingTipsComponent } from './CoachingTipsComponent';
+import { InteractiveTextEditor } from './InteractiveTextEditor';
+import { getNSWSelectiveFeedback } from '../lib/openai';
 import './responsive.css';
 import './layout-fix.css';
 import './full-width-fix.css';
@@ -48,9 +34,17 @@ interface WritingIssue {
   suggestion: string;
 }
 
+interface TemplateData {
+  setting: string;
+  characters: string;
+  plot: string;
+  theme: string;
+}
+
 export function WritingArea({ content, onChange, textType, onTimerStart, onSubmit, onTextTypeChange, onPopupCompleted, onPromptGenerated }: WritingAreaProps) {
   const { state, addWriting } = useApp();
   const [prompt, setPrompt] = useState('');
+  const [displayPrompt, setDisplayPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -69,12 +63,49 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
   const [showEvaluationModal, setShowEvaluationModal] = useState(false);
   const [popupFlowCompleted, setPopupFlowCompleted] = useState(false);
   
-  // NSW Analysis Tab Management
-  const [activeTab, setActiveTab] = useState('textType');
+  // Template state
+  const [templateData, setTemplateData] = useState<TemplateData>({
+    setting: '',
+    characters: '',
+    plot: '',
+    theme: ''
+  });
+  const [showPlanning, setShowPlanning] = useState(false);
+  const [wordCount, setWordCount] = useState(0);
+  const [characterCount, setCharacterCount] = useState(0);
+  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const highlightLayerRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // FIXED: Check for prompts from multiple sources
+  useEffect(() => {
+    const checkForPrompt = () => {
+      // Check multiple sources for the prompt
+      const savedPrompt = localStorage.getItem(`${textType}_prompt`) || 
+                          localStorage.getItem('generatedPrompt');
+      
+      if (savedPrompt && savedPrompt !== displayPrompt) {
+        console.log('✅ Found saved prompt:', savedPrompt);
+        setDisplayPrompt(savedPrompt);
+        setPrompt(savedPrompt);
+        
+        if (onPromptGenerated) {
+          onPromptGenerated(savedPrompt);
+        }
+      }
+    };
+
+    if (textType) {
+      checkForPrompt();
+      
+      // Check periodically in case prompt loads after component
+      const interval = setInterval(checkForPrompt, 500);
+      
+      return () => clearInterval(interval);
+    }
+  }, [textType, displayPrompt, onPromptGenerated]);
 
   // Initialize popup flow when component mounts or when textType is empty
   useEffect(() => {
@@ -95,7 +126,8 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
       const savedPrompt = localStorage.getItem(`${savedWritingType}_prompt`);
       if (savedPrompt) {
         setPrompt(savedPrompt);
-        setPopupFlowCompleted(true); // Mark as completed if we have both type and prompt
+        setDisplayPrompt(savedPrompt);
+        setPopupFlowCompleted(true);
         if (onPromptGenerated) {
           onPromptGenerated(savedPrompt);
         }
@@ -107,7 +139,7 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
     if (!textType && !savedWritingType && !popupFlowCompleted) {
       setShowWritingTypeModal(true);
     }
-  }, []); // Remove textType and selectedWritingType from dependencies to prevent loops
+  }, []);
 
   useEffect(() => {
     if (prompt) {
@@ -115,26 +147,12 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
     }
   }, [prompt, onTimerStart]);
 
-  // Load saved prompt from localStorage
+  // Calculate word and character count
   useEffect(() => {
-    if (selectedWritingType || textType) {
-      const currentTextType = textType || selectedWritingType;
-      const savedPrompt = localStorage.getItem(`${currentTextType}_prompt`);
-      if (savedPrompt) {
-        setPrompt(savedPrompt);
-        if (onPromptGenerated) {
-          onPromptGenerated(savedPrompt);
-        }
-      }
-    }
-  }, [selectedWritingType, textType, onPromptGenerated]);
-
-  // Pass prompt to parent whenever it changes
-  useEffect(() => {
-    if (prompt && onPromptGenerated) {
-      onPromptGenerated(prompt);
-    }
-  }, [prompt, onPromptGenerated]);
+    const words = content.trim().split(/\s+/).filter(word => word.length > 0);
+    setWordCount(words.length);
+    setCharacterCount(content.length);
+  }, [content]);
 
   // Auto-save content
   useEffect(() => {
@@ -157,7 +175,7 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
       await dbOperations.saveWriting({
         content,
         textType: textType || selectedWritingType,
-        prompt,
+        prompt: displayPrompt,
         wordCount: countWords(content),
         createdAt: new Date()
       });
@@ -167,7 +185,7 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
     } finally {
       setIsSaving(false);
     }
-  }, [content, textType, selectedWritingType, prompt, isSaving]);
+  }, [content, textType, selectedWritingType, displayPrompt, isSaving]);
 
   useEffect(() => {
     const interval = setInterval(saveContent, 30000);
@@ -228,15 +246,12 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
     setSelectedWritingType(type);
     localStorage.setItem('selectedWritingType', type);
     
-    // Close the writing type modal and show prompt options modal
     setShowWritingTypeModal(false);
     
-    // Add a small delay to ensure smooth transition
     setTimeout(() => {
       setShowPromptOptionsModal(true);
     }, 100);
     
-    // Call the callback to update parent component
     if (onTextTypeChange) {
       onTextTypeChange(type);
     }
@@ -252,21 +267,18 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
     
     if (newPrompt) {
       setPrompt(newPrompt);
+      setDisplayPrompt(newPrompt);
       
-      // Save prompt to localStorage
       localStorage.setItem(`${currentTextType}_prompt`, newPrompt);
       
-      // Pass the generated prompt to parent immediately
       if (onPromptGenerated) {
         onPromptGenerated(newPrompt);
       }
     }
     setIsGenerating(false);
     
-    // Mark popup flow as completed
     setPopupFlowCompleted(true);
     
-    // Call the callback to indicate popup flow is completed
     if (onPopupCompleted) {
       onPopupCompleted();
     }
@@ -276,7 +288,6 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
   const handleCustomPromptOption = () => {
     setShowPromptOptionsModal(false);
     
-    // Add a small delay to ensure smooth transition
     setTimeout(() => {
       setShowCustomPromptModal(true);
     }, 100);
@@ -285,22 +296,19 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
   // Handle custom prompt submission
   const handleCustomPromptSubmit = (customPrompt: string) => {
     setPrompt(customPrompt);
+    setDisplayPrompt(customPrompt);
     
-    // Save custom prompt to localStorage
     const currentTextType = textType || selectedWritingType;
     localStorage.setItem(`${currentTextType}_prompt`, customPrompt);
     
-    // Pass the custom prompt to parent
     if (onPromptGenerated) {
       onPromptGenerated(customPrompt);
     }
     
     setShowCustomPromptModal(false);
     
-    // Mark popup flow as completed
     setPopupFlowCompleted(true);
     
-    // Call the callback to indicate popup flow is completed
     if (onPopupCompleted) {
       onPopupCompleted();
     }
@@ -310,90 +318,47 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
     setShowEvaluationModal(true);
   };
 
-  // FIXED: Updated renderWritingTemplate to pass prompt to templates
-  const renderWritingTemplate = () => {
-    const currentTextType = textType || selectedWritingType;
-    
-    switch (currentTextType) {
-      case 'narrative':
-        return <NarrativeWritingTemplateRedesigned 
-          content={content}
-          onChange={onChange}
-          prompt={prompt}  // FIXED: Pass prompt to template
-          onPromptChange={setPrompt}  // Allow template to update prompt if needed
-        />;
-      case 'persuasive':
-        return <PersuasiveWritingTemplate 
-          content={content}
-          onChange={onChange}
-          prompt={prompt}
-          onPromptChange={setPrompt}
-        />;
-      case 'expository':
-        return <ExpositoryWritingTemplate 
-          content={content}
-          onChange={onChange}
-          prompt={prompt}
-          onPromptChange={setPrompt}
-        />;
-      case 'reflective':
-        return <ReflectiveWritingTemplate 
-          content={content}
-          onChange={onChange}
-          prompt={prompt}
-          onPromptChange={setPrompt}
-        />;
-      case 'descriptive':
-        return <DescriptiveWritingTemplate 
-          content={content}
-          onChange={onChange}
-          prompt={prompt}
-          onPromptChange={setPrompt}
-        />;
-      case 'recount':
-        return <RecountWritingTemplate 
-          content={content}
-          onChange={onChange}
-          prompt={prompt}
-          onPromptChange={setPrompt}
-        />;
-      case 'discursive':
-        return <DiscursiveWritingTemplate 
-          content={content}
-          onChange={onChange}
-          prompt={prompt}
-          onPromptChange={setPrompt}
-        />;
-      case 'news report':
-        return <NewsReportWritingTemplate 
-          content={content}
-          onChange={onChange}
-          prompt={prompt}
-          onPromptChange={setPrompt}
-        />;
-      case 'letter':
-        return <LetterWritingTemplate 
-          content={content}
-          onChange={onChange}
-          prompt={prompt}
-          onPromptChange={setPrompt}
-        />;
-      case 'diary entry':
-        return <DiaryWritingTemplate 
-          content={content}
-          onChange={onChange}
-          prompt={prompt}
-          onPromptChange={setPrompt}
-        />;
-      case 'speech':
-        return <SpeechWritingTemplate 
-          content={content}
-          onChange={onChange}
-          prompt={prompt}
-          onPromptChange={setPrompt}
-        />;
-      default:
-        return null;
+  // Template functions
+  const writingSteps = [
+    { id: 1, title: "Setting", icon: Settings, description: "Where and when your story unfolds", field: 'setting' as keyof TemplateData },
+    { id: 2, title: "Characters", icon: Users, description: "The people who bring your story to life", field: 'characters' as keyof TemplateData },
+    { id: 3, title: "Plot", icon: Target, description: "The sequence of events in your story", field: 'plot' as keyof TemplateData },
+    { id: 4, title: "Theme", icon: Star, description: "The deeper meaning or message", field: 'theme' as keyof TemplateData }
+  ];
+
+  const updateCompletedSteps = (data: TemplateData) => {
+    const completed: number[] = [];
+    if (data.setting.trim()) completed.push(1);
+    if (data.characters.trim()) completed.push(2);
+    if (data.plot.trim()) completed.push(3);
+    if (data.theme.trim()) completed.push(4);
+    setCompletedSteps(completed);
+  };
+
+  const handleTemplateChange = (field: keyof TemplateData, value: string) => {
+    const newData = {
+      ...templateData,
+      [field]: value
+    };
+    setTemplateData(newData);
+    updateCompletedSteps(newData);
+  };
+
+  const getProgressPercentage = () => {
+    return Math.round((completedSteps.length / writingSteps.length) * 100);
+  };
+
+  const togglePlanning = () => {
+    setShowPlanning(!showPlanning);
+  };
+
+  // AI Feedback function for the enhanced editor
+  const handleGetFeedback = async (content: string) => {
+    try {
+      return await getNSWSelectiveFeedback(content, 'narrative', 'detailed', []);
+    } catch (error) {
+      console.error('Error getting NSW Selective feedback:', error);
+      return null;
     }
   };
 
@@ -401,79 +366,95 @@ export function WritingArea({ content, onChange, textType, onTimerStart, onSubmi
 
   return (
     <div ref={containerRef} className="writing-area-container h-full flex flex-col p-0 m-0">
-      {/* Writing Template Section with Scrolling - Takes remaining space but allows submit button to be visible */}
-      {currentTextType && (
-        <div className="writing-template-section flex-1 overflow-y-auto min-h-0">
-          {renderWritingTemplate()}
+      {/* FIXED: Prominent prompt display at the top */}
+      {displayPrompt && (
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 p-6 mb-6 rounded-r-lg shadow-sm">
+          <div className="flex items-start space-x-3">
+            <div className="flex-shrink-0 w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+              <Sparkles className="w-4 h-4 text-white" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-blue-900 mb-2">Your Writing Prompt</h3>
+              <p className="text-blue-800 leading-relaxed text-base">{displayPrompt}</p>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* NSW Analysis Tools Section - Add this before the status section */}
-      {(textType || selectedWritingType) && content && content.trim().length > 50 && (
-        <div className="nsw-analysis-tools">
-          <h3>NSW Selective Writing Analysis</h3>
-          
-          {/* Tab Navigation */}
-          <div className="tab-buttons">
-            <button 
-              onClick={() => setActiveTab('textType')}
-              className={activeTab === 'textType' ? 'active' : ''}
-            >
-              Text Type Analysis
-            </button>
-            <button 
-              onClick={() => setActiveTab('vocabulary')}
-              className={activeTab === 'vocabulary' ? 'active' : ''}
-            >
-              Vocabulary Analysis
-            </button>
-            <button 
-              onClick={() => setActiveTab('progress')}
-              className={activeTab === 'progress' ? 'active' : ''}
-            >
-              Progress Tracking
-            </button>
-            <button 
-              onClick={() => setActiveTab('coaching')}
-              className={activeTab === 'coaching' ? 'active' : ''}
-            >
-              Coaching Tips
-            </button>
-          </div>
-          
-          {/* Tab Content */}
-          <div className="tab-content">
-            {activeTab === 'textType' && (
-              <TextTypeAnalysisComponent 
-                content={content} 
-                textType={textType || selectedWritingType} 
-              />
+      {/* Writing Template Section */}
+      {currentTextType && (
+        <div className="writing-template-section flex-1 overflow-y-auto min-h-0">
+          <div className="h-full flex flex-col bg-gray-50">
+            {/* Planning Section - Only show if toggled */}
+            {showPlanning && (
+              <div className="bg-white border-b border-gray-200 p-6">
+                <div className="max-w-4xl mx-auto">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">Story Planning</h3>
+                    <div className="flex items-center space-x-2">
+                      <div className="text-sm text-gray-600">
+                        Progress: {getProgressPercentage()}%
+                      </div>
+                      <div className="w-20 bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${getProgressPercentage()}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {writingSteps.map((step) => (
+                      <div key={step.id} className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          {completedSteps.includes(step.id) ? (
+                            <CheckCircle className="w-5 h-5 text-green-500" />
+                          ) : (
+                            <step.icon className="w-5 h-5 text-gray-400" />
+                          )}
+                          <label className="font-medium text-gray-700">{step.title}</label>
+                        </div>
+                        <textarea
+                          value={templateData[step.field]}
+                          onChange={(e) => handleTemplateChange(step.field, e.target.value)}
+                          placeholder={step.description}
+                          className="w-full h-20 p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
             )}
-            
-            {activeTab === 'vocabulary' && (
-              <VocabularySophisticationComponent 
-                content={content} 
-              />
-            )}
-            
-            {activeTab === 'progress' && state.user && (
-              <ProgressTrackingComponent 
-                userId={state.user.id} 
-                assessmentData={{
-                  totalScore: 0, // Replace with actual assessment score
-                  overallBand: 1, // Replace with actual band level
-                  criteriaFeedback: {} // Replace with actual criteria feedback
-                }} 
-              />
-            )}
-            
-            {activeTab === 'coaching' && (
-              <CoachingTipsComponent 
-                content={content}
-                textType={textType || selectedWritingType}
-                currentScore={0} // Replace with actual current score
-                focusArea="vocabulary" // Can be dynamic: "vocabulary", "structure", "grammar", etc.
-              />
+
+            {/* Main Writing Area */}
+            <div className="flex-1 p-6 bg-white">
+              <div className="max-w-4xl mx-auto h-full">
+                <InteractiveTextEditor
+                  content={content}
+                  onChange={onChange}
+                  placeholder={displayPrompt ? "Start writing your story here..." : "Start writing your amazing story here! Let your creativity flow and bring your ideas to life... ✨"}
+                  className="w-full h-full"
+                  textType={currentTextType}
+                  onGetFeedback={handleGetFeedback}
+                />
+              </div>
+            </div>
+
+            {/* Writing Tips (Bottom) */}
+            {wordCount < 50 && (
+              <div className="bg-blue-50 border-t border-blue-200 p-4">
+                <div className="max-w-4xl mx-auto">
+                  <div className="flex items-center space-x-2 text-blue-700">
+                    <Lightbulb className="w-4 h-4" />
+                    <span className="font-medium">Writing Tip:</span>
+                  </div>
+                  <p className="text-blue-600 text-sm mt-1">
+                    Start with a strong opening that grabs your reader's attention. Don't worry about making it perfect - you can always revise it later!
+                  </p>
+                </div>
+              </div>
             )}
           </div>
         </div>
