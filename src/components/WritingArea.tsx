@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { generatePrompt, getSynonyms, rephraseSentence, evaluateEssay } from '../lib/openai';
 import { dbOperations } from '../lib/database';
 import { useApp } from '../contexts/AppContext';
@@ -142,56 +142,130 @@ export function WritingArea({
     }
   }, [prompt, onPromptGenerated]);
 
-  // Persist content to localStorage
+  // Auto-save content
   useEffect(() => {
-    localStorage.setItem('writingContent', content);
+    const timeoutId = setTimeout(() => {
+      if (content) {
+        localStorage.setItem('writingContent', content);
+        setIsSaving(false);
+        setLastSaved(new Date());
+      }
+    }, 1000);
+
+    return () => clearTimeout(timeoutId);
   }, [content]);
 
-  // Persist selectedWritingType to localStorage
+  // Analyze content for issues
   useEffect(() => {
-    localStorage.setItem('selectedWritingType', selectedWritingType);
-  }, [selectedWritingType]);
+    if (content && showHighlights) {
+      const newIssues: WritingIssue[] = [];
+      
+      // Check spelling
+      spellingPatterns.forEach(({ pattern, suggestion }) => {
+        let match;
+        while ((match = pattern.exec(content)) !== null) {
+          newIssues.push({
+            start: match.index,
+            end: match.index + match[0].length,
+            type: 'spelling',
+            message: `Possible spelling error: "${match[0]}"`,
+            suggestion
+          });
+        }
+      });
 
-  // Detect writing issues
-  const detectIssues = useCallback((text: string): WritingIssue[] => {
-    const detectedIssues: WritingIssue[] = [];
+      // Check grammar
+      grammarPatterns.forEach(({ pattern, suggestion }) => {
+        let match;
+        while ((match = pattern.exec(content)) !== null) {
+          newIssues.push({
+            start: match.index,
+            end: match.index + match[0].length,
+            type: 'grammar',
+            message: `Grammar issue: "${match[0]}"`,
+            suggestion
+          });
+        }
+      });
 
-    // Check spelling
-    spellingPatterns.forEach(({ pattern, suggestion }) => {
-      let match;
-      while ((match = pattern.exec(text)) !== null) {
-        detectedIssues.push({
-          start: match.index,
-          end: match.index + match[0].length,
-          type: 'spelling',
-          message: `Possible spelling error: "${match[0]}"議題`,
-          suggestion: suggestion
-        });
+      setIssues(newIssues);
+    }
+  }, [content, showHighlights]);
+
+  // Handle textarea changes
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newContent = e.target.value;
+    onChange(newContent);
+    setIsSaving(true);
+    setSelectedIssue(null); // Close any open suggestion popup
+  };
+
+  // Handle textarea clicks for issue selection
+  const handleTextareaClick = (e: React.MouseEvent<HTMLTextAreaElement>) => {
+    const textarea = e.currentTarget;
+    const cursorPosition = textarea.selectionStart;
+    
+    // Find if cursor is on an issue
+    const clickedIssue = issues.find(issue => 
+      cursorPosition >= issue.start && cursorPosition <= issue.end
+    );
+
+    if (clickedIssue) {
+      const rect = textarea.getBoundingClientRect();
+      setPopupPosition({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      });
+      setSelectedIssue(clickedIssue);
+      
+      // Load suggestions for this issue
+      loadSuggestions(clickedIssue);
+    } else {
+      setSelectedIssue(null);
+    }
+  };
+
+  // FIXED: Handle clicks on the writing area container when textarea is disabled
+  const handleWritingAreaClick = () => {
+    // If there's no prompt, show the writing type modal
+    if (!prompt && !showWritingTypeModal && !showPromptOptionsModal && !showCustomPromptModal) {
+      setShowWritingTypeModal(true);
+    }
+  };
+
+  // Load suggestions for an issue
+  const loadSuggestions = async (issue: WritingIssue) => {
+    setIsLoadingSuggestions(true);
+    try {
+      if (issue.type === 'vocabulary') {
+        const word = content.substring(issue.start, issue.end);
+        const synonyms = await getSynonyms(word);
+        setSuggestions(synonyms);
+      } else if (issue.type === 'style') {
+        const sentence = content.substring(issue.start, issue.end);
+        const rephrasedSentence = await rephraseSentence(sentence);
+        setSuggestions([rephrasedSentence]);
+      } else {
+        setSuggestions([issue.suggestion]);
       }
-    });
+    } catch (error) {
+      console.error('Error loading suggestions:', error);
+      setSuggestions([issue.suggestion]);
+    }
+    setIsLoadingSuggestions(false);
+  };
 
-    // Check grammar
-    grammarPatterns.forEach(({ pattern, suggestion }) => {
-      let match;
-      while ((match = pattern.exec(text)) !== null) {
-        detectedIssues.push({
-          start: match.index,
-          end: match.index + match[0].length,
-          type: 'grammar',
-          message: `Grammar suggestion: "${match[0]}"議題`,
-          suggestion: suggestion
-        });
-      }
-    });
-
-    return detectedIssues;
-  }, []);
-
-  // Update issues when content changes
-  useEffect(() => {
-    const newIssues = detectIssues(content);
-    setIssues(newIssues);
-  }, [content, detectIssues]);
+  // Apply suggestion
+  const handleApplySuggestion = (suggestion: string) => {
+    if (selectedIssue) {
+      const newContent = 
+        content.substring(0, selectedIssue.start) + 
+        suggestion + 
+        content.substring(selectedIssue.end);
+      onChange(newContent);
+      setSelectedIssue(null);
+    }
+  };
 
   // Handle writing type selection
   const handleWritingTypeSelect = (type: string) => {
@@ -248,17 +322,19 @@ export function WritingArea({
   // Handle custom prompt option
   const handleCustomPromptOption = () => {
     setShowPromptOptionsModal(false);
-    setShowCustomPromptModal(true);
+    
+    // Add a small delay to ensure smooth transition
+    setTimeout(() => {
+      setShowCustomPromptModal(true);
+    }, 100);
   };
 
   // Handle custom prompt submission
   const handleCustomPromptSubmit = (customPrompt: string) => {
     setPrompt(customPrompt);
     
-    // Use the current text type (either from props or local state)
+    // Save custom prompt to localStorage
     const currentTextType = textType || selectedWritingType;
-    
-    // Save prompt to localStorage using the current text type
     if (currentTextType) {
       localStorage.setItem(`${currentTextType}_prompt`, customPrompt);
     }
@@ -268,93 +344,39 @@ export function WritingArea({
       onPromptGenerated(customPrompt);
     }
     
-    setIsGenerating(false);
     setShowCustomPromptModal(false);
+    
+    // Mark popup flow as completed
     setPopupFlowCompleted(true);
     
+    // Call the callback to indicate popup flow is completed
     if (onPopupCompleted) {
       onPopupCompleted();
     }
   };
 
-  // Handle textarea changes
-  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newContent = e.target.value;
-    onChange(newContent);
-    
-    // Auto-save after 2 seconds of inactivity
-    const timeoutId = setTimeout(() => {
-      handleAutoSave(newContent);
-    }, 2000);
-
-    return () => clearTimeout(timeoutId);
-  };
-
-  // Handle textarea clicks for issue selection
-  const handleTextareaClick = (e: React.MouseEvent<HTMLTextAreaElement>) => {
-    const textarea = e.currentTarget;
-    const cursorPosition = textarea.selectionStart;
-    
-    // Find if cursor is on an issue
-    const clickedIssue = issues.find(issue => 
-      cursorPosition >= issue.start && cursorPosition <= issue.end
-    );
-
-    if (clickedIssue) {
-      const rect = textarea.getBoundingClientRect();
-      setPopupPosition({
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
-      });
-      setSelectedIssue(clickedIssue);
-      loadSuggestions(clickedIssue);
-    } else {
-      setSelectedIssue(null);
-      setSuggestions([]);
-    }
-  };
-
-  // Auto-save functionality
-  const handleAutoSave = async (content: string) => {
+  // Handle evaluation submission
+  const handleEvaluationSubmit = async () => {
     if (!content.trim()) return;
     
-    setIsSaving(true);
     try {
-      // Save to localStorage
-      localStorage.setItem('writingContent', content);
-      setLastSaved(new Date());
+      const currentTextType = textType || selectedWritingType;
+      const evaluation = await evaluateEssay(content, currentTextType);
+      
+      if (evaluation) {
+        // Save evaluation to database
+        await dbOperations.saveEvaluation({
+          content,
+          textType: currentTextType,
+          evaluation,
+          timestamp: new Date().toISOString()
+        });
+        
+        setShowEvaluationModal(true);
+      }
     } catch (error) {
-      console.error('Auto-save failed:', error);
-    } finally {
-      setIsSaving(false);
+      console.error('Error evaluating essay:', error);
     }
-  };
-
-  // Load suggestions for an issue
-  const loadSuggestions = (issue: WritingIssue) => {
-    setSuggestions([issue.suggestion]);
-  };
-
-  // Handle applying a suggestion
-  const handleApplySuggestion = (suggestion: string, start: number, end: number) => {
-    const newContent = content.slice(0, start) + suggestion + content.slice(end);
-    onChange(newContent);
-    setSelectedIssue(null);
-    setSuggestions([]);
-  };
-
-  // Handle evaluation
-  const handleEvaluationSubmit = () => {
-    setShowEvaluationModal(true);
-  };
-
-  const handleCloseEvaluationModal = () => {
-    setShowEvaluationModal(false);
-  };
-
-  // Toggle highlights
-  const handleToggleHighlights = () => {
-    setShowHighlights(!showHighlights);
   };
 
   // Handle planning toggle (pass through to parent)
@@ -368,7 +390,11 @@ export function WritingArea({
   return (
     <div className="writing-area-container h-full flex flex-col">
       {/* Main Writing Area */}
-      <div className="flex-1 relative">
+      <div 
+        className="flex-1 relative"
+        onClick={handleWritingAreaClick}
+        style={{ cursor: !prompt ? 'pointer' : 'default' }}
+      >
         <textarea
           value={content}
           onChange={handleTextareaChange}
@@ -385,7 +411,6 @@ export function WritingArea({
           }}
           disabled={!prompt}
         />
-
         {/* Inline Suggestion Popup */}
         {selectedIssue && (
           <InlineSuggestionPopup
@@ -400,33 +425,23 @@ export function WritingArea({
 
         {/* Loading overlay when generating prompt */}
         {isGenerating && (
-          <div className="absolute inset-0 bg-white bg-opacity-90 flex items-center justify-center z-10">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600 font-medium">Generating your writing prompt...</p>
+          <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center">
+            <div className="flex items-center space-x-3 bg-white rounded-lg shadow-lg p-4">
+              <Sparkles className="w-6 h-6 text-purple-600 animate-spin" />
+              <span className="text-gray-700 font-medium">Generating your writing prompt...</span>
             </div>
           </div>
         )}
       </div>
 
-      {/* Status Bar */}
+      {/* Writing Status Bar */}
       <WritingStatusBar
         wordCount={wordCount}
-        lastSaved={lastSaved}
         isSaving={isSaving}
+        lastSaved={lastSaved}
         showHighlights={showHighlights}
-        onToggleHighlights={handleToggleHighlights}
-        onEvaluate={handleEvaluationSubmit}
-        onShowPlanning={handleShowPlanning}
-        content={content}
-        textType={textType || selectedWritingType}
-        onRestore={(content, textType) => {
-          onChange(content);
-          setSelectedWritingType(textType);
-          if (onTextTypeChange) {
-            onTextTypeChange(textType);
-          }
-        }}
+        onToggleHighlights={() => setShowHighlights(!showHighlights)}
+        issueCount={issues.length}
       />
 
       {/* RESTORED: Submit Button Section */}
@@ -467,7 +482,7 @@ export function WritingArea({
 
       <EssayEvaluationModal
         isOpen={showEvaluationModal}
-        onClose={handleCloseEvaluationModal}
+        onClose={() => setShowEvaluationModal(false)}
         content={content}
         textType={textType || selectedWritingType}
       />
