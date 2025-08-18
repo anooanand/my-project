@@ -634,4 +634,4 @@ export const checkOpenAIConnectionStatus = async (): Promise<{ is_connected: boo
     console.error("❌ OpenAI: Error checking connection status:", error);
     return { is_connected: false };
   }
-};```
+};
