@@ -1,548 +1,426 @@
-import OpenAI from 'openai';
+// OpenAI Integration with Enhanced Error Handling and Fallback Prompts
+// src/lib/openai.ts
 
-// Create OpenAI client with enhanced error handling
-let openai: OpenAI | null = null;
+const OPENAI_API_KEY = process.env.REACT_APP_OPENAI_API_KEY || process.env.OPENAI_API_KEY;
+const OPENAI_API_BASE = process.env.REACT_APP_OPENAI_API_BASE || 'https://api.openai.com/v1';
 
-try {
-  // Try multiple possible API key environment variables
-  const apiKey = import.meta.env.VITE_OPENAI_API_KEY || 
-                 import.meta.env.OPENAI_API_KEY ||
-                 process.env.OPENAI_API_KEY;
+// High-quality fallback prompts for when AI generation fails
+const FALLBACK_PROMPTS = {
+  narrative: "Write an engaging story about a character who discovers something unexpected that changes their life forever. Include vivid descriptions, realistic dialogue, and show the character's emotional journey. Make sure your story has a clear beginning, middle, and end with a satisfying conclusion. Focus on showing rather than telling, and use sensory details to bring your story to life.",
   
-  if (apiKey && 
-      apiKey !== 'your_openai_api_key_here' && 
-      apiKey !== 'your-openai-api-key-here' && 
-      apiKey !== 'sk-placeholder' &&
-      apiKey.trim() !== '' &&
-      apiKey.startsWith('sk-')) {
-    openai = new OpenAI({
-      apiKey: apiKey,
-      dangerouslyAllowBrowser: true
-    });
-    console.log('[DEBUG] OpenAI client initialized successfully with GPT-4');
-  } else {
-    console.warn('[DEBUG] OpenAI API key not configured or invalid - AI features will be limited');
-    console.warn('[DEBUG] Expected format: sk-... but got:', apiKey ? `${apiKey.substring(0, 10)}...` : 'undefined');
-  }
-} catch (error) {
-  console.error('[DEBUG] Failed to initialize OpenAI client:', error);
-  openai = null;
-}
-
-// Safe function to check if OpenAI is available
-const isOpenAIAvailable = (): boolean => {
-  return openai !== null;
+  persuasive: "Choose a topic you feel strongly about and write a persuasive essay to convince others of your viewpoint. Use strong evidence, logical reasoning, and persuasive techniques like rhetorical questions and emotional appeals. Structure your argument clearly with an introduction that states your position, body paragraphs that support your argument with evidence, and a conclusion that reinforces your main point.",
+  
+  expository: "Select a topic you know well and write an informative essay that teaches others about it. Use clear explanations, relevant examples, and organize your information in a logical sequence. Include an engaging introduction that hooks your reader, body paragraphs that explore different aspects of your topic, and a strong conclusion that summarizes your main points.",
+  
+  reflective: "Think about a meaningful experience in your life and write a reflective piece exploring what you learned from it. Show your thoughts and feelings, and explain how this experience changed or influenced you. Be honest and thoughtful in your reflection, using specific details to help your reader understand the significance of this experience.",
+  
+  descriptive: "Choose a place, person, or object that is special to you and write a descriptive piece that brings it to life for your reader. Use sensory details (sight, sound, smell, touch, taste) and figurative language like metaphors and similes to create vivid imagery. Paint a picture with words that allows your reader to experience what you're describing.",
+  
+  recount: "Write about an important event or experience in your life, telling what happened in the order it occurred. Include details about who was involved, where it happened, when it took place, and why it was significant to you. Use descriptive language to help your reader visualize the events and understand their importance."
 };
 
-// Helper function to make API calls to the enhanced backend
-async function makeBackendCall(operation: string, data: any): Promise<any> {
+// FIXED: Enhanced prompt generation with proper error handling
+export const generatePrompt = async (textType: string): Promise<string> => {
+  console.log('🔄 OpenAI: Generating prompt for text type:', textType);
+  
   try {
-    console.log(`[DEBUG] Making backend call for operation: ${operation}`);
-    
-    // Always try backend calls first, regardless of environment
-    try {
-      const response = await fetch('/.netlify/functions/ai-operations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          operation,
-          ...data
-        })
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error(`[DEBUG] Backend call failed: ${response.status} - ${errorText}`);
-        throw new Error(`Backend call failed: ${response.status}`);
-      }
-
-      const result = await response.json();
-      console.log(`[DEBUG] Backend call successful for ${operation}`);
-      return result;
-    } catch (fetchError) {
-      console.error(`[DEBUG] Backend fetch failed for ${operation}:`, fetchError);
-      return { error: 'BACKEND_NOT_AVAILABLE' };
+    // Check if OpenAI API key is configured
+    if (!OPENAI_API_KEY) {
+      console.warn('⚠️ OpenAI API key not found, using fallback prompt');
+      return getFallbackPrompt(textType);
     }
-  } catch (error) {
-    console.error('Backend call error:', error);
-    return { error: 'BACKEND_NOT_AVAILABLE' };
-  }
-}
 
-// Enhanced NSW Selective Writing Feedback Function
-export async function getNSWSelectiveFeedback(
-  content: string, 
-  textType: string, 
-  assistanceLevel: string = 'medium', 
-  feedbackHistory: any[] = []
-): Promise<any> {
-  try {
-    return await makeBackendCall('getNSWSelectiveFeedback', {
-      content,
-      textType,
-      assistanceLevel,
-      feedbackHistory
-    });
-  } catch (error) {
-    console.error('Error getting NSW Selective feedback:', error);
-    
-    console.log('[DEBUG] Using enhanced NSW Selective fallback feedback');
-    
-    // Enhanced fallback response with detailed NSW criteria analysis
-    const analysis = analyzeContentStructure(content);
-    const estimatedScore = Math.min(30, Math.max(8, Math.round(analysis.wordCount / 15) + analysis.paragraphCount * 2));
-    const bandLevel = estimatedScore >= 27 ? 6 : estimatedScore >= 22 ? 5 : estimatedScore >= 17 ? 4 : estimatedScore >= 12 ? 3 : estimatedScore >= 7 ? 2 : 1;
-    
-    return {
-      overallComment: `Your ${analysis.wordCount}-word ${textType} demonstrates ${bandLevel >= 4 ? 'solid' : 'developing'} understanding of NSW Selective requirements. You're currently showing Band ${bandLevel} characteristics. Let's work on reaching Band 5-6 level.`,
-      totalScore: estimatedScore,
-      overallBand: bandLevel,
-      bandDescription: bandLevel >= 5 ? "Proficient - Well-developed ideas" : bandLevel >= 4 ? "Sound - Adequate ideas" : "Developing - Simple ideas",
-      estimatedExamScore: `${estimatedScore}/30`,
-      criteriaFeedback: {
-        ideasAndContent: {
-          score: Math.round(estimatedScore * 0.3),
-          maxScore: 9,
-          band: Math.min(6, Math.max(1, Math.round(estimatedScore * 0.3 / 1.5))),
-          strengths: analysis.wordCount > 100 ? [`You've developed a substantial ${textType} with ${analysis.wordCount} words`] : ["You've made a good start on your writing"],
-          improvements: analysis.wordCount < 150 ? ["Develop your ideas with more specific details and examples"] : ["Deepen your analysis and add more sophisticated insights"],
-          suggestions: [`Add more specific examples and evidence to support your ${textType} ideas`, "Show deeper thinking by explaining the 'why' behind your points"],
-          nextSteps: [`Expand your ${textType} with at least 2 more specific examples or details`]
-        },
-        textStructureAndOrganization: {
-          score: Math.round(estimatedScore * 0.25),
-          maxScore: 7.5,
-          band: Math.min(6, Math.max(1, Math.round(estimatedScore * 0.25 / 1.25))),
-          strengths: analysis.paragraphCount > 1 ? [`Good paragraph organization with ${analysis.paragraphCount} paragraphs`] : ["You have a clear structure"],
-          improvements: analysis.paragraphCount === 1 ? ["Break your writing into multiple paragraphs for better organization"] : ["Strengthen transitions between paragraphs"],
-          suggestions: [`Use NSW Selective-appropriate structure for ${textType}: clear introduction, well-developed body, strong conclusion`, "Add transition words to connect your ideas smoothly"],
-          nextSteps: [`Review NSW Selective ${textType} structure requirements and apply them to your writing`]
-        },
-        languageFeaturesAndVocabulary: {
-          score: Math.round(estimatedScore * 0.25),
-          maxScore: 7.5,
-          band: Math.min(6, Math.max(1, Math.round(estimatedScore * 0.25 / 1.25))),
-          strengths: analysis.descriptiveWords.length > 3 ? [`Good use of descriptive language: ${analysis.descriptiveWords.slice(0, 3).join(', ')}`] : ["You're developing your vocabulary"],
-          improvements: ["Use more sophisticated vocabulary appropriate for NSW Selective Band 5-6 level", "Vary your sentence structures for more engaging writing"],
-          suggestions: ["Replace simple words with more sophisticated alternatives (e.g., 'good' → 'exceptional')", "Use complex sentences with subordinate clauses"],
-          nextSteps: ["Practice using 5 new sophisticated vocabulary words in your next draft"]
-        },
-        spellingPunctuationGrammar: {
-          score: Math.round(estimatedScore * 0.2),
-          maxScore: 6,
-          band: Math.min(6, Math.max(1, Math.round(estimatedScore * 0.2 / 1))),
-          strengths: ["Your basic grammar and spelling show good control"],
-          improvements: ["Check for any minor errors and ensure consistent tense throughout"],
-          suggestions: ["Proofread your work carefully, reading it aloud to catch errors", "Use varied punctuation to create more sophisticated sentences"],
-          nextSteps: [`Maintain consistent ${textType === 'narrative' ? 'past' : 'present'} tense throughout your writing`]
-        }
+    // Create the API request
+    const response = await fetch(`${OPENAI_API_BASE}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
       },
-      priorityFocus: [
-        estimatedScore < 20 ? "Develop ideas with more specific details and examples" : "Add sophisticated insights and analysis",
-        estimatedScore < 15 ? "Improve basic structure and organization" : "Enhance vocabulary and sentence variety"
-      ],
-      examStrategies: [
-        `Plan your ${textType} structure before writing (5 minutes planning time)`,
-        "Use sophisticated vocabulary appropriate for selective school entry",
-        "Leave time to check and improve your work (5 minutes checking time)"
-      ],
-      interactiveQuestions: getTextTypeQuestions(textType),
-      revisionSuggestions: [
-        `Add 2-3 more specific examples to strengthen your ${textType}`,
-        "Replace 3 simple words with more sophisticated alternatives",
-        "Check that each paragraph has one clear main idea"
-      ]
-    };
-  }
-}
-
-// Helper function to analyze content structure and extract key elements
-function analyzeContentStructure(content: string) {
-  const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 0);
-  const words = content.trim().split(/\s+/).filter(w => w.length > 0);
-  const paragraphs = content.split(/\n\s*\n/).filter(p => p.trim().length > 0);
-  
-  // Extract potential character names (capitalized words that aren't sentence starters)
-  const potentialCharacters = words.filter((word, index) => {
-    const isCapitalized = /^[A-Z][a-z]+$/.test(word);
-    const isNotSentenceStart = index > 0 && !/[.!?]/.test(words[index - 1]);
-    return isCapitalized && isNotSentenceStart;
-  });
-
-  // Identify dialogue (text in quotes)
-  const dialogueMatches = content.match(/"[^"]*"/g) || [];
-  
-  // Identify descriptive language (adjectives and adverbs)
-  const descriptiveWords = words.filter(word => 
-    /ly$/.test(word) || // adverbs ending in -ly
-    /ing$/.test(word) || // present participles
-    /ed$/.test(word) // past participles
-  );
-
-  return {
-    sentenceCount: sentences.length,
-    wordCount: words.length,
-    paragraphCount: paragraphs.length,
-    averageSentenceLength: words.length / sentences.length,
-    potentialCharacters: [...new Set(potentialCharacters)],
-    hasDialogue: dialogueMatches.length > 0,
-    dialogueCount: dialogueMatches.length,
-    descriptiveWords: [...new Set(descriptiveWords)],
-    firstSentence: sentences[0]?.trim() || '',
-    lastSentence: sentences[sentences.length - 1]?.trim() || ''
-  };
-}
-
-// Enhanced function to get contextual writing feedback
-export async function getWritingFeedback(content: string, textType: string, assistanceLevel: string, feedbackHistory: any[]): Promise<any> {
-  try {
-    return await makeBackendCall('getWritingFeedback', {
-      content,
-      textType,
-      assistanceLevel,
-      feedbackHistory
+      body: JSON.stringify({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'system',
+            content: `You are an expert writing teacher for NSW Selective School entrance exams. Generate engaging, age-appropriate writing prompts for Year 6 students (ages 11-12).`
+          },
+          {
+            role: 'user',
+            content: `Create a creative and engaging ${textType} writing prompt for a Year 6 student preparing for NSW Selective School entrance exams. The prompt should:
+            
+            1. Be age-appropriate and interesting for 11-12 year olds
+            2. Encourage creativity and critical thinking
+            3. Be clear and specific enough to guide their writing
+            4. Allow for personal expression and unique perspectives
+            5. Be suitable for a 40-minute writing task
+            
+            Make the prompt inspiring and fun while maintaining educational value. Return only the prompt text, no additional formatting or explanations.`
+          }
+        ],
+        max_tokens: 200,
+        temperature: 0.8,
+      }),
     });
-  } catch (error) {
-    console.error('Error getting writing feedback:', error);
-    
-    console.log('[DEBUG] Using enhanced fallback feedback for local development');
-    
-    // Enhanced contextual fallback based on content analysis
-    const analysis = analyzeContentStructure(content);
-    const qualityScore = Math.min(10, Math.max(3, Math.round(analysis.wordCount / 20) + (analysis.paragraphCount > 1 ? 2 : 0)));
-    
-    return {
-      overallComment: `Your ${analysis.wordCount}-word ${textType} shows ${qualityScore >= 7 ? 'strong' : qualityScore >= 5 ? 'good' : 'developing'} effort for NSW Selective preparation! You're building important writing skills.`,
-      feedbackItems: [
-        {
-          type: "praise",
-          area: "NSW Selective Preparation",
-          text: `Excellent effort writing ${analysis.wordCount} words! This shows dedication to your NSW Selective preparation.`,
-          exampleFromText: analysis.firstSentence,
-          suggestionForImprovement: "For NSW Selective success, continue building sophisticated vocabulary and varied sentence structures."
-        },
-        {
-          type: "suggestion",
-          area: "NSW Text Structure",
-          text: analysis.paragraphCount === 1 ? `Your ${textType} is currently in one paragraph.` : `You've organized your ${textType} into ${analysis.paragraphCount} paragraphs - good structure!`,
-          suggestionForImprovement: analysis.paragraphCount === 1 ? `For NSW Selective ${textType}, break your writing into 3-4 well-developed paragraphs.` : "Excellent paragraph organization for NSW Selective standards!"
-        },
-        {
-          type: "challenge",
-          area: "Vocabulary Enhancement",
-          text: `Your vocabulary shows ${analysis.descriptiveWords.length > 5 ? 'good variety' : 'room for growth'}.`,
-          suggestionForImprovement: "For Band 5-6 NSW Selective writing, use more sophisticated vocabulary that demonstrates language maturity."
-        }
-      ],
-      focusForNextTime: [
-        analysis.averageSentenceLength < 10 ? "Write longer, more complex sentences for NSW Selective standards" : "Excellent sentence complexity!",
-        analysis.descriptiveWords.length < 5 ? "Add more sophisticated vocabulary and descriptive language" : "Great use of descriptive language!",
-        `Ensure your ${textType} follows NSW Selective text type conventions`,
-        "Practice using literary devices appropriate for your age level"
-      ]
-    };
-  }
-}
 
-// Enhanced function for specialized text type feedback with contextual analysis
-async function getSpecializedTextTypeFeedback(content: string, textType: string): Promise<any> {
-  try {
-    return await makeBackendCall('getSpecializedTextTypeFeedback', {
-      content,
-      textType
-    });
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    
+    if (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) {
+      const generatedPrompt = data.choices[0].message.content.trim();
+      console.log('✅ OpenAI: Prompt generated successfully');
+      return generatedPrompt;
+    } else {
+      throw new Error('Invalid response format from OpenAI API');
+    }
+    
   } catch (error) {
-    console.error('Error getting specialized text type feedback:', error);
-    return {
-      overallComment: "Unable to provide specialized feedback at this time. Your writing shows good understanding of the task.",
-      textTypeSpecificFeedback: {
-        structure: "Your writing has a clear structure appropriate for this text type.",
-        language: "You've used suitable language for this writing style.",
-        purpose: "Your writing addresses the main purpose effectively.",
-        audience: "Consider your audience when refining your writing."
+    console.error('❌ OpenAI: Error generating prompt:', error);
+    
+    // Return fallback prompt instead of failing completely
+    console.log('🔄 OpenAI: Using fallback prompt');
+    return getFallbackPrompt(textType);
+  }
+};
+
+// Get fallback prompt for the specified text type
+const getFallbackPrompt = (textType: string): string => {
+  return FALLBACK_PROMPTS[textType as keyof typeof FALLBACK_PROMPTS] || FALLBACK_PROMPTS.narrative;
+};
+
+// Enhanced synonym generation with fallback
+export const getSynonyms = async (word: string): Promise<string[]> => {
+  console.log('🔄 OpenAI: Getting synonyms for:', word);
+  
+  try {
+    if (!OPENAI_API_KEY) {
+      return getBasicSynonyms(word);
+    }
+
+    const response = await fetch(`${OPENAI_API_BASE}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
       },
-      strengthsInTextType: [
-        "Good understanding of the text type requirements",
-        "Appropriate structure and organization",
-        "Clear attempt at the required style"
-      ],
-      improvementAreas: [
-        "Continue developing text type knowledge",
-        "Practice specific language features",
-        "Strengthen understanding of conventions"
-      ],
-      nextSteps: [
-        "Review examples of this text type",
-        "Practice with guided exercises",
-        "Seek additional feedback and support"
-      ]
-    };
-  }
-}
-
-// Enhanced function to identify specific mistakes in context
-export async function identifyCommonMistakes(content: string, textType: string) {
-  try {
-    return await makeBackendCall('identifyCommonMistakes', {
-      content,
-      textType
+      body: JSON.stringify({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a helpful writing assistant. Provide synonyms that are appropriate for Year 6 students (ages 11-12).'
+          },
+          {
+            role: 'user',
+            content: `Provide 5 age-appropriate synonyms for the word "${word}". Return only the synonyms separated by commas, no additional text.`
+          }
+        ],
+        max_tokens: 100,
+        temperature: 0.3,
+      }),
     });
-  } catch (error) {
-    console.error('Error identifying common mistakes:', error);
-    const analysis = analyzeContentStructure(content);
-    return {
-      overallAssessment: `Your ${analysis.wordCount}-word piece shows good effort. I can see you're developing your writing skills.`,
-      mistakesIdentified: [],
-      patternAnalysis: `Your writing shows ${analysis.sentenceCount} sentences with an average length of ${Math.round(analysis.averageSentenceLength)} words. Continue focusing on clear expression.`,
-      priorityFixes: [
-        analysis.averageSentenceLength < 6 ? "Try writing some longer, more detailed sentences" : "Good sentence length variety",
-        "Proofread carefully for spelling and grammar",
-        "Read your work aloud to check if it flows well"
-      ],
-      positiveElements: [
-        `Strong opening: "${analysis.firstSentence.substring(0, 40)}..."`,
-        `Good effort with ${analysis.wordCount} words written`
-      ]
-    };
-  }
-}
 
-// Keep all other existing functions unchanged but route through backend
-export async function generatePrompt(textType: string): Promise<string> {
-  try {
-    const result = await makeBackendCall('generatePrompt', { textType });
-    if (result.error === 'BACKEND_NOT_AVAILABLE') {
-      console.log('[DEBUG] Using fallback prompts for local development');
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    if (data.choices && data.choices[0] && data.choices[0].message) {
+      const synonyms = data.choices[0].message.content
+        .trim()
+        .split(',')
+        .map((s: string) => s.trim())
+        .filter((s: string) => s.length > 0);
       
-      // Enhanced NSW Selective fallback prompts
-      const nswSelectiveFallbackPrompts: { [key: string]: string } = {
-        narrative: "Write a narrative about a time when you had to make a difficult decision. Show how this experience changed you as a person. Include dialogue, descriptive language, and a clear structure with beginning, middle, and end.",
-        persuasive: "Should students be allowed to use technology during class time? Write a persuasive essay arguing your position. Use specific examples, address counterarguments, and include a strong conclusion that calls your reader to action.",
-        creative: "Write a creative piece that begins with this line: 'The old photograph revealed a secret that changed everything.' Use sophisticated vocabulary, varied sentence structures, and engaging literary techniques.",
-        descriptive: "Describe your ideal learning environment using all five senses. Paint a vivid picture that helps the reader experience this space as if it were real. Focus on sensory details and figurative language.",
-        recount: "Recount a significant event from your life. Describe what happened, your feelings, and the outcome. Ensure a clear chronological order and personal reflection.",
-        discursive: "Discuss the pros and cons of social media for teenagers. Present a balanced argument, considering various viewpoints, and conclude with your own reasoned perspective.",
-        news_report: "Write a news report about a recent local event. Include a catchy headline, lead paragraph (who, what, when, where, why, how), and factual details from reliable sources.",
-        letter: "Write a formal letter to your local council proposing a new community initiative. Clearly state your purpose, provide supporting reasons, and suggest next steps.",
-        diary: "Write a diary entry from the perspective of a historical figure on a pivotal day in their life. Express their thoughts, feelings, and observations.",
-        speech: "Prepare a speech for your school assembly on the importance of environmental conservation. Engage your audience with rhetorical devices and a clear call to action.",
-        default: "Write a short story about a magical object found in an unexpected place. Focus on character development and a surprising plot twist."
-      };
-      return nswSelectiveFallbackPrompts[textType] || nswSelectiveFallbackPrompts.default;
+      console.log('✅ OpenAI: Synonyms generated successfully');
+      return synonyms;
+    } else {
+      throw new Error('Invalid response format');
     }
-    return result.prompt;
+    
   } catch (error) {
-    console.error('Error generating prompt:', error);
-    return "An error occurred while generating the prompt. Please try again.";
+    console.error('❌ OpenAI: Error getting synonyms:', error);
+    return getBasicSynonyms(word);
   }
-}
+};
 
-export async function getSynonyms(word: string): Promise<string[]> {
+// Basic synonym fallback
+const getBasicSynonyms = (word: string): string[] => {
+  const synonymMap: { [key: string]: string[] } = {
+    'good': ['great', 'excellent', 'wonderful', 'fantastic', 'amazing'],
+    'bad': ['terrible', 'awful', 'horrible', 'dreadful', 'poor'],
+    'big': ['large', 'huge', 'enormous', 'massive', 'giant'],
+    'small': ['tiny', 'little', 'miniature', 'petite', 'compact'],
+    'happy': ['joyful', 'cheerful', 'delighted', 'pleased', 'content'],
+    'sad': ['unhappy', 'sorrowful', 'gloomy', 'dejected', 'melancholy'],
+    'fast': ['quick', 'rapid', 'swift', 'speedy', 'hasty'],
+    'slow': ['sluggish', 'gradual', 'leisurely', 'unhurried', 'delayed']
+  };
+  
+  return synonymMap[word.toLowerCase()] || [word];
+};
+
+// Enhanced sentence rephrasing with fallback
+export const rephraseSentence = async (sentence: string): Promise<string> => {
+  console.log('🔄 OpenAI: Rephrasing sentence');
+  
   try {
-    const result = await makeBackendCall('getSynonyms', { word });
-    if (result.error === 'BACKEND_NOT_AVAILABLE') {
-      console.log('[DEBUG] Using fallback synonyms for local development');
-      const fallbackSynonyms: { [key: string]: string[] } = {
-        good: ['excellent', 'great', 'fine', 'superior', 'pleasant'],
-        bad: ['poor', 'terrible', 'awful', 'inferior', 'unpleasant'],
-        happy: ['joyful', 'cheerful', 'merry', 'glad', 'delighted'],
-        sad: ['unhappy', 'sorrowful', 'depressed', 'gloomy', 'miserable'],
-        big: ['large', 'huge', 'gigantic', 'enormous', 'massive'],
-        small: ['tiny', 'little', 'miniature', 'petite', 'minuscule']
-      };
-      return fallbackSynonyms[word.toLowerCase()] || [];
+    if (!OPENAI_API_KEY) {
+      return sentence; // Return original if no API key
     }
-    return result.synonyms;
-  } catch (error) {
-    console.error('Error getting synonyms:', error);
-    return [];
-  }
-}
 
-export async function rephraseSentence(sentence: string): Promise<string> {
+    const response = await fetch(`${OPENAI_API_BASE}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a writing assistant helping Year 6 students improve their writing. Rephrase sentences to be more engaging and age-appropriate.'
+          },
+          {
+            role: 'user',
+            content: `Rephrase this sentence to make it more engaging and varied while keeping the same meaning: "${sentence}". Return only the rephrased sentence.`
+          }
+        ],
+        max_tokens: 150,
+        temperature: 0.7,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    if (data.choices && data.choices[0] && data.choices[0].message) {
+      const rephrased = data.choices[0].message.content.trim();
+      console.log('✅ OpenAI: Sentence rephrased successfully');
+      return rephrased;
+    } else {
+      throw new Error('Invalid response format');
+    }
+    
+  } catch (error) {
+    console.error('❌ OpenAI: Error rephrasing sentence:', error);
+    return sentence; // Return original sentence on error
+  }
+};
+
+// Enhanced essay evaluation with fallback
+export const evaluateEssay = async (content: string, textType: string): Promise<any> => {
+  console.log('🔄 OpenAI: Evaluating essay');
+  
   try {
-    const result = await makeBackendCall('rephraseSentence', { sentence });
-    if (result.error === 'BACKEND_NOT_AVAILABLE') {
-      console.log('[DEBUG] Using fallback rephrased sentence for local development');
-      return `"${sentence}" rephrased: This is a rephrased version of your sentence.`;
+    if (!OPENAI_API_KEY) {
+      return getBasicEvaluation(content, textType);
     }
-    return result.rephrasedSentence;
-  } catch (error) {
-    console.error('Error rephrasing sentence:', error);
-    return "An error occurred while rephrasing the sentence.";
-  }
-}
 
-export async function evaluateEssay(content: string, textType: string): Promise<any> {
-  try {
-    const result = await makeBackendCall('evaluateEssay', { content, textType });
-    if (result.error === 'BACKEND_NOT_AVAILABLE') {
-      console.log('[DEBUG] Using fallback essay evaluation for local development');
-      return {
-        overallFeedback: "This is a fallback evaluation. Your essay shows good effort.",
-        score: 75,
-        areasForImprovement: ["Expand on your ideas", "Improve sentence structure"],
-        strengths: ["Clear topic", "Good vocabulary"]
-      };
+    const response = await fetch(`${OPENAI_API_BASE}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'system',
+            content: `You are an expert teacher evaluating ${textType} writing for NSW Selective School entrance exams. Provide constructive feedback appropriate for Year 6 students.`
+          },
+          {
+            role: 'user',
+            content: `Please evaluate this ${textType} writing piece and provide feedback in JSON format with the following structure:
+            {
+              "overallScore": (number 1-10),
+              "strengths": ["strength1", "strength2"],
+              "improvements": ["improvement1", "improvement2"],
+              "specificFeedback": "detailed feedback paragraph",
+              "nextSteps": ["step1", "step2"]
+            }
+            
+            Writing piece:
+            "${content}"`
+          }
+        ],
+        max_tokens: 500,
+        temperature: 0.3,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.status}`);
     }
-    return result;
-  } catch (error) {
-    console.error('Error evaluating essay:', error);
-    return { overallFeedback: "An error occurred during essay evaluation.", score: 0, areasForImprovement: [], strengths: [] };
-  }
-}
 
-export function getTextTypeQuestions(textType: string): string[] {
-  const questions: { [key: string]: string[] } = {
-    narrative: [
-      "What is the main conflict in your story, and how is it resolved?",
-      "Have you shown, rather than told, your characters' emotions and motivations?",
-      "Is the pacing effective? Are there moments of tension and release?",
-      "How does your story's ending leave the reader feeling?"
+    const data = await response.json();
+    
+    if (data.choices && data.choices[0] && data.choices[0].message) {
+      try {
+        const evaluation = JSON.parse(data.choices[0].message.content);
+        console.log('✅ OpenAI: Essay evaluated successfully');
+        return evaluation;
+      } catch (parseError) {
+        console.error('Error parsing evaluation JSON:', parseError);
+        return getBasicEvaluation(content, textType);
+      }
+    } else {
+      throw new Error('Invalid response format');
+    }
+    
+  } catch (error) {
+    console.error('❌ OpenAI: Error evaluating essay:', error);
+    return getBasicEvaluation(content, textType);
+  }
+};
+
+// Basic evaluation fallback
+const getBasicEvaluation = (content: string, textType: string) => {
+  const wordCount = content.trim().split(/\s+/).length;
+  const hasGoodLength = wordCount >= 150;
+  const hasVariedSentences = content.includes('.') && content.includes(',');
+  
+  return {
+    overallScore: hasGoodLength && hasVariedSentences ? 7 : 5,
+    strengths: [
+      hasGoodLength ? "Good length and development" : "Shows effort in writing",
+      hasVariedSentences ? "Uses varied punctuation" : "Clear communication"
     ],
-    persuasive: [
-      "Is your thesis statement clear and compelling?",
-      "Have you used strong evidence and logical reasoning to support each argument?",
-      "How effectively do you address and refute counterarguments?",
-      "Does your conclusion leave a lasting impression and call to action?"
+    improvements: [
+      !hasGoodLength ? "Try to develop your ideas more fully" : "Consider adding more descriptive details",
+      !hasVariedSentences ? "Use more varied sentence structures" : "Check for spelling and grammar"
     ],
-    expository: [
-      "Is your explanation clear and easy for the reader to understand?",
-      "Have you provided sufficient details and examples to illustrate your points?",
-      "Is the information organized logically, with clear topic sentences for each paragraph?",
-      "How do you ensure your writing remains objective and factual?"
-    ],
-    reflective: [
-      "Have you clearly articulated the experience you are reflecting on?",
-      "Do you delve deeply into your thoughts and feelings about the experience?",
-      "What insights or lessons have you gained from this experience?",
-      "How does your reflection connect to broader themes or ideas?"
-    ],
-    descriptive: [
-      "Have you used vivid sensory details (sight, sound, smell, taste, touch) to bring your subject to life?",
-      "Are your adjectives and adverbs precise and impactful?",
-      "Have you used figurative language (similes, metaphors) effectively?",
-      "Does your description create a clear and unified impression for the reader?"
-    ],
-    recount: [
-      "Is the sequence of events clear and easy to follow?",
-      "Have you included enough specific details to make the event come alive?",
-      "What was the most significant moment, and have you highlighted it?",
-      "How did you feel during the event, and have you conveyed that?"
-    ],
-    discursive: [
-      "Have you presented a balanced view of the issue, considering multiple perspectives?",
-      "Are your arguments well-supported with evidence or examples?",
-      "Is your conclusion thoughtful and does it offer a clear stance or summary?",
-      "How do you maintain an objective tone while discussing complex ideas?"
-    ],
-    news_report: [
-      "Have you included all the key information (who, what, when, where, why, how)?",
-      "Is your language objective and factual?",
-      "Is the most important information presented first?",
-      "Have you quoted sources appropriately?"
-    ],
-    letter: [
-      "Is the purpose of your letter clear?",
-      "Have you used the appropriate tone and formality for your audience?",
-      "Is the structure of your letter correct (address, salutation, body, closing)?",
-      "Have you clearly stated any actions you expect from the recipient?"
-    ],
-    diary: [
-      "Does your diary entry sound authentic and personal?",
-      "Have you expressed your feelings and thoughts clearly?",
-      "Are there enough details to make the events vivid?",
-      "What insights or reflections have you included about your day?"
-    ],
-    speech: [
-      "Is your main message clear and compelling?",
-      "Have you considered your audience and tailored your language to them?",
-      "Does your speech have a strong opening and a memorable closing?",
-      "Have you used rhetorical devices effectively to engage your audience?"
-    ],
-    default: [
-      "What is the main purpose of your writing?",
-      "Who is your intended audience?",
-      "What is one area you'd like to improve in this piece?",
-      "What new vocabulary can you incorporate?"
+    specificFeedback: `Your ${textType} writing shows good effort. ${hasGoodLength ? 'You have developed your ideas well with a good length.' : 'Try to expand your ideas with more details and examples.'} ${hasVariedSentences ? 'Your use of punctuation helps make your writing clear.' : 'Consider using more varied sentence structures to make your writing more engaging.'}`,
+    nextSteps: [
+      "Read your work aloud to check for flow",
+      "Add more descriptive words to paint a clearer picture"
     ]
   };
-  return questions[textType.toLowerCase()] || questions.default;
-}
+};
 
-// Function to get text type specific vocabulary
-export async function getTextTypeVocabulary(textType: string): Promise<any> {
+// NSW Selective feedback function
+export const getNSWSelectiveFeedback = async (content: string, textType: string, feedbackType: string, focusAreas: string[]): Promise<any> => {
+  console.log('🔄 OpenAI: Getting NSW Selective feedback');
+  
   try {
-    return await makeBackendCall('getTextTypeVocabulary', { textType });
-  } catch (error) {
-    console.error('Error getting text type vocabulary:', error);
+    if (!OPENAI_API_KEY) {
+      return getBasicNSWFeedback(content, textType);
+    }
+
+    const response = await fetch(`${OPENAI_API_BASE}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are an expert NSW Selective School entrance exam evaluator. Provide detailed, constructive feedback for Year 6 students.'
+          },
+          {
+            role: 'user',
+            content: `Evaluate this ${textType} writing for NSW Selective School standards. Focus on: ${focusAreas.join(', ') || 'overall quality'}. 
+            
+            Provide feedback in JSON format:
+            {
+              "score": (number 1-10),
+              "criteria": {
+                "ideas": (number 1-10),
+                "organization": (number 1-10),
+                "voice": (number 1-10),
+                "wordChoice": (number 1-10),
+                "sentenceFluency": (number 1-10),
+                "conventions": (number 1-10)
+              },
+              "strengths": ["strength1", "strength2"],
+              "improvements": ["improvement1", "improvement2"],
+              "detailedFeedback": "comprehensive feedback paragraph",
+              "suggestions": ["suggestion1", "suggestion2"]
+            }
+            
+            Writing: "${content}"`
+          }
+        ],
+        max_tokens: 600,
+        temperature: 0.3,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.status}`);
+    }
+
+    const data = await response.json();
     
-    // Fallback vocabulary suggestions based on text type
-    const vocabularyMap: { [key: string]: any } = {
-      narrative: {
-        descriptive: ['vivid', 'captivating', 'mesmerizing', 'enchanting', 'breathtaking'],
-        emotions: ['elated', 'devastated', 'bewildered', 'triumphant', 'apprehensive'],
-        actions: ['sprinted', 'whispered', 'contemplated', 'discovered', 'transformed']
-      },
-      persuasive: {
-        strong_verbs: ['advocate', 'emphasize', 'demonstrate', 'establish', 'convince'],
-        connectives: ['furthermore', 'consequently', 'nevertheless', 'undoubtedly', 'ultimately'],
-        adjectives: ['compelling', 'crucial', 'significant', 'essential', 'imperative']
-      },
-      expository: {
-        academic: ['analyze', 'examine', 'investigate', 'demonstrate', 'illustrate'],
-        connectives: ['therefore', 'however', 'moreover', 'subsequently', 'specifically'],
-        precise: ['accurate', 'comprehensive', 'systematic', 'methodical', 'thorough']
+    if (data.choices && data.choices[0] && data.choices[0].message) {
+      try {
+        const feedback = JSON.parse(data.choices[0].message.content);
+        console.log('✅ OpenAI: NSW Selective feedback generated successfully');
+        return feedback;
+      } catch (parseError) {
+        console.error('Error parsing NSW feedback JSON:', parseError);
+        return getBasicNSWFeedback(content, textType);
       }
-    };
+    } else {
+      throw new Error('Invalid response format');
+    }
     
-    return vocabularyMap[textType] || vocabularyMap.narrative;
-  }
-}
-
-// Function to get writing structure guidance
-export async function getWritingStructure(textType: string): Promise<any> {
-  try {
-    return await makeBackendCall('getWritingStructure', { textType });
   } catch (error) {
-    console.error('Error getting writing structure:', error);
-    
-    // Fallback structure guidance
-    const structureMap: { [key: string]: any } = {
-      narrative: {
-        introduction: "Set the scene with engaging opening",
-        body: "Develop plot with rising action, climax, and resolution",
-        conclusion: "Reflect on the experience and its significance"
-      },
-      persuasive: {
-        introduction: "Present your position clearly",
-        body: "Support arguments with evidence and address counterpoints",
-        conclusion: "Reinforce your position with a call to action"
-      },
-      expository: {
-        introduction: "Introduce the topic and thesis",
-        body: "Present information logically with supporting details",
-        conclusion: "Summarize key points and implications"
-      }
-    };
-    
-    return structureMap[textType] || structureMap.narrative;
+    console.error('❌ OpenAI: Error getting NSW Selective feedback:', error);
+    return getBasicNSWFeedback(content, textType);
   }
-}
+};
 
+// Basic NSW feedback fallback
+const getBasicNSWFeedback = (content: string, textType: string) => {
+  const wordCount = content.trim().split(/\s+/).length;
+  const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 0);
+  const avgSentenceLength = sentences.length > 0 ? wordCount / sentences.length : 0;
+  
+  const baseScore = Math.min(10, Math.max(1, Math.round(wordCount / 30)));
+  
+  return {
+    score: baseScore,
+    criteria: {
+      ideas: Math.min(10, baseScore + 1),
+      organization: baseScore,
+      voice: Math.max(1, baseScore - 1),
+      wordChoice: baseScore,
+      sentenceFluency: avgSentenceLength > 8 ? Math.min(10, baseScore + 1) : Math.max(1, baseScore - 1),
+      conventions: baseScore
+    },
+    strengths: [
+      wordCount >= 100 ? "Good development of ideas" : "Clear communication",
+      sentences.length > 3 ? "Uses varied sentence structures" : "Shows understanding of the task"
+    ],
+    improvements: [
+      wordCount < 150 ? "Expand your ideas with more details" : "Consider adding more sophisticated vocabulary",
+      avgSentenceLength < 8 ? "Try using longer, more complex sentences" : "Check for spelling and punctuation"
+    ],
+    detailedFeedback: `Your ${textType} writing demonstrates ${wordCount >= 150 ? 'good' : 'developing'} understanding of the task requirements. ${wordCount >= 100 ? 'You have provided sufficient detail to support your ideas.' : 'Consider expanding your ideas with more specific examples and details.'} Your sentence structure ${avgSentenceLength > 8 ? 'shows good variety' : 'could benefit from more complexity'}.`,
+    suggestions: [
+      "Use more descriptive adjectives and adverbs",
+      "Include specific examples to support your main points",
+      "Read your work aloud to check for flow and clarity"
+    ]
+  };
+};
 
-export { openai };
-
-export async function checkOpenAIConnectionStatus(): Promise<{ is_connected: boolean }> {
-  try {
-    const result = await makeBackendCall("check_openai_connection", {});
-    return result;
-  } catch (error) {
-    console.error("Error checking OpenAI connection status:", error);
-    return { is_connected: false };
-  }
-}
-
-
+export default {
+  generatePrompt,
+  getSynonyms,
+  rephraseSentence,
+  evaluateEssay,
+  getNSWSelectiveFeedback
+};
