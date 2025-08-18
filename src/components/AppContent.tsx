@@ -355,77 +355,42 @@ function AppContent() {
             user ? <SettingsPage onBack={() => setActivePage('dashboard')} /> : <Navigate to="/" />
           } />
           <Route path="/writing" element={
-  <WritingAccessCheck onNavigate={handleNavigation}>
-    <ErrorBoundary>
-      <div className="writing-route h-screen flex flex-col">
-        <EnhancedHeader 
-          textType={textType}
-          assistanceLevel={assistanceLevel}
-          onTextTypeChange={setTextType}
-          onAssistanceLevelChange={setAssistanceLevel}
-          onTimerStart={() => setTimerStarted(true)}
-          hideTextTypeSelector={popupFlowCompleted}
-        />
-        
-        {showExamMode ? (
-          <ExamSimulationMode 
-            onExit={() => setShowExamMode(false)}
-          />
-        ) : (
-          <div className="writing-layout-content flex-1 min-h-0">
-            <ErrorBoundary>
-              <EnhancedWritingLayout
-                content={content}
-                onChange={setContent}
-                textType={textType}
-                assistanceLevel={assistanceLevel}
-                selectedText={selectedText}
-                onTimerStart={setTimerStarted}
-                onSubmit={handleSubmit}
-                onTextTypeChange={handleTextTypeChange}
-                onPopupCompleted={handlePopupCompleted}
-                onNavigate={handleNavigation}
-              />
-            </ErrorBoundary>
-          </div>
-        )}
-      </div>
-    </ErrorBoundary>
-  </WritingAccessCheck>
-} />
-          <Route path="/writing" element={
             <WritingAccessCheck onNavigate={handleNavigation}>
-              <div className="writing-route h-screen flex flex-col">
-                <EnhancedHeader 
-                  textType={textType}
-                  assistanceLevel={assistanceLevel}
-                  onTextTypeChange={setTextType}
-                  onAssistanceLevelChange={setAssistanceLevel}
-                  onTimerStart={() => setTimerStarted(true)}
-                  hideTextTypeSelector={popupFlowCompleted}
-                />
-                
-                {showExamMode ? (
-                  <ExamSimulationMode 
-                    onExit={() => setShowExamMode(false)}
+              <ErrorBoundary>
+                <div className="writing-route h-screen flex flex-col">
+                  <EnhancedHeader 
+                    textType={textType}
+                    assistanceLevel={assistanceLevel}
+                    onTextTypeChange={setTextType}
+                    onAssistanceLevelChange={setAssistanceLevel}
+                    onTimerStart={() => setTimerStarted(true)}
+                    hideTextTypeSelector={popupFlowCompleted}
                   />
-                ) : (
-                  <div className="writing-layout-content flex-1 min-h-0">
-                    <EnhancedWritingLayout
-                      content={content}
-                      onChange={setContent}
-                      textType={textType}
-                      assistanceLevel={assistanceLevel}
-                      selectedText={selectedText}
-                      onTimerStart={setTimerStarted}
-                      onSubmit={handleSubmit}
-                      onTextTypeChange={handleTextTypeChange}
-                      onPopupCompleted={handlePopupCompleted}
-                      onNavigate={handleNavigation}
+                  
+                  {showExamMode ? (
+                    <ExamSimulationMode 
+                      onExit={() => setShowExamMode(false)}
                     />
-                  </div>
-                )}
-              </div>
+                  ) : (
+                    <div className="writing-layout-content flex-1 min-h-0">
+                      <ErrorBoundary>
+                        <EnhancedWritingLayout
+                          content={content}
+                          onChange={setContent}
+                          textType={textType}
+                          assistanceLevel={assistanceLevel}
+                          selectedText={selectedText}
+                          onTimerStart={setTimerStarted}
+                          onSubmit={handleSubmit}
+                          onTextTypeChange={handleTextTypeChange}
+                          onPopupCompleted={handlePopupCompleted}
+                          onNavigate={handleNavigation}
+                        />
+                      </ErrorBoundary>
+                    </div>
+                  )}
+                </div>
+              </ErrorBoundary>
             </WritingAccessCheck>
           } />
 
@@ -444,34 +409,66 @@ function AppContent() {
           <Route path="/progress-tracking" element={<ProgressTrackingComponent />} />
           <Route path="/coaching-tips" element={<CoachingTipsComponent />} />
 
+          <Route path="/payment-success" element={
+            <PaymentSuccessPage 
+              onNavigate={handleNavigation}
+              planType={pendingPaymentPlan}
+            />
+          } />
+          <Route path="/auth/callback" element={<EmailVerificationHandler />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
-
-        {/* Only show footer on specific pages */}
-        {shouldShowFooter() && <Footer />}
-
-        <AuthModal
-          isOpen={showAuthModal}
-          onClose={() => setShowAuthModal(false)}
-          mode={authModalMode}
-          onAuthSuccess={handleAuthSuccess}
-        />
-
-        {showPaymentSuccess && (
-          <PaymentSuccessPage
-            onClose={() => setShowPaymentSuccess(false)}
-            planType={pendingPaymentPlan || 'unknown'}
-          />
-        )}
       </div>
+
+      {/* Footer - Only show on certain pages */}
+      {shouldShowFooter() && <Footer />}
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        mode={authModalMode}
+        onSuccess={handleAuthSuccess}
+      />
+
+      {/* Planning Tool Modal */}
+      <PlanningToolModal
+        isOpen={showPlanningTool}
+        onClose={() => setShowPlanningTool(false)}
+        onSavePlan={(plan) => {
+          console.log('Plan saved:', plan);
+          setShowPlanningTool(false);
+        }}
+        textType={textType}
+        content={content}
+      />
+
+      {/* Help Center Modal */}
+      {showHelpCenter && (
+        <HelpCenter onClose={() => setShowHelpCenter(false)} />
+      )}
+
+      {/* Admin Button - Only show for admin users */}
       <AdminButton />
     </div>
   );
 }
 
-export default AppContent;
+// Placeholder components for missing routes
+function TextTypeAnalysisComponent() {
+  return <div>Text Type Analysis Component</div>;
+}
 
-import { TextTypeAnalysisComponent } from './TextTypeAnalysisComponent';
-import { VocabularySophisticationComponent } from './VocabularySophisticationComponent';
-import { ProgressTrackingComponent } from './ProgressTrackingComponent';
-import { CoachingTipsComponent } from './CoachingTipsComponent';
+function VocabularySophisticationComponent() {
+  return <div>Vocabulary Sophistication Component</div>;
+}
+
+function ProgressTrackingComponent() {
+  return <div>Progress Tracking Component</div>;
+}
+
+function CoachingTipsComponent() {
+  return <div>Coaching Tips Component</div>;
+}
+
+export default AppContent;
