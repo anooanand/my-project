@@ -39,10 +39,10 @@ export function EnhancedHeader({
               <PenTool className="h-5 w-5 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tight">Writing Adventure!</h1>
-              <div className="flex items-center space-x-1 text-xs text-blue-100">
+              <h1 className="text-xl font-bold tracking-tight text-white drop-shadow-lg">Writing Adventure!</h1>
+              <div className="flex items-center space-x-1 text-xs text-white opacity-90">
                 <Sparkles className="w-3 h-3" />
-                <span>Unleash Your Creativity</span>
+                <span className="drop-shadow">Unleash Your Creativity</span>
               </div>
             </div>
           </div>
@@ -50,10 +50,10 @@ export function EnhancedHeader({
           {/* Center Content - Text Type Selector (conditionally rendered) */}
           <div className="flex-1 flex justify-center">
             {!hideTextTypeSelector && (
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-4 bg-white bg-opacity-10 backdrop-blur-sm rounded-lg px-4 py-2">
                 <div className="flex items-center space-x-2">
-                  <BookOpen className="h-4 w-4 text-blue-100" />
-                  <span className="text-sm font-medium">Text Type:</span>
+                  <BookOpen className="h-4 w-4 text-white" />
+                  <span className="text-sm font-medium text-white drop-shadow">Text Type:</span>
                 </div>
                 <select
                   value={textType}
@@ -72,21 +72,19 @@ export function EnhancedHeader({
 
           {/* Right Side - Home Button */}
           <div className="flex items-center space-x-3">
+            {/* Decorative Element */}
             <div className="w-2 h-2 bg-yellow-300 rounded-full animate-pulse">
-              <Sparkles className="w-2 h-2 text-white" />
             </div>
-          </div>
 
-          {/* Home Button */}
-          {onHomeClick && (
+            {/* Home Button - ALWAYS VISIBLE */}
             <button
-              onClick={onHomeClick}
-              className="flex items-center space-x-2 px-3 py-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-lg transition-all duration-200 font-medium shadow-md text-sm"
+              onClick={onHomeClick || (() => window.location.href = '/')}
+              className="flex items-center space-x-2 px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white rounded-lg transition-all duration-200 font-medium shadow-lg text-sm backdrop-blur-sm border border-white border-opacity-20"
             >
               <Home className="h-4 w-4" />
-              <span>Home</span>
+              <span className="drop-shadow">Home</span>
             </button>
-          )}
+          </div>
         </div>
       </div>
     </div>
