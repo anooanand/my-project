@@ -48,7 +48,7 @@ export function TabbedCoachPanel({
   return (
     <div className="h-full flex flex-col coach-panel-container" style={{ height: 'calc(100vh - 100px)' }}>
       {/* Tab Navigation */}
-      <div className="coach-panel-header border-b-0 bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30">
+      <div className="coach-panel-header border-b-0 bg-gradient-to-r from-blue-200 to-cyan-200 dark:from-blue-900/30 dark:to-cyan-900/30">
         <div className="flex space-x-2 bg-white dark:bg-gray-800 p-2 rounded-2xl shadow-md">
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -56,7 +56,7 @@ export function TabbedCoachPanel({
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-base font-bold transition-all duration-300 ${
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-lg font-bold transition-all duration-300 ${
                   activeTab === tab.id
                     ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg transform scale-105'
                     : 'bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 text-gray-700 dark:text-gray-300 hover:from-gray-200 hover:to-gray-300 dark:hover:from-gray-600 dark:hover:to-gray-700'
