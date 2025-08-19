@@ -1,136 +1,79 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { WritingArea } from './WritingArea';
 import { TabbedCoachPanel } from './TabbedCoachPanel';
-import { DynamicPromptDisplay } from './DynamicPromptDisplay';
 import { PlanningToolModal } from './PlanningToolModal';
-import { Lightbulb, Type, Save, Settings, Sparkles, Users, Target, Star, CheckCircle, PanelRightClose, PanelRightOpen, Plus, Download, HelpCircle, Bot, PenTool, ToggleLeft, ToggleRight } from 'lucide-react';
-import './layout-fix.css';
-import './full-width-fix.css';
-import './writing-area-fix.css';
-import './new-layout.css';
-import './space-optimization.css';
-import './layout-fix-enhanced.css';
+import { 
+  Bot, 
+  PanelRightClose, 
+  Plus, 
+  Save, 
+  Download, 
+  HelpCircle, 
+  Type,
+  PenTool,
+  ToggleLeft,
+  ToggleRight
+} from 'lucide-react';
 
 interface EnhancedWritingLayoutProps {
   content: string;
   onChange: (content: string) => void;
   textType: string;
-  assistanceLevel: string;
-  selectedText: string;
   onTimerStart: (shouldStart: boolean) => void;
   onSubmit: () => void;
   onTextTypeChange?: (textType: string) => void;
-  onPopupCompleted?: () => void;
   onNavigate?: (page: string) => void;
-  onShowHelpCenter?: () => void;
   onStartNewEssay?: () => void;
-}
-
-interface TemplateData {
-  setting: string;
-  characters: string;
-  plot: string;
-  theme: string;
+  onShowHelpCenter?: () => void;
+  onPopupCompleted?: () => void;
+  assistanceLevel?: 'beginner' | 'intermediate' | 'advanced';
+  selectedText?: string;
 }
 
 export function EnhancedWritingLayout({
   content,
   onChange,
   textType,
-  assistanceLevel,
-  selectedText,
   onTimerStart,
   onSubmit,
   onTextTypeChange,
-  onPopupCompleted,
   onNavigate,
+  onStartNewEssay,
   onShowHelpCenter,
-  onStartNewEssay
+  onPopupCompleted,
+  assistanceLevel = 'intermediate',
+  selectedText = ''
 }: EnhancedWritingLayoutProps) {
   const [showWritingBuddy, setShowWritingBuddy] = useState(true);
-  const [wordCount, setWordCount] = useState(0);
-  const [characterCount, setCharacterCount] = useState(0);
-  const [writingStreak, setWritingStreak] = useState(3);
-  const [timeSpent, setTimeSpent] = useState(0);
-  const [plan, setPlan] = useState<any>(null);
-  
-  // RESTORED: Planning Tool Modal State (like in old version)
   const [showPlanningTool, setShowPlanningTool] = useState(false);
-  
-  // State to store the generated prompt from WritingArea
+  const [plan, setPlan] = useState('');
   const [generatedPrompt, setGeneratedPrompt] = useState('');
+  const [timeSpent, setTimeSpent] = useState(0);
+  const [writingStreak, setWritingStreak] = useState(1);
 
-  // Get writing prompt based on text type (fallback for when no generated prompt exists)
-  const getWritingPrompt = () => {
-    // Use generated prompt if available, otherwise use static prompts
-    if (generatedPrompt) {
-      return generatedPrompt;
-    }
-    
-    const prompts = {
-      'narrative': 'Write a compelling narrative story that engages your reader from beginning to end. Include vivid descriptions, interesting characters, and a clear plot structure with a beginning, middle, and end.',
-      'persuasive': 'Write a persuasive piece that convinces your reader of your viewpoint. Use strong arguments, evidence, and persuasive techniques to support your position.',
-      'expository': 'Write an informative piece that explains a topic clearly and thoroughly. Use facts, examples, and logical organization to educate your reader.',
-      'recount': 'Write a recount of an event or experience. Include details about what happened, when, where, and why it was significant.',
-      'reflective': 'Write a reflective piece about your thoughts, feelings, and experiences. Show personal growth and insight through your writing.',
-      'descriptive': 'Write a descriptive piece that paints a vivid picture with words. Use sensory details and figurative language to create imagery.',
-      'discursive': 'Write a discursive piece that explores different perspectives on a topic. Present balanced arguments and analysis.',
-      'news report': 'Write a news report that informs readers about current events. Use the 5 W\'s and H (Who, What, When, Where, Why, How).',
-      'letter': 'Write a letter that communicates effectively with your intended audience. Use appropriate tone and format.',
-      'diary entry': 'Write a diary entry that captures your personal thoughts and experiences. Be authentic and reflective.',
-      'speech': 'Write a speech that engages and persuades your audience. Use rhetorical devices and clear structure.',
-      'default': 'Write a well-structured piece that demonstrates your writing skills. Focus on clear expression, good organization, and engaging content.'
-    };
-    
-    return prompts[textType as keyof typeof prompts] || prompts.default;
-  };
-
-  // Callback to receive generated prompt from WritingArea
-  const handlePromptGenerated = (prompt: string) => {
-    setGeneratedPrompt(prompt);
-  };
-
-  // RESTORED: Handle plan saving from planning modal (like in old version)
-  const handleSavePlan = (savedPlan: any) => {
-    setPlan(savedPlan);
-    setShowPlanningTool(false);
-    
-    // Save plan to localStorage
-    localStorage.setItem('writingPlan', JSON.stringify(savedPlan));
-    
-    console.log('Plan saved:', savedPlan);
-  };
-
-  // Calculate word and character count
-  useEffect(() => {
-    const words = content.trim().split(/\s+/).filter(word => word.length > 0);
-    setWordCount(words.length);
-    setCharacterCount(content.length);
-  }, [content]);
+  const wordCount = content.trim().split(/\s+/).filter(word => word.length > 0).length;
 
   // Timer for tracking writing time
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeSpent(prev => prev + 1);
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, []);
-
-  // Load saved plan on mount
-  useEffect(() => {
-    const savedPlan = localStorage.getItem('writingPlan');
-    if (savedPlan) {
-      try {
-        setPlan(JSON.parse(savedPlan));
-      } catch (error) {
-        console.error('Error loading saved plan:', error);
-      }
+    let interval: NodeJS.Timeout;
+    if (content.length > 0) {
+      interval = setInterval(() => {
+        setTimeSpent(prev => prev + 1);
+      }, 1000);
     }
-  }, []);
+    return () => clearInterval(interval);
+  }, [content]);
 
   const toggleWritingBuddy = () => {
     setShowWritingBuddy(!showWritingBuddy);
+  };
+
+  const handleTogglePlanning = () => {
+    setShowPlanningTool(!showPlanningTool);
+  };
+
+  const handlePromptGenerated = (prompt: string) => {
+    setGeneratedPrompt(prompt);
   };
 
   const handleNewStory = () => {
@@ -138,18 +81,8 @@ export function EnhancedWritingLayout({
       onStartNewEssay();
     } else {
       onChange('');
-      // Clear generated prompt and plan when starting new story
+      // Clear generated prompt when starting new story
       setGeneratedPrompt('');
-      setPlan(null);
-      // Clear localStorage
-      localStorage.removeItem('writingContent');
-      localStorage.removeItem('selectedWritingType');
-      localStorage.removeItem('writingPlan');
-      // Clear all saved prompts
-      const textTypes = ['narrative', 'persuasive', 'expository', 'recount', 'reflective', 'descriptive', 'discursive', 'news report', 'letter', 'diary entry', 'speech'];
-      textTypes.forEach(type => {
-        localStorage.removeItem(`${type}_prompt`);
-      });
       if (onNavigate) {
         onNavigate('dashboard');
       }
@@ -159,9 +92,6 @@ export function EnhancedWritingLayout({
   const handleSave = () => {
     // Save functionality
     localStorage.setItem('writingContent', content);
-    if (plan) {
-      localStorage.setItem('writingPlan', JSON.stringify(plan));
-    }
   };
 
   const handleExport = () => {
@@ -169,7 +99,7 @@ export function EnhancedWritingLayout({
     const element = document.createElement('a');
     const file = new Blob([content], { type: 'text/plain' });
     element.href = URL.createObjectURL(file);
-    element.download = `writing-${textType || 'story'}-${new Date().toISOString().split('T')[0]}.txt`;
+    element.download = `writing-${textType}-${new Date().toISOString().split('T')[0]}.txt`;
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
@@ -183,114 +113,10 @@ export function EnhancedWritingLayout({
     }
   };
 
-  // RESTORED: Toggle planning modal (like in old version)
-  const handleTogglePlanning = () => {
-    setShowPlanningTool(!showPlanningTool);
-  };
-
   return (
     <div className="enhanced-writing-layout space-optimized bg-gray-50 overflow-hidden min-h-0 h-full flex flex-row">
       {/* Left Side - Writing Area with Toolbar and Prompt - 70% width */}
       <div className="writing-left-section flex-1 flex flex-col min-h-0" style={{ flex: '0 0 70%' }}>
-        
-        {/* Dynamic Prompt Display - Only show when we have a generated prompt */}
-        {(textType && generatedPrompt) && (
-          <div className="flex-shrink-0">
-            <DynamicPromptDisplay 
-              prompt={generatedPrompt}
-              textType={textType}
-            />
-          </div>
-        )}
-
-        {/* Compact Toolbar - OPTIMIZED SPACING */}
-        <div className="bg-white border-b border-gray-200 p-1 shadow-sm flex-shrink-0">
-          <div className="px-3 flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              {/* Action Buttons - Compact */}
-              <button
-                onClick={handleNewStory}
-                className="toolbar-button flex items-center space-x-1 px-2 py-1 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-xs"
-              >
-                <Plus className="w-3 h-3" />
-                <span>New</span>
-              </button>
-              
-              <button
-                onClick={handleSave}
-                className="toolbar-button flex items-center space-x-1 px-2 py-1 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-xs"
-              >
-                <Save className="w-3 h-3" />
-                <span>Save</span>
-              </button>
-              
-              <button
-                onClick={handleExport}
-                className="toolbar-button flex items-center space-x-1 px-2 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-xs"
-              >
-                <Download className="w-3 h-3" />
-                <span>Export</span>
-              </button>
-              
-              <button
-                onClick={handleHelp}
-                className="toolbar-button flex items-center space-x-1 px-2 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors text-xs"
-              >
-                <HelpCircle className="w-3 h-3" />
-                <span>Help</span>
-              </button>
-
-              {/* RESTORED: Planning Toggle Button with Toggle Switch Icon */}
-              {textType && (
-                <button
-                  onClick={handleTogglePlanning}
-                  className={`toolbar-button flex items-center space-x-1 px-3 py-1 rounded-lg transition-all duration-200 text-xs font-medium ${
-                    showPlanningTool 
-                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg' 
-                      : 'bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-700 hover:from-indigo-200 hover:to-purple-200'
-                  }`}
-                >
-                  {showPlanningTool ? <ToggleRight className="w-4 h-4" /> : <ToggleLeft className="w-4 h-4" />}
-                  <PenTool className="w-3 h-3" />
-                  <span>Planning</span>
-                  {plan && (
-                    <div className="w-2 h-2 bg-green-400 rounded-full ml-1"></div>
-                  )}
-                </button>
-              )}
-
-              {/* Show Writing Buddy Button when hidden */}
-              {!showWritingBuddy && (
-                <button
-                  onClick={toggleWritingBuddy}
-                  className="toolbar-button flex items-center space-x-1 px-2 py-1 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors text-xs"
-                >
-                  <Bot className="w-3 h-3" />
-                  <span>Writing Buddy</span>
-                </button>
-              )}
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              {/* Word Count - Compact */}
-              <div className="flex items-center space-x-1 text-xs text-gray-600">
-                <Type className="w-3 h-3" />
-                <span className="font-medium">{wordCount} words</span>
-              </div>
-
-              {/* Writing Stats - Compact */}
-              <div className="flex items-center space-x-1 text-xs">
-                <div className="writing-stats bg-green-100 px-2 py-0.5 rounded-full">
-                  <span className="font-medium">{Math.round(timeSpent / 60)} min</span>
-                </div>
-                <div className="writing-stats bg-purple-100 px-2 py-0.5 rounded-full">
-                  <span className="font-medium">{writingStreak} day streak</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Writing Area - Full height */}
         <div className="writing-textarea-wrapper flex-1 min-h-0">
           <div className="h-full">
@@ -303,56 +129,42 @@ export function EnhancedWritingLayout({
               onTextTypeChange={onTextTypeChange}
               onPopupCompleted={onPopupCompleted}
               onPromptGenerated={handlePromptGenerated}
+              prompt={generatedPrompt}
             />
           </div>
         </div>
 
         {/* Plan Summary (if saved) */}
         {plan && (
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-4 m-4 flex-shrink-0 border border-blue-200 dark:border-blue-700">
-            <div className="flex items-start space-x-3">
-              <div className="flex-shrink-0">
-                <CheckCircle className="w-5 h-5 text-green-500 mt-0.5" />
+          <div className="plan-summary bg-gradient-to-r from-indigo-50 to-purple-50 border-t border-indigo-200 p-3 flex-shrink-0">
+            <div className="flex items-start space-x-2">
+              <PenTool className="w-4 h-4 text-indigo-600 mt-0.5 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <h4 className="text-sm font-medium text-indigo-800 mb-1">Your Writing Plan</h4>
+                <p className="text-xs text-indigo-700 line-clamp-2">{plan}</p>
               </div>
-              <div className="flex-1">
-                <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-2 flex items-center">
-                  <PenTool className="w-4 h-4 mr-2" />
-                  Your Writing Plan
-                </h4>
-                <div className="text-sm text-blue-700 dark:text-blue-300 space-y-2">
-                  {plan.structure && plan.structure.length > 0 && (
-                    <div>
-                      <strong>Structure:</strong>
-                      <ul className="list-disc list-inside ml-2 mt-1">
-                        {plan.structure.slice(0, 3).map((item: any, index: number) => (
-                          <li key={index} className="truncate">
-                            {item.section}: {item.content || 'Not filled'}
-                          </li>
-                        ))}
-                        {plan.structure.length > 3 && (
-                          <li className="text-gray-500">... and {plan.structure.length - 3} more sections</li>
-                        )}
-                      </ul>
-                    </div>
-                  )}
-                  {plan.keyPoints && plan.keyPoints.length > 0 && (
-                    <div>
-                      <strong>Key Points:</strong> {plan.keyPoints.slice(0, 2).join(', ')}
-                      {plan.keyPoints.length > 2 && '...'}
-                    </div>
-                  )}
-                </div>
-                <button
-                  onClick={handleTogglePlanning}
-                  className="mt-2 text-xs text-blue-600 hover:text-blue-800 font-medium"
-                >
-                  Click to edit plan
-                </button>
-              </div>
+              <button
+                onClick={handleTogglePlanning}
+                className="text-indigo-600 hover:text-indigo-800 transition-colors"
+              >
+                <ToggleRight className="w-4 h-4" />
+              </button>
             </div>
           </div>
         )}
       </div>
+
+      {/* Planning Tool Modal */}
+      <PlanningToolModal
+        isOpen={showPlanningTool}
+        onClose={() => setShowPlanningTool(false)}
+        textType={textType}
+        onPlanSaved={(savedPlan) => {
+          setPlan(savedPlan);
+          setShowPlanningTool(false);
+        }}
+        existingPlan={plan}
+      />
 
       {/* Right Sidebar - Writing Buddy Panel - 30% width */}
       {showWritingBuddy && (
@@ -386,15 +198,6 @@ export function EnhancedWritingLayout({
           </div>
         </div>
       )}
-
-      {/* RESTORED: Planning Tool Modal (like in old version) */}
-      <PlanningToolModal
-        isOpen={showPlanningTool}
-        onClose={() => setShowPlanningTool(false)}
-        onSavePlan={handleSavePlan}
-        textType={textType}
-        content={content}
-      />
     </div>
   );
 }
