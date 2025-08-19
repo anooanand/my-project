@@ -1,3 +1,4 @@
+WritingArea.tsx
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   Save, 
@@ -506,7 +507,8 @@ export function WritingArea({
   };
 
   return (
-    <div className={`flex flex-col h-screen bg-gray-50 ${isFullscreen ? 'fixed inset-0 z-50' : ''}`}>
+    <div className={`flex flex-col h-screen bg-gray-50 pb-20 ${isFullscreen ? 'fixed inset-0 z-50' : ''}`}>
+
       {/* Main Writing Area */}
       <div className="flex flex-1 overflow-hidden">
         <div className="flex-1 flex flex-col">
@@ -676,20 +678,20 @@ export function WritingArea({
           </div>
 
           {/* Submit Button - Prominently positioned and ALWAYS VISIBLE */}
-          <div className="bg-white border-t border-gray-200 p-4 flex justify-center shadow-lg">
+          <div className="bg-white border-t-2 border-gray-300 p-6 flex justify-center shadow-2xl sticky bottom-0 z-50">
             <button
               onClick={handleEvaluate}
               disabled={!content.trim() || isEvaluating}
-              className="flex items-center px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg hover:from-green-600 hover:to-emerald-600 transition-all duration-200 shadow-lg hover:shadow-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed text-lg min-w-[250px] justify-center"
+              className="flex items-center px-12 py-6 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl hover:from-green-600 hover:to-emerald-600 transition-all duration-200 shadow-2xl hover:shadow-3xl font-bold disabled:opacity-50 disabled:cursor-not-allowed text-xl min-w-[300px] justify-center transform hover:scale-105"
             >
               {isEvaluating ? (
                 <>
-                  <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
+                  <RefreshCw className="h-6 w-6 mr-3 animate-spin" />
                   Evaluating...
                 </>
               ) : (
                 <>
-                  <Send className="h-5 w-5 mr-2" />
+                  <Send className="h-6 w-6 mr-3" />
                   Submit for Evaluation
                 </>
               )}
