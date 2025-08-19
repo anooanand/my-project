@@ -1,8 +1,8 @@
 // OpenAI Integration with Enhanced Error Handling and Fallback Prompts
 // src/lib/openai.ts
 
-const OPENAI_API_KEY = process.env.REACT_APP_OPENAI_API_KEY || process.env.OPENAI_API_KEY;
-const OPENAI_API_BASE = process.env.REACT_APP_OPENAI_API_BASE || 'https://api.openai.com/v1';
+const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
+const OPENAI_API_BASE = import.meta.env.VITE_OPENAI_API_BASE || 'https://api.openai.com/v1';
 
 // High-quality fallback prompts for when AI generation fails
 const FALLBACK_PROMPTS = {
