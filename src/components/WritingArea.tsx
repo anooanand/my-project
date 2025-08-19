@@ -632,7 +632,7 @@ What would you like help with today? Just type your question and I'll provide sp
       {/* Main Writing Area */}
       <div className="flex flex-1 overflow-hidden">
         <div className="flex-1 flex flex-col">
-          {/* Compact Prompt Display */}
+          {/* Compact Prompt Display - Fixed height and scrollable */}
           <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 border-b-2 border-blue-200 p-3 shadow-sm">
             <div className="flex items-start space-x-3">
               <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-md">
@@ -643,9 +643,9 @@ What would you like help with today? Just type your question and I'll provide sp
                   <span className="mr-2">✨</span>
                   Your Writing Prompt
                 </h3>
-                <div className="bg-white bg-opacity-80 p-3 rounded-lg border border-blue-200 shadow-sm">
+                <div className="bg-white bg-opacity-80 p-3 rounded-lg border border-blue-200 shadow-sm max-h-32 overflow-y-auto">
                   {prompt ? (
-                    <p className="text-gray-800 leading-relaxed">{prompt}</p>
+                    <p className="text-gray-800 leading-relaxed text-sm">{prompt}</p>
                   ) : (
                     <div className="flex items-center space-x-2">
                       <RefreshCw className="h-4 w-4 text-blue-500 animate-spin" />
@@ -682,6 +682,13 @@ What would you like help with today? Just type your question and I'll provide sp
               )}
             </div>
             <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setShowPlanningModal(true)}
+                className="px-3 py-1 bg-purple-500 text-white rounded text-xs hover:bg-purple-600 transition-colors flex items-center"
+              >
+                <Wand2 className="h-3 w-3 mr-1" />
+                Planning Phase
+              </button>
               {!examMode ? (
                 <button
                   onClick={startExamMode}
@@ -699,7 +706,7 @@ What would you like help with today? Just type your question and I'll provide sp
               )}
               <button
                 onClick={() => setShowStructureGuide(!showStructureGuide)}
-                className="px-3 py-1 bg-purple-500 text-white rounded text-xs hover:bg-purple-600 transition-colors"
+                className="px-3 py-1 bg-green-500 text-white rounded text-xs hover:bg-green-600 transition-colors"
               >
                 Structure Guide
               </button>
@@ -813,17 +820,6 @@ What would you like help with today? Just type your question and I'll provide sp
                 <p className="text-purple-100 text-sm">Your AI writing assistant</p>
               </div>
             </div>
-          </div>
-
-          {/* Planning Phase Button - Moved to sidebar */}
-          <div className="p-4 border-b border-white border-opacity-20">
-            <button
-              onClick={() => setShowPlanningModal(true)}
-              className="w-full flex items-center justify-center px-4 py-3 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-all duration-200 font-medium"
-            >
-              <Wand2 className="h-4 w-4 mr-2" />
-              Planning Phase
-            </button>
           </div>
 
           {/* Tab Navigation */}
