@@ -1,13 +1,10 @@
-// Enhanced Writing Type Selection Modal - Copy and paste this to replace your existing WritingTypeSelectionModal.tsx
-
 import React, { useState } from 'react';
 import { X, BookOpen, Lightbulb, MessageSquare, Megaphone, ScrollText, Sparkles, Newspaper, Mail, Calendar, Rocket, Puzzle, Wand, Compass, MapPin, Target, Mic, Search, Filter, Star, Heart, Zap, Crown, Gem } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 interface WritingTypeSelectionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelectType: (type: string) => void;
+  onSelect: (type: string) => void; // FIXED: Changed from onSelectType to onSelect
 }
 
 const writingTypes = [
@@ -134,11 +131,10 @@ const writingTypes = [
   }
 ];
 
-export function WritingTypeSelectionModal({ isOpen, onClose, onSelectType }: WritingTypeSelectionModalProps) {
+export function WritingTypeSelectionModal({ isOpen, onClose, onSelect }: WritingTypeSelectionModalProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDifficulty, setSelectedDifficulty] = useState('All');
   const [showPopularOnly, setShowPopularOnly] = useState(false);
-  const navigate = useNavigate();
 
   if (!isOpen) return null;
 
@@ -151,11 +147,18 @@ export function WritingTypeSelectionModal({ isOpen, onClose, onSelectType }: Wri
     return matchesSearch && matchesDifficulty && matchesPopular;
   });
 
+  // FIXED: Proper click handler that calls onSelect
   const handleTypeSelect = (type: string) => {
-    onSelectType(type);
+    console.log('🎯 WritingTypeSelectionModal: Type selected:', type);
+    
+    // Store in localStorage for persistence
     localStorage.setItem('selectedWritingType', type);
-    // Don't navigate here - let the parent component handle the flow
-    // The onSelectType callback will handle the next steps
+    
+    // Call the parent's onSelect callback
+    onSelect(type);
+    
+    // Close the modal
+    onClose();
   };
 
   const getDifficultyColor = (difficulty: string) => {
@@ -202,51 +205,44 @@ export function WritingTypeSelectionModal({ isOpen, onClose, onSelectType }: Wri
             </div>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors bg-white dark:bg-gray-700 p-3 rounded-full shadow-lg hover:shadow-xl transform hover:scale-110 transition-all duration-300"
+              className="p-3 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors shadow-lg hover:shadow-xl transform hover:scale-110"
             >
-              <X className="w-7 h-7" />
+              <X className="h-8 w-8 text-gray-600 dark:text-gray-300" />
             </button>
           </div>
         </div>
 
-        {/* Enhanced Search and Filter Section */}
-        <div className="p-8 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-800 dark:to-blue-900/20 border-b-2 border-gray-200 dark:border-gray-600 relative z-10">
-          <div className="flex flex-col md:flex-row gap-6 items-center">
-            
-            {/* Search Bar */}
-            <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+        {/* Search and Filter Section */}
+        <div className="p-8 border-b-2 border-gray-200 dark:border-gray-600 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-800 dark:to-blue-900/20 relative z-10">
+          <div className="flex flex-col md:flex-row gap-4 items-center">
+            <div className="flex-1 relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search writing types..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 border-2 border-gray-300 rounded-2xl focus:border-blue-500 focus:outline-none text-lg font-medium shadow-lg"
+                className="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-2xl focus:border-blue-500 focus:outline-none text-lg font-medium shadow-lg"
               />
             </div>
-
-            {/* Difficulty Filter */}
-            <div className="flex items-center gap-3">
-              <Filter className="text-gray-500 h-5 w-5" />
-              <select
-                value={selectedDifficulty}
-                onChange={(e) => setSelectedDifficulty(e.target.value)}
-                className="px-4 py-3 border-2 border-gray-300 rounded-2xl focus:border-blue-500 focus:outline-none text-lg font-medium shadow-lg"
-              >
-                <option value="All">All Levels</option>
-                <option value="Easy">Easy</option>
-                <option value="Medium">Medium</option>
-                <option value="Hard">Hard</option>
-              </select>
-            </div>
-
-            {/* Popular Filter */}
+            
+            <select
+              value={selectedDifficulty}
+              onChange={(e) => setSelectedDifficulty(e.target.value)}
+              className="px-6 py-3 border-2 border-gray-300 rounded-2xl focus:border-blue-500 focus:outline-none text-lg font-medium shadow-lg bg-white"
+            >
+              <option value="All">All Levels</option>
+              <option value="Easy">Easy</option>
+              <option value="Medium">Medium</option>
+              <option value="Hard">Hard</option>
+            </select>
+            
             <button
               onClick={() => setShowPopularOnly(!showPopularOnly)}
-              className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-bold text-lg shadow-lg transition-all duration-300 transform hover:scale-105 ${
+              className={`px-6 py-3 rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center gap-2 ${
                 showPopularOnly 
-                  ? 'bg-gradient-to-r from-yellow-400 to-orange-400 text-white' 
-                  : 'bg-white text-gray-700 border-2 border-gray-300 hover:border-yellow-400'
+                  ? 'bg-yellow-400 text-yellow-900 border-2 border-yellow-500' 
+                  : 'bg-white border-2 border-gray-300 text-gray-700 hover:border-yellow-400'
               }`}
             >
               <Star className={`h-5 w-5 ${showPopularOnly ? 'fill-current' : ''}`} />
