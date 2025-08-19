@@ -633,23 +633,23 @@ What would you like help with today? Just type your question and I'll provide sp
       <div className="flex flex-1 overflow-hidden">
         <div className="flex-1 flex flex-col">
           {/* Compact Prompt Display - Fixed height and scrollable */}
-          <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 border-b-2 border-blue-200 p-3 shadow-sm">
-            <div className="flex items-start space-x-3">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-md">
-                <Sparkles className="h-4 w-4 text-white" />
+          <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 border-b-2 border-blue-200 p-2 shadow-sm">
+            <div className="flex items-start space-x-2">
+              <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-md">
+                <Sparkles className="h-3 w-3 text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-lg font-bold text-blue-900 mb-2 flex items-center">
-                  <span className="mr-2">✨</span>
+                <h3 className="text-sm font-bold text-blue-900 mb-1 flex items-center">
+                  <span className="mr-1">✨</span>
                   Your Writing Prompt
                 </h3>
-                <div className="bg-white bg-opacity-80 p-3 rounded-lg border border-blue-200 shadow-sm h-20 overflow-y-auto">
+                <div className="bg-white bg-opacity-90 p-2 rounded border border-blue-200 shadow-sm h-14 overflow-y-auto">
                   {prompt ? (
-                    <p className="text-gray-800 leading-relaxed text-sm break-words">{prompt}</p>
+                    <p className="text-gray-800 leading-tight text-xs break-words">{prompt}</p>
                   ) : (
-                    <div className="flex items-center space-x-2">
-                      <RefreshCw className="h-4 w-4 text-blue-500 animate-spin" />
-                      <p className="text-blue-700 text-sm">Loading your writing prompt...</p>
+                    <div className="flex items-center space-x-1">
+                      <RefreshCw className="h-3 w-3 text-blue-500 animate-spin" />
+                      <p className="text-blue-700 text-xs">Loading your writing prompt...</p>
                     </div>
                   )}
                 </div>
