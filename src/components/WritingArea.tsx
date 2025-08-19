@@ -1335,14 +1335,6 @@ How can I help you today? 💪`;
           
           <div className="flex items-center space-x-2">
             <button
-              onClick={() => setShowPlanningModal(true)}
-              className="flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-200 shadow-md hover:shadow-lg"
-            >
-              <PenTool className="h-4 w-4 mr-2" />
-              Planning Phase
-            </button>
-            
-            <button
               onClick={() => setIsFullscreen(!isFullscreen)}
               className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
             >
@@ -1380,6 +1372,17 @@ How can I help you today? 💪`;
             </div>
           </div>
 
+          {/* Planning Phase Button - Moved between prompt and writing area */}
+          <div className="bg-white border-b border-gray-200 p-4 flex justify-center">
+            <button
+              onClick={() => setShowPlanningModal(true)}
+              className="flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
+            >
+              <PenTool className="h-5 w-5 mr-2" />
+              Planning Phase
+            </button>
+          </div>
+
           {/* Writing Textarea */}
           <div className="flex-1 p-6">
             <textarea
@@ -1396,6 +1399,18 @@ How can I help you today? 💪`;
                 fontFamily: 'Georgia, serif'
               }}
             />
+          </div>
+
+          {/* Submit Button - Added at bottom */}
+          <div className="bg-white border-t border-gray-200 p-4 flex justify-center">
+            <button
+              onClick={handleEvaluate}
+              disabled={!content.trim()}
+              className="flex items-center px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg hover:from-green-600 hover:to-emerald-600 transition-all duration-200 shadow-md hover:shadow-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Send className="h-5 w-5 mr-2" />
+              Submit for Evaluation
+            </button>
           </div>
 
           {/* Enhanced Bottom Stats Bar */}
