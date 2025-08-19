@@ -133,6 +133,13 @@ export function WritingArea({
     averageWordsPerMinute: 0
   });
 
+  // NSW Selective Exam specific features
+  const [examMode, setExamMode] = useState(false);
+  const [examTimeLimit, setExamTimeLimit] = useState(30 * 60); // 30 minutes in seconds
+  const [examTimeRemaining, setExamTimeRemaining] = useState(examTimeLimit);
+  const [targetWordCount, setTargetWordCount] = useState(300); // Typical NSW exam target
+  const [showStructureGuide, setShowStructureGuide] = useState(false);
+
   // Chat functionality for Writing Buddy
   const [chatMessages, setChatMessages] = useState<Array<{id: string, text: string, sender: 'user' | 'ai', timestamp: Date}>>([]);
   const [chatInput, setChatInput] = useState('');
@@ -140,6 +147,7 @@ export function WritingArea({
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const examTimerRef = useRef<NodeJS.Timeout | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   // Enhanced prompt loading with better debugging and fallback
@@ -179,13 +187,13 @@ export function WritingArea({
       
       console.log('⚠️ WritingArea: No prompt found in any source, using fallback');
       
-      // Enhanced fallback prompts
+      // Enhanced fallback prompts optimized for NSW Selective exam
       const fallbackPrompts = {
-        narrative: "Write a captivating story about a character who discovers something unexpected that changes their life forever. Include vivid descriptions, realistic dialogue, and show how the character grows throughout the story. Focus on creating a clear beginning, middle, and end with engaging plot development.",
-        persuasive: "Write a compelling persuasive essay arguing for or against a topic you feel strongly about. Use logical reasoning, credible evidence, emotional appeals, and address counterarguments to convince your readers. End with a strong call to action.",
-        expository: "Write an informative essay explaining a topic you're knowledgeable about or find interesting. Provide clear explanations, specific examples, and organize your information in a logical way that helps readers understand the subject thoroughly.",
-        reflective: "Write a thoughtful reflection about a meaningful experience in your life. Explore what you learned, how it changed you, and what insights you gained. Use descriptive language to help readers understand both the experience and your thoughts about it.",
-        descriptive: "Write a vivid description of a place, person, or object that is meaningful to you. Use sensory details, figurative language, and specific examples to create a clear and engaging picture in your reader's mind."
+        narrative: "Write an engaging story about a character who discovers something unexpected that changes their life forever. Include vivid descriptions, realistic dialogue, and show how the character grows throughout the story. Focus on creating a clear beginning, middle, and end with engaging plot development. (Target: 250-350 words)",
+        persuasive: "Write a compelling persuasive essay arguing for or against a topic you feel strongly about. Use logical reasoning, credible evidence, emotional appeals, and address counterarguments to convince your readers. End with a strong call to action. (Target: 250-350 words)",
+        expository: "Write an informative essay explaining a topic you're knowledgeable about or find interesting. Provide clear explanations, specific examples, and organize your information in a logical way that helps readers understand the subject thoroughly. (Target: 250-350 words)",
+        reflective: "Write a thoughtful reflection about a meaningful experience in your life. Explore what you learned, how it changed you, and what insights you gained. Use descriptive language to help readers understand both the experience and your thoughts about it. (Target: 250-350 words)",
+        descriptive: "Write a vivid description of a place, person, or object that is meaningful to you. Use sensory details, figurative language, and specific examples to create a clear and engaging picture in your reader's mind. (Target: 250-350 words)"
       };
       
       const fallbackPrompt = fallbackPrompts[textType as keyof typeof fallbackPrompts] || fallbackPrompts.narrative;
@@ -257,6 +265,31 @@ export function WritingArea({
       }
     };
   }, [isTimerRunning]);
+
+  // Exam timer functionality
+  useEffect(() => {
+    if (examMode && examTimeRemaining > 0) {
+      examTimerRef.current = setInterval(() => {
+        setExamTimeRemaining(prev => {
+          if (prev <= 1) {
+            setExamMode(false);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    } else {
+      if (examTimerRef.current) {
+        clearInterval(examTimerRef.current);
+      }
+    }
+
+    return () => {
+      if (examTimerRef.current) {
+        clearInterval(examTimerRef.current);
+      }
+    };
+  }, [examMode, examTimeRemaining]);
 
   // Update statistics when content changes
   useEffect(() => {
@@ -357,7 +390,7 @@ export function WritingArea({
       setActiveTab('coaching-tips');
     } catch (error) {
       console.error('Error evaluating writing:', error);
-      // Provide fallback evaluation
+      // Provide fallback evaluation optimized for NSW Selective criteria
       setEvaluation({
         score: Math.floor(Math.random() * 3) + 7, // Random score between 7-9
         overallScore: Math.floor(Math.random() * 3) + 7,
@@ -365,25 +398,65 @@ export function WritingArea({
           'Good use of vocabulary and varied sentence structure',
           'Clear organization and logical flow of ideas',
           'Engaging content that holds reader interest',
-          'Appropriate tone for the text type'
+          'Appropriate tone for the text type',
+          'Effective use of language features'
         ],
         improvements: [
           'Add more descriptive details and sensory language',
           'Vary sentence length for better rhythm',
           'Include more specific examples to support main points',
-          'Strengthen transitions between paragraphs'
+          'Strengthen transitions between paragraphs',
+          'Consider adding more sophisticated vocabulary'
         ],
-        specificFeedback: `Your ${textType} writing shows good potential with clear structure and engaging content. Focus on adding more vivid details and varying your sentence structure to make it even more compelling. Consider using more specific examples to support your main ideas.`,
+        specificFeedback: `Your ${textType} writing shows good potential with clear structure and engaging content. For NSW Selective exam success, focus on adding more vivid details and varying your sentence structure to make it even more compelling. Consider using more specific examples to support your main ideas and ensure your word count is within the target range.`,
         nextSteps: [
           `Practice descriptive writing techniques for ${textType}`,
           'Read examples of excellent ' + textType + ' writing',
           'Focus on character development and dialogue',
-          'Work on creating stronger opening and closing paragraphs'
-        ]
+          'Work on creating stronger opening and closing paragraphs',
+          'Practice writing within time constraints'
+        ],
+        nswCriteria: {
+          ideasAndContent: Math.floor(Math.random() * 3) + 7,
+          textStructure: Math.floor(Math.random() * 3) + 7,
+          languageFeatures: Math.floor(Math.random() * 3) + 7,
+          grammarAndSpelling: Math.floor(Math.random() * 3) + 8
+        }
       });
       setActiveTab('coaching-tips');
     } finally {
       setIsEvaluating(false);
+    }
+  };
+
+  // Start exam mode
+  const startExamMode = () => {
+    setExamMode(true);
+    setExamTimeRemaining(examTimeLimit);
+    setIsTimerRunning(true);
+  };
+
+  // Stop exam mode
+  const stopExamMode = () => {
+    setExamMode(false);
+    setIsTimerRunning(false);
+  };
+
+  // Format time display
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Get word count status
+  const getWordCountStatus = () => {
+    if (wordCount < targetWordCount * 0.8) {
+      return { color: 'text-orange-600', message: 'Below target' };
+    } else if (wordCount > targetWordCount * 1.2) {
+      return { color: 'text-red-600', message: 'Above target' };
+    } else {
+      return { color: 'text-green-600', message: 'On target' };
     }
   };
 
@@ -433,99 +506,103 @@ export function WritingArea({
       const input = chatInput.toLowerCase();
       
       if (input.includes('analyze') || input.includes('feedback')) {
-        aiResponse = `I've analyzed your ${textType} writing! Here's my assessment:
+        const wordStatus = getWordCountStatus();
+        aiResponse = `I've analyzed your ${textType} writing! Here's my NSW Selective exam assessment:
 
 📊 **Current Stats:**
-• Word count: ${wordCount} words
+• Word count: ${wordCount} words (Target: ${targetWordCount}) - ${wordStatus.message}
 • Reading time: ${readingTime} minutes
 • Writing time: ${formatTime(timeSpent)}
+${examMode ? `• Exam time remaining: ${formatTime(examTimeRemaining)}` : ''}
 
 ✅ **Strengths I notice:**
 • ${content.trim() ? 'Good structure and organization' : 'Ready to start writing!'}
 • ${wordCount > 50 ? 'Developing ideas well' : 'Great potential for expansion'}
 • Appropriate tone for ${textType} writing
 
-🎯 **Suggestions:**
-• ${wordCount < 100 ? 'Continue developing your ideas with more details' : 'Consider adding more descriptive language'}
-• ${textType === 'narrative' ? 'Include dialogue to bring characters to life' : textType === 'persuasive' ? 'Strengthen your arguments with evidence' : 'Add specific examples to clarify your points'}
+🎯 **NSW Selective Tips:**
+• ${wordCount < targetWordCount * 0.8 ? 'Add more detail to reach target word count' : wordCount > targetWordCount * 1.2 ? 'Consider condensing to stay within target range' : 'Word count is on target - great job!'}
+• ${textType === 'narrative' ? 'Include dialogue and character development' : textType === 'persuasive' ? 'Strengthen arguments with evidence' : 'Add specific examples to clarify points'}
+• Focus on varied vocabulary and sentence structures
 
 Keep writing! You're doing great! 🌟`;
       } else if (input.includes('vocabulary') || input.includes('word') || input.includes('synonym')) {
-        aiResponse = `Great question about vocabulary! Here are some tips for enhancing your ${textType} writing:
+        aiResponse = `Great question about vocabulary! Here are NSW Selective exam tips for enhancing your ${textType} writing:
 
-🔤 **Word Choice Tips:**
-• Instead of "good" → try "excellent," "remarkable," "outstanding"
-• Instead of "bad" → try "terrible," "dreadful," "inadequate"
-• Instead of "said" → try "declared," "whispered," "exclaimed"
-• Instead of "went" → try "traveled," "journeyed," "ventured"
+🔤 **Word Choice Strategies:**
+• Use specific, descriptive words instead of general ones
+• Vary your vocabulary - avoid repeating the same words
+• Include some sophisticated vocabulary, but ensure it fits naturally
+• Use figurative language like metaphors and similes
 
-✨ **For ${textType} writing specifically:**
-${textType === 'narrative' ? '• Use vivid action verbs and sensory details\n• Choose words that create mood and atmosphere' : 
-  textType === 'persuasive' ? '• Use strong, confident language\n• Choose words that evoke emotion and conviction' : 
-  '• Use precise, clear terminology\n• Choose words that explain concepts clearly'}
+📝 **${textType.charAt(0).toUpperCase() + textType.slice(1)} Specific Tips:**
+${textType === 'narrative' ? '• Use action verbs and sensory details\n• Include dialogue with varied speech tags\n• Describe settings vividly' : 
+  textType === 'persuasive' ? '• Use emotive language to persuade\n• Include strong, confident language\n• Use rhetorical questions effectively' : 
+  '• Use precise, technical vocabulary when appropriate\n• Include transitional phrases\n• Use clear, explanatory language'}
 
-💡 **Pro tip:** Select any word in your writing to see synonym suggestions!`;
-      } else if (input.includes('structure') || input.includes('organize') || input.includes('paragraph')) {
-        aiResponse = getStructureAdvice(textType);
-      } else if (input.includes('grammar') || input.includes('mistake') || input.includes('error')) {
-        aiResponse = `I can help you with grammar and style! Here are some common areas to check:
+💡 **Quick Vocabulary Boosters:**
+• Instead of "good" → excellent, outstanding, remarkable
+• Instead of "bad" → terrible, dreadful, appalling
+• Instead of "said" → declared, exclaimed, whispered
 
-📝 **Grammar Checklist:**
-• Subject-verb agreement
-• Proper comma usage
-• Consistent verb tenses
-• Complete sentences (avoid fragments)
+Would you like me to suggest alternatives for any specific words in your writing?`;
+      } else if (input.includes('structure') || input.includes('organize')) {
+        aiResponse = `Excellent question about structure! Here's how to organize your ${textType} for NSW Selective success:
 
-✍️ **Style Tips for ${textType}:**
-• Vary your sentence length for better flow
-• Use active voice when possible
-• Avoid repetitive word choices
-• ${textType === 'narrative' ? 'Show emotions through actions, not just words' : 
-     textType === 'persuasive' ? 'Use confident, assertive language' : 
-     'Use clear, precise explanations'}
+📋 **${textType.charAt(0).toUpperCase() + textType.slice(1)} Structure:**
+${textType === 'narrative' ? 
+  '• **Opening:** Hook the reader, introduce character/setting\n• **Rising Action:** Build tension, develop conflict\n• **Climax:** Peak moment of the story\n• **Resolution:** Conclude satisfyingly, show character growth' :
+  textType === 'persuasive' ?
+  '• **Introduction:** State your position clearly\n• **Body:** 2-3 strong arguments with evidence\n• **Address counterarguments:** Show you understand other views\n• **Conclusion:** Restate position, call to action' :
+  '• **Introduction:** Introduce topic clearly\n• **Body:** 2-3 main points with examples\n• **Use transitions:** Connect ideas smoothly\n• **Conclusion:** Summarize key points'
+}
 
-🔍 **Quick check:** Read your writing aloud to catch awkward phrasing!`;
-      } else if (input.includes('planning') || input.includes('plan') || input.includes('organize')) {
-        aiResponse = getPlanningAdvice(textType);
-      } else if (input.includes('help') || input.includes('stuck') || input.includes('idea')) {
-        aiResponse = `I'm here to help you succeed with your ${textType} writing! 🚀
+🔗 **Transition Words:**
+• To add ideas: furthermore, additionally, moreover
+• To contrast: however, nevertheless, on the other hand
+• To conclude: therefore, consequently, in conclusion
 
-🎯 **I can assist with:**
-• **Text Analysis** - Get detailed feedback on your writing
-• **Vocabulary** - Find better words and synonyms
-• **Structure** - Organize your ideas effectively
-• **Grammar** - Check for errors and improve style
-• **Planning** - Brainstorm and outline your ideas
+⏰ **Time Management:**
+• Spend 5 minutes planning
+• 20 minutes writing
+• 5 minutes reviewing and editing
 
-💡 **Quick actions you can try:**
-• Click "Analyze Text Type" for detailed feedback
-• Use the Paraphrase Tool to enhance sentences
-• Open Planning Phase for structured brainstorming
-• Select words in your text for synonym suggestions
+Your current structure looks ${content.length > 100 ? 'well-developed' : 'like it needs more development'}!`;
+      } else if (input.includes('time') || input.includes('exam')) {
+        aiResponse = `Great question about exam timing! Here's your NSW Selective exam strategy:
 
-What specific aspect would you like help with? Just ask! 😊`;
+⏰ **Time Breakdown (30 minutes total):**
+• **5 minutes:** Read prompt, brainstorm, plan structure
+• **20 minutes:** Write your response
+• **5 minutes:** Review, edit, check spelling/grammar
+
+📊 **Your Current Progress:**
+• Time spent: ${formatTime(timeSpent)}
+• Words written: ${wordCount}
+• Writing speed: ${progressData.averageWordsPerMinute} words/minute
+
+🎯 **Target Goals:**
+• Word count: ${targetWordCount} words
+• Writing speed: 12-15 words per minute
+• ${examMode ? `Time remaining: ${formatTime(examTimeRemaining)}` : 'Not in exam mode - click "Start Exam Mode" to practice!'}
+
+💡 **Quick Tips:**
+• Don't spend too long on planning - get writing!
+• Aim for ${Math.round(targetWordCount / 20)} words per minute
+• Leave time to check your work
+• If running out of time, focus on a strong conclusion
+
+${!examMode ? 'Would you like to start exam mode to practice with a timer?' : 'You\'re in exam mode - keep going!'}`;
       } else {
-        aiResponse = `Hello! I'm your AI Writing Buddy, here to help you excel at ${textType} writing! 🌟
+        aiResponse = `Hi there! I'm your Writing Buddy, here to help with your ${textType} writing! 
 
-📚 **What I can help with:**
-• **Analysis & Feedback** - Detailed evaluation of your writing
-• **Vocabulary Enhancement** - Better word choices and synonyms  
-• **Structure & Organization** - How to organize your ideas
-• **Grammar & Style** - Fixing errors and improving flow
-• **Planning & Brainstorming** - Getting your ideas organized
+I can help you with:
+📝 **Writing feedback** - Ask me to "analyze my writing"
+🔤 **Vocabulary** - Ask about "vocabulary tips" or "synonyms"
+📋 **Structure** - Ask about "how to organize" your writing
+⏰ **Exam prep** - Ask about "time management" or "exam tips"
 
-🎯 **Current writing stats:**
-• ${wordCount} words written
-• ${formatTime(timeSpent)} spent writing
-• ${textType.charAt(0).toUpperCase() + textType.slice(1)} text type
-
-Ask me anything about writing, or try saying:
-• "Analyze my writing"
-• "Help with vocabulary"  
-• "Grammar tips"
-• "Structure advice"
-
-How can I help you today? 💪`;
+What would you like help with today? Just type your question and I'll provide specific guidance for NSW Selective exam success! 🌟`;
       }
       
       const aiMessage = {
@@ -535,818 +612,28 @@ How can I help you today? 💪`;
         timestamp: new Date()
       };
       
-      setTimeout(() => {
-        setChatMessages(prev => [...prev, aiMessage]);
-        setIsChatLoading(false);
-      }, 1000);
-      
+      setChatMessages(prev => [...prev, aiMessage]);
     } catch (error) {
       console.error('Error in chat:', error);
       const errorMessage = {
         id: (Date.now() + 1).toString(),
-        text: 'I apologize, but I\'m having trouble responding right now. Please try again or use the other Writing Buddy tools available in the tabs above.',
+        text: "I'm having trouble responding right now. Please try asking your question again!",
         sender: 'ai' as const,
         timestamp: new Date()
       };
       setChatMessages(prev => [...prev, errorMessage]);
+    } finally {
       setIsChatLoading(false);
     }
   };
 
-  // Enhanced structure advice
-  const getStructureAdvice = (textType: string) => {
-    const advice = {
-      narrative: `📖 **Narrative Structure Guide:**
-
-🎬 **Story Arc:**
-• **Beginning:** Hook your reader with an engaging opening
-• **Middle:** Develop conflict and build tension
-• **End:** Resolve the conflict with a satisfying conclusion
-
-👥 **Character Development:**
-• Show character traits through actions and dialogue
-• Give your protagonist clear goals and motivations
-• Create realistic character growth throughout the story
-
-🏗️ **Paragraph Structure:**
-• Start each paragraph with a clear topic
-• Use dialogue to break up narrative sections
-• Include sensory details to immerse readers
-
-💡 **Pro tip:** Each paragraph should move your story forward!`,
-
-      persuasive: `🎯 **Persuasive Structure Guide:**
-
-📝 **Essay Organization:**
-• **Introduction:** Hook + clear thesis statement
-• **Body:** 3-4 strong arguments with evidence
-• **Conclusion:** Restate thesis + call to action
-
-💪 **Argument Development:**
-• Start with your strongest argument
-• Use evidence: facts, statistics, expert opinions
-• Address counterarguments respectfully
-• Connect each point back to your thesis
-
-🔗 **Transitions:**
-• "Furthermore," "Additionally," "However," "In contrast"
-• Link ideas smoothly between paragraphs
-
-💡 **Pro tip:** End each body paragraph by connecting back to your main argument!`,
-
-      expository: `📚 **Expository Structure Guide:**
-
-🏗️ **Information Organization:**
-• **Introduction:** Topic introduction + thesis
-• **Body:** Main points with supporting details
-• **Conclusion:** Summary + significance
-
-📊 **Paragraph Structure:**
-• Topic sentence stating the main idea
-• Supporting details and examples
-• Concluding sentence linking to next paragraph
-
-🔍 **Clarity Techniques:**
-• Define important terms
-• Use specific examples
-• Include transitions between ideas
-• Organize from general to specific (or vice versa)
-
-💡 **Pro tip:** Each paragraph should focus on one main concept!`
-    };
-    return advice[textType as keyof typeof advice] || advice.narrative;
-  };
-
-  // Enhanced planning advice
-  const getPlanningAdvice = (textType: string) => {
-    const advice = {
-      narrative: `📝 **Narrative Planning Guide:**
-
-👤 **Character Planning:**
-• Who is your protagonist? What do they want?
-• What obstacles will they face?
-• How will they change by the end?
-
-🌍 **Setting & Atmosphere:**
-• Where and when does your story take place?
-• How does the setting affect the mood?
-• What sensory details will you include?
-
-📈 **Plot Development:**
-• What's the main conflict or problem?
-• What are the key events that happen?
-• How will the conflict be resolved?
-
-💭 **Theme & Message:**
-• What lesson or insight will readers gain?
-• How will you show this through the story?
-
-🎯 **Use the Planning Phase button to organize these ideas!**`,
-
-      persuasive: `🎯 **Persuasive Planning Guide:**
-
-💡 **Position & Thesis:**
-• What exactly are you arguing for/against?
-• Can you state your position in one clear sentence?
-
-👥 **Audience Analysis:**
-• Who are you trying to convince?
-• What do they currently believe?
-• What concerns might they have?
-
-📊 **Evidence Collection:**
-• What facts support your position?
-• Do you have statistics or expert opinions?
-• What real-world examples can you use?
-
-🔄 **Counterarguments:**
-• What might opponents say?
-• How will you address their concerns?
-• Can you turn weaknesses into strengths?
-
-🎯 **Use the Planning Phase button to organize your arguments!**`,
-
-      expository: `📚 **Expository Planning Guide:**
-
-🎯 **Topic & Purpose:**
-• What exactly are you explaining?
-• Why is this information important?
-• What should readers learn?
-
-📋 **Main Points:**
-• What are the 3-4 key concepts to cover?
-• How do these points relate to each other?
-• What's the logical order to present them?
-
-💡 **Supporting Details:**
-• What examples will clarify each point?
-• Do you need definitions or explanations?
-• What evidence supports your information?
-
-🔗 **Organization Strategy:**
-• Chronological order? Most to least important?
-• Problem-solution? Cause-effect?
-• How will you connect ideas smoothly?
-
-🎯 **Use the Planning Phase button to structure your information!**`
-    };
-    return advice[textType as keyof typeof advice] || advice.narrative;
-  };
-
-  // Quick chat actions
-  const handleQuickAction = (action: string) => {
-    setChatInput(action);
-    setTimeout(() => handleChatSubmit(), 100);
-  };
-
-  // Format time display
-  const formatTime = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    
-    if (hours > 0) {
-      return `${hours}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    }
-    return `${minutes}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  // Copy text to clipboard
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-  };
-
-  // Text Type Analysis Tab Content
-  const renderTextTypeAnalysis = () => (
-    <div className="space-y-4">
-      <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border border-blue-200">
-        <h3 className="text-lg font-bold text-blue-900 mb-3 flex items-center">
-          <Target className="h-5 w-5 mr-2" />
-          {textType.charAt(0).toUpperCase() + textType.slice(1)} Analysis
-        </h3>
-        
-        <div className="grid grid-cols-1 gap-3 mb-4">
-          <div className="bg-white p-3 rounded-lg shadow-sm">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-gray-600 font-medium text-sm">Word Count</span>
-              <span className="text-xl font-bold text-blue-600">{wordCount}</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
-                className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-                style={{ width: `${Math.min((wordCount / 300) * 100, 100)}%` }}
-              ></div>
-            </div>
-            <p className="text-xs text-gray-500 mt-1">Target: 250-300 words</p>
-          </div>
-          
-          <div className="bg-white p-3 rounded-lg shadow-sm">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-gray-600 font-medium text-sm">Reading Time</span>
-              <span className="text-xl font-bold text-green-600">{readingTime} min</span>
-            </div>
-            <div className="flex items-center text-xs text-gray-500">
-              <Clock className="h-3 w-3 mr-1" />
-              Based on 200 words/minute
-            </div>
-          </div>
-        </div>
-
-        <button
-          onClick={handleEvaluate}
-          disabled={isEvaluating || !content.trim()}
-          className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white py-2 px-4 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm"
-        >
-          {isEvaluating ? (
-            <>
-              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-              Analyzing...
-            </>
-          ) : (
-            <>
-              <Sparkles className="h-4 w-4 mr-2" />
-              Analyze Text Type
-            </>
-          )}
-        </button>
-      </div>
-    </div>
-  );
-
-  // Vocabulary Sophistication Tab Content
-  const renderVocabularySophistication = () => (
-    <div className="space-y-4">
-      <div className="bg-gradient-to-r from-green-50 to-teal-50 p-4 rounded-lg border border-green-200">
-        <h3 className="text-lg font-bold text-green-900 mb-3 flex items-center">
-          <BookOpen className="h-5 w-5 mr-2" />
-          Paraphrase Tool
-        </h3>
-        
-        <div className="space-y-3">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Enter text to enhance:
-            </label>
-            <textarea
-              value={paraphraseInput}
-              onChange={(e) => setParaphraseInput(e.target.value)}
-              placeholder="Type text to improve..."
-              className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none text-sm"
-              rows={3}
-            />
-          </div>
-          
-          <button
-            onClick={handleParaphrase}
-            disabled={isParaphrasing || !paraphraseInput.trim()}
-            className="w-full bg-gradient-to-r from-green-500 to-teal-500 text-white py-2 px-4 rounded-lg font-semibold hover:from-green-600 hover:to-teal-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm"
-          >
-            {isParaphrasing ? (
-              <>
-                <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                Enhancing...
-              </>
-            ) : (
-              <>
-                <Wand2 className="h-4 w-4 mr-2" />
-                Paraphrase
-              </>
-            )}
-          </button>
-          
-          {paraphraseOutput && (
-            <div className="bg-white p-3 rounded-lg border border-green-200">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-green-700">Enhanced Version:</span>
-                <button
-                  onClick={() => copyToClipboard(paraphraseOutput)}
-                  className="text-green-600 hover:text-green-700"
-                >
-                  <Copy className="h-3 w-3" />
-                </button>
-              </div>
-              <p className="text-gray-800 text-sm">{paraphraseOutput}</p>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Synonym Helper */}
-      {showSynonyms && (
-        <div className="bg-white p-3 rounded-lg border-2 border-yellow-200 shadow-lg">
-          <h4 className="font-semibold text-gray-800 mb-2 text-sm">
-            Synonyms for "{selectedText}":
-          </h4>
-          {isLoadingSynonyms ? (
-            <div className="flex items-center text-gray-500 text-sm">
-              <RefreshCw className="h-3 w-3 mr-2 animate-spin" />
-              Loading synonyms...
-            </div>
-          ) : (
-            <div className="flex flex-wrap gap-1">
-              {synonyms.map((synonym, index) => (
-                <button
-                  key={index}
-                  onClick={() => replaceSynonym(synonym)}
-                  className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs hover:bg-yellow-200 transition-colors"
-                >
-                  {synonym}
-                </button>
-              ))}
-            </div>
-          )}
-          <button
-            onClick={() => setShowSynonyms(false)}
-            className="mt-2 text-gray-500 hover:text-gray-700 text-xs"
-          >
-            Close
-          </button>
-        </div>
-      )}
-    </div>
-  );
-
-  // Progress Tracking Tab Content
-  const renderProgressTracking = () => (
-    <div className="space-y-4">
-      <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg border border-purple-200">
-        <h3 className="text-lg font-bold text-purple-900 mb-3 flex items-center">
-          <TrendingUp className="h-5 w-5 mr-2" />
-          Writing Progress
-        </h3>
-        
-        <div className="grid grid-cols-1 gap-3 mb-4">
-          <div className="bg-white p-3 rounded-lg shadow-sm">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-gray-600 font-medium text-sm">Time Spent</span>
-              <div className="flex items-center">
-                <button
-                  onClick={() => setIsTimerRunning(!isTimerRunning)}
-                  className={`p-1 rounded-full mr-2 text-xs ${isTimerRunning ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}
-                >
-                  {isTimerRunning ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
-                </button>
-                <span className="text-lg font-bold text-purple-600">{formatTime(timeSpent)}</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white p-3 rounded-lg shadow-sm">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-gray-600 font-medium text-sm">Words/Minute</span>
-              <span className="text-lg font-bold text-pink-600">{progressData.averageWordsPerMinute}</span>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-3 rounded-lg">
-          <h4 className="font-semibold text-gray-800 mb-2 text-sm">Daily Goal Progress</h4>
-          <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-            <div 
-              className="bg-gradient-to-r from-purple-400 to-pink-500 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${Math.min((wordCount / 250) * 100, 100)}%` }}
-            ></div>
-          </div>
-          <p className="text-xs text-gray-500">{wordCount}/250 words today</p>
-        </div>
-      </div>
-    </div>
-  );
-
-  // Coaching Tips Tab Content with Chat
-  const renderCoachingTips = () => (
-    <div className="space-y-4 h-full flex flex-col">
-      <div className="bg-gradient-to-r from-orange-50 to-red-50 p-4 rounded-lg border border-orange-200">
-        <h3 className="text-lg font-bold text-orange-900 mb-3 flex items-center">
-          <Award className="h-5 w-5 mr-2" />
-          AI Writing Coach
-        </h3>
-        
-        {evaluation ? (
-          <div className="space-y-3">
-            <div className="bg-white p-3 rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-semibold text-gray-800">Overall Score</span>
-                <div className="flex items-center">
-                  <span className="text-2xl font-bold text-orange-600">{evaluation.overallScore || evaluation.score}</span>
-                  <span className="text-gray-500 ml-1 text-sm">/10</span>
-                </div>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-gradient-to-r from-orange-400 to-red-500 h-2 rounded-full transition-all duration-500"
-                  style={{ width: `${((evaluation.overallScore || evaluation.score) / 10) * 100}%` }}
-                ></div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-3">
-              <div className="bg-green-50 p-3 rounded-lg border border-green-200">
-                <h4 className="font-semibold text-green-800 mb-1 flex items-center text-sm">
-                  <CheckCircle className="h-4 w-4 mr-1" />
-                  Strengths
-                </h4>
-                <ul className="space-y-1">
-                  {(evaluation.strengths || []).map((strength: string, index: number) => (
-                    <li key={index} className="text-green-700 text-xs">• {strength}</li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
-                <h4 className="font-semibold text-blue-800 mb-1 flex items-center text-sm">
-                  <Lightbulb className="h-4 w-4 mr-1" />
-                  Areas to Improve
-                </h4>
-                <ul className="space-y-1">
-                  {(evaluation.improvements || []).map((improvement: string, index: number) => (
-                    <li key={index} className="text-blue-700 text-xs">• {improvement}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-
-            {evaluation.specificFeedback && (
-              <div className="bg-white p-3 rounded-lg border border-gray-200">
-                <h4 className="font-semibold text-gray-800 mb-1 text-sm">Detailed Feedback</h4>
-                <p className="text-gray-700 text-xs">{evaluation.specificFeedback || evaluation.detailedFeedback}</p>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="text-center py-4">
-            <Trophy className="h-12 w-12 text-gray-300 mx-auto mb-2" />
-            <p className="text-gray-500 mb-3 text-sm">Get personalized feedback on your writing!</p>
-            <button
-              onClick={handleEvaluate}
-              disabled={!content.trim()}
-              className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-            >
-              Get Feedback
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Enhanced Chat Interface */}
-      <div className="flex-1 bg-white rounded-lg border border-gray-200 flex flex-col min-h-0">
-        <div className="p-3 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
-          <h4 className="font-semibold text-gray-800 text-sm flex items-center">
-            <MessageSquare className="h-4 w-4 mr-2" />
-            Chat with Writing Buddy
-          </h4>
-          <p className="text-xs text-gray-600 mt-1">Ask me anything about your {textType} writing!</p>
-        </div>
-        
-        <div className="flex-1 overflow-y-auto p-3 space-y-2 min-h-0">
-          {chatMessages.length === 0 && (
-            <div className="text-center py-4">
-              <div className="bg-gradient-to-r from-blue-100 to-purple-100 rounded-lg p-4 mb-3">
-                <p className="text-gray-700 text-sm mb-3">👋 Hi! I'm your AI Writing Buddy. I can help you with:</p>
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="bg-white rounded p-2">📊 Text Analysis</div>
-                  <div className="bg-white rounded p-2">📚 Vocabulary</div>
-                  <div className="bg-white rounded p-2">✏️ Grammar Tips</div>
-                  <div className="bg-white rounded p-2">🏗️ Structure</div>
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-1 justify-center">
-                <button
-                  onClick={() => handleQuickAction('Analyze my writing')}
-                  className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200"
-                >
-                  📊 Analyze Writing
-                </button>
-                <button
-                  onClick={() => handleQuickAction('Help with vocabulary')}
-                  className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs hover:bg-green-200"
-                >
-                  📚 Vocabulary Help
-                </button>
-                <button
-                  onClick={() => handleQuickAction('Grammar tips')}
-                  className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs hover:bg-purple-200"
-                >
-                  ✏️ Grammar Tips
-                </button>
-                <button
-                  onClick={() => handleQuickAction('Structure advice')}
-                  className="px-2 py-1 bg-orange-100 text-orange-700 rounded text-xs hover:bg-orange-200"
-                >
-                  🏗️ Structure Help
-                </button>
-              </div>
-            </div>
-          )}
-          
-          {chatMessages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
-              <div
-                className={`max-w-[85%] p-2 rounded-lg text-xs ${
-                  message.sender === 'user'
-                    ? 'bg-blue-500 text-white rounded-br-sm'
-                    : 'bg-gray-100 text-gray-800 rounded-bl-sm'
-                }`}
-              >
-                <p className="whitespace-pre-wrap">{message.text}</p>
-                {message.sender === 'ai' && (
-                  <div className="flex items-center justify-between mt-1">
-                    <span className="text-xs text-gray-500">
-                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
-                    <button
-                      onClick={() => copyToClipboard(message.text)}
-                      className="text-gray-500 hover:text-gray-700 ml-2"
-                      title="Copy message"
-                    >
-                      <Copy className="h-3 w-3" />
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-          
-          {isChatLoading && (
-            <div className="flex justify-start">
-              <div className="bg-gray-100 p-2 rounded-lg text-xs flex items-center">
-                <RefreshCw className="h-3 w-3 animate-spin mr-2" />
-                Writing Buddy is thinking...
-              </div>
-            </div>
-          )}
-          
-          <div ref={chatEndRef} />
-        </div>
-        
-        <div className="p-3 border-t border-gray-200 bg-gray-50">
-          <div className="flex space-x-2">
-            <input
-              type="text"
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleChatSubmit()}
-              placeholder="Ask about writing, grammar, vocabulary..."
-              className="flex-1 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-            />
-            <button
-              onClick={handleChatSubmit}
-              disabled={!chatInput.trim() || isChatLoading}
-              className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Send className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  // Enhanced Planning Modal with text-type specific content
-  const renderPlanningModal = () => (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-500 to-purple-500 text-white p-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-bold flex items-center">
-              <PenTool className="h-6 w-6 mr-2" />
-              Planning Phase - {textType.charAt(0).toUpperCase() + textType.slice(1)} Writing
-            </h2>
-            <button
-              onClick={() => setShowPlanningModal(false)}
-              className="p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition-colors"
-            >
-              <X className="h-6 w-6" />
-            </button>
-          </div>
-          <p className="text-blue-100 mt-2">Take time to plan your ideas - great writing starts with great planning!</p>
-        </div>
-        
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Planning Notes */}
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  📝 Planning Notes & Ideas
-                </label>
-                <textarea
-                  value={planningNotes}
-                  onChange={(e) => setPlanningNotes(e.target.value)}
-                  placeholder="Brainstorm your ideas, create an outline, or jot down key points..."
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                  rows={8}
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  🎯 Writing Goals for This Session
-                </label>
-                <textarea
-                  value={writingGoals}
-                  onChange={(e) => setWritingGoals(e.target.value)}
-                  placeholder="What do you want to accomplish in this writing session?"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                  rows={3}
-                />
-              </div>
-            </div>
-            
-            {/* Enhanced Text-Type Specific Planning Guide */}
-            <div className="space-y-4">
-              <div className="bg-blue-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-blue-900 mb-3 flex items-center">
-                  <Target className="h-5 w-5 mr-2" />
-                  {textType.charAt(0).toUpperCase() + textType.slice(1)} Writing Guide
-                </h3>
-                
-                {textType === 'narrative' && (
-                  <div className="space-y-3">
-                    <div className="bg-white p-3 rounded border border-blue-200">
-                      <h4 className="font-medium text-blue-800 mb-2 flex items-center">
-                        <Users className="h-4 w-4 mr-1" />
-                        Characters & Setting
-                      </h4>
-                      <ul className="text-blue-700 text-sm space-y-1">
-                        <li>• Who is your main character? What are their goals?</li>
-                        <li>• What motivates them? What do they fear?</li>
-                        <li>• Where and when does your story take place?</li>
-                        <li>• How does the setting affect the mood and story?</li>
-                      </ul>
-                    </div>
-                    
-                    <div className="bg-white p-3 rounded border border-blue-200">
-                      <h4 className="font-medium text-blue-800 mb-2 flex items-center">
-                        <Zap className="h-4 w-4 mr-1" />
-                        Plot Structure
-                      </h4>
-                      <ul className="text-blue-700 text-sm space-y-1">
-                        <li>• Beginning: How will you hook the reader?</li>
-                        <li>• Middle: What problem or conflict occurs?</li>
-                        <li>• Climax: What's the most exciting moment?</li>
-                        <li>• End: How is the problem resolved?</li>
-                      </ul>
-                    </div>
-                    
-                    <div className="bg-white p-3 rounded border border-blue-200">
-                      <h4 className="font-medium text-blue-800 mb-2 flex items-center">
-                        <Lightbulb className="h-4 w-4 mr-1" />
-                        Writing Techniques
-                      </h4>
-                      <ul className="text-blue-700 text-sm space-y-1">
-                        <li>• Include dialogue to show character personality</li>
-                        <li>• Use descriptive details for setting and characters</li>
-                        <li>• Show emotions through actions, not just words</li>
-                        <li>• Create suspense to keep readers engaged</li>
-                      </ul>
-                    </div>
-                  </div>
-                )}
-                
-                {textType === 'persuasive' && (
-                  <div className="space-y-3">
-                    <div className="bg-white p-3 rounded border border-blue-200">
-                      <h4 className="font-medium text-blue-800 mb-2 flex items-center">
-                        <Target className="h-4 w-4 mr-1" />
-                        Position & Arguments
-                      </h4>
-                      <ul className="text-blue-700 text-sm space-y-1">
-                        <li>• What is your clear position statement?</li>
-                        <li>• What are your 3 strongest arguments?</li>
-                        <li>• What evidence supports each argument?</li>
-                        <li>• What counterarguments might you address?</li>
-                      </ul>
-                    </div>
-                    
-                    <div className="bg-white p-3 rounded border border-blue-200">
-                      <h4 className="font-medium text-blue-800 mb-2 flex items-center">
-                        <BookOpen className="h-4 w-4 mr-1" />
-                        Evidence & Examples
-                      </h4>
-                      <ul className="text-blue-700 text-sm space-y-1">
-                        <li>• Statistics and facts that support your position</li>
-                        <li>• Expert opinions and credible quotes</li>
-                        <li>• Real-world examples and case studies</li>
-                        <li>• Personal experiences (if appropriate)</li>
-                      </ul>
-                    </div>
-                    
-                    <div className="bg-white p-3 rounded border border-blue-200">
-                      <h4 className="font-medium text-blue-800 mb-2 flex items-center">
-                        <Zap className="h-4 w-4 mr-1" />
-                        Persuasive Techniques
-                      </h4>
-                      <ul className="text-blue-700 text-sm space-y-1">
-                        <li>• Use emotional appeals to connect with readers</li>
-                        <li>• Present logical reasoning and evidence</li>
-                        <li>• Address opposing viewpoints respectfully</li>
-                        <li>• End with a strong call to action</li>
-                      </ul>
-                    </div>
-                  </div>
-                )}
-                
-                {textType === 'expository' && (
-                  <div className="space-y-3">
-                    <div className="bg-white p-3 rounded border border-blue-200">
-                      <h4 className="font-medium text-blue-800 mb-2 flex items-center">
-                        <Target className="h-4 w-4 mr-1" />
-                        Topic & Purpose
-                      </h4>
-                      <ul className="text-blue-700 text-sm space-y-1">
-                        <li>• What is your main topic?</li>
-                        <li>• What do you want readers to learn?</li>
-                        <li>• Why is this information important?</li>
-                        <li>• Who is your target audience?</li>
-                      </ul>
-                    </div>
-                    
-                    <div className="bg-white p-3 rounded border border-blue-200">
-                      <h4 className="font-medium text-blue-800 mb-2 flex items-center">
-                        <Layout className="h-4 w-4 mr-1" />
-                        Organization & Structure
-                      </h4>
-                      <ul className="text-blue-700 text-sm space-y-1">
-                        <li>• Introduction: Hook and thesis statement</li>
-                        <li>• Body: 3-4 main points with supporting details</li>
-                        <li>• Conclusion: Summary and final thoughts</li>
-                        <li>• Logical flow between paragraphs</li>
-                      </ul>
-                    </div>
-                    
-                    <div className="bg-white p-3 rounded border border-blue-200">
-                      <h4 className="font-medium text-blue-800 mb-2 flex items-center">
-                        <Lightbulb className="h-4 w-4 mr-1" />
-                        Information & Examples
-                      </h4>
-                      <ul className="text-blue-700 text-sm space-y-1">
-                        <li>• Clear explanations of complex concepts</li>
-                        <li>• Specific examples and illustrations</li>
-                        <li>• Definitions of important terms</li>
-                        <li>• Smooth transitions between ideas</li>
-                      </ul>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-gray-50 p-4 flex justify-between items-center border-t">
-          <div className="text-sm text-gray-600 flex items-center">
-            <Clock className="h-4 w-4 mr-1" />
-            Take your time to plan - good writing starts with good planning!
-          </div>
-          <button
-            onClick={() => setShowPlanningModal(false)}
-            className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-6 py-2 rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-200 font-medium shadow-md hover:shadow-lg"
-          >
-            Start Writing
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <div className={`flex flex-col h-screen bg-gray-50 ${isFullscreen ? 'fixed inset-0 z-50' : ''}`}>
-      {/* Compact Header - Reduced padding */}
-      <div className="bg-white border-b border-gray-200 px-4 py-2 shadow-sm">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <h1 className="text-xl font-bold text-gray-900">Writing Area</h1>
-            {isAutoSaving && (
-              <div className="flex items-center text-green-600 text-xs">
-                <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
-                Auto-saving...
-              </div>
-            )}
-            {lastSaved && (
-              <div className="text-gray-500 text-xs">
-                Last saved: {lastSaved.toLocaleTimeString()}
-              </div>
-            )}
-          </div>
-          
-          <button
-            onClick={() => setIsFullscreen(!isFullscreen)}
-            className="p-1 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-          </button>
-        </div>
-      </div>
-
+      {/* Main Writing Area */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Main Writing Area */}
         <div className="flex-1 flex flex-col">
           {/* Compact Prompt Display */}
-          <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 border-b-2 border-blue-200 p-4 shadow-sm">
+          <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 border-b-2 border-blue-200 p-3 shadow-sm">
             <div className="flex items-start space-x-3">
               <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-md">
                 <Sparkles className="h-4 w-4 text-white" />
@@ -1370,8 +657,111 @@ How can I help you today? 💪`;
             </div>
           </div>
 
-          {/* Writing Textarea - Increased height by removing Planning Phase button space */}
-          <div className="flex-1 p-4">
+          {/* NSW Exam Status Bar */}
+          <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between text-sm">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <span className="text-gray-600">Words:</span>
+                <span className={`font-semibold ${getWordCountStatus().color}`}>
+                  {wordCount}/{targetWordCount}
+                </span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Clock className="h-4 w-4 text-gray-500" />
+                <span className="text-gray-600">
+                  {examMode ? `Exam: ${formatTime(examTimeRemaining)}` : `Time: ${formatTime(timeSpent)}`}
+                </span>
+              </div>
+              {examMode && (
+                <div className="flex items-center space-x-2">
+                  <div className={`w-2 h-2 rounded-full ${examTimeRemaining > 300 ? 'bg-green-500' : examTimeRemaining > 120 ? 'bg-yellow-500' : 'bg-red-500'}`}></div>
+                  <span className={`font-medium ${examTimeRemaining > 300 ? 'text-green-600' : examTimeRemaining > 120 ? 'text-yellow-600' : 'text-red-600'}`}>
+                    {examTimeRemaining > 300 ? 'Good time' : examTimeRemaining > 120 ? 'Hurry up!' : 'Time running out!'}
+                  </span>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center space-x-2">
+              {!examMode ? (
+                <button
+                  onClick={startExamMode}
+                  className="px-3 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600 transition-colors"
+                >
+                  Start Exam Mode
+                </button>
+              ) : (
+                <button
+                  onClick={stopExamMode}
+                  className="px-3 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 transition-colors"
+                >
+                  Stop Exam
+                </button>
+              )}
+              <button
+                onClick={() => setShowStructureGuide(!showStructureGuide)}
+                className="px-3 py-1 bg-purple-500 text-white rounded text-xs hover:bg-purple-600 transition-colors"
+              >
+                Structure Guide
+              </button>
+            </div>
+          </div>
+
+          {/* Structure Guide */}
+          {showStructureGuide && (
+            <div className="bg-purple-50 border-b border-purple-200 p-3">
+              <h4 className="font-semibold text-purple-900 mb-2">{textType.charAt(0).toUpperCase() + textType.slice(1)} Structure Guide:</h4>
+              <div className="text-sm text-purple-800">
+                {textType === 'narrative' && (
+                  <div className="grid grid-cols-4 gap-2">
+                    <div className="bg-white p-2 rounded">
+                      <strong>Opening:</strong> Hook, character, setting
+                    </div>
+                    <div className="bg-white p-2 rounded">
+                      <strong>Rising Action:</strong> Build tension, conflict
+                    </div>
+                    <div className="bg-white p-2 rounded">
+                      <strong>Climax:</strong> Peak moment
+                    </div>
+                    <div className="bg-white p-2 rounded">
+                      <strong>Resolution:</strong> Conclude, growth
+                    </div>
+                  </div>
+                )}
+                {textType === 'persuasive' && (
+                  <div className="grid grid-cols-4 gap-2">
+                    <div className="bg-white p-2 rounded">
+                      <strong>Introduction:</strong> State position clearly
+                    </div>
+                    <div className="bg-white p-2 rounded">
+                      <strong>Arguments:</strong> 2-3 strong points with evidence
+                    </div>
+                    <div className="bg-white p-2 rounded">
+                      <strong>Counter-arguments:</strong> Address opposing views
+                    </div>
+                    <div className="bg-white p-2 rounded">
+                      <strong>Conclusion:</strong> Restate, call to action
+                    </div>
+                  </div>
+                )}
+                {textType === 'expository' && (
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="bg-white p-2 rounded">
+                      <strong>Introduction:</strong> Introduce topic clearly
+                    </div>
+                    <div className="bg-white p-2 rounded">
+                      <strong>Body:</strong> 2-3 main points with examples
+                    </div>
+                    <div className="bg-white p-2 rounded">
+                      <strong>Conclusion:</strong> Summarize key points
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Writing Textarea - Maximized space */}
+          <div className="flex-1 p-3">
             <textarea
               ref={textareaRef}
               value={content}
@@ -1388,123 +778,474 @@ How can I help you today? 💪`;
             />
           </div>
 
-          {/* Submit Button - Moved higher up, more compact */}
+          {/* Submit Button - Prominently positioned */}
           <div className="bg-white border-t border-gray-200 p-3 flex justify-center">
             <button
               onClick={handleEvaluate}
-              disabled={!content.trim()}
-              className="flex items-center px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg hover:from-green-600 hover:to-emerald-600 transition-all duration-200 shadow-md hover:shadow-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={!content.trim() || isEvaluating}
+              className="flex items-center px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg hover:from-green-600 hover:to-emerald-600 transition-all duration-200 shadow-lg hover:shadow-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed text-lg"
             >
-              <Send className="h-4 w-4 mr-2" />
-              Submit for Evaluation
+              {isEvaluating ? (
+                <>
+                  <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
+                  Evaluating...
+                </>
+              ) : (
+                <>
+                  <Send className="h-5 w-5 mr-2" />
+                  Submit for Evaluation
+                </>
+              )}
             </button>
-          </div>
-
-          {/* Enhanced Bottom Stats Bar */}
-          <div className="bg-white border-t border-gray-200 p-4 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-6">
-                <div className="flex items-center text-gray-600">
-                  <FileText className="h-4 w-4 mr-1" />
-                  <span className="font-medium">{wordCount} words</span>
-                </div>
-                <div className="flex items-center text-gray-600">
-                  <Type className="h-4 w-4 mr-1" />
-                  <span>{characterCount} characters</span>
-                </div>
-                <div className="flex items-center text-gray-600">
-                  <Clock className="h-4 w-4 mr-1" />
-                  <span>{readingTime} min read</span>
-                </div>
-                <div className="flex items-center text-gray-600">
-                  <Timer className="h-4 w-4 mr-1" />
-                  <span>{formatTime(timeSpent)}</span>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => setShowPlanningModal(true)}
-                  className="flex items-center px-3 py-1 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                >
-                  <PenTool className="h-4 w-4 mr-1" />
-                  Planning
-                </button>
-                
-                <button
-                  onClick={handleEvaluate}
-                  disabled={!content.trim()}
-                  className="flex items-center px-3 py-1 text-green-600 hover:bg-green-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Award className="h-4 w-4 mr-1" />
-                  Evaluate
-                </button>
-              </div>
-            </div>
           </div>
         </div>
 
-        {/* Enhanced Writing Buddy Sidebar - Moved up to touch header */}
-        <div className="w-96 bg-white border-l border-gray-200 flex flex-col shadow-lg">
-          <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-3 shadow-md">
-            <h2 className="text-lg font-bold flex items-center">
-              <Heart className="h-4 w-4 mr-2" />
-              Writing Buddy
-            </h2>
-            <p className="text-purple-100 text-xs mt-1">Your AI writing assistant</p>
+        {/* Writing Buddy Sidebar - Moved up to touch header */}
+        <div className="w-80 bg-gradient-to-b from-purple-500 to-pink-500 text-white flex flex-col shadow-xl">
+          {/* Writing Buddy Header */}
+          <div className="p-4 border-b border-white border-opacity-20">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                <Heart className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold">Writing Buddy</h2>
+                <p className="text-purple-100 text-sm">Your AI writing assistant</p>
+              </div>
+            </div>
           </div>
 
           {/* Planning Phase Button - Moved to sidebar */}
-          <div className="bg-blue-50 border-b border-blue-200 p-3">
+          <div className="p-4 border-b border-white border-opacity-20">
             <button
               onClick={() => setShowPlanningModal(true)}
-              className="w-full flex items-center justify-center px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-200 shadow-md hover:shadow-lg font-medium text-sm"
+              className="w-full flex items-center justify-center px-4 py-3 bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg transition-all duration-200 font-medium"
             >
-              <PenTool className="h-4 w-4 mr-2" />
+              <Wand2 className="h-4 w-4 mr-2" />
               Planning Phase
             </button>
           </div>
 
           {/* Tab Navigation */}
-          <div className="border-b border-gray-200 bg-gray-50">
-            <nav className="flex">
-              {[
-                { id: 'text-type-analysis', label: 'Analysis', icon: Target },
-                { id: 'vocabulary', label: 'Vocabulary', icon: BookOpen },
-                { id: 'progress', label: 'Progress', icon: TrendingUp },
-                { id: 'coaching-tips', label: 'Coach', icon: Award }
-              ].map((tab) => {
-                const IconComponent = tab.icon;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`flex-1 px-2 py-2 text-xs font-medium border-b-2 transition-colors ${
-                      activeTab === tab.id
-                        ? 'border-purple-500 text-purple-600 bg-white'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    <IconComponent className="h-3 w-3 mx-auto mb-1" />
-                    <div className="text-center">{tab.label}</div>
-                  </button>
-                );
-              })}
-            </nav>
+          <div className="flex border-b border-white border-opacity-20">
+            {[
+              { id: 'text-type-analysis', label: 'Analysis', icon: BarChart3 },
+              { id: 'vocabulary-builder', label: 'Vocabulary', icon: BookOpen },
+              { id: 'progress-tracker', label: 'Progress', icon: TrendingUp },
+              { id: 'coaching-tips', label: 'Coach', icon: Target }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex-1 p-3 text-xs font-medium transition-colors ${
+                  activeTab === tab.id
+                    ? 'bg-white bg-opacity-20 text-white'
+                    : 'text-purple-100 hover:text-white hover:bg-white hover:bg-opacity-10'
+                }`}
+              >
+                <tab.icon className="h-4 w-4 mx-auto mb-1" />
+                {tab.label}
+              </button>
+            ))}
           </div>
 
           {/* Tab Content */}
-          <div className="flex-1 overflow-y-auto p-3">
-            {activeTab === 'text-type-analysis' && renderTextTypeAnalysis()}
-            {activeTab === 'vocabulary' && renderVocabularySophistication()}
-            {activeTab === 'progress' && renderProgressTracking()}
-            {activeTab === 'coaching-tips' && renderCoachingTips()}
+          <div className="flex-1 overflow-y-auto">
+            {activeTab === 'text-type-analysis' && (
+              <div className="p-4 space-y-4">
+                <div className="bg-white bg-opacity-10 rounded-lg p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium">Analysis</span>
+                    <Target className="h-4 w-4" />
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Word Count</span>
+                        <span className="font-medium">{wordCount}</span>
+                      </div>
+                      <div className="text-xs text-purple-200">Target: {targetWordCount} words</div>
+                    </div>
+                    
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Reading Time</span>
+                        <span className="font-medium">{readingTime} min</span>
+                      </div>
+                      <div className="text-xs text-purple-200">Based on 200 words/minute</div>
+                    </div>
+                    
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Writing Speed</span>
+                        <span className="font-medium">{progressData.averageWordsPerMinute} wpm</span>
+                      </div>
+                      <div className="text-xs text-purple-200">Target: 12-15 words/minute</div>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    setChatInput('analyze my writing');
+                    handleChatSubmit();
+                  }}
+                  className="w-full bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg p-3 text-sm font-medium transition-colors"
+                >
+                  <BarChart3 className="h-4 w-4 mr-2 inline" />
+                  Analyze Text Type
+                </button>
+              </div>
+            )}
+
+            {activeTab === 'vocabulary-builder' && (
+              <div className="p-4 space-y-4">
+                <div className="bg-white bg-opacity-10 rounded-lg p-3">
+                  <h3 className="font-medium mb-2 flex items-center">
+                    <BookOpen className="h-4 w-4 mr-2" />
+                    Vocabulary
+                  </h3>
+                  <div className="text-xs text-purple-200 mb-3">
+                    Target: 250-300 words
+                  </div>
+                  <div className="text-xs text-purple-200">
+                    Based on 200 words/minute reading speed
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <button
+                    onClick={() => {
+                      setChatInput('vocabulary tips');
+                      handleChatSubmit();
+                    }}
+                    className="w-full bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg p-3 text-sm font-medium transition-colors text-left"
+                  >
+                    💡 Get Vocabulary Tips
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      setChatInput('synonyms for common words');
+                      handleChatSubmit();
+                    }}
+                    className="w-full bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg p-3 text-sm font-medium transition-colors text-left"
+                  >
+                    🔄 Find Synonyms
+                  </button>
+                </div>
+
+                {/* Paraphrase Tool */}
+                <div className="bg-white bg-opacity-10 rounded-lg p-3">
+                  <h4 className="font-medium mb-2">Paraphrase Tool</h4>
+                  <textarea
+                    value={paraphraseInput}
+                    onChange={(e) => setParaphraseInput(e.target.value)}
+                    placeholder="Enter text to paraphrase..."
+                    className="w-full p-2 rounded bg-white bg-opacity-20 text-white placeholder-purple-200 text-sm resize-none"
+                    rows={2}
+                  />
+                  <button
+                    onClick={handleParaphrase}
+                    disabled={!paraphraseInput.trim() || isParaphrasing}
+                    className="w-full mt-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded p-2 text-sm font-medium transition-colors disabled:opacity-50"
+                  >
+                    {isParaphrasing ? 'Paraphrasing...' : 'Paraphrase'}
+                  </button>
+                  {paraphraseOutput && (
+                    <div className="mt-2 p-2 bg-white bg-opacity-20 rounded text-sm">
+                      {paraphraseOutput}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'progress-tracker' && (
+              <div className="p-4 space-y-4">
+                <div className="bg-white bg-opacity-10 rounded-lg p-3">
+                  <h3 className="font-medium mb-3 flex items-center">
+                    <TrendingUp className="h-4 w-4 mr-2" />
+                    Progress
+                  </h3>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Words Written</span>
+                        <span className="font-medium">{progressData.wordsWritten}</span>
+                      </div>
+                      <div className="w-full bg-white bg-opacity-20 rounded-full h-2">
+                        <div 
+                          className="bg-white h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${Math.min((progressData.wordsWritten / targetWordCount) * 100, 100)}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Time Spent</span>
+                        <span className="font-medium">{formatTime(timeSpent)}</span>
+                      </div>
+                      {examMode && (
+                        <div className="text-xs text-purple-200">
+                          Exam time remaining: {formatTime(examTimeRemaining)}
+                        </div>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Writing Speed</span>
+                        <span className="font-medium">{progressData.averageWordsPerMinute} wpm</span>
+                      </div>
+                      <div className="text-xs text-purple-200">
+                        Target: 12-15 words/minute
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    setChatInput('time management tips');
+                    handleChatSubmit();
+                  }}
+                  className="w-full bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg p-3 text-sm font-medium transition-colors"
+                >
+                  <Clock className="h-4 w-4 mr-2 inline" />
+                  Time Management Tips
+                </button>
+              </div>
+            )}
+
+            {activeTab === 'coaching-tips' && (
+              <div className="p-4 space-y-4">
+                {evaluation ? (
+                  <div className="space-y-4">
+                    <div className="bg-white bg-opacity-10 rounded-lg p-3">
+                      <h3 className="font-medium mb-2 flex items-center">
+                        <Award className="h-4 w-4 mr-2" />
+                        NSW Selective Assessment
+                      </h3>
+                      
+                      {evaluation.nswCriteria && (
+                        <div className="space-y-2 mb-3">
+                          <div className="flex justify-between text-sm">
+                            <span>Ideas & Content:</span>
+                            <span className="font-medium">{evaluation.nswCriteria.ideasAndContent}/10</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span>Text Structure:</span>
+                            <span className="font-medium">{evaluation.nswCriteria.textStructure}/10</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span>Language Features:</span>
+                            <span className="font-medium">{evaluation.nswCriteria.languageFeatures}/10</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span>Grammar & Spelling:</span>
+                            <span className="font-medium">{evaluation.nswCriteria.grammarAndSpelling}/10</span>
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div className="text-sm">
+                        <strong>Overall Score: {evaluation.overallScore}/10</strong>
+                      </div>
+                    </div>
+
+                    <div className="bg-white bg-opacity-10 rounded-lg p-3">
+                      <h4 className="font-medium mb-2 text-green-200">✅ Strengths</h4>
+                      <ul className="text-sm space-y-1">
+                        {evaluation.strengths?.slice(0, 3).map((strength: string, index: number) => (
+                          <li key={index} className="text-purple-100">• {strength}</li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className="bg-white bg-opacity-10 rounded-lg p-3">
+                      <h4 className="font-medium mb-2 text-yellow-200">🎯 Improvements</h4>
+                      <ul className="text-sm space-y-1">
+                        {evaluation.improvements?.slice(0, 3).map((improvement: string, index: number) => (
+                          <li key={index} className="text-purple-100">• {improvement}</li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className="bg-white bg-opacity-10 rounded-lg p-3">
+                      <h4 className="font-medium mb-2 text-blue-200">📝 Feedback</h4>
+                      <p className="text-sm text-purple-100">{evaluation.specificFeedback}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-white bg-opacity-10 rounded-lg p-3">
+                    <h3 className="font-medium mb-2 flex items-center">
+                      <Target className="h-4 w-4 mr-2" />
+                      Coaching Tips
+                    </h3>
+                    <p className="text-sm text-purple-200 mb-3">
+                      Write your {textType} and submit it for detailed feedback and coaching tips!
+                    </p>
+                    <button
+                      onClick={() => {
+                        setChatInput('coaching tips for ' + textType);
+                        handleChatSubmit();
+                      }}
+                      className="w-full bg-white bg-opacity-20 hover:bg-opacity-30 rounded p-2 text-sm font-medium transition-colors"
+                    >
+                      Get Writing Tips
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Chat Interface */}
+          <div className="border-t border-white border-opacity-20 p-4">
+            <div className="bg-white bg-opacity-10 rounded-lg p-3 mb-3 max-h-32 overflow-y-auto">
+              {chatMessages.length === 0 ? (
+                <p className="text-sm text-purple-200">Ask me anything about writing! Try "analyze my writing" or "vocabulary tips"</p>
+              ) : (
+                <div className="space-y-2">
+                  {chatMessages.slice(-2).map((message) => (
+                    <div key={message.id} className={`text-xs ${message.sender === 'user' ? 'text-white font-medium' : 'text-purple-100'}`}>
+                      <strong>{message.sender === 'user' ? 'You:' : 'Buddy:'}</strong> {message.text.substring(0, 100)}{message.text.length > 100 ? '...' : ''}
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div ref={chatEndRef} />
+            </div>
+            
+            <div className="flex space-x-2">
+              <input
+                type="text"
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleChatSubmit()}
+                placeholder="Ask me anything..."
+                className="flex-1 p-2 rounded bg-white bg-opacity-20 text-white placeholder-purple-200 text-sm"
+              />
+              <button
+                onClick={handleChatSubmit}
+                disabled={!chatInput.trim() || isChatLoading}
+                className="px-3 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded transition-colors disabled:opacity-50"
+              >
+                {isChatLoading ? (
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Enhanced Planning Modal */}
-      {showPlanningModal && renderPlanningModal()}
+      {/* Synonyms Popup */}
+      {showSynonyms && selectedText && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">Synonyms for "{selectedText}"</h3>
+              <button
+                onClick={() => setShowSynonyms(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            {isLoadingSynonyms ? (
+              <div className="flex items-center justify-center py-4">
+                <RefreshCw className="h-5 w-5 animate-spin text-blue-500" />
+                <span className="ml-2 text-gray-600">Loading synonyms...</span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                {synonyms.map((synonym, index) => (
+                  <button
+                    key={index}
+                    onClick={() => replaceSynonym(synonym)}
+                    className="p-2 text-left bg-gray-100 hover:bg-blue-100 rounded transition-colors"
+                  >
+                    {synonym}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Planning Modal */}
+      {showPlanningModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold">Planning Phase</h3>
+              <button
+                onClick={() => setShowPlanningModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Planning Notes
+                </label>
+                <textarea
+                  value={planningNotes}
+                  onChange={(e) => setPlanningNotes(e.target.value)}
+                  placeholder="Brainstorm your ideas, outline your structure..."
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  rows={6}
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Writing Goals
+                </label>
+                <textarea
+                  value={writingGoals}
+                  onChange={(e) => setWritingGoals(e.target.value)}
+                  placeholder="What do you want to achieve with this piece?"
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  rows={3}
+                />
+              </div>
+              
+              <div className="flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowPlanningModal(false)}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    setShowPlanningModal(false);
+                    // Focus on the writing area
+                    textareaRef.current?.focus();
+                  }}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                >
+                  Start Writing
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
