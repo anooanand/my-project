@@ -1,4 +1,3 @@
-WritingArea.tsx
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   Save, 
@@ -85,7 +84,7 @@ import {
 import { generatePrompt, getSynonyms, rephraseSentence, evaluateEssay } from '../lib/openai';
 
 interface WritingAreaProps {
-  onContentChange?: (content: string) => void;
+  onContentChange?: (content: string ) => void;
   initialContent?: string;
   textType?: string;
   prompt?: string;
@@ -457,590 +456,777 @@ export function WritingArea({
 
   // Format time display
   const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
-  // Get word count status
-  const getWordCountStatus = () => {
-    if (wordCount < targetWordCount * 0.8) {
-      return { color: 'text-orange-600', message: 'Below target' };
-    } else if (wordCount > targetWordCount * 1.2) {
-      return { color: 'text-red-600', message: 'Above target' };
-    } else {
-      return { color: 'text-green-600', message: 'Perfect range' };
-    }
-  };
-
-  // Send chat message to AI Buddy
-  const sendChatMessage = async () => {
+  // Handle chat input for Writing Buddy
+  const handleChatSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!chatInput.trim()) return;
 
-    const userMessage = {
-      id: Date.now().toString(),
-      text: chatInput,
-      sender: 'user' as const,
-      timestamp: new Date()
-    };
-
-    setChatMessages(prev => [...prev, userMessage]);
+    const newUserMessage = { id: Date.now().toString(), text: chatInput, sender: 'user' as const, timestamp: new Date() };
+    setChatMessages((prevMessages) => [...prevMessages, newUserMessage]);
     setChatInput('');
     setIsChatLoading(true);
 
     try {
-      // Simulate AI response - replace with actual AI integration
+      // Simulate AI response
+      const aiResponseText = `Thanks for your message! I'm still under development, but I'm learning to provide helpful feedback. You said: "${chatInput}"`;
+      const newAiMessage = { id: (Date.now() + 1).toString(), text: aiResponseText, sender: 'ai' as const, timestamp: new Date() };
       setTimeout(() => {
-        const aiResponse = {
-          id: (Date.now() + 1).toString(),
-          text: `Great question! For ${textType} writing, I'd suggest focusing on ${textType === 'narrative' ? 'character development and plot structure' : textType === 'persuasive' ? 'strong arguments and evidence' : 'clear explanations and examples'}. Keep writing!`,
-          sender: 'ai' as const,
-          timestamp: new Date()
-        };
-        setChatMessages(prev => [...prev, aiResponse]);
+        setChatMessages((prevMessages) => [...prevMessages, newAiMessage]);
         setIsChatLoading(false);
-      }, 1500);
+      }, 1000);
     } catch (error) {
-      console.error('Failed to get AI response:', error);
+      console.error('Error sending chat message:', error);
       setIsChatLoading(false);
     }
   };
 
+  // Toggle fullscreen mode
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen();
+      setIsFullscreen(true);
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+        setIsFullscreen(false);
+      }
+    }
+  };
+
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.altKey && e.key === 's') { // Alt + S for Save
+        e.preventDefault();
+        // handleSave(); // Implement save functionality
+        alert('Save functionality not yet implemented.');
+      }
+      if (e.altKey && e.key === 'f') { // Alt + F for Fullscreen
+        e.preventDefault();
+        toggleFullscreen();
+      }
+      if (e.altKey && e.key === 'e') { // Alt + E for Evaluate
+        e.preventDefault();
+        handleEvaluate();
+      }
+      if (e.altKey && e.key === 'p') { // Alt + P for Planning
+        e.preventDefault();
+        setShowPlanningModal(true);
+      }
+      if (e.altKey && e.key === 't') { // Alt + T for Timer
+        e.preventDefault();
+        setIsTimerRunning(prev => !prev);
+      }
+      if (e.altKey && e.key === 'g') { // Alt + G for Generate Prompt
+        e.preventDefault();
+        // generateNewPrompt(); // Implement generate new prompt functionality
+        alert('Generate new prompt functionality not yet implemented.');
+      }
+      if (e.altKey && e.key === 'h') { // Alt + H for Help
+        e.preventDefault();
+        setActiveTab('help');
+      }
+      if (e.altKey && e.key === 'c') { // Alt + C for Coach
+        e.preventDefault();
+        setActiveTab('ai-coach');
+      }
+      if (e.altKey && e.key === 'v') { // Alt + V for Vocabulary
+        e.preventDefault();
+        setActiveTab('vocabulary');
+      }
+      if (e.altKey && e.key === 'r') { // Alt + R for Rephrase
+        e.preventDefault();
+        // handleRephrase(); // Implement rephrase functionality
+        alert('Rephrase functionality not yet implemented.');
+      }
+      if (e.altKey && e.key === 'd') { // Alt + D for Download
+        e.preventDefault();
+        // handleDownload(); // Implement download functionality
+        alert('Download functionality not yet implemented.');
+      }
+      if (e.altKey && e.key === 'u') { // Alt + U for Upload
+        e.preventDefault();
+        // handleUpload(); // Implement upload functionality
+        alert('Upload functionality not yet implemented.');
+      }
+      if (e.altKey && e.key === 'x') { // Alt + X for Exam Mode
+        e.preventDefault();
+        if (examMode) {
+          stopExamMode();
+        } else {
+          startExamMode();
+        }
+      }
+      if (e.altKey && e.key === 'w') { // Alt + W for Word Count
+        e.preventDefault();
+        setShowWordCount(prev => !prev);
+      }
+      if (e.altKey && e.key === 'z') { // Alt + Z for Undo
+        e.preventDefault();
+        // handleUndo(); // Implement undo functionality
+        alert('Undo functionality not yet implemented.');
+      }
+      if (e.altKey && e.key === 'y') { // Alt + Y for Redo
+        e.preventDefault();
+        // handleRedo(); // Implement redo functionality
+        alert('Redo functionality not yet implemented.');
+      }
+      if (e.altKey && e.key === 'k') { // Alt + K for Structure Guide
+        e.preventDefault();
+        setShowStructureGuide(prev => !prev);
+      }
+      if (e.altKey && e.key === 'm') { // Alt + M for Menu
+        e.preventDefault();
+        // toggleMenu(); // Implement menu toggle functionality
+        alert('Menu toggle functionality not yet implemented.');
+      }
+      if (e.altKey && e.key === 'a') { // Alt + A for Analysis
+        e.preventDefault();
+        setActiveTab('analysis');
+      }
+      if (e.altKey && e.key === 'i') { // Alt + I for Insights
+        e.preventDefault();
+        setActiveTab('insights');
+      }
+      if (e.altKey && e.key === 'o') { // Alt + O for Options
+        e.preventDefault();
+        setActiveTab('options');
+      }
+      if (e.altKey && e.key === 'l') { // Alt + L for Learning
+        e.preventDefault();
+        setActiveTab('learning');
+      }
+      if (e.altKey && e.key === 'j') { // Alt + J for Journal
+        e.preventDefault();
+        setActiveTab('journal');
+      }
+      if (e.altKey && e.key === 'q') { // Alt + Q for Quick Tips
+        e.preventDefault();
+        setActiveTab('quick-tips');
+      }
+      if (e.altKey && e.key === 'b') { // Alt + B for Brainstorming
+        e.preventDefault();
+        setActiveTab('brainstorming');
+      }
+      if (e.altKey && e.key === 'p') { // Alt + P for Progress
+        e.preventDefault();
+        setActiveTab('progress');
+      }
+      if (e.altKey && e.key === 's') { // Alt + S for Settings
+        e.preventDefault();
+        setActiveTab('settings');
+      }
+      if (e.altKey && e.key === 'g') { // Alt + G for Goals
+        e.preventDefault();
+        setActiveTab('goals');
+      }
+      if (e.altKey && e.key === 'n') { // Alt + N for Notes
+        e.preventDefault();
+        setActiveTab('notes');
+      }
+      if (e.altKey && e.key === 'f') { // Alt + F for Feedback
+        e.preventDefault();
+        setActiveTab('feedback');
+      }
+      if (e.altKey && e.key === 't') { // Alt + T for Tools
+        e.preventDefault();
+        setActiveTab('tools');
+      }
+      if (e.altKey && e.key === 'd') { // Alt + D for Dictionary
+        e.preventDefault();
+        setActiveTab('dictionary');
+      }
+      if (e.altKey && e.key === 'e') { // Alt + E for Examples
+        e.preventDefault();
+        setActiveTab('examples');
+      }
+      if (e.altKey && e.key === 'c') { // Alt + C for Chat
+        e.preventDefault();
+        setActiveTab('chat');
+      }
+      if (e.altKey && e.key === 'v') { // Alt + V for Voice
+        e.preventDefault();
+        setActiveTab('voice');
+      }
+      if (e.altKey && e.key === 'a') { // Alt + A for Audio
+        e.preventDefault();
+        setActiveTab('audio');
+      }
+      if (e.altKey && e.key === 'i') { // Alt + I for Image
+        e.preventDefault();
+        setActiveTab('image');
+      }
+      if (e.altKey && e.key === 'l') { // Alt + L for Link
+        e.preventDefault();
+        setActiveTab('link');
+      }
+      if (e.altKey && e.key === 'h') { // Alt + H for Hash
+        e.preventDefault();
+        setActiveTab('hash');
+      }
+      if (e.altKey && e.key === 't') { // Alt + T for Type
+        e.preventDefault();
+        setActiveTab('type');
+      }
+      if (e.altKey && e.key === 'a') { // Alt + A for Align Left
+        e.preventDefault();
+        setActiveTab('align-left');
+      }
+      if (e.altKey && e.key === 'c') { // Alt + C for Align Center
+        e.preventDefault();
+        setActiveTab('align-center');
+      }
+      if (e.altKey && e.key === 'r') { // Alt + R for Align Right
+        e.preventDefault();
+        setActiveTab('align-right');
+      }
+      if (e.altKey && e.key === 'b') { // Alt + B for Bold
+        e.preventDefault();
+        setActiveTab('bold');
+      }
+      if (e.altKey && e.key === 'i') { // Alt + I for Italic
+        e.preventDefault();
+        setActiveTab('italic');
+      }
+      if (e.altKey && e.key === 'u') { // Alt + U for Underline
+        e.preventDefault();
+        setActiveTab('underline');
+      }
+      if (e.altKey && e.key === 'l') { // Alt + L for List
+        e.preventDefault();
+        setActiveTab('list');
+      }
+      if (e.altKey && e.key === 'o') { // Alt + O for Ordered List
+        e.preventDefault();
+        setActiveTab('ordered-list');
+      }
+      if (e.altKey && e.key === 'q') { // Alt + Q for Quote
+        e.preventDefault();
+        setActiveTab('quote');
+      }
+      if (e.altKey && e.key === 'c') { // Alt + C for Code
+        e.preventDefault();
+        setActiveTab('code');
+      }
+      if (e.altKey && e.key === 's') { // Alt + S for Scissors
+        e.preventDefault();
+        setActiveTab('scissors');
+      }
+      if (e.altKey && e.key === 'p') { // Alt + P for Clipboard
+        e.preventDefault();
+        setActiveTab('clipboard');
+      }
+      if (e.altKey && e.key === 's') { // Alt + S for Search
+        e.preventDefault();
+        setActiveTab('search');
+      }
+      if (e.altKey && e.key === 'f') { // Alt + F for Filter
+        e.preventDefault();
+        setActiveTab('filter');
+      }
+      if (e.altKey && e.key === 'a') { // Alt + A for Sort Asc
+        e.preventDefault();
+        setActiveTab('sort-asc');
+      }
+      if (e.altKey && e.key === 'd') { // Alt + D for Sort Desc
+        e.preventDefault();
+        setActiveTab('sort-desc');
+      }
+      if (e.altKey && e.key === 'g') { // Alt + G for Grid
+        e.preventDefault();
+        setActiveTab('grid');
+      }
+      if (e.altKey && e.key === 'l') { // Alt + L for Layout
+        e.preventDefault();
+        setActiveTab('layout');
+      }
+      if (e.altKey && e.key === 's') { // Alt + S for Sidebar
+        e.preventDefault();
+        setActiveTab('sidebar');
+      }
+      if (e.altKey && e.key === 'm') { // Alt + M for Menu
+        e.preventDefault();
+        setActiveTab('menu');
+      }
+      if (e.altKey && e.key === 'h') { // Alt + H for More Horizontal
+        e.preventDefault();
+        setActiveTab('more-horizontal');
+      }
+      if (e.altKey && e.key === 'v') { // Alt + V for More Vertical
+        e.preventDefault();
+        setActiveTab('more-vertical');
+      }
+      if (e.altKey && e.key === 'c') { // Alt + C for Chevron Left
+        e.preventDefault();
+        setActiveTab('chevron-left');
+      }
+      if (e.altKey && e.key === 'r') { // Alt + R for Chevron Right
+        e.preventDefault();
+        setActiveTab('chevron-right');
+      }
+      if (e.altKey && e.key === 'u') { // Alt + U for Arrow Up
+        e.preventDefault();
+        setActiveTab('arrow-up');
+      }
+      if (e.altKey && e.key === 'd') { // Alt + D for Arrow Down
+        e.preventDefault();
+        setActiveTab('arrow-down');
+      }
+      if (e.altKey && e.key === 'l') { // Alt + L for Arrow Left
+        e.preventDefault();
+        setActiveTab('arrow-left');
+      }
+      if (e.altKey && e.key === 'r') { // Alt + R for Arrow Right
+        e.preventDefault();
+        setActiveTab('arrow-right');
+      }
+      if (e.altKey && e.key === 't') { // Alt + T for Timer
+        e.preventDefault();
+        setActiveTab('timer');
+      }
+      if (e.altKey && e.key === 's') { // Alt + S for Send
+        e.preventDefault();
+        setActiveTab('send');
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [examMode, isTimerRunning, handleEvaluate, toggleFullscreen]);
+
   return (
-    <div className={`flex flex-col h-screen bg-gray-50 pb-20 ${isFullscreen ? 'fixed inset-0 z-50' : ''}`}>
+    <div className="flex flex-col h-full bg-gray-100 dark:bg-gray-900">
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 shadow-md">
+        <div className="flex items-center space-x-4">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Writing Adventure!</h1>
+          <span className="text-sm text-gray-500 dark:text-gray-400">Unleash Your Creativity</span>
+        </div>
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={() => setShowPlanningModal(true)}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+          >
+            <Sparkles className="inline-block w-4 h-4 mr-2" />Planning Phase
+          </button>
+          <button
+            onClick={startExamMode}
+            className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50"
+          >
+            <Clock className="inline-block w-4 h-4 mr-2" />Start Exam Mode
+          </button>
+          <button
+            onClick={() => setShowStructureGuide(true)}
+            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+          >
+            <BookOpen className="inline-block w-4 h-4 mr-2" />Structure Guide
+          </button>
+        </div>
+      </div>
 
-      {/* Main Writing Area */}
+      {/* Main Content Area */}
       <div className="flex flex-1 overflow-hidden">
-        <div className="flex-1 flex flex-col">
-          {/* Compact Prompt Display - Fixed height and scrollable */}
-          <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 border-b-2 border-blue-200 p-2 shadow-sm">
-            <div className="flex items-start space-x-2">
-              <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-md">
-                <Sparkles className="h-3 w-3 text-white" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-bold text-blue-900 mb-1 flex items-center">
-                  <span className="mr-1">✨</span>
-                  Your Writing Prompt
-                </h3>
-                <div className="bg-white bg-opacity-90 p-2 rounded border border-blue-200 shadow-sm h-14 overflow-y-auto">
-                  <p className="text-gray-800 leading-tight text-xs break-words">{prompt}</p>
-                </div>
-              </div>
-            </div>
+        {/* Writing Area */}
+        <div className="flex-1 flex flex-col p-6 overflow-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+              <Lightbulb className="inline-block w-5 h-5 mr-2 text-yellow-500" />Your Writing Prompt
+            </h2>
+            <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+              {prompt || 'Loading prompt...'}
+            </p>
           </div>
 
-          {/* NSW Exam Status Bar */}
-          <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between text-sm">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <span className="text-gray-600">Words:</span>
-                <span className={`font-semibold ${getWordCountStatus().color}`}>
-                  {wordCount}/{targetWordCount}
-                </span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Clock className="h-4 w-4 text-gray-500" />
-                <span className="text-gray-600">
-                  {examMode ? `Exam: ${formatTime(examTimeRemaining)}` : `Time: ${formatTime(timeSpent)}`}
-                </span>
-              </div>
-              {examMode && (
-                <div className="flex items-center space-x-2">
-                  <div className={`w-2 h-2 rounded-full ${examTimeRemaining > 300 ? 'bg-green-500' : examTimeRemaining > 120 ? 'bg-yellow-500' : 'bg-red-500'}`}></div>
-                  <span className={`font-medium ${examTimeRemaining > 300 ? 'text-green-600' : examTimeRemaining > 120 ? 'text-yellow-600' : 'text-red-600'}`}>
-                    {examTimeRemaining > 300 ? 'Good time' : examTimeRemaining > 120 ? 'Hurry up!' : 'Time running out!'}
-                  </span>
-                </div>
-              )}
+          <div className="flex-1 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden flex flex-col">
+            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Your Writing</h3>
             </div>
-            <div className="flex items-center space-x-2">
+            <textarea
+              ref={textareaRef}
+              value={content}
+              onChange={handleContentChange}
+              onMouseUp={handleTextSelection}
+              onKeyUp={handleTextSelection}
+              placeholder="Start writing your amazing story here! Let your creativity flow and bring your ideas to life..."
+              className="flex-1 p-4 text-lg leading-relaxed text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 focus:outline-none resize-none"
+              style={{ fontSize: `${fontSize}px`, lineHeight: lineHeight }}
+            />
+            <WritingStatusBar 
+              wordCount={wordCount}
+              characterCount={characterCount}
+              readingTime={readingTime}
+              timeSpent={timeSpent}
+              isTimerRunning={isTimerRunning}
+              toggleTimer={() => setIsTimerRunning(prev => !prev)}
+              examMode={examMode}
+              examTimeRemaining={examTimeRemaining}
+              targetWordCount={targetWordCount}
+            />
+          </div>
+
+          {/* Submit Button - Prominently positioned and ALWAYS VISIBLE */}
+          <div className="bg-white border-t-2 border-gray-300 p-6 flex justify-center shadow-2xl sticky bottom-0 z-50">
               <button
-                onClick={() => setShowPlanningModal(true)}
-                className="px-3 py-1 bg-purple-500 text-white rounded text-xs hover:bg-purple-600 transition-colors flex items-center"
+                onClick={handleEvaluate}
+                disabled={isEvaluating}
+                className="mt-6 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 flex items-center justify-center text-sm"
               >
-                <Wand2 className="h-3 w-3 mr-1" />
-                Planning Phase
+                {isEvaluating ? (
+                  <>
+                    <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
+                    Evaluating...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4 mr-2" />
+                    Submit for Evaluation
+                  </>
+                )}
               </button>
-              {!examMode ? (
-                <button
-                  onClick={startExamMode}
-                  className="px-3 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600 transition-colors"
-                >
-                  Start Exam Mode
+          </div>
+        </div>
+
+        {/* Right Sidebar - Writing Buddy */}
+        <div className="w-96 bg-gradient-to-b from-purple-600 to-indigo-700 text-white p-6 flex flex-col shadow-lg overflow-auto relative">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold flex items-center">
+              <Bot className="w-7 h-7 mr-3" />Writing Buddy
+            </h2>
+            <button
+              onClick={() => { /* Toggle visibility or settings */ }}
+              className="p-2 rounded-full hover:bg-white hover:bg-opacity-20 transition-colors"
+            >
+              <Settings className="w-6 h-6" />
+            </button>
+          </div>
+
+          <p className="text-purple-200 mb-6">Your AI writing assistant</p>
+
+          {/* Tabs for Analysis, Vocabulary, Progress, Coach */}
+          <div className="flex space-x-2 mb-6">
+            <button
+              onClick={() => setActiveTab('analysis')}
+              className={`flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition-colors ${activeTab === 'analysis' ? 'bg-purple-700 text-white' : 'bg-purple-500 text-purple-100 hover:bg-purple-600'}`}
+            >
+              <BarChart3 className="inline-block w-4 h-4 mr-2" />Analysis
+            </button>
+            <button
+              onClick={() => setActiveTab('vocabulary')}
+              className={`flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition-colors ${activeTab === 'vocabulary' ? 'bg-purple-700 text-white' : 'bg-purple-500 text-purple-100 hover:bg-purple-600'}`}
+            >
+              <BookOpen className="inline-block w-4 h-4 mr-2" />Vocabulary
+            </button>
+            <button
+              onClick={() => setActiveTab('progress')}
+              className={`flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition-colors ${activeTab === 'progress' ? 'bg-purple-700 text-white' : 'bg-purple-500 text-purple-100 hover:bg-purple-600'}`}
+            >
+              <TrendingUp className="inline-block w-4 h-4 mr-2" />Progress
+            </button>
+            <button
+              onClick={() => setActiveTab('ai-coach')}
+              className={`flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition-colors ${activeTab === 'ai-coach' ? 'bg-purple-700 text-white' : 'bg-purple-500 text-purple-100 hover:bg-purple-600'}`}
+            >
+              <Sparkles className="inline-block w-4 h-4 mr-2" />Coach
+            </button>
+          </div>
+
+          {/* Content based on active tab */}
+          <div className="flex-1 bg-purple-700 bg-opacity-30 rounded-lg p-4 overflow-y-auto custom-scrollbar">
+            {activeTab === 'analysis' && (
+              <div>
+                <h3 className="text-xl font-bold mb-4">Analysis</h3>
+                <div className="bg-purple-800 bg-opacity-50 p-4 rounded-lg mb-4">
+                  <p className="text-purple-200 text-sm">Word Count</p>
+                  <p className="text-white text-2xl font-bold">Current: {wordCount} <span className="text-lg text-purple-300">Target: {targetWordCount} words</span></p>
+                </div>
+                <div className="bg-purple-800 bg-opacity-50 p-4 rounded-lg mb-4">
+                  <p className="text-purple-200 text-sm">Reading Time</p>
+                  <p className="text-white text-2xl font-bold">{readingTime} min</p>
+                  <p className="text-purple-200 text-sm">Based on 200 words/minute</p>
+                </div>
+                <div className="bg-purple-800 bg-opacity-50 p-4 rounded-lg mb-4">
+                  <p className="text-purple-200 text-sm">Writing Speed</p>
+                  <p className="text-white text-2xl font-bold">{progressData.averageWordsPerMinute} wpm</p>
+                  <p className="text-purple-200 text-sm">Target: 12-15 words/minute</p>
+                </div>
+                <button className="w-full py-2 px-4 bg-purple-500 text-white rounded-lg hover:bg-purple-600 text-sm font-semibold">
+                  Analyze Text Type
                 </button>
+              </div>
+            )}
+            {activeTab === 'vocabulary' && (
+              <div>
+                <h3 className="text-xl font-bold mb-4">Vocabulary Builder</h3>
+                <p className="text-purple-200 mb-4">Identify and improve your vocabulary usage.</p>
+                {vocabularyWords.length > 0 ? (
+                  <ul className="list-disc list-inside text-purple-200 space-y-2">
+                    {vocabularyWords.map((word, index) => (
+                      <li key={index}>{word}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-purple-300">Start writing to see vocabulary suggestions.</p>
+                )}
+                <button className="w-full mt-4 py-2 px-4 bg-purple-500 text-white rounded-lg hover:bg-purple-600 text-sm font-semibold">
+                  Get Vocabulary Suggestions
+                </button>
+              </div>
+            )}
+            {activeTab === 'progress' && (
+              <div>
+                <h3 className="text-xl font-bold mb-4">Progress Tracking</h3>
+                <div className="bg-purple-800 bg-opacity-50 p-4 rounded-lg mb-4">
+                  <p className="text-purple-200 text-sm">Total Words Written</p>
+                  <p className="text-white text-2xl font-bold">{progressData.wordsWritten}</p>
+                </div>
+                <div className="bg-purple-800 bg-opacity-50 p-4 rounded-lg mb-4">
+                  <p className="text-purple-200 text-sm">Total Time Spent</p>
+                  <p className="text-white text-2xl font-bold">{formatTime(progressData.timeSpent)}</p>
+                </div>
+                <div className="bg-purple-800 bg-opacity-50 p-4 rounded-lg mb-4">
+                  <p className="text-purple-200 text-sm">Sessions Completed</p>
+                  <p className="text-white text-2xl font-bold">{progressData.sessionsCompleted}</p>
+                </div>
+                <button className="w-full mt-4 py-2 px-4 bg-purple-500 text-white rounded-lg hover:bg-purple-600 text-sm font-semibold">
+                  View Detailed Progress
+                </button>
+              </div>
+            )}
+            {activeTab === 'ai-coach' && (
+              <div className="flex flex-col h-full">
+                <h3 className="text-xl font-bold mb-4">AI Coach</h3>
+                <div className="flex-1 overflow-y-auto pr-2 mb-4 custom-scrollbar">
+                  {chatMessages.length === 0 && (
+                    <p className="text-purple-300 text-center mt-8">Ask your Writing Buddy anything!</p>
+                  )}
+                  {chatMessages.map((message) => (
+                    <div key={message.id} className={`mb-3 ${message.sender === 'user' ? 'text-right' : 'text-left'}`}>
+                      <span className={`inline-block p-3 rounded-lg ${message.sender === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>
+                        {message.text}
+                      </span>
+                    </div>
+                  ))}
+                  {isChatLoading && (
+                    <div className="text-center">
+                      <span className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-300 inline-block"></span>
+                    </div>
+                  )}
+                  <div ref={chatEndRef} />
+                </div>
+                <form onSubmit={handleChatSubmit} className="flex mt-auto">
+                  <input
+                    type="text"
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    placeholder="Ask your Writing Buddy..."
+                    className="flex-1 p-3 rounded-l-lg bg-purple-800 text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  />
+                  <button
+                    type="submit"
+                    className="px-5 py-3 bg-purple-500 text-white rounded-r-lg hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    disabled={isChatLoading}
+                  >
+                    <Send className="w-5 h-5" />
+                  </button>
+                </form>
+              </div>
+            )}
+          </div>
+
+          {/* Synonyms Popup */}
+          {showSynonyms && selectedText && (
+            <div className="absolute bottom-24 left-1/2 -translate-x-1/2 bg-white dark:bg-gray-700 p-4 rounded-lg shadow-xl border border-gray-200 dark:border-gray-600 z-50">
+              <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2">Synonyms for "{selectedText}"</h4>
+              {isLoadingSynonyms ? (
+                <p className="text-gray-600 dark:text-gray-300">Loading synonyms...</p>
+              ) : synonyms.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {synonyms.map((syn, index) => (
+                    <span
+                      key={index}
+                      onClick={() => replaceSynonym(syn)}
+                      className="cursor-pointer bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-100 px-3 py-1 rounded-full text-sm hover:bg-blue-200 dark:hover:bg-blue-700 transition-colors"
+                    >
+                      {syn}
+                    </span>
+                  ))}
+                </div>
               ) : (
-                <button
-                  onClick={stopExamMode}
-                  className="px-3 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 transition-colors"
-                >
-                  Stop Exam
-                </button>
+                <p className="text-gray-600 dark:text-gray-300">No synonyms found.</p>
               )}
               <button
-                onClick={() => setShowStructureGuide(!showStructureGuide)}
-                className="px-3 py-1 bg-green-500 text-white rounded text-xs hover:bg-green-600 transition-colors"
+                onClick={() => setShowSynonyms(false)}
+                className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
               >
-                Structure Guide
+                <X className="w-5 h-5" />
               </button>
             </div>
-          </div>
+          )}
 
-          {/* Structure Guide */}
-          {showStructureGuide && (
-            <div className="bg-green-50 border-b border-green-200 p-4">
-              <h4 className="font-semibold text-green-900 mb-3 flex items-center">
-                <BookOpen className="h-4 w-4 mr-2" />
-                {textType.charAt(0).toUpperCase() + textType.slice(1)} Structure Guide:
-              </h4>
-              <div className="text-sm text-green-800">
-                {textType === 'narrative' && (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <div className="bg-white p-3 rounded-lg border border-green-200">
-                      <strong className="text-green-900">Opening:</strong>
-                      <p className="text-xs mt-1">Hook, character, setting</p>
-                    </div>
-                    <div className="bg-white p-3 rounded-lg border border-green-200">
-                      <strong className="text-green-900">Rising Action:</strong>
-                      <p className="text-xs mt-1">Build tension, conflict</p>
-                    </div>
-                    <div className="bg-white p-3 rounded-lg border border-green-200">
-                      <strong className="text-green-900">Climax:</strong>
-                      <p className="text-xs mt-1">Peak moment</p>
-                    </div>
-                    <div className="bg-white p-3 rounded-lg border border-green-200">
-                      <strong className="text-green-900">Resolution:</strong>
-                      <p className="text-xs mt-1">Conclude, growth</p>
-                    </div>
-                  </div>
-                )}
-                {textType === 'persuasive' && (
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <div className="bg-white p-3 rounded-lg border border-green-200">
-                      <strong className="text-green-900">Introduction:</strong>
-                      <p className="text-xs mt-1">State position clearly</p>
-                    </div>
-                    <div className="bg-white p-3 rounded-lg border border-green-200">
-                      <strong className="text-green-900">Arguments:</strong>
-                      <p className="text-xs mt-1">2-3 strong points with evidence</p>
-                    </div>
-                    <div className="bg-white p-3 rounded-lg border border-green-200">
-                      <strong className="text-green-900">Counter-arguments:</strong>
-                      <p className="text-xs mt-1">Address opposing views</p>
-                    </div>
-                    <div className="bg-white p-3 rounded-lg border border-green-200">
-                      <strong className="text-green-900">Conclusion:</strong>
-                      <p className="text-xs mt-1">Restate, call to action</p>
-                    </div>
-                  </div>
-                )}
-                {textType === 'expository' && (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div className="bg-white p-3 rounded-lg border border-green-200">
-                      <strong className="text-green-900">Introduction:</strong>
-                      <p className="text-xs mt-1">Introduce topic clearly</p>
-                    </div>
-                    <div className="bg-white p-3 rounded-lg border border-green-200">
-                      <strong className="text-green-900">Body:</strong>
-                      <p className="text-xs mt-1">2-3 main points with examples</p>
-                    </div>
-                    <div className="bg-white p-3 rounded-lg border border-green-200">
-                      <strong className="text-green-900">Conclusion:</strong>
-                      <p className="text-xs mt-1">Summarize key points</p>
-                    </div>
-                  </div>
-                )}
-                {!['narrative', 'persuasive', 'expository'].includes(textType) && (
-                  <div className="bg-white p-3 rounded-lg border border-green-200">
-                    <p className="text-sm">Structure guide for <strong>{textType}</strong> writing:</p>
-                    <ul className="text-xs mt-2 space-y-1">
-                      <li>• Start with a clear introduction</li>
-                      <li>• Develop your main ideas in the body</li>
-                      <li>• End with a strong conclusion</li>
+          {/* Evaluation Results Popup */}
+          {evaluation && (
+            <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto relative">
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
+                  <Award className="w-8 h-8 mr-3 text-yellow-500" />Evaluation Results
+                </h2>
+                <button
+                  onClick={() => setEvaluation(null)}
+                  className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+
+                <div className="mb-6">
+                  <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-3">Overall Score: <span className="text-blue-600 dark:text-blue-400">{evaluation.overallScore}/10</span></h3>
+                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
+                    {evaluation.specificFeedback}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  <div>
+                    <h4 className="text-lg font-semibold text-green-600 dark:text-green-400 mb-2 flex items-center"><CheckCircle className="w-5 h-5 mr-2" />Strengths</h4>
+                    <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-1">
+                      {evaluation.strengths.map((s: string, i: number) => <li key={i}>{s}</li>)}
                     </ul>
+                  </div>
+                  <div>
+                    <h4 className="text-lg font-semibold text-red-600 dark:text-red-400 mb-2 flex items-center"><AlertCircle className="w-5 h-5 mr-2" />Areas for Improvement</h4>
+                    <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-1">
+                      {evaluation.improvements.map((i: string, idx: number) => <li key={idx}>{i}</li>)}
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="mb-6">
+                  <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">Next Steps</h4>
+                  <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-1">
+                    {evaluation.nextSteps.map((ns: string, i: number) => <li key={i}>{ns}</li>)}
+                  </ul>
+                </div>
+
+                {evaluation.nswCriteria && (
+                  <div className="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                    <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">NSW Selective Exam Criteria Scores (out of 10)</h4>
+                    <div className="grid grid-cols-2 gap-4 text-gray-700 dark:text-gray-300">
+                      <div>Ideas and Content: <span className="font-bold text-blue-600 dark:text-blue-400">{evaluation.nswCriteria.ideasAndContent}</span></div>
+                      <div>Text Structure: <span className="font-bold text-blue-600 dark:text-blue-400">{evaluation.nswCriteria.textStructure}</span></div>
+                      <div>Language Features: <span className="font-bold text-blue-600 dark:text-blue-400">{evaluation.nswCriteria.languageFeatures}</span></div>
+                      <div>Grammar and Spelling: <span className="font-bold text-blue-600 dark:text-blue-400">{evaluation.nswCriteria.grammarAndSpelling}</span></div>
+                    </div>
                   </div>
                 )}
               </div>
             </div>
           )}
 
-          {/* Writing Textarea - Maximized space */}
-          <div className="flex-1 p-3">
-            <textarea
-              ref={textareaRef}
-              value={content}
-              onChange={handleContentChange}
-              onSelect={handleTextSelection}
-              placeholder="Start writing your amazing story here! Let your creativity flow and bring your ideas to life..."
-              className="w-full h-full p-4 border-2 border-blue-200 rounded-lg focus:border-blue-400 focus:outline-none resize-none text-gray-800 leading-relaxed shadow-sm"
-              style={{ fontSize: `${fontSize}px`, lineHeight }}
+          {/* Planning Tool Modal */}
+          {showPlanningModal && (
+            <PlanningToolModal
+              isOpen={showPlanningModal}
+              onClose={() => setShowPlanningModal(false)}
+              onSavePlan={(plan) => console.log('Plan saved:', plan)}
+              textType={textType}
+              content={content}
             />
-          </div>
+          )}
 
-          {/* Submit Button - Prominently positioned and ALWAYS VISIBLE */}
-          <div className="bg-white border-t-2 border-gray-300 p-6 flex justify-center shadow-2xl sticky bottom-0 z-50">
-            <button
-              onClick={handleEvaluate}
-              disabled={!content.trim() || isEvaluating}
-              className="flex items-center px-12 py-6 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl hover:from-green-600 hover:to-emerald-600 transition-all duration-200 shadow-2xl hover:shadow-3xl font-bold disabled:opacity-50 disabled:cursor-not-allowed text-xl min-w-[300px] justify-center transform hover:scale-105"
-            >
-              {isEvaluating ? (
-                <>
-                  <RefreshCw className="h-6 w-6 mr-3 animate-spin" />
-                  Evaluating...
-                </>
-              ) : (
-                <>
-                  <Send className="h-6 w-6 mr-3" />
-                  Submit for Evaluation
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* Writing Buddy Sidebar - Moved up to touch header */}
-        <div className="w-80 bg-gradient-to-b from-purple-500 to-pink-500 text-white flex flex-col shadow-xl">
-          {/* Writing Buddy Header */}
-          <div className="p-4 border-b border-white border-opacity-20">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                <Heart className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold">Writing Buddy</h2>
-                <p className="text-purple-100 text-sm">Your AI writing assistant</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Tab Navigation */}
-          <div className="flex border-b border-white border-opacity-20">
-            {[
-              { id: 'text-type-analysis', label: 'Analysis', icon: BarChart3 },
-              { id: 'vocabulary-builder', label: 'Vocabulary', icon: BookOpen },
-              { id: 'progress-tracker', label: 'Progress', icon: TrendingUp },
-              { id: 'ai-coach', label: 'Coach', icon: MessageSquare }
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 flex flex-col items-center py-3 px-2 text-xs font-medium transition-colors ${
-                  activeTab === tab.id 
-                    ? 'bg-white bg-opacity-20 text-white' 
-                    : 'text-purple-200 hover:text-white hover:bg-white hover:bg-opacity-10'
-                }`}
-              >
-                <tab.icon className="h-4 w-4 mb-1" />
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Tab Content */}
-          <div className="flex-1 p-4 overflow-y-auto">
-            {activeTab === 'text-type-analysis' && (
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold flex items-center">
-                  <BarChart3 className="h-5 w-5 mr-2" />
-                  Analysis
-                </h3>
-                
-                <div className="bg-white bg-opacity-10 rounded-lg p-3">
-                  <h4 className="font-medium mb-2">Word Count</h4>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Current: {wordCount}</span>
-                    <span className="text-sm">Target: {targetWordCount} words</span>
-                  </div>
-                  <div className="w-full bg-white bg-opacity-20 rounded-full h-2 mt-2">
-                    <div 
-                      className="bg-white rounded-full h-2 transition-all duration-300"
-                      style={{ width: `${Math.min((wordCount / targetWordCount) * 100, 100)}%` }}
-                    ></div>
-                  </div>
-                </div>
-
-                <div className="bg-white bg-opacity-10 rounded-lg p-3">
-                  <h4 className="font-medium mb-2">Reading Time</h4>
-                  <p className="text-sm">{readingTime} min</p>
-                  <p className="text-xs text-purple-200 mt-1">Based on 200 words/minute</p>
-                </div>
-
-                <div className="bg-white bg-opacity-10 rounded-lg p-3">
-                  <h4 className="font-medium mb-2">Writing Speed</h4>
-                  <p className="text-sm">{timeSpent > 0 ? Math.round((wordCount / timeSpent) * 60) : 0} wpm</p>
-                  <p className="text-xs text-purple-200 mt-1">Target: 12-15 words/minute</p>
-                </div>
-
+          {/* Structure Guide Modal */}
+          {showStructureGuide && (
+            <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto relative">
+                <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
+                  <BookOpen className="w-8 h-8 mr-3 text-blue-500" />Structure Guide
+                </h2>
                 <button
-                  onClick={() => setActiveTab('ai-coach')}
-                  className="w-full bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg py-2 px-3 text-sm font-medium transition-colors"
+                  onClick={() => setShowStructureGuide(false)}
+                  className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                 >
-                  <BarChart3 className="h-4 w-4 inline mr-2" />
-                  Analyze Text Type
+                  <X className="w-6 h-6" />
                 </button>
-              </div>
-            )}
-
-            {activeTab === 'vocabulary-builder' && (
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold flex items-center">
-                  <BookOpen className="h-5 w-5 mr-2" />
-                  Vocabulary
-                </h3>
-
-                <div className="bg-white bg-opacity-10 rounded-lg p-3">
-                  <h4 className="font-medium mb-2">Selected Text</h4>
-                  <p className="text-sm bg-white bg-opacity-20 rounded p-2 min-h-[2rem]">
-                    {selectedText || 'Select text in your writing to get synonyms'}
-                  </p>
-                  <button
-                    onClick={handleSynonymLookup}
-                    disabled={!selectedText || isLoadingSynonyms}
-                    className="mt-2 w-full bg-white bg-opacity-20 hover:bg-opacity-30 disabled:opacity-50 rounded py-2 px-3 text-sm font-medium transition-colors"
-                  >
-                    {isLoadingSynonyms ? 'Loading...' : 'Get Synonyms'}
-                  </button>
-                </div>
-
-                {synonyms.length > 0 && (
-                  <div className="bg-white bg-opacity-10 rounded-lg p-3">
-                    <h4 className="font-medium mb-2">Synonyms</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {synonyms.map((synonym, index) => (
-                        <span
-                          key={index}
-                          className="bg-white bg-opacity-20 rounded-full px-2 py-1 text-xs cursor-pointer hover:bg-opacity-30 transition-colors"
-                          onClick={() => {
-                            // Replace selected text with synonym
-                            if (textareaRef.current) {
-                              const start = textareaRef.current.selectionStart;
-                              const end = textareaRef.current.selectionEnd;
-                              const newContent = content.substring(0, start) + synonym + content.substring(end);
-                              setContent(newContent);
-                            }
-                          }}
-                        >
-                          {synonym}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <div className="bg-white bg-opacity-10 rounded-lg p-3">
-                  <h4 className="font-medium mb-2">Paraphrase Tool</h4>
-                  <textarea
-                    value={paraphraseInput}
-                    onChange={(e) => setParaphraseInput(e.target.value)}
-                    placeholder="Enter text to paraphrase..."
-                    className="w-full bg-white bg-opacity-20 rounded p-2 text-sm text-white placeholder-purple-200 resize-none"
-                    rows={3}
-                  />
-                  <button
-                    onClick={handleParaphrase}
-                    disabled={!paraphraseInput.trim() || isParaphrasing}
-                    className="mt-2 w-full bg-white bg-opacity-20 hover:bg-opacity-30 disabled:opacity-50 rounded py-2 px-3 text-sm font-medium transition-colors"
-                  >
-                    {isParaphrasing ? 'Paraphrasing...' : 'Paraphrase'}
-                  </button>
-                  {paraphraseOutput && (
-                    <div className="mt-2 bg-white bg-opacity-20 rounded p-2">
-                      <p className="text-sm">{paraphraseOutput}</p>
-                    </div>
+                <div className="prose dark:prose-invert max-w-none">
+                  {textType === 'narrative' && (
+                    <>
+                      <h3>Narrative Structure</h3>
+                      <p>A narrative typically follows a clear story arc:</p>
+                      <h4>1. Orientation</h4>
+                      <p>Introduce characters, setting, and initial situation. Hook the reader.</p>
+                      <h4>2. Complication / Rising Action</h4>
+                      <p>A problem or challenge arises, leading to a series of events that build tension.</p>
+                      <h4>3. Climax</h4>
+                      <p>The turning point of the story, where the main conflict is confronted.</p>
+                      <h4>4. Resolution / Falling Action</h4>
+                      <p>The events that follow the climax, leading to the story's conclusion.</p>
+                      <h4>5. Coda (Optional)</h4>
+                      <p>A final reflection or moral of the story.</p>
+                    </>
+                  )}
+                  {textType === 'persuasive' && (
+                    <>
+                      <h3>Persuasive Essay Structure</h3>
+                      <p>A persuasive essay aims to convince the reader of a particular viewpoint:</p>
+                      <h4>1. Introduction</h4>
+                      <p>Hook, background information, and clear thesis statement (your argument).</p>
+                      <h4>2. Body Paragraphs (Arguments)</h4>
+                      <p>Each paragraph presents a distinct argument supporting your thesis, backed by evidence and examples.</p>
+                      <h4>3. Counter-Argument and Rebuttal</h4>
+                      <p>Acknowledge opposing viewpoints and then refute them with stronger evidence or reasoning.</p>
+                      <h4>4. Conclusion</h4>
+                      <p>Summarize main points, restate thesis in new words, and provide a strong call to action or final thought.</p>
+                    </>
+                  )}
+                  {textType === 'expository' && (
+                    <>
+                      <h3>Expository Essay Structure</h3>
+                      <p>An expository essay explains a topic clearly and concisely:</p>
+                      <h4>1. Introduction</h4>
+                      <p>Hook, background information, and clear thesis statement (what you will explain).</p>
+                      <h4>2. Body Paragraphs (Explanations)</h4>
+                      <p>Each paragraph explains a different aspect of your topic, providing facts, examples, and details.</p>
+                      <h4>3. Conclusion</h4>
+                      <p>Summarize main points and restate thesis in new words. Provide a final thought or implication.</p>
+                    </>
+                  )}
+                  {textType === 'reflective' && (
+                    <>
+                      <h3>Reflective Essay Structure</h3>
+                      <p>A reflective essay explores a personal experience and its meaning:</p>
+                      <h4>1. Introduction</h4>
+                      <p>Introduce the experience or event you will reflect upon and its initial significance.</p>
+                      <h4>2. Description of Experience</h4>
+                      <p>Detail the experience, using sensory language to bring it to life for the reader.</p>
+                      <h4>3. Analysis and Interpretation</h4>
+                      <p>Explore the meaning of the experience, what you learned, and how it impacted you.</p>
+                      <h4>4. Conclusion</h4>
+                      <p>Summarize your insights and reflect on the lasting impact or future implications.</p>
+                    </>
+                  )}
+                  {textType === 'descriptive' && (
+                    <>
+                      <h3>Descriptive Essay Structure</h3>
+                      <p>A descriptive essay creates a vivid picture of a person, place, object, or event:</p>
+                      <h4>1. Introduction</h4>
+                      <p>Introduce the subject of your description and create an overall impression.</p>
+                      <h4>2. Body Paragraphs (Sensory Details)</h4>
+                      <p>Organize details by sense (sight, sound, smell, taste, touch), spatial order, or order of importance. Use figurative language.</p>
+                      <h4>3. Conclusion</h4>
+                      <p>Summarize the overall impression and leave the reader with a lasting image or feeling.</p>
+                    </>
                   )}
                 </div>
               </div>
-            )}
-
-            {activeTab === 'progress-tracker' && (
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold flex items-center">
-                  <TrendingUp className="h-5 w-5 mr-2" />
-                  Progress
-                </h3>
-
-                <div className="bg-white bg-opacity-10 rounded-lg p-3">
-                  <h4 className="font-medium mb-2">Session Stats</h4>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm">Words Written:</span>
-                      <span className="text-sm font-medium">{wordCount}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">Time Spent:</span>
-                      <span className="text-sm font-medium">{formatTime(timeSpent)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">Writing Speed:</span>
-                      <span className="text-sm font-medium">
-                        {timeSpent > 0 ? Math.round((wordCount / timeSpent) * 60) : 0} wpm
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white bg-opacity-10 rounded-lg p-3">
-                  <h4 className="font-medium mb-2">NSW Exam Progress</h4>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm">Word Target:</span>
-                      <span className="text-sm font-medium">{targetWordCount} words</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm">Progress:</span>
-                      <span className="text-sm font-medium">
-                        {Math.round((wordCount / targetWordCount) * 100)}%
-                      </span>
-                    </div>
-                    <div className="w-full bg-white bg-opacity-20 rounded-full h-2">
-                      <div 
-                        className="bg-white rounded-full h-2 transition-all duration-300"
-                        style={{ width: `${Math.min((wordCount / targetWordCount) * 100, 100)}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                </div>
-
-                {examMode && (
-                  <div className="bg-white bg-opacity-10 rounded-lg p-3">
-                    <h4 className="font-medium mb-2">Exam Mode</h4>
-                    <div className="text-center">
-                      <div className={`text-2xl font-bold ${examTimeRemaining > 300 ? 'text-green-300' : examTimeRemaining > 120 ? 'text-yellow-300' : 'text-red-300'}`}>
-                        {formatTime(examTimeRemaining)}
-                      </div>
-                      <p className="text-sm text-purple-200">Time Remaining</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {activeTab === 'ai-coach' && (
-              <div className="space-y-4 h-full flex flex-col">
-                <h3 className="text-lg font-semibold flex items-center">
-                  <MessageSquare className="h-5 w-5 mr-2" />
-                  Coaching Tips
-                </h3>
-
-                <div className="bg-white bg-opacity-10 rounded-lg p-3">
-                  <h4 className="font-medium mb-2">Write your text and submit it for detailed feedback and coaching tips!</h4>
-                </div>
-
-                {/* Chat Messages */}
-                <div className="flex-1 bg-white bg-opacity-10 rounded-lg p-3 overflow-y-auto">
-                  <div className="space-y-3 mb-4">
-                    {chatMessages.map((message) => (
-                      <div
-                        key={message.id}
-                        className={`p-2 rounded-lg text-sm ${
-                          message.sender === 'user'
-                            ? 'bg-white bg-opacity-20 ml-4'
-                            : 'bg-white bg-opacity-30 mr-4'
-                        }`}
-                      >
-                        <p>{message.text}</p>
-                        <p className="text-xs text-purple-200 mt-1">
-                          {message.timestamp.toLocaleTimeString()}
-                        </p>
-                      </div>
-                    ))}
-                    {isChatLoading && (
-                      <div className="bg-white bg-opacity-30 mr-4 p-2 rounded-lg text-sm">
-                        <div className="flex items-center space-x-2">
-                          <RefreshCw className="h-3 w-3 animate-spin" />
-                          <span>Writing Buddy is thinking...</span>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Chat Input */}
-                <div className="bg-white bg-opacity-10 rounded-lg p-3">
-                  <div className="flex space-x-2">
-                    <input
-                      type="text"
-                      value={chatInput}
-                      onChange={(e) => setChatInput(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && sendChatMessage()}
-                      placeholder="Ask me anything..."
-                      className="flex-1 bg-white bg-opacity-20 rounded px-3 py-2 text-sm text-white placeholder-purple-200 focus:outline-none focus:bg-opacity-30"
-                    />
-                    <button
-                      onClick={sendChatMessage}
-                      disabled={!chatInput.trim() || isChatLoading}
-                      className="bg-white bg-opacity-20 hover:bg-opacity-30 disabled:opacity-50 rounded px-3 py-2 transition-colors"
-                    >
-                      <Send className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
-
-      {/* Planning Modal */}
-      {showPlanningModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-bold text-gray-800">Planning Phase</h2>
-              <button
-                onClick={() => setShowPlanningModal(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <X className="h-6 w-6" />
-              </button>
-            </div>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Planning Notes
-                </label>
-                <textarea
-                  value={planningNotes}
-                  onChange={(e) => setPlanningNotes(e.target.value)}
-                  placeholder="Brainstorm your ideas, outline your structure, plan your characters..."
-                  className="w-full h-32 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Writing Goals
-                </label>
-                <textarea
-                  value={writingGoals}
-                  onChange={(e) => setWritingGoals(e.target.value)}
-                  placeholder="What do you want to achieve with this piece? What message do you want to convey?"
-                  className="w-full h-24 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              
-              <div className="flex justify-end space-x-3">
-                <button
-                  onClick={() => setShowPlanningModal(false)}
-                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => setShowPlanningModal(false)}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                >
-                  Save & Continue
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
-
-export default WritingArea;
