@@ -1,5 +1,5 @@
 import React from 'react';
-import { PenTool, BookOpen, Clock, Settings, HelpCircle, Lightbulb, Award, Sparkles, Rocket } from 'lucide-react';
+import { PenTool, BookOpen, Clock, Settings, HelpCircle, Lightbulb, Award, Sparkles, Rocket, Home } from 'lucide-react';
 
 interface EnhancedHeaderProps {
   textType: string;
@@ -8,6 +8,7 @@ interface EnhancedHeaderProps {
   onAssistanceLevelChange: (level: string) => void;
   onTimerStart: () => void;
   hideTextTypeSelector?: boolean;
+  onHomeClick?: () => void;
 }
 
 export function EnhancedHeader({
@@ -16,7 +17,8 @@ export function EnhancedHeader({
   onTextTypeChange,
   onAssistanceLevelChange,
   onTimerStart,
-  hideTextTypeSelector
+  hideTextTypeSelector,
+  onHomeClick
 }: EnhancedHeaderProps) {
   // Handle text type change
   const handleTextTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -60,9 +62,17 @@ export function EnhancedHeader({
           </div>
         </div>
 
-        {/* Removed the dropdown selector completely */}
+        {/* Home Button */}
+        {onHomeClick && (
+          <button
+            onClick={onHomeClick}
+            className="flex items-center space-x-2 px-3 py-2 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white rounded-lg transition-all duration-200 font-medium shadow-md text-sm"
+          >
+            <Home className="h-4 w-4" />
+            <span>Home</span>
+          </button>
+        )}
       </div>
     </div>
   );
 }
-
