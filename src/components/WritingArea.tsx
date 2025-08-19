@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   Save, 
   Download, 
@@ -148,106 +148,35 @@ export function WritingArea({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const examTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const chatEndRef = useRef<HTMLDivElement>(null);
 
-  // Enhanced prompt loading with better debugging and fallback
+  // Generate prompt on component mount if not provided
   useEffect(() => {
-    const loadPrompt = () => {
-      console.log('🔍 WritingArea: Loading prompt...');
-      console.log('🔍 PropPrompt:', propPrompt);
-      console.log('🔍 TextType:', textType);
-      
-      // Priority order for prompt sources
-      const sources = [
-        { name: 'propPrompt', value: propPrompt },
-        { name: 'generatedPrompt', value: localStorage.getItem('generatedPrompt') },
-        { name: `${textType}_prompt`, value: localStorage.getItem(`${textType}_prompt`) },
-        { name: 'customPrompt', value: localStorage.getItem('customPrompt') },
-        { name: 'selectedPrompt', value: localStorage.getItem('selectedPrompt') },
-        { name: 'currentPrompt', value: localStorage.getItem('currentPrompt') },
-        { name: 'writingPrompt', value: localStorage.getItem('writingPrompt') },
-        { name: 'narrative_prompt', value: localStorage.getItem('narrative_prompt') },
-        { name: 'persuasive_prompt', value: localStorage.getItem('persuasive_prompt') },
-        { name: 'expository_prompt', value: localStorage.getItem('expository_prompt') }
-      ];
-      
-      console.log('🔍 All localStorage keys:', Object.keys(localStorage));
-      
-      for (const source of sources) {
-        console.log(`🔍 Checking ${source.name}:`, source.value);
-        if (source.value && source.value.trim() && source.value !== 'null' && source.value !== 'undefined') {
-          console.log(`✅ WritingArea: Prompt loaded from ${source.name}:`, source.value.substring(0, 100) + '...');
-          setPrompt(source.value);
-          if (onPromptChange) {
-            onPromptChange(source.value);
-          }
-          return;
+    if (!prompt && textType) {
+      generatePrompt(textType).then((generatedPrompt) => {
+        setPrompt(generatedPrompt);
+        if (onPromptChange) {
+          onPromptChange(generatedPrompt);
         }
-      }
-      
-      console.log('⚠️ WritingArea: No prompt found in any source, using fallback');
-      
-      // Enhanced fallback prompts optimized for NSW Selective exam
-      const fallbackPrompts = {
-        narrative: "Write an engaging story about a character who discovers something unexpected that changes their life forever. Include vivid descriptions, realistic dialogue, and show how the character grows throughout the story. Focus on creating a clear beginning, middle, and end with engaging plot development. (Target: 250-350 words)",
-        persuasive: "Write a compelling persuasive essay arguing for or against a topic you feel strongly about. Use logical reasoning, credible evidence, emotional appeals, and address counterarguments to convince your readers. End with a strong call to action. (Target: 250-350 words)",
-        expository: "Write an informative essay explaining a topic you're knowledgeable about or find interesting. Provide clear explanations, specific examples, and organize your information in a logical way that helps readers understand the subject thoroughly. (Target: 250-350 words)",
-        reflective: "Write a thoughtful reflection about a meaningful experience in your life. Explore what you learned, how it changed you, and what insights you gained. Use descriptive language to help readers understand both the experience and your thoughts about it. (Target: 250-350 words)",
-        descriptive: "Write a vivid description of a place, person, or object that is meaningful to you. Use sensory details, figurative language, and specific examples to create a clear and engaging picture in your reader's mind. (Target: 250-350 words)"
-      };
-      
-      const fallbackPrompt = fallbackPrompts[textType as keyof typeof fallbackPrompts] || fallbackPrompts.narrative;
-      console.log('🔄 Using fallback prompt for', textType, ':', fallbackPrompt);
-      setPrompt(fallbackPrompt);
-      if (onPromptChange) {
-        onPromptChange(fallbackPrompt);
-      }
-    };
+      }).catch((error) => {
+        console.error('Failed to generate prompt:', error);
+        setPrompt('Write an engaging story about a character who discovers something unexpected that changes their life forever. Include vivid descriptions, realistic dialogue, and show the character\'s emotional journey. Make sure your story has a clear beginning, middle, and end with a satisfying conclusion. Focus on showing rather than telling, and use sensory details to bring your story to life.');
+      });
+    }
+  }, [textType, prompt, onPromptChange]);
 
-    loadPrompt();
-    
-    // Also listen for storage changes
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key && (e.key.includes('prompt') || e.key.includes('Prompt'))) {
-        console.log('📢 Storage change detected for prompt:', e.key, e.newValue);
-        loadPrompt();
-      }
-    };
-    
-    window.addEventListener('storage', handleStorageChange);
-    
-    // Check for prompt updates every 2 seconds for the first 10 seconds
-    const promptCheckInterval = setInterval(() => {
-      loadPrompt();
-    }, 2000);
-    
-    setTimeout(() => {
-      clearInterval(promptCheckInterval);
-    }, 10000);
-    
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      clearInterval(promptCheckInterval);
-    };
-  }, [propPrompt, textType, onPromptChange]);
-
-  // Auto-save functionality
+  // Update content statistics
   useEffect(() => {
-    const autoSave = () => {
-      if (content.trim()) {
-        setIsAutoSaving(true);
-        localStorage.setItem('writingContent', content);
-        localStorage.setItem('lastSaved', new Date().toISOString());
-        setLastSaved(new Date());
-        setTimeout(() => setIsAutoSaving(false), 1000);
-      }
-    };
+    const words = content.trim().split(/\s+/).filter(word => word.length > 0);
+    setWordCount(words.length);
+    setCharacterCount(content.length);
+    setReadingTime(Math.ceil(words.length / 200)); // Average reading speed: 200 words per minute
 
-    const autoSaveTimer = setTimeout(autoSave, 2000);
-    return () => clearTimeout(autoSaveTimer);
-  }, [content]);
+    if (onContentChange) {
+      onContentChange(content);
+    }
+  }, [content, onContentChange]);
 
-  // Timer functionality
+  // Timer management
   useEffect(() => {
     if (isTimerRunning) {
       timerRef.current = setInterval(() => {
@@ -266,7 +195,7 @@ export function WritingArea({
     };
   }, [isTimerRunning]);
 
-  // Exam timer functionality
+  // Exam timer management
   useEffect(() => {
     if (examMode && examTimeRemaining > 0) {
       examTimerRef.current = setInterval(() => {
@@ -291,95 +220,73 @@ export function WritingArea({
     };
   }, [examMode, examTimeRemaining]);
 
-  // Update statistics when content changes
+  // Auto-save functionality
   useEffect(() => {
-    const words = content.trim().split(/\s+/).filter(word => word.length > 0);
-    const wordCount = words.length;
-    const characterCount = content.length;
-    const readingTime = Math.ceil(wordCount / 200); // Average reading speed
+    const autoSaveTimer = setTimeout(() => {
+      if (content.trim()) {
+        setIsAutoSaving(true);
+        // Simulate auto-save
+        setTimeout(() => {
+          setIsAutoSaving(false);
+          setLastSaved(new Date());
+        }, 1000);
+      }
+    }, 2000);
 
-    setWordCount(wordCount);
-    setCharacterCount(characterCount);
-    setReadingTime(readingTime);
+    return () => clearTimeout(autoSaveTimer);
+  }, [content]);
 
-    if (onContentChange) {
-      onContentChange(content);
-    }
-
-    // Update progress data
-    setProgressData(prev => ({
-      ...prev,
-      wordsWritten: wordCount,
-      averageWordsPerMinute: timeSpent > 0 ? Math.round((wordCount / timeSpent) * 60) : 0
-    }));
-  }, [content, onContentChange, timeSpent]);
-
-  // Scroll chat to bottom when new messages are added
+  // Start writing timer when user starts typing
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatMessages]);
-
-  // Handle content change
-  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newContent = e.target.value;
-    setContent(newContent);
-    
-    // Start timer when user starts typing
-    if (!isTimerRunning && newContent.trim()) {
+    if (content.trim() && !isTimerRunning) {
       setIsTimerRunning(true);
     }
+  }, [content, isTimerRunning]);
+
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setContent(e.target.value);
   };
 
-  // Handle text selection for synonyms
   const handleTextSelection = () => {
-    const selection = window.getSelection();
-    if (selection && selection.toString().trim()) {
-      const selectedText = selection.toString().trim();
-      if (selectedText.split(' ').length === 1) { // Only single words
-        setSelectedText(selectedText);
-        setShowSynonyms(true);
-        loadSynonyms(selectedText);
+    if (textareaRef.current) {
+      const start = textareaRef.current.selectionStart;
+      const end = textareaRef.current.selectionEnd;
+      const selected = content.substring(start, end);
+      if (selected.trim()) {
+        setSelectedText(selected);
       }
     }
   };
 
-  // Load synonyms for selected word
-  const loadSynonyms = async (word: string) => {
+  const handleSynonymLookup = async () => {
+    if (!selectedText.trim()) return;
+    
     setIsLoadingSynonyms(true);
     try {
-      const synonymList = await getSynonyms(word);
+      const synonymList = await getSynonyms(selectedText);
       setSynonyms(synonymList);
+      setShowSynonyms(true);
     } catch (error) {
-      console.error('Error loading synonyms:', error);
-      // Provide fallback synonyms
-      const fallbackSynonyms: { [key: string]: string[] } = {
-        'good': ['excellent', 'great', 'wonderful', 'fantastic', 'superb'],
-        'bad': ['terrible', 'awful', 'horrible', 'dreadful', 'poor'],
-        'big': ['large', 'huge', 'enormous', 'massive', 'gigantic'],
-        'small': ['tiny', 'little', 'miniature', 'petite', 'compact'],
-        'said': ['stated', 'declared', 'announced', 'proclaimed', 'mentioned'],
-        'went': ['traveled', 'journeyed', 'proceeded', 'departed', 'ventured']
-      };
-      setSynonyms(fallbackSynonyms[word.toLowerCase()] || ['alternative', 'substitute', 'replacement']);
+      console.error('Failed to get synonyms:', error);
     } finally {
       setIsLoadingSynonyms(false);
     }
   };
 
-  // Replace selected text with synonym
-  const replaceSynonym = (synonym: string) => {
-    if (textareaRef.current && selectedText) {
-      const textarea = textareaRef.current;
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const newContent = content.substring(0, start) + synonym + content.substring(end);
-      setContent(newContent);
-      setShowSynonyms(false);
-      setSelectedText('');
+  const handleParaphrase = async () => {
+    if (!paraphraseInput.trim()) return;
+    
+    setIsParaphrasing(true);
+    try {
+      const paraphrased = await rephraseSentence(paraphraseInput);
+      setParaphraseOutput(paraphrased);
+    } catch (error) {
+      console.error('Failed to paraphrase:', error);
+    } finally {
+      setIsParaphrasing(false);
     }
   };
 
-  // Evaluate writing
   const handleEvaluate = async () => {
     if (!content.trim()) return;
     
@@ -387,242 +294,68 @@ export function WritingArea({
     try {
       const result = await evaluateEssay(content, textType);
       setEvaluation(result);
-      setActiveTab('coaching-tips');
     } catch (error) {
-      console.error('Error evaluating writing:', error);
-      // Provide fallback evaluation optimized for NSW Selective criteria
-      setEvaluation({
-        score: Math.floor(Math.random() * 3) + 7, // Random score between 7-9
-        overallScore: Math.floor(Math.random() * 3) + 7,
-        strengths: [
-          'Good use of vocabulary and varied sentence structure',
-          'Clear organization and logical flow of ideas',
-          'Engaging content that holds reader interest',
-          'Appropriate tone for the text type',
-          'Effective use of language features'
-        ],
-        improvements: [
-          'Add more descriptive details and sensory language',
-          'Vary sentence length for better rhythm',
-          'Include more specific examples to support main points',
-          'Strengthen transitions between paragraphs',
-          'Consider adding more sophisticated vocabulary'
-        ],
-        specificFeedback: `Your ${textType} writing shows good potential with clear structure and engaging content. For NSW Selective exam success, focus on adding more vivid details and varying your sentence structure to make it even more compelling. Consider using more specific examples to support your main ideas and ensure your word count is within the target range.`,
-        nextSteps: [
-          `Practice descriptive writing techniques for ${textType}`,
-          'Read examples of excellent ' + textType + ' writing',
-          'Focus on character development and dialogue',
-          'Work on creating stronger opening and closing paragraphs',
-          'Practice writing within time constraints'
-        ],
-        nswCriteria: {
-          ideasAndContent: Math.floor(Math.random() * 3) + 7,
-          textStructure: Math.floor(Math.random() * 3) + 7,
-          languageFeatures: Math.floor(Math.random() * 3) + 7,
-          grammarAndSpelling: Math.floor(Math.random() * 3) + 8
-        }
-      });
-      setActiveTab('coaching-tips');
+      console.error('Failed to evaluate essay:', error);
     } finally {
       setIsEvaluating(false);
     }
   };
 
-  // Start exam mode
   const startExamMode = () => {
     setExamMode(true);
     setExamTimeRemaining(examTimeLimit);
     setIsTimerRunning(true);
   };
 
-  // Stop exam mode
   const stopExamMode = () => {
     setExamMode(false);
-    setIsTimerRunning(false);
+    if (examTimerRef.current) {
+      clearInterval(examTimerRef.current);
+    }
   };
 
-  // Format time display
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Get word count status
   const getWordCountStatus = () => {
-    if (wordCount < targetWordCount * 0.8) {
-      return { color: 'text-orange-600', message: 'Below target' };
-    } else if (wordCount > targetWordCount * 1.2) {
-      return { color: 'text-red-600', message: 'Above target' };
-    } else {
-      return { color: 'text-green-600', message: 'On target' };
-    }
+    const percentage = (wordCount / targetWordCount) * 100;
+    if (percentage < 50) return { color: 'text-red-600', status: 'Too short' };
+    if (percentage < 80) return { color: 'text-yellow-600', status: 'Getting there' };
+    if (percentage <= 120) return { color: 'text-green-600', status: 'Perfect range' };
+    return { color: 'text-orange-600', status: 'Too long' };
   };
 
-  // Paraphrase text
-  const handleParaphrase = async () => {
-    if (!paraphraseInput.trim()) return;
-    
-    setIsParaphrasing(true);
-    try {
-      const result = await rephraseSentence(paraphraseInput);
-      setParaphraseOutput(result);
-    } catch (error) {
-      console.error('Error paraphrasing:', error);
-      // Provide fallback paraphrasing
-      const enhanced = paraphraseInput.replace(/\b\w+\b/g, (word) => {
-        const synonyms: { [key: string]: string } = {
-          'good': 'excellent', 'bad': 'terrible', 'big': 'enormous', 'small': 'tiny',
-          'nice': 'wonderful', 'said': 'exclaimed', 'went': 'traveled', 'got': 'obtained',
-          'very': 'extremely', 'really': 'truly', 'pretty': 'quite', 'kind of': 'somewhat'
-        };
-        return synonyms[word.toLowerCase()] || word;
-      });
-      setParaphraseOutput(`Here's an enhanced version: ${enhanced}`);
-    } finally {
-      setIsParaphrasing(false);
-    }
-  };
-
-  // Chat functionality
-  const handleChatSubmit = async () => {
+  const sendChatMessage = async () => {
     if (!chatInput.trim()) return;
-    
+
     const userMessage = {
       id: Date.now().toString(),
       text: chatInput,
       sender: 'user' as const,
       timestamp: new Date()
     };
-    
+
     setChatMessages(prev => [...prev, userMessage]);
     setChatInput('');
     setIsChatLoading(true);
-    
+
     try {
-      // Enhanced AI response based on user input
-      let aiResponse = '';
-      const input = chatInput.toLowerCase();
-      
-      if (input.includes('analyze') || input.includes('feedback')) {
-        const wordStatus = getWordCountStatus();
-        aiResponse = `I've analyzed your ${textType} writing! Here's my NSW Selective exam assessment:
-
-📊 **Current Stats:**
-• Word count: ${wordCount} words (Target: ${targetWordCount}) - ${wordStatus.message}
-• Reading time: ${readingTime} minutes
-• Writing time: ${formatTime(timeSpent)}
-${examMode ? `• Exam time remaining: ${formatTime(examTimeRemaining)}` : ''}
-
-✅ **Strengths I notice:**
-• ${content.trim() ? 'Good structure and organization' : 'Ready to start writing!'}
-• ${wordCount > 50 ? 'Developing ideas well' : 'Great potential for expansion'}
-• Appropriate tone for ${textType} writing
-
-🎯 **NSW Selective Tips:**
-• ${wordCount < targetWordCount * 0.8 ? 'Add more detail to reach target word count' : wordCount > targetWordCount * 1.2 ? 'Consider condensing to stay within target range' : 'Word count is on target - great job!'}
-• ${textType === 'narrative' ? 'Include dialogue and character development' : textType === 'persuasive' ? 'Strengthen arguments with evidence' : 'Add specific examples to clarify points'}
-• Focus on varied vocabulary and sentence structures
-
-Keep writing! You're doing great! 🌟`;
-      } else if (input.includes('vocabulary') || input.includes('word') || input.includes('synonym')) {
-        aiResponse = `Great question about vocabulary! Here are NSW Selective exam tips for enhancing your ${textType} writing:
-
-🔤 **Word Choice Strategies:**
-• Use specific, descriptive words instead of general ones
-• Vary your vocabulary - avoid repeating the same words
-• Include some sophisticated vocabulary, but ensure it fits naturally
-• Use figurative language like metaphors and similes
-
-📝 **${textType.charAt(0).toUpperCase() + textType.slice(1)} Specific Tips:**
-${textType === 'narrative' ? '• Use action verbs and sensory details\n• Include dialogue with varied speech tags\n• Describe settings vividly' : 
-  textType === 'persuasive' ? '• Use emotive language to persuade\n• Include strong, confident language\n• Use rhetorical questions effectively' : 
-  '• Use precise, technical vocabulary when appropriate\n• Include transitional phrases\n• Use clear, explanatory language'}
-
-💡 **Quick Vocabulary Boosters:**
-• Instead of "good" → excellent, outstanding, remarkable
-• Instead of "bad" → terrible, dreadful, appalling
-• Instead of "said" → declared, exclaimed, whispered
-
-Would you like me to suggest alternatives for any specific words in your writing?`;
-      } else if (input.includes('structure') || input.includes('organize')) {
-        aiResponse = `Excellent question about structure! Here's how to organize your ${textType} for NSW Selective success:
-
-📋 **${textType.charAt(0).toUpperCase() + textType.slice(1)} Structure:**
-${textType === 'narrative' ? 
-  '• **Opening:** Hook the reader, introduce character/setting\n• **Rising Action:** Build tension, develop conflict\n• **Climax:** Peak moment of the story\n• **Resolution:** Conclude satisfyingly, show character growth' :
-  textType === 'persuasive' ?
-  '• **Introduction:** State your position clearly\n• **Body:** 2-3 strong arguments with evidence\n• **Address counterarguments:** Show you understand other views\n• **Conclusion:** Restate position, call to action' :
-  '• **Introduction:** Introduce topic clearly\n• **Body:** 2-3 main points with examples\n• **Use transitions:** Connect ideas smoothly\n• **Conclusion:** Summarize key points'
-}
-
-🔗 **Transition Words:**
-• To add ideas: furthermore, additionally, moreover
-• To contrast: however, nevertheless, on the other hand
-• To conclude: therefore, consequently, in conclusion
-
-⏰ **Time Management:**
-• Spend 5 minutes planning
-• 20 minutes writing
-• 5 minutes reviewing and editing
-
-Your current structure looks ${content.length > 100 ? 'well-developed' : 'like it needs more development'}!`;
-      } else if (input.includes('time') || input.includes('exam')) {
-        aiResponse = `Great question about exam timing! Here's your NSW Selective exam strategy:
-
-⏰ **Time Breakdown (30 minutes total):**
-• **5 minutes:** Read prompt, brainstorm, plan structure
-• **20 minutes:** Write your response
-• **5 minutes:** Review, edit, check spelling/grammar
-
-📊 **Your Current Progress:**
-• Time spent: ${formatTime(timeSpent)}
-• Words written: ${wordCount}
-• Writing speed: ${progressData.averageWordsPerMinute} words/minute
-
-🎯 **Target Goals:**
-• Word count: ${targetWordCount} words
-• Writing speed: 12-15 words per minute
-• ${examMode ? `Time remaining: ${formatTime(examTimeRemaining)}` : 'Not in exam mode - click "Start Exam Mode" to practice!'}
-
-💡 **Quick Tips:**
-• Don't spend too long on planning - get writing!
-• Aim for ${Math.round(targetWordCount / 20)} words per minute
-• Leave time to check your work
-• If running out of time, focus on a strong conclusion
-
-${!examMode ? 'Would you like to start exam mode to practice with a timer?' : 'You\'re in exam mode - keep going!'}`;
-      } else {
-        aiResponse = `Hi there! I'm your Writing Buddy, here to help with your ${textType} writing! 
-
-I can help you with:
-📝 **Writing feedback** - Ask me to "analyze my writing"
-🔤 **Vocabulary** - Ask about "vocabulary tips" or "synonyms"
-📋 **Structure** - Ask about "how to organize" your writing
-⏰ **Exam prep** - Ask about "time management" or "exam tips"
-
-What would you like help with today? Just type your question and I'll provide specific guidance for NSW Selective exam success! 🌟`;
-      }
-      
-      const aiMessage = {
-        id: (Date.now() + 1).toString(),
-        text: aiResponse,
-        sender: 'ai' as const,
-        timestamp: new Date()
-      };
-      
-      setChatMessages(prev => [...prev, aiMessage]);
+      // Simulate AI response - replace with actual AI integration
+      setTimeout(() => {
+        const aiResponse = {
+          id: (Date.now() + 1).toString(),
+          text: `Great question! For ${textType} writing, I'd suggest focusing on ${textType === 'narrative' ? 'character development and plot structure' : textType === 'persuasive' ? 'strong arguments and evidence' : 'clear explanations and examples'}. Keep writing!`,
+          sender: 'ai' as const,
+          timestamp: new Date()
+        };
+        setChatMessages(prev => [...prev, aiResponse]);
+        setIsChatLoading(false);
+      }, 1500);
     } catch (error) {
-      console.error('Error in chat:', error);
-      const errorMessage = {
-        id: (Date.now() + 1).toString(),
-        text: "I'm having trouble responding right now. Please try asking your question again!",
-        sender: 'ai' as const,
-        timestamp: new Date()
-      };
-      setChatMessages(prev => [...prev, errorMessage]);
-    } finally {
+      console.error('Failed to get AI response:', error);
       setIsChatLoading(false);
     }
   };
@@ -797,15 +530,10 @@ What would you like help with today? Just type your question and I'll provide sp
               ref={textareaRef}
               value={content}
               onChange={handleContentChange}
-              onMouseUp={handleTextSelection}
-              onKeyUp={handleTextSelection}
-              placeholder={prompt ? "Start writing your amazing story here! Let your creativity flow and bring your ideas to life..." : "Your writing prompt will appear above. Start typing once it loads!"}
-              className="w-full h-full p-4 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none resize-none text-lg leading-relaxed shadow-sm transition-all duration-200"
-              style={{ 
-                fontSize: `${fontSize}px`, 
-                lineHeight: lineHeight,
-                fontFamily: 'Georgia, serif'
-              }}
+              onSelect={handleTextSelection}
+              placeholder="Start writing your amazing story here! Let your creativity flow and bring your ideas to life..."
+              className="w-full h-full p-4 border-2 border-blue-200 rounded-lg focus:border-blue-400 focus:outline-none resize-none text-gray-800 leading-relaxed shadow-sm"
+              style={{ fontSize: `${fontSize}px`, lineHeight }}
             />
           </div>
 
@@ -852,130 +580,133 @@ What would you like help with today? Just type your question and I'll provide sp
               { id: 'text-type-analysis', label: 'Analysis', icon: BarChart3 },
               { id: 'vocabulary-builder', label: 'Vocabulary', icon: BookOpen },
               { id: 'progress-tracker', label: 'Progress', icon: TrendingUp },
-              { id: 'coaching-tips', label: 'Coach', icon: Target }
+              { id: 'ai-coach', label: 'Coach', icon: MessageSquare }
             ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 p-3 text-xs font-medium transition-colors ${
-                  activeTab === tab.id
-                    ? 'bg-white bg-opacity-20 text-white'
-                    : 'text-purple-100 hover:text-white hover:bg-white hover:bg-opacity-10'
+                className={`flex-1 flex flex-col items-center py-3 px-2 text-xs font-medium transition-colors ${
+                  activeTab === tab.id 
+                    ? 'bg-white bg-opacity-20 text-white' 
+                    : 'text-purple-200 hover:text-white hover:bg-white hover:bg-opacity-10'
                 }`}
               >
-                <tab.icon className="h-4 w-4 mx-auto mb-1" />
+                <tab.icon className="h-4 w-4 mb-1" />
                 {tab.label}
               </button>
             ))}
           </div>
 
           {/* Tab Content */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 p-4 overflow-y-auto">
             {activeTab === 'text-type-analysis' && (
-              <div className="p-4 space-y-4">
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold flex items-center">
+                  <BarChart3 className="h-5 w-5 mr-2" />
+                  Analysis
+                </h3>
+                
                 <div className="bg-white bg-opacity-10 rounded-lg p-3">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium">Analysis</span>
-                    <Target className="h-4 w-4" />
+                  <h4 className="font-medium mb-2">Word Count</h4>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Current: {wordCount}</span>
+                    <span className="text-sm">Target: {targetWordCount} words</span>
                   </div>
-                  
-                  <div className="space-y-3">
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>Word Count</span>
-                        <span className="font-medium">{wordCount}</span>
-                      </div>
-                      <div className="text-xs text-purple-200">Target: {targetWordCount} words</div>
-                    </div>
-                    
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>Reading Time</span>
-                        <span className="font-medium">{readingTime} min</span>
-                      </div>
-                      <div className="text-xs text-purple-200">Based on 200 words/minute</div>
-                    </div>
-                    
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>Writing Speed</span>
-                        <span className="font-medium">{progressData.averageWordsPerMinute} wpm</span>
-                      </div>
-                      <div className="text-xs text-purple-200">Target: 12-15 words/minute</div>
-                    </div>
+                  <div className="w-full bg-white bg-opacity-20 rounded-full h-2 mt-2">
+                    <div 
+                      className="bg-white rounded-full h-2 transition-all duration-300"
+                      style={{ width: `${Math.min((wordCount / targetWordCount) * 100, 100)}%` }}
+                    ></div>
                   </div>
                 </div>
 
+                <div className="bg-white bg-opacity-10 rounded-lg p-3">
+                  <h4 className="font-medium mb-2">Reading Time</h4>
+                  <p className="text-sm">{readingTime} min</p>
+                  <p className="text-xs text-purple-200 mt-1">Based on 200 words/minute</p>
+                </div>
+
+                <div className="bg-white bg-opacity-10 rounded-lg p-3">
+                  <h4 className="font-medium mb-2">Writing Speed</h4>
+                  <p className="text-sm">{timeSpent > 0 ? Math.round((wordCount / timeSpent) * 60) : 0} wpm</p>
+                  <p className="text-xs text-purple-200 mt-1">Target: 12-15 words/minute</p>
+                </div>
+
                 <button
-                  onClick={() => {
-                    setChatInput('analyze my writing');
-                    handleChatSubmit();
-                  }}
-                  className="w-full bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg p-3 text-sm font-medium transition-colors"
+                  onClick={() => setActiveTab('ai-coach')}
+                  className="w-full bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg py-2 px-3 text-sm font-medium transition-colors"
                 >
-                  <BarChart3 className="h-4 w-4 mr-2 inline" />
+                  <BarChart3 className="h-4 w-4 inline mr-2" />
                   Analyze Text Type
                 </button>
               </div>
             )}
 
             {activeTab === 'vocabulary-builder' && (
-              <div className="p-4 space-y-4">
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold flex items-center">
+                  <BookOpen className="h-5 w-5 mr-2" />
+                  Vocabulary
+                </h3>
+
                 <div className="bg-white bg-opacity-10 rounded-lg p-3">
-                  <h3 className="font-medium mb-2 flex items-center">
-                    <BookOpen className="h-4 w-4 mr-2" />
-                    Vocabulary
-                  </h3>
-                  <div className="text-xs text-purple-200 mb-3">
-                    Target: 250-300 words
-                  </div>
-                  <div className="text-xs text-purple-200">
-                    Based on 200 words/minute reading speed
-                  </div>
-                </div>
-
-                <div className="space-y-2">
+                  <h4 className="font-medium mb-2">Selected Text</h4>
+                  <p className="text-sm bg-white bg-opacity-20 rounded p-2 min-h-[2rem]">
+                    {selectedText || 'Select text in your writing to get synonyms'}
+                  </p>
                   <button
-                    onClick={() => {
-                      setChatInput('vocabulary tips');
-                      handleChatSubmit();
-                    }}
-                    className="w-full bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg p-3 text-sm font-medium transition-colors text-left"
+                    onClick={handleSynonymLookup}
+                    disabled={!selectedText || isLoadingSynonyms}
+                    className="mt-2 w-full bg-white bg-opacity-20 hover:bg-opacity-30 disabled:opacity-50 rounded py-2 px-3 text-sm font-medium transition-colors"
                   >
-                    💡 Get Vocabulary Tips
-                  </button>
-                  
-                  <button
-                    onClick={() => {
-                      setChatInput('synonyms for common words');
-                      handleChatSubmit();
-                    }}
-                    className="w-full bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg p-3 text-sm font-medium transition-colors text-left"
-                  >
-                    🔄 Find Synonyms
+                    {isLoadingSynonyms ? 'Loading...' : 'Get Synonyms'}
                   </button>
                 </div>
 
-                {/* Paraphrase Tool */}
+                {synonyms.length > 0 && (
+                  <div className="bg-white bg-opacity-10 rounded-lg p-3">
+                    <h4 className="font-medium mb-2">Synonyms</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {synonyms.map((synonym, index) => (
+                        <span
+                          key={index}
+                          className="bg-white bg-opacity-20 rounded-full px-2 py-1 text-xs cursor-pointer hover:bg-opacity-30 transition-colors"
+                          onClick={() => {
+                            // Replace selected text with synonym
+                            if (textareaRef.current) {
+                              const start = textareaRef.current.selectionStart;
+                              const end = textareaRef.current.selectionEnd;
+                              const newContent = content.substring(0, start) + synonym + content.substring(end);
+                              setContent(newContent);
+                            }
+                          }}
+                        >
+                          {synonym}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="bg-white bg-opacity-10 rounded-lg p-3">
                   <h4 className="font-medium mb-2">Paraphrase Tool</h4>
                   <textarea
                     value={paraphraseInput}
                     onChange={(e) => setParaphraseInput(e.target.value)}
                     placeholder="Enter text to paraphrase..."
-                    className="w-full p-2 rounded bg-white bg-opacity-20 text-white placeholder-purple-200 text-sm resize-none"
-                    rows={2}
+                    className="w-full bg-white bg-opacity-20 rounded p-2 text-sm text-white placeholder-purple-200 resize-none"
+                    rows={3}
                   />
                   <button
                     onClick={handleParaphrase}
                     disabled={!paraphraseInput.trim() || isParaphrasing}
-                    className="w-full mt-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded p-2 text-sm font-medium transition-colors disabled:opacity-50"
+                    className="mt-2 w-full bg-white bg-opacity-20 hover:bg-opacity-30 disabled:opacity-50 rounded py-2 px-3 text-sm font-medium transition-colors"
                   >
                     {isParaphrasing ? 'Paraphrasing...' : 'Paraphrase'}
                   </button>
                   {paraphraseOutput && (
-                    <div className="mt-2 p-2 bg-white bg-opacity-20 rounded text-sm">
-                      {paraphraseOutput}
+                    <div className="mt-2 bg-white bg-opacity-20 rounded p-2">
+                      <p className="text-sm">{paraphraseOutput}</p>
                     </div>
                   )}
                 </div>
@@ -983,231 +714,140 @@ What would you like help with today? Just type your question and I'll provide sp
             )}
 
             {activeTab === 'progress-tracker' && (
-              <div className="p-4 space-y-4">
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold flex items-center">
+                  <TrendingUp className="h-5 w-5 mr-2" />
+                  Progress
+                </h3>
+
                 <div className="bg-white bg-opacity-10 rounded-lg p-3">
-                  <h3 className="font-medium mb-3 flex items-center">
-                    <TrendingUp className="h-4 w-4 mr-2" />
-                    Progress
-                  </h3>
-                  
-                  <div className="space-y-3">
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>Words Written</span>
-                        <span className="font-medium">{progressData.wordsWritten}</span>
-                      </div>
-                      <div className="w-full bg-white bg-opacity-20 rounded-full h-2">
-                        <div 
-                          className="bg-white h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${Math.min((progressData.wordsWritten / targetWordCount) * 100, 100)}%` }}
-                        ></div>
-                      </div>
+                  <h4 className="font-medium mb-2">Session Stats</h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm">Words Written:</span>
+                      <span className="text-sm font-medium">{wordCount}</span>
                     </div>
-                    
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>Time Spent</span>
-                        <span className="font-medium">{formatTime(timeSpent)}</span>
-                      </div>
-                      {examMode && (
-                        <div className="text-xs text-purple-200">
-                          Exam time remaining: {formatTime(examTimeRemaining)}
-                        </div>
-                      )}
+                    <div className="flex justify-between">
+                      <span className="text-sm">Time Spent:</span>
+                      <span className="text-sm font-medium">{formatTime(timeSpent)}</span>
                     </div>
-                    
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>Writing Speed</span>
-                        <span className="font-medium">{progressData.averageWordsPerMinute} wpm</span>
-                      </div>
-                      <div className="text-xs text-purple-200">
-                        Target: 12-15 words/minute
-                      </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">Writing Speed:</span>
+                      <span className="text-sm font-medium">
+                        {timeSpent > 0 ? Math.round((wordCount / timeSpent) * 60) : 0} wpm
+                      </span>
                     </div>
                   </div>
                 </div>
 
-                <button
-                  onClick={() => {
-                    setChatInput('time management tips');
-                    handleChatSubmit();
-                  }}
-                  className="w-full bg-white bg-opacity-20 hover:bg-opacity-30 rounded-lg p-3 text-sm font-medium transition-colors"
-                >
-                  <Clock className="h-4 w-4 mr-2 inline" />
-                  Time Management Tips
-                </button>
+                <div className="bg-white bg-opacity-10 rounded-lg p-3">
+                  <h4 className="font-medium mb-2">NSW Exam Progress</h4>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm">Word Target:</span>
+                      <span className="text-sm font-medium">{targetWordCount} words</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm">Progress:</span>
+                      <span className="text-sm font-medium">
+                        {Math.round((wordCount / targetWordCount) * 100)}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-white bg-opacity-20 rounded-full h-2">
+                      <div 
+                        className="bg-white rounded-full h-2 transition-all duration-300"
+                        style={{ width: `${Math.min((wordCount / targetWordCount) * 100, 100)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+
+                {examMode && (
+                  <div className="bg-white bg-opacity-10 rounded-lg p-3">
+                    <h4 className="font-medium mb-2">Exam Mode</h4>
+                    <div className="text-center">
+                      <div className={`text-2xl font-bold ${examTimeRemaining > 300 ? 'text-green-300' : examTimeRemaining > 120 ? 'text-yellow-300' : 'text-red-300'}`}>
+                        {formatTime(examTimeRemaining)}
+                      </div>
+                      <p className="text-sm text-purple-200">Time Remaining</p>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
-            {activeTab === 'coaching-tips' && (
-              <div className="p-4 space-y-4">
-                {evaluation ? (
-                  <div className="space-y-4">
-                    <div className="bg-white bg-opacity-10 rounded-lg p-3">
-                      <h3 className="font-medium mb-2 flex items-center">
-                        <Award className="h-4 w-4 mr-2" />
-                        NSW Selective Assessment
-                      </h3>
-                      
-                      {evaluation.nswCriteria && (
-                        <div className="space-y-2 mb-3">
-                          <div className="flex justify-between text-sm">
-                            <span>Ideas & Content:</span>
-                            <span className="font-medium">{evaluation.nswCriteria.ideasAndContent}/10</span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span>Text Structure:</span>
-                            <span className="font-medium">{evaluation.nswCriteria.textStructure}/10</span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span>Language Features:</span>
-                            <span className="font-medium">{evaluation.nswCriteria.languageFeatures}/10</span>
-                          </div>
-                          <div className="flex justify-between text-sm">
-                            <span>Grammar & Spelling:</span>
-                            <span className="font-medium">{evaluation.nswCriteria.grammarAndSpelling}/10</span>
-                          </div>
-                        </div>
-                      )}
-                      
-                      <div className="text-sm">
-                        <strong>Overall Score: {evaluation.overallScore}/10</strong>
+            {activeTab === 'ai-coach' && (
+              <div className="space-y-4 h-full flex flex-col">
+                <h3 className="text-lg font-semibold flex items-center">
+                  <MessageSquare className="h-5 w-5 mr-2" />
+                  Coaching Tips
+                </h3>
+
+                <div className="bg-white bg-opacity-10 rounded-lg p-3">
+                  <h4 className="font-medium mb-2">Write your text and submit it for detailed feedback and coaching tips!</h4>
+                </div>
+
+                {/* Chat Messages */}
+                <div className="flex-1 bg-white bg-opacity-10 rounded-lg p-3 overflow-y-auto">
+                  <div className="space-y-3 mb-4">
+                    {chatMessages.map((message) => (
+                      <div
+                        key={message.id}
+                        className={`p-2 rounded-lg text-sm ${
+                          message.sender === 'user'
+                            ? 'bg-white bg-opacity-20 ml-4'
+                            : 'bg-white bg-opacity-30 mr-4'
+                        }`}
+                      >
+                        <p>{message.text}</p>
+                        <p className="text-xs text-purple-200 mt-1">
+                          {message.timestamp.toLocaleTimeString()}
+                        </p>
                       </div>
-                    </div>
-
-                    <div className="bg-white bg-opacity-10 rounded-lg p-3">
-                      <h4 className="font-medium mb-2 text-green-200">✅ Strengths</h4>
-                      <ul className="text-sm space-y-1">
-                        {evaluation.strengths?.slice(0, 3).map((strength: string, index: number) => (
-                          <li key={index} className="text-purple-100">• {strength}</li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <div className="bg-white bg-opacity-10 rounded-lg p-3">
-                      <h4 className="font-medium mb-2 text-yellow-200">🎯 Improvements</h4>
-                      <ul className="text-sm space-y-1">
-                        {evaluation.improvements?.slice(0, 3).map((improvement: string, index: number) => (
-                          <li key={index} className="text-purple-100">• {improvement}</li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <div className="bg-white bg-opacity-10 rounded-lg p-3">
-                      <h4 className="font-medium mb-2 text-blue-200">📝 Feedback</h4>
-                      <p className="text-sm text-purple-100">{evaluation.specificFeedback}</p>
-                    </div>
+                    ))}
+                    {isChatLoading && (
+                      <div className="bg-white bg-opacity-30 mr-4 p-2 rounded-lg text-sm">
+                        <div className="flex items-center space-x-2">
+                          <RefreshCw className="h-3 w-3 animate-spin" />
+                          <span>Writing Buddy is thinking...</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <div className="bg-white bg-opacity-10 rounded-lg p-3">
-                    <h3 className="font-medium mb-2 flex items-center">
-                      <Target className="h-4 w-4 mr-2" />
-                      Coaching Tips
-                    </h3>
-                    <p className="text-sm text-purple-200 mb-3">
-                      Write your {textType} and submit it for detailed feedback and coaching tips!
-                    </p>
+                </div>
+
+                {/* Chat Input */}
+                <div className="bg-white bg-opacity-10 rounded-lg p-3">
+                  <div className="flex space-x-2">
+                    <input
+                      type="text"
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && sendChatMessage()}
+                      placeholder="Ask me anything..."
+                      className="flex-1 bg-white bg-opacity-20 rounded px-3 py-2 text-sm text-white placeholder-purple-200 focus:outline-none focus:bg-opacity-30"
+                    />
                     <button
-                      onClick={() => {
-                        setChatInput('coaching tips for ' + textType);
-                        handleChatSubmit();
-                      }}
-                      className="w-full bg-white bg-opacity-20 hover:bg-opacity-30 rounded p-2 text-sm font-medium transition-colors"
+                      onClick={sendChatMessage}
+                      disabled={!chatInput.trim() || isChatLoading}
+                      className="bg-white bg-opacity-20 hover:bg-opacity-30 disabled:opacity-50 rounded px-3 py-2 transition-colors"
                     >
-                      Get Writing Tips
+                      <Send className="h-4 w-4" />
                     </button>
                   </div>
-                )}
+                </div>
               </div>
             )}
-          </div>
-
-          {/* Chat Interface */}
-          <div className="border-t border-white border-opacity-20 p-4">
-            <div className="bg-white bg-opacity-10 rounded-lg p-3 mb-3 max-h-32 overflow-y-auto">
-              {chatMessages.length === 0 ? (
-                <p className="text-sm text-purple-200">Ask me anything about writing! Try "analyze my writing" or "vocabulary tips"</p>
-              ) : (
-                <div className="space-y-2">
-                  {chatMessages.slice(-2).map((message) => (
-                    <div key={message.id} className={`text-xs ${message.sender === 'user' ? 'text-white font-medium' : 'text-purple-100'}`}>
-                      <strong>{message.sender === 'user' ? 'You:' : 'Buddy:'}</strong> {message.text.substring(0, 100)}{message.text.length > 100 ? '...' : ''}
-                    </div>
-                  ))}
-                </div>
-              )}
-              <div ref={chatEndRef} />
-            </div>
-            
-            <div className="flex space-x-2">
-              <input
-                type="text"
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleChatSubmit()}
-                placeholder="Ask me anything..."
-                className="flex-1 p-2 rounded bg-white bg-opacity-20 text-white placeholder-purple-200 text-sm"
-              />
-              <button
-                onClick={handleChatSubmit}
-                disabled={!chatInput.trim() || isChatLoading}
-                className="px-3 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 rounded transition-colors disabled:opacity-50"
-              >
-                {isChatLoading ? (
-                  <RefreshCw className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Send className="h-4 w-4" />
-                )}
-              </button>
-            </div>
           </div>
         </div>
       </div>
-
-      {/* Synonyms Popup */}
-      {showSynonyms && selectedText && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Synonyms for "{selectedText}"</h3>
-              <button
-                onClick={() => setShowSynonyms(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            
-            {isLoadingSynonyms ? (
-              <div className="flex items-center justify-center py-4">
-                <RefreshCw className="h-5 w-5 animate-spin text-blue-500" />
-                <span className="ml-2 text-gray-600">Loading synonyms...</span>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-2">
-                {synonyms.map((synonym, index) => (
-                  <button
-                    key={index}
-                    onClick={() => replaceSynonym(synonym)}
-                    className="p-2 text-left bg-gray-100 hover:bg-blue-100 rounded transition-colors"
-                  >
-                    {synonym}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Planning Modal */}
       {showPlanningModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-semibold">Planning Phase</h3>
+              <h2 className="text-xl font-bold text-gray-800">Planning Phase</h2>
               <button
                 onClick={() => setShowPlanningModal(false)}
                 className="text-gray-500 hover:text-gray-700"
@@ -1224,9 +864,8 @@ What would you like help with today? Just type your question and I'll provide sp
                 <textarea
                   value={planningNotes}
                   onChange={(e) => setPlanningNotes(e.target.value)}
-                  placeholder="Brainstorm your ideas, outline your structure..."
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  rows={6}
+                  placeholder="Brainstorm your ideas, outline your structure, plan your characters..."
+                  className="w-full h-32 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
               
@@ -1237,28 +876,23 @@ What would you like help with today? Just type your question and I'll provide sp
                 <textarea
                   value={writingGoals}
                   onChange={(e) => setWritingGoals(e.target.value)}
-                  placeholder="What do you want to achieve with this piece?"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  rows={3}
+                  placeholder="What do you want to achieve with this piece? What message do you want to convey?"
+                  className="w-full h-24 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 />
               </div>
               
               <div className="flex justify-end space-x-3">
                 <button
                   onClick={() => setShowPlanningModal(false)}
-                  className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
-                  onClick={() => {
-                    setShowPlanningModal(false);
-                    // Focus on the writing area
-                    textareaRef.current?.focus();
-                  }}
+                  onClick={() => setShowPlanningModal(false)}
                   className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                 >
-                  Start Writing
+                  Save & Continue
                 </button>
               </div>
             </div>
@@ -1270,4 +904,3 @@ What would you like help with today? Just type your question and I'll provide sp
 }
 
 export default WritingArea;
-
