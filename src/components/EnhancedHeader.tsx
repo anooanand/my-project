@@ -60,37 +60,7 @@ export function EnhancedHeader({
           </div>
         </div>
 
-        <div className="flex space-x-3">
-          {/* Show selected text type instead of dropdown when hideTextTypeSelector is true */}
-          {hideTextTypeSelector ? (
-            textType && (
-              <div className="flex items-center space-x-2 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 rounded-lg border-2 border-blue-300">
-                <span className="text-blue-800 dark:text-blue-200 font-medium text-sm">
-                  {getTextTypeDisplayName(textType)}
-                </span>
-              </div>
-            )
-          ) : (
-            <select
-              value={textType}
-              onChange={handleTextTypeChange}
-              className="block rounded-lg border-2 border-blue-300 py-1 pl-3 pr-8 text-gray-900 dark:text-gray-100 dark:bg-gray-700 focus:ring-2 focus:ring-blue-200 focus:border-blue-500 text-sm font-medium shadow-sm transition-all duration-200 hover:border-blue-400"
-            >
-              <option value="">📝 Choose your story type...</option>
-              <option value="narrative">🚀 Adventure Story</option>
-              <option value="persuasive">🔊 Convince Others</option>
-              <option value="expository">📚 Explain & Teach</option>
-              <option value="reflective">✨ My Thoughts & Feelings</option>
-              <option value="descriptive">🎨 Describe with Details</option>
-              <option value="recount">📆 Tell What Happened</option>
-              <option value="discursive">🤔 Explore Different Ideas</option>
-              <option value="news report">📰 News Reporter</option>
-              <option value="letter">✉️ Write a Letter</option>
-              <option value="diary entry">📔 Dear Diary</option>
-              <option value="speech">🎤 Give a Speech</option>
-            </select>
-          )}
-        </div>
+        {/* Removed the dropdown selector completely */}
       </div>
     </div>
   );
