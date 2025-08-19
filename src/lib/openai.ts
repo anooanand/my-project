@@ -52,7 +52,7 @@ export const openai = {
   }
 };
 
-// FIXED: Enhanced prompt generation with proper error handling
+// Enhanced prompt generation with proper error handling
 export const generatePrompt = async (textType: string): Promise<string> => {
   console.log('🔄 OpenAI: Generating prompt for text type:', textType);
   
@@ -340,7 +340,7 @@ const getBasicEvaluation = (content: string, textType: string) => {
 };
 
 // NSW Selective feedback function
-export const getNSWSelectiveFeedback = async (content: string, textType: string, feedbackType: string, focusAreas: string[]): Promise<any> => {
+export const getNSWSelectiveFeedback = async (content: string, textType: string, feedbackType: string = 'comprehensive', focusAreas: string[] = []): Promise<any> => {
   console.log('🔄 OpenAI: Getting NSW Selective feedback');
   
   try {
@@ -450,6 +450,150 @@ const getBasicNSWFeedback = (content: string, textType: string) => {
   };
 };
 
+// Additional required exports for various components
+export const getTextTypeVocabulary = async (textType: string): Promise<string[]> => {
+  console.log('🔄 OpenAI: Getting text type vocabulary for:', textType);
+  
+  try {
+    if (!OPENAI_API_KEY) {
+      return getBasicTextTypeVocabulary(textType);
+    }
+
+    const response = await fetch(`${OPENAI_API_BASE}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'system',
+            content: 'You are a vocabulary expert helping Year 6 students improve their writing with appropriate vocabulary.'
+          },
+          {
+            role: 'user',
+            content: `Provide 10 sophisticated but age-appropriate vocabulary words for ${textType} writing. Return only the words separated by commas.`
+          }
+        ],
+        max_tokens: 150,
+        temperature: 0.5,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`OpenAI API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    if (data.choices && data.choices[0] && data.choices[0].message) {
+      const vocabulary = data.choices[0].message.content
+        .trim()
+        .split(',')
+        .map((word: string) => word.trim())
+        .filter((word: string) => word.length > 0);
+      
+      console.log('✅ OpenAI: Text type vocabulary generated successfully');
+      return vocabulary;
+    } else {
+      throw new Error('Invalid response format');
+    }
+    
+  } catch (error) {
+    console.error('❌ OpenAI: Error getting text type vocabulary:', error);
+    return getBasicTextTypeVocabulary(textType);
+  }
+};
+
+const getBasicTextTypeVocabulary = (textType: string): string[] => {
+  const vocabularyMap: { [key: string]: string[] } = {
+    narrative: ['captivating', 'mysterious', 'adventurous', 'dramatic', 'suspenseful', 'vivid', 'enchanting', 'thrilling', 'compelling', 'extraordinary'],
+    persuasive: ['convincing', 'compelling', 'essential', 'crucial', 'significant', 'beneficial', 'advantageous', 'important', 'necessary', 'valuable'],
+    expository: ['informative', 'comprehensive', 'detailed', 'thorough', 'systematic', 'analytical', 'factual', 'precise', 'accurate', 'educational'],
+    reflective: ['thoughtful', 'meaningful', 'insightful', 'contemplative', 'introspective', 'profound', 'significant', 'transformative', 'enlightening', 'personal'],
+    descriptive: ['vivid', 'picturesque', 'stunning', 'magnificent', 'breathtaking', 'spectacular', 'gorgeous', 'beautiful', 'striking', 'impressive'],
+    recount: ['memorable', 'significant', 'eventful', 'remarkable', 'unforgettable', 'important', 'notable', 'meaningful', 'impactful', 'consequential']
+  };
+  
+  return vocabularyMap[textType] || vocabularyMap.narrative;
+};
+
+export const getWritingFeedback = async (content: string, textType: string): Promise<any> => {
+  return await getNSWSelectiveFeedback(content, textType);
+};
+
+export const getWritingStructure = async (textType: string): Promise<any> => {
+  console.log('🔄 OpenAI: Getting writing structure for:', textType);
+  
+  const structures = {
+    narrative: {
+      introduction: "Hook the reader with an engaging opening",
+      body: "Develop the plot with rising action, climax, and falling action",
+      conclusion: "Provide a satisfying resolution"
+    },
+    persuasive: {
+      introduction: "State your position clearly",
+      body: "Present arguments with evidence and examples",
+      conclusion: "Reinforce your position and call to action"
+    },
+    expository: {
+      introduction: "Introduce the topic and main idea",
+      body: "Explain with facts, examples, and details",
+      conclusion: "Summarize the main points"
+    }
+  };
+  
+  return structures[textType as keyof typeof structures] || structures.narrative;
+};
+
+export const identifyCommonMistakes = async (content: string): Promise<any[]> => {
+  console.log('🔄 OpenAI: Identifying common mistakes');
+  
+  const mistakes = [];
+  
+  // Basic mistake detection
+  if (content.includes('i ')) {
+    mistakes.push({
+      type: 'capitalization',
+      message: 'Remember to capitalize "I"',
+      suggestion: 'Always capitalize the pronoun "I"'
+    });
+  }
+  
+  if (content.includes('its a')) {
+    mistakes.push({
+      type: 'grammar',
+      message: 'Check your contractions',
+      suggestion: 'Use "it\'s" for "it is"'
+    });
+  }
+  
+  return mistakes;
+};
+
+export const checkOpenAIConnectionStatus = async (): Promise<boolean> => {
+  try {
+    if (!OPENAI_API_KEY) {
+      return false;
+    }
+    
+    // Simple test request
+    const response = await fetch(`${OPENAI_API_BASE}/models`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+      },
+    });
+    
+    return response.ok;
+  } catch (error) {
+    console.error('OpenAI connection check failed:', error);
+    return false;
+  }
+};
+
 // Additional exports that might be expected by other components
 export const getEnhancedFeedback = getNSWSelectiveFeedback;
 export const analyzeText = evaluateEssay;
@@ -465,5 +609,10 @@ export default {
   getNSWSelectiveFeedback,
   getEnhancedFeedback,
   analyzeText,
-  improveWriting
+  improveWriting,
+  getTextTypeVocabulary,
+  getWritingFeedback,
+  getWritingStructure,
+  identifyCommonMistakes,
+  checkOpenAIConnectionStatus
 };
