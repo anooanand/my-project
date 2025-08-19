@@ -547,7 +547,7 @@ Use our Planning tool to get started!`;
       <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 rounded-xl border-2 border-blue-200">
         <h3 className="text-xl font-bold text-blue-900 mb-4 flex items-center">
           <Target className="h-6 w-6 mr-2" />
-          {textType.charAt(0).toUpperCase() + textType.slice(1)} Writing Analysis
+          Writing Analysis
         </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -604,18 +604,18 @@ Use our Planning tool to get started!`;
       <div className="bg-gradient-to-r from-green-50 to-teal-50 p-6 rounded-xl border-2 border-green-200">
         <h3 className="text-xl font-bold text-green-900 mb-4 flex items-center">
           <BookOpen className="h-6 w-6 mr-2" />
-          Vocabulary Enhancement
+          Paraphrase Tool
         </h3>
         
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Enter text to paraphrase:
+              Original Text:
             </label>
             <textarea
               value={paraphraseInput}
               onChange={(e) => setParaphraseInput(e.target.value)}
-              placeholder="Type or paste text you want to improve..."
+              placeholder="Enter or paste text to paraphrase..."
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
               rows={3}
             />
@@ -629,7 +629,7 @@ Use our Planning tool to get started!`;
             {isParaphrasing ? (
               <>
                 <RefreshCw className="h-5 w-5 mr-2 animate-spin" />
-                Enhancing...
+                Paraphrasing...
               </>
             ) : (
               <>
@@ -642,7 +642,7 @@ Use our Planning tool to get started!`;
           {paraphraseOutput && (
             <div className="bg-white p-4 rounded-lg border border-green-200">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-green-700">Enhanced Version:</span>
+                <span className="text-sm font-medium text-green-700">Paraphrased Text:</span>
                 <button
                   onClick={() => copyToClipboard(paraphraseOutput)}
                   className="text-green-600 hover:text-green-700"
@@ -697,7 +697,7 @@ Use our Planning tool to get started!`;
       <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-xl border-2 border-purple-200">
         <h3 className="text-xl font-bold text-purple-900 mb-4 flex items-center">
           <TrendingUp className="h-6 w-6 mr-2" />
-          Writing Progress
+          Progress Tracking
         </h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -744,7 +744,7 @@ Use our Planning tool to get started!`;
       <div className="bg-gradient-to-r from-orange-50 to-red-50 p-6 rounded-xl border-2 border-orange-200">
         <h3 className="text-xl font-bold text-orange-900 mb-4 flex items-center">
           <Award className="h-6 w-6 mr-2" />
-          Writing Feedback & Tips
+          Coaching Tips
         </h3>
         
         {evaluation ? (
@@ -1001,7 +1001,7 @@ Use our Planning tool to get started!`;
     <div className={`flex h-screen bg-gray-50 ${isFullscreen ? 'fixed inset-0 z-50' : ''}`}>
       {/* Main Writing Area */}
       <div className="flex-1 flex flex-col">
-        {/* Header */}
+        {/* Header - Removed "Choose your story type" dropdown */}
         <div className="bg-white border-b border-gray-200 p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -1115,7 +1115,7 @@ Use our Planning tool to get started!`;
         </div>
       </div>
 
-      {/* Writing Buddy Sidebar */}
+      {/* Writing Buddy Sidebar - Made fully visible */}
       <div className="w-96 bg-white border-l border-gray-200 flex flex-col">
         <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-4">
           <h2 className="text-xl font-bold flex items-center">
@@ -1152,7 +1152,7 @@ Use our Planning tool to get started!`;
           </nav>
         </div>
 
-        {/* Tab Content */}
+        {/* Tab Content - Made scrollable and fully visible */}
         <div className="flex-1 overflow-y-auto p-4">
           {activeTab === 'text-type-analysis' && renderTextTypeAnalysis()}
           {activeTab === 'vocabulary' && renderVocabularySophistication()}
