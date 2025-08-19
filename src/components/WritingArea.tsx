@@ -1315,55 +1315,53 @@ How can I help you today? 💪`;
 
   return (
     <div className={`flex flex-col h-screen bg-gray-50 ${isFullscreen ? 'fixed inset-0 z-50' : ''}`}>
-      {/* Enhanced Header */}
-      <div className="bg-white border-b border-gray-200 p-4 shadow-sm">
+      {/* Compact Header - Reduced padding */}
+      <div className="bg-white border-b border-gray-200 px-4 py-2 shadow-sm">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold text-gray-900">Writing Area</h1>
+          <div className="flex items-center space-x-3">
+            <h1 className="text-xl font-bold text-gray-900">Writing Area</h1>
             {isAutoSaving && (
-              <div className="flex items-center text-green-600 text-sm">
-                <RefreshCw className="h-4 w-4 mr-1 animate-spin" />
+              <div className="flex items-center text-green-600 text-xs">
+                <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
                 Auto-saving...
               </div>
             )}
             {lastSaved && (
-              <div className="text-gray-500 text-sm">
+              <div className="text-gray-500 text-xs">
                 Last saved: {lastSaved.toLocaleTimeString()}
               </div>
             )}
           </div>
           
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => setIsFullscreen(!isFullscreen)}
-              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              {isFullscreen ? <Minimize2 className="h-5 w-5" /> : <Maximize2 className="h-5 w-5" />}
-            </button>
-          </div>
+          <button
+            onClick={() => setIsFullscreen(!isFullscreen)}
+            className="p-1 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+          </button>
         </div>
       </div>
 
       <div className="flex flex-1 overflow-hidden">
         {/* Main Writing Area */}
         <div className="flex-1 flex flex-col">
-          {/* Enhanced Prompt Display - Always Visible */}
-          <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 border-b-2 border-blue-200 p-6 shadow-sm">
-            <div className="flex items-start space-x-4">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-md">
-                <Sparkles className="h-5 w-5 text-white" />
+          {/* Compact Prompt Display */}
+          <div className="bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 border-b-2 border-blue-200 p-4 shadow-sm">
+            <div className="flex items-start space-x-3">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0 shadow-md">
+                <Sparkles className="h-4 w-4 text-white" />
               </div>
               <div className="flex-1">
-                <h3 className="text-xl font-bold text-blue-900 mb-3 flex items-center">
+                <h3 className="text-lg font-bold text-blue-900 mb-2 flex items-center">
                   <span className="mr-2">✨</span>
                   Your Writing Prompt
                 </h3>
-                <div className="bg-white bg-opacity-80 p-4 rounded-lg border border-blue-200 shadow-sm">
+                <div className="bg-white bg-opacity-80 p-3 rounded-lg border border-blue-200 shadow-sm">
                   {prompt ? (
-                    <p className="text-gray-800 leading-relaxed text-lg">{prompt}</p>
+                    <p className="text-gray-800 leading-relaxed">{prompt}</p>
                   ) : (
                     <div className="flex items-center space-x-2">
-                      <RefreshCw className="h-5 w-5 text-blue-500 animate-spin" />
+                      <RefreshCw className="h-4 w-4 text-blue-500 animate-spin" />
                       <p className="text-blue-700">Loading your writing prompt...</p>
                     </div>
                   )}
@@ -1372,19 +1370,8 @@ How can I help you today? 💪`;
             </div>
           </div>
 
-          {/* Planning Phase Button - Moved between prompt and writing area */}
-          <div className="bg-white border-b border-gray-200 p-4 flex justify-center">
-            <button
-              onClick={() => setShowPlanningModal(true)}
-              className="flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-200 shadow-md hover:shadow-lg font-medium"
-            >
-              <PenTool className="h-5 w-5 mr-2" />
-              Planning Phase
-            </button>
-          </div>
-
-          {/* Writing Textarea */}
-          <div className="flex-1 p-6">
+          {/* Writing Textarea - Increased height by removing Planning Phase button space */}
+          <div className="flex-1 p-4">
             <textarea
               ref={textareaRef}
               value={content}
@@ -1392,7 +1379,7 @@ How can I help you today? 💪`;
               onMouseUp={handleTextSelection}
               onKeyUp={handleTextSelection}
               placeholder={prompt ? "Start writing your amazing story here! Let your creativity flow and bring your ideas to life..." : "Your writing prompt will appear above. Start typing once it loads!"}
-              className="w-full h-full p-6 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none resize-none text-lg leading-relaxed shadow-sm transition-all duration-200"
+              className="w-full h-full p-4 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:outline-none resize-none text-lg leading-relaxed shadow-sm transition-all duration-200"
               style={{ 
                 fontSize: `${fontSize}px`, 
                 lineHeight: lineHeight,
@@ -1401,14 +1388,14 @@ How can I help you today? 💪`;
             />
           </div>
 
-          {/* Submit Button - Added at bottom */}
-          <div className="bg-white border-t border-gray-200 p-4 flex justify-center">
+          {/* Submit Button - Moved higher up, more compact */}
+          <div className="bg-white border-t border-gray-200 p-3 flex justify-center">
             <button
               onClick={handleEvaluate}
               disabled={!content.trim()}
-              className="flex items-center px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg hover:from-green-600 hover:to-emerald-600 transition-all duration-200 shadow-md hover:shadow-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg hover:from-green-600 hover:to-emerald-600 transition-all duration-200 shadow-md hover:shadow-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Send className="h-5 w-5 mr-2" />
+              <Send className="h-4 w-4 mr-2" />
               Submit for Evaluation
             </button>
           </div>
@@ -1457,14 +1444,25 @@ How can I help you today? 💪`;
           </div>
         </div>
 
-        {/* Enhanced Writing Buddy Sidebar */}
+        {/* Enhanced Writing Buddy Sidebar - Moved up to touch header */}
         <div className="w-96 bg-white border-l border-gray-200 flex flex-col shadow-lg">
-          <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-4 shadow-md">
-            <h2 className="text-xl font-bold flex items-center">
-              <Heart className="h-5 w-5 mr-2" />
+          <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-3 shadow-md">
+            <h2 className="text-lg font-bold flex items-center">
+              <Heart className="h-4 w-4 mr-2" />
               Writing Buddy
             </h2>
-            <p className="text-purple-100 text-sm mt-1">Your AI writing assistant</p>
+            <p className="text-purple-100 text-xs mt-1">Your AI writing assistant</p>
+          </div>
+
+          {/* Planning Phase Button - Moved to sidebar */}
+          <div className="bg-blue-50 border-b border-blue-200 p-3">
+            <button
+              onClick={() => setShowPlanningModal(true)}
+              className="w-full flex items-center justify-center px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-200 shadow-md hover:shadow-lg font-medium text-sm"
+            >
+              <PenTool className="h-4 w-4 mr-2" />
+              Planning Phase
+            </button>
           </div>
 
           {/* Tab Navigation */}
@@ -1481,13 +1479,13 @@ How can I help you today? 💪`;
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex-1 px-2 py-3 text-xs font-medium border-b-2 transition-colors ${
+                    className={`flex-1 px-2 py-2 text-xs font-medium border-b-2 transition-colors ${
                       activeTab === tab.id
                         ? 'border-purple-500 text-purple-600 bg-white'
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-100'
                     }`}
                   >
-                    <IconComponent className="h-4 w-4 mx-auto mb-1" />
+                    <IconComponent className="h-3 w-3 mx-auto mb-1" />
                     <div className="text-center">{tab.label}</div>
                   </button>
                 );
@@ -1496,7 +1494,7 @@ How can I help you today? 💪`;
           </div>
 
           {/* Tab Content */}
-          <div className="flex-1 overflow-y-auto p-4">
+          <div className="flex-1 overflow-y-auto p-3">
             {activeTab === 'text-type-analysis' && renderTextTypeAnalysis()}
             {activeTab === 'vocabulary' && renderVocabularySophistication()}
             {activeTab === 'progress' && renderProgressTracking()}
