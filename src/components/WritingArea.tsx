@@ -14,7 +14,9 @@ import {
   Wand2,
   RefreshCw,
   Copy,
-  Check
+  Check,
+  FileText,
+  Timer
 } from 'lucide-react';
 
 interface WritingAreaProps {
@@ -29,7 +31,7 @@ interface WritingAreaProps {
   prompt?: string;
 }
 
-export function WritingArea({
+export const WritingArea: React.FC<WritingAreaProps> = ({
   content,
   onChange,
   textType,
@@ -39,7 +41,7 @@ export function WritingArea({
   onPopupCompleted,
   onPromptGenerated,
   prompt: externalPrompt
-}: WritingAreaProps) {
+}) => {
   const [prompt, setPrompt] = useState('');
   const [showPlanningModal, setShowPlanningModal] = useState(false);
   const [activeTab, setActiveTab] = useState('analysis');
@@ -448,7 +450,7 @@ export function WritingArea({
                 {wordCount} words
               </span>
               <span className="flex items-center">
-                <Type className="w-4 h-4 mr-1" />
+                <FileText className="w-4 h-4 mr-1" />
                 {charCount} characters
               </span>
               <span className="flex items-center">
@@ -496,4 +498,4 @@ export function WritingArea({
       </div>
     </div>
   );
-}
+};
