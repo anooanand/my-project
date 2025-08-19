@@ -12,7 +12,8 @@ import {
   Type,
   PenTool,
   ToggleLeft,
-  ToggleRight
+  ToggleRight,
+  Heart
 } from 'lucide-react';
 
 interface EnhancedWritingLayoutProps {
@@ -169,18 +170,18 @@ export function EnhancedWritingLayout({
       {/* Right Sidebar - Writing Buddy Panel - 30% width */}
       {showWritingBuddy && (
         <div className="writing-buddy-panel bg-white border-l border-gray-200 flex flex-col min-h-0" style={{ flex: '0 0 30%', minWidth: '300px' }}>
-          {/* Writing Buddy Header - OPTIMIZED */}
-          <div className="writing-buddy-header bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 border-b border-gray-200 flex-shrink-0 p-3">
+          {/* Writing Buddy Header - FIXED AND VISIBLE */}
+          <div className="writing-buddy-header bg-gradient-to-r from-purple-500 to-pink-500 text-white border-b border-gray-200 flex-shrink-0 p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <Bot className="w-4 h-4 text-purple-600" />
-                <h3 className="font-semibold text-purple-800 text-sm">Writing Buddy</h3>
+                <Heart className="w-5 h-5 text-white" />
+                <h2 className="text-xl font-bold text-white">Writing Buddy</h2>
               </div>
               <button
                 onClick={toggleWritingBuddy}
-                className="p-1 hover:bg-purple-200 rounded-lg transition-colors"
+                className="p-1 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors"
               >
-                <PanelRightClose className="w-4 h-4 text-purple-600" />
+                <PanelRightClose className="w-5 h-5 text-white" />
               </button>
             </div>
           </div>
