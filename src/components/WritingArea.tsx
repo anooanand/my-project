@@ -457,394 +457,81 @@ export default function WritingArea({
     setIsTimerRunning(false);
   };
 
-  // Format time display
-  const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+  // Toggle fullscreen
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
   };
 
-  // Handle chat input for Writing Buddy
+  // Handle chat submission
   const handleChatSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!chatInput.trim()) return;
 
-    const newUserMessage = { id: Date.now().toString(), text: chatInput, sender: 'user' as const, timestamp: new Date() };
-    setChatMessages((prevMessages) => [...prevMessages, newUserMessage]);
+    const userMessage = {
+      id: Date.now().toString(),
+      text: chatInput,
+      sender: 'user' as const,
+      timestamp: new Date()
+    };
+
+    setChatMessages(prev => [...prev, userMessage]);
     setChatInput('');
     setIsChatLoading(true);
 
     try {
-      // Simulate AI response
-      const aiResponseText = `Thanks for your message! I'm still under development, but I'm learning to provide helpful feedback. You said: "${chatInput}"`;
-      const newAiMessage = { id: (Date.now() + 1).toString(), text: aiResponseText, sender: 'ai' as const, timestamp: new Date() };
-      setTimeout(() => {
-        setChatMessages((prevMessages) => [...prevMessages, newAiMessage]);
-        setIsChatLoading(false);
-      }, 1000);
+      // Simulate AI response (replace with actual AI call)
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      const aiMessage = {
+        id: (Date.now() + 1).toString(),
+        text: `I understand you're asking about "${chatInput}". Here's some helpful advice for your ${textType} writing...`,
+        sender: 'ai' as const,
+        timestamp: new Date()
+      };
+
+      setChatMessages(prev => [...prev, aiMessage]);
     } catch (error) {
       console.error('Error sending chat message:', error);
+    } finally {
       setIsChatLoading(false);
     }
   };
 
-  // Toggle fullscreen mode
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen();
-      setIsFullscreen(true);
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-        setIsFullscreen(false);
-      }
-    }
-  };
-
-  // Handle keyboard shortcuts.
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.altKey && e.key === 's') { // Alt + S for Save
-        e.preventDefault();
-        // handleSave(); // Implement save functionality
-        alert('Save functionality not yet implemented.');
-      }
-      if (e.altKey && e.key === 'f') { // Alt + F for Fullscreen
-        e.preventDefault();
-        toggleFullscreen();
-      }
-      if (e.altKey && e.key === 'e') { // Alt + E for Evaluate
-        e.preventDefault();
-        handleEvaluate();
-      }
-      if (e.altKey && e.key === 'p') { // Alt + P for Planning
-        e.preventDefault();
-        setShowPlanningModal(true);
-      }
-      if (e.altKey && e.key === 't') { // Alt + T for Timer
-        e.preventDefault();
-        setIsTimerRunning(prev => !prev);
-      }
-      if (e.altKey && e.key === 'g') { // Alt + G for Generate Prompt
-        e.preventDefault();
-        // generateNewPrompt(); // Implement generate new prompt functionality
-        alert('Generate new prompt functionality not yet implemented.');
-      }
-      if (e.altKey && e.key === 'h') { // Alt + H for Help
-        e.preventDefault();
-        setActiveTab('help');
-      }
-      if (e.altKey && e.key === 'c') { // Alt + C for Coach
-        e.preventDefault();
-        setActiveTab('ai-coach');
-      }
-      if (e.altKey && e.key === 'v') { // Alt + V for Vocabulary
-        e.preventDefault();
-        setActiveTab('vocabulary');
-      }
-      if (e.altKey && e.key === 'r') { // Alt + R for Rephrase
-        e.preventDefault();
-        // handleRephrase(); // Implement rephrase functionality
-        alert('Rephrase functionality not yet implemented.');
-      }
-      if (e.altKey && e.key === 'd') { // Alt + D for Download
-        e.preventDefault();
-        // handleDownload(); // Implement download functionality
-        alert('Download functionality not yet implemented.');
-      }
-      if (e.altKey && e.key === 'u') { // Alt + U for Upload
-        e.preventDefault();
-        // handleUpload(); // Implement upload functionality
-        alert('Upload functionality not yet implemented.');
-      }
-      if (e.altKey && e.key === 'x') { // Alt + X for Exam Mode
-        e.preventDefault();
-        if (examMode) {
-          stopExamMode();
-        } else {
-          startExamMode();
-        }
-      }
-      if (e.altKey && e.key === 'w') { // Alt + W for Word Count
-        e.preventDefault();
-        setShowWordCount(prev => !prev);
-      }
-      if (e.altKey && e.key === 'z') { // Alt + Z for Undo
-        e.preventDefault();
-        // handleUndo(); // Implement undo functionality
-        alert('Undo functionality not yet implemented.');
-      }
-      if (e.altKey && e.key === 'y') { // Alt + Y for Redo
-        e.preventDefault();
-        // handleRedo(); // Implement redo functionality
-        alert('Redo functionality not yet implemented.');
-      }
-      if (e.altKey && e.key === 'k') { // Alt + K for Structure Guide
-        e.preventDefault();
-        setShowStructureGuide(prev => !prev);
-      }
-      if (e.altKey && e.key === 'm') { // Alt + M for Menu
-        e.preventDefault();
-        // toggleMenu(); // Implement menu toggle functionality
-        alert('Menu toggle functionality not yet implemented.');
-      }
-      if (e.altKey && e.key === 'a') { // Alt + A for Analysis
-        e.preventDefault();
-        setActiveTab('analysis');
-      }
-      if (e.altKey && e.key === 'i') { // Alt + I for Insights
-        e.preventDefault();
-        setActiveTab('insights');
-      }
-      if (e.altKey && e.key === 'o') { // Alt + O for Options
-        e.preventDefault();
-        setActiveTab('options');
-      }
-      if (e.altKey && e.key === 'l') { // Alt + L for Learning
-        e.preventDefault();
-        setActiveTab('learning');
-      }
-      if (e.altKey && e.key === 'j') { // Alt + J for Journal
-        e.preventDefault();
-        setActiveTab('journal');
-      }
-      if (e.altKey && e.key === 'q') { // Alt + Q for Quick Tips
-        e.preventDefault();
-        setActiveTab('quick-tips');
-      }
-      if (e.altKey && e.key === 'b') { // Alt + B for Brainstorming
-        e.preventDefault();
-        setActiveTab('brainstorming');
-      }
-      if (e.altKey && e.key === 'p') { // Alt + P for Progress
-        e.preventDefault();
-        setActiveTab('progress');
-      }
-      if (e.altKey && e.key === 's') { // Alt + S for Settings
-        e.preventDefault();
-        setActiveTab('settings');
-      }
-      if (e.altKey && e.key === 'g') { // Alt + G for Goals
-        e.preventDefault();
-        setActiveTab('goals');
-      }
-      if (e.altKey && e.key === 'n') { // Alt + N for Notes
-        e.preventDefault();
-        setActiveTab('notes');
-      }
-      if (e.altKey && e.key === 'f') { // Alt + F for Feedback
-        e.preventDefault();
-        setActiveTab('feedback');
-      }
-      if (e.altKey && e.key === 't') { // Alt + T for Tools
-        e.preventDefault();
-        setActiveTab('tools');
-      }
-      if (e.altKey && e.key === 'd') { // Alt + D for Dictionary
-        e.preventDefault();
-        setActiveTab('dictionary');
-      }
-      if (e.altKey && e.key === 'e') { // Alt + E for Examples
-        e.preventDefault();
-        setActiveTab('examples');
-      }
-      if (e.altKey && e.key === 'c') { // Alt + C for Chat
-        e.preventDefault();
-        setActiveTab('chat');
-      }
-      if (e.altKey && e.key === 'v') { // Alt + V for Voice
-        e.preventDefault();
-        setActiveTab('voice');
-      }
-      if (e.altKey && e.key === 'a') { // Alt + A for Audio
-        e.preventDefault();
-        setActiveTab('audio');
-      }
-      if (e.altKey && e.key === 'i') { // Alt + I for Image
-        e.preventDefault();
-        setActiveTab('image');
-      }
-      if (e.altKey && e.key === 'l') { // Alt + L for Link
-        e.preventDefault();
-        setActiveTab('link');
-      }
-      if (e.altKey && e.key === 'h') { // Alt + H for Hash
-        e.preventDefault();
-        setActiveTab('hash');
-      }
-      if (e.altKey && e.key === 't') { // Alt + T for Type
-        e.preventDefault();
-        setActiveTab('type');
-      }
-      if (e.altKey && e.key === 'a') { // Alt + A for Align Left
-        e.preventDefault();
-        setActiveTab('align-left');
-      }
-      if (e.altKey && e.key === 'c') { // Alt + C for Align Center
-        e.preventDefault();
-        setActiveTab('align-center');
-      }
-      if (e.altKey && e.key === 'r') { // Alt + R for Align Right
-        e.preventDefault();
-        setActiveTab('align-right');
-      }
-      if (e.altKey && e.key === 'b') { // Alt + B for Bold
-        e.preventDefault();
-        setActiveTab('bold');
-      }
-      if (e.altKey && e.key === 'i') { // Alt + I for Italic
-        e.preventDefault();
-        setActiveTab('italic');
-      }
-      if (e.altKey && e.key === 'u') { // Alt + U for Underline
-        e.preventDefault();
-        setActiveTab('underline');
-      }
-      if (e.altKey && e.key === 'l') { // Alt + L for List
-        e.preventDefault();
-        setActiveTab('list');
-      }
-      if (e.altKey && e.key === 'o') { // Alt + O for Ordered List
-        e.preventDefault();
-        setActiveTab('ordered-list');
-      }
-      if (e.altKey && e.key === 'q') { // Alt + Q for Quote
-        e.preventDefault();
-        setActiveTab('quote');
-      }
-      if (e.altKey && e.key === 'c') { // Alt + C for Code
-        e.preventDefault();
-        setActiveTab('code');
-      }
-      if (e.altKey && e.key === 's') { // Alt + S for Scissors
-        e.preventDefault();
-        setActiveTab('scissors');
-      }
-      if (e.altKey && e.key === 'p') { // Alt + P for Clipboard
-        e.preventDefault();
-        setActiveTab('clipboard');
-      }
-      if (e.altKey && e.key === 's') { // Alt + S for Search
-        e.preventDefault();
-        setActiveTab('search');
-      }
-      if (e.altKey && e.key === 'f') { // Alt + F for Filter
-        e.preventDefault();
-        setActiveTab('filter');
-      }
-      if (e.altKey && e.key === 'a') { // Alt + A for Sort Asc
-        e.preventDefault();
-        setActiveTab('sort-asc');
-      }
-      if (e.altKey && e.key === 'd') { // Alt + D for Sort Desc
-        e.preventDefault();
-        setActiveTab('sort-desc');
-      }
-      if (e.altKey && e.key === 'g') { // Alt + G for Grid
-        e.preventDefault();
-        setActiveTab('grid');
-      }
-      if (e.altKey && e.key === 'l') { // Alt + L for Layout
-        e.preventDefault();
-        setActiveTab('layout');
-      }
-      if (e.altKey && e.key === 's') { // Alt + S for Sidebar
-        e.preventDefault();
-        setActiveTab('sidebar');
-      }
-      if (e.altKey && e.key === 'm') { // Alt + M for Menu
-        e.preventDefault();
-        setActiveTab('menu');
-      }
-      if (e.altKey && e.key === 'h') { // Alt + H for More Horizontal
-        e.preventDefault();
-        setActiveTab('more-horizontal');
-      }
-      if (e.altKey && e.key === 'v') { // Alt + V for More Vertical
-        e.preventDefault();
-        setActiveTab('more-vertical');
-      }
-      if (e.altKey && e.key === 'c') { // Alt + C for Chevron Left
-        e.preventDefault();
-        setActiveTab('chevron-left');
-      }
-      if (e.altKey && e.key === 'r') { // Alt + R for Chevron Right
-        e.preventDefault();
-        setActiveTab('chevron-right');
-      }
-      if (e.altKey && e.key === 'u') { // Alt + U for Arrow Up
-        e.preventDefault();
-        setActiveTab('arrow-up');
-      }
-      if (e.altKey && e.key === 'd') { // Alt + D for Arrow Down
-        e.preventDefault();
-        setActiveTab('arrow-down');
-      }
-      if (e.altKey && e.key === 'l') { // Alt + L for Arrow Left
-        e.preventDefault();
-        setActiveTab('arrow-left');
-      }
-      if (e.altKey && e.key === 'r') { // Alt + R for Arrow Right
-        e.preventDefault();
-        setActiveTab('arrow-right');
-      }
-      if (e.altKey && e.key === 't') { // Alt + T for Timer
-        e.preventDefault();
-        setActiveTab('timer');
-      }
-      if (e.altKey && e.key === 's') { // Alt + S for Send
-        e.preventDefault();
-        setActiveTab('send');
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [examMode, isTimerRunning, handleEvaluate, toggleFullscreen]);
-
   return (
     <div className="flex flex-col h-full bg-gray-100 dark:bg-gray-900">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 shadow-md">
-        <div className="flex items-center space-x-4">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Writing Adventure!</h1>
-          <span className="text-sm text-gray-500 dark:text-gray-400">Unleash Your Creativity</span>
-        </div>
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={() => setShowPlanningModal(true)}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-          >
-            <Sparkles className="inline-block w-4 h-4 mr-2" />Planning Phase
-          </button>
-          <button
-            onClick={startExamMode}
-            className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50"
-          >
-            <Clock className="inline-block w-4 h-4 mr-2" />Start Exam Mode
-          </button>
-          <button
-            onClick={() => setShowStructureGuide(true)}
-            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
-          >
-            <BookOpen className="inline-block w-4 h-4 mr-2" />Structure Guide
-          </button>
-        </div>
-      </div>
-
       {/* Main Content Area */}
       <div className="flex flex-1 overflow-hidden">
         {/* Writing Area */}
         <div className="flex-1 flex flex-col p-6 overflow-auto">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-4">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
               <Lightbulb className="inline-block w-5 h-5 mr-2 text-yellow-500" />Your Writing Prompt
             </h2>
             <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
               {prompt || 'Loading prompt...'}
             </p>
+          </div>
+
+          {/* MOVED BUTTONS: Planning Phase, Start Exam Mode, Structure Guide - Now below prompt */}
+          <div className="flex items-center justify-center space-x-4 mb-4">
+            <button
+              onClick={() => setShowPlanningModal(true)}
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+            >
+              <Sparkles className="inline-block w-4 h-4 mr-2" />Planning Phase
+            </button>
+            <button
+              onClick={startExamMode}
+              className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50"
+            >
+              <Clock className="inline-block w-4 h-4 mr-2" />Start Exam Mode
+            </button>
+            <button
+              onClick={() => setShowStructureGuide(true)}
+              className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+            >
+              <BookOpen className="inline-block w-4 h-4 mr-2" />Structure Guide
+            </button>
           </div>
 
           <div className="flex-1 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden flex flex-col">
@@ -861,25 +548,32 @@ export default function WritingArea({
               className="flex-1 p-4 text-lg leading-relaxed text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 focus:outline-none resize-none"
               style={{ fontSize: `${fontSize}px`, lineHeight: lineHeight }}
             />
-            <WritingStatusBar 
-              wordCount={wordCount}
-              characterCount={characterCount}
-              readingTime={readingTime}
-              timeSpent={timeSpent}
-              isTimerRunning={isTimerRunning}
-              toggleTimer={() => setIsTimerRunning(prev => !prev)}
-              examMode={examMode}
-              examTimeRemaining={examTimeRemaining}
-              targetWordCount={targetWordCount}
-            />
-          </div>
-
-          {/* Submit Button - Prominently positioned and ALWAYS VISIBLE */}
-          <div className="bg-white border-t-2 border-gray-300 p-6 flex justify-center shadow-2xl sticky bottom-0 z-50">
+            
+            {/* CONSOLIDATED BOTTOM ELEMENTS: All in one line to save space */}
+            <div className="bg-white border-t border-gray-200 p-3 flex items-center justify-between text-sm">
+              <div className="flex items-center space-x-6">
+                <div className="flex items-center space-x-1">
+                  <FileText className="w-4 h-4 text-blue-600" />
+                  <span className="font-medium text-gray-700">{wordCount} words</span>
+                </div>
+                <div className="flex items-center space-x-1 text-orange-600">
+                  <AlertCircle className="w-4 h-4" />
+                  <span>Write more!</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <Zap className="w-4 h-4 text-purple-600" />
+                  <span className="text-gray-600">{characterCount} characters</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <Clock className="w-4 h-4 text-green-600" />
+                  <span className="text-gray-600">{readingTime} min read</span>
+                </div>
+              </div>
+              
               <button
                 onClick={handleEvaluate}
                 disabled={isEvaluating}
-                className="mt-6 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 flex items-center justify-center text-sm"
+                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 flex items-center justify-center text-sm"
               >
                 {isEvaluating ? (
                   <>
@@ -893,6 +587,7 @@ export default function WritingArea({
                   </>
                 )}
               </button>
+            </div>
           </div>
         </div>
 
@@ -936,70 +631,141 @@ export default function WritingArea({
               onClick={() => setActiveTab('ai-coach')}
               className={`flex-1 py-2 px-4 rounded-lg text-sm font-semibold transition-colors ${activeTab === 'ai-coach' ? 'bg-purple-700 text-white' : 'bg-purple-500 text-purple-100 hover:bg-purple-600'}`}
             >
-              <Sparkles className="inline-block w-4 h-4 mr-2" />Coach
+              <Bot className="inline-block w-4 h-4 mr-2" />Coach
             </button>
           </div>
 
-          {/* Content based on active tab */}
-          <div className="flex-1 bg-purple-700 bg-opacity-30 rounded-lg p-4 overflow-y-auto custom-scrollbar">
+          {/* Tab Content */}
+          <div className="flex-1 overflow-y-auto">
             {activeTab === 'analysis' && (
               <div>
-                <h3 className="text-xl font-bold mb-4">Analysis</h3>
-                <div className="bg-purple-800 bg-opacity-50 p-4 rounded-lg mb-4">
-                  <p className="text-purple-200 text-sm">Word Count</p>
-                  <p className="text-white text-2xl font-bold">Current: {wordCount} <span className="text-lg text-purple-300">Target: {targetWordCount} words</span></p>
+                <h3 className="text-xl font-bold mb-4">Text Analysis</h3>
+                <div className="space-y-4">
+                  <div className="bg-purple-800 bg-opacity-50 p-4 rounded-lg">
+                    <h4 className="font-semibold mb-2">Writing Statistics</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span>Words:</span>
+                        <span className="font-bold">{wordCount}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Characters:</span>
+                        <span className="font-bold">{characterCount}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Reading Time:</span>
+                        <span className="font-bold">{readingTime} min</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Time Spent:</span>
+                        <span className="font-bold">{Math.floor(timeSpent / 60)}:{(timeSpent % 60).toString().padStart(2, '0')}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-purple-800 bg-opacity-50 p-4 rounded-lg">
+                    <h4 className="font-semibold mb-2">Writing Quality</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span>Sentence Variety:</span>
+                        <span className="text-green-300">Good</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Vocabulary Level:</span>
+                        <span className="text-yellow-300">Intermediate</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Readability:</span>
+                        <span className="text-green-300">Excellent</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="bg-purple-800 bg-opacity-50 p-4 rounded-lg mb-4">
-                  <p className="text-purple-200 text-sm">Reading Time</p>
-                  <p className="text-white text-2xl font-bold">{readingTime} min</p>
-                  <p className="text-purple-200 text-sm">Based on 200 words/minute</p>
-                </div>
-                <div className="bg-purple-800 bg-opacity-50 p-4 rounded-lg mb-4">
-                  <p className="text-purple-200 text-sm">Writing Speed</p>
-                  <p className="text-white text-2xl font-bold">{progressData.averageWordsPerMinute} wpm</p>
-                  <p className="text-purple-200 text-sm">Target: 12-15 words/minute</p>
-                </div>
-                <button className="w-full py-2 px-4 bg-purple-500 text-white rounded-lg hover:bg-purple-600 text-sm font-semibold">
-                  Analyze Text Type
-                </button>
               </div>
             )}
             {activeTab === 'vocabulary' && (
               <div>
-                <h3 className="text-xl font-bold mb-4">Vocabulary Builder</h3>
-                <p className="text-purple-200 mb-4">Identify and improve your vocabulary usage.</p>
-                {vocabularyWords.length > 0 ? (
-                  <ul className="list-disc list-inside text-purple-200 space-y-2">
-                    {vocabularyWords.map((word, index) => (
-                      <li key={index}>{word}</li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-purple-300">Start writing to see vocabulary suggestions.</p>
-                )}
-                <button className="w-full mt-4 py-2 px-4 bg-purple-500 text-white rounded-lg hover:bg-purple-600 text-sm font-semibold">
-                  Get Vocabulary Suggestions
-                </button>
+                <h3 className="text-xl font-bold mb-4">Vocabulary Enhancement</h3>
+                <div className="space-y-4">
+                  <div className="bg-purple-800 bg-opacity-50 p-4 rounded-lg">
+                    <h4 className="font-semibold mb-2">Suggested Words</h4>
+                    <div className="flex flex-wrap gap-2">
+                      {['magnificent', 'extraordinary', 'compelling', 'vivid', 'eloquent'].map((word, index) => (
+                        <span key={index} className="bg-purple-600 px-3 py-1 rounded-full text-sm cursor-pointer hover:bg-purple-500 transition-colors">
+                          {word}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div className="bg-purple-800 bg-opacity-50 p-4 rounded-lg">
+                    <h4 className="font-semibold mb-2">Word Alternatives</h4>
+                    <p className="text-sm text-purple-200 mb-2">Select text in your writing to see synonyms</p>
+                    {selectedText && (
+                      <div>
+                        <p className="text-sm mb-2">Alternatives for "{selectedText}":</p>
+                        <div className="flex flex-wrap gap-2">
+                          {synonyms.map((syn, index) => (
+                            <span
+                              key={index}
+                              onClick={() => replaceSynonym(syn)}
+                              className="bg-blue-600 px-3 py-1 rounded-full text-sm cursor-pointer hover:bg-blue-500 transition-colors"
+                            >
+                              {syn}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
             {activeTab === 'progress' && (
               <div>
-                <h3 className="text-xl font-bold mb-4">Progress Tracking</h3>
-                <div className="bg-purple-800 bg-opacity-50 p-4 rounded-lg mb-4">
-                  <p className="text-purple-200 text-sm">Total Words Written</p>
-                  <p className="text-white text-2xl font-bold">{progressData.wordsWritten}</p>
+                <h3 className="text-xl font-bold mb-4">Writing Progress</h3>
+                <div className="space-y-4">
+                  <div className="bg-purple-800 bg-opacity-50 p-4 rounded-lg">
+                    <h4 className="font-semibold mb-2">Today's Session</h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span>Words Written:</span>
+                        <span className="font-bold">{progressData.wordsWritten}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Time Spent:</span>
+                        <span className="font-bold">{Math.floor(progressData.timeSpent / 60)}m {progressData.timeSpent % 60}s</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Words/Minute:</span>
+                        <span className="font-bold">{progressData.averageWordsPerMinute}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-purple-800 bg-opacity-50 p-4 rounded-lg">
+                    <h4 className="font-semibold mb-2">Target Progress</h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <span>Word Count Goal:</span>
+                        <span>{targetWordCount} words</span>
+                      </div>
+                      <div className="w-full bg-purple-900 rounded-full h-2">
+                        <div 
+                          className="bg-green-400 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${Math.min((wordCount / targetWordCount) * 100, 100)}%` }}
+                        ></div>
+                      </div>
+                      <p className="text-xs text-purple-200">
+                        {wordCount >= targetWordCount ? 'Goal achieved! 🎉' : `${targetWordCount - wordCount} words to go`}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <button className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg transition-colors">
+                    View Detailed Progress
+                  </button>
                 </div>
-                <div className="bg-purple-800 bg-opacity-50 p-4 rounded-lg mb-4">
-                  <p className="text-purple-200 text-sm">Total Time Spent</p>
-                  <p className="text-white text-2xl font-bold">{formatTime(progressData.timeSpent)}</p>
-                </div>
-                <div className="bg-purple-800 bg-opacity-50 p-4 rounded-lg mb-4">
-                  <p className="text-purple-200 text-sm">Sessions Completed</p>
-                  <p className="text-white text-2xl font-bold">{progressData.sessionsCompleted}</p>
-                </div>
-                <button className="w-full mt-4 py-2 px-4 bg-purple-500 text-white rounded-lg hover:bg-purple-600 text-sm font-semibold">
-                  View Detailed Progress
-                </button>
               </div>
             )}
             {activeTab === 'ai-coach' && (
@@ -1233,3 +999,46 @@ export default function WritingArea({
     </div>
   );
 }
+
+// Placeholder for PlanningToolModal component
+const PlanningToolModal = ({ isOpen, onClose, onSavePlan, textType, content }: any) => {
+  if (!isOpen) return null;
+  
+  return (
+    <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto relative">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Planning Tool</h2>
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+        >
+          <X className="w-6 h-6" />
+        </button>
+        <p className="text-gray-700 dark:text-gray-300 mb-4">
+          Use this space to plan your {textType} writing. Think about your main ideas, structure, and key points.
+        </p>
+        <textarea
+          className="w-full h-64 p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Write your planning notes here..."
+        />
+        <div className="flex justify-end space-x-4 mt-6">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              onSavePlan('Planning notes saved');
+              onClose();
+            }}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            Save Plan
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
