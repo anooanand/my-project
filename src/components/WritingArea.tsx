@@ -497,11 +497,11 @@ export default function WritingArea({
       <div className="flex-1 flex overflow-hidden">
         {/* Writing Area */}
         <div className="flex-1 flex flex-col bg-white dark:bg-gray-800 shadow-lg">
-          {/* Prompt Display */}
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 shadow-lg">
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="text-lg font-bold flex items-center">
-                <PenTool className="w-5 h-5 mr-2" />
+          {/* Clean Prompt Display - Blue Gradient Header */}
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 shadow-lg">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-xl font-bold flex items-center">
+                <PenTool className="w-6 h-6 mr-3" />
                 Writing Prompt
               </h2>
               <div className="flex items-center space-x-2">
@@ -510,18 +510,18 @@ export default function WritingArea({
                   className="p-2 rounded-full hover:bg-white hover:bg-opacity-20 transition-colors"
                   title="Structure Guide"
                 >
-                  <BookOpen className="w-4 h-4" />
+                  <BookOpen className="w-5 h-5" />
                 </button>
                 <button
                   onClick={() => setShowPlanningModal(true)}
                   className="p-2 rounded-full hover:bg-white hover:bg-opacity-20 transition-colors"
                   title="Planning Tool"
                 >
-                  <Target className="w-4 h-4" />
+                  <Target className="w-5 h-5" />
                 </button>
               </div>
             </div>
-            <p className="text-blue-100 leading-relaxed">{prompt}</p>
+            <p className="text-blue-100 leading-relaxed text-lg">{prompt}</p>
           </div>
 
           {/* Writing Area */}
@@ -533,44 +533,44 @@ export default function WritingArea({
               onMouseUp={handleTextSelection}
               onKeyUp={handleTextSelection}
               placeholder="Start writing your amazing story here! Let your creativity flow and bring your ideas to life..."
-              className="flex-1 p-4 text-lg leading-relaxed text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 focus:outline-none resize-none"
+              className="flex-1 p-6 text-lg leading-relaxed text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 focus:outline-none resize-none"
               style={{ fontSize: `${fontSize}px`, lineHeight: lineHeight }}
             />
 
-            {/* ULTRA-COMPACT BOTTOM ELEMENTS: All in one line to save maximum space */}
-            <div className="bg-white border-t border-gray-200 p-2 flex items-center justify-between text-xs">
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-1">
-                  <FileText className="w-3 h-3 text-blue-600" />
-                  <span className="font-medium text-gray-700">{wordCount} words</span>
+            {/* Clean Bottom Status Bar */}
+            <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between">
+              <div className="flex items-center space-x-6 text-sm text-gray-600 dark:text-gray-400">
+                <div className="flex items-center space-x-2">
+                  <FileText className="w-4 h-4 text-blue-600" />
+                  <span className="font-medium">{wordCount} words</span>
                 </div>
-                <div className="flex items-center space-x-1 text-orange-600">
-                  <AlertCircle className="w-3 h-3" />
+                <div className="flex items-center space-x-2">
+                  <Clock className="w-4 h-4 text-orange-600" />
                   <span>Write more!</span>
                 </div>
-                <div className="flex items-center space-x-1">
-                  <Zap className="w-3 h-3 text-purple-600" />
-                  <span className="text-gray-600">{characterCount} characters</span>
+                <div className="flex items-center space-x-2">
+                  <Zap className="w-4 h-4 text-purple-600" />
+                  <span>{characterCount} characters</span>
                 </div>
-                <div className="flex items-center space-x-1">
-                  <Clock className="w-3 h-3 text-green-600" />
-                  <span className="text-gray-600">{readingTime} min read</span>
+                <div className="flex items-center space-x-2">
+                  <Clock className="w-4 h-4 text-green-600" />
+                  <span>{readingTime} min read</span>
                 </div>
               </div>
 
               <button
                 onClick={handleEvaluate}
                 disabled={isEvaluating}
-                className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 focus:outline-none focus:ring-1 focus:ring-green-500 focus:ring-opacity-50 flex items-center justify-center text-xs"
+                className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 flex items-center justify-center"
               >
                 {isEvaluating ? (
                   <>
-                    <span className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></span>
+                    <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
                     Evaluating...
                   </>
                 ) : (
                   <>
-                    <Send className="w-3 h-3 mr-1" />
+                    <Send className="w-4 h-4 mr-2" />
                     Submit for Evaluation
                   </>
                 )}
@@ -579,60 +579,60 @@ export default function WritingArea({
           </div>
         </div>
 
-        {/* OPTIMIZED Right Sidebar - Writing Buddy with smaller text and compact design */}
-        <div className="w-80 bg-gradient-to-b from-purple-600 to-indigo-700 text-white p-4 flex flex-col shadow-lg overflow-auto relative">
-          {/* COMPACT HEADER */}
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-bold flex items-center">
-              <Bot className="w-5 h-5 mr-2" />Writing Buddy
+        {/* Right Sidebar - Writing Buddy */}
+        <div className="w-96 bg-gradient-to-b from-purple-600 to-indigo-700 text-white p-6 flex flex-col shadow-lg overflow-auto relative">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold flex items-center">
+              <Bot className="w-6 h-6 mr-3" />Writing Buddy
             </h2>
             <button
               onClick={() => { /* Toggle visibility or settings */ }}
-              className="p-1 rounded-full hover:bg-white hover:bg-opacity-20 transition-colors"
+              className="p-2 rounded-full hover:bg-white hover:bg-opacity-20 transition-colors"
             >
-              <Settings className="w-4 h-4" />
+              <Settings className="w-5 h-5" />
             </button>
           </div>
 
-          <p className="text-purple-200 mb-3 text-sm">Your AI writing assistant</p>
+          <p className="text-purple-200 mb-4">Your AI writing assistant</p>
 
-          {/* COMPACT TABS - Smaller buttons and text */}
-          <div className="flex space-x-1 mb-3">
+          {/* Tabs */}
+          <div className="flex space-x-1 mb-4">
             <button
               onClick={() => setActiveTab('ai-coach')}
-              className={`flex-1 py-1 px-2 rounded text-xs font-semibold transition-colors ${activeTab === 'ai-coach' ? 'bg-purple-700 text-white' : 'bg-purple-500 text-purple-100 hover:bg-purple-600'}`}
+              className={`flex-1 py-2 px-3 rounded text-sm font-semibold transition-colors ${activeTab === 'ai-coach' ? 'bg-purple-700 text-white' : 'bg-purple-500 text-purple-100 hover:bg-purple-600'}`}
             >
-              <Bot className="inline-block w-3 h-3 mr-1" />Coach
+              <Bot className="inline-block w-4 h-4 mr-2" />Coach
             </button>
             <button
               onClick={() => setActiveTab('analysis')}
-              className={`flex-1 py-1 px-2 rounded text-xs font-semibold transition-colors ${activeTab === 'analysis' ? 'bg-purple-700 text-white' : 'bg-purple-500 text-purple-100 hover:bg-purple-600'}`}
+              className={`flex-1 py-2 px-3 rounded text-sm font-semibold transition-colors ${activeTab === 'analysis' ? 'bg-purple-700 text-white' : 'bg-purple-500 text-purple-100 hover:bg-purple-600'}`}
             >
-              <BarChart3 className="inline-block w-3 h-3 mr-1" />Analysis
+              <BarChart3 className="inline-block w-4 h-4 mr-2" />Analysis
             </button>
             <button
               onClick={() => setActiveTab('vocabulary')}
-              className={`flex-1 py-1 px-2 rounded text-xs font-semibold transition-colors ${activeTab === 'vocabulary' ? 'bg-purple-700 text-white' : 'bg-purple-500 text-purple-100 hover:bg-purple-600'}`}
+              className={`flex-1 py-2 px-3 rounded text-sm font-semibold transition-colors ${activeTab === 'vocabulary' ? 'bg-purple-700 text-white' : 'bg-purple-500 text-purple-100 hover:bg-purple-600'}`}
             >
-              <BookOpen className="inline-block w-3 h-3 mr-1" />Vocabulary
+              <BookOpen className="inline-block w-4 h-4 mr-2" />Vocabulary
             </button>
             <button
               onClick={() => setActiveTab('progress')}
-              className={`flex-1 py-1 px-2 rounded text-xs font-semibold transition-colors ${activeTab === 'progress' ? 'bg-purple-700 text-white' : 'bg-purple-500 text-purple-100 hover:bg-purple-600'}`}
+              className={`flex-1 py-2 px-3 rounded text-sm font-semibold transition-colors ${activeTab === 'progress' ? 'bg-purple-700 text-white' : 'bg-purple-500 text-purple-100 hover:bg-purple-600'}`}
             >
-              <TrendingUp className="inline-block w-3 h-3 mr-1" />Progress
+              <TrendingUp className="inline-block w-4 h-4 mr-2" />Progress
             </button>
           </div>
 
-          {/* COMPACT TAB CONTENT with smaller text sizes */}
+          {/* Tab Content */}
           <div className="flex-1 overflow-y-auto">
             {activeTab === 'analysis' && (
               <div>
-                <h3 className="text-sm font-bold mb-2">Text Analysis</h3>
-                <div className="space-y-2">
-                  <div className="bg-purple-800 bg-opacity-50 p-2 rounded">
-                    <h4 className="font-semibold mb-1 text-xs">Writing Statistics</h4>
-                    <div className="space-y-1 text-xs">
+                <h3 className="text-lg font-bold mb-3">Text Analysis</h3>
+                <div className="space-y-3">
+                  <div className="bg-purple-800 bg-opacity-50 p-3 rounded">
+                    <h4 className="font-semibold mb-2">Writing Statistics</h4>
+                    <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span>Words:</span>
                         <span className="font-bold">{wordCount}</span>
@@ -652,9 +652,9 @@ export default function WritingArea({
                     </div>
                   </div>
 
-                  <div className="bg-purple-800 bg-opacity-50 p-2 rounded">
-                    <h4 className="font-semibold mb-1 text-xs">Writing Quality</h4>
-                    <div className="space-y-1 text-xs">
+                  <div className="bg-purple-800 bg-opacity-50 p-3 rounded">
+                    <h4 className="font-semibold mb-2">Writing Quality</h4>
+                    <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span>Sentence Variety:</span>
                         <span className="text-green-300">Good</span>
@@ -674,31 +674,31 @@ export default function WritingArea({
             )}
             {activeTab === 'vocabulary' && (
               <div>
-                <h3 className="text-sm font-bold mb-2">Vocabulary Enhancement</h3>
-                <div className="space-y-2">
-                  <div className="bg-purple-800 bg-opacity-50 p-2 rounded">
-                    <h4 className="font-semibold mb-1 text-xs">Suggested Words</h4>
-                    <div className="flex flex-wrap gap-1">
+                <h3 className="text-lg font-bold mb-3">Vocabulary Enhancement</h3>
+                <div className="space-y-3">
+                  <div className="bg-purple-800 bg-opacity-50 p-3 rounded">
+                    <h4 className="font-semibold mb-2">Suggested Words</h4>
+                    <div className="flex flex-wrap gap-2">
                       {['magnificent', 'extraordinary', 'compelling', 'vivid', 'eloquent'].map((word, index) => (
-                        <span key={index} className="bg-purple-600 px-2 py-1 rounded-full text-xs cursor-pointer hover:bg-purple-500 transition-colors">
+                        <span key={index} className="bg-purple-600 px-3 py-1 rounded-full text-sm cursor-pointer hover:bg-purple-500 transition-colors">
                           {word}
                         </span>
                       ))}
                     </div>
                   </div>
 
-                  <div className="bg-purple-800 bg-opacity-50 p-2 rounded">
-                    <h4 className="font-semibold mb-1 text-xs">Word Alternatives</h4>
-                    <p className="text-xs text-purple-200 mb-1">Select text in your writing to see synonyms</p>
+                  <div className="bg-purple-800 bg-opacity-50 p-3 rounded">
+                    <h4 className="font-semibold mb-2">Word Alternatives</h4>
+                    <p className="text-sm text-purple-200 mb-2">Select text in your writing to see synonyms</p>
                     {selectedText && (
                       <div>
-                        <p className="text-xs mb-1">Alternatives for "{selectedText}":</p>
-                        <div className="flex flex-wrap gap-1">
+                        <p className="text-sm mb-2">Alternatives for "{selectedText}":</p>
+                        <div className="flex flex-wrap gap-2">
                           {synonyms.map((syn, index) => (
                             <span
                               key={index}
                               onClick={() => replaceSynonym(syn)}
-                              className="bg-blue-600 px-2 py-1 rounded-full text-xs cursor-pointer hover:bg-blue-500 transition-colors"
+                              className="bg-blue-600 px-3 py-1 rounded-full text-sm cursor-pointer hover:bg-blue-500 transition-colors"
                             >
                               {syn}
                             </span>
@@ -712,11 +712,11 @@ export default function WritingArea({
             )}
             {activeTab === 'progress' && (
               <div>
-                <h3 className="text-sm font-bold mb-2">Writing Progress</h3>
-                <div className="space-y-2">
-                  <div className="bg-purple-800 bg-opacity-50 p-2 rounded">
-                    <h4 className="font-semibold mb-1 text-xs">Today's Session</h4>
-                    <div className="space-y-1 text-xs">
+                <h3 className="text-lg font-bold mb-3">Writing Progress</h3>
+                <div className="space-y-3">
+                  <div className="bg-purple-800 bg-opacity-50 p-3 rounded">
+                    <h4 className="font-semibold mb-2">Today's Session</h4>
+                    <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span>Words Written:</span>
                         <span className="font-bold">{progressData.wordsWritten}</span>
@@ -732,26 +732,26 @@ export default function WritingArea({
                     </div>
                   </div>
 
-                  <div className="bg-purple-800 bg-opacity-50 p-2 rounded">
-                    <h4 className="font-semibold mb-1 text-xs">Target Progress</h4>
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-xs">
+                  <div className="bg-purple-800 bg-opacity-50 p-3 rounded">
+                    <h4 className="font-semibold mb-2">Target Progress</h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm">
                         <span>Word Count Goal:</span>
                         <span>{targetWordCount} words</span>
                       </div>
-                      <div className="w-full bg-purple-900 rounded-full h-1">
+                      <div className="w-full bg-purple-900 rounded-full h-2">
                         <div
-                          className="bg-green-400 h-1 rounded-full transition-all duration-300"
+                          className="bg-green-400 h-2 rounded-full transition-all duration-300"
                           style={{ width: `${Math.min((wordCount / targetWordCount) * 100, 100)}%` }}
                         ></div>
                       </div>
-                      <p className="text-xs text-purple-200">
+                      <p className="text-sm text-purple-200">
                         {wordCount >= targetWordCount ? 'Goal achieved! 🎉' : `${targetWordCount - wordCount} words to go`}
                       </p>
                     </div>
                   </div>
 
-                  <button className="w-full bg-purple-600 hover:bg-purple-700 text-white py-1 px-2 rounded text-xs transition-colors">
+                  <button className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded transition-colors">
                     View Detailed Progress
                   </button>
                 </div>
@@ -759,12 +759,12 @@ export default function WritingArea({
             )}
             {activeTab === 'ai-coach' && (
               <div className="flex flex-col h-full">
-                <h3 className="text-sm font-bold mb-2">AI Coach</h3>
+                <h3 className="text-lg font-bold mb-3">AI Coach</h3>
                 
                 {/* Evaluation Display */}
                 {evaluation && (
-                  <div className="mb-4 bg-purple-800 bg-opacity-50 p-3 rounded">
-                    <h4 className="text-lg font-semibold text-green-400 mb-2 flex items-center">
+                  <div className="mb-4 bg-purple-800 bg-opacity-50 p-4 rounded">
+                    <h4 className="text-lg font-semibold text-green-400 mb-3 flex items-center">
                       <Award className="w-5 h-5 mr-2" />
                       Overall Score: {evaluation.overallScore}/10
                     </h4>
@@ -775,58 +775,58 @@ export default function WritingArea({
 
                     <div className="grid grid-cols-1 gap-4 mb-4">
                       <div>
-                        <h4 className="text-lg font-semibold text-green-600 dark:text-green-400 mb-2 flex items-center">
-                          <CheckCircle className="w-5 h-5 mr-2" />Strengths
+                        <h4 className="text-base font-semibold text-green-400 mb-2 flex items-center">
+                          <CheckCircle className="w-4 h-4 mr-2" />Strengths
                         </h4>
-                        <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-1">
+                        <ul className="list-disc list-inside text-purple-200 space-y-1 text-sm">
                           {evaluation.strengths.map((strength: string, idx: number) => <li key={idx}>{strength}</li>)}
                         </ul>
                       </div>
                       <div>
-                        <h4 className="text-lg font-semibold text-red-600 dark:text-red-400 mb-2 flex items-center">
-                          <AlertCircle className="w-5 h-5 mr-2" />Areas for Improvement
+                        <h4 className="text-base font-semibold text-red-400 mb-2 flex items-center">
+                          <AlertCircle className="w-4 h-4 mr-2" />Areas for Improvement
                         </h4>
-                        <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-1">
+                        <ul className="list-disc list-inside text-purple-200 space-y-1 text-sm">
                           {evaluation.improvements.map((i: string, idx: number) => <li key={idx}>{i}</li>)}
                         </ul>
                       </div>
                     </div>
 
-                    <div className="mb-6">
-                      <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">Next Steps</h4>
-                      <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-1">
+                    <div className="mb-4">
+                      <h4 className="text-base font-semibold text-purple-200 mb-2">Next Steps</h4>
+                      <ul className="list-disc list-inside text-purple-200 space-y-1 text-sm">
                         {evaluation.nextSteps.map((ns: string, i: number) => <li key={i}>{ns}</li>)}
                       </ul>
                     </div>
 
                     {evaluation.nswCriteria && (
-                      <div className="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
-                        <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">NSW Selective Exam Criteria Scores (out of 10)</h4>
-                        <div className="grid grid-cols-2 gap-4 text-gray-700 dark:text-gray-300">
-                          <div>Ideas and Content: <span className="font-bold text-blue-600 dark:text-blue-400">{evaluation.nswCriteria.ideasAndContent}</span></div>
-                          <div>Text Structure: <span className="font-bold text-blue-600 dark:text-blue-400">{evaluation.nswCriteria.textStructure}</span></div>
-                          <div>Language Features: <span className="font-bold text-blue-600 dark:text-blue-400">{evaluation.nswCriteria.languageFeatures}</span></div>
-                          <div>Grammar and Spelling: <span className="font-bold text-blue-600 dark:text-blue-400">{evaluation.nswCriteria.grammarAndSpelling}</span></div>
+                      <div className="bg-purple-900 bg-opacity-50 p-3 rounded">
+                        <h4 className="text-base font-semibold text-purple-200 mb-2">NSW Selective Exam Criteria Scores (out of 10)</h4>
+                        <div className="grid grid-cols-2 gap-2 text-sm text-purple-200">
+                          <div>Ideas and Content: <span className="font-bold text-blue-400">{evaluation.nswCriteria.ideasAndContent}</span></div>
+                          <div>Text Structure: <span className="font-bold text-blue-400">{evaluation.nswCriteria.textStructure}</span></div>
+                          <div>Language Features: <span className="font-bold text-blue-400">{evaluation.nswCriteria.languageFeatures}</span></div>
+                          <div>Grammar and Spelling: <span className="font-bold text-blue-400">{evaluation.nswCriteria.grammarAndSpelling}</span></div>
                         </div>
                       </div>
                     )}
                   </div>
                 )}
 
-                <div className="flex-1 overflow-y-auto pr-1 mb-2 custom-scrollbar">
+                <div className="flex-1 overflow-y-auto pr-2 mb-3">
                   {chatMessages.length === 0 && (
-                    <p className="text-purple-300 text-center mt-4 text-xs">Ask your Writing Buddy anything!</p>
+                    <p className="text-purple-300 text-center mt-8">Ask your Writing Buddy anything!</p>
                   )}
                   {chatMessages.map((message) => (
-                    <div key={message.id} className={`mb-2 ${message.sender === 'user' ? 'text-right' : 'text-left'}`}>
-                      <span className={`inline-block p-2 rounded text-xs ${message.sender === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>
+                    <div key={message.id} className={`mb-3 ${message.sender === 'user' ? 'text-right' : 'text-left'}`}>
+                      <span className={`inline-block p-3 rounded text-sm ${message.sender === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>
                         {message.text}
                       </span>
                     </div>
                   ))}
                   {isChatLoading && (
                     <div className="text-center">
-                      <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-300 inline-block"></span>
+                      <span className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-300 inline-block"></span>
                     </div>
                   )}
                   <div ref={chatEndRef} />
@@ -837,13 +837,13 @@ export default function WritingArea({
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
                     placeholder="Ask your Writing Buddy..."
-                    className="flex-1 p-2 rounded-l bg-purple-800 text-white placeholder-purple-300 focus:outline-none focus:ring-1 focus:ring-purple-500 text-xs"
+                    className="flex-1 p-3 rounded-l bg-purple-800 text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
                   />
                   <button
                     type="submit"
-                    className="px-3 py-2 bg-purple-500 text-white rounded-r hover:bg-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:ring-opacity-50 text-xs"
+                    className="px-4 py-3 bg-purple-500 text-white rounded-r hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50"
                   >
-                    <Send className="w-3 h-3" />
+                    <Send className="w-4 h-4" />
                   </button>
                 </form>
               </div>
