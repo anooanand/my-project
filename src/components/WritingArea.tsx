@@ -1,106 +1,17 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import {
-  Save,
-  Download,
-  Upload,
-  Eye,
-  EyeOff,
-  RotateCcw,
-  Sparkles,
-  BookOpen,
-  Target,
-  TrendingUp,
-  Award,
-  CheckCircle,
-  AlertCircle,
-  Star,
-  Lightbulb,
-  MessageSquare,
-  BarChart3,
-  Clock,
-  Zap,
-  Heart,
-  Trophy,
-  Wand2,
-  PenTool,
-  FileText,
-  Settings,
-  RefreshCw,
-  Play,
-  Pause,
-  Volume2,
-  VolumeX,
-  Maximize2,
-  Minimize2,
-  Copy,
-  Check,
-  X,
-  Plus,
-  Minus,
-  ChevronDown,
-  ChevronUp,
-  Info,
-  HelpCircle,
-  Calendar,
-  Users,
-  Globe,
-  Mic,
-  Camera,
-  Image,
-  Link,
-  Hash,
-  Type,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  Bold,
-  Italic,
-  Underline,
-  List,
-  ListOrdered,
-  Quote,
-  Code,
-  Scissors,
-  Clipboard,
-  Search,
-  Filter,
-  SortAsc,
-  SortDesc,
-  Grid,
-  Layout,
-  Sidebar,
-  Menu,
-  MoreHorizontal,
-  MoreVertical,
-  ChevronLeft,
-  ChevronRight,
-  ArrowUp,
-  ArrowDown,
-  ArrowLeft,
-  ArrowRight,
-  Timer,
-  Send,
-  Bot
-} from 'lucide-react';
+import { Save, Download, Upload, Eye, EyeOff, RotateCcw, Sparkles, BookOpen, Target, TrendingUp, Award, CheckCircle, AlertCircle, Star, Lightbulb, MessageSquare, BarChart3, Clock, Zap, Heart, Trophy, Wand2, PenTool, FileText, Settings, RefreshCw, Play, Pause, Volume2, VolumeX, Maximize2, Minimize2, Copy, Check, X, Plus, Minus, ChevronDown, ChevronUp, Info, HelpCircle, Calendar, Users, Globe, Mic, Camera, Image, Link, Hash, Type, AlignLeft, AlignCenter, AlignRight, Bold, Italic, Underline, List, ListOrdered, Quote, Code, Scissors, Clipboard, Search, Filter, SortAsc, SortDesc, Grid, Layout, Sidebar, Menu, MoreHorizontal, MoreVertical, ChevronLeft, ChevronRight, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Timer, Send, Bot } from 'lucide-react';
 import { generatePrompt, getSynonyms, rephraseSentence, evaluateEssay } from '../lib/openai';
 import { WritingStatusBar } from './WritingStatusBar';
 
-
 interface WritingAreaProps {
-  onContentChange?: (content: string ) => void;
+  onContentChange?: (content: string) => void;
   initialContent?: string;
   textType?: string;
   prompt?: string;
   onPromptChange?: (prompt: string) => void;
 }
 
-export default function WritingArea({ 
-  onContentChange, 
-  initialContent = '', 
-  textType = 'narrative',
-  prompt: propPrompt,
-  onPromptChange 
-}: WritingAreaProps) {
+export default function WritingArea({ onContentChange, initialContent = '', textType = 'narrative', prompt: propPrompt, onPromptChange }: WritingAreaProps) {
   // State management
   const [content, setContent] = useState(initialContent);
   const [prompt, setPrompt] = useState(propPrompt || '');
@@ -108,7 +19,7 @@ export default function WritingArea({
   const [characterCount, setCharacterCount] = useState(0);
   const [readingTime, setReadingTime] = useState(0);
   const [showPlanningModal, setShowPlanningModal] = useState(false);
-  const [activeTab, setActiveTab] = useState('text-type-analysis');
+  const [activeTab, setActiveTab] = useState('analysis');
   const [isAutoSaving, setIsAutoSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [showWordCount, setShowWordCount] = useState(true);
@@ -129,20 +40,13 @@ export default function WritingArea({
   const [paraphraseOutput, setParaphraseOutput] = useState('');
   const [isParaphrasing, setIsParaphrasing] = useState(false);
   const [vocabularyWords, setVocabularyWords] = useState<string[]>([]);
-  const [progressData, setProgressData] = useState({
-    wordsWritten: 0,
-    timeSpent: 0,
-    sessionsCompleted: 0,
-    averageWordsPerMinute: 0
-  });
-
+  const [progressData, setProgressData] = useState({ wordsWritten: 0, timeSpent: 0, sessionsCompleted: 0, averageWordsPerMinute: 0 });
   // NSW Selective Exam specific features
   const [examMode, setExamMode] = useState(false);
   const [examTimeLimit, setExamTimeLimit] = useState(30 * 60); // 30 minutes in seconds
   const [examTimeRemaining, setExamTimeRemaining] = useState(examTimeLimit);
   const [targetWordCount, setTargetWordCount] = useState(300); // Typical NSW exam target
   const [showStructureGuide, setShowStructureGuide] = useState(false);
-
   // Chat functionality for Writing Buddy
   const [chatMessages, setChatMessages] = useState<Array<{id: string, text: string, sender: 'user' | 'ai', timestamp: Date}>>([]);
   const [chatInput, setChatInput] = useState('');
@@ -159,7 +63,6 @@ export default function WritingArea({
       console.log('🔍 WritingArea: Loading prompt...');
       console.log('🔍 PropPrompt:', propPrompt);
       console.log('🔍 TextType:', textType);
-      
       // Priority order for prompt sources
       const sources = [
         { name: 'propPrompt', value: propPrompt },
@@ -173,9 +76,7 @@ export default function WritingArea({
         { name: 'persuasive_prompt', value: localStorage.getItem('persuasive_prompt') },
         { name: 'expository_prompt', value: localStorage.getItem('expository_prompt') }
       ];
-      
       console.log('🔍 All localStorage keys:', Object.keys(localStorage));
-      
       let loadedPrompt = '';
       for (const source of sources) {
         console.log(`🔍 Checking ${source.name}:`, source.value);
@@ -185,7 +86,6 @@ export default function WritingArea({
           break;
         }
       }
-      
       if (loadedPrompt) {
         setPrompt(loadedPrompt);
         if (onPromptChange) {
@@ -208,7 +108,6 @@ export default function WritingArea({
             reflective: "Write a thoughtful reflection about a meaningful experience in your life. Explore what you learned, how it changed you, and what insights you gained. Use descriptive language to help readers understand both the experience and your thoughts about it. (Target: 250-350 words)",
             descriptive: "Write a vivid description of a place, person, or object that is meaningful to you. Use sensory details, figurative language, and specific examples to create a clear and engaging picture in your reader's mind. (Target: 250-350 words)"
           };
-          
           const finalFallbackPrompt = fallbackPrompts[textType as keyof typeof fallbackPrompts] || fallbackPrompts.narrative;
           console.log('🔄 Using final fallback prompt for', textType, ':', finalFallbackPrompt);
           setPrompt(finalFallbackPrompt);
@@ -220,7 +119,6 @@ export default function WritingArea({
     };
 
     loadPrompt();
-    
     // Also listen for storage changes
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key && (e.key.includes('prompt') || e.key.includes('Prompt'))) {
@@ -228,18 +126,14 @@ export default function WritingArea({
         loadPrompt();
       }
     };
-    
     window.addEventListener('storage', handleStorageChange);
-    
     // Check for prompt updates every 2 seconds for the first 10 seconds
     const promptCheckInterval = setInterval(() => {
       loadPrompt();
     }, 2000);
-    
     setTimeout(() => {
       clearInterval(promptCheckInterval);
     }, 10000);
-    
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       clearInterval(promptCheckInterval);
@@ -257,7 +151,6 @@ export default function WritingArea({
         setTimeout(() => setIsAutoSaving(false), 1000);
       }
     };
-
     const autoSaveTimer = setTimeout(autoSave, 2000);
     return () => clearTimeout(autoSaveTimer);
   }, [content]);
@@ -273,7 +166,6 @@ export default function WritingArea({
         clearInterval(timerRef.current);
       }
     }
-
     return () => {
       if (timerRef.current) {
         clearInterval(timerRef.current);
@@ -298,7 +190,6 @@ export default function WritingArea({
         clearInterval(examTimerRef.current);
       }
     }
-
     return () => {
       if (examTimerRef.current) {
         clearInterval(examTimerRef.current);
@@ -312,15 +203,12 @@ export default function WritingArea({
     const wordCount = words.length;
     const characterCount = content.length;
     const readingTime = Math.ceil(wordCount / 200); // Average reading speed
-
     setWordCount(wordCount);
     setCharacterCount(characterCount);
     setReadingTime(readingTime);
-
     if (onContentChange) {
       onContentChange(content);
     }
-
     // Update progress data
     setProgressData(prev => ({
       ...prev,
@@ -338,7 +226,6 @@ export default function WritingArea({
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newContent = e.target.value;
     setContent(newContent);
-    
     // Start timer when user starts typing
     if (!isTimerRunning && newContent.trim()) {
       setIsTimerRunning(true);
@@ -397,7 +284,6 @@ export default function WritingArea({
   // Evaluate writing
   const handleEvaluate = async () => {
     if (!content.trim()) return;
-    
     setIsEvaluating(true);
     try {
       const result = await evaluateEssay(content, textType);
@@ -466,29 +352,24 @@ export default function WritingArea({
   const handleChatSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!chatInput.trim()) return;
-
     const userMessage = {
       id: Date.now().toString(),
       text: chatInput,
       sender: 'user' as const,
       timestamp: new Date()
     };
-
     setChatMessages(prev => [...prev, userMessage]);
     setChatInput('');
     setIsChatLoading(true);
-
     try {
       // Simulate AI response (replace with actual AI call)
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
       const aiMessage = {
         id: (Date.now() + 1).toString(),
         text: `I understand you're asking about "${chatInput}". Here's some helpful advice for your ${textType} writing...`,
         sender: 'ai' as const,
         timestamp: new Date()
       };
-
       setChatMessages(prev => [...prev, aiMessage]);
     } catch (error) {
       console.error('Error sending chat message:', error);
@@ -498,48 +379,59 @@ export default function WritingArea({
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-100 dark:bg-gray-900">
+    <div className="flex flex-col h-full bg-gray-50">
+      {/* Prompt Section */}
+      <div className="bg-white rounded-lg shadow-sm p-4 mb-4 mx-4 mt-4">
+        <div className="flex items-center mb-2">
+          <Lightbulb className="w-4 h-4 mr-2 text-yellow-500" />
+          <span className="text-sm font-medium text-gray-700">Your Writing Prompt</span>
+        </div>
+        <p className="text-gray-600 text-sm leading-relaxed">
+          {prompt || 'Write an engaging story about a character who discovers something unexpected that changes their life forever. Include vivid descriptions, realistic dialogue, and show the character\'s emotional journey. Make sure your story has a clear beginning, middle, and end with a satisfying conclusion. Focus on showing rather than telling, and use sensory details to bring your story to life.'}
+        </p>
+      </div>
+      {/* Action Buttons */}
+      <div className="flex items-center space-x-3 px-4 mb-4">
+        <button
+          onClick={() => setShowPlanningModal(true)}
+          className="flex items-center px-3 py-2 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600 transition-colors"
+        >
+          <Sparkles className="w-4 h-4 mr-1" />
+          Planning Phase
+        </button>
+        <button
+          onClick={startExamMode}
+          className="flex items-center px-3 py-2 bg-purple-500 text-white text-sm rounded-md hover:bg-purple-600 transition-colors"
+        >
+          <Clock className="w-4 h-4 mr-1" />
+          Start Exam Mode
+        </button>
+        <button
+          onClick={() => setShowStructureGuide(true)}
+          className="flex items-center px-3 py-2 bg-green-500 text-white text-sm rounded-md hover:bg-green-600 transition-colors"
+        >
+          <BookOpen className="w-4 h-4 mr-1" />
+          Structure Guide
+        </button>
+      </div>
       {/* Main Content Area */}
       <div className="flex flex-1 overflow-hidden">
         {/* Writing Area */}
-        <div className="flex-1 flex flex-col p-3 overflow-auto">
-          {/* COMPACT PROMPT BOX - Reduced size significantly */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 mb-2">
-            <h2 className="text-sm font-semibold text-gray-900 dark:text-white mb-2 flex items-center">
-              <Lightbulb className="inline-block w-4 h-4 mr-1 text-yellow-500" />Your Writing Prompt
-            </h2>
-            <p className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed">
-              {prompt || 'Loading prompt...'}
-            </p>
-          </div>
-
-          {/* COMPACT BUTTONS AND TITLE IN ONE LINE - Reduced spacing and font sizes */}
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setShowPlanningModal(true)}
-                className="px-2 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-opacity-50"
-              >
-                <Sparkles className="inline-block w-3 h-3 mr-1" />Planning Phase
-              </button>
-              <button
-                onClick={startExamMode}
-                className="px-2 py-1 bg-purple-500 text-white rounded text-xs hover:bg-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:ring-opacity-50"
-              >
-                <Clock className="inline-block w-3 h-3 mr-1" />Start Exam Mode
-              </button>
-              <button
-                onClick={() => setShowStructureGuide(true)}
-                className="px-2 py-1 bg-green-500 text-white rounded text-xs hover:bg-green-600 focus:outline-none focus:ring-1 focus:ring-green-500 focus:ring-opacity-50"
-              >
-                <BookOpen className="inline-block w-3 h-3 mr-1" />Structure Guide
-              </button>
+        <div className="flex-1 flex flex-col px-4 pb-4">
+          <div className="bg-white rounded-lg shadow-sm flex-1 flex flex-col overflow-hidden">
+            {/* Writing Area Header */}
+            <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+              <h3 className="text-lg font-medium text-gray-900">Your Writing</h3>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setIsFullscreen(!isFullscreen)}
+                  className="p-1 text-gray-400 hover:text-gray-600"
+                >
+                  {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
-            <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200">Your Writing</h3>
-          </div>
-
-          {/* MAXIMIZED WRITING AREA */}
-          <div className="flex-1 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden flex flex-col">
+            {/* Text Area */}
             <textarea
               ref={textareaRef}
               value={content}
@@ -547,44 +439,38 @@ export default function WritingArea({
               onMouseUp={handleTextSelection}
               onKeyUp={handleTextSelection}
               placeholder="Start writing your amazing story here! Let your creativity flow and bring your ideas to life..."
-              className="flex-1 p-4 text-lg leading-relaxed text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 focus:outline-none resize-none"
+              className="flex-1 p-4 text-base leading-relaxed text-gray-900 bg-white focus:outline-none resize-none"
               style={{ fontSize: `${fontSize}px`, lineHeight: lineHeight }}
             />
-            
-            {/* ULTRA-COMPACT BOTTOM ELEMENTS: All in one line to save maximum space */}
-            <div className="bg-white border-t border-gray-200 p-2 flex items-center justify-between text-xs">
-              <div className="flex items-center space-x-4">
+            {/* Status Bar */}
+            <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+              <div className="flex items-center space-x-6 text-sm text-gray-600">
                 <div className="flex items-center space-x-1">
-                  <FileText className="w-3 h-3 text-blue-600" />
-                  <span className="font-medium text-gray-700">{wordCount} words</span>
-                </div>
-                <div className="flex items-center space-x-1 text-orange-600">
-                  <AlertCircle className="w-3 h-3" />
-                  <span>Write more!</span>
+                  <FileText className="w-4 h-4" />
+                  <span>{wordCount} words</span>
                 </div>
                 <div className="flex items-center space-x-1">
-                  <Zap className="w-3 h-3 text-purple-600" />
-                  <span className="text-gray-600">{characterCount} characters</span>
+                  <Clock className="w-4 h-4" />
+                  <span>{characterCount} characters</span>
                 </div>
                 <div className="flex items-center space-x-1">
-                  <Clock className="w-3 h-3 text-green-600" />
-                  <span className="text-gray-600">{readingTime} min read</span>
+                  <Eye className="w-4 h-4" />
+                  <span>{readingTime} min read</span>
                 </div>
               </div>
-              
               <button
                 onClick={handleEvaluate}
                 disabled={isEvaluating}
-                className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 focus:outline-none focus:ring-1 focus:ring-green-500 focus:ring-opacity-50 flex items-center justify-center text-xs"
+                className="flex items-center px-4 py-2 bg-green-500 text-white text-sm rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 disabled:opacity-50"
               >
                 {isEvaluating ? (
                   <>
-                    <span className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></span>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                     Evaluating...
                   </>
                 ) : (
                   <>
-                    <Send className="w-3 h-3 mr-1" />
+                    <Send className="w-4 h-4 mr-2" />
                     Submit for Evaluation
                   </>
                 )}
@@ -592,413 +478,352 @@ export default function WritingArea({
             </div>
           </div>
         </div>
-
-        {/* OPTIMIZED Right Sidebar - Writing Buddy with smaller text and compact design */}
-        <div className="w-80 bg-gradient-to-b from-purple-600 to-indigo-700 text-white p-4 flex flex-col shadow-lg overflow-auto relative">
-          {/* COMPACT HEADER */}
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-bold flex items-center">
-              <Bot className="w-5 h-5 mr-2" />Writing Buddy
-            </h2>
-            <button
-              onClick={() => { /* Toggle visibility or settings */ }}
-              className="p-1 rounded-full hover:bg-white hover:bg-opacity-20 transition-colors"
-            >
-              <Settings className="w-4 h-4" />
-            </button>
+        {/* Right Sidebar - Writing Buddy */}
+        <div className="w-80 bg-gradient-to-b from-purple-600 to-indigo-700 text-white flex flex-col shadow-lg">
+          {/* Header */}
+          <div className="p-4 border-b border-purple-500">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-xl font-bold flex items-center">
+                <Bot className="w-6 h-6 mr-2" />
+                Writing Buddy
+              </h2>
+              <button className="p-1 rounded-full hover:bg-white hover:bg-opacity-20 transition-colors">
+                <Settings className="w-5 h-5" />
+              </button>
+            </div>
+            <p className="text-purple-200 text-sm">Your AI writing assistant</p>
           </div>
-
-          <p className="text-purple-200 mb-3 text-sm">Your AI writing assistant</p>
-
-          {/* COMPACT TABS - Smaller buttons and text */}
-          <div className="flex space-x-1 mb-3">
-            <button
-              onClick={() => setActiveTab('analysis')}
-              className={`flex-1 py-1 px-2 rounded text-xs font-semibold transition-colors ${activeTab === 'analysis' ? 'bg-purple-700 text-white' : 'bg-purple-500 text-purple-100 hover:bg-purple-600'}`}
-            >
-              <BarChart3 className="inline-block w-3 h-3 mr-1" />Analysis
-            </button>
-            <button
-              onClick={() => setActiveTab('vocabulary')}
-              className={`flex-1 py-1 px-2 rounded text-xs font-semibold transition-colors ${activeTab === 'vocabulary' ? 'bg-purple-700 text-white' : 'bg-purple-500 text-purple-100 hover:bg-purple-600'}`}
-            >
-              <BookOpen className="inline-block w-3 h-3 mr-1" />Vocabulary
-            </button>
-            <button
-              onClick={() => setActiveTab('progress')}
-              className={`flex-1 py-1 px-2 rounded text-xs font-semibold transition-colors ${activeTab === 'progress' ? 'bg-purple-700 text-white' : 'bg-purple-500 text-purple-100 hover:bg-purple-600'}`}
-            >
-              <TrendingUp className="inline-block w-3 h-3 mr-1" />Progress
-            </button>
-            <button
-              onClick={() => setActiveTab('ai-coach')}
-              className={`flex-1 py-1 px-2 rounded text-xs font-semibold transition-colors ${activeTab === 'ai-coach' ? 'bg-purple-700 text-white' : 'bg-purple-500 text-purple-100 hover:bg-purple-600'}`}
-            >
-              <Bot className="inline-block w-3 h-3 mr-1" />Coach
-            </button>
+          {/* Tabs */}
+          <div className="flex border-b border-purple-500">
+            {[
+              { id: 'analysis', label: 'Analysis', icon: BarChart3 },
+              { id: 'vocabulary', label: 'Vocabulary', icon: BookOpen },
+              { id: 'progress', label: 'Progress', icon: TrendingUp },
+              { id: 'ai-coach', label: 'Coach', icon: Bot }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex-1 py-3 px-2 text-xs font-medium transition-colors ${
+                  activeTab === tab.id ? 'bg-purple-700 text-white' : 'text-purple-200 hover:bg-purple-600'
+                }`}
+              >
+                <tab.icon className="w-4 h-4 mx-auto mb-1" />
+                {tab.label}
+              </button>
+            ))}
           </div>
-
-          {/* COMPACT TAB CONTENT with smaller text sizes */}
-          <div className="flex-1 overflow-y-auto">
+          {/* Tab Content */}
+          <div className="flex-1 p-4 overflow-y-auto">
             {activeTab === 'analysis' && (
-              <div>
-                <h3 className="text-sm font-bold mb-2">Text Analysis</h3>
-                <div className="space-y-2">
-                  <div className="bg-purple-800 bg-opacity-50 p-2 rounded">
-                    <h4 className="font-semibold mb-1 text-xs">Writing Statistics</h4>
-                    <div className="space-y-1 text-xs">
-                      <div className="flex justify-between">
-                        <span>Words:</span>
-                        <span className="font-bold">{wordCount}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Characters:</span>
-                        <span className="font-bold">{characterCount}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Reading Time:</span>
-                        <span className="font-bold">{readingTime} min</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Time Spent:</span>
-                        <span className="font-bold">{Math.floor(timeSpent / 60)}:{(timeSpent % 60).toString().padStart(2, '0')}</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-purple-800 bg-opacity-50 p-2 rounded">
-                    <h4 className="font-semibold mb-1 text-xs">Writing Quality</h4>
-                    <div className="space-y-1 text-xs">
-                      <div className="flex justify-between">
-                        <span>Sentence Variety:</span>
-                        <span className="text-green-300">Good</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Vocabulary Level:</span>
-                        <span className="text-yellow-300">Intermediate</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Readability:</span>
-                        <span className="text-green-300">Excellent</span>
-                      </div>
-                    </div>
-                  </div>
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold mb-3">Writing Analysis</h3>
+                <div className="bg-purple-800 bg-opacity-50 rounded-lg p-3">
+                  <h4 className="font-medium mb-2 text-sm">Words:</h4>
+                  <div className="text-2xl font-bold">{wordCount}</div>
                 </div>
+                <div className="bg-purple-800 bg-opacity-50 rounded-lg p-3">
+                  <h4 className="font-medium mb-2 text-sm">Characters:</h4>
+                  <div className="text-2xl font-bold">{characterCount}</div>
+                </div>
+                <div className="bg-purple-800 bg-opacity-50 rounded-lg p-3">
+                  <h4 className="font-medium mb-2 text-sm">Reading Time:</h4>
+                  <div className="text-2xl font-bold">{readingTime} min</div>
+                </div>
+                <button
+                  className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg text-sm transition-colors"
+                >
+                  Submit for Evaluation
+                </button>
               </div>
             )}
             {activeTab === 'vocabulary' && (
-              <div>
-                <h3 className="text-sm font-bold mb-2">Vocabulary Enhancement</h3>
-                <div className="space-y-2">
-                  <div className="bg-purple-800 bg-opacity-50 p-2 rounded">
-                    <h4 className="font-semibold mb-1 text-xs">Suggested Words</h4>
-                    <div className="flex flex-wrap gap-1">
-                      {['magnificent', 'extraordinary', 'compelling', 'vivid', 'eloquent'].map((word, index) => (
-                        <span key={index} className="bg-purple-600 px-2 py-1 rounded-full text-xs cursor-pointer hover:bg-purple-500 transition-colors">
-                          {word}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div className="bg-purple-800 bg-opacity-50 p-2 rounded">
-                    <h4 className="font-semibold mb-1 text-xs">Word Alternatives</h4>
-                    <p className="text-xs text-purple-200 mb-1">Select text in your writing to see synonyms</p>
-                    {selectedText && (
-                      <div>
-                        <p className="text-xs mb-1">Alternatives for "{selectedText}":</p>
-                        <div className="flex flex-wrap gap-1">
-                          {synonyms.map((syn, index) => (
-                            <span
-                              key={index}
-                              onClick={() => replaceSynonym(syn)}
-                              className="bg-blue-600 px-2 py-1 rounded-full text-xs cursor-pointer hover:bg-blue-500 transition-colors"
-                            >
-                              {syn}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold mb-3">Vocabulary</h3>
+                <p className="text-purple-200 text-sm">Select text to see suggestions</p>
               </div>
             )}
             {activeTab === 'progress' && (
-              <div>
-                <h3 className="text-sm font-bold mb-2">Writing Progress</h3>
-                <div className="space-y-2">
-                  <div className="bg-purple-800 bg-opacity-50 p-2 rounded">
-                    <h4 className="font-semibold mb-1 text-xs">Today's Session</h4>
-                    <div className="space-y-1 text-xs">
-                      <div className="flex justify-between">
-                        <span>Words Written:</span>
-                        <span className="font-bold">{progressData.wordsWritten}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Time Spent:</span>
-                        <span className="font-bold">{Math.floor(progressData.timeSpent / 60)}m {progressData.timeSpent % 60}s</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Words/Minute:</span>
-                        <span className="font-bold">{progressData.averageWordsPerMinute}</span>
-                      </div>
-                    </div>
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold mb-3">Progress</h3>
+                <div className="bg-purple-800 bg-opacity-50 rounded-lg p-3">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm">Word Goal:</span>
+                    <span className="font-bold">{targetWordCount}</span>
                   </div>
-                  
-                  <div className="bg-purple-800 bg-opacity-50 p-2 rounded">
-                    <h4 className="font-semibold mb-1 text-xs">Target Progress</h4>
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-xs">
-                        <span>Word Count Goal:</span>
-                        <span>{targetWordCount} words</span>
-                      </div>
-                      <div className="w-full bg-purple-900 rounded-full h-1">
-                        <div 
-                          className="bg-green-400 h-1 rounded-full transition-all duration-300"
-                          style={{ width: `${Math.min((wordCount / targetWordCount) * 100, 100)}%` }}
-                        ></div>
-                      </div>
-                      <p className="text-xs text-purple-200">
-                        {wordCount >= targetWordCount ? 'Goal achieved! 🎉' : `${targetWordCount - wordCount} words to go`}
-                      </p>
-                    </div>
+                  <div className="w-full bg-purple-900 rounded-full h-2">
+                    <div
+                      className="bg-green-400 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${Math.min((wordCount / targetWordCount) * 100, 100)}%` }}
+                    ></div>
                   </div>
-                  
-                  <button className="w-full bg-purple-600 hover:bg-purple-700 text-white py-1 px-2 rounded text-xs transition-colors">
-                    View Detailed Progress
-                  </button>
+                  <p className="text-xs text-purple-200 mt-2">
+                    {wordCount >= targetWordCount ? 'Goal achieved! 🎉' : `${targetWordCount - wordCount} words to go`}
+                  </p>
                 </div>
               </div>
             )}
             {activeTab === 'ai-coach' && (
               <div className="flex flex-col h-full">
-                <h3 className="text-sm font-bold mb-2">AI Coach</h3>
-                <div className="flex-1 overflow-y-auto pr-1 mb-2 custom-scrollbar">
+                <h3 className="text-lg font-semibold mb-3">AI Coach</h3>
+                <div className="flex-1 overflow-y-auto mb-4">
                   {chatMessages.length === 0 && (
-                    <p className="text-purple-300 text-center mt-4 text-xs">Ask your Writing Buddy anything!</p>
+                    <p className="text-purple-300 text-center mt-8 text-sm">Ask your Writing Buddy anything!</p>
                   )}
                   {chatMessages.map((message) => (
-                    <div key={message.id} className={`mb-2 ${message.sender === 'user' ? 'text-right' : 'text-left'}`}>
-                      <span className={`inline-block p-2 rounded text-xs ${message.sender === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>
+                    <div
+                      key={message.id}
+                      className={`mb-3 ${message.sender === 'user' ? 'text-right' : 'text-left'}`}
+                    >
+                      <div
+                        className={`inline-block p-3 rounded-lg text-sm ${
+                          message.sender === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'
+                        }`}
+                      >
                         {message.text}
-                      </span>
+                      </div>
                     </div>
                   ))}
                   {isChatLoading && (
                     <div className="text-center">
-                      <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-300 inline-block"></span>
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-300 mx-auto"></div>
                     </div>
                   )}
                   <div ref={chatEndRef} />
                 </div>
-                <form onSubmit={handleChatSubmit} className="flex mt-auto">
+                <form onSubmit={handleChatSubmit} className="flex">
                   <input
                     type="text"
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
                     placeholder="Ask your Writing Buddy..."
-                    className="flex-1 p-2 rounded-l bg-purple-800 text-white placeholder-purple-300 focus:outline-none focus:ring-1 focus:ring-purple-500 text-xs"
+                    className="flex-1 p-2 rounded-l-lg bg-purple-800 text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
                   />
                   <button
                     type="submit"
-                    className="px-3 py-2 bg-purple-500 text-white rounded-r hover:bg-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-500"
-                    disabled={isChatLoading}
+                    className="px-4 py-2 bg-purple-500 text-white rounded-r-lg hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
                   >
-                    <Send className="w-3 h-3" />
+                    <Send className="w-4 h-4" />
                   </button>
                 </form>
               </div>
             )}
           </div>
-
-          {/* Synonyms Popup */}
-          {showSynonyms && selectedText && (
-            <div className="absolute bottom-24 left-1/2 -translate-x-1/2 bg-white dark:bg-gray-700 p-4 rounded-lg shadow-xl border border-gray-200 dark:border-gray-600 z-50">
-              <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2">Synonyms for "{selectedText}"</h4>
-              {isLoadingSynonyms ? (
-                <p className="text-gray-600 dark:text-gray-300">Loading synonyms...</p>
-              ) : synonyms.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {synonyms.map((syn, index) => (
-                    <span
-                      key={index}
-                      onClick={() => replaceSynonym(syn)}
-                      className="cursor-pointer bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-100 px-3 py-1 rounded-full text-sm hover:bg-blue-200 dark:hover:bg-blue-700 transition-colors"
-                    >
-                      {syn}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-600 dark:text-gray-300">No synonyms found.</p>
-              )}
-              <button
-                onClick={() => setShowSynonyms(false)}
-                className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-          )}
-
-          {/* Evaluation Results Popup */}
-          {evaluation && (
-            <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto relative">
-                <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
-                  <Award className="w-8 h-8 mr-3 text-yellow-500" />Evaluation Results
-                </h2>
-                <button
-                  onClick={() => setEvaluation(null)}
-                  className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-
-                <div className="mb-6">
-                  <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-3">Overall Score: <span className="text-blue-600 dark:text-blue-400">{evaluation.overallScore}/10</span></h3>
-                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
-                    {evaluation.specificFeedback}
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                  <div>
-                    <h4 className="text-lg font-semibold text-green-600 dark:text-green-400 mb-2 flex items-center"><CheckCircle className="w-5 h-5 mr-2" />Strengths</h4>
-                    <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-1">
-                      {evaluation.strengths.map((s: string, i: number) => <li key={i}>{s}</li>)}
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="text-lg font-semibold text-red-600 dark:text-red-400 mb-2 flex items-center"><AlertCircle className="w-5 h-5 mr-2" />Areas for Improvement</h4>
-                    <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-1">
-                      {evaluation.improvements.map((i: string, idx: number) => <li key={idx}>{i}</li>)}
-                    </ul>
-                  </div>
-                </div>
-
-                <div className="mb-6">
-                  <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">Next Steps</h4>
-                  <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-1">
-                    {evaluation.nextSteps.map((ns: string, i: number) => <li key={i}>{ns}</li>)}
-                  </ul>
-                </div>
-
-                {evaluation.nswCriteria && (
-                  <div className="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
-                    <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">NSW Selective Exam Criteria Scores (out of 10)</h4>
-                    <div className="grid grid-cols-2 gap-4 text-gray-700 dark:text-gray-300">
-                      <div>Ideas and Content: <span className="font-bold text-blue-600 dark:text-blue-400">{evaluation.nswCriteria.ideasAndContent}</span></div>
-                      <div>Text Structure: <span className="font-bold text-blue-600 dark:text-blue-400">{evaluation.nswCriteria.textStructure}</span></div>
-                      <div>Language Features: <span className="font-bold text-blue-600 dark:text-blue-400">{evaluation.nswCriteria.languageFeatures}</span></div>
-                      <div>Grammar and Spelling: <span className="font-bold text-blue-600 dark:text-blue-400">{evaluation.nswCriteria.grammarAndSpelling}</span></div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Planning Tool Modal */}
-          {showPlanningModal && (
-            <PlanningToolModal
-              isOpen={showPlanningModal}
-              onClose={() => setShowPlanningModal(false)}
-              onSavePlan={(plan) => console.log('Plan saved:', plan)}
-              textType={textType}
-              content={content}
-            />
-          )}
-
-          {/* Structure Guide Modal */}
-          {showStructureGuide && (
-            <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto relative">
-                <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
-                  <BookOpen className="w-8 h-8 mr-3 text-blue-500" />Structure Guide
-                </h2>
-                <button
-                  onClick={() => setShowStructureGuide(false)}
-                  className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-                <div className="prose dark:prose-invert max-w-none">
-                  {textType === 'narrative' && (
-                    <>
-                      <h3>Narrative Structure</h3>
-                      <p>A narrative typically follows a clear story arc:</p>
-                      <h4>1. Orientation</h4>
-                      <p>Introduce characters, setting, and initial situation. Hook the reader.</p>
-                      <h4>2. Complication / Rising Action</h4>
-                      <p>A problem or challenge arises, leading to a series of events that build tension.</p>
-                      <h4>3. Climax</h4>
-                      <p>The turning point of the story, where the main conflict is confronted.</p>
-                      <h4>4. Resolution / Falling Action</h4>
-                      <p>The events that follow the climax, leading to the story's conclusion.</p>
-                      <h4>5. Coda (Optional)</h4>
-                      <p>A final reflection or moral of the story.</p>
-                    </>
-                  )}
-                  {textType === 'persuasive' && (
-                    <>
-                      <h3>Persuasive Essay Structure</h3>
-                      <p>A persuasive essay aims to convince the reader of a particular viewpoint:</p>
-                      <h4>1. Introduction</h4>
-                      <p>Hook, background information, and clear thesis statement (your argument).</p>
-                      <h4>2. Body Paragraphs (Arguments)</h4>
-                      <p>Each paragraph presents a distinct argument supporting your thesis, backed by evidence and examples.</p>
-                      <h4>3. Counter-Argument and Rebuttal</h4>
-                      <p>Acknowledge opposing viewpoints and then refute them with stronger evidence or reasoning.</p>
-                      <h4>4. Conclusion</h4>
-                      <p>Summarize main points, restate thesis in new words, and provide a strong call to action or final thought.</p>
-                    </>
-                  )}
-                  {textType === 'expository' && (
-                    <>
-                      <h3>Expository Essay Structure</h3>
-                      <p>An expository essay explains a topic clearly and concisely:</p>
-                      <h4>1. Introduction</h4>
-                      <p>Hook, background information, and clear thesis statement (what you will explain).</p>
-                      <h4>2. Body Paragraphs (Explanations)</h4>
-                      <p>Each paragraph explains a different aspect of your topic, providing facts, examples, and details.</p>
-                      <h4>3. Conclusion</h4>
-                      <p>Summarize main points and restate thesis in new words. Provide a final thought or implication.</p>
-                    </>
-                  )}
-                  {textType === 'reflective' && (
-                    <>
-                      <h3>Reflective Essay Structure</h3>
-                      <p>A reflective essay explores a personal experience and its meaning:</p>
-                      <h4>1. Introduction</h4>
-                      <p>Introduce the experience or event you will reflect upon and its initial significance.</p>
-                      <h4>2. Description of Experience</h4>
-                      <p>Detail the experience, using sensory language to bring it to life for the reader.</p>
-                      <h4>3. Analysis and Interpretation</h4>
-                      <p>Explore the meaning of the experience, what you learned, and how it impacted you.</p>
-                      <h4>4. Conclusion</h4>
-                      <p>Summarize your insights and reflect on the lasting impact or future implications.</p>
-                    </>
-                  )}
-                  {textType === 'descriptive' && (
-                    <>
-                      <h3>Descriptive Essay Structure</h3>
-                      <p>A descriptive essay creates a vivid picture of a person, place, object, or event:</p>
-                      <h4>1. Introduction</h4>
-                      <p>Introduce the subject of your description and create an overall impression.</p>
-                      <h4>2. Body Paragraphs (Sensory Details)</h4>
-                      <p>Organize details by sense (sight, sound, smell, taste, touch), spatial order, or order of importance. Use figurative language.</p>
-                      <h4>3. Conclusion</h4>
-                      <p>Summarize the overall impression and leave the reader with a lasting image or feeling.</p>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
+      {/* Modals */}
+      <PlanningToolModal
+        isOpen={showPlanningModal}
+        onClose={() => setShowPlanningModal(false)}
+        onSavePlan={(plan: string) => {
+          setPlanningNotes(plan);
+          setShowPlanningModal(false);
+        }}
+        textType={textType}
+        content={content}
+      />
+      {/* Synonyms Popup */}
+      {showSynonyms && selectedText && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-4 max-w-md w-full mx-4">
+            <h3 className="font-semibold mb-2">Synonyms for "{selectedText}"</h3>
+            <div className="flex flex-wrap gap-2 mb-4">
+              {synonyms.map((synonym, index) => (
+                <button
+                  key={index}
+                  onClick={() => replaceSynonym(synonym)}
+                  className="px-3 py-1 bg-blue-500 text-white rounded-full text-sm hover:bg-blue-600"
+                >
+                  {synonym}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setShowSynonyms(false)}
+              className="w-full py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+      {/* Evaluation Results Popup */}
+      {evaluation && (
+        <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto relative">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
+              <Award className="w-8 h-8 mr-3 text-yellow-500" />
+              Evaluation Results
+            </h2>
+            <button
+              onClick={() => setEvaluation(null)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <div className="mb-6">
+              <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-3">
+                Overall Score: <span className="text-blue-600 dark:text-blue-400">{evaluation.overallScore}/10</span>
+              </h3>
+              <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
+                {evaluation.specificFeedback}
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <h4 className="text-lg font-semibold text-green-600 dark:text-green-400 mb-2 flex items-center">
+                  <CheckCircle className="w-5 h-5 mr-2" />
+                  Strengths
+                </h4>
+                <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-1">
+                  {evaluation.strengths.map((s: string, i: number) => (
+                    <li key={i}>{s}</li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h4 className="text-lg font-semibold text-red-600 dark:text-red-400 mb-2 flex items-center">
+                  <AlertCircle className="w-5 h-5 mr-2" />
+                  Areas for Improvement
+                </h4>
+                <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-1">
+                  {evaluation.improvements.map((i: string, idx: number) => (
+                    <li key={idx}>{i}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+            <div className="mb-6">
+              <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">Next Steps</h4>
+              <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-1">
+                {evaluation.nextSteps.map((ns: string, i: number) => (
+                  <li key={i}>{ns}</li>
+                ))}
+              </ul>
+            </div>
+            {evaluation.nswCriteria && (
+              <div className="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">
+                  NSW Selective Exam Criteria Scores (out of 10)
+                </h4>
+                <div className="grid grid-cols-2 gap-4 text-gray-700 dark:text-gray-300">
+                  <div>
+                    Ideas and Content:{' '}
+                    <span className="font-bold text-blue-600 dark:text-blue-400">
+                      {evaluation.nswCriteria.ideasAndContent}
+                    </span>
+                  </div>
+                  <div>
+                    Text Structure:{' '}
+                    <span className="font-bold text-blue-600 dark:text-blue-400">
+                      {evaluation.nswCriteria.textStructure}
+                    </span>
+                  </div>
+                  <div>
+                    Language Features:{' '}
+                    <span className="font-bold text-blue-600 dark:text-blue-400">
+                      {evaluation.nswCriteria.languageFeatures}
+                    </span>
+                  </div>
+                  <div>
+                    Grammar and Spelling:{' '}
+                    <span className="font-bold text-blue-600 dark:text-blue-400">
+                      {evaluation.nswCriteria.grammarAndSpelling}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+      {/* Structure Guide Modal */}
+      {showStructureGuide && (
+        <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto relative">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
+              <BookOpen className="w-8 h-8 mr-3 text-blue-500" />
+              Structure Guide
+            </h2>
+            <button
+              onClick={() => setShowStructureGuide(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <div className="prose dark:prose-invert max-w-none">
+              {textType === 'narrative' && (
+                <>
+                  <h3>Narrative Structure</h3>
+                  <p>A narrative typically follows a clear story arc:</p>
+                  <h4>1. Orientation</h4>
+                  <p>Introduce characters, setting, and initial situation. Hook the reader.</p>
+                  <h4>2. Complication / Rising Action</h4>
+                  <p>A problem or challenge arises, leading to a series of events that build tension.</p>
+                  <h4>3. Climax</h4>
+                  <p>The turning point of the story, where the main conflict is confronted.</p>
+                  <h4>4. Resolution / Falling Action</h4>
+                  <p>The events that follow the climax, leading to the story's conclusion.</p>
+                  <h4>5. Coda (Optional)</h4>
+                  <p>A final reflection or moral of the story.</p>
+                </>
+              )}
+              {textType === 'persuasive' && (
+                <>
+                  <h3>Persuasive Essay Structure</h3>
+                  <p>A persuasive essay aims to convince the reader of a particular viewpoint:</p>
+                  <h4>1. Introduction</h4>
+                  <p>Hook, background information, and clear thesis statement (your argument).</p>
+                  <h4>2. Body Paragraphs (Arguments)</h4>
+                  <p>Each paragraph presents a distinct argument supporting your thesis, backed by evidence and examples.</p>
+                  <h4>3. Counter-Argument and Rebuttal</h4>
+                  <p>Acknowledge opposing viewpoints and then refute them with stronger evidence or reasoning.</p>
+                  <h4>4. Conclusion</h4>
+                  <p>Summarize main points, restate thesis in new words, and provide a strong call to action or final thought.</p>
+                </>
+              )}
+              {textType === 'expository' && (
+                <>
+                  <h3>Expository Essay Structure</h3>
+                  <p>An expository essay explains a topic clearly and concisely:</p>
+                  <h4>1. Introduction</h4>
+                  <p>Hook, background information, and clear thesis statement (what you will explain).</p>
+                  <h4>2. Body Paragraphs (Explanations)</h4>
+                  <p>Each paragraph explains a different aspect of your topic, providing facts, examples, and details.</p>
+                  <h4>3. Conclusion</h4>
+                  <p>Summarize main points and restate thesis in new words. Provide a final thought or implication.</p>
+                </>
+              )}
+              {textType === 'reflective' && (
+                <>
+                  <h3>Reflective Essay Structure</h3>
+                  <p>A reflective essay explores a personal experience and its meaning:</p>
+                  <h4>1. Introduction</h4>
+                  <p>Introduce the experience or event you will reflect upon and its initial significance.</p>
+                  <h4>2. Description of Experience</h4>
+                  <p>Detail the experience, using sensory language to bring it to life for the reader.</p>
+                  <h4>3. Analysis and Interpretation</h4>
+                  <p>Explore the meaning of the experience, what you learned, and how it impacted you.</p>
+                  <h4>4. Conclusion</h4>
+                  <p>Summarize your insights and reflect on the lasting impact or future implications.</p>
+                </>
+              )}
+              {textType === 'descriptive' && (
+                <>
+                  <h3>Descriptive Essay Structure</h3>
+                  <p>A descriptive essay creates a vivid picture of a person, place, object, or event:</p>
+                  <h4>1. Introduction</h4>
+                  <p>Introduce the subject of your description and create an overall impression.</p>
+                  <h4>2. Body Paragraphs (Sensory Details)</h4>
+                  <p>Organize details by sense (sight, sound, smell, taste, touch), spatial order, or order of importance. Use figurative language.</p>
+                  <h4>3. Conclusion</h4>
+                  <p>Summarize the overall impression and leave the reader with a lasting image or feeling.</p>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1006,7 +831,6 @@ export default function WritingArea({
 // Placeholder for PlanningToolModal component
 const PlanningToolModal = ({ isOpen, onClose, onSavePlan, textType, content }: any) => {
   if (!isOpen) return null;
-  
   return (
     <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto relative">
