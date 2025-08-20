@@ -85,318 +85,80 @@ import {
 import { generatePrompt, getSynonyms, rephraseSentence, evaluateEssay } from '../lib/openai';
 import { WritingStatusBar } from './WritingStatusBar';
 
-
 interface WritingAreaProps {
-  onContentChange?: (content: string ) => void;
-  initialContent?: string;
+  content?: string;
+  onChange?: (content: string) => void;
   textType?: string;
+  onTimerStart?: (shouldStart: boolean) => void;
+  onSubmit?: () => void;
+  onTextTypeChange?: (textType: string) => void;
+  onPopupCompleted?: () => void;
+  onPromptGenerated?: (prompt: string) => void;
   prompt?: string;
+  onContentChange?: (content: string) => void;
+  initialContent?: string;
   onPromptChange?: (prompt: string) => void;
 }
 
 export default function WritingArea({
+  content = '',
+  onChange,
+  textType = 'narrative',
+  onTimerStart,
+  onSubmit,
+  onTextTypeChange,
+  onPopupCompleted,
+  onPromptGenerated,
+  prompt = "Write an engaging story about a character who discovers something unexpected that changes their life forever. Include vivid descriptions, realistic dialogue, and show the character's emotional journey. Make sure your story has a clear beginning, middle, and end with a satisfying conclusion. Focus on showing rather than telling, and use sensory details to bring your story to life.",
   onContentChange,
   initialContent = '',
-  textType = 'narrative',
-  prompt: propPrompt,
   onPromptChange
 }: WritingAreaProps) {
   // State management
-  const [content, setContent] = useState(initialContent);
-  const [prompt, setPrompt] = useState(propPrompt || '');
-  const [wordCount, setWordCount] = useState(0);
-  const [characterCount, setCharacterCount] = useState(0);
-  const [readingTime, setReadingTime] = useState(0);
-  const [showPlanningModal, setShowPlanningModal] = useState(false);
-  const [activeTab, setActiveTab] = useState('ai-coach');
-  const [isAutoSaving, setIsAutoSaving] = useState(false);
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [showWordCount, setShowWordCount] = useState(true);
-  const [fontSize, setFontSize] = useState(16);
-  const [lineHeight, setLineHeight] = useState(1.6);
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [currentContent, setCurrentContent] = useState(content || initialContent);
   const [selectedText, setSelectedText] = useState('');
-  const [showSynonyms, setShowSynonyms] = useState(false);
-  const [synonyms, setSynonyms] = useState<string[]>([]);
-  const [isLoadingSynonyms, setIsLoadingSynonyms] = useState(false);
-  const [evaluation, setEvaluation] = useState<any>(null);
-  const [isEvaluating, setIsEvaluating] = useState(false);
-  const [planningNotes, setPlanningNotes] = useState('');
-  const [writingGoals, setWritingGoals] = useState('');
-  const [timeSpent, setTimeSpent] = useState(0);
-  const [isTimerRunning, setIsTimerRunning] = useState(false);
-  const [paraphraseInput, setParaphraseInput] = useState('');
-  const [paraphraseOutput, setParaphraseOutput] = useState('');
-  const [isParaphrasing, setIsParaphrasing] = useState(false);
-  const [vocabularyWords, setVocabularyWords] = useState<string[]>([]);
-  const [progressData, setProgressData] = useState({
-    wordsWritten: 0,
-    timeSpent: 0,
-    sessionsCompleted: 0,
-    averageWordsPerMinute: 0
-  });
-
-  // NSW Selective Exam specific features
-  const [examMode, setExamMode] = useState(false);
-  const [examTimeLimit, setExamTimeLimit] = useState(30 * 60); // 30 minutes in seconds
-  const [examTimeRemaining, setExamTimeRemaining] = useState(examTimeLimit);
-  const [targetWordCount, setTargetWordCount] = useState(300); // Typical NSW exam target
   const [showStructureGuide, setShowStructureGuide] = useState(false);
-
-  // Chat functionality for Writing Buddy
-  const [chatMessages, setChatMessages] = useState<Array<{id: string, text: string, sender: 'user' | 'ai', timestamp: Date}>>([]);
+  const [showPlanningModal, setShowPlanningModal] = useState(false);
+  const [fontSize, setFontSize] = useState(18);
+  const [lineHeight, setLineHeight] = useState(1.6);
+  const [isEvaluating, setIsEvaluating] = useState(false);
+  const [evaluation, setEvaluation] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState('analysis');
+  const [examMode, setExamMode] = useState(false);
+  const [examTimeRemaining, setExamTimeRemaining] = useState(0);
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [examTimeLimit] = useState(40 * 60); // 40 minutes in seconds
+  const [chatMessages, setChatMessages] = useState<any[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [isChatLoading, setIsChatLoading] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const examTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const chatEndRef = useRef<HTMLDivElement>(null);
 
-  // Enhanced prompt loading with better debugging and fallback
-  useEffect(() => {
-    const loadPrompt = () => {
-      console.log('🔍 WritingArea: Loading prompt...');
-      console.log('🔍 PropPrompt:', propPrompt);
-      console.log('🔍 TextType:', textType);
+  // Calculate writing statistics
+  const wordCount = currentContent.trim().split(/\s+/).filter(word => word.length > 0).length;
+  const characterCount = currentContent.length;
+  const readingTime = Math.ceil(wordCount / 200);
 
-      // Priority order for prompt sources
-      const sources = [
-        { name: 'propPrompt', value: propPrompt },
-        { name: 'generatedPrompt', value: localStorage.getItem('generatedPrompt') },
-        { name: `${textType}_prompt`, value: localStorage.getItem(`${textType}_prompt`) },
-        { name: 'customPrompt', value: localStorage.getItem('customPrompt') },
-        { name: 'selectedPrompt', value: localStorage.getItem('selectedPrompt') },
-        { name: 'currentPrompt', value: localStorage.getItem('currentPrompt') },
-        { name: 'writingPrompt', value: localStorage.getItem('writingPrompt') },
-        { name: 'narrative_prompt', value: localStorage.getItem('narrative_prompt') },
-        { name: 'persuasive_prompt', value: localStorage.getItem('persuasive_prompt') },
-        { name: 'expository_prompt', value: localStorage.getItem('expository_prompt') }
-      ];
-
-      console.log('🔍 All localStorage keys:', Object.keys(localStorage));
-
-      let loadedPrompt = '';
-      for (const source of sources) {
-        console.log(`🔍 Checking ${source.name}:`, source.value);
-        if (source.value && source.value.trim() && source.value !== 'null' && source.value !== 'undefined') {
-          console.log(`✅ WritingArea: Prompt loaded from ${source.name}:`, source.value.substring(0, 100) + '...');
-          loadedPrompt = source.value;
-          break;
-        }
-      }
-
-      if (loadedPrompt) {
-        setPrompt(loadedPrompt);
-        if (onPromptChange) {
-          onPromptChange(loadedPrompt);
-        }
-      } else {
-        console.log('⚠️ WritingArea: No prompt found in any source, attempting to generate or use fallback');
-        generatePrompt(textType).then((generatedPrompt) => {
-          setPrompt(generatedPrompt);
-          if (onPromptChange) {
-            onPromptChange(generatedPrompt);
-          }
-        }).catch((error) => {
-          console.error('Failed to generate prompt:', error);
-          // Enhanced fallback prompts optimized for NSW Selective exam
-          const fallbackPrompts = {
-            narrative: "Write an engaging story about a character who discovers something unexpected that changes their life forever. Include vivid descriptions, realistic dialogue, and show how the character grows throughout the story. Focus on creating a clear beginning, middle, and end with engaging plot development. (Target: 250-350 words)",
-            persuasive: "Write a compelling persuasive essay arguing for or against a topic you feel strongly about. Use logical reasoning, credible evidence, emotional appeals, and address counterarguments to convince your readers. End with a strong call to action. (Target: 250-350 words)",
-            expository: "Write an informative essay explaining a topic you're knowledgeable about or find interesting. Provide clear explanations, specific examples, and organize your information in a logical way that helps readers understand the subject thoroughly. (Target: 250-350 words)",
-            reflective: "Write a thoughtful reflection about a meaningful experience in your life. Explore what you learned, how it changed you, and what insights you gained. Use descriptive language to help readers understand both the experience and your thoughts about it. (Target: 250-350 words)",
-            descriptive: "Write a vivid description of a place, person, or object that is meaningful to you. Use sensory details, figurative language, and specific examples to create a clear and engaging picture in your reader's mind. (Target: 250-350 words)"
-          };
-
-          const finalFallbackPrompt = fallbackPrompts[textType as keyof typeof fallbackPrompts] || fallbackPrompts.narrative;
-          console.log('🔄 Using final fallback prompt for', textType, ':', finalFallbackPrompt);
-          setPrompt(finalFallbackPrompt);
-          if (onPromptChange) {
-            onPromptChange(finalFallbackPrompt);
-          }
-        });
-      }
-    };
-
-    loadPrompt();
-
-    // Also listen for storage changes
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key && (e.key.includes('prompt') || e.key.includes('Prompt'))) {
-        console.log('📢 Storage change detected for prompt:', e.key, e.newValue);
-        loadPrompt();
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-
-    // Check for prompt updates every 2 seconds for the first 10 seconds
-    const promptCheckInterval = setInterval(() => {
-      loadPrompt();
-    }, 2000);
-
-    setTimeout(() => {
-      clearInterval(promptCheckInterval);
-    }, 10000);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      clearInterval(promptCheckInterval);
-    };
-  }, [propPrompt, textType, onPromptChange]);
-
-  // Auto-save functionality
-  useEffect(() => {
-    const autoSave = () => {
-      if (content.trim()) {
-        setIsAutoSaving(true);
-        localStorage.setItem('writingContent', content);
-        localStorage.setItem('lastSaved', new Date().toISOString());
-        setLastSaved(new Date());
-        setTimeout(() => setIsAutoSaving(false), 1000);
-      }
-    };
-
-    const autoSaveTimer = setTimeout(autoSave, 2000);
-    return () => clearTimeout(autoSaveTimer);
-  }, [content]);
-
-  // Timer functionality
-  useEffect(() => {
-    if (isTimerRunning) {
-      timerRef.current = setInterval(() => {
-        setTimeSpent(prev => prev + 1);
-      }, 1000);
-    } else {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-    }
-
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-    };
-  }, [isTimerRunning]);
-
-  // Exam timer functionality
-  useEffect(() => {
-    if (examMode && examTimeRemaining > 0) {
-      examTimerRef.current = setInterval(() => {
-        setExamTimeRemaining(prev => {
-          if (prev <= 1) {
-            setExamMode(false);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    } else {
-      if (examTimerRef.current) {
-        clearInterval(examTimerRef.current);
-      }
-    }
-
-    return () => {
-      if (examTimerRef.current) {
-        clearInterval(examTimerRef.current);
-      }
-    };
-  }, [examMode, examTimeRemaining]);
-
-  // Update statistics when content changes
-  useEffect(() => {
-    const words = content.trim().split(/\s+/).filter(word => word.length > 0);
-    const wordCount = words.length;
-    const characterCount = content.length;
-    const readingTime = Math.ceil(wordCount / 200); // Average reading speed
-
-    setWordCount(wordCount);
-    setCharacterCount(characterCount);
-    setReadingTime(readingTime);
-
-    if (onContentChange) {
-      onContentChange(content);
-    }
-
-    // Update progress data
-    setProgressData(prev => ({
-      ...prev,
-      wordsWritten: wordCount,
-      averageWordsPerMinute: timeSpent > 0 ? Math.round((wordCount / timeSpent) * 60) : 0
-    }));
-  }, [content, onContentChange, timeSpent]);
-
-  // Scroll chat to bottom when new messages are added
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatMessages]);
-
-  // Handle content change
-  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  // Handle content changes
+  const handleContentChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newContent = e.target.value;
-    setContent(newContent);
+    setCurrentContent(newContent);
+    onChange?.(newContent);
+    onContentChange?.(newContent);
+  }, [onChange, onContentChange]);
 
-    // Start timer when user starts typing
-    if (!isTimerRunning && newContent.trim()) {
-      setIsTimerRunning(true);
+  // Handle text selection
+  const handleTextSelection = useCallback(() => {
+    if (textareaRef.current) {
+      const start = textareaRef.current.selectionStart;
+      const end = textareaRef.current.selectionEnd;
+      const selected = currentContent.substring(start, end);
+      setSelectedText(selected);
     }
-  };
+  }, [currentContent]);
 
-  // Handle text selection for synonyms
-  const handleTextSelection = () => {
-    const selection = window.getSelection();
-    if (selection && selection.toString().trim()) {
-      const selectedText = selection.toString().trim();
-      if (selectedText.split(' ').length === 1) { // Only single words
-        setSelectedText(selectedText);
-        setShowSynonyms(true);
-        loadSynonyms(selectedText);
-      }
-    }
-  };
-
-  // Load synonyms for selected word
-  const loadSynonyms = async (word: string) => {
-    setIsLoadingSynonyms(true);
-    try {
-      const synonymList = await getSynonyms(word);
-      setSynonyms(synonymList);
-    } catch (error) {
-      console.error('Error loading synonyms:', error);
-      // Provide fallback synonyms
-      const fallbackSynonyms: { [key: string]: string[] } = {
-        'good': ['excellent', 'great', 'wonderful', 'fantastic', 'superb'],
-        'bad': ['terrible', 'awful', 'horrible', 'dreadful', 'poor'],
-        'big': ['large', 'huge', 'enormous', 'massive', 'gigantic'],
-        'small': ['tiny', 'little', 'miniature', 'petite', 'compact'],
-        'said': ['stated', 'declared', 'announced', 'proclaimed', 'mentioned'],
-        'went': ['traveled', 'journeyed', 'proceeded', 'departed', 'ventured']
-      };
-      setSynonyms(fallbackSynonyms[word.toLowerCase()] || ['alternative', 'substitute', 'replacement']);
-    } finally {
-      setIsLoadingSynonyms(false);
-    }
-  };
-
-  // Replace selected text with synonym
-  const replaceSynonym = (synonym: string) => {
-    if (textareaRef.current && selectedText) {
-      const textarea = textareaRef.current;
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const newContent = content.substring(0, start) + synonym + content.substring(end);
-      setContent(newContent);
-      setShowSynonyms(false);
-      setSelectedText('');
-    }
-  };
-
-  // Handle chat submission
-  const handleChatSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Send chat message
+  const handleSendChatMessage = async () => {
     if (!chatInput.trim()) return;
 
     const userMessage = {
@@ -430,11 +192,11 @@ export default function WritingArea({
 
   // Evaluate writing
   const handleEvaluate = async () => {
-    if (!content.trim()) return;
+    if (!currentContent.trim()) return;
 
     setIsEvaluating(true);
     try {
-      const result = await evaluateEssay(content, textType);
+      const result = await evaluateEssay(currentContent, textType);
       setEvaluation(result);
       setActiveTab('ai-coach');
     } catch (error) {
@@ -497,85 +259,45 @@ export default function WritingArea({
       <div className="flex-1 flex overflow-hidden">
         {/* Writing Area */}
         <div className="flex-1 flex flex-col bg-white dark:bg-gray-800 shadow-lg">
-          {/* Clean Prompt Display - Blue Gradient Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 shadow-lg">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-xl font-bold flex items-center">
-                <PenTool className="w-6 h-6 mr-3" />
-                Writing Prompt
-              </h2>
-              <div className="flex items-center space-x-2">
+          {/* Compact Writing Prompt - White Background */}
+          <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-3 shadow-sm">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center">
+                <PenTool className="w-4 h-4 mr-2" />
+                Your Writing Prompt
+              </h3>
+              <div className="flex items-center space-x-1">
                 <button
                   onClick={() => setShowStructureGuide(true)}
-                  className="p-2 rounded-full hover:bg-white hover:bg-opacity-20 transition-colors"
+                  className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                   title="Structure Guide"
                 >
-                  <BookOpen className="w-5 h-5" />
+                  <BookOpen className="w-4 h-4 text-gray-500" />
                 </button>
                 <button
                   onClick={() => setShowPlanningModal(true)}
-                  className="p-2 rounded-full hover:bg-white hover:bg-opacity-20 transition-colors"
+                  className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                   title="Planning Tool"
                 >
-                  <Target className="w-5 h-5" />
+                  <Target className="w-4 h-4 text-gray-500" />
                 </button>
               </div>
             </div>
-            <p className="text-blue-100 leading-relaxed text-lg">{prompt}</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{prompt}</p>
           </div>
 
-          {/* Writing Area */}
-          <div className="flex-1 flex flex-col">
+          {/* Writing Area - Full Height */}
+          <div className="flex-1 flex flex-col min-h-0">
             <textarea
               ref={textareaRef}
-              value={content}
+              value={currentContent}
               onChange={handleContentChange}
               onMouseUp={handleTextSelection}
               onKeyUp={handleTextSelection}
               placeholder="Start writing your amazing story here! Let your creativity flow and bring your ideas to life..."
-              className="flex-1 p-6 text-lg leading-relaxed text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 focus:outline-none resize-none"
+              className="flex-1 p-6 text-lg leading-relaxed text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 focus:outline-none resize-none border-none"
               style={{ fontSize: `${fontSize}px`, lineHeight: lineHeight }}
             />
-
-            {/* Clean Bottom Status Bar */}
-            <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between">
-              <div className="flex items-center space-x-6 text-sm text-gray-600 dark:text-gray-400">
-                <div className="flex items-center space-x-2">
-                  <FileText className="w-4 h-4 text-blue-600" />
-                  <span className="font-medium">{wordCount} words</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Clock className="w-4 h-4 text-orange-600" />
-                  <span>Write more!</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Zap className="w-4 h-4 text-purple-600" />
-                  <span>{characterCount} characters</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Clock className="w-4 h-4 text-green-600" />
-                  <span>{readingTime} min read</span>
-                </div>
-              </div>
-
-              <button
-                onClick={handleEvaluate}
-                disabled={isEvaluating}
-                className="px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 flex items-center justify-center"
-              >
-                {isEvaluating ? (
-                  <>
-                    <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
-                    Evaluating...
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-4 h-4 mr-2" />
-                    Submit for Evaluation
-                  </>
-                )}
-              </button>
-            </div>
           </div>
         </div>
 
@@ -584,7 +306,8 @@ export default function WritingArea({
           {/* Header */}
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold flex items-center">
-              <Bot className="w-6 h-6 mr-3" />Writing Buddy
+              <Bot className="w-6 h-6 mr-3" />
+              Writing Buddy
             </h2>
             <button
               onClick={() => { /* Toggle visibility or settings */ }}
@@ -598,302 +321,196 @@ export default function WritingArea({
 
           {/* Tabs */}
           <div className="flex space-x-1 mb-4">
-            <button
-              onClick={() => setActiveTab('ai-coach')}
-              className={`flex-1 py-2 px-3 rounded text-sm font-semibold transition-colors ${activeTab === 'ai-coach' ? 'bg-purple-700 text-white' : 'bg-purple-500 text-purple-100 hover:bg-purple-600'}`}
-            >
-              <Bot className="inline-block w-4 h-4 mr-2" />Coach
-            </button>
-            <button
-              onClick={() => setActiveTab('analysis')}
-              className={`flex-1 py-2 px-3 rounded text-sm font-semibold transition-colors ${activeTab === 'analysis' ? 'bg-purple-700 text-white' : 'bg-purple-500 text-purple-100 hover:bg-purple-600'}`}
-            >
-              <BarChart3 className="inline-block w-4 h-4 mr-2" />Analysis
-            </button>
-            <button
-              onClick={() => setActiveTab('vocabulary')}
-              className={`flex-1 py-2 px-3 rounded text-sm font-semibold transition-colors ${activeTab === 'vocabulary' ? 'bg-purple-700 text-white' : 'bg-purple-500 text-purple-100 hover:bg-purple-600'}`}
-            >
-              <BookOpen className="inline-block w-4 h-4 mr-2" />Vocabulary
-            </button>
-            <button
-              onClick={() => setActiveTab('progress')}
-              className={`flex-1 py-2 px-3 rounded text-sm font-semibold transition-colors ${activeTab === 'progress' ? 'bg-purple-700 text-white' : 'bg-purple-500 text-purple-100 hover:bg-purple-600'}`}
-            >
-              <TrendingUp className="inline-block w-4 h-4 mr-2" />Progress
-            </button>
+            {[
+              { id: 'analysis', label: 'Analysis', icon: BarChart3 },
+              { id: 'vocabulary', label: 'Vocabulary', icon: Lightbulb },
+              { id: 'progress', label: 'Progress', icon: TrendingUp },
+              { id: 'coach', label: 'Coach', icon: MessageSquare }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`flex-1 flex items-center justify-center px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  activeTab === tab.id
+                    ? 'bg-white bg-opacity-20 text-white'
+                    : 'text-purple-200 hover:text-white hover:bg-white hover:bg-opacity-10'
+                }`}
+              >
+                <tab.icon className="w-4 h-4 mr-1" />
+                {tab.label}
+              </button>
+            ))}
           </div>
 
           {/* Tab Content */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-auto">
             {activeTab === 'analysis' && (
-              <div>
-                <h3 className="text-lg font-bold mb-3">Text Analysis</h3>
-                <div className="space-y-3">
-                  <div className="bg-purple-800 bg-opacity-50 p-3 rounded">
-                    <h4 className="font-semibold mb-2">Writing Statistics</h4>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span>Words:</span>
-                        <span className="font-bold">{wordCount}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Characters:</span>
-                        <span className="font-bold">{characterCount}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Reading Time:</span>
-                        <span className="font-bold">{readingTime} min</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Time Spent:</span>
-                        <span className="font-bold">{Math.floor(timeSpent / 60)}:{(timeSpent % 60).toString().padStart(2, '0')}</span>
-                      </div>
+              <div className="space-y-4">
+                <div className="bg-white bg-opacity-10 rounded-lg p-4">
+                  <h3 className="font-semibold mb-3 flex items-center">
+                    <BarChart3 className="w-5 h-5 mr-2" />
+                    Writing Analysis
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-purple-200">Words:</span>
+                      <span className="font-semibold">{wordCount}</span>
                     </div>
-                  </div>
-
-                  <div className="bg-purple-800 bg-opacity-50 p-3 rounded">
-                    <h4 className="font-semibold mb-2">Writing Quality</h4>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span>Sentence Variety:</span>
-                        <span className="text-green-300">Good</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Vocabulary Level:</span>
-                        <span className="text-yellow-300">Intermediate</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Readability:</span>
-                        <span className="text-green-300">Excellent</span>
-                      </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-purple-200">Characters:</span>
+                      <span className="font-semibold">{characterCount}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-purple-200">Reading Time:</span>
+                      <span className="font-semibold">{readingTime} min</span>
                     </div>
                   </div>
                 </div>
+
+                <button
+                  onClick={handleEvaluate}
+                  disabled={isEvaluating || !currentContent.trim()}
+                  className="w-full bg-green-500 hover:bg-green-600 disabled:bg-gray-500 disabled:cursor-not-allowed text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center"
+                >
+                  {isEvaluating ? (
+                    <>
+                      <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
+                      Evaluating...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4 mr-2" />
+                      Submit for Evaluation
+                    </>
+                  )}
+                </button>
               </div>
             )}
+
             {activeTab === 'vocabulary' && (
-              <div>
-                <h3 className="text-lg font-bold mb-3">Vocabulary Enhancement</h3>
-                <div className="space-y-3">
-                  <div className="bg-purple-800 bg-opacity-50 p-3 rounded">
-                    <h4 className="font-semibold mb-2">Suggested Words</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {['magnificent', 'extraordinary', 'compelling', 'vivid', 'eloquent'].map((word, index) => (
-                        <span key={index} className="bg-purple-600 px-3 py-1 rounded-full text-sm cursor-pointer hover:bg-purple-500 transition-colors">
-                          {word}
-                        </span>
-                      ))}
+              <div className="space-y-4">
+                <div className="bg-white bg-opacity-10 rounded-lg p-4">
+                  <h3 className="font-semibold mb-3 flex items-center">
+                    <Lightbulb className="w-5 h-5 mr-2" />
+                    Vocabulary Enhancement
+                  </h3>
+                  <p className="text-purple-200 text-sm mb-3">
+                    Select text in your writing to get synonym suggestions and improvements.
+                  </p>
+                  {selectedText && (
+                    <div className="bg-white bg-opacity-10 rounded p-3">
+                      <p className="text-sm font-medium mb-2">Selected: "{selectedText}"</p>
+                      <button className="text-sm bg-blue-500 hover:bg-blue-600 px-3 py-1 rounded transition-colors">
+                        Get Synonyms
+                      </button>
                     </div>
-                  </div>
-
-                  <div className="bg-purple-800 bg-opacity-50 p-3 rounded">
-                    <h4 className="font-semibold mb-2">Word Alternatives</h4>
-                    <p className="text-sm text-purple-200 mb-2">Select text in your writing to see synonyms</p>
-                    {selectedText && (
-                      <div>
-                        <p className="text-sm mb-2">Alternatives for "{selectedText}":</p>
-                        <div className="flex flex-wrap gap-2">
-                          {synonyms.map((syn, index) => (
-                            <span
-                              key={index}
-                              onClick={() => replaceSynonym(syn)}
-                              className="bg-blue-600 px-3 py-1 rounded-full text-sm cursor-pointer hover:bg-blue-500 transition-colors"
-                            >
-                              {syn}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  )}
                 </div>
               </div>
             )}
-            {activeTab === 'progress' && (
-              <div>
-                <h3 className="text-lg font-bold mb-3">Writing Progress</h3>
-                <div className="space-y-3">
-                  <div className="bg-purple-800 bg-opacity-50 p-3 rounded">
-                    <h4 className="font-semibold mb-2">Today's Session</h4>
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span>Words Written:</span>
-                        <span className="font-bold">{progressData.wordsWritten}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Time Spent:</span>
-                        <span className="font-bold">{Math.floor(progressData.timeSpent / 60)}m {progressData.timeSpent % 60}s</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Words/Minute:</span>
-                        <span className="font-bold">{progressData.averageWordsPerMinute}</span>
-                      </div>
-                    </div>
-                  </div>
 
-                  <div className="bg-purple-800 bg-opacity-50 p-3 rounded">
-                    <h4 className="font-semibold mb-2">Target Progress</h4>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Word Count Goal:</span>
-                        <span>{targetWordCount} words</span>
+            {activeTab === 'progress' && (
+              <div className="space-y-4">
+                <div className="bg-white bg-opacity-10 rounded-lg p-4">
+                  <h3 className="font-semibold mb-3 flex items-center">
+                    <TrendingUp className="w-5 h-5 mr-2" />
+                    Writing Progress
+                  </h3>
+                  <div className="space-y-3">
+                    <div>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span>Word Count Goal</span>
+                        <span>{wordCount}/300</span>
                       </div>
-                      <div className="w-full bg-purple-900 rounded-full h-2">
-                        <div
+                      <div className="w-full bg-white bg-opacity-20 rounded-full h-2">
+                        <div 
                           className="bg-green-400 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${Math.min((wordCount / targetWordCount) * 100, 100)}%` }}
+                          style={{ width: `${Math.min((wordCount / 300) * 100, 100)}%` }}
                         ></div>
                       </div>
-                      <p className="text-sm text-purple-200">
-                        {wordCount >= targetWordCount ? 'Goal achieved! 🎉' : `${targetWordCount - wordCount} words to go`}
-                      </p>
                     </div>
                   </div>
-
-                  <button className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded transition-colors">
-                    View Detailed Progress
-                  </button>
                 </div>
               </div>
             )}
-            {activeTab === 'ai-coach' && (
-              <div className="flex flex-col h-full">
-                <h3 className="text-lg font-bold mb-3">AI Coach</h3>
-                
-                {/* Evaluation Display */}
-                {evaluation && (
-                  <div className="mb-4 bg-purple-800 bg-opacity-50 p-4 rounded">
-                    <h4 className="text-lg font-semibold text-green-400 mb-3 flex items-center">
-                      <Award className="w-5 h-5 mr-2" />
-                      Overall Score: {evaluation.overallScore}/10
-                    </h4>
-                    
-                    <div className="mb-4">
-                      <p className="text-sm text-purple-200 mb-3">{evaluation.specificFeedback}</p>
-                    </div>
 
-                    <div className="grid grid-cols-1 gap-4 mb-4">
-                      <div>
-                        <h4 className="text-base font-semibold text-green-400 mb-2 flex items-center">
-                          <CheckCircle className="w-4 h-4 mr-2" />Strengths
-                        </h4>
-                        <ul className="list-disc list-inside text-purple-200 space-y-1 text-sm">
-                          {evaluation.strengths.map((strength: string, idx: number) => <li key={idx}>{strength}</li>)}
-                        </ul>
+            {activeTab === 'coach' && (
+              <div className="space-y-4">
+                <div className="bg-white bg-opacity-10 rounded-lg p-4">
+                  <h3 className="font-semibold mb-3 flex items-center">
+                    <MessageSquare className="w-5 h-5 mr-2" />
+                    AI Writing Coach
+                  </h3>
+                  
+                  {/* Chat Messages */}
+                  <div className="space-y-2 mb-3 max-h-40 overflow-y-auto">
+                    {chatMessages.map((message) => (
+                      <div
+                        key={message.id}
+                        className={`p-2 rounded text-sm ${
+                          message.sender === 'user'
+                            ? 'bg-blue-500 bg-opacity-50 ml-4'
+                            : 'bg-white bg-opacity-20 mr-4'
+                        }`}
+                      >
+                        {message.text}
                       </div>
-                      <div>
-                        <h4 className="text-base font-semibold text-red-400 mb-2 flex items-center">
-                          <AlertCircle className="w-4 h-4 mr-2" />Areas for Improvement
-                        </h4>
-                        <ul className="list-disc list-inside text-purple-200 space-y-1 text-sm">
-                          {evaluation.improvements.map((i: string, idx: number) => <li key={idx}>{i}</li>)}
-                        </ul>
-                      </div>
-                    </div>
-
-                    <div className="mb-4">
-                      <h4 className="text-base font-semibold text-purple-200 mb-2">Next Steps</h4>
-                      <ul className="list-disc list-inside text-purple-200 space-y-1 text-sm">
-                        {evaluation.nextSteps.map((ns: string, i: number) => <li key={i}>{ns}</li>)}
-                      </ul>
-                    </div>
-
-                    {evaluation.nswCriteria && (
-                      <div className="bg-purple-900 bg-opacity-50 p-3 rounded">
-                        <h4 className="text-base font-semibold text-purple-200 mb-2">NSW Selective Exam Criteria Scores (out of 10)</h4>
-                        <div className="grid grid-cols-2 gap-2 text-sm text-purple-200">
-                          <div>Ideas and Content: <span className="font-bold text-blue-400">{evaluation.nswCriteria.ideasAndContent}</span></div>
-                          <div>Text Structure: <span className="font-bold text-blue-400">{evaluation.nswCriteria.textStructure}</span></div>
-                          <div>Language Features: <span className="font-bold text-blue-400">{evaluation.nswCriteria.languageFeatures}</span></div>
-                          <div>Grammar and Spelling: <span className="font-bold text-blue-400">{evaluation.nswCriteria.grammarAndSpelling}</span></div>
+                    ))}
+                    {isChatLoading && (
+                      <div className="bg-white bg-opacity-20 mr-4 p-2 rounded text-sm">
+                        <div className="flex items-center">
+                          <span className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-2"></span>
+                          Thinking...
                         </div>
                       </div>
                     )}
                   </div>
-                )}
 
-                <div className="flex-1 overflow-y-auto pr-2 mb-3">
-                  {chatMessages.length === 0 && (
-                    <p className="text-purple-300 text-center mt-8">Ask your Writing Buddy anything!</p>
-                  )}
-                  {chatMessages.map((message) => (
-                    <div key={message.id} className={`mb-3 ${message.sender === 'user' ? 'text-right' : 'text-left'}`}>
-                      <span className={`inline-block p-3 rounded text-sm ${message.sender === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>
-                        {message.text}
-                      </span>
-                    </div>
-                  ))}
-                  {isChatLoading && (
-                    <div className="text-center">
-                      <span className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-300 inline-block"></span>
-                    </div>
-                  )}
-                  <div ref={chatEndRef} />
+                  {/* Chat Input */}
+                  <div className="flex space-x-2">
+                    <input
+                      type="text"
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleSendChatMessage()}
+                      placeholder="Ask for writing help..."
+                      className="flex-1 bg-white bg-opacity-20 text-white placeholder-purple-200 px-3 py-2 rounded text-sm focus:outline-none focus:bg-opacity-30"
+                    />
+                    <button
+                      onClick={handleSendChatMessage}
+                      disabled={!chatInput.trim() || isChatLoading}
+                      className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-500 px-3 py-2 rounded text-sm transition-colors"
+                    >
+                      <Send className="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
-                <form onSubmit={handleChatSubmit} className="flex mt-auto">
-                  <input
-                    type="text"
-                    value={chatInput}
-                    onChange={(e) => setChatInput(e.target.value)}
-                    placeholder="Ask your Writing Buddy..."
-                    className="flex-1 p-3 rounded-l bg-purple-800 text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  />
-                  <button
-                    type="submit"
-                    className="px-4 py-3 bg-purple-500 text-white rounded-r hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50"
-                  >
-                    <Send className="w-4 h-4" />
-                  </button>
-                </form>
+
+                {evaluation && (
+                  <div className="bg-white bg-opacity-10 rounded-lg p-4">
+                    <h4 className="font-semibold mb-2 flex items-center">
+                      <Award className="w-4 h-4 mr-2" />
+                      Evaluation Results
+                    </h4>
+                    <div className="text-sm space-y-2">
+                      <div className="flex justify-between">
+                        <span>Overall Score:</span>
+                        <span className="font-semibold">{evaluation.overallScore}/10</span>
+                      </div>
+                      <p className="text-purple-200">{evaluation.specificFeedback}</p>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Status Bar */}
-      <WritingStatusBar
-        wordCount={wordCount}
-        characterCount={characterCount}
-        readingTime={readingTime}
-        isAutoSaving={isAutoSaving}
-        lastSaved={lastSaved}
-        timeSpent={timeSpent}
-        isTimerRunning={isTimerRunning}
-        toggleTimer={() => setIsTimerRunning(!isTimerRunning)}
-        examMode={examMode}
-        examTimeRemaining={examTimeRemaining}
-        targetWordCount={targetWordCount}
-        showWordCount={showWordCount}
-        toggleWordCount={() => setShowWordCount(!showWordCount)}
-        fontSize={fontSize}
-        setFontSize={setFontSize}
-        lineHeight={lineHeight}
-        setLineHeight={setLineHeight}
-        isFullscreen={isFullscreen}
-        toggleFullscreen={() => setIsFullscreen(!isFullscreen)}
-      />
-
-      {/* Planning Tool Modal */}
-      <PlanningToolModal
-        isOpen={showPlanningModal}
-        onClose={() => setShowPlanningModal(false)}
-        textType={textType}
-        onPlanSaved={(plan) => {
-          setPlanningNotes(plan);
-          setShowPlanningModal(false);
-        }}
-        existingPlan={planningNotes}
-      />
-
       {/* Structure Guide Modal */}
       {showStructureGuide && (
         <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto relative">
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
-              <BookOpen className="w-8 h-8 mr-3 text-blue-500" />Structure Guide
-            </h2>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto relative">
             <button
               onClick={() => setShowStructureGuide(false)}
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
@@ -973,49 +590,44 @@ export default function WritingArea({
           </div>
         </div>
       )}
+
+      {/* Planning Tool Modal */}
+      {showPlanningModal && (
+        <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto relative">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Planning Tool</h2>
+            <button
+              onClick={() => setShowPlanningModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <p className="text-gray-700 dark:text-gray-300 mb-4">
+              Use this space to plan your {textType} writing. Think about your main ideas, structure, and key points.
+            </p>
+            <textarea
+              className="w-full h-64 p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Write your planning notes here..."
+            />
+            <div className="flex justify-end space-x-4 mt-6">
+              <button
+                onClick={() => setShowPlanningModal(false)}
+                className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setShowPlanningModal(false);
+                }}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                Save Plan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-
-// Placeholder for PlanningToolModal component
-const PlanningToolModal = ({ isOpen, onClose, onSavePlan, textType, content }: any) => {
-  if (!isOpen) return null;
-  
-  return (
-    <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto relative">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Planning Tool</h2>
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-        >
-          <X className="w-6 h-6" />
-        </button>
-        <p className="text-gray-700 dark:text-gray-300 mb-4">
-          Use this space to plan your {textType} writing. Think about your main ideas, structure, and key points.
-        </p>
-        <textarea
-          className="w-full h-64 p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Write your planning notes here..."
-        />
-        <div className="flex justify-end space-x-4 mt-6">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={() => {
-              onSavePlan('Planning notes saved');
-              onClose();
-            }}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            Save Plan
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
