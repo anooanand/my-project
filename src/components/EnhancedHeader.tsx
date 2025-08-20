@@ -32,18 +32,11 @@ export function EnhancedHeader({
   return (
     <div className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white shadow-xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo and Title */}
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center backdrop-blur-sm">
-              <PenTool className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold tracking-tight text-white drop-shadow-lg">Writing Adventure!</h1>
-              <div className="flex items-center space-x-1 text-xs text-white opacity-90">
-                <Sparkles className="w-3 h-3" />
-                <span className="drop-shadow">Unleash Your Creativity</span>
-              </div>
+        <div className="flex items-center justify-between h-12">
+          {/* Left Side - Minimal Logo */}
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center backdrop-blur-sm">
+              <PenTool className="h-4 w-4 text-white" />
             </div>
           </div>
 
@@ -72,14 +65,10 @@ export function EnhancedHeader({
 
           {/* Right Side - Home Button */}
           <div className="flex items-center space-x-3">
-            {/* Decorative Element */}
-            <div className="w-2 h-2 bg-yellow-300 rounded-full animate-pulse">
-            </div>
-
             {/* Home Button - ALWAYS VISIBLE */}
             <button
               onClick={onHomeClick || (() => window.location.href = '/')}
-              className="flex items-center space-x-2 px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white rounded-lg transition-all duration-200 font-medium shadow-lg text-sm backdrop-blur-sm border border-white border-opacity-20"
+              className="flex items-center space-x-2 px-3 py-1 bg-white bg-opacity-20 hover:bg-opacity-30 text-white rounded-lg transition-all duration-200 font-medium shadow-lg text-sm backdrop-blur-sm border border-white border-opacity-20"
             >
               <Home className="h-4 w-4" />
               <span className="drop-shadow">Home</span>
