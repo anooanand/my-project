@@ -502,42 +502,44 @@ export default function WritingArea({
       {/* Main Content Area */}
       <div className="flex flex-1 overflow-hidden">
         {/* Writing Area */}
-        <div className="flex-1 flex flex-col p-6 overflow-auto">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-4">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-              <Lightbulb className="inline-block w-5 h-5 mr-2 text-yellow-500" />Your Writing Prompt
+        <div className="flex-1 flex flex-col p-3 overflow-auto">
+          {/* COMPACT PROMPT BOX - Reduced size significantly */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 mb-2">
+            <h2 className="text-sm font-semibold text-gray-900 dark:text-white mb-2 flex items-center">
+              <Lightbulb className="inline-block w-4 h-4 mr-1 text-yellow-500" />Your Writing Prompt
             </h2>
-            <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+            <p className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed">
               {prompt || 'Loading prompt...'}
             </p>
           </div>
 
-          {/* MOVED BUTTONS: Planning Phase, Start Exam Mode, Structure Guide - Now below prompt */}
-          <div className="flex items-center justify-center space-x-4 mb-4">
-            <button
-              onClick={() => setShowPlanningModal(true)}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-            >
-              <Sparkles className="inline-block w-4 h-4 mr-2" />Planning Phase
-            </button>
-            <button
-              onClick={startExamMode}
-              className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50"
-            >
-              <Clock className="inline-block w-4 h-4 mr-2" />Start Exam Mode
-            </button>
-            <button
-              onClick={() => setShowStructureGuide(true)}
-              className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
-            >
-              <BookOpen className="inline-block w-4 h-4 mr-2" />Structure Guide
-            </button>
+          {/* COMPACT BUTTONS AND TITLE IN ONE LINE - Reduced spacing and font sizes */}
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setShowPlanningModal(true)}
+                className="px-2 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-opacity-50"
+              >
+                <Sparkles className="inline-block w-3 h-3 mr-1" />Planning Phase
+              </button>
+              <button
+                onClick={startExamMode}
+                className="px-2 py-1 bg-purple-500 text-white rounded text-xs hover:bg-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:ring-opacity-50"
+              >
+                <Clock className="inline-block w-3 h-3 mr-1" />Start Exam Mode
+              </button>
+              <button
+                onClick={() => setShowStructureGuide(true)}
+                className="px-2 py-1 bg-green-500 text-white rounded text-xs hover:bg-green-600 focus:outline-none focus:ring-1 focus:ring-green-500 focus:ring-opacity-50"
+              >
+                <BookOpen className="inline-block w-3 h-3 mr-1" />Structure Guide
+              </button>
+            </div>
+            <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200">Your Writing</h3>
           </div>
 
+          {/* MAXIMIZED WRITING AREA */}
           <div className="flex-1 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden flex flex-col">
-            <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">Your Writing</h3>
-            </div>
             <textarea
               ref={textareaRef}
               value={content}
@@ -549,23 +551,23 @@ export default function WritingArea({
               style={{ fontSize: `${fontSize}px`, lineHeight: lineHeight }}
             />
             
-            {/* CONSOLIDATED BOTTOM ELEMENTS: All in one line to save space */}
-            <div className="bg-white border-t border-gray-200 p-3 flex items-center justify-between text-sm">
-              <div className="flex items-center space-x-6">
+            {/* ULTRA-COMPACT BOTTOM ELEMENTS: All in one line to save maximum space */}
+            <div className="bg-white border-t border-gray-200 p-2 flex items-center justify-between text-xs">
+              <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-1">
-                  <FileText className="w-4 h-4 text-blue-600" />
+                  <FileText className="w-3 h-3 text-blue-600" />
                   <span className="font-medium text-gray-700">{wordCount} words</span>
                 </div>
                 <div className="flex items-center space-x-1 text-orange-600">
-                  <AlertCircle className="w-4 h-4" />
+                  <AlertCircle className="w-3 h-3" />
                   <span>Write more!</span>
                 </div>
                 <div className="flex items-center space-x-1">
-                  <Zap className="w-4 h-4 text-purple-600" />
+                  <Zap className="w-3 h-3 text-purple-600" />
                   <span className="text-gray-600">{characterCount} characters</span>
                 </div>
                 <div className="flex items-center space-x-1">
-                  <Clock className="w-4 h-4 text-green-600" />
+                  <Clock className="w-3 h-3 text-green-600" />
                   <span className="text-gray-600">{readingTime} min read</span>
                 </div>
               </div>
@@ -573,16 +575,16 @@ export default function WritingArea({
               <button
                 onClick={handleEvaluate}
                 disabled={isEvaluating}
-                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 flex items-center justify-center text-sm"
+                className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 focus:outline-none focus:ring-1 focus:ring-green-500 focus:ring-opacity-50 flex items-center justify-center text-xs"
               >
                 {isEvaluating ? (
                   <>
-                    <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></span>
+                    <span className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></span>
                     Evaluating...
                   </>
                 ) : (
                   <>
-                    <Send className="w-4 h-4 mr-2" />
+                    <Send className="w-3 h-3 mr-1" />
                     Submit for Evaluation
                   </>
                 )}
