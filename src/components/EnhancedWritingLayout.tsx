@@ -49,7 +49,7 @@ export function EnhancedWritingLayout({
 
   return (
     <div className="enhanced-writing-layout h-full bg-gray-50 overflow-hidden">
-      {/* Main Writing Area - Full height with no bottom spacing */}
+      {/* Main Writing Area - Full height */}
       <div className="h-full">
         <WritingArea
           content={content}
@@ -63,6 +63,25 @@ export function EnhancedWritingLayout({
           prompt={generatedPrompt}
         />
       </div>
+
+      {/* Plan Summary (if saved) */}
+      {plan && (
+        <div className="plan-summary bg-gradient-to-r from-indigo-50 to-purple-50 border-t border-indigo-200 p-3 flex-shrink-0">
+          <div className="flex items-start space-x-2">
+            <PenTool className="w-4 h-4 text-indigo-600 mt-0.5 flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <h4 className="text-sm font-medium text-indigo-800 mb-1">Your Writing Plan</h4>
+              <p className="text-xs text-indigo-700 line-clamp-2">{plan}</p>
+            </div>
+            <button
+              onClick={handleTogglePlanning}
+              className="text-indigo-600 hover:text-indigo-800 transition-colors"
+            >
+              <ToggleRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Planning Tool Modal */}
       <PlanningToolModal
