@@ -394,6 +394,40 @@ export default function WritingArea({
     }
   };
 
+  // Handle chat submission
+  const handleChatSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatInput.trim()) return;
+
+    const userMessage = {
+      id: Date.now().toString(),
+      text: chatInput,
+      sender: 'user' as const,
+      timestamp: new Date()
+    };
+
+    setChatMessages(prev => [...prev, userMessage]);
+    setChatInput('');
+    setIsChatLoading(true);
+
+    try {
+      // Simulate AI response - in real implementation, this would call your AI service
+      setTimeout(() => {
+        const aiResponse = {
+          id: (Date.now() + 1).toString(),
+          text: "I'm here to help with your writing! What specific aspect would you like to work on?",
+          sender: 'ai' as const,
+          timestamp: new Date()
+        };
+        setChatMessages(prev => [...prev, aiResponse]);
+        setIsChatLoading(false);
+      }, 1000);
+    } catch (error) {
+      console.error('Error sending chat message:', error);
+      setIsChatLoading(false);
+    }
+  };
+
   // Evaluate writing
   const handleEvaluate = async () => {
     if (!content.trim()) return;
@@ -456,48 +490,42 @@ export default function WritingArea({
     setExamMode(false);
     setIsTimerRunning(false);
   };
+
+  return (
     <div className="flex flex-col h-full bg-gray-100 dark:bg-gray-900">
       {/* Main Content Area */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex-1 flex overflow-hidden">
         {/* Writing Area */}
-        <div className="flex-1 flex flex-col p-3 overflow-auto">
-          {/* COMPACT PROMPT BOX - Reduced size significantly */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-3 mb-2">
-            <h2 className="text-sm font-semibold text-gray-900 dark:text-white mb-2 flex items-center">
-              <Lightbulb className="inline-block w-4 h-4 mr-1 text-yellow-500" />Your Writing Prompt
-            </h2>
-            <p className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed">
-              {prompt || 'Loading prompt...'}
-            </p>
-          </div>
-
-          {/* COMPACT BUTTONS AND TITLE IN ONE LINE - Reduced spacing and font sizes */}
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setShowPlanningModal(true)}
-                className="px-2 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:ring-opacity-50"
-              >
-                <Sparkles className="inline-block w-3 h-3 mr-1" />Planning Phase
-              </button>
-              <button
-                onClick={startExamMode}
-                className="px-2 py-1 bg-purple-500 text-white rounded text-xs hover:bg-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:ring-opacity-50"
-              >
-                <Clock className="inline-block w-3 h-3 mr-1" />Start Exam Mode
-              </button>
-              <button
-                onClick={() => setShowStructureGuide(true)}
-                className="px-2 py-1 bg-green-500 text-white rounded text-xs hover:bg-green-600 focus:outline-none focus:ring-1 focus:ring-green-500 focus:ring-opacity-50"
-              >
-                <BookOpen className="inline-block w-3 h-3 mr-1" />Structure Guide
-              </button>
+        <div className="flex-1 flex flex-col bg-white dark:bg-gray-800 shadow-lg">
+          {/* Prompt Display */}
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 shadow-lg">
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="text-lg font-bold flex items-center">
+                <PenTool className="w-5 h-5 mr-2" />
+                Writing Prompt
+              </h2>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setShowStructureGuide(true)}
+                  className="p-2 rounded-full hover:bg-white hover:bg-opacity-20 transition-colors"
+                  title="Structure Guide"
+                >
+                  <BookOpen className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setShowPlanningModal(true)}
+                  className="p-2 rounded-full hover:bg-white hover:bg-opacity-20 transition-colors"
+                  title="Planning Tool"
+                >
+                  <Target className="w-4 h-4" />
+                </button>
+              </div>
             </div>
-            <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200">Your Writing</h3>
+            <p className="text-blue-100 leading-relaxed">{prompt}</p>
           </div>
 
-          {/* MAXIMIZED WRITING AREA */}
-          <div className="flex-1 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden flex flex-col">
+          {/* Writing Area */}
+          <div className="flex-1 flex flex-col">
             <textarea
               ref={textareaRef}
               value={content}
@@ -732,6 +760,59 @@ export default function WritingArea({
             {activeTab === 'ai-coach' && (
               <div className="flex flex-col h-full">
                 <h3 className="text-sm font-bold mb-2">AI Coach</h3>
+                
+                {/* Evaluation Display */}
+                {evaluation && (
+                  <div className="mb-4 bg-purple-800 bg-opacity-50 p-3 rounded">
+                    <h4 className="text-lg font-semibold text-green-400 mb-2 flex items-center">
+                      <Award className="w-5 h-5 mr-2" />
+                      Overall Score: {evaluation.overallScore}/10
+                    </h4>
+                    
+                    <div className="mb-4">
+                      <p className="text-sm text-purple-200 mb-3">{evaluation.specificFeedback}</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4 mb-4">
+                      <div>
+                        <h4 className="text-lg font-semibold text-green-600 dark:text-green-400 mb-2 flex items-center">
+                          <CheckCircle className="w-5 h-5 mr-2" />Strengths
+                        </h4>
+                        <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-1">
+                          {evaluation.strengths.map((strength: string, idx: number) => <li key={idx}>{strength}</li>)}
+                        </ul>
+                      </div>
+                      <div>
+                        <h4 className="text-lg font-semibold text-red-600 dark:text-red-400 mb-2 flex items-center">
+                          <AlertCircle className="w-5 h-5 mr-2" />Areas for Improvement
+                        </h4>
+                        <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-1">
+                          {evaluation.improvements.map((i: string, idx: number) => <li key={idx}>{i}</li>)}
+                        </ul>
+                      </div>
+                    </div>
+
+                    <div className="mb-6">
+                      <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">Next Steps</h4>
+                      <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-1">
+                        {evaluation.nextSteps.map((ns: string, i: number) => <li key={i}>{ns}</li>)}
+                      </ul>
+                    </div>
+
+                    {evaluation.nswCriteria && (
+                      <div className="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
+                        <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">NSW Selective Exam Criteria Scores (out of 10)</h4>
+                        <div className="grid grid-cols-2 gap-4 text-gray-700 dark:text-gray-300">
+                          <div>Ideas and Content: <span className="font-bold text-blue-600 dark:text-blue-400">{evaluation.nswCriteria.ideasAndContent}</span></div>
+                          <div>Text Structure: <span className="font-bold text-blue-600 dark:text-blue-400">{evaluation.nswCriteria.textStructure}</span></div>
+                          <div>Language Features: <span className="font-bold text-blue-600 dark:text-blue-400">{evaluation.nswCriteria.languageFeatures}</span></div>
+                          <div>Grammar and Spelling: <span className="font-bold text-blue-600 dark:text-blue-400">{evaluation.nswCriteria.grammarAndSpelling}</span></div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div className="flex-1 overflow-y-auto pr-1 mb-2 custom-scrollbar">
                   {chatMessages.length === 0 && (
                     <p className="text-purple-300 text-center mt-4 text-xs">Ask your Writing Buddy anything!</p>
@@ -809,29 +890,31 @@ export default function WritingArea({
       {/* Structure Guide Modal */}
       {showStructureGuide && (
         <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full relative">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto relative">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
+              <BookOpen className="w-8 h-8 mr-3 text-blue-500" />Structure Guide
+            </h2>
             <button
               onClick={() => setShowStructureGuide(false)}
-              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
             >
-              <X className="w-5 h-5" />
+              <X className="w-6 h-6" />
             </button>
-            <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Essay Structure Guide</h3>
-            <div className="text-gray-700 dark:text-gray-300 text-sm space-y-3">
+            <div className="prose dark:prose-invert max-w-none">
               {textType === 'narrative' && (
                 <>
-                  <h3>Narrative Essay Structure</h3>
-                  <p>A narrative essay tells a story, often a personal one:</p>
-                  <h4>1. Introduction</h4>
-                  <p>Set the scene, introduce characters, and hint at the conflict or main event.</p>
-                  <h4>2. Rising Action</h4>
-                  <p>Develop the plot, introduce challenges, and build tension.</p>
+                  <h3>Narrative Structure</h3>
+                  <p>A narrative typically follows a clear story arc:</p>
+                  <h4>1. Orientation</h4>
+                  <p>Introduce characters, setting, and initial situation. Hook the reader.</p>
+                  <h4>2. Complication / Rising Action</h4>
+                  <p>A problem or challenge arises, leading to a series of events that build tension.</p>
                   <h4>3. Climax</h4>
-                  <p>The turning point of the story, where the main conflict is faced.</p>
-                  <h4>4. Falling Action</h4>
-                  <p>Events that happen after the climax, leading to the resolution.</p>
-                  <h4>5. Resolution</h4>
-                  <p>The conclusion of the story, where conflicts are resolved and loose ends tied up.</p>
+                  <p>The turning point of the story, where the main conflict is confronted.</p>
+                  <h4>4. Resolution / Falling Action</h4>
+                  <p>The events that follow the climax, leading to the story's conclusion.</p>
+                  <h4>5. Coda (Optional)</h4>
+                  <p>A final reflection or moral of the story.</p>
                 </>
               )}
               {textType === 'persuasive' && (
@@ -839,25 +922,25 @@ export default function WritingArea({
                   <h3>Persuasive Essay Structure</h3>
                   <p>A persuasive essay aims to convince the reader of a particular viewpoint:</p>
                   <h4>1. Introduction</h4>
-                  <p>Hook the reader, provide background, and state your clear thesis statement.</p>
+                  <p>Hook, background information, and clear thesis statement (your argument).</p>
                   <h4>2. Body Paragraphs (Arguments)</h4>
-                  <p>Present your arguments with supporting evidence, examples, and logical reasoning. Each paragraph should focus on one main point.</p>
-                  <h4>3. Counterarguments and Rebuttals</h4>
-                  <p>Acknowledge opposing viewpoints and refute them with evidence and reasoning.</p>
+                  <p>Each paragraph presents a distinct argument supporting your thesis, backed by evidence and examples.</p>
+                  <h4>3. Counter-Argument and Rebuttal</h4>
+                  <p>Acknowledge opposing viewpoints and then refute them with stronger evidence or reasoning.</p>
                   <h4>4. Conclusion</h4>
-                  <p>Summarize your main points, restate your thesis in new words, and provide a strong call to action or final thought.</p>
+                  <p>Summarize main points, restate thesis in new words, and provide a strong call to action or final thought.</p>
                 </>
               )}
               {textType === 'expository' && (
                 <>
                   <h3>Expository Essay Structure</h3>
-                  <p>An expository essay explains, clarifies, or informs:</p>
+                  <p>An expository essay explains a topic clearly and concisely:</p>
                   <h4>1. Introduction</h4>
-                  <p>Introduce the topic and provide a clear thesis statement that outlines what will be explained.</p>
+                  <p>Hook, background information, and clear thesis statement (what you will explain).</p>
                   <h4>2. Body Paragraphs (Explanations)</h4>
-                  <p>Provide detailed explanations, facts, and examples to support your main points. Use clear and concise language.</p>
+                  <p>Each paragraph explains a different aspect of your topic, providing facts, examples, and details.</p>
                   <h4>3. Conclusion</h4>
-                  <p>Summarize the main points and reiterate the thesis statement. Avoid introducing new information.</p>
+                  <p>Summarize main points and restate thesis in new words. Provide a final thought or implication.</p>
                 </>
               )}
               {textType === 'reflective' && (
@@ -893,3 +976,46 @@ export default function WritingArea({
     </div>
   );
 }
+
+// Placeholder for PlanningToolModal component
+const PlanningToolModal = ({ isOpen, onClose, onSavePlan, textType, content }: any) => {
+  if (!isOpen) return null;
+  
+  return (
+    <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto relative">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Planning Tool</h2>
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+        >
+          <X className="w-6 h-6" />
+        </button>
+        <p className="text-gray-700 dark:text-gray-300 mb-4">
+          Use this space to plan your {textType} writing. Think about your main ideas, structure, and key points.
+        </p>
+        <textarea
+          className="w-full h-64 p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Write your planning notes here..."
+        />
+        <div className="flex justify-end space-x-4 mt-6">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              onSavePlan('Planning notes saved');
+              onClose();
+            }}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            Save Plan
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
