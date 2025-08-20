@@ -500,7 +500,7 @@ export default function WritingArea({
     }
   };
 
-  // Handle keyboard shortcuts
+  // Handle keyboard shortcuts.
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.altKey && e.key === 's') { // Alt + S for Save
