@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Save, Download, Upload, Eye, EyeOff, RotateCcw, Sparkles, BookOpen, Target, TrendingUp, Award, CheckCircle, AlertCircle, Star, Lightbulb, MessageSquare, BarChart3, Clock, Zap, Heart, Trophy, Wand2, PenTool, FileText, Settings, RefreshCw, Play, Pause, Volume2, VolumeX, Maximize2, Minimize2, Copy, Check, X, Plus, Minus, ChevronDown, ChevronUp, Info, HelpCircle, Calendar, Users, Globe, Mic, Camera, Image, Link, Hash, Type, AlignLeft, AlignCenter, AlignRight, Bold, Italic, Underline, List, ListOrdered, Quote, Code, Scissors, Clipboard, Search, Filter, SortAsc, SortDesc, Grid, Layout, Sidebar, Menu, MoreHorizontal, MoreVertical, ChevronLeft, ChevronRight, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Timer, Send, Bot } from 'lucide-react';
 import { generatePrompt, getSynonyms, rephraseSentence, evaluateEssay } from '../lib/openai';
 import { WritingStatusBar } from './WritingStatusBar';
+import { StructuredPlanningSection } from './StructuredPlanningSection';
 
 interface WritingAreaProps {
   onContentChange?: (content: string) => void;
@@ -19,7 +20,7 @@ export default function WritingArea({ onContentChange, initialContent = '', text
   const [characterCount, setCharacterCount] = useState(0);
   const [readingTime, setReadingTime] = useState(0);
   const [showPlanningModal, setShowPlanningModal] = useState(false);
-  const [activeTab, setActiveTab] = useState('analysis');
+  const [activeTab, setActiveTab] = useState('ai-coach'); // Changed default to ai-coach
   const [isAutoSaving, setIsAutoSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [showWordCount, setShowWordCount] = useState(true);
@@ -56,6 +57,10 @@ export default function WritingArea({ onContentChange, initialContent = '', text
   }>>([]);
   const [chatInput, setChatInput] = useState('');
   const [isChatLoading, setIsChatLoading] = useState(false);
+  
+  // Planning section state
+  const [showPlanningSection, setShowPlanningSection] = useState(false);
+  const [savedPlan, setSavedPlan] = useState<any>(null);
   
   // Refs
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -287,6 +292,12 @@ export default function WritingArea({ onContentChange, initialContent = '', text
     }
   };
 
+  // Handle planning section save
+  const handlePlanSave = (plan: any) => {
+    setSavedPlan(plan);
+    setShowPlanningSection(false);
+  };
+
   return (
     <div className="flex h-full bg-gray-50">
       {/* Main Content Area - Left Side */}
@@ -302,6 +313,18 @@ export default function WritingArea({ onContentChange, initialContent = '', text
           </p>
         </div>
 
+        {/* Planning Section */}
+        {showPlanningSection && (
+          <div className="mx-3 mb-3">
+            <StructuredPlanningSection
+              textType={textType}
+              onSavePlan={handlePlanSave}
+              isExpanded={showPlanningSection}
+              onToggle={() => setShowPlanningSection(!showPlanningSection)}
+            />
+          </div>
+        )}
+
         {/* Writing Area */}
         <div className="flex-1 flex flex-col px-3 pb-3">
           <div className="bg-white rounded-lg shadow-sm flex-1 flex flex-col overflow-hidden">
@@ -310,7 +333,7 @@ export default function WritingArea({ onContentChange, initialContent = '', text
               <h3 className="text-sm font-medium text-gray-900">Your Writing</h3>
               <div className="flex items-center space-x-2">
                 <button
-                  onClick={() => setShowPlanningModal(true)}
+                  onClick={() => setShowPlanningSection(!showPlanningSection)}
                   className="flex items-center px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition-colors"
                 >
                   <Sparkles className="w-3 h-3 mr-1" />
@@ -390,37 +413,37 @@ export default function WritingArea({ onContentChange, initialContent = '', text
         </div>
       </div>
 
-      {/* Right Sidebar - Writing Buddy - Extends to top */}
-      <div className="w-80 bg-gradient-to-b from-purple-600 to-indigo-700 text-white flex flex-col shadow-lg">
+      {/* Right Sidebar - Writing Buddy - Improved colors and readability */}
+      <div className="w-80 bg-gradient-to-b from-indigo-600 to-purple-700 text-white flex flex-col shadow-lg">
         {/* Header - Smaller padding and font sizes */}
-        <div className="p-2 border-b border-purple-500">
+        <div className="p-2 border-b border-indigo-500 bg-indigo-700">
           <div className="flex items-center justify-between mb-1">
-            <h2 className="text-sm font-bold flex items-center">
+            <h2 className="text-sm font-bold flex items-center text-white">
               <Bot className="w-4 h-4 mr-1" />
               Writing Buddy
             </h2>
             <button className="p-1 rounded-full hover:bg-white hover:bg-opacity-20 transition-colors">
-              <Settings className="w-3 h-3" />
+              <Settings className="w-3 h-3 text-indigo-200" />
             </button>
           </div>
-          <p className="text-purple-200 text-xs">Your AI writing assistant</p>
+          <p className="text-indigo-200 text-xs">Your AI writing assistant</p>
         </div>
 
-        {/* Tabs - Smaller padding and font sizes */}
-        <div className="flex border-b border-purple-500">
+        {/* Tabs - Reordered with Coach first, smaller padding and font sizes */}
+        <div className="flex border-b border-indigo-500 bg-indigo-600">
           {[
+            { id: 'ai-coach', label: 'Coach', icon: Bot },
             { id: 'analysis', label: 'Analysis', icon: BarChart3 },
             { id: 'vocabulary', label: 'Vocabulary', icon: BookOpen },
-            { id: 'progress', label: 'Progress', icon: TrendingUp },
-            { id: 'ai-coach', label: 'Coach', icon: Bot }
+            { id: 'progress', label: 'Progress', icon: TrendingUp }
           ].map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`flex-1 py-1.5 px-1 text-xs font-medium transition-colors ${
                 activeTab === tab.id 
-                  ? 'bg-purple-700 text-white' 
-                  : 'text-purple-200 hover:bg-purple-600'
+                  ? 'bg-indigo-800 text-white border-b-2 border-yellow-400' 
+                  : 'text-indigo-200 hover:bg-indigo-700 hover:text-white'
               }`}
             >
               <tab.icon className="w-3 h-3 mx-auto mb-0.5" />
@@ -429,74 +452,28 @@ export default function WritingArea({ onContentChange, initialContent = '', text
           ))}
         </div>
 
-        {/* Tab Content - Smaller padding and font sizes */}
-        <div className="flex-1 p-2 overflow-y-auto">
-          {activeTab === 'analysis' && (
-            <div className="space-y-2">
-              <h3 className="text-xs font-semibold mb-2 text-purple-100">Writing Analysis</h3>
-              
-              <div className="bg-purple-800 bg-opacity-50 rounded-lg p-2">
-                <h4 className="font-medium mb-1 text-xs text-purple-200">Words:</h4>
-                <div className="text-lg font-bold text-white">{wordCount}</div>
-              </div>
-              
-              <div className="bg-purple-800 bg-opacity-50 rounded-lg p-2">
-                <h4 className="font-medium mb-1 text-xs text-purple-200">Characters:</h4>
-                <div className="text-lg font-bold text-white">{characterCount}</div>
-              </div>
-              
-              <div className="bg-purple-800 bg-opacity-50 rounded-lg p-2">
-                <h4 className="font-medium mb-1 text-xs text-purple-200">Reading Time:</h4>
-                <div className="text-lg font-bold text-white">{readingTime} min</div>
-              </div>
-              
-              <button className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-3 rounded-lg text-xs transition-colors">
-                Submit for Evaluation
-              </button>
-            </div>
-          )}
-          
-          {activeTab === 'vocabulary' && (
-            <div className="space-y-2">
-              <h3 className="text-xs font-semibold mb-2 text-purple-100">Vocabulary</h3>
-              <p className="text-purple-200 text-xs">Select text to see suggestions</p>
-            </div>
-          )}
-          
-          {activeTab === 'progress' && (
-            <div className="space-y-2">
-              <h3 className="text-xs font-semibold mb-2 text-purple-100">Progress</h3>
-              <div className="bg-purple-800 bg-opacity-50 rounded-lg p-2">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-xs text-purple-200">Word Goal:</span>
-                  <span className="font-bold text-sm text-white">{targetWordCount}</span>
-                </div>
-                <div className="w-full bg-purple-900 rounded-full h-2">
-                  <div 
-                    className="bg-green-400 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${Math.min((wordCount / targetWordCount) * 100, 100)}%` }}
-                  ></div>
-                </div>
-                <p className="text-xs text-purple-200 mt-1">
-                  {wordCount >= targetWordCount ? 'Goal achieved! 🎉' : `${targetWordCount - wordCount} words to go`}
-                </p>
-              </div>
-            </div>
-          )}
-          
+        {/* Tab Content - Smaller padding and font sizes with improved colors */}
+        <div className="flex-1 p-2 overflow-y-auto bg-indigo-600">
           {activeTab === 'ai-coach' && (
             <div className="flex flex-col h-full">
-              <h3 className="text-xs font-semibold mb-2 text-purple-100">AI Coach</h3>
-              <div className="flex-1 overflow-y-auto mb-2">
+              <h3 className="text-xs font-semibold mb-2 text-indigo-100">AI Coach</h3>
+              <div className="flex-1 overflow-y-auto mb-2 bg-indigo-700 rounded-lg p-2">
                 {chatMessages.length === 0 && (
-                  <p className="text-purple-300 text-center mt-4 text-xs">Ask your Writing Buddy anything!</p>
+                  <div className="text-center mt-4">
+                    <p className="text-indigo-200 text-xs mb-2">Ask your Writing Buddy anything!</p>
+                    <div className="text-xs text-indigo-300 space-y-1">
+                      <p>• "How can I improve my introduction?"</p>
+                      <p>• "What's a good synonym for 'said'?"</p>
+                      <p>• "Help me with my conclusion"</p>
+                    </div>
+                  </div>
                 )}
                 {chatMessages.map((message) => (
                   <div key={message.id} className={`mb-2 ${message.sender === 'user' ? 'text-right' : 'text-left'}`}>
                     <div className={`inline-block p-2 rounded-lg text-xs max-w-[90%] ${
                       message.sender === 'user' 
                         ? 'bg-blue-500 text-white' 
-                        : 'bg-gray-200 text-gray-800'
+                        : 'bg-white text-gray-800 shadow-sm'
                     }`}>
                       {message.text}
                     </div>
@@ -504,7 +481,7 @@ export default function WritingArea({ onContentChange, initialContent = '', text
                 ))}
                 {isChatLoading && (
                   <div className="text-center">
-                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-purple-300 mx-auto"></div>
+                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-indigo-200 mx-auto"></div>
                   </div>
                 )}
                 <div ref={chatEndRef} />
@@ -516,16 +493,84 @@ export default function WritingArea({ onContentChange, initialContent = '', text
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
                   placeholder="Ask for help..."
-                  className="flex-1 px-2 py-1 text-xs text-gray-900 bg-white rounded border-none focus:outline-none focus:ring-1 focus:ring-purple-300"
+                  className="flex-1 px-2 py-1 text-xs text-gray-900 bg-white rounded border-none focus:outline-none focus:ring-1 focus:ring-yellow-400"
                 />
                 <button
                   type="submit"
                   disabled={!chatInput.trim() || isChatLoading}
-                  className="px-2 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded disabled:opacity-50 text-xs"
+                  className="px-2 py-1 bg-yellow-500 hover:bg-yellow-600 text-indigo-900 rounded disabled:opacity-50 text-xs font-medium"
                 >
                   <Send className="w-3 h-3" />
                 </button>
               </form>
+            </div>
+          )}
+
+          {activeTab === 'analysis' && (
+            <div className="space-y-2">
+              <h3 className="text-xs font-semibold mb-2 text-indigo-100">Writing Analysis</h3>
+              
+              <div className="bg-indigo-700 rounded-lg p-2">
+                <h4 className="font-medium mb-1 text-xs text-indigo-200">Words:</h4>
+                <div className="text-lg font-bold text-white">{wordCount}</div>
+              </div>
+              
+              <div className="bg-indigo-700 rounded-lg p-2">
+                <h4 className="font-medium mb-1 text-xs text-indigo-200">Characters:</h4>
+                <div className="text-lg font-bold text-white">{characterCount}</div>
+              </div>
+              
+              <div className="bg-indigo-700 rounded-lg p-2">
+                <h4 className="font-medium mb-1 text-xs text-indigo-200">Reading Time:</h4>
+                <div className="text-lg font-bold text-white">{readingTime} min</div>
+              </div>
+              
+              <button 
+                onClick={handleEvaluate}
+                className="w-full bg-yellow-500 hover:bg-yellow-600 text-indigo-900 py-2 px-3 rounded-lg text-xs font-medium transition-colors"
+              >
+                Submit for Evaluation
+              </button>
+            </div>
+          )}
+          
+          {activeTab === 'vocabulary' && (
+            <div className="space-y-2">
+              <h3 className="text-xs font-semibold mb-2 text-indigo-100">Vocabulary</h3>
+              <div className="bg-indigo-700 rounded-lg p-2">
+                <p className="text-indigo-200 text-xs mb-2">Select text to see suggestions</p>
+                <div className="text-xs text-indigo-300">
+                  <p>• Highlight any word in your writing</p>
+                  <p>• Get instant synonym suggestions</p>
+                  <p>• Improve your vocabulary</p>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {activeTab === 'progress' && (
+            <div className="space-y-2">
+              <h3 className="text-xs font-semibold mb-2 text-indigo-100">Progress</h3>
+              <div className="bg-indigo-700 rounded-lg p-2">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-xs text-indigo-200">Word Goal:</span>
+                  <span className="font-bold text-sm text-white">{targetWordCount}</span>
+                </div>
+                <div className="w-full bg-indigo-800 rounded-full h-2 mb-2">
+                  <div 
+                    className="bg-yellow-400 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${Math.min((wordCount / targetWordCount) * 100, 100)}%` }}
+                  ></div>
+                </div>
+                <p className="text-xs text-indigo-200">
+                  {wordCount >= targetWordCount ? 'Goal achieved! 🎉' : `${targetWordCount - wordCount} words to go`}
+                </p>
+              </div>
+              
+              <div className="bg-indigo-700 rounded-lg p-2">
+                <h4 className="font-medium mb-1 text-xs text-indigo-200">Writing Time:</h4>
+                <div className="text-sm font-bold text-white">{Math.floor(timeSpent / 60)}:{(timeSpent % 60).toString().padStart(2, '0')}</div>
+              </div>
             </div>
           )}
         </div>
@@ -565,19 +610,7 @@ export default function WritingArea({ onContentChange, initialContent = '', text
         </div>
       )}
 
-      {/* Planning Modal */}
-      <PlanningToolModal
-        isOpen={showPlanningModal}
-        onClose={() => setShowPlanningModal(false)}
-        onSavePlan={(plan) => {
-          setPlanningNotes(plan);
-          setShowPlanningModal(false);
-        }}
-        textType={textType}
-        content={content}
-      />
-
-      {/* Structure Guide Modal */}
+      {/* Structure Guide Modal - Fixed with proper content */}
       {showStructureGuide && (
         <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto relative">
@@ -594,68 +627,170 @@ export default function WritingArea({ onContentChange, initialContent = '', text
               </h2>
               
               {textType === 'narrative' && (
-                <>
-                  <h3>Narrative Essay Structure</h3>
-                  <p>A narrative essay tells a story with a clear beginning, middle, and end:</p>
-                  <h4>1. Introduction (Hook & Setting)</h4>
-                  <p>Start with an engaging hook, introduce characters, and establish the setting.</p>
-                  <h4>2. Rising Action</h4>
-                  <p>Build tension and develop the conflict. Show character development through actions and dialogue.</p>
-                  <h4>3. Climax</h4>
-                  <p>The turning point or most exciting moment of your story.</p>
-                  <h4>4. Falling Action & Resolution</h4>
-                  <p>Resolve the conflict and show how characters have changed. End with a satisfying conclusion.</p>
-                </>
+                <div className="space-y-4">
+                  <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-300 mb-2">Narrative Essay Structure</h3>
+                    <p className="text-blue-700 dark:text-blue-400 mb-3">A narrative essay tells a story with a clear beginning, middle, and end:</p>
+                    
+                    <div className="space-y-3">
+                      <div className="border-l-4 border-blue-500 pl-3">
+                        <h4 className="font-semibold text-gray-800 dark:text-gray-200">1. Introduction (Hook & Setting)</h4>
+                        <p className="text-gray-600 dark:text-gray-400 text-sm">Start with an engaging hook, introduce characters, and establish the setting.</p>
+                      </div>
+                      
+                      <div className="border-l-4 border-green-500 pl-3">
+                        <h4 className="font-semibold text-gray-800 dark:text-gray-200">2. Rising Action</h4>
+                        <p className="text-gray-600 dark:text-gray-400 text-sm">Build tension and develop the conflict. Show character development through actions and dialogue.</p>
+                      </div>
+                      
+                      <div className="border-l-4 border-yellow-500 pl-3">
+                        <h4 className="font-semibold text-gray-800 dark:text-gray-200">3. Climax</h4>
+                        <p className="text-gray-600 dark:text-gray-400 text-sm">The turning point or most exciting moment of your story.</p>
+                      </div>
+                      
+                      <div className="border-l-4 border-purple-500 pl-3">
+                        <h4 className="font-semibold text-gray-800 dark:text-gray-200">4. Falling Action & Resolution</h4>
+                        <p className="text-gray-600 dark:text-gray-400 text-sm">Resolve the conflict and show how characters have changed. End with a satisfying conclusion.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               )}
+              
               {textType === 'persuasive' && (
-                <>
-                  <h3>Persuasive Essay Structure</h3>
-                  <p>A persuasive essay aims to convince the reader of your viewpoint:</p>
-                  <h4>1. Introduction</h4>
-                  <p>Hook the reader, provide background information, and state your clear thesis/position.</p>
-                  <h4>2. Body Paragraphs (Arguments)</h4>
-                  <p>Present your strongest arguments with evidence, examples, and reasoning. Address counterarguments.</p>
-                  <h4>3. Conclusion</h4>
-                  <p>Restate your thesis, summarize key points, and end with a call to action or final persuasive statement.</p>
-                </>
+                <div className="space-y-4">
+                  <div className="bg-red-50 dark:bg-red-900/30 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold text-red-800 dark:text-red-300 mb-2">Persuasive Essay Structure</h3>
+                    <p className="text-red-700 dark:text-red-400 mb-3">A persuasive essay aims to convince the reader of your viewpoint:</p>
+                    
+                    <div className="space-y-3">
+                      <div className="border-l-4 border-red-500 pl-3">
+                        <h4 className="font-semibold text-gray-800 dark:text-gray-200">1. Introduction</h4>
+                        <p className="text-gray-600 dark:text-gray-400 text-sm">Hook the reader, provide background information, and state your clear thesis/position.</p>
+                      </div>
+                      
+                      <div className="border-l-4 border-orange-500 pl-3">
+                        <h4 className="font-semibold text-gray-800 dark:text-gray-200">2. Body Paragraphs (Arguments)</h4>
+                        <p className="text-gray-600 dark:text-gray-400 text-sm">Present your strongest arguments with evidence, examples, and reasoning. Address counterarguments.</p>
+                      </div>
+                      
+                      <div className="border-l-4 border-yellow-500 pl-3">
+                        <h4 className="font-semibold text-gray-800 dark:text-gray-200">3. Conclusion</h4>
+                        <p className="text-gray-600 dark:text-gray-400 text-sm">Restate your thesis, summarize key points, and end with a call to action or final persuasive statement.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               )}
+              
               {textType === 'expository' && (
-                <>
-                  <h3>Expository Essay Structure</h3>
-                  <p>An expository essay explains or informs about a topic:</p>
-                  <h4>1. Introduction</h4>
-                  <p>Hook, background information, and clear thesis statement (what you will explain).</p>
-                  <h4>2. Body Paragraphs (Explanations)</h4>
-                  <p>Each paragraph explains a different aspect of your topic, providing facts, examples, and details.</p>
-                  <h4>3. Conclusion</h4>
-                  <p>Summarize main points and restate thesis in new words. Provide a final thought or implication.</p>
-                </>
+                <div className="space-y-4">
+                  <div className="bg-green-50 dark:bg-green-900/30 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold text-green-800 dark:text-green-300 mb-2">Expository Essay Structure</h3>
+                    <p className="text-green-700 dark:text-green-400 mb-3">An expository essay explains or informs about a topic:</p>
+                    
+                    <div className="space-y-3">
+                      <div className="border-l-4 border-green-500 pl-3">
+                        <h4 className="font-semibold text-gray-800 dark:text-gray-200">1. Introduction</h4>
+                        <p className="text-gray-600 dark:text-gray-400 text-sm">Hook, background information, and clear thesis statement (what you will explain).</p>
+                      </div>
+                      
+                      <div className="border-l-4 border-blue-500 pl-3">
+                        <h4 className="font-semibold text-gray-800 dark:text-gray-200">2. Body Paragraphs (Explanations)</h4>
+                        <p className="text-gray-600 dark:text-gray-400 text-sm">Each paragraph explains a different aspect of your topic, providing facts, examples, and details.</p>
+                      </div>
+                      
+                      <div className="border-l-4 border-purple-500 pl-3">
+                        <h4 className="font-semibold text-gray-800 dark:text-gray-200">3. Conclusion</h4>
+                        <p className="text-gray-600 dark:text-gray-400 text-sm">Summarize main points and restate thesis in new words. Provide a final thought or implication.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               )}
+              
               {textType === 'reflective' && (
-                <>
-                  <h3>Reflective Essay Structure</h3>
-                  <p>A reflective essay explores a personal experience and its meaning:</p>
-                  <h4>1. Introduction</h4>
-                  <p>Introduce the experience or event you will reflect upon and its initial significance.</p>
-                  <h4>2. Description of Experience</h4>
-                  <p>Detail the experience, using sensory language to bring it to life for the reader.</p>
-                  <h4>3. Analysis and Interpretation</h4>
-                  <p>Explore the meaning of the experience, what you learned, and how it impacted you.</p>
-                  <h4>4. Conclusion</h4>
-                  <p>Summarize your insights and reflect on the lasting impact or future implications.</p>
-                </>
+                <div className="space-y-4">
+                  <div className="bg-purple-50 dark:bg-purple-900/30 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold text-purple-800 dark:text-purple-300 mb-2">Reflective Essay Structure</h3>
+                    <p className="text-purple-700 dark:text-purple-400 mb-3">A reflective essay explores a personal experience and its meaning:</p>
+                    
+                    <div className="space-y-3">
+                      <div className="border-l-4 border-purple-500 pl-3">
+                        <h4 className="font-semibold text-gray-800 dark:text-gray-200">1. Introduction</h4>
+                        <p className="text-gray-600 dark:text-gray-400 text-sm">Introduce the experience or event you will reflect upon and its initial significance.</p>
+                      </div>
+                      
+                      <div className="border-l-4 border-pink-500 pl-3">
+                        <h4 className="font-semibold text-gray-800 dark:text-gray-200">2. Description of Experience</h4>
+                        <p className="text-gray-600 dark:text-gray-400 text-sm">Detail the experience, using sensory language to bring it to life for the reader.</p>
+                      </div>
+                      
+                      <div className="border-l-4 border-indigo-500 pl-3">
+                        <h4 className="font-semibold text-gray-800 dark:text-gray-200">3. Analysis and Interpretation</h4>
+                        <p className="text-gray-600 dark:text-gray-400 text-sm">Explore the meaning of the experience, what you learned, and how it impacted you.</p>
+                      </div>
+                      
+                      <div className="border-l-4 border-blue-500 pl-3">
+                        <h4 className="font-semibold text-gray-800 dark:text-gray-200">4. Conclusion</h4>
+                        <p className="text-gray-600 dark:text-gray-400 text-sm">Summarize your insights and reflect on the lasting impact or future implications.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               )}
+              
               {textType === 'descriptive' && (
-                <>
-                  <h3>Descriptive Essay Structure</h3>
-                  <p>A descriptive essay creates a vivid picture of a person, place, object, or event:</p>
-                  <h4>1. Introduction</h4>
-                  <p>Introduce the subject of your description and create an overall impression.</p>
-                  <h4>2. Body Paragraphs (Sensory Details)</h4>
-                  <p>Organize details by sense (sight, sound, smell, taste, touch), spatial order, or order of importance. Use figurative language.</p>
-                  <h4>3. Conclusion</h4>
-                  <p>Summarize the overall impression and leave the reader with a lasting image or feeling.</p>
-                </>
+                <div className="space-y-4">
+                  <div className="bg-yellow-50 dark:bg-yellow-900/30 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold text-yellow-800 dark:text-yellow-300 mb-2">Descriptive Essay Structure</h3>
+                    <p className="text-yellow-700 dark:text-yellow-400 mb-3">A descriptive essay creates a vivid picture of a person, place, object, or event:</p>
+                    
+                    <div className="space-y-3">
+                      <div className="border-l-4 border-yellow-500 pl-3">
+                        <h4 className="font-semibold text-gray-800 dark:text-gray-200">1. Introduction</h4>
+                        <p className="text-gray-600 dark:text-gray-400 text-sm">Introduce the subject of your description and create an overall impression.</p>
+                      </div>
+                      
+                      <div className="border-l-4 border-orange-500 pl-3">
+                        <h4 className="font-semibold text-gray-800 dark:text-gray-200">2. Body Paragraphs (Sensory Details)</h4>
+                        <p className="text-gray-600 dark:text-gray-400 text-sm">Organize details by sense (sight, sound, smell, taste, touch), spatial order, or order of importance. Use figurative language.</p>
+                      </div>
+                      
+                      <div className="border-l-4 border-red-500 pl-3">
+                        <h4 className="font-semibold text-gray-800 dark:text-gray-200">3. Conclusion</h4>
+                        <p className="text-gray-600 dark:text-gray-400 text-sm">Summarize the overall impression and leave the reader with a lasting image or feeling.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Default structure for other text types */}
+              {!['narrative', 'persuasive', 'expository', 'reflective', 'descriptive'].includes(textType) && (
+                <div className="space-y-4">
+                  <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
+                    <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">General Writing Structure</h3>
+                    <p className="text-gray-600 dark:text-gray-400 mb-3">A well-structured piece of writing typically includes:</p>
+                    
+                    <div className="space-y-3">
+                      <div className="border-l-4 border-gray-500 pl-3">
+                        <h4 className="font-semibold text-gray-800 dark:text-gray-200">1. Introduction</h4>
+                        <p className="text-gray-600 dark:text-gray-400 text-sm">Engage your reader and introduce your main topic or thesis.</p>
+                      </div>
+                      
+                      <div className="border-l-4 border-gray-500 pl-3">
+                        <h4 className="font-semibold text-gray-800 dark:text-gray-200">2. Body Paragraphs</h4>
+                        <p className="text-gray-600 dark:text-gray-400 text-sm">Develop your main points with supporting details, examples, and evidence.</p>
+                      </div>
+                      
+                      <div className="border-l-4 border-gray-500 pl-3">
+                        <h4 className="font-semibold text-gray-800 dark:text-gray-200">3. Conclusion</h4>
+                        <p className="text-gray-600 dark:text-gray-400 text-sm">Summarize your main points and provide a satisfying ending.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
           </div>
@@ -664,45 +799,3 @@ export default function WritingArea({ onContentChange, initialContent = '', text
     </div>
   );
 }
-
-// Placeholder for PlanningToolModal component
-const PlanningToolModal = ({ isOpen, onClose, onSavePlan, textType, content }: any) => {
-  if (!isOpen) return null;
-  return (
-    <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto relative">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Planning Tool</h2>
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-        >
-          <X className="w-6 h-6" />
-        </button>
-        <p className="text-gray-700 dark:text-gray-300 mb-4">
-          Use this space to plan your {textType} writing. Think about your main ideas, structure, and key points.
-        </p>
-        <textarea
-          className="w-full h-64 p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Write your planning notes here..."
-        />
-        <div className="flex justify-end space-x-4 mt-6">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={() => {
-              onSavePlan('Planning notes saved');
-              onClose();
-            }}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            Save Plan
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
