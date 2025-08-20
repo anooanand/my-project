@@ -12,7 +12,7 @@ import {
   TrendingUp,
   Clock,
   User,
-  Bot
+  User
 } from 'lucide-react';
 
 // Types for enhanced coaching system
