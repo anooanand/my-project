@@ -91,7 +91,7 @@ interface WritingAreaProps {
   onPromptChange?: (prompt: string) => void;
 }
 
-export function WritingArea({ 
+export default function WritingArea({ 
   onContentChange, 
   initialContent = '', 
   textType = 'narrative',
