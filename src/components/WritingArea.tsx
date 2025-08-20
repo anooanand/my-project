@@ -82,6 +82,8 @@ import {
   Send
 } from 'lucide-react';
 import { generatePrompt, getSynonyms, rephraseSentence, evaluateEssay } from '../lib/openai';
+import { WritingStatusBar } from './WritingStatusBar';
+
 
 interface WritingAreaProps {
   onContentChange?: (content: string ) => void;
