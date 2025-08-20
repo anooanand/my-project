@@ -380,58 +380,57 @@ export default function WritingArea({ onContentChange, initialContent = '', text
 
   return (
     <div className="flex flex-col h-full bg-gray-50">
-      {/* Prompt Section */}
-      <div className="bg-white rounded-lg shadow-sm p-4 mb-4 mx-4 mt-4">
-        <div className="flex items-center mb-2">
-          <Lightbulb className="w-4 h-4 mr-2 text-yellow-500" />
-          <span className="text-sm font-medium text-gray-700">Your Writing Prompt</span>
+      {/* Prompt Section - Reduced padding */}
+      <div className="bg-white rounded-lg shadow-sm p-3 mb-3 mx-3 mt-3">
+        <div className="flex items-center mb-1">
+          <Lightbulb className="w-3 h-3 mr-1 text-yellow-500" />
+          <span className="text-xs font-medium text-gray-700">Your Writing Prompt</span>
         </div>
-        <p className="text-gray-600 text-sm leading-relaxed">
+        <p className="text-gray-600 text-xs leading-relaxed">
           {prompt || 'Write an engaging story about a character who discovers something unexpected that changes their life forever. Include vivid descriptions, realistic dialogue, and show the character\'s emotional journey. Make sure your story has a clear beginning, middle, and end with a satisfying conclusion. Focus on showing rather than telling, and use sensory details to bring your story to life.'}
         </p>
       </div>
-      {/* Action Buttons */}
-      <div className="flex items-center space-x-3 px-4 mb-4">
-        <button
-          onClick={() => setShowPlanningModal(true)}
-          className="flex items-center px-3 py-2 bg-blue-500 text-white text-sm rounded-md hover:bg-blue-600 transition-colors"
-        >
-          <Sparkles className="w-4 h-4 mr-1" />
-          Planning Phase
-        </button>
-        <button
-          onClick={startExamMode}
-          className="flex items-center px-3 py-2 bg-purple-500 text-white text-sm rounded-md hover:bg-purple-600 transition-colors"
-        >
-          <Clock className="w-4 h-4 mr-1" />
-          Start Exam Mode
-        </button>
-        <button
-          onClick={() => setShowStructureGuide(true)}
-          className="flex items-center px-3 py-2 bg-green-500 text-white text-sm rounded-md hover:bg-green-600 transition-colors"
-        >
-          <BookOpen className="w-4 h-4 mr-1" />
-          Structure Guide
-        </button>
-      </div>
+
       {/* Main Content Area */}
       <div className="flex flex-1 overflow-hidden">
         {/* Writing Area */}
-        <div className="flex-1 flex flex-col px-4 pb-4">
+        <div className="flex-1 flex flex-col px-3 pb-3">
           <div className="bg-white rounded-lg shadow-sm flex-1 flex flex-col overflow-hidden">
-            {/* Writing Area Header */}
-            <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
-              <h3 className="text-lg font-medium text-gray-900">Your Writing</h3>
+            {/* Writing Area Header with Buttons - Consolidated */}
+            <div className="px-3 py-2 border-b border-gray-200 flex items-center justify-between">
+              <h3 className="text-sm font-medium text-gray-900">Your Writing</h3>
               <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setShowPlanningModal(true)}
+                  className="flex items-center px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition-colors"
+                >
+                  <Sparkles className="w-3 h-3 mr-1" />
+                  Planning Phase
+                </button>
+                <button
+                  onClick={startExamMode}
+                  className="flex items-center px-2 py-1 bg-purple-500 text-white text-xs rounded hover:bg-purple-600 transition-colors"
+                >
+                  <Clock className="w-3 h-3 mr-1" />
+                  Start Exam Mode
+                </button>
+                <button
+                  onClick={() => setShowStructureGuide(true)}
+                  className="flex items-center px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600 transition-colors"
+                >
+                  <BookOpen className="w-3 h-3 mr-1" />
+                  Structure Guide
+                </button>
                 <button
                   onClick={() => setIsFullscreen(!isFullscreen)}
                   className="p-1 text-gray-400 hover:text-gray-600"
                 >
-                  {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                  {isFullscreen ? <Minimize2 className="w-3 h-3" /> : <Maximize2 className="w-3 h-3" />}
                 </button>
               </div>
             </div>
-            {/* Text Area */}
+
+            {/* Text Area - Reduced padding and font size */}
             <textarea
               ref={textareaRef}
               value={content}
@@ -439,38 +438,40 @@ export default function WritingArea({ onContentChange, initialContent = '', text
               onMouseUp={handleTextSelection}
               onKeyUp={handleTextSelection}
               placeholder="Start writing your amazing story here! Let your creativity flow and bring your ideas to life..."
-              className="flex-1 p-4 text-base leading-relaxed text-gray-900 bg-white focus:outline-none resize-none"
-              style={{ fontSize: `${fontSize}px`, lineHeight: lineHeight }}
+              className="flex-1 p-3 text-sm leading-relaxed text-gray-900 bg-white focus:outline-none resize-none"
+              style={{ fontSize: `${fontSize - 2}px`, lineHeight: lineHeight }}
             />
-            {/* Status Bar */}
-            <div className="px-4 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
-              <div className="flex items-center space-x-6 text-sm text-gray-600">
+            
+            {/* Status Bar - Reduced padding and font size */}
+            <div className="px-3 py-2 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
+              <div className="flex items-center space-x-4 text-xs text-gray-600">
                 <div className="flex items-center space-x-1">
-                  <FileText className="w-4 h-4" />
+                  <FileText className="w-3 h-3" />
                   <span>{wordCount} words</span>
                 </div>
                 <div className="flex items-center space-x-1">
-                  <Clock className="w-4 h-4" />
+                  <Clock className="w-3 h-3" />
                   <span>{characterCount} characters</span>
                 </div>
                 <div className="flex items-center space-x-1">
-                  <Eye className="w-4 h-4" />
+                  <Eye className="w-3 h-3" />
                   <span>{readingTime} min read</span>
                 </div>
               </div>
+              
               <button
                 onClick={handleEvaluate}
                 disabled={isEvaluating}
-                className="flex items-center px-4 py-2 bg-green-500 text-white text-sm rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 disabled:opacity-50"
+                className="flex items-center px-3 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600 focus:outline-none focus:ring-1 focus:ring-green-500 focus:ring-opacity-50 disabled:opacity-50"
               >
                 {isEvaluating ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
                     Evaluating...
                   </>
                 ) : (
                   <>
-                    <Send className="w-4 h-4 mr-2" />
+                    <Send className="w-3 h-3 mr-1" />
                     Submit for Evaluation
                   </>
                 )}
@@ -478,22 +479,24 @@ export default function WritingArea({ onContentChange, initialContent = '', text
             </div>
           </div>
         </div>
-        {/* Right Sidebar - Writing Buddy */}
+
+        {/* Right Sidebar - Writing Buddy - Reduced padding */}
         <div className="w-80 bg-gradient-to-b from-purple-600 to-indigo-700 text-white flex flex-col shadow-lg">
-          {/* Header */}
-          <div className="p-4 border-b border-purple-500">
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="text-xl font-bold flex items-center">
-                <Bot className="w-6 h-6 mr-2" />
+          {/* Header - Reduced padding */}
+          <div className="p-3 border-b border-purple-500">
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="text-lg font-bold flex items-center">
+                <Bot className="w-5 h-5 mr-2" />
                 Writing Buddy
               </h2>
               <button className="p-1 rounded-full hover:bg-white hover:bg-opacity-20 transition-colors">
-                <Settings className="w-5 h-5" />
+                <Settings className="w-4 h-4" />
               </button>
             </div>
-            <p className="text-purple-200 text-sm">Your AI writing assistant</p>
+            <p className="text-purple-200 text-xs">Your AI writing assistant</p>
           </div>
-          {/* Tabs */}
+
+          {/* Tabs - Reduced padding */}
           <div className="flex border-b border-purple-500">
             {[
               { id: 'analysis', label: 'Analysis', icon: BarChart3 },
@@ -504,89 +507,94 @@ export default function WritingArea({ onContentChange, initialContent = '', text
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 py-3 px-2 text-xs font-medium transition-colors ${
-                  activeTab === tab.id ? 'bg-purple-700 text-white' : 'text-purple-200 hover:bg-purple-600'
+                className={`flex-1 py-2 px-1 text-xs font-medium transition-colors ${
+                  activeTab === tab.id 
+                    ? 'bg-purple-700 text-white' 
+                    : 'text-purple-200 hover:bg-purple-600'
                 }`}
               >
-                <tab.icon className="w-4 h-4 mx-auto mb-1" />
+                <tab.icon className="w-3 h-3 mx-auto mb-1" />
                 {tab.label}
               </button>
             ))}
           </div>
-          {/* Tab Content */}
-          <div className="flex-1 p-4 overflow-y-auto">
+
+          {/* Tab Content - Reduced padding and font sizes */}
+          <div className="flex-1 p-3 overflow-y-auto">
             {activeTab === 'analysis' && (
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold mb-3">Writing Analysis</h3>
-                <div className="bg-purple-800 bg-opacity-50 rounded-lg p-3">
-                  <h4 className="font-medium mb-2 text-sm">Words:</h4>
-                  <div className="text-2xl font-bold">{wordCount}</div>
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold mb-2">Writing Analysis</h3>
+                
+                <div className="bg-purple-800 bg-opacity-50 rounded-lg p-2">
+                  <h4 className="font-medium mb-1 text-xs">Words:</h4>
+                  <div className="text-xl font-bold">{wordCount}</div>
                 </div>
-                <div className="bg-purple-800 bg-opacity-50 rounded-lg p-3">
-                  <h4 className="font-medium mb-2 text-sm">Characters:</h4>
-                  <div className="text-2xl font-bold">{characterCount}</div>
+                
+                <div className="bg-purple-800 bg-opacity-50 rounded-lg p-2">
+                  <h4 className="font-medium mb-1 text-xs">Characters:</h4>
+                  <div className="text-xl font-bold">{characterCount}</div>
                 </div>
-                <div className="bg-purple-800 bg-opacity-50 rounded-lg p-3">
-                  <h4 className="font-medium mb-2 text-sm">Reading Time:</h4>
-                  <div className="text-2xl font-bold">{readingTime} min</div>
+                
+                <div className="bg-purple-800 bg-opacity-50 rounded-lg p-2">
+                  <h4 className="font-medium mb-1 text-xs">Reading Time:</h4>
+                  <div className="text-xl font-bold">{readingTime} min</div>
                 </div>
-                <button
-                  className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg text-sm transition-colors"
-                >
+                
+                <button className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2 px-3 rounded-lg text-xs transition-colors">
                   Submit for Evaluation
                 </button>
               </div>
             )}
+            
             {activeTab === 'vocabulary' && (
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold mb-3">Vocabulary</h3>
-                <p className="text-purple-200 text-sm">Select text to see suggestions</p>
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold mb-2">Vocabulary</h3>
+                <p className="text-purple-200 text-xs">Select text to see suggestions</p>
               </div>
             )}
+            
             {activeTab === 'progress' && (
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold mb-3">Progress</h3>
-                <div className="bg-purple-800 bg-opacity-50 rounded-lg p-3">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm">Word Goal:</span>
-                    <span className="font-bold">{targetWordCount}</span>
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold mb-2">Progress</h3>
+                <div className="bg-purple-800 bg-opacity-50 rounded-lg p-2">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-xs">Word Goal:</span>
+                    <span className="font-bold text-sm">{targetWordCount}</span>
                   </div>
                   <div className="w-full bg-purple-900 rounded-full h-2">
-                    <div
+                    <div 
                       className="bg-green-400 h-2 rounded-full transition-all duration-300"
                       style={{ width: `${Math.min((wordCount / targetWordCount) * 100, 100)}%` }}
                     ></div>
                   </div>
-                  <p className="text-xs text-purple-200 mt-2">
+                  <p className="text-xs text-purple-200 mt-1">
                     {wordCount >= targetWordCount ? 'Goal achieved! 🎉' : `${targetWordCount - wordCount} words to go`}
                   </p>
                 </div>
               </div>
             )}
+            
             {activeTab === 'ai-coach' && (
               <div className="flex flex-col h-full">
-                <h3 className="text-lg font-semibold mb-3">AI Coach</h3>
-                <div className="flex-1 overflow-y-auto mb-4">
+                <h3 className="text-sm font-semibold mb-2">AI Coach</h3>
+                <div className="flex-1 overflow-y-auto mb-3">
                   {chatMessages.length === 0 && (
-                    <p className="text-purple-300 text-center mt-8 text-sm">Ask your Writing Buddy anything!</p>
+                    <p className="text-purple-300 text-center mt-6 text-xs">Ask your Writing Buddy anything!</p>
                   )}
                   {chatMessages.map((message) => (
-                    <div
-                      key={message.id}
-                      className={`mb-3 ${message.sender === 'user' ? 'text-right' : 'text-left'}`}
-                    >
-                      <div
-                        className={`inline-block p-3 rounded-lg text-sm ${
-                          message.sender === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'
-                        }`}
-                      >
+                    <div key={message.id} className={`mb-2 ${message.sender === 'user' ? 'text-right' : 'text-left'}`}>
+                      <div className={`inline-block p-2 rounded-lg text-xs ${
+                        message.sender === 'user' 
+                          ? 'bg-blue-500 text-white' 
+                          : 'bg-gray-200 text-gray-800'
+                      }`}>
                         {message.text}
                       </div>
                     </div>
                   ))}
                   {isChatLoading && (
                     <div className="text-center">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-300 mx-auto"></div>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-300 mx-auto"></div>
                     </div>
                   )}
                   <div ref={chatEndRef} />
@@ -597,13 +605,13 @@ export default function WritingArea({ onContentChange, initialContent = '', text
                     value={chatInput}
                     onChange={(e) => setChatInput(e.target.value)}
                     placeholder="Ask your Writing Buddy..."
-                    className="flex-1 p-2 rounded-l-lg bg-purple-800 text-white placeholder-purple-300 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
+                    className="flex-1 p-2 rounded-l-lg bg-purple-800 text-white placeholder-purple-300 focus:outline-none focus:ring-1 focus:ring-purple-500 text-xs"
                   />
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-purple-500 text-white rounded-r-lg hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="px-3 py-2 bg-purple-500 text-white rounded-r-lg hover:bg-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-500"
                   >
-                    <Send className="w-4 h-4" />
+                    <Send className="w-3 h-3" />
                   </button>
                 </form>
               </div>
@@ -611,6 +619,7 @@ export default function WritingArea({ onContentChange, initialContent = '', text
           </div>
         </div>
       </div>
+
       {/* Modals */}
       <PlanningToolModal
         isOpen={showPlanningModal}
@@ -622,17 +631,18 @@ export default function WritingArea({ onContentChange, initialContent = '', text
         textType={textType}
         content={content}
       />
+
       {/* Synonyms Popup */}
       {showSynonyms && selectedText && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-4 max-w-md w-full mx-4">
-            <h3 className="font-semibold mb-2">Synonyms for "{selectedText}"</h3>
+            <h3 className="font-semibold mb-2 text-sm">Synonyms for "{selectedText}"</h3>
             <div className="flex flex-wrap gap-2 mb-4">
               {synonyms.map((synonym, index) => (
                 <button
                   key={index}
                   onClick={() => replaceSynonym(synonym)}
-                  className="px-3 py-1 bg-blue-500 text-white rounded-full text-sm hover:bg-blue-600"
+                  className="px-2 py-1 bg-blue-500 text-white rounded-full text-xs hover:bg-blue-600"
                 >
                   {synonym}
                 </button>
@@ -640,13 +650,14 @@ export default function WritingArea({ onContentChange, initialContent = '', text
             </div>
             <button
               onClick={() => setShowSynonyms(false)}
-              className="w-full py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+              className="w-full py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm"
             >
               Close
             </button>
           </div>
         </div>
       )}
+
       {/* Evaluation Results Popup */}
       {evaluation && (
         <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
@@ -737,6 +748,7 @@ export default function WritingArea({ onContentChange, initialContent = '', text
           </div>
         </div>
       )}
+
       {/* Structure Guide Modal */}
       {showStructureGuide && (
         <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
