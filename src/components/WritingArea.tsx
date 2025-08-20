@@ -94,12 +94,12 @@ interface WritingAreaProps {
   onPromptChange?: (prompt: string) => void;
 }
 
-export default function WritingArea({ 
-  onContentChange, 
-  initialContent = '', 
+export default function WritingArea({
+  onContentChange,
+  initialContent = '',
   textType = 'narrative',
   prompt: propPrompt,
-  onPromptChange 
+  onPromptChange
 }: WritingAreaProps) {
   // State management
   const [content, setContent] = useState(initialContent);
@@ -108,7 +108,7 @@ export default function WritingArea({
   const [characterCount, setCharacterCount] = useState(0);
   const [readingTime, setReadingTime] = useState(0);
   const [showPlanningModal, setShowPlanningModal] = useState(false);
-  const [activeTab, setActiveTab] = useState('text-type-analysis');
+  const [activeTab, setActiveTab] = useState('ai-coach');
   const [isAutoSaving, setIsAutoSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [showWordCount, setShowWordCount] = useState(true);
@@ -159,7 +159,7 @@ export default function WritingArea({
       console.log('🔍 WritingArea: Loading prompt...');
       console.log('🔍 PropPrompt:', propPrompt);
       console.log('🔍 TextType:', textType);
-      
+
       // Priority order for prompt sources
       const sources = [
         { name: 'propPrompt', value: propPrompt },
@@ -173,9 +173,9 @@ export default function WritingArea({
         { name: 'persuasive_prompt', value: localStorage.getItem('persuasive_prompt') },
         { name: 'expository_prompt', value: localStorage.getItem('expository_prompt') }
       ];
-      
+
       console.log('🔍 All localStorage keys:', Object.keys(localStorage));
-      
+
       let loadedPrompt = '';
       for (const source of sources) {
         console.log(`🔍 Checking ${source.name}:`, source.value);
@@ -185,7 +185,7 @@ export default function WritingArea({
           break;
         }
       }
-      
+
       if (loadedPrompt) {
         setPrompt(loadedPrompt);
         if (onPromptChange) {
@@ -208,7 +208,7 @@ export default function WritingArea({
             reflective: "Write a thoughtful reflection about a meaningful experience in your life. Explore what you learned, how it changed you, and what insights you gained. Use descriptive language to help readers understand both the experience and your thoughts about it. (Target: 250-350 words)",
             descriptive: "Write a vivid description of a place, person, or object that is meaningful to you. Use sensory details, figurative language, and specific examples to create a clear and engaging picture in your reader's mind. (Target: 250-350 words)"
           };
-          
+
           const finalFallbackPrompt = fallbackPrompts[textType as keyof typeof fallbackPrompts] || fallbackPrompts.narrative;
           console.log('🔄 Using final fallback prompt for', textType, ':', finalFallbackPrompt);
           setPrompt(finalFallbackPrompt);
@@ -220,7 +220,7 @@ export default function WritingArea({
     };
 
     loadPrompt();
-    
+
     // Also listen for storage changes
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key && (e.key.includes('prompt') || e.key.includes('Prompt'))) {
@@ -228,18 +228,18 @@ export default function WritingArea({
         loadPrompt();
       }
     };
-    
+
     window.addEventListener('storage', handleStorageChange);
-    
+
     // Check for prompt updates every 2 seconds for the first 10 seconds
     const promptCheckInterval = setInterval(() => {
       loadPrompt();
     }, 2000);
-    
+
     setTimeout(() => {
       clearInterval(promptCheckInterval);
     }, 10000);
-    
+
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       clearInterval(promptCheckInterval);
@@ -338,7 +338,7 @@ export default function WritingArea({
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newContent = e.target.value;
     setContent(newContent);
-    
+
     // Start timer when user starts typing
     if (!isTimerRunning && newContent.trim()) {
       setIsTimerRunning(true);
@@ -397,7 +397,7 @@ export default function WritingArea({
   // Evaluate writing
   const handleEvaluate = async () => {
     if (!content.trim()) return;
-    
+
     setIsEvaluating(true);
     try {
       const result = await evaluateEssay(content, textType);
@@ -456,48 +456,6 @@ export default function WritingArea({
     setExamMode(false);
     setIsTimerRunning(false);
   };
-
-  // Toggle fullscreen
-  const toggleFullscreen = () => {
-    setIsFullscreen(!isFullscreen);
-  };
-
-  // Handle chat submission
-  const handleChatSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!chatInput.trim()) return;
-
-    const userMessage = {
-      id: Date.now().toString(),
-      text: chatInput,
-      sender: 'user' as const,
-      timestamp: new Date()
-    };
-
-    setChatMessages(prev => [...prev, userMessage]);
-    setChatInput('');
-    setIsChatLoading(true);
-
-    try {
-      // Simulate AI response (replace with actual AI call)
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const aiMessage = {
-        id: (Date.now() + 1).toString(),
-        text: `I understand you're asking about "${chatInput}". Here's some helpful advice for your ${textType} writing...`,
-        sender: 'ai' as const,
-        timestamp: new Date()
-      };
-
-      setChatMessages(prev => [...prev, aiMessage]);
-    } catch (error) {
-      console.error('Error sending chat message:', error);
-    } finally {
-      setIsChatLoading(false);
-    }
-  };
-
-  return (
     <div className="flex flex-col h-full bg-gray-100 dark:bg-gray-900">
       {/* Main Content Area */}
       <div className="flex flex-1 overflow-hidden">
@@ -550,7 +508,7 @@ export default function WritingArea({
               className="flex-1 p-4 text-lg leading-relaxed text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 focus:outline-none resize-none"
               style={{ fontSize: `${fontSize}px`, lineHeight: lineHeight }}
             />
-            
+
             {/* ULTRA-COMPACT BOTTOM ELEMENTS: All in one line to save maximum space */}
             <div className="bg-white border-t border-gray-200 p-2 flex items-center justify-between text-xs">
               <div className="flex items-center space-x-4">
@@ -571,7 +529,7 @@ export default function WritingArea({
                   <span className="text-gray-600">{readingTime} min read</span>
                 </div>
               </div>
-              
+
               <button
                 onClick={handleEvaluate}
                 disabled={isEvaluating}
@@ -613,6 +571,12 @@ export default function WritingArea({
           {/* COMPACT TABS - Smaller buttons and text */}
           <div className="flex space-x-1 mb-3">
             <button
+              onClick={() => setActiveTab('ai-coach')}
+              className={`flex-1 py-1 px-2 rounded text-xs font-semibold transition-colors ${activeTab === 'ai-coach' ? 'bg-purple-700 text-white' : 'bg-purple-500 text-purple-100 hover:bg-purple-600'}`}
+            >
+              <Bot className="inline-block w-3 h-3 mr-1" />Coach
+            </button>
+            <button
               onClick={() => setActiveTab('analysis')}
               className={`flex-1 py-1 px-2 rounded text-xs font-semibold transition-colors ${activeTab === 'analysis' ? 'bg-purple-700 text-white' : 'bg-purple-500 text-purple-100 hover:bg-purple-600'}`}
             >
@@ -629,12 +593,6 @@ export default function WritingArea({
               className={`flex-1 py-1 px-2 rounded text-xs font-semibold transition-colors ${activeTab === 'progress' ? 'bg-purple-700 text-white' : 'bg-purple-500 text-purple-100 hover:bg-purple-600'}`}
             >
               <TrendingUp className="inline-block w-3 h-3 mr-1" />Progress
-            </button>
-            <button
-              onClick={() => setActiveTab('ai-coach')}
-              className={`flex-1 py-1 px-2 rounded text-xs font-semibold transition-colors ${activeTab === 'ai-coach' ? 'bg-purple-700 text-white' : 'bg-purple-500 text-purple-100 hover:bg-purple-600'}`}
-            >
-              <Bot className="inline-block w-3 h-3 mr-1" />Coach
             </button>
           </div>
 
@@ -665,7 +623,7 @@ export default function WritingArea({
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="bg-purple-800 bg-opacity-50 p-2 rounded">
                     <h4 className="font-semibold mb-1 text-xs">Writing Quality</h4>
                     <div className="space-y-1 text-xs">
@@ -700,7 +658,7 @@ export default function WritingArea({
                       ))}
                     </div>
                   </div>
-                  
+
                   <div className="bg-purple-800 bg-opacity-50 p-2 rounded">
                     <h4 className="font-semibold mb-1 text-xs">Word Alternatives</h4>
                     <p className="text-xs text-purple-200 mb-1">Select text in your writing to see synonyms</p>
@@ -745,7 +703,7 @@ export default function WritingArea({
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="bg-purple-800 bg-opacity-50 p-2 rounded">
                     <h4 className="font-semibold mb-1 text-xs">Target Progress</h4>
                     <div className="space-y-1">
@@ -754,7 +712,7 @@ export default function WritingArea({
                         <span>{targetWordCount} words</span>
                       </div>
                       <div className="w-full bg-purple-900 rounded-full h-1">
-                        <div 
+                        <div
                           className="bg-green-400 h-1 rounded-full transition-all duration-300"
                           style={{ width: `${Math.min((wordCount / targetWordCount) * 100, 100)}%` }}
                         ></div>
@@ -764,7 +722,7 @@ export default function WritingArea({
                       </p>
                     </div>
                   </div>
-                  
+
                   <button className="w-full bg-purple-600 hover:bg-purple-700 text-white py-1 px-2 rounded text-xs transition-colors">
                     View Detailed Progress
                   </button>
@@ -802,8 +760,7 @@ export default function WritingArea({
                   />
                   <button
                     type="submit"
-                    className="px-3 py-2 bg-purple-500 text-white rounded-r hover:bg-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-500"
-                    disabled={isChatLoading}
+                    className="px-3 py-2 bg-purple-500 text-white rounded-r hover:bg-purple-600 focus:outline-none focus:ring-1 focus:ring-purple-500 focus:ring-opacity-50 text-xs"
                   >
                     <Send className="w-3 h-3" />
                   </button>
@@ -811,237 +768,128 @@ export default function WritingArea({
               </div>
             )}
           </div>
-
-          {/* Synonyms Popup */}
-          {showSynonyms && selectedText && (
-            <div className="absolute bottom-24 left-1/2 -translate-x-1/2 bg-white dark:bg-gray-700 p-4 rounded-lg shadow-xl border border-gray-200 dark:border-gray-600 z-50">
-              <h4 className="font-semibold text-gray-800 dark:text-gray-100 mb-2">Synonyms for "{selectedText}"</h4>
-              {isLoadingSynonyms ? (
-                <p className="text-gray-600 dark:text-gray-300">Loading synonyms...</p>
-              ) : synonyms.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {synonyms.map((syn, index) => (
-                    <span
-                      key={index}
-                      onClick={() => replaceSynonym(syn)}
-                      className="cursor-pointer bg-blue-100 dark:bg-blue-800 text-blue-800 dark:text-blue-100 px-3 py-1 rounded-full text-sm hover:bg-blue-200 dark:hover:bg-blue-700 transition-colors"
-                    >
-                      {syn}
-                    </span>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-600 dark:text-gray-300">No synonyms found.</p>
-              )}
-              <button
-                onClick={() => setShowSynonyms(false)}
-                className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-          )}
-
-          {/* Evaluation Results Popup */}
-          {evaluation && (
-            <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto relative">
-                <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
-                  <Award className="w-8 h-8 mr-3 text-yellow-500" />Evaluation Results
-                </h2>
-                <button
-                  onClick={() => setEvaluation(null)}
-                  className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-
-                <div className="mb-6">
-                  <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-3">Overall Score: <span className="text-blue-600 dark:text-blue-400">{evaluation.overallScore}/10</span></h3>
-                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed mb-4">
-                    {evaluation.specificFeedback}
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                  <div>
-                    <h4 className="text-lg font-semibold text-green-600 dark:text-green-400 mb-2 flex items-center"><CheckCircle className="w-5 h-5 mr-2" />Strengths</h4>
-                    <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-1">
-                      {evaluation.strengths.map((s: string, i: number) => <li key={i}>{s}</li>)}
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="text-lg font-semibold text-red-600 dark:text-red-400 mb-2 flex items-center"><AlertCircle className="w-5 h-5 mr-2" />Areas for Improvement</h4>
-                    <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-1">
-                      {evaluation.improvements.map((i: string, idx: number) => <li key={idx}>{i}</li>)}
-                    </ul>
-                  </div>
-                </div>
-
-                <div className="mb-6">
-                  <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">Next Steps</h4>
-                  <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 space-y-1">
-                    {evaluation.nextSteps.map((ns: string, i: number) => <li key={i}>{ns}</li>)}
-                  </ul>
-                </div>
-
-                {evaluation.nswCriteria && (
-                  <div className="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg">
-                    <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">NSW Selective Exam Criteria Scores (out of 10)</h4>
-                    <div className="grid grid-cols-2 gap-4 text-gray-700 dark:text-gray-300">
-                      <div>Ideas and Content: <span className="font-bold text-blue-600 dark:text-blue-400">{evaluation.nswCriteria.ideasAndContent}</span></div>
-                      <div>Text Structure: <span className="font-bold text-blue-600 dark:text-blue-400">{evaluation.nswCriteria.textStructure}</span></div>
-                      <div>Language Features: <span className="font-bold text-blue-600 dark:text-blue-400">{evaluation.nswCriteria.languageFeatures}</span></div>
-                      <div>Grammar and Spelling: <span className="font-bold text-blue-600 dark:text-blue-400">{evaluation.nswCriteria.grammarAndSpelling}</span></div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Planning Tool Modal */}
-          {showPlanningModal && (
-            <PlanningToolModal
-              isOpen={showPlanningModal}
-              onClose={() => setShowPlanningModal(false)}
-              onSavePlan={(plan) => console.log('Plan saved:', plan)}
-              textType={textType}
-              content={content}
-            />
-          )}
-
-          {/* Structure Guide Modal */}
-          {showStructureGuide && (
-            <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 max-w-3xl w-full max-h-[90vh] overflow-y-auto relative">
-                <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
-                  <BookOpen className="w-8 h-8 mr-3 text-blue-500" />Structure Guide
-                </h2>
-                <button
-                  onClick={() => setShowStructureGuide(false)}
-                  className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-                <div className="prose dark:prose-invert max-w-none">
-                  {textType === 'narrative' && (
-                    <>
-                      <h3>Narrative Structure</h3>
-                      <p>A narrative typically follows a clear story arc:</p>
-                      <h4>1. Orientation</h4>
-                      <p>Introduce characters, setting, and initial situation. Hook the reader.</p>
-                      <h4>2. Complication / Rising Action</h4>
-                      <p>A problem or challenge arises, leading to a series of events that build tension.</p>
-                      <h4>3. Climax</h4>
-                      <p>The turning point of the story, where the main conflict is confronted.</p>
-                      <h4>4. Resolution / Falling Action</h4>
-                      <p>The events that follow the climax, leading to the story's conclusion.</p>
-                      <h4>5. Coda (Optional)</h4>
-                      <p>A final reflection or moral of the story.</p>
-                    </>
-                  )}
-                  {textType === 'persuasive' && (
-                    <>
-                      <h3>Persuasive Essay Structure</h3>
-                      <p>A persuasive essay aims to convince the reader of a particular viewpoint:</p>
-                      <h4>1. Introduction</h4>
-                      <p>Hook, background information, and clear thesis statement (your argument).</p>
-                      <h4>2. Body Paragraphs (Arguments)</h4>
-                      <p>Each paragraph presents a distinct argument supporting your thesis, backed by evidence and examples.</p>
-                      <h4>3. Counter-Argument and Rebuttal</h4>
-                      <p>Acknowledge opposing viewpoints and then refute them with stronger evidence or reasoning.</p>
-                      <h4>4. Conclusion</h4>
-                      <p>Summarize main points, restate thesis in new words, and provide a strong call to action or final thought.</p>
-                    </>
-                  )}
-                  {textType === 'expository' && (
-                    <>
-                      <h3>Expository Essay Structure</h3>
-                      <p>An expository essay explains a topic clearly and concisely:</p>
-                      <h4>1. Introduction</h4>
-                      <p>Hook, background information, and clear thesis statement (what you will explain).</p>
-                      <h4>2. Body Paragraphs (Explanations)</h4>
-                      <p>Each paragraph explains a different aspect of your topic, providing facts, examples, and details.</p>
-                      <h4>3. Conclusion</h4>
-                      <p>Summarize main points and restate thesis in new words. Provide a final thought or implication.</p>
-                    </>
-                  )}
-                  {textType === 'reflective' && (
-                    <>
-                      <h3>Reflective Essay Structure</h3>
-                      <p>A reflective essay explores a personal experience and its meaning:</p>
-                      <h4>1. Introduction</h4>
-                      <p>Introduce the experience or event you will reflect upon and its initial significance.</p>
-                      <h4>2. Description of Experience</h4>
-                      <p>Detail the experience, using sensory language to bring it to life for the reader.</p>
-                      <h4>3. Analysis and Interpretation</h4>
-                      <p>Explore the meaning of the experience, what you learned, and how it impacted you.</p>
-                      <h4>4. Conclusion</h4>
-                      <p>Summarize your insights and reflect on the lasting impact or future implications.</p>
-                    </>
-                  )}
-                  {textType === 'descriptive' && (
-                    <>
-                      <h3>Descriptive Essay Structure</h3>
-                      <p>A descriptive essay creates a vivid picture of a person, place, object, or event:</p>
-                      <h4>1. Introduction</h4>
-                      <p>Introduce the subject of your description and create an overall impression.</p>
-                      <h4>2. Body Paragraphs (Sensory Details)</h4>
-                      <p>Organize details by sense (sight, sound, smell, taste, touch), spatial order, or order of importance. Use figurative language.</p>
-                      <h4>3. Conclusion</h4>
-                      <p>Summarize the overall impression and leave the reader with a lasting image or feeling.</p>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
+
+      {/* Status Bar */}
+      <WritingStatusBar
+        wordCount={wordCount}
+        characterCount={characterCount}
+        readingTime={readingTime}
+        isAutoSaving={isAutoSaving}
+        lastSaved={lastSaved}
+        timeSpent={timeSpent}
+        isTimerRunning={isTimerRunning}
+        toggleTimer={() => setIsTimerRunning(!isTimerRunning)}
+        examMode={examMode}
+        examTimeRemaining={examTimeRemaining}
+        targetWordCount={targetWordCount}
+        showWordCount={showWordCount}
+        toggleWordCount={() => setShowWordCount(!showWordCount)}
+        fontSize={fontSize}
+        setFontSize={setFontSize}
+        lineHeight={lineHeight}
+        setLineHeight={setLineHeight}
+        isFullscreen={isFullscreen}
+        toggleFullscreen={() => setIsFullscreen(!isFullscreen)}
+      />
+
+      {/* Planning Tool Modal */}
+      <PlanningToolModal
+        isOpen={showPlanningModal}
+        onClose={() => setShowPlanningModal(false)}
+        textType={textType}
+        onPlanSaved={(plan) => {
+          setPlanningNotes(plan);
+          setShowPlanningModal(false);
+        }}
+        existingPlan={planningNotes}
+      />
+
+      {/* Structure Guide Modal */}
+      {showStructureGuide && (
+        <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full relative">
+            <button
+              onClick={() => setShowStructureGuide(false)}
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <h3 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">Essay Structure Guide</h3>
+            <div className="text-gray-700 dark:text-gray-300 text-sm space-y-3">
+              {textType === 'narrative' && (
+                <>
+                  <h3>Narrative Essay Structure</h3>
+                  <p>A narrative essay tells a story, often a personal one:</p>
+                  <h4>1. Introduction</h4>
+                  <p>Set the scene, introduce characters, and hint at the conflict or main event.</p>
+                  <h4>2. Rising Action</h4>
+                  <p>Develop the plot, introduce challenges, and build tension.</p>
+                  <h4>3. Climax</h4>
+                  <p>The turning point of the story, where the main conflict is faced.</p>
+                  <h4>4. Falling Action</h4>
+                  <p>Events that happen after the climax, leading to the resolution.</p>
+                  <h4>5. Resolution</h4>
+                  <p>The conclusion of the story, where conflicts are resolved and loose ends tied up.</p>
+                </>
+              )}
+              {textType === 'persuasive' && (
+                <>
+                  <h3>Persuasive Essay Structure</h3>
+                  <p>A persuasive essay aims to convince the reader of a particular viewpoint:</p>
+                  <h4>1. Introduction</h4>
+                  <p>Hook the reader, provide background, and state your clear thesis statement.</p>
+                  <h4>2. Body Paragraphs (Arguments)</h4>
+                  <p>Present your arguments with supporting evidence, examples, and logical reasoning. Each paragraph should focus on one main point.</p>
+                  <h4>3. Counterarguments and Rebuttals</h4>
+                  <p>Acknowledge opposing viewpoints and refute them with evidence and reasoning.</p>
+                  <h4>4. Conclusion</h4>
+                  <p>Summarize your main points, restate your thesis in new words, and provide a strong call to action or final thought.</p>
+                </>
+              )}
+              {textType === 'expository' && (
+                <>
+                  <h3>Expository Essay Structure</h3>
+                  <p>An expository essay explains, clarifies, or informs:</p>
+                  <h4>1. Introduction</h4>
+                  <p>Introduce the topic and provide a clear thesis statement that outlines what will be explained.</p>
+                  <h4>2. Body Paragraphs (Explanations)</h4>
+                  <p>Provide detailed explanations, facts, and examples to support your main points. Use clear and concise language.</p>
+                  <h4>3. Conclusion</h4>
+                  <p>Summarize the main points and reiterate the thesis statement. Avoid introducing new information.</p>
+                </>
+              )}
+              {textType === 'reflective' && (
+                <>
+                  <h3>Reflective Essay Structure</h3>
+                  <p>A reflective essay explores a personal experience and its meaning:</p>
+                  <h4>1. Introduction</h4>
+                  <p>Introduce the experience or event you will reflect upon and its initial significance.</p>
+                  <h4>2. Description of Experience</h4>
+                  <p>Detail the experience, using sensory language to bring it to life for the reader.</p>
+                  <h4>3. Analysis and Interpretation</h4>
+                  <p>Explore the meaning of the experience, what you learned, and how it impacted you.</p>
+                  <h4>4. Conclusion</h4>
+                  <p>Summarize your insights and reflect on the lasting impact or future implications.</p>
+                </>
+              )}
+              {textType === 'descriptive' && (
+                <>
+                  <h3>Descriptive Essay Structure</h3>
+                  <p>A descriptive essay creates a vivid picture of a person, place, object, or event:</p>
+                  <h4>1. Introduction</h4>
+                  <p>Introduce the subject and create an overall impression or mood.</p>
+                  <h4>2. Body Paragraphs (Sensory Details)</h4>
+                  <p>Use vivid sensory language (sight, sound, smell, taste, touch) and figurative language (similes, metaphors) to describe the subject in detail.</p>
+                  <h4>3. Conclusion</h4>
+                  <p>Summarize the overall impression and leave the reader with a lasting image or feeling.</p>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-
-// Placeholder for PlanningToolModal component
-const PlanningToolModal = ({ isOpen, onClose, onSavePlan, textType, content }: any) => {
-  if (!isOpen) return null;
-  
-  return (
-    <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto relative">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Planning Tool</h2>
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-        >
-          <X className="w-6 h-6" />
-        </button>
-        <p className="text-gray-700 dark:text-gray-300 mb-4">
-          Use this space to plan your {textType} writing. Think about your main ideas, structure, and key points.
-        </p>
-        <textarea
-          className="w-full h-64 p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Write your planning notes here..."
-        />
-        <div className="flex justify-end space-x-4 mt-6">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={() => {
-              onSavePlan('Planning notes saved');
-              onClose();
-            }}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            Save Plan
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
