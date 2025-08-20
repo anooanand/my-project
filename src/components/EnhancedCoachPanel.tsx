@@ -1,18 +1,18 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { 
-  MessageCircle, 
-  Send, 
-  Loader2, 
-  Brain, 
-  BookOpen, 
-  Target, 
+import {
+  MessageCircle,
+  Send,
+  Loader2,
+  Brain,
+  BookOpen,
+  Target,
   Lightbulb,
   CheckCircle,
   AlertCircle,
   TrendingUp,
   Clock,
   User,
-  User
+  Bot
 } from 'lucide-react';
 
 // Types for enhanced coaching system
