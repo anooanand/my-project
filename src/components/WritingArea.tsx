@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Save, Download, Upload, Eye, EyeOff, RotateCcw, Sparkles, BookOpen, Target, TrendingUp, Award, CheckCircle, AlertCircle, Star, Lightbulb, MessageSquare, BarChart3, Clock, Zap, Heart, Trophy, Wand2, PenTool, FileText, Settings, RefreshCw, Play, Pause, Volume2, VolumeX, Maximize2, Minimize2, Copy, Check, X, Plus, Minus, ChevronDown, ChevronUp, Info, HelpCircle, Calendar, Users, Globe, Mic, Camera, Image, Link, Hash, Type, AlignLeft, AlignCenter, AlignRight, Bold, Italic, Underline, List, ListOrdered, Quote, Code, Scissors, Clipboard, Search, Filter, SortAsc, SortDesc, Grid, Layout, Sidebar, Menu, MoreHorizontal, MoreVertical, ChevronLeft, ChevronRight, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Timer, Send, Bot } from 'lucide-react';
+import { Save, Download, Upload, Eye, EyeOff, RotateCcw, Sparkles, BookOpen, Target, TrendingUp, Award, CheckCircle, AlertCircle, Star, Lightbulb, MessageSquare, BarChart3, Clock, Zap, Heart, Trophy, Wand2, PenTool, FileText, Settings, RefreshCw, Play, Pause, Volume2, VolumeX, Maximize2, Minimize2, Copy, Check, X, Plus, Minus, ChevronDown, ChevronUp, Info, HelpCircle, Calendar, Users, Globe, Mic, Camera, Image, Link, Hash, Type, AlignLeft, AlignCenter, AlignRight, Bold, Italic, Underline, List, ListOrdered, Quote, Code, Scissors, Clipboard, Search, Filter, SortAsc, SortDesc, Grid, Layout, Sidebar, Menu, MoreHorizontal, MoreVertical, ChevronLeft, ChevronRight, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Timer, Send, Bot, StopCircle } from 'lucide-react';
 import { generatePrompt, getSynonyms, rephraseSentence, evaluateEssay } from '../lib/openai';
 import { WritingStatusBar } from './WritingStatusBar';
 import { StructuredPlanningSection } from './StructuredPlanningSection';
@@ -42,12 +42,15 @@ export default function WritingArea({ onContentChange, initialContent = '', text
   const [isParaphrasing, setIsParaphrasing] = useState(false);
   const [vocabularyWords, setVocabularyWords] = useState<string[]>([]);
   const [progressData, setProgressData] = useState({ wordsWritten: 0, timeSpent: 0, sessionsCompleted: 0, averageWordsPerMinute: 0 });
-  // NSW Selective Exam specific features
+  
+  // NSW Selective Exam specific features - Enhanced
   const [examMode, setExamMode] = useState(false);
   const [examTimeLimit, setExamTimeLimit] = useState(30 * 60); // 30 minutes in seconds
   const [examTimeRemaining, setExamTimeRemaining] = useState(examTimeLimit);
   const [targetWordCount, setTargetWordCount] = useState(300); // Typical NSW exam target
   const [showStructureGuide, setShowStructureGuide] = useState(false);
+  const [examStartTime, setExamStartTime] = useState<Date | null>(null);
+  
   // Chat functionality for Writing Buddy
   const [chatMessages, setChatMessages] = useState<Array<{
     id: string;
@@ -61,6 +64,11 @@ export default function WritingArea({ onContentChange, initialContent = '', text
   // Planning section state
   const [showPlanningSection, setShowPlanningSection] = useState(false);
   const [savedPlan, setSavedPlan] = useState<any>(null);
+  
+  // New features
+  const [showWritingTips, setShowWritingTips] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
+  const [focusMode, setFocusMode] = useState(false);
   
   // Refs
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -77,7 +85,7 @@ export default function WritingArea({ onContentChange, initialContent = '', text
     return () => clearInterval(interval);
   }, [isTimerRunning]);
 
-  // Exam timer effect
+  // Enhanced Exam timer effect
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (examMode && examTimeRemaining > 0) {
@@ -86,7 +94,7 @@ export default function WritingArea({ onContentChange, initialContent = '', text
           if (prev <= 1) {
             setExamMode(false);
             setIsTimerRunning(false);
-            alert('Time is up! Your exam has ended.');
+            alert('⏰ Time is up! Your exam has ended. Your work has been automatically saved.');
             return 0;
           }
           return prev - 1;
@@ -244,17 +252,39 @@ export default function WritingArea({ onContentChange, initialContent = '', text
     }
   };
 
-  // Start exam mode
+  // Enhanced Start exam mode
   const startExamMode = () => {
-    setExamMode(true);
-    setExamTimeRemaining(examTimeLimit);
-    setIsTimerRunning(true);
+    const confirmed = window.confirm(
+      `🎯 Start Exam Mode?\n\n` +
+      `• Duration: ${examTimeLimit / 60} minutes\n` +
+      `• Target: ${targetWordCount} words\n` +
+      `• Text Type: ${textType}\n\n` +
+      `Your current work will be saved. Ready to begin?`
+    );
+    
+    if (confirmed) {
+      setExamMode(true);
+      setExamTimeRemaining(examTimeLimit);
+      setExamStartTime(new Date());
+      setIsTimerRunning(true);
+      setFocusMode(true); // Enable focus mode during exam
+      
+      // Clear content for fresh start
+      if (window.confirm('Start with a blank document? (Current work will be saved)')) {
+        setContent('');
+      }
+    }
   };
 
   // Stop exam mode
   const stopExamMode = () => {
-    setExamMode(false);
-    setIsTimerRunning(false);
+    const confirmed = window.confirm('Are you sure you want to end the exam? Your work will be saved.');
+    if (confirmed) {
+      setExamMode(false);
+      setIsTimerRunning(false);
+      setFocusMode(false);
+      alert('✅ Exam completed! Your work has been saved.');
+    }
   };
 
   // Toggle fullscreen
@@ -262,10 +292,11 @@ export default function WritingArea({ onContentChange, initialContent = '', text
     setIsFullscreen(!isFullscreen);
   };
 
-  // Handle chat submission
+  // Enhanced chat submission with better AI responses
   const handleChatSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!chatInput.trim()) return;
+    
     const userMessage = {
       id: Date.now().toString(),
       text: chatInput,
@@ -275,12 +306,29 @@ export default function WritingArea({ onContentChange, initialContent = '', text
     setChatMessages(prev => [...prev, userMessage]);
     setChatInput('');
     setIsChatLoading(true);
+    
     try {
-      // Simulate AI response (replace with actual AI call)
+      // Simulate AI response with more contextual help
       await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      let aiResponse = '';
+      const input = chatInput.toLowerCase();
+      
+      if (input.includes('introduction') || input.includes('intro')) {
+        aiResponse = `For a strong ${textType} introduction:\n• Start with a compelling hook\n• Introduce your main character/topic\n• Set the scene or context\n• End with a clear thesis or direction`;
+      } else if (input.includes('conclusion') || input.includes('ending')) {
+        aiResponse = `For a powerful ${textType} conclusion:\n• Summarize key points\n• Show character growth/resolution\n• Leave a lasting impression\n• Connect back to your opening`;
+      } else if (input.includes('synonym') || input.includes('word')) {
+        aiResponse = `To find better words:\n• Highlight any word in your text\n• I'll suggest synonyms instantly\n• Try words like: magnificent, extraordinary, compelling`;
+      } else if (input.includes('structure') || input.includes('organize')) {
+        aiResponse = `For ${textType} structure:\n• Use the Structure Guide button\n• Follow the recommended format\n• Each paragraph should have one main idea\n• Use transitions between sections`;
+      } else {
+        aiResponse = `Great question about "${chatInput}"! For ${textType} writing, focus on:\n• Clear structure and flow\n• Vivid, specific details\n• Strong character development\n• Engaging dialogue and description`;
+      }
+      
       const aiMessage = {
         id: (Date.now() + 1).toString(),
-        text: `I understand you're asking about "${chatInput}". Here's some helpful advice for your ${textType} writing...`,
+        text: aiResponse,
         sender: 'ai' as const,
         timestamp: new Date()
       };
@@ -298,17 +346,49 @@ export default function WritingArea({ onContentChange, initialContent = '', text
     setShowPlanningSection(false);
   };
 
+  // Format time for display
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
   return (
-    <div className="flex h-full bg-gray-50">
-      {/* Main Content Area - Left Side */}
-      <div className="flex-1 flex flex-col">
-        {/* Prompt Section - Now inside left area only */}
-        <div className="bg-white rounded-lg shadow-sm p-3 mb-3 mx-3 mt-3">
-          <div className="flex items-center mb-1">
-            <Lightbulb className="w-3 h-3 mr-1 text-yellow-500" />
-            <span className="text-xs font-medium text-gray-700">Your Writing Prompt</span>
+    <div className={`flex h-full ${focusMode ? 'bg-gray-900' : 'bg-gray-50'} transition-colors duration-300`}>
+      {/* Exam Mode Overlay */}
+      {examMode && (
+        <div className="fixed top-0 left-0 right-0 z-40 bg-red-600 text-white px-4 py-2 flex items-center justify-between shadow-lg">
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center">
+              <Clock className="w-5 h-5 mr-2" />
+              <span className="font-bold text-lg">EXAM MODE</span>
+            </div>
+            <div className="text-sm">
+              Time Remaining: <span className="font-mono text-lg">{formatTime(examTimeRemaining)}</span>
+            </div>
+            <div className="text-sm">
+              Words: <span className="font-bold">{wordCount}/{targetWordCount}</span>
+            </div>
           </div>
-          <p className="text-gray-600 text-xs leading-relaxed">
+          <button
+            onClick={stopExamMode}
+            className="flex items-center px-3 py-1 bg-red-700 hover:bg-red-800 rounded text-sm font-medium"
+          >
+            <StopCircle className="w-4 h-4 mr-1" />
+            End Exam
+          </button>
+        </div>
+      )}
+
+      {/* Main Content Area - Left Side */}
+      <div className="flex-1 flex flex-col" style={{ marginTop: examMode ? '60px' : '0' }}>
+        {/* Prompt Section - Enhanced styling */}
+        <div className={`${focusMode ? 'bg-gray-800 border-gray-700' : 'bg-white'} rounded-lg shadow-sm p-4 mb-3 mx-3 mt-3 transition-colors duration-300`}>
+          <div className="flex items-center mb-2">
+            <Lightbulb className="w-4 h-4 mr-2 text-yellow-500" />
+            <span className={`text-sm font-bold ${focusMode ? 'text-gray-200' : 'text-gray-800'}`}>Your Writing Prompt</span>
+          </div>
+          <p className={`${focusMode ? 'text-gray-300' : 'text-gray-600'} text-sm leading-relaxed`}>
             {prompt || 'Write an engaging story about a character who discovers something unexpected that changes their life forever. Include vivid descriptions, realistic dialogue, and show the character\'s emotional journey. Make sure your story has a clear beginning, middle, and end with a satisfying conclusion. Focus on showing rather than telling, and use sensory details to bring your story to life.'}
           </p>
         </div>
@@ -325,12 +405,46 @@ export default function WritingArea({ onContentChange, initialContent = '', text
           </div>
         )}
 
+        {/* Writing Tips Section */}
+        {showWritingTips && (
+          <div className={`${focusMode ? 'bg-gray-800 border-gray-700' : 'bg-blue-50 border-blue-200'} border rounded-lg p-3 mx-3 mb-3`}>
+            <div className="flex items-center justify-between mb-2">
+              <h4 className={`text-sm font-semibold ${focusMode ? 'text-blue-300' : 'text-blue-800'}`}>
+                💡 {textType.charAt(0).toUpperCase() + textType.slice(1)} Writing Tips
+              </h4>
+              <button
+                onClick={() => setShowWritingTips(false)}
+                className={`text-xs ${focusMode ? 'text-gray-400 hover:text-gray-300' : 'text-blue-600 hover:text-blue-800'}`}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <div className={`text-xs ${focusMode ? 'text-gray-300' : 'text-blue-700'} space-y-1`}>
+              {textType === 'narrative' && (
+                <>
+                  <p>• Start with action or dialogue to hook readers</p>
+                  <p>• Show emotions through actions, not just words</p>
+                  <p>• Use all five senses in your descriptions</p>
+                </>
+              )}
+              {textType === 'persuasive' && (
+                <>
+                  <p>• State your position clearly in the first paragraph</p>
+                  <p>• Use facts, statistics, and expert opinions</p>
+                  <p>• Address counterarguments to strengthen your case</p>
+                </>
+              )}
+              {/* Add more tips for other text types */}
+            </div>
+          </div>
+        )}
+
         {/* Writing Area */}
         <div className="flex-1 flex flex-col px-3 pb-3">
-          <div className="bg-white rounded-lg shadow-sm flex-1 flex flex-col overflow-hidden">
-            {/* Writing Area Header with Buttons - Consolidated */}
-            <div className="px-3 py-2 border-b border-gray-200 flex items-center justify-between">
-              <h3 className="text-sm font-medium text-gray-900">Your Writing</h3>
+          <div className={`${focusMode ? 'bg-gray-800 border-gray-700' : 'bg-white'} rounded-lg shadow-sm flex-1 flex flex-col overflow-hidden transition-colors duration-300`}>
+            {/* Writing Area Header with Buttons - Enhanced */}
+            <div className={`px-3 py-2 ${focusMode ? 'border-gray-700' : 'border-gray-200'} border-b flex items-center justify-between`}>
+              <h3 className={`text-sm font-medium ${focusMode ? 'text-gray-200' : 'text-gray-900'}`}>Your Writing</h3>
               <div className="flex items-center space-x-2">
                 <button
                   onClick={() => setShowPlanningSection(!showPlanningSection)}
@@ -341,10 +455,11 @@ export default function WritingArea({ onContentChange, initialContent = '', text
                 </button>
                 <button
                   onClick={startExamMode}
-                  className="flex items-center px-2 py-1 bg-purple-500 text-white text-xs rounded hover:bg-purple-600 transition-colors"
+                  disabled={examMode}
+                  className="flex items-center px-2 py-1 bg-purple-500 text-white text-xs rounded hover:bg-purple-600 transition-colors disabled:opacity-50"
                 >
                   <Clock className="w-3 h-3 mr-1" />
-                  Start Exam Mode
+                  {examMode ? 'Exam Active' : 'Start Exam Mode'}
                 </button>
                 <button
                   onClick={() => setShowStructureGuide(true)}
@@ -354,15 +469,29 @@ export default function WritingArea({ onContentChange, initialContent = '', text
                   Structure Guide
                 </button>
                 <button
+                  onClick={() => setShowWritingTips(!showWritingTips)}
+                  className="flex items-center px-2 py-1 bg-yellow-500 text-white text-xs rounded hover:bg-yellow-600 transition-colors"
+                >
+                  <Lightbulb className="w-3 h-3 mr-1" />
+                  Tips
+                </button>
+                <button
+                  onClick={() => setFocusMode(!focusMode)}
+                  className="flex items-center px-2 py-1 bg-gray-500 text-white text-xs rounded hover:bg-gray-600 transition-colors"
+                >
+                  <Eye className="w-3 h-3 mr-1" />
+                  Focus
+                </button>
+                <button
                   onClick={() => setIsFullscreen(!isFullscreen)}
-                  className="p-1 text-gray-400 hover:text-gray-600"
+                  className={`p-1 ${focusMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}
                 >
                   {isFullscreen ? <Minimize2 className="w-3 h-3" /> : <Maximize2 className="w-3 h-3" />}
                 </button>
               </div>
             </div>
 
-            {/* Text Area - Reduced padding and font size */}
+            {/* Text Area - Enhanced */}
             <textarea
               ref={textareaRef}
               value={content}
@@ -370,13 +499,17 @@ export default function WritingArea({ onContentChange, initialContent = '', text
               onMouseUp={handleTextSelection}
               onKeyUp={handleTextSelection}
               placeholder="Start writing your amazing story here! Let your creativity flow and bring your ideas to life..."
-              className="flex-1 p-3 text-sm leading-relaxed text-gray-900 bg-white focus:outline-none resize-none"
-              style={{ fontSize: `${fontSize - 2}px`, lineHeight: lineHeight }}
+              className={`flex-1 p-4 text-sm leading-relaxed ${
+                focusMode 
+                  ? 'text-gray-100 bg-gray-800 placeholder-gray-500' 
+                  : 'text-gray-900 bg-white placeholder-gray-400'
+              } focus:outline-none resize-none transition-colors duration-300`}
+              style={{ fontSize: `${fontSize}px`, lineHeight: lineHeight }}
             />
             
-            {/* Status Bar - Reduced padding and font size */}
-            <div className="px-3 py-2 bg-gray-50 border-t border-gray-200 flex items-center justify-between">
-              <div className="flex items-center space-x-4 text-xs text-gray-600">
+            {/* Status Bar - Enhanced */}
+            <div className={`px-3 py-2 ${focusMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'} border-t flex items-center justify-between transition-colors duration-300`}>
+              <div className={`flex items-center space-x-4 text-xs ${focusMode ? 'text-gray-300' : 'text-gray-600'}`}>
                 <div className="flex items-center space-x-1">
                   <FileText className="w-3 h-3" />
                   <span>{wordCount} words</span>
@@ -389,6 +522,12 @@ export default function WritingArea({ onContentChange, initialContent = '', text
                   <Eye className="w-3 h-3" />
                   <span>{readingTime} min read</span>
                 </div>
+                {isAutoSaving && (
+                  <div className="flex items-center space-x-1 text-blue-500">
+                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-500"></div>
+                    <span>Saving...</span>
+                  </div>
+                )}
               </div>
               
               <button
@@ -413,13 +552,13 @@ export default function WritingArea({ onContentChange, initialContent = '', text
         </div>
       </div>
 
-      {/* Right Sidebar - Writing Buddy - Improved colors and readability */}
+      {/* Right Sidebar - Writing Buddy - Enhanced with better alignment */}
       <div className="w-80 bg-gradient-to-b from-indigo-600 to-purple-700 text-white flex flex-col shadow-lg">
-        {/* Header - Smaller padding and font sizes */}
-        <div className="p-2 border-b border-indigo-500 bg-indigo-700">
+        {/* Header - Better alignment */}
+        <div className="p-3 border-b border-indigo-500 bg-indigo-700">
           <div className="flex items-center justify-between mb-1">
             <h2 className="text-sm font-bold flex items-center text-white">
-              <Bot className="w-4 h-4 mr-1" />
+              <Bot className="w-4 h-4 mr-2" />
               Writing Buddy
             </h2>
             <button className="p-1 rounded-full hover:bg-white hover:bg-opacity-20 transition-colors">
@@ -429,7 +568,7 @@ export default function WritingArea({ onContentChange, initialContent = '', text
           <p className="text-indigo-200 text-xs">Your AI writing assistant</p>
         </div>
 
-        {/* Tabs - Reordered with Coach first, smaller padding and font sizes */}
+        {/* Tabs - Better alignment and spacing */}
         <div className="flex border-b border-indigo-500 bg-indigo-600">
           {[
             { id: 'ai-coach', label: 'Coach', icon: Bot },
@@ -440,65 +579,76 @@ export default function WritingArea({ onContentChange, initialContent = '', text
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 py-1.5 px-1 text-xs font-medium transition-colors ${
+              className={`flex-1 py-2 px-1 text-xs font-medium transition-colors flex flex-col items-center ${
                 activeTab === tab.id 
                   ? 'bg-indigo-800 text-white border-b-2 border-yellow-400' 
                   : 'text-indigo-200 hover:bg-indigo-700 hover:text-white'
               }`}
             >
-              <tab.icon className="w-3 h-3 mx-auto mb-0.5" />
-              <div className="text-xs">{tab.label}</div>
+              <tab.icon className="w-3 h-3 mb-1" />
+              <span className="text-xs leading-tight">{tab.label}</span>
             </button>
           ))}
         </div>
 
-        {/* Tab Content - Smaller padding and font sizes with improved colors */}
-        <div className="flex-1 p-2 overflow-y-auto bg-indigo-600">
+        {/* Tab Content - Better alignment and spacing */}
+        <div className="flex-1 p-3 overflow-y-auto bg-indigo-600">
           {activeTab === 'ai-coach' && (
             <div className="flex flex-col h-full">
-              <h3 className="text-xs font-semibold mb-2 text-indigo-100">AI Coach</h3>
-              <div className="flex-1 overflow-y-auto mb-2 bg-indigo-700 rounded-lg p-2">
+              <h3 className="text-xs font-semibold mb-3 text-indigo-100 text-center">AI Coach</h3>
+              <div className="flex-1 overflow-y-auto mb-3 bg-indigo-700 rounded-lg p-3">
                 {chatMessages.length === 0 && (
-                  <div className="text-center mt-4">
-                    <p className="text-indigo-200 text-xs mb-2">Ask your Writing Buddy anything!</p>
-                    <div className="text-xs text-indigo-300 space-y-1">
-                      <p>• "How can I improve my introduction?"</p>
-                      <p>• "What's a good synonym for 'said'?"</p>
-                      <p>• "Help me with my conclusion"</p>
+                  <div className="text-center">
+                    <p className="text-indigo-200 text-xs mb-3 font-medium">Ask your Writing Buddy anything!</p>
+                    <div className="text-xs text-indigo-300 space-y-2 text-left">
+                      <p className="flex items-start">
+                        <span className="text-yellow-400 mr-2">•</span>
+                        "How can I improve my introduction?"
+                      </p>
+                      <p className="flex items-start">
+                        <span className="text-yellow-400 mr-2">•</span>
+                        "What's a good synonym for 'said'?"
+                      </p>
+                      <p className="flex items-start">
+                        <span className="text-yellow-400 mr-2">•</span>
+                        "Help me with my conclusion"
+                      </p>
                     </div>
                   </div>
                 )}
                 {chatMessages.map((message) => (
-                  <div key={message.id} className={`mb-2 ${message.sender === 'user' ? 'text-right' : 'text-left'}`}>
-                    <div className={`inline-block p-2 rounded-lg text-xs max-w-[90%] ${
+                  <div key={message.id} className={`mb-3 ${message.sender === 'user' ? 'text-right' : 'text-left'}`}>
+                    <div className={`inline-block p-2 rounded-lg text-xs max-w-[90%] leading-relaxed ${
                       message.sender === 'user' 
                         ? 'bg-blue-500 text-white' 
                         : 'bg-white text-gray-800 shadow-sm'
                     }`}>
-                      {message.text}
+                      {message.text.split('\n').map((line, index) => (
+                        <div key={index}>{line}</div>
+                      ))}
                     </div>
                   </div>
                 ))}
                 {isChatLoading && (
-                  <div className="text-center">
-                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-indigo-200 mx-auto"></div>
+                  <div className="text-center py-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-200 mx-auto"></div>
                   </div>
                 )}
                 <div ref={chatEndRef} />
               </div>
               
-              <form onSubmit={handleChatSubmit} className="flex space-x-1">
+              <form onSubmit={handleChatSubmit} className="flex space-x-2">
                 <input
                   type="text"
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
                   placeholder="Ask for help..."
-                  className="flex-1 px-2 py-1 text-xs text-gray-900 bg-white rounded border-none focus:outline-none focus:ring-1 focus:ring-yellow-400"
+                  className="flex-1 px-3 py-2 text-xs text-gray-900 bg-white rounded border-none focus:outline-none focus:ring-2 focus:ring-yellow-400"
                 />
                 <button
                   type="submit"
                   disabled={!chatInput.trim() || isChatLoading}
-                  className="px-2 py-1 bg-yellow-500 hover:bg-yellow-600 text-indigo-900 rounded disabled:opacity-50 text-xs font-medium"
+                  className="px-3 py-2 bg-yellow-500 hover:bg-yellow-600 text-indigo-900 rounded disabled:opacity-50 text-xs font-medium transition-colors"
                 >
                   <Send className="w-3 h-3" />
                 </button>
@@ -507,27 +657,27 @@ export default function WritingArea({ onContentChange, initialContent = '', text
           )}
 
           {activeTab === 'analysis' && (
-            <div className="space-y-2">
-              <h3 className="text-xs font-semibold mb-2 text-indigo-100">Writing Analysis</h3>
+            <div className="space-y-3">
+              <h3 className="text-xs font-semibold mb-3 text-indigo-100 text-center">Writing Analysis</h3>
               
-              <div className="bg-indigo-700 rounded-lg p-2">
+              <div className="bg-indigo-700 rounded-lg p-3 text-center">
                 <h4 className="font-medium mb-1 text-xs text-indigo-200">Words:</h4>
-                <div className="text-lg font-bold text-white">{wordCount}</div>
+                <div className="text-2xl font-bold text-white">{wordCount}</div>
               </div>
               
-              <div className="bg-indigo-700 rounded-lg p-2">
+              <div className="bg-indigo-700 rounded-lg p-3 text-center">
                 <h4 className="font-medium mb-1 text-xs text-indigo-200">Characters:</h4>
-                <div className="text-lg font-bold text-white">{characterCount}</div>
+                <div className="text-2xl font-bold text-white">{characterCount}</div>
               </div>
               
-              <div className="bg-indigo-700 rounded-lg p-2">
+              <div className="bg-indigo-700 rounded-lg p-3 text-center">
                 <h4 className="font-medium mb-1 text-xs text-indigo-200">Reading Time:</h4>
-                <div className="text-lg font-bold text-white">{readingTime} min</div>
+                <div className="text-2xl font-bold text-white">{readingTime} min</div>
               </div>
               
               <button 
                 onClick={handleEvaluate}
-                className="w-full bg-yellow-500 hover:bg-yellow-600 text-indigo-900 py-2 px-3 rounded-lg text-xs font-medium transition-colors"
+                className="w-full bg-yellow-500 hover:bg-yellow-600 text-indigo-900 py-3 px-3 rounded-lg text-xs font-medium transition-colors"
               >
                 Submit for Evaluation
               </button>
@@ -535,42 +685,58 @@ export default function WritingArea({ onContentChange, initialContent = '', text
           )}
           
           {activeTab === 'vocabulary' && (
-            <div className="space-y-2">
-              <h3 className="text-xs font-semibold mb-2 text-indigo-100">Vocabulary</h3>
-              <div className="bg-indigo-700 rounded-lg p-2">
-                <p className="text-indigo-200 text-xs mb-2">Select text to see suggestions</p>
-                <div className="text-xs text-indigo-300">
-                  <p>• Highlight any word in your writing</p>
-                  <p>• Get instant synonym suggestions</p>
-                  <p>• Improve your vocabulary</p>
+            <div className="space-y-3">
+              <h3 className="text-xs font-semibold mb-3 text-indigo-100 text-center">Vocabulary</h3>
+              <div className="bg-indigo-700 rounded-lg p-3 text-center">
+                <p className="text-indigo-200 text-xs mb-3">Select text to see suggestions</p>
+                <div className="text-xs text-indigo-300 space-y-2 text-left">
+                  <p className="flex items-start">
+                    <span className="text-yellow-400 mr-2">•</span>
+                    Highlight any word in your writing
+                  </p>
+                  <p className="flex items-start">
+                    <span className="text-yellow-400 mr-2">•</span>
+                    Get instant synonym suggestions
+                  </p>
+                  <p className="flex items-start">
+                    <span className="text-yellow-400 mr-2">•</span>
+                    Improve your vocabulary
+                  </p>
                 </div>
               </div>
             </div>
           )}
           
           {activeTab === 'progress' && (
-            <div className="space-y-2">
-              <h3 className="text-xs font-semibold mb-2 text-indigo-100">Progress</h3>
-              <div className="bg-indigo-700 rounded-lg p-2">
-                <div className="flex justify-between items-center mb-1">
+            <div className="space-y-3">
+              <h3 className="text-xs font-semibold mb-3 text-indigo-100 text-center">Progress</h3>
+              <div className="bg-indigo-700 rounded-lg p-3">
+                <div className="flex justify-between items-center mb-2">
                   <span className="text-xs text-indigo-200">Word Goal:</span>
                   <span className="font-bold text-sm text-white">{targetWordCount}</span>
                 </div>
-                <div className="w-full bg-indigo-800 rounded-full h-2 mb-2">
+                <div className="w-full bg-indigo-800 rounded-full h-3 mb-2">
                   <div 
-                    className="bg-yellow-400 h-2 rounded-full transition-all duration-300"
+                    className="bg-yellow-400 h-3 rounded-full transition-all duration-300"
                     style={{ width: `${Math.min((wordCount / targetWordCount) * 100, 100)}%` }}
                   ></div>
                 </div>
-                <p className="text-xs text-indigo-200">
-                  {wordCount >= targetWordCount ? 'Goal achieved! 🎉' : `${targetWordCount - wordCount} words to go`}
+                <p className="text-xs text-indigo-200 text-center">
+                  {wordCount >= targetWordCount ? '🎉 Goal achieved!' : `${targetWordCount - wordCount} words to go`}
                 </p>
               </div>
               
-              <div className="bg-indigo-700 rounded-lg p-2">
+              <div className="bg-indigo-700 rounded-lg p-3 text-center">
                 <h4 className="font-medium mb-1 text-xs text-indigo-200">Writing Time:</h4>
-                <div className="text-sm font-bold text-white">{Math.floor(timeSpent / 60)}:{(timeSpent % 60).toString().padStart(2, '0')}</div>
+                <div className="text-lg font-bold text-white">{formatTime(timeSpent)}</div>
               </div>
+
+              {examMode && (
+                <div className="bg-red-600 rounded-lg p-3 text-center">
+                  <h4 className="font-medium mb-1 text-xs text-red-200">Exam Time Left:</h4>
+                  <div className="text-lg font-bold text-white">{formatTime(examTimeRemaining)}</div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -610,10 +776,10 @@ export default function WritingArea({ onContentChange, initialContent = '', text
         </div>
       )}
 
-      {/* Structure Guide Modal - Fixed with proper content */}
+      {/* Structure Guide Modal - Fixed to show content based on text type */}
       {showStructureGuide && (
         <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto relative">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto relative">
             <button
               onClick={() => setShowStructureGuide(false)}
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
@@ -626,7 +792,8 @@ export default function WritingArea({ onContentChange, initialContent = '', text
                 {textType.charAt(0).toUpperCase() + textType.slice(1)} Writing Structure
               </h2>
               
-              {textType === 'narrative' && (
+              {/* Dynamic content based on textType */}
+              {textType.toLowerCase() === 'narrative' && (
                 <div className="space-y-4">
                   <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg">
                     <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-300 mb-2">Narrative Essay Structure</h3>
@@ -657,7 +824,7 @@ export default function WritingArea({ onContentChange, initialContent = '', text
                 </div>
               )}
               
-              {textType === 'persuasive' && (
+              {textType.toLowerCase() === 'persuasive' && (
                 <div className="space-y-4">
                   <div className="bg-red-50 dark:bg-red-900/30 p-4 rounded-lg">
                     <h3 className="text-lg font-semibold text-red-800 dark:text-red-300 mb-2">Persuasive Essay Structure</h3>
@@ -683,7 +850,7 @@ export default function WritingArea({ onContentChange, initialContent = '', text
                 </div>
               )}
               
-              {textType === 'expository' && (
+              {textType.toLowerCase() === 'expository' && (
                 <div className="space-y-4">
                   <div className="bg-green-50 dark:bg-green-900/30 p-4 rounded-lg">
                     <h3 className="text-lg font-semibold text-green-800 dark:text-green-300 mb-2">Expository Essay Structure</h3>
@@ -709,65 +876,8 @@ export default function WritingArea({ onContentChange, initialContent = '', text
                 </div>
               )}
               
-              {textType === 'reflective' && (
-                <div className="space-y-4">
-                  <div className="bg-purple-50 dark:bg-purple-900/30 p-4 rounded-lg">
-                    <h3 className="text-lg font-semibold text-purple-800 dark:text-purple-300 mb-2">Reflective Essay Structure</h3>
-                    <p className="text-purple-700 dark:text-purple-400 mb-3">A reflective essay explores a personal experience and its meaning:</p>
-                    
-                    <div className="space-y-3">
-                      <div className="border-l-4 border-purple-500 pl-3">
-                        <h4 className="font-semibold text-gray-800 dark:text-gray-200">1. Introduction</h4>
-                        <p className="text-gray-600 dark:text-gray-400 text-sm">Introduce the experience or event you will reflect upon and its initial significance.</p>
-                      </div>
-                      
-                      <div className="border-l-4 border-pink-500 pl-3">
-                        <h4 className="font-semibold text-gray-800 dark:text-gray-200">2. Description of Experience</h4>
-                        <p className="text-gray-600 dark:text-gray-400 text-sm">Detail the experience, using sensory language to bring it to life for the reader.</p>
-                      </div>
-                      
-                      <div className="border-l-4 border-indigo-500 pl-3">
-                        <h4 className="font-semibold text-gray-800 dark:text-gray-200">3. Analysis and Interpretation</h4>
-                        <p className="text-gray-600 dark:text-gray-400 text-sm">Explore the meaning of the experience, what you learned, and how it impacted you.</p>
-                      </div>
-                      
-                      <div className="border-l-4 border-blue-500 pl-3">
-                        <h4 className="font-semibold text-gray-800 dark:text-gray-200">4. Conclusion</h4>
-                        <p className="text-gray-600 dark:text-gray-400 text-sm">Summarize your insights and reflect on the lasting impact or future implications.</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              {textType === 'descriptive' && (
-                <div className="space-y-4">
-                  <div className="bg-yellow-50 dark:bg-yellow-900/30 p-4 rounded-lg">
-                    <h3 className="text-lg font-semibold text-yellow-800 dark:text-yellow-300 mb-2">Descriptive Essay Structure</h3>
-                    <p className="text-yellow-700 dark:text-yellow-400 mb-3">A descriptive essay creates a vivid picture of a person, place, object, or event:</p>
-                    
-                    <div className="space-y-3">
-                      <div className="border-l-4 border-yellow-500 pl-3">
-                        <h4 className="font-semibold text-gray-800 dark:text-gray-200">1. Introduction</h4>
-                        <p className="text-gray-600 dark:text-gray-400 text-sm">Introduce the subject of your description and create an overall impression.</p>
-                      </div>
-                      
-                      <div className="border-l-4 border-orange-500 pl-3">
-                        <h4 className="font-semibold text-gray-800 dark:text-gray-200">2. Body Paragraphs (Sensory Details)</h4>
-                        <p className="text-gray-600 dark:text-gray-400 text-sm">Organize details by sense (sight, sound, smell, taste, touch), spatial order, or order of importance. Use figurative language.</p>
-                      </div>
-                      
-                      <div className="border-l-4 border-red-500 pl-3">
-                        <h4 className="font-semibold text-gray-800 dark:text-gray-200">3. Conclusion</h4>
-                        <p className="text-gray-600 dark:text-gray-400 text-sm">Summarize the overall impression and leave the reader with a lasting image or feeling.</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              {/* Default structure for other text types */}
-              {!['narrative', 'persuasive', 'expository', 'reflective', 'descriptive'].includes(textType) && (
+              {/* Add more text types as needed */}
+              {!['narrative', 'persuasive', 'expository'].includes(textType.toLowerCase()) && (
                 <div className="space-y-4">
                   <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
                     <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">General Writing Structure</h3>
