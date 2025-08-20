@@ -61,7 +61,7 @@ const extractResponseText = (response: any, questionType: string, userQuestion: 
         const structureFeedback = response.criteriaFeedback.textStructureAndOrganization;
         nswResponse += `**Structure Guidance (NSW Band ${structureFeedback.band || 'Assessment'}):**\n`;
         if (structureFeedback.suggestions && structureFeedback.suggestions.length > 0) {
-          nswResponse += structureFeedback.suggestions.slice(0, 2).join('\n') + '\n\n';
+          nswResponse += structureFeedback.suggestions.join('\n') + '\n\n'; // Removed slice(0,2)
         }
       }
       
@@ -69,7 +69,7 @@ const extractResponseText = (response: any, questionType: string, userQuestion: 
         const vocabFeedback = response.criteriaFeedback.languageFeaturesAndVocabulary;
         nswResponse += `**Vocabulary Enhancement (NSW Band ${vocabFeedback.band || 'Assessment'}):**\n`;
         if (vocabFeedback.suggestions && vocabFeedback.suggestions.length > 0) {
-          nswResponse += vocabFeedback.suggestions.slice(0, 2).join('\n') + '\n\n';
+          nswResponse += vocabFeedback.suggestions.join('\n') + '\n\n'; // Removed slice(0,2)
         }
       }
       
@@ -77,14 +77,14 @@ const extractResponseText = (response: any, questionType: string, userQuestion: 
         const contentFeedback = response.criteriaFeedback.ideasAndContent;
         nswResponse += `**Content Development (NSW Band ${contentFeedback.band || 'Assessment'}):**\n`;
         if (contentFeedback.suggestions && contentFeedback.suggestions.length > 0) {
-          nswResponse += contentFeedback.suggestions.slice(0, 2).join('\n') + '\n\n';
+          nswResponse += contentFeedback.suggestions.join('\n') + '\n\n'; // Removed slice(0,2)
         }
       }
       
       // Add NSW-specific exam strategies if available
       if (response.examStrategies && response.examStrategies.length > 0) {
         nswResponse += `**NSW Selective Exam Tips:**\n`;
-        nswResponse += response.examStrategies.slice(0, 2).join('\n');
+        nswResponse += response.examStrategies.join('\n'); // Removed slice(0,2)
       }
       
       return nswResponse;
@@ -93,8 +93,8 @@ const extractResponseText = (response: any, questionType: string, userQuestion: 
     // Handle specific question types with contextual responses
     if (questionType === 'vocabulary' && response.suggestions) {
       if (Array.isArray(response.suggestions)) {
-        return `Here are some vocabulary suggestions for your ${textType} writing:\n\n` + 
-               response.suggestions.slice(0, 3).map((s: any) => {
+        return `Here are some vocabulary suggestions for your ${textType} writing:\n\n` +
+               response.suggestions.map((s: any) => { // Removed slice(0,3)
                  if (typeof s === 'object' && s.word && s.suggestion) {
                    return `• Instead of "${s.word}", try: ${s.suggestion}`;
                  }
@@ -109,8 +109,8 @@ const extractResponseText = (response: any, questionType: string, userQuestion: 
     
     if (questionType === 'grammar' && response.corrections) {
       if (Array.isArray(response.corrections) && response.corrections.length > 0) {
-        return `Here are some grammar suggestions:\n\n` + 
-               response.corrections.slice(0, 3).map((c: any) => `• ${c.suggestion || c.message || c}`).join('\n');
+        return `Here are some grammar suggestions:\n\n` +
+               response.corrections.map((c: any) => `• ${c.suggestion || c.message || c}`).join('\n'); // Removed slice(0,3)
       }
     }
     
@@ -295,99 +295,73 @@ export function CoachPanel({ content, textType, assistanceLevel }: CoachPanelPro
         },
         body: JSON.stringify({
           operation: analysis.operation,
-          question: question,
+          userQuestion: question,
           content: content,
-          textType: textType, // Pass textType here
-          assistanceLevel: localAssistanceLevel,
-          conversationContext: conversationContext,
+          textType: textType,
+          conversationContext: conversationContext.map(msg => ({ role: msg.isUser ? 'user' : 'assistant', content: msg.text }))
         }),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('AI operation failed:', errorData);
-        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+        throw new Error(errorData.message || `API error: ${response.statusText}`);
       }
 
-      const result = await response.json();
-      console.log('[DEBUG] AI response data:', result);
-
-      // If the response is a structured feedback, process it
-      if (result.structuredFeedback) {
-        setStructuredFeedback(result.structuredFeedback);
-        return { data: result.structuredFeedback, responseQuality: 'high' };
-      } else if (result.response) {
-        // For general text responses
-        return { data: result.response, responseQuality: 'high' };
-      } else if (result.suggestions) {
-        // For vocabulary suggestions
-        return { data: result, responseQuality: 'high' };
-      } else if (result.corrections) {
-        // For grammar corrections
-        return { data: result, responseQuality: 'high' };
-      } else if (result.structure) {
-        // For structure analysis
-        return { data: result, responseQuality: 'high' };
-      }
+      const data = await response.json();
+      const aiResponseText = extractResponseText(data, analysis.type, question, textType);
       
-      // Fallback to local intelligent response if AI response is not as expected
-      return { data: generateIntelligentLocalResponse(question, analysis, content, textType), responseQuality: 'fallback' };
+      setChatMessages((prevMessages) => [
+        ...prevMessages,
+        { id: Date.now().toString(), text: aiResponseText, isUser: false, timestamp: new Date(), questionType: analysis.type, operation: analysis.operation, responseQuality: data.responseQuality || 'high' },
+      ]);
+      setConversationContext((prevContext) => [
+        ...prevContext,
+        { id: Date.now().toString(), text: question, isUser: true, timestamp: new Date() },
+        { id: Date.now().toString(), text: aiResponseText, isUser: false, timestamp: new Date() },
+      ]);
 
-    } catch (error) {
-      console.error('Error sending message:', error);
-      setError('Oops! I encountered an error: ' + (error as Error).message + '. Please try again or rephrase your question.');
-      // Fallback to local intelligent response on error
-      return { data: generateIntelligentLocalResponse(question, analysis, content, textType), responseQuality: 'fallback' };
+    } catch (err: any) {
+      console.error('Error routing question to operation:', err);
+      AIErrorHandler.handleError(err);
+      // Fallback to local response if API fails
+      const localResponse = generateIntelligentLocalResponse(question, analysis, content, textType);
+      const aiResponseText = extractResponseText(localResponse, analysis.type, question, textType);
+      setChatMessages((prevMessages) => [
+        ...prevMessages,
+        { id: Date.now().toString(), text: aiResponseText, isUser: false, timestamp: new Date(), questionType: analysis.type, operation: analysis.operation, responseQuality: 'fallback' },
+      ]);
+      setConversationContext((prevContext) => [
+        ...prevContext,
+        { id: Date.now().toString(), text: question, isUser: true, timestamp: new Date() },
+        { id: Date.now().toString(), text: aiResponseText, isUser: false, timestamp: new Date() },
+      ]);
+      setError(err.message || 'An unexpected error occurred.');
     }
-  }, [content, localAssistanceLevel, conversationContext, textType]); // Add textType to dependencies
+  }, [content, textType, conversationContext]);
 
-  const handleSendMessage = useCallback(async (messageText: string) => {
-    if (!messageText.trim()) return;
+  const handleSendMessage = useCallback(async (message: string) => {
+    if (!message.trim()) return;
 
     const newUserMessage: ChatMessage = {
-      id: `user-${Date.now()}`,
-      text: messageText,
+      id: Date.now().toString(),
+      text: message,
       isUser: true,
       timestamp: new Date(),
     };
-    setChatMessages((prev) => [...prev, newUserMessage]);
+    setChatMessages((prevMessages) => [...prevMessages, newUserMessage]);
     setChatInput('');
     setIsChatLoading(true);
-    setError(null);
 
     try {
-      const analysis = analyzeUserQuestion(messageText);
-      const routedResponse = await routeQuestionToOperation(messageText, analysis);
-      
-      const aiResponseText = extractResponseText(routedResponse.data, analysis.type, messageText, textType); // Pass textType here
-
-      const newAIMessage: ChatMessage = {
-        id: `ai-${Date.now()}`,
-        text: aiResponseText,
-        isUser: false,
-        timestamp: new Date(),
-        questionType: analysis.type,
-        operation: analysis.operation,
-        responseQuality: routedResponse.responseQuality,
-      };
-      setChatMessages((prev) => [...prev, newAIMessage]);
-      setConversationContext((prev) => [...prev, newUserMessage, newAIMessage]);
-
+      const analysis = analyzeUserQuestion(message);
+      await routeQuestionToOperation(message, analysis);
     } catch (err) {
-      console.error('Error processing message:', err);
-      setError('Sorry, I could not process that request. Please try again.');
-      const errorMessage: ChatMessage = {
-        id: `error-${Date.now()}`,
-        text: 'Sorry, I could not process that request. Please try again.',
-        isUser: false,
-        timestamp: new Date(),
-        responseQuality: 'low',
-      };
-      setChatMessages((prev) => [...prev, errorMessage]);
+      console.error('Error sending message:', err);
+      setError('Failed to send message. Please try again.');
     } finally {
       setIsChatLoading(false);
     }
-  }, [analyzeUserQuestion, routeQuestionToOperation, textType]); // Add textType to dependencies
+  }, [analyzeUserQuestion, routeQuestionToOperation]);
 
   useEffect(() => {
     if (chatMessagesEndRef.current) {
@@ -395,135 +369,186 @@ export function CoachPanel({ content, textType, assistanceLevel }: CoachPanelPro
     }
   }, [chatMessages]);
 
-  const getMessageClass = (isUser: boolean, quality?: 'high' | 'medium' | 'low' | 'fallback') => {
-    let baseClass = isUser ? 'bg-blue-500 text-white self-end' : 'bg-gray-200 text-gray-800 self-start';
-    if (!isUser && quality === 'fallback') {
-      baseClass = 'bg-yellow-100 text-yellow-800 self-start border border-yellow-300';
+  // Function to generate initial feedback (can be called once or on content change)
+  const generateInitialFeedback = useCallback(async () => {
+    if (!content || content === lastProcessedContent) return; // Only process if content has changed
+
+    setIsLoading(true);
+    setError(null);
+    try {
+      const feedback = await getWritingFeedback(content, textType, assistanceLevel);
+      setStructuredFeedback(feedback);
+      setFeedbackHistory(feedback.feedbackItems);
+      setLastProcessedContent(content);
+    } catch (err: any) {
+      console.error('Error fetching feedback:', err);
+      setError(AIErrorHandler.handleError(err));
+    } finally {
+      setIsLoading(false);
     }
-    return `${baseClass} p-3 rounded-lg max-w-[80%]`;
+  }, [content, textType, assistanceLevel, lastProcessedContent]);
+
+  useEffect(() => {
+    generateInitialFeedback();
+  }, [generateInitialFeedback]);
+
+  const toggleFeedbackItem = (index: number) => {
+    setHiddenFeedbackItems((prev) =>
+      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]
+    );
   };
 
-  const getMessageIcon = (isUser: boolean, quality?: 'high' | 'medium' | 'low' | 'fallback') => {
-    if (isUser) return null;
-    if (quality === 'high') return <Sparkles size={18} className="text-purple-500 mr-2" />;
-    if (quality === 'medium') return <Lightbulb size={18} className="text-orange-500 mr-2" />;
-    if (quality === 'low' || quality === 'fallback') return <AlertCircle size={18} className="text-red-500 mr-2" />;
-    return <Bot size={18} className="text-gray-500 mr-2" />;
+  const toggleOverallComment = () => {
+    setIsOverallCommentHidden(!isOverallCommentHidden);
+  };
+
+  const toggleFocusForNextTime = () => {
+    setIsFocusForNextTimeHidden(!isFocusForNextTimeHidden);
+  };
+
+  const handleRefreshFeedback = () => {
+    setStructuredFeedback(null);
+    setFeedbackHistory([]);
+    setChatMessages([]);
+    setConversationContext([]);
+    setLastProcessedContent(''); // Reset to force regeneration
+    generateInitialFeedback();
   };
 
   return (
     <div className="coach-panel-container">
-      {structuredFeedback && (
-        <div className="feedback-summary">
-          <div className="summary-header">
-            <h3 className="summary-title">Your Writing Feedback</h3>
-            <div className="toggle-buttons">
-              <button onClick={() => setIsOverallCommentHidden(!isOverallCommentHidden)}>
-                {isOverallCommentHidden ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
-                Overall Comment
-              </button>
-              <button onClick={() => setIsFocusForNextTimeHidden(!isFocusForNextTimeHidden)}>
-                {isFocusForNextTimeHidden ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
-                Focus for Next Time
-              </button>
+      <div className="coach-panel-header">
+        <MessageSquare size={24} />
+        <h3>Your AI Writing Assistant</h3>
+        <button onClick={handleRefreshFeedback} className="refresh-button" title="Refresh Feedback">
+          <RefreshCw size={20} />
+        </button>
+      </div>
+
+      {isLoading && <div className="loading-spinner">Generating feedback...</div>}
+      {error && <div className="error-message">Error: {error}</div>}
+
+      {!isLoading && !error && structuredFeedback && (
+        <div className="feedback-section">
+          <div className="feedback-item-card overall-comment-card">
+            <div className="feedback-item-header" onClick={toggleOverallComment}>
+              <Lightbulb size={20} />
+              <h4>Overall Feedback</h4>
+              {isOverallCommentHidden ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
             </div>
+            {!isOverallCommentHidden && (
+              <p className="feedback-text">{structuredFeedback.overallComment}</p>
+            )}
           </div>
-          {!isOverallCommentHidden && (
-            <p className="overall-comment">{structuredFeedback.overallComment}</p>
-          )}
-          <div className="feedback-items">
-            {structuredFeedback.feedbackItems.map((item, index) => (
-              <div key={index} className="feedback-item">
-                <div className="item-header">
-                  {item.type === 'praise' && <ThumbsUp size={18} className="text-green-500" />}
-                  {item.type === 'suggestion' && <Lightbulb size={18} className="text-blue-500" />}
-                  {item.type === 'question' && <HelpCircle size={18} className="text-purple-500" />}
-                  {item.type === 'challenge' && <Target size={18} className="text-red-500" />}
-                  <span className="item-area">{item.area}</span>
-                </div>
-                <p className="item-text">{item.text}</p>
-                {item.exampleFromText && (
-                  <p className="item-example">Example: "{item.exampleFromText}"</p>
-                )}
-                {item.suggestionForImprovement && (
-                  <p className="item-suggestion">Suggestion: {item.suggestionForImprovement}</p>
-                )}
+
+          {structuredFeedback.feedbackItems.map((item, index) => (
+            <div key={index} className="feedback-item-card">
+              <div className="feedback-item-header" onClick={() => toggleFeedbackItem(index)}>
+                {item.type === 'praise' && <ThumbsUp size={20} className="praise-icon" />}
+                {item.type === 'suggestion' && <Lightbulb size={20} className="suggestion-icon" />}
+                {item.type === 'question' && <HelpCircle size={20} className="question-icon" />}
+                {item.type === 'challenge' && <Target size={20} className="challenge-icon" />}
+                <h4>{item.area}</h4>
+                {hiddenFeedbackItems.includes(index) ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
               </div>
-            ))}
+              {!hiddenFeedbackItems.includes(index) && (
+                <div className="feedback-item-content">
+                  <p className="feedback-text">{item.text}</p>
+                  {item.exampleFromText && (
+                    <p className="feedback-example">Example: "{item.exampleFromText}"</p>
+                  )}
+                  {item.suggestionForImprovement && (
+                    <p className="feedback-suggestion">Suggestion: {item.suggestionForImprovement}</p>
+                  )}
+                </div>
+              )}
+            </div>
+          ))}
+
+          <div className="feedback-item-card focus-card">
+            <div className="feedback-item-header" onClick={toggleFocusForNextTime}>
+              <Star size={20} />
+              <h4>Focus for Next Time</h4>
+              {isFocusForNextTimeHidden ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
+            </div>
+            {!isFocusForNextTimeHidden && (
+              <ul className="focus-list">
+                {structuredFeedback.focusForNextTime.map((focus, index) => (
+                  <li key={index}>{focus}</li>
+                ))}
+              </ul>
+            )}
           </div>
-          {!isFocusForNextTimeHidden && structuredFeedback.focusForNextTime.length > 0 && (
-            <ul className="focus-list">
-              {structuredFeedback.focusForNextTime.map((focus, index) => (
-                <li key={index}>{focus}</li>
-              ))}
-            </ul>
-          )}
         </div>
       )}
 
       <div className="chat-section">
         <div className="chat-messages">
+          {chatMessages.length === 0 && !isLoading && !error && (
+            <div className="empty-chat-message">
+              <Sparkles size={30} />
+              <p>Ask your Writing Buddy anything!</p>
+            </div>
+          )}
           {chatMessages.map((message) => (
-            <div key={message.id} className={`chat-message ${getMessageClass(message.isUser, message.responseQuality)}`}>
-              <div className="flex items-center">
-                {!message.isUser && getMessageIcon(message.isUser, message.responseQuality)}
-                <span>{message.text}</span>
-              </div>
-              <span className="timestamp">{message.timestamp.toLocaleTimeString()}</span>
+            <div key={message.id} className={`chat-message ${message.isUser ? 'user-message' : 'ai-message'}`}>
+              {!message.isUser && (
+                <span className="message-icon">
+                  {message.responseQuality === 'high' && <Zap size={16} className="high-quality" title="High Quality AI Response" />}
+                  {message.responseQuality === 'medium' && <Gift size={16} className="medium-quality" title="Medium Quality AI Response" />}
+                  {message.responseQuality === 'low' && <Heart size={16} className="low-quality" title="Low Quality AI Response" />}
+                  {message.responseQuality === 'fallback' && <AlertCircle size={16} className="fallback-quality" title="Fallback Local Response" />}
+                </span>
+              )}
+              <p>{message.text}</p>
+              <span className="message-timestamp">{message.timestamp.toLocaleTimeString()}</span>
             </div>
           ))}
           {isChatLoading && (
-            <div className="chat-message bg-gray-200 text-gray-800 self-start p-3 rounded-lg max-w-[80%]">
-              <div className="flex items-center">
-                <Bot size={18} className="text-gray-500 mr-2" />
-                <span>Typing...</span>
-              </div>
+            <div className="chat-message ai-message">
+              <span className="message-icon"><Sparkles size={16} /></span>
+              <p>Thinking...</p>
             </div>
           )}
           <div ref={chatMessagesEndRef} />
         </div>
 
-        <div className="chat-input-area">
-          {showPrompts && (
-            <div className="quick-prompts">
-              {promptConfig.map((prompt, index) => (
-                <button
-                  key={index}
-                  className="quick-prompt-button"
-                  onClick={() => handleQuickPrompt(prompt.text, prompt.operation, prompt.questionType)}
-                >
-                  {getIconForQuestionType(prompt.questionType as QuestionAnalysis['type'])}
-                  {prompt.label}
-                </button>
-              ))}
-            </div>
-          )}
-          <div className="input-container">
-            <button className="toggle-prompts-button" onClick={() => setShowPrompts(!showPrompts)}>
-              {showPrompts ? <X size={20} /> : <Sparkles size={20} />}
-            </button>
-            <input
-              type="text"
-              placeholder="Ask me a question about your writing..."
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  handleSendMessage(chatInput);
-                }
-              }}
-              className="chat-input"
-            />
-            <button
-              className="send-button"
-              onClick={() => handleSendMessage(chatInput)}
-              disabled={!chatInput.trim() || isChatLoading}
-            >
-              <Send size={20} />
-            </button>
+        {showPrompts && (
+          <div className="suggested-prompts">
+            <button onClick={() => handleSendMessage('Can you give me some vocabulary suggestions?')}>Vocabulary</button>
+            <button onClick={() => handleSendMessage('How can I improve my story structure?')}>Structure</button>
+            <button onClick={() => handleSendMessage('Check my grammar and spelling.')}>Grammar</button>
+            <button onClick={() => handleSendMessage('How can I make my content more engaging?')}>Content</button>
+            <button onClick={() => handleSendMessage('Give me some general writing tips.')}>General Tips</button>
           </div>
+        )}
+
+        <div className="input-container">
+          <button className="toggle-prompts-button" onClick={() => setShowPrompts(!showPrompts)}>
+            {showPrompts ? <X size={20} /> : <Sparkles size={20} />}
+          </button>
+          <input
+            type="text"
+            placeholder="Ask me a question about your writing..."
+            value={chatInput}
+            onChange={(e) => setChatInput(e.target.value)}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter') {
+                handleSendMessage(chatInput);
+              }
+            }}
+            className="chat-input"
+          />
+          <button
+            className="send-button"
+            onClick={() => handleSendMessage(chatInput)}
+            disabled={!chatInput.trim() || isChatLoading}
+          >
+            <Send size={20} />
+          </button>
         </div>
       </div>
     </div>
   );
 }
+
