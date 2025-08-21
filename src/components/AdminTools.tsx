@@ -1,369 +1,474 @@
-import React, { useState, useEffect } from 'react';
-import { ManualVerificationTool } from './ManualVerificationTool';
-import { Shield, Users, Key, Database, AlertTriangle, User, Mail, Calendar } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import './layout-fix.css';
 
-interface AdminToolsProps {
-  onClose: () => void;
-  userEmail?: string;
-  isAdmin: boolean;
-}
+import { NavBar } from './NavBar';
+import { HeroSection } from './HeroSection';
+import { FeaturesSection } from './FeaturesSection';
+import { ToolsSection } from './ToolsSection';
+import { WritingTypesSection } from './WritingTypesSection';
+import { StudentSuccessSection } from './StudentSuccessSection';
+import { HowItWorksSection } from './HowItWorksSection';
+import { EnhancedSuccessSection } from './EnhancedSuccessSection';
+import { Footer } from './Footer';
+import { PaymentSuccessPage } from './PaymentSuccessPage';
+import { PricingPage } from './PricingPage';
+import { Dashboard } from './Dashboard';
+import { AuthModal } from './AuthModal';
+import { FAQPage } from './FAQPage';
+import { AboutPage } from './AboutPage';
+import { SettingsPage } from './SettingsPage';
+import { DemoPage } from './DemoPage';
+import { ErrorBoundary } from './ErrorBoundary';
 
-interface AdminStats {
-  totalUsers: number;
-  verifiedUsers: number;
-  paidUsers: number;
-  recentSignups: number;
-}
+// Writing components
+import { SplitScreen } from './SplitScreen';
+import { WritingArea } from './WritingArea';
+import { TabbedCoachPanel } from './TabbedCoachPanel';
+import { EnhancedWritingLayout } from './EnhancedWritingLayout';
+import { LearningPage } from './LearningPage';
+import { ExamSimulationMode } from './ExamSimulationMode';
+import { SupportiveFeatures } from './SupportiveFeatures';
+import { HelpCenter } from './HelpCenter';
+import { EssayFeedbackPage } from './EssayFeedbackPage';
+import { EnhancedHeader } from './EnhancedHeader';
+import { SpecializedCoaching } from './text-type-templates/SpecializedCoaching';
+import { BrainstormingTools } from './BrainstormingTools';
+import { WritingAccessCheck } from './WritingAccessCheck';
+import { WritingToolbar } from './WritingToolbar';
+import { PlanningToolModal } from './PlanningToolModal';
+import { EmailVerificationHandler } from './EmailVerificationHandler';
+import { FloatingChatWindow } from './FloatingChatWindow';
+import { WritingDemo } from './WritingDemo';
+import { checkOpenAIConnectionStatus } from '../lib/openai';
+import { AdminButton } from './AdminButton';
 
-export function AdminTools({ onClose, userEmail, isAdmin }: AdminToolsProps) {
-  const [activeTab, setActiveTab] = useState<'users' | 'verification' | 'payments' | 'system'>('verification');
-  const [showVerificationTool, setShowVerificationTool] = useState(false);
-  const [adminStats, setAdminStats] = useState<AdminStats | null>(null);
-  const [isLoadingStats, setIsLoadingStats] = useState(true);
+function AppContent() {
+  const { user, isLoading, paymentCompleted, emailVerified, authSignOut } = useAuth();
+  const [activePage, setActivePage] = useState('home');
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin');
+  const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
+  const [pendingPaymentPlan, setPendingPaymentPlan] = useState<string | null>(null);
+  const location = useLocation();
 
-  // Security check - don't render if not admin
-  if (!isAdmin) {
+  // Writing state
+  const [content, setContent] = useState('');
+  const [textType, setTextType] = useState('');
+  const [assistanceLevel, setAssistanceLevel] = useState('detailed');
+  const [timerStarted, setTimerStarted] = useState(false);
+  const [selectedText, setSelectedText] = useState('');
+  const [showExamMode, setShowExamMode] = useState(false);
+  const [showHelpCenter, setShowHelpCenter] = useState(false);
+  const [showPlanningTool, setShowPlanningTool] = useState(false);
+  
+  // New state for popup flow completion
+  const [popupFlowCompleted, setPopupFlowCompleted] = useState(false); 
+  const [hasSignedIn, setHasSignedIn] = useState(false);
+  
+  // Panel state for attached chat
+  const [panelVisible, setPanelVisible] = useState(true);
+  const [openAIConnected, setOpenAIConnected] = useState<boolean | null>(null);
+  const [openAILoading, setOpenAILoading] = useState<boolean>(true);
+
+  // Handle sign-in behavior - clear content and show modal when user signs in
+  useEffect(() => {
+    if (user && !hasSignedIn) {
+      // User just signed in
+      setHasSignedIn(true);
+      
+      // Clear content and reset state
+      setContent('');
+      setTextType('');
+      setPopupFlowCompleted(false);
+      
+      // Clear localStorage to ensure fresh start
+      // localStorage.removeItem('writingContent');
+      // localStorage.removeItem('selectedWritingType');
+      
+      // If we're on the writing page, this will trigger the writing type modal
+      if (activePage === 'writing') {
+        // The WritingArea component will handle showing the modal
+      }
+    } else if (!user && hasSignedIn) {
+      // User signed out
+      setHasSignedIn(false);
+    }
+  }, [user, hasSignedIn, activePage]);
+
+  useEffect(() => {
+    const fetchOpenAIStatus = async () => {
+      setOpenAILoading(true);
+      const status = await checkOpenAIConnectionStatus();
+      setOpenAIConnected(status.is_connected);
+      setOpenAILoading(false);
+    };
+    fetchOpenAIStatus();
+  }, []);
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentSuccess = urlParams.get('paymentSuccess') === 'true' || urlParams.get('payment_success') === 'true';
+    const planType = urlParams.get('planType') || urlParams.get('plan');
+    const userEmail = urlParams.get('email');
+    
+    if (paymentSuccess && planType) {
+      console.log('[DEBUG] Payment success detected for plan:', planType);
+      
+      // Store payment info
+      if (userEmail) {
+        localStorage.setItem('userEmail', userEmail);
+      }
+      localStorage.setItem('payment_plan', planType);
+      localStorage.setItem('payment_date', new Date().toISOString());
+      
+      // Clear URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname);
+      
+      setShowPaymentSuccess(true);
+      setPendingPaymentPlan(planType);
+      setActivePage('payment-success');
+    }
+  }, []);
+
+  // Set active page based on current path
+  useEffect(() => {
+    const path = location.pathname.substring(1) || 'home';
+    if (path !== 'auth/callback') { // Don't change active page during auth callback
+      setActivePage(path);
+    }
+  }, [location.pathname]);
+
+  // Text selection logic for writing area
+  useEffect(() => {
+    const handleSelectionChange = () => {
+      const selection = window.getSelection();
+      if (selection && selection.toString().trim().length > 0) {
+        setSelectedText(selection.toString());
+      }
+    };
+
+    document.addEventListener('selectionchange', handleSelectionChange);
+    return () => document.removeEventListener('selectionchange', handleSelectionChange);
+  }, []);
+
+  // NAVIGATION FIX: Improved auth success handler
+  const handleAuthSuccess = useCallback(() => {
+    try {
+      setShowAuthModal(false);
+      
+      if (pendingPaymentPlan) {
+        setActivePage('payment-success');
+        setShowPaymentSuccess(true);
+      } else {
+        // Navigate to appropriate page based on user state
+        if (user && emailVerified && paymentCompleted) {
+          setActivePage('writing');
+        } else {
+          setActivePage('dashboard');
+        }
+      }
+    } catch (error) {
+      console.error('Auth success navigation error:', error);
+      // Fallback to dashboard
+      setActivePage('dashboard');
+      setShowAuthModal(false);
+    }
+  }, [pendingPaymentPlan, user, emailVerified, paymentCompleted]);
+
+  const handleForceSignOut = async () => {
+    try {
+      console.log('🔄 AppContent: Starting force sign out...');
+      
+      // Reset all local state first
+      setActivePage('home');
+      setShowAuthModal(false);
+      setShowPaymentSuccess(false);
+      setPendingPaymentPlan(null);
+      setContent('');
+      setTextType('');
+      setPopupFlowCompleted(false);
+      
+      console.log('✅ AppContent: Local state reset completed');
+      
+      // Then attempt auth sign out
+      await authSignOut();
+      console.log('✅ AppContent: Auth sign out completed');
+      
+    } catch (error) {
+      console.error('AppContent: Error during sign out:', error);
+      
+      // Force reset even if sign out fails
+      setActivePage('home');
+      setShowAuthModal(false);
+      setShowPaymentSuccess(false);
+      setPendingPaymentPlan(null);
+      
+      // Clear localStorage as fallback
+      localStorage.clear();
+      
+      console.log('⚠️ AppContent: Forced local state reset due to sign out error');
+    }
+  };
+
+  // NAVIGATION FIX: Improved navigation handler with proper state management
+  const handleNavigation = useCallback(async (page: string) => {
+    try {
+      // Prevent navigation during loading states
+      if (isLoading) return;
+      
+      // Special handling for dashboard - redirect based on verification and payment status
+      if (page === 'dashboard' && user) {
+        if (!emailVerified) {
+          setActivePage('dashboard'); // Show email verification reminder
+        } else if (paymentCompleted) {
+          setActivePage('writing'); // Full access
+        } else {
+          setActivePage('pricing'); // Need to complete payment
+        }
+      } else {
+        // Smooth navigation with state cleanup
+        setActivePage(page);
+      }
+      
+      // Always close auth modal on navigation
+      setShowAuthModal(false);
+      
+      // Clear any temporary states that might interfere
+      setSelectedText('');
+      
+    } catch (error) {
+      console.error('Navigation error:', error);
+      // Fallback to home page on navigation errors
+      setActivePage('home');
+    }
+  }, [user, emailVerified, paymentCompleted, isLoading]);
+
+  // NAVIGATION FIX: Improved get started handler with consistent flow
+  const handleGetStarted = useCallback(async () => {
+    try {
+      if (user) {
+        if (!emailVerified) {
+          setActivePage('dashboard'); // Show email verification reminder
+        } else if (paymentCompleted) {
+          setActivePage('writing'); // Full access
+        } else {
+          setActivePage('pricing'); // Need to complete payment
+        }
+      } else {
+        setAuthModalMode('signup');
+        setShowAuthModal(true);
+      }
+    } catch (error) {
+      console.error('Get started error:', error);
+      // Fallback to showing auth modal
+      setAuthModalMode('signup');
+      setShowAuthModal(true);
+    }
+  }, [user, emailVerified, paymentCompleted]);
+
+  const handleSubmit = () => {
+    console.log('Writing submitted:', { content, textType });
+  };
+
+  // NAVIGATION FIX: Improved text type change handler
+  const handleTextTypeChange = useCallback((newTextType: string) => {
+    try {
+      setTextType(newTextType);
+      console.log('Text type changed to:', newTextType);
+    } catch (error) {
+      console.error('Text type change error:', error);
+    }
+  }, []);
+
+  // NAVIGATION FIX: Improved popup completion handler
+  const handlePopupCompleted = useCallback(() => {
+    try {
+      setPopupFlowCompleted(true);
+    } catch (error) {
+      console.error('Popup completion error:', error);
+    }
+  }, []);
+
+  // NAVIGATION FIX: Improved footer visibility logic
+  const shouldShowFooter = useCallback(() => {
+    // Don't show footer on writing page or other specific pages
+    const noFooterPages = ['writing', 'exam', 'dashboard', 'settings'];
+    return !noFooterPages.includes(activePage);
+  }, [activePage]);
+
+  if (isLoading) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
-          <div className="flex items-center justify-center mb-4">
-            <AlertTriangle className="h-12 w-12 text-red-500" />
-          </div>
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white text-center mb-4">
-            Access Denied
-          </h2>
-          <p className="text-gray-600 dark:text-gray-300 text-center mb-6">
-            You don't have permission to access admin tools.
-          </p>
-          <button
-            onClick={onClose}
-            className="w-full px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600"
-          >
-            Close
-          </button>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-300">Loading...</p>
         </div>
       </div>
     );
   }
 
-  // Fetch admin statistics
-  useEffect(() => {
-    const fetchAdminStats = async () => {
-      try {
-        setIsLoadingStats(true);
-        
-        // Get total users count
-        const { count: totalUsers } = await supabase
-          .from('user_profiles')
-          .select('*', { count: 'exact', head: true });
-
-        // Get verified users count
-        const { count: verifiedUsers } = await supabase
-          .from('user_access_status')
-          .select('*', { count: 'exact', head: true })
-          .eq('email_verified', true);
-
-        // Get paid users count
-        const { count: paidUsers } = await supabase
-          .from('user_profiles')
-          .select('*', { count: 'exact', head: true })
-          .eq('payment_verified', true);
-
-        // Get recent signups (last 7 days)
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        
-        const { count: recentSignups } = await supabase
-          .from('user_profiles')
-          .select('*', { count: 'exact', head: true })
-          .gte('created_at', sevenDaysAgo.toISOString());
-
-        setAdminStats({
-          totalUsers: totalUsers || 0,
-          verifiedUsers: verifiedUsers || 0,
-          paidUsers: paidUsers || 0,
-          recentSignups: recentSignups || 0
-        });
-      } catch (error) {
-        console.error('Error fetching admin stats:', error);
-        setAdminStats({
-          totalUsers: 0,
-          verifiedUsers: 0,
-          paidUsers: 0,
-          recentSignups: 0
-        });
-      } finally {
-        setIsLoadingStats(false);
-      }
-    };
-
-    fetchAdminStats();
-  }, []);
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-        {/* Header */}
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-red-100 dark:bg-red-900 rounded-lg">
-              <Shield className="h-6 w-6 text-red-600 dark:text-red-400" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white">Admin Tools</h2>
-              <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
-                <User className="h-4 w-4" />
-                <span>{userEmail}</span>
-                <span>•</span>
-                <Calendar className="h-4 w-4" />
-                <span>{new Date().toLocaleDateString()}</span>
+    <div className="app-content-wrapper bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="route-with-footer">
+        <Routes>
+          <Route path="/" element={
+            <>
+              <NavBar 
+                activePage={activePage}
+                onNavigate={handleNavigation}
+                user={user}
+                onSignInClick={() => {
+                  setAuthModalMode('signin');
+                  setShowAuthModal(true);
+                }}
+                onSignUpClick={() => {
+                  setAuthModalMode('signup');
+                  setShowAuthModal(true);
+                }}
+                onForceSignOut={handleForceSignOut}
+                openAIConnected={openAIConnected}
+                openAILoading={openAILoading}
+              />
+              <div className="main-route-content">
+                <HeroSection onGetStarted={handleGetStarted} />
+                <FeaturesSection />
+                <EnhancedSuccessSection />
               </div>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-            aria-label="Close Admin Tools"
-          >
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Stats Overview */}
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-          <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">System Overview</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Total Users</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {isLoadingStats ? '...' : adminStats?.totalUsers || 0}
-                  </p>
+            </>
+          } />
+          <Route path="/pricing" element={<PricingPage onNavigate={handleNavigation} />} />
+          <Route path="/faq" element={<FAQPage onNavigate={handleNavigation} />} />
+          <Route path="/about" element={<AboutPage onNavigate={handleNavigation} />} />
+          <Route path="/demo" element={<DemoPage onNavigate={handleNavigation} />} />
+          <Route path="/dashboard" element={
+            user ? (
+              <Dashboard 
+                onNavigate={handleNavigation}
+                onSignOut={handleForceSignOut}
+              />
+            ) : (
+              <Navigate to="/" />
+            )
+          } />
+          <Route path="/settings" element={
+            user ? <SettingsPage onBack={() => setActivePage('dashboard')} /> : <Navigate to="/" />
+          } />
+          <Route path="/writing" element={
+            <WritingAccessCheck onNavigate={handleNavigation}>
+              <ErrorBoundary>
+                <div className="writing-route h-screen flex flex-col">
+                  <EnhancedHeader 
+                    textType={textType}
+                    assistanceLevel={assistanceLevel}
+                    onTextTypeChange={setTextType}
+                    onAssistanceLevelChange={setAssistanceLevel}
+                    onTimerStart={() => setTimerStarted(true)}
+                    hideTextTypeSelector={popupFlowCompleted}
+                  />
+                  
+                  {showExamMode ? (
+                    <ExamSimulationMode 
+                      onExit={() => setShowExamMode(false)}
+                    />
+                  ) : (
+                    <div className="writing-layout-content flex-1 min-h-0">
+                      <ErrorBoundary>
+                        <EnhancedWritingLayout
+                          content={content}
+                          onChange={setContent}
+                          textType={textType}
+                          assistanceLevel={assistanceLevel}
+                          selectedText={selectedText}
+                          onTimerStart={setTimerStarted}
+                          onSubmit={handleSubmit}
+                          onTextTypeChange={handleTextTypeChange}
+                          onPopupCompleted={handlePopupCompleted}
+                          onNavigate={handleNavigation}
+                        />
+                      </ErrorBoundary>
+                    </div>
+                  )}
                 </div>
-                <Users className="h-8 w-8 text-blue-500" />
-              </div>
-            </div>
-            
-            <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Verified</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {isLoadingStats ? '...' : adminStats?.verifiedUsers || 0}
-                  </p>
-                </div>
-                <Mail className="h-8 w-8 text-green-500" />
-              </div>
-            </div>
-            
-            <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Paid Users</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {isLoadingStats ? '...' : adminStats?.paidUsers || 0}
-                  </p>
-                </div>
-                <Database className="h-8 w-8 text-purple-500" />
-              </div>
-            </div>
-            
-            <div className="bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Recent (7d)</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {isLoadingStats ? '...' : adminStats?.recentSignups || 0}
-                  </p>
-                </div>
-                <Calendar className="h-8 w-8 text-orange-500" />
-              </div>
-            </div>
-          </div>
-        </div>
+              </ErrorBoundary>
+            </WritingAccessCheck>
+          } />
 
-        {/* Tabs */}
-        <div className="flex border-b border-gray-200 dark:border-gray-700">
-          <button
-            className={`px-6 py-3 font-medium text-sm transition-colors ${
-              activeTab === 'users'
-                ? 'border-b-2 border-blue-500 text-blue-600 bg-blue-50 dark:bg-blue-900/20'
-                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
-            }`}
-            onClick={() => setActiveTab('users')}
-          >
-            <Users className="inline-block h-4 w-4 mr-2" />
-            Users
-          </button>
-          <button
-            className={`px-6 py-3 font-medium text-sm transition-colors ${
-              activeTab === 'verification'
-                ? 'border-b-2 border-blue-500 text-blue-600 bg-blue-50 dark:bg-blue-900/20'
-                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
-            }`}
-            onClick={() => setActiveTab('verification')}
-          >
-            <Key className="inline-block h-4 w-4 mr-2" />
-            Verification
-          </button>
-          <button
-            className={`px-6 py-3 font-medium text-sm transition-colors ${
-              activeTab === 'payments'
-                ? 'border-b-2 border-blue-500 text-blue-600 bg-blue-50 dark:bg-blue-900/20'
-                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
-            }`}
-            onClick={() => setActiveTab('payments')}
-          >
-            <svg className="inline-block h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            Payments
-          </button>
-          <button
-            className={`px-6 py-3 font-medium text-sm transition-colors ${
-              activeTab === 'system'
-                ? 'border-b-2 border-blue-500 text-blue-600 bg-blue-50 dark:bg-blue-900/20'
-                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
-            }`}
-            onClick={() => setActiveTab('system')}
-          >
-            <Database className="inline-block h-4 w-4 mr-2" />
-            System
-          </button>
-        </div>
+          <Route path="/learning" element={<LearningPage />} />
+          <Route path="/exam" element={<ExamSimulationMode onExit={() => setActivePage('writing')} />} />
+          <Route path="/supportive-features" element={<SupportiveFeatures />} />
+          <Route path="/help-center" element={<HelpCenter />} />
+          <Route path="/essay-feedback" element={<EssayFeedbackPage />} />
+          <Route path="/specialized-coaching" element={<SpecializedCoaching />} />
+          <Route path="/brainstorming-tools" element={<BrainstormingTools />} />
+          <Route path="/email-verification" element={<EmailVerificationHandler />} />
+          <Route path="/demo-writing" element={<WritingDemo />} />
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
-          {activeTab === 'verification' && (
-            <div>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">User Verification Tools</h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white dark:bg-gray-700 p-6 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm">
-                  <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center">
-                    <Key className="h-5 w-5 mr-2 text-blue-500" />
-                    Manual Email Verification
-                  </h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                    Manually verify a user's email address and grant them access to the platform. Use this only when the automatic verification process fails.
-                  </p>
-                  <button
-                    onClick={() => setShowVerificationTool(true)}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors font-medium"
-                  >
-                    Open Verification Tool
-                  </button>
-                </div>
-                
-                <div className="bg-white dark:bg-gray-700 p-6 rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm">
-                  <h4 className="font-medium text-gray-900 dark:text-white mb-3 flex items-center">
-                    <Mail className="h-5 w-5 mr-2 text-green-500" />
-                    Resend Verification Email
-                  </h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-                    Resend verification email to users who haven't verified their email address. This will trigger a new verification email.
-                  </p>
-                  <button
-                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors font-medium"
-                    onClick={() => {
-                      // TODO: Implement resend verification email functionality
-                      alert('Resend verification email functionality will be implemented here');
-                    }}
-                  >
-                    Resend Verification Email
-                  </button>
-                </div>
-              </div>
-              
-              <div className="mt-6 bg-yellow-50 dark:bg-yellow-900/30 p-4 rounded-lg border border-yellow-200 dark:border-yellow-700">
-                <h4 className="font-medium text-yellow-800 dark:text-yellow-200 mb-2 flex items-center">
-                  <AlertTriangle className="h-5 w-5 mr-2" />
-                  Important Security Notice
-                </h4>
-                <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                  Manual verification should only be used in exceptional cases when the normal verification process fails.
-                  Always verify the user's identity through alternative means before manually verifying their account.
-                  All admin actions are logged for security purposes.
-                </p>
-              </div>
-            </div>
-          )}
+          <Route path="/text-type-analysis" element={<TextTypeAnalysisComponent />} />
+          <Route path="/vocabulary-sophistication" element={<VocabularySophisticationComponent />} />
+          <Route path="/progress-tracking" element={<ProgressTrackingComponent />} />
+          <Route path="/coaching-tips" element={<CoachingTipsComponent />} />
 
-          {activeTab === 'users' && (
-            <div>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">User Management</h3>
-              <div className="bg-white dark:bg-gray-700 p-6 rounded-lg border border-gray-200 dark:border-gray-600">
-                <p className="text-gray-600 dark:text-gray-300 mb-4">
-                  User management tools will be available here. This section will include:
-                </p>
-                <ul className="list-disc list-inside text-sm text-gray-600 dark:text-gray-300 space-y-2">
-                  <li>View and search user accounts</li>
-                  <li>Manage user roles and permissions</li>
-                  <li>View user activity and login history</li>
-                  <li>Suspend or activate user accounts</li>
-                </ul>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'payments' && (
-            <div>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Payment Management</h3>
-              <div className="bg-white dark:bg-gray-700 p-6 rounded-lg border border-gray-200 dark:border-gray-600">
-                <p className="text-gray-600 dark:text-gray-300 mb-4">
-                  Payment management tools will be available here. This section will include:
-                </p>
-                <ul className="list-disc list-inside text-sm text-gray-600 dark:text-gray-300 space-y-2">
-                  <li>View payment history and transactions</li>
-                  <li>Manage subscription statuses</li>
-                  <li>Process refunds and adjustments</li>
-                  <li>View payment analytics and reports</li>
-                </ul>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'system' && (
-            <div>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">System Management</h3>
-              <div className="bg-white dark:bg-gray-700 p-6 rounded-lg border border-gray-200 dark:border-gray-600">
-                <p className="text-gray-600 dark:text-gray-300 mb-4">
-                  System management tools will be available here. This section will include:
-                </p>
-                <ul className="list-disc list-inside text-sm text-gray-600 dark:text-gray-300 space-y-2">
-                  <li>System health monitoring</li>
-                  <li>Database maintenance tools</li>
-                  <li>API usage statistics</li>
-                  <li>Error logs and debugging tools</li>
-                </ul>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-          <div className="flex justify-between items-center">
-            <div className="text-xs text-gray-500 dark:text-gray-400">
-              Admin session: {userEmail} • {new Date().toLocaleString()}
-            </div>
-            <button
-              onClick={onClose}
-              className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-            >
-              Close
-            </button>
-          </div>
-        </div>
+          <Route path="/payment-success" element={
+            <PaymentSuccessPage 
+              onNavigate={handleNavigation}
+              planType={pendingPaymentPlan}
+            />
+          } />
+          <Route path="/auth/callback" element={<EmailVerificationHandler />} />
+          <Route path="*" element={<Navigate to="/" />} />
+        </Routes>
       </div>
 
-      {showVerificationTool && (
-        <ManualVerificationTool onClose={() => setShowVerificationTool(false)} />
+      {/* Footer - Only show on certain pages */}
+      {shouldShowFooter() && <Footer />}
+
+      {/* FIXED: Auth Modal with correct prop name */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        mode={authModalMode}
+        onAuthSuccess={handleAuthSuccess}
+      />
+
+      {/* Planning Tool Modal */}
+      <PlanningToolModal
+        isOpen={showPlanningTool}
+        onClose={() => setShowPlanningTool(false)}
+        onSavePlan={(plan) => {
+          console.log('Plan saved:', plan);
+          setShowPlanningTool(false);
+        }}
+        textType={textType}
+        content={content}
+      />
+
+      {/* Help Center Modal */}
+      {showHelpCenter && (
+        <HelpCenter onClose={() => setShowHelpCenter(false)} />
       )}
+
+      {/* Admin Button - Only show for admin users */}
+      <AdminButton />
     </div>
   );
 }
+
+// Placeholder components for missing routes
+function TextTypeAnalysisComponent() {
+  return <div>Text Type Analysis Component</div>;
+}
+
+function VocabularySophisticationComponent() {
+  return <div>Vocabulary Sophistication Component</div>;
+}
+
+function ProgressTrackingComponent() {
+  return <div>Progress Tracking Component</div>;
+}
+
+function CoachingTipsComponent() {
+  return <div>Coaching Tips Component</div>;
+}
+
+export default AppContent;
