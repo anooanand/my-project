@@ -95,12 +95,12 @@ export function DiaryWritingTemplate({ content, onChange, onTimerStart, onSubmit
           }
         }
       }, 1000);
-    } else if (interval) {
-      clearInterval(interval);
     }
     
     return () => {
-      if (interval) clearInterval(interval);
+      if (interval !== null) {
+        clearInterval(interval);
+      }
     };
   }, [isPlanningTimerActive, planningMinutes, planningSeconds, isPlanningTimerCompleted]);
 
@@ -128,12 +128,12 @@ export function DiaryWritingTemplate({ content, onChange, onTimerStart, onSubmit
           }
         }
       }, 1000);
-    } else if (interval) {
-      clearInterval(interval);
     }
     
     return () => {
-      if (interval) clearInterval(interval);
+      if (interval !== null) {
+        clearInterval(interval);
+      }
     };
   }, [isWritingTimerActive, writingMinutes, writingSecondsState, isWritingTimerCompleted, onTimerStart]);
 

@@ -55,7 +55,9 @@ export function EnhancedTimer({ onStart, onPause, onReset }: EnhancedTimerProps)
     }
     
     return () => {
-      if (interval) clearInterval(interval);
+      if (interval !== null) {
+        clearInterval(interval);
+      }
     };
   }, [active, timeLeft, phase, onPause]);
 
