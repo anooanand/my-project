@@ -1,20 +1,23 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { supabase } from '../lib/supabase';
-import type { User } from '@supabase/supabase-js';
+import { supabase, getSafeUser, getSafeUserSession } from '../lib/supabase';
+import type { User, Session } from '@supabase/supabase-js';
 
 // Define the AuthContext interface
 interface AuthContextType {
   user: User | null;
+  session: Session | null;
   loading: boolean;
   emailVerified: boolean;
   paymentCompleted: boolean;
   isAdmin: boolean;
   userRole: string | null;
+  authError: string | null;
   authSignIn: (email: string, password: string) => Promise<{ data: any; error: any }>;
   authSignUp: (email: string, password: string) => Promise<{ data: any; error: any }>;
   authSignOut: () => Promise<void>;
   forceRefreshVerification: () => void;
   checkAdminStatus: () => Promise<boolean>;
+  clearAuthError: () => void;
 }
 
 // Create the AuthContext
@@ -22,11 +25,18 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [emailVerified, setEmailVerified] = useState(false);
   const [paymentCompleted, setPaymentCompleted] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  // Clear auth error
+  const clearAuthError = useCallback(() => {
+    setAuthError(null);
+  }, []);
 
   // IMPROVED: Helper function to create user profile with proper schema
   const ensureUserProfile = async (user: User) => {
@@ -220,15 +230,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return false;
   };
 
-  // IMPROVED: Main function to check user authentication and status
+  // ENHANCED: Main function to check user authentication and status with better error handling
   const checkUserAndStatus = useCallback(async () => {
     try {
       setLoading(true);
+      setAuthError(null);
       
-      const { data: { user: supabaseUser }, error: userError } = await supabase.auth.getUser();
+      // First, try to get the session
+      const { session: currentSession, error: sessionError } = await getSafeUserSession();
+      
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        setAuthError(`Session error: ${sessionError.message}`);
+      }
+      
+      setSession(currentSession);
+      
+      // Then try to get the user
+      const { user: supabaseUser, error: userError } = await getSafeUser();
       
       if (userError) {
-        console.error('Error getting user:', userError);
+        console.error('User error:', userError);
+        setAuthError(`User error: ${userError.message}`);
         setUser(null);
         setEmailVerified(false);
         setPaymentCompleted(false);
@@ -325,7 +348,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (error) {
       console.error('Error in checkUserAndStatus:', error);
+      setAuthError(`Authentication error: ${error.message}`);
       setUser(null);
+      setSession(null);
       setEmailVerified(false);
       setPaymentCompleted(false);
       setIsAdmin(false);
@@ -333,17 +358,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } finally {
       setLoading(false);
     }
-  }, [checkAdminStatus]);
+  }, [checkAdminStatus, paymentCompleted]);
 
   useEffect(() => {
-    checkUserAndStatus();
+    let mounted = true;
+    
+    const initializeAuth = async () => {
+      if (mounted) {
+        await checkUserAndStatus();
+      }
+    };
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log('Auth state change:', _event);
-      checkUserAndStatus();
+    initializeAuth();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state change:', event, session?.user?.email);
+      
+      if (mounted) {
+        setSession(session);
+        
+        // Add a small delay to ensure session is properly set
+        setTimeout(() => {
+          if (mounted) {
+            checkUserAndStatus();
+          }
+        }, 100);
+      }
     });
 
     return () => {
+      mounted = false;
       authListener.subscription.unsubscribe();
     };
   }, [checkUserAndStatus]);
@@ -355,36 +399,42 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const authSignIn = async (email: string, password: string) => {
     try {
+      setAuthError(null);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
       if (error) {
+        setAuthError(error.message);
         return { data: null, error };
       }
       
       return { data, error: null };
     } catch (error) {
       console.error('Sign in error:', error);
+      setAuthError(error.message);
       return { data: null, error };
     }
   };
 
   const authSignUp = async (email: string, password: string) => {
     try {
+      setAuthError(null);
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
       });
       
       if (error) {
+        setAuthError(error.message);
         return { data: null, error };
       }
       
       return { data, error: null };
     } catch (error) {
       console.error('Sign up error:', error);
+      setAuthError(error.message);
       return { data: null, error };
     }
   };
@@ -392,9 +442,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const authSignOut = async () => {
     try {
       console.log('🔄 AuthContext: Starting sign out...');
+      setAuthError(null);
       
       // Reset local state first
       setUser(null);
+      setSession(null);
       setEmailVerified(false);
       setPaymentCompleted(false);
       setIsAdmin(false);
@@ -407,6 +459,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (error) {
         console.error('AuthContext: Supabase sign out error:', error);
+        setAuthError(error.message);
         throw error;
       }
       
@@ -414,9 +467,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
     } catch (error) {
       console.error('AuthContext: Sign out error:', error);
+      setAuthError(error.message);
       
       // Force reset state even if sign out fails
       setUser(null);
+      setSession(null);
       setEmailVerified(false);
       setPaymentCompleted(false);
       setIsAdmin(false);
@@ -428,16 +483,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const value: AuthContextType = {
     user,
+    session,
     loading,
     emailVerified,
     paymentCompleted,
     isAdmin,
     userRole,
+    authError,
     authSignIn,
     authSignUp,
     authSignOut,
     forceRefreshVerification,
-    checkAdminStatus
+    checkAdminStatus,
+    clearAuthError
   };
 
   return (
