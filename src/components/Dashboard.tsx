@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { isEmailVerified, hasAnyAccess, getUserAccessStatus } from '../lib/supabase';
+import { WritingTypeSelectionModal } from './WritingTypeSelectionModal';
+import { PromptOptionsModal } from './PromptOptionsModal';
+import { generatePrompt } from '../lib/openai';
 import { 
   Mail, 
   CheckCircle, 
@@ -51,111 +54,99 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
   const [userAccessData, setUserAccessData] = useState<any>(null);
   const [showWelcomeMessage, setShowWelcomeMessage] = useState(false);
   
+  // FIXED: Modal states for proper sequence
+  const [showWritingTypeModal, setShowWritingTypeModal] = useState(false);
+  const [showPromptOptionsModal, setShowPromptOptionsModal] = useState(false);
+  const [selectedWritingType, setSelectedWritingType] = useState<string>('');
+  const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false);
+
   // Use prop user if provided, otherwise use context user
   const currentUser = propUser || user;
 
-  // FIXED: Single verification check with proper dependency array
   useEffect(() => {
-    let isMounted = true; // Prevent state updates if component unmounts
-    
     const checkVerificationStatus = async () => {
-      if (!currentUser || !currentUser.id) {
-        setIsLoading(false);
-        return;
-      }
-
-      console.log('🔍 Dashboard: Checking verification status for user:', currentUser.id);
-      setIsLoading(true);
-      
-      try {
-        // Get detailed user access status from database
-        const accessData = await getUserAccessStatus(currentUser.id);
+      if (currentUser) {
+        console.log('🔍 Dashboard: Checking verification status for user:', currentUser.id);
+        setIsLoading(true);
         
-        if (!isMounted) return; // Don't update state if component unmounted
-        
-        setUserAccessData(accessData);
-        
-        if (accessData) {
-          console.log('📊 User access data:', accessData);
+        try {
+          // Get detailed user access status from database
+          const accessData = await getUserAccessStatus(currentUser.id);
+          setUserAccessData(accessData);
           
-          // Check if user has permanent access (payment verified or manual override)
-          if (accessData.payment_verified || accessData.manual_override || accessData.has_access) {
-            setIsVerified(true);
-            setAccessType('permanent');
+          if (accessData) {
+            console.log('📊 User access data:', accessData);
             
-            // Check if this is the first time showing the welcome message
-            const hasSeenWelcome = localStorage.getItem(`welcome_shown_${currentUser.id}`);
-            if (!hasSeenWelcome) {
-              setShowWelcomeMessage(true);
-              localStorage.setItem(`welcome_shown_${currentUser.id}`, 'true');
-            }
-            
-            console.log('✅ Dashboard: Permanent access confirmed - payment verified:', accessData.payment_verified);
-            setIsLoading(false);
-            return;
-          }
-          
-          // Check if user has valid temporary access
-          if (accessData.temp_access_until) {
-            const tempDate = new Date(accessData.temp_access_until);
-            if (tempDate > new Date()) {
+            // Check if user has permanent access (payment verified or manual override)
+            if (accessData.payment_verified || accessData.manual_override || accessData.has_access) {
               setIsVerified(true);
-              setAccessType('temporary');
-              setTempAccessUntil(accessData.temp_access_until);
-              console.log('✅ Dashboard: Temporary access valid until:', tempDate);
+              setAccessType('permanent');
+              
+              // Check if this is the first time showing the welcome message
+              const hasSeenWelcome = localStorage.getItem(`welcome_shown_${currentUser.id}`);
+              if (!hasSeenWelcome) {
+                setShowWelcomeMessage(true);
+                localStorage.setItem(`welcome_shown_${currentUser.id}`, 'true');
+              }
+              
+              console.log('✅ Dashboard: Permanent access confirmed - payment verified:', accessData.payment_verified);
               setIsLoading(false);
               return;
             }
+            
+            // Check if user has valid temporary access
+            if (accessData.temp_access_until) {
+              const tempDate = new Date(accessData.temp_access_until);
+              if (tempDate > new Date()) {
+                setIsVerified(true);
+                setAccessType('temporary');
+                setTempAccessUntil(accessData.temp_access_until);
+                console.log('✅ Dashboard: Temporary access valid until:', tempDate);
+                setIsLoading(false);
+                return;
+              }
+            }
           }
-        }
-        
-        // Fallback: Check for temporary access in localStorage
-        const tempAccess = localStorage.getItem('temp_access_granted');
-        const tempUntil = localStorage.getItem('temp_access_until');
-        
-        if (tempAccess === 'true' && tempUntil) {
-          const tempDate = new Date(tempUntil);
-          if (tempDate > new Date()) {
-            setIsVerified(true);
-            setAccessType('temporary');
-            setTempAccessUntil(tempUntil);
-            console.log('✅ Dashboard: Temporary access from localStorage valid until:', tempDate);
-            setIsLoading(false);
-            return;
-          } else {
-            // Clean up expired temporary access
-            localStorage.removeItem('temp_access_granted');
-            localStorage.removeItem('temp_access_until');
-            localStorage.removeItem('temp_access_plan');
+          
+          // Fallback: Check for temporary access in localStorage
+          const tempAccess = localStorage.getItem('temp_access_granted');
+          const tempUntil = localStorage.getItem('temp_access_until');
+          
+          if (tempAccess === 'true' && tempUntil) {
+            const tempDate = new Date(tempUntil);
+            if (tempDate > new Date()) {
+              setIsVerified(true);
+              setAccessType('temporary');
+              setTempAccessUntil(tempUntil);
+              console.log('✅ Dashboard: Temporary access from localStorage valid until:', tempDate);
+              setIsLoading(false);
+              return;
+            } else {
+              // Clean up expired temporary access
+              localStorage.removeItem('temp_access_granted');
+              localStorage.removeItem('temp_access_until');
+              localStorage.removeItem('temp_access_plan');
+            }
           }
-        }
-        
-        // Check basic email verification
-        const verified = isEmailVerified(currentUser);
-        setIsVerified(verified);
-        setAccessType('none');
-        console.log('📊 Dashboard: Only email verification result:', verified);
-        
-      } catch (error) {
-        console.error('❌ Error checking verification status:', error);
-        if (isMounted) {
+          
+          // Check basic email verification
+          const verified = isEmailVerified(currentUser);
+          setIsVerified(verified);
+          setAccessType('none');
+          console.log('📊 Dashboard: Only email verification result:', verified);
+          
+        } catch (error) {
+          console.error('❌ Error checking verification status:', error);
           setIsVerified(false);
           setAccessType('none');
         }
-      }
-      
-      if (isMounted) {
+        
         setIsLoading(false);
       }
     };
 
     checkVerificationStatus();
-    
-    // Cleanup function
-    return () => {
-      isMounted = false;
-    };
-  }, [currentUser?.id]); // Only depend on user ID to prevent infinite loops
+  }, [currentUser]);
 
   const handleManualRefresh = async () => {
     if (currentUser) {
@@ -200,52 +191,133 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
     }
   };
 
-  // FIXED: Enhanced navigation with multiple fallback methods
+  // FIXED: Step 1 - "Write Story" button opens writing type selection modal
   const handleStartWriting = () => {
     console.log('🚀 Dashboard: Starting writing flow...');
     
+    // Clear any existing navigation data to ensure fresh start
+    localStorage.removeItem('selectedWritingType');
+    localStorage.removeItem('promptType');
+    localStorage.removeItem('navigationSource');
+    localStorage.removeItem('writingContent');
+    localStorage.removeItem('generatedPrompt');
+    
+    // Set navigation source to track the flow
+    localStorage.setItem('navigationSource', 'dashboard');
+    
+    // Show the writing type selection modal (Step 2)
+    setShowWritingTypeModal(true);
+  };
+
+  // FIXED: Step 2 - Handle writing type selection, then show prompt options
+  const handleWritingTypeSelect = (type: string) => {
+    console.log('📝 Dashboard: Writing type selected:', type);
+    
+    // Store the selected writing type
+    setSelectedWritingType(type);
+    localStorage.setItem('selectedWritingType', type);
+    
+    // Close writing type modal and open prompt options modal (Step 3)
+    setShowWritingTypeModal(false);
+    setShowPromptOptionsModal(true);
+  };
+
+  // FIXED: Step 3 - Handle prompt generation, then navigate to writing area
+  const handleGeneratePrompt = async () => {
+    console.log('🎯 Dashboard: Generating prompt for:', selectedWritingType);
+    setIsGeneratingPrompt(true);
+    
     try {
-      // Clear any existing navigation data to ensure fresh start
-      localStorage.removeItem('selectedWritingType');
-      localStorage.removeItem('promptType');
-      localStorage.removeItem('navigationSource');
-      localStorage.removeItem('writingContent');
-      localStorage.removeItem('generatedPrompt');
+      // Call the OpenAI prompt generation function
+      const prompt = await generatePrompt(selectedWritingType);
       
-      // Set navigation source to track the flow
-      localStorage.setItem('navigationSource', 'dashboard');
-      
-      // ENHANCED FIX: Multiple navigation methods with immediate execution
-      console.log('✅ Dashboard: Attempting navigation to writing page...');
-      
-      // Method 1: Use onNavigate prop if available
-      if (onNavigate && typeof onNavigate === 'function') {
-        console.log('✅ Dashboard: Using onNavigate prop');
-        onNavigate('writing');
-        return;
-      }
-      
-      // Method 2: Use React Router navigate
-      if (navigate && typeof navigate === 'function') {
-        console.log('✅ Dashboard: Using React Router navigate');
+      if (prompt) {
+        console.log('✅ Prompt generated successfully:', prompt);
+        
+        // CRITICAL: Save to localStorage so WritingArea can access it
+        localStorage.setItem(`${selectedWritingType}_prompt`, prompt);
+        localStorage.setItem('generatedPrompt', prompt);
+        localStorage.setItem('selectedWritingType', selectedWritingType);
+        localStorage.setItem('promptType', 'generated');
+        
+        console.log('✅ Prompt saved to localStorage');
+        
+        // Close prompt options modal
+        setShowPromptOptionsModal(false);
+        
+        // Small delay to ensure localStorage is written
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        // Navigate to writing area AFTER prompt is generated
         navigate('/writing');
-        return;
+        console.log('✅ Dashboard: Navigation to /writing initiated');
+        
+      } else {
+        throw new Error('No prompt generated');
       }
-      
-      // Method 3: Direct window location change
-      console.log('✅ Dashboard: Using window.location fallback');
-      window.location.href = '/writing';
       
     } catch (error) {
-      console.error('❌ Dashboard: Navigation error:', error);
+      console.error('❌ Error generating prompt:', error);
       
-      // Ultimate fallback: Force page navigation
-      try {
+      // FALLBACK: Use high-quality static prompts if AI generation fails
+      const fallbackPrompts = {
+        narrative: "Write an engaging story about a character who discovers something unexpected that changes their life forever. Include vivid descriptions, realistic dialogue, and show the character's emotional journey. Make sure your story has a clear beginning, middle, and end with a satisfying conclusion. Focus on showing rather than telling, and use sensory details to bring your story to life.",
+        persuasive: "Choose a topic you feel strongly about and write a persuasive essay to convince others of your viewpoint. Use strong evidence, logical reasoning, and persuasive techniques like rhetorical questions and emotional appeals. Structure your argument clearly with an introduction that states your position, body paragraphs that support your argument with evidence, and a conclusion that reinforces your main point.",
+        expository: "Select a topic you know well and write an informative essay that teaches others about it. Use clear explanations, relevant examples, and organize your information in a logical sequence. Include an engaging introduction that hooks your reader, body paragraphs that explore different aspects of your topic, and a strong conclusion that summarizes your main points.",
+        reflective: "Think about a meaningful experience in your life and write a reflective piece exploring what you learned from it. Show your thoughts and feelings, and explain how this experience changed or influenced you. Be honest and thoughtful in your reflection, using specific details to help your reader understand the significance of this experience.",
+        descriptive: "Choose a place, person, or object that is special to you and write a descriptive piece that brings it to life for your reader. Use sensory details (sight, sound, smell, touch, taste) and figurative language like metaphors and similes to create vivid imagery. Paint a picture with words that allows your reader to experience what you're describing.",
+        recount: "Write about an important event or experience in your life, telling what happened in the order it occurred. Include details about who was involved, where it happened, when it took place, and why it was significant to you. Use descriptive language to help your reader visualize the events and understand their importance."
+      };
+      
+      const fallbackPrompt = fallbackPrompts[selectedWritingType as keyof typeof fallbackPrompts] || fallbackPrompts.narrative;
+      
+      console.log('🔄 Using fallback prompt:', fallbackPrompt);
+      
+      // Save fallback prompt
+      localStorage.setItem(`${selectedWritingType}_prompt`, fallbackPrompt);
+      localStorage.setItem('generatedPrompt', fallbackPrompt);
+      localStorage.setItem('selectedWritingType', selectedWritingType);
+      localStorage.setItem('promptType', 'generated');
+      
+      // Close prompt options modal
+      setShowPromptOptionsModal(false);
+      
+      // Navigate to writing area with fallback prompt
+      await new Promise(resolve => setTimeout(resolve, 200));
+      navigate('/writing');
+      
+    } finally {
+      setIsGeneratingPrompt(false);
+    }
+  };
+
+  // FIXED: Step 3 - Handle custom prompt, then navigate to writing area
+  const handleCustomPrompt = () => {
+    console.log('✏️ Dashboard: Using custom prompt for:', selectedWritingType);
+    
+    // Store the prompt type
+    localStorage.setItem('promptType', 'custom');
+    localStorage.setItem('selectedWritingType', selectedWritingType);
+    
+    // Close prompt options modal
+    setShowPromptOptionsModal(false);
+    
+    // Navigate to writing page (Step 4 - Writing Area)
+    console.log('📍 Dashboard: Navigating to writing area...');
+    
+    // FIXED: Use React Router navigate directly for consistent navigation
+    try {
+      navigate('/writing');
+      console.log('✅ Dashboard: Navigation to /writing initiated');
+    } catch (error) {
+      console.error('❌ Dashboard: Navigation error:', error);
+      // Fallback to onNavigate if available
+      if (onNavigate) {
+        console.log('📍 Dashboard: Using onNavigate fallback');
+        onNavigate('writing');
+      } else {
+        console.log('📍 Dashboard: Using window.location fallback');
         window.location.href = '/writing';
-      } catch (fallbackError) {
-        console.error('❌ Dashboard: Fallback navigation failed:', fallbackError);
-        // Last resort: reload page and navigate
-        window.location.replace('/writing');
       }
     }
   };
@@ -253,16 +325,14 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
   const handlePracticeExam = () => {
     console.log('🚀 Dashboard: Navigating to practice exam...');
     try {
-      if (navigate) {
-        navigate('/exam');
-      } else if (onNavigate) {
+      navigate('/exam');
+    } catch (error) {
+      console.error('❌ Dashboard: Exam navigation error:', error);
+      if (onNavigate) {
         onNavigate('exam');
       } else {
         window.location.href = '/exam';
       }
-    } catch (error) {
-      console.error('❌ Dashboard: Exam navigation error:', error);
-      window.location.href = '/exam';
     }
   };
 
@@ -320,99 +390,116 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 relative overflow-hidden">
       {/* Floating Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-32 h-32 bg-yellow-200 rounded-full opacity-20 animate-bounce"></div>
-        <div className="absolute top-40 right-20 w-24 h-24 bg-pink-200 rounded-full opacity-20 animate-pulse"></div>
-        <div className="absolute bottom-40 left-20 w-28 h-28 bg-blue-200 rounded-full opacity-20 animate-bounce"></div>
-        <div className="absolute bottom-20 right-10 w-36 h-36 bg-purple-200 rounded-full opacity-20 animate-pulse"></div>
+        <div className="absolute top-20 left-10 w-32 h-32 bg-yellow-200 rounded-full opacity-20 animate-pulse"></div>
+        <div className="absolute top-40 right-20 w-24 h-24 bg-pink-200 rounded-full opacity-30 animate-bounce"></div>
+        <div className="absolute bottom-32 left-1/4 w-40 h-40 bg-purple-200 rounded-full opacity-15 animate-pulse"></div>
+        <div className="absolute bottom-20 right-1/3 w-28 h-28 bg-green-200 rounded-full opacity-25 animate-bounce"></div>
       </div>
 
-      <div className="relative z-10 container mx-auto px-4 py-8">
-        {/* Header with Welcome Message */}
-        <div className="text-center mb-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
+        
+        {/* Enhanced Header with Animated Mascot */}
+        <div className="mb-8 text-center">
           <div className="flex items-center justify-center mb-6">
-            <div className="w-20 h-20 bg-gradient-to-r from-orange-400 to-pink-500 rounded-full flex items-center justify-center shadow-xl">
-              <Smile className="h-10 w-10 text-white" />
+            <div className="relative">
+              <div className="w-20 h-20 bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-400 rounded-full flex items-center justify-center mr-6 shadow-2xl transform hover:scale-110 transition-all duration-300 animate-pulse">
+                <Sparkles className="h-10 w-10 text-white animate-spin" style={{ animationDuration: '3s' }} />
+              </div>
+              <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-green-400 to-blue-400 rounded-full flex items-center justify-center shadow-lg animate-bounce">
+                <Crown className="h-4 w-4 text-white" />
+              </div>
             </div>
-            <div className="ml-6 text-left">
-              <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+            <div className="text-left">
+              <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
                 Hi there, {getUserName()}! 🌟
               </h1>
-              <p className="text-2xl text-orange-500 font-semibold mt-2">
+              <p className="text-2xl text-gray-700 font-medium bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent">
                 Let's write something awesome today!
               </p>
             </div>
           </div>
         </div>
 
-        {isLoading ? (
-          <div className="text-center py-16">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-8"></div>
-            <p className="text-gray-600 text-xl">Loading your dashboard...</p>
-          </div>
-        ) : (
-          <>
-            {/* Welcome Message for First-Time Users */}
-            {showWelcomeMessage && (
-              <div className="bg-gradient-to-r from-green-100 to-blue-100 rounded-3xl p-8 mb-12 shadow-xl relative">
-                <button
-                  onClick={handleDismissWelcome}
-                  className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 transition-colors"
-                >
-                  <X className="h-6 w-6" />
-                </button>
-                
-                <div className="flex items-start">
-                  <div className="w-16 h-16 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center mr-6 shadow-xl">
-                    <Trophy className="h-8 w-8 text-white" />
+        {/* Enhanced Welcome Message for Premium Users */}
+        {showWelcomeMessage && accessType === 'permanent' && (
+          <div className="bg-gradient-to-r from-green-100 via-blue-100 to-purple-100 border-4 border-green-300 rounded-3xl p-8 mb-8 relative overflow-hidden shadow-2xl">
+            <div className="absolute top-0 right-0 w-40 h-40 bg-yellow-200 rounded-full -mr-20 -mt-20 opacity-30 animate-pulse"></div>
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-pink-200 rounded-full -ml-16 -mb-16 opacity-40 animate-bounce"></div>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-purple-200 to-blue-200 rounded-full opacity-10 animate-spin" style={{ animationDuration: '20s' }}></div>
+            
+            <button
+              onClick={handleDismissWelcome}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transform hover:scale-110 transition-all duration-300"
+            >
+              <X className="h-6 w-6" />
+            </button>
+            
+            <div className="flex items-center relative z-10">
+              <div className="w-24 h-24 bg-gradient-to-r from-green-400 via-blue-400 to-purple-400 rounded-full flex items-center justify-center mr-8 shadow-2xl animate-bounce">
+                <Trophy className="h-12 w-12 text-white" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-4xl font-bold text-green-900 mb-4 flex items-center">
+                  🎉 Hooray! You're All Set! 
+                  <Gem className="h-8 w-8 text-yellow-500 ml-3 animate-pulse" />
+                </h3>
+                <p className="text-green-800 mb-6 text-xl font-medium">
+                  Welcome to your writing adventure! You now have access to all the cool features:
+                </p>
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="flex items-center text-green-700 font-medium">
+                    <PenTool className="h-5 w-5 mr-3 text-green-600" />
+                    ✨ AI Writing Assistant
                   </div>
-                  <div className="flex-1">
-                    <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                      🎉 Hooray! You're All Set! 💎
-                    </h2>
-                    <p className="text-gray-700 text-lg mb-6">
-                      Welcome to your writing adventure! You now have access to all the cool features:
-                    </p>
-                    
-                    <div className="grid grid-cols-2 gap-4 mb-6">
-                      <div className="flex items-center">
-                        <Sparkles className="h-6 w-6 text-yellow-500 mr-3" />
-                        <span className="text-gray-700">✨ AI Writing Assistant</span>
-                      </div>
-                      <div className="flex items-center">
-                        <BarChart3 className="h-6 w-6 text-green-500 mr-3" />
-                        <span className="text-gray-700">📊 Progress Tracking</span>
-                      </div>
-                      <div className="flex items-center">
-                        <Target className="h-6 w-6 text-red-500 mr-3" />
-                        <span className="text-gray-700">🎯 Practice Exams</span>
-                      </div>
-                      <div className="flex items-center">
-                        <Award className="h-6 w-6 text-purple-500 mr-3" />
-                        <span className="text-gray-700">🏆 NSW Selective Prep</span>
-                      </div>
-                    </div>
-                    
-                    <p className="text-gray-700 text-lg font-semibold">
-                      Ready to become an amazing writer? Let's start your first story! 🚀
-                    </p>
+                  <div className="flex items-center text-green-700 font-medium">
+                    <BarChart3 className="h-5 w-5 mr-3 text-green-600" />
+                    📊 Progress Tracking
+                  </div>
+                  <div className="flex items-center text-green-700 font-medium">
+                    <Target className="h-5 w-5 mr-3 text-green-600" />
+                    🎯 Practice Exams
+                  </div>
+                  <div className="flex items-center text-green-700 font-medium">
+                    <Award className="h-5 w-5 mr-3 text-green-600" />
+                    🏆 NSW Selective Prep
                   </div>
                 </div>
+                <p className="text-green-700 text-lg">
+                  Ready to become an amazing writer? Let's start your first story! 🚀
+                </p>
               </div>
-            )}
+            </div>
+          </div>
+        )}
 
-            {/* Access Status Display */}
+        {/* Loading State */}
+        {isLoading && (
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+            <p className="text-gray-600 text-lg">Loading your dashboard...</p>
+          </div>
+        )}
+
+        {/* Access Status Display */}
+        {!isLoading && (
+          <>
+            {/* Temporary Access Banner */}
             {accessType === 'temporary' && tempAccessUntil && (
-              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-6 mb-8 rounded-r-xl shadow-lg">
-                <div className="flex items-center">
-                  <Clock className="h-8 w-8 text-yellow-600 mr-4" />
-                  <div>
-                    <h3 className="text-xl font-semibold text-yellow-800 mb-2">Temporary Access Active</h3>
-                    <p className="text-yellow-700 mb-2">
-                      You have temporary access until: <strong>{formatDateTime(tempAccessUntil)}</strong>
-                    </p>
-                    <p className="text-yellow-600 text-sm">
-                      {getTimeRemaining(tempAccessUntil)}
-                    </p>
+              <div className="bg-gradient-to-r from-yellow-100 to-orange-100 border-2 border-yellow-300 rounded-2xl p-6 mb-8 shadow-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="w-16 h-16 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full flex items-center justify-center mr-6 shadow-xl">
+                      <Clock className="h-8 w-8 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold text-yellow-900 mb-2">⏰ Temporary Access Active!</h3>
+                      <p className="text-yellow-800 text-lg">
+                        You have temporary access until: <strong>{formatDateTime(tempAccessUntil)}</strong>
+                      </p>
+                      <p className="text-yellow-700 font-medium">
+                        {getTimeRemaining(tempAccessUntil)}
+                      </p>
+                    </div>
                   </div>
                   <button
                     onClick={handleManualRefresh}
@@ -427,7 +514,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
             {/* Main Action Cards */}
             {(isVerified && (accessType === 'permanent' || accessType === 'temporary')) ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-                {/* FIXED: Write Story Card with enhanced navigation */}
+                {/* FIXED: Write Story Card with proper flow */}
                 <div className="bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-3xl p-8 text-white shadow-2xl transform hover:scale-105 transition-all duration-300 relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
                   <div className="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-10 rounded-full -ml-12 -mb-12"></div>
@@ -439,21 +526,21 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
                       </div>
                       <div>
                         <h3 className="text-3xl font-bold mb-2">Write Story</h3>
-                        <p className="text-purple-100 text-lg">Create amazing stories with AI help!</p>
+                        <p className="text-blue-100 text-lg">Create amazing stories with AI help!</p>
                       </div>
                     </div>
                     
                     <div className="space-y-3 mb-8">
-                      <div className="flex items-center text-purple-100">
+                      <div className="flex items-center text-blue-100">
                         <Sparkles className="h-5 w-5 mr-3" />
                         <span>AI-powered writing prompts</span>
                       </div>
-                      <div className="flex items-center text-purple-100">
-                        <BookOpen className="h-5 w-5 mr-3" />
+                      <div className="flex items-center text-blue-100">
+                        <Target className="h-5 w-5 mr-3" />
                         <span>NSW Selective School prep</span>
                       </div>
-                      <div className="flex items-center text-purple-100">
-                        <Zap className="h-5 w-5 mr-3" />
+                      <div className="flex items-center text-blue-100">
+                        <Award className="h-5 w-5 mr-3" />
                         <span>Real-time feedback & tips</span>
                       </div>
                     </div>
@@ -510,103 +597,47 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
                 </div>
               </div>
             ) : (
-              // Access denied or verification needed
+              /* No Access State */
               <div className="text-center py-16">
-                <div className="bg-white rounded-3xl p-12 shadow-xl max-w-2xl mx-auto">
-                  {!isVerified ? (
-                    <>
-                      <Mail className="h-20 w-20 text-yellow-500 mx-auto mb-6" />
-                      <h2 className="text-4xl font-bold text-gray-900 mb-6">Almost There! 📧</h2>
-                      <p className="text-gray-600 text-xl mb-8">
-                        Please check your email and click the verification link to unlock your writing adventure!
-                      </p>
-                      <button
-                        onClick={handleManualRefresh}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
-                      >
-                        I've Verified My Email!
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <Gift className="h-20 w-20 text-purple-500 mx-auto mb-6" />
-                      <h2 className="text-4xl font-bold text-gray-900 mb-6">Choose Your Plan! 🎁</h2>
-                      <p className="text-gray-600 text-xl mb-8">
-                        Select a plan to start your amazing writing journey with AI assistance!
-                      </p>
-                      <button
-                        onClick={() => onNavigate?.('pricing')}
-                        className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
-                      >
-                        View Pricing Plans
-                      </button>
-                    </>
-                  )}
+                <div className="w-32 h-32 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-8">
+                  <Mail className="h-16 w-16 text-red-600" />
                 </div>
+                <h2 className="text-4xl font-bold text-gray-900 mb-4">Almost There!</h2>
+                <p className="text-gray-600 text-xl mb-8 max-w-2xl mx-auto">
+                  Please verify your email or complete your subscription to access all the amazing writing features.
+                </p>
+                <button
+                  onClick={handleManualRefresh}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
+                >
+                  Check Status Again
+                </button>
               </div>
             )}
-
-            {/* Quick Stats Cards */}
-            {(isVerified && (accessType === 'permanent' || accessType === 'temporary')) && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-                <div className="bg-white rounded-2xl p-6 shadow-lg">
-                  <div className="flex items-center">
-                    <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mr-4">
-                      <FileText className="h-6 w-6 text-blue-600" />
-                    </div>
-                    <div>
-                      <h4 className="text-lg font-semibold text-gray-900">Stories Written</h4>
-                      <p className="text-3xl font-bold text-blue-600">0</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="bg-white rounded-2xl p-6 shadow-lg">
-                  <div className="flex items-center">
-                    <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mr-4">
-                      <Trophy className="h-6 w-6 text-green-600" />
-                    </div>
-                    <div>
-                      <h4 className="text-lg font-semibold text-gray-900">Practice Exams</h4>
-                      <p className="text-3xl font-bold text-green-600">0</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="bg-white rounded-2xl p-6 shadow-lg">
-                  <div className="flex items-center">
-                    <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mr-4">
-                      <Star className="h-6 w-6 text-purple-600" />
-                    </div>
-                    <div>
-                      <h4 className="text-lg font-semibold text-gray-900">Writing Score</h4>
-                      <p className="text-3xl font-bold text-purple-600">-</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Settings and Sign Out */}
-            <div className="flex justify-center space-x-4">
-              <button
-                onClick={() => onNavigate?.('settings')}
-                className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center"
-              >
-                <Settings className="h-5 w-5 mr-2" />
-                Settings
-              </button>
-              
-              <button
-                onClick={onSignOut}
-                className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
-              >
-                Sign Out
-              </button>
-            </div>
           </>
         )}
       </div>
+
+      {/* FIXED: Writing Type Selection Modal */}
+      {showWritingTypeModal && (
+        <WritingTypeSelectionModal
+          isOpen={showWritingTypeModal}
+          onClose={() => setShowWritingTypeModal(false)}
+          onSelect={handleWritingTypeSelect}
+        />
+      )}
+
+      {/* FIXED: Prompt Options Modal */}
+      {showPromptOptionsModal && (
+        <PromptOptionsModal
+          isOpen={showPromptOptionsModal}
+          onClose={() => setShowPromptOptionsModal(false)}
+          onGeneratePrompt={handleGeneratePrompt}
+          onCustomPrompt={handleCustomPrompt}
+          isGenerating={isGeneratingPrompt}
+          writingType={selectedWritingType}
+        />
+      )}
     </div>
   );
 }
