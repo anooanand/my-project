@@ -200,7 +200,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
     }
   };
 
-  // FIXED: Simple direct navigation - NO MORE MODALS!
+  // FIXED: Enhanced navigation with multiple fallback methods
   const handleStartWriting = () => {
     console.log('🚀 Dashboard: Starting writing flow...');
     
@@ -215,35 +215,54 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
       // Set navigation source to track the flow
       localStorage.setItem('navigationSource', 'dashboard');
       
-      // SIMPLE FIX: Navigate directly to writing page - NO MORE MODALS!
-      if (onNavigate) {
-        console.log('✅ Dashboard: Navigating to writing page via onNavigate');
+      // ENHANCED FIX: Multiple navigation methods with immediate execution
+      console.log('✅ Dashboard: Attempting navigation to writing page...');
+      
+      // Method 1: Use onNavigate prop if available
+      if (onNavigate && typeof onNavigate === 'function') {
+        console.log('✅ Dashboard: Using onNavigate prop');
         onNavigate('writing');
-      } else if (navigate) {
-        console.log('✅ Dashboard: Navigating to writing page via navigate');
-        navigate('/writing');
-      } else {
-        console.log('✅ Dashboard: Navigating to writing page via window.location');
-        window.location.href = '/writing';
+        return;
       }
+      
+      // Method 2: Use React Router navigate
+      if (navigate && typeof navigate === 'function') {
+        console.log('✅ Dashboard: Using React Router navigate');
+        navigate('/writing');
+        return;
+      }
+      
+      // Method 3: Direct window location change
+      console.log('✅ Dashboard: Using window.location fallback');
+      window.location.href = '/writing';
+      
     } catch (error) {
       console.error('❌ Dashboard: Navigation error:', error);
-      // Fallback navigation
-      window.location.href = '/writing';
+      
+      // Ultimate fallback: Force page navigation
+      try {
+        window.location.href = '/writing';
+      } catch (fallbackError) {
+        console.error('❌ Dashboard: Fallback navigation failed:', fallbackError);
+        // Last resort: reload page and navigate
+        window.location.replace('/writing');
+      }
     }
   };
 
   const handlePracticeExam = () => {
     console.log('🚀 Dashboard: Navigating to practice exam...');
     try {
-      navigate('/exam');
-    } catch (error) {
-      console.error('❌ Dashboard: Exam navigation error:', error);
-      if (onNavigate) {
+      if (navigate) {
+        navigate('/exam');
+      } else if (onNavigate) {
         onNavigate('exam');
       } else {
         window.location.href = '/exam';
       }
+    } catch (error) {
+      console.error('❌ Dashboard: Exam navigation error:', error);
+      window.location.href = '/exam';
     }
   };
 
@@ -408,7 +427,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
             {/* Main Action Cards */}
             {(isVerified && (accessType === 'permanent' || accessType === 'temporary')) ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-                {/* FIXED: Write Story Card with direct navigation */}
+                {/* FIXED: Write Story Card with enhanced navigation */}
                 <div className="bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-3xl p-8 text-white shadow-2xl transform hover:scale-105 transition-all duration-300 relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
                   <div className="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-10 rounded-full -ml-12 -mb-12"></div>
@@ -420,21 +439,21 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
                       </div>
                       <div>
                         <h3 className="text-3xl font-bold mb-2">Write Story</h3>
-                        <p className="text-blue-100 text-lg">Create amazing stories with AI help!</p>
+                        <p className="text-purple-100 text-lg">Create amazing stories with AI help!</p>
                       </div>
                     </div>
                     
                     <div className="space-y-3 mb-8">
-                      <div className="flex items-center text-blue-100">
+                      <div className="flex items-center text-purple-100">
                         <Sparkles className="h-5 w-5 mr-3" />
                         <span>AI-powered writing prompts</span>
                       </div>
-                      <div className="flex items-center text-blue-100">
-                        <Target className="h-5 w-5 mr-3" />
+                      <div className="flex items-center text-purple-100">
+                        <BookOpen className="h-5 w-5 mr-3" />
                         <span>NSW Selective School prep</span>
                       </div>
-                      <div className="flex items-center text-blue-100">
-                        <Award className="h-5 w-5 mr-3" />
+                      <div className="flex items-center text-purple-100">
+                        <Zap className="h-5 w-5 mr-3" />
                         <span>Real-time feedback & tips</span>
                       </div>
                     </div>
@@ -491,23 +510,100 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
                 </div>
               </div>
             ) : (
-              /* No Access State */
+              // Access denied or verification needed
               <div className="text-center py-16">
-                <div className="w-32 h-32 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-8">
-                  <Mail className="h-16 w-16 text-red-600" />
+                <div className="bg-white rounded-3xl p-12 shadow-xl max-w-2xl mx-auto">
+                  {!isVerified ? (
+                    <>
+                      <Mail className="h-20 w-20 text-yellow-500 mx-auto mb-6" />
+                      <h2 className="text-4xl font-bold text-gray-900 mb-6">Almost There! 📧</h2>
+                      <p className="text-gray-600 text-xl mb-8">
+                        Please check your email and click the verification link to unlock your writing adventure!
+                      </p>
+                      <button
+                        onClick={handleManualRefresh}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                      >
+                        I've Verified My Email!
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <Gift className="h-20 w-20 text-purple-500 mx-auto mb-6" />
+                      <h2 className="text-4xl font-bold text-gray-900 mb-6">Choose Your Plan! 🎁</h2>
+                      <p className="text-gray-600 text-xl mb-8">
+                        Select a plan to start your amazing writing journey with AI assistance!
+                      </p>
+                      <button
+                        onClick={() => onNavigate?.('pricing')}
+                        className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                      >
+                        View Pricing Plans
+                      </button>
+                    </>
+                  )}
                 </div>
-                <h2 className="text-4xl font-bold text-gray-900 mb-4">Almost There!</h2>
-                <p className="text-gray-600 text-xl mb-8 max-w-2xl mx-auto">
-                  Please verify your email or complete your subscription to access all the amazing writing features.
-                </p>
-                <button
-                  onClick={handleManualRefresh}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
-                >
-                  Check Status Again
-                </button>
               </div>
             )}
+
+            {/* Quick Stats Cards */}
+            {(isVerified && (accessType === 'permanent' || accessType === 'temporary')) && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                <div className="bg-white rounded-2xl p-6 shadow-lg">
+                  <div className="flex items-center">
+                    <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mr-4">
+                      <FileText className="h-6 w-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-semibold text-gray-900">Stories Written</h4>
+                      <p className="text-3xl font-bold text-blue-600">0</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-white rounded-2xl p-6 shadow-lg">
+                  <div className="flex items-center">
+                    <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mr-4">
+                      <Trophy className="h-6 w-6 text-green-600" />
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-semibold text-gray-900">Practice Exams</h4>
+                      <p className="text-3xl font-bold text-green-600">0</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-white rounded-2xl p-6 shadow-lg">
+                  <div className="flex items-center">
+                    <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mr-4">
+                      <Star className="h-6 w-6 text-purple-600" />
+                    </div>
+                    <div>
+                      <h4 className="text-lg font-semibold text-gray-900">Writing Score</h4>
+                      <p className="text-3xl font-bold text-purple-600">-</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Settings and Sign Out */}
+            <div className="flex justify-center space-x-4">
+              <button
+                onClick={() => onNavigate?.('settings')}
+                className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center"
+              >
+                <Settings className="h-5 w-5 mr-2" />
+                Settings
+              </button>
+              
+              <button
+                onClick={onSignOut}
+                className="bg-red-500 hover:bg-red-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+              >
+                Sign Out
+              </button>
+            </div>
           </>
         )}
       </div>
