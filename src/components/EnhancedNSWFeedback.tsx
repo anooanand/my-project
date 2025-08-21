@@ -28,12 +28,17 @@ const NSW_TEXT_TYPE_GUIDES = {
     structure: "Introduction to subject, detailed description paragraphs, and concluding impression",
     language: "Vivid imagery, sensory details, and figurative language",
     focus: "Creating a clear picture in the reader's mind through detailed observation"
+  },
+  recount: {
+    structure: "Clear sequence of events, setting the scene, and concluding with significance",
+    language: "Action verbs, time connectives, and sensory details",
+    focus: "Accurate retelling of events and personal significance"
   }
 };
 
 // Band color mapping for visual display
-const getBandColor = (band) => {
-  const colors = {
+const getBandColor = (band: number) => {
+  const colors: { [key: number]: string } = {
     6: 'bg-emerald-500 text-white border-emerald-600',
     5: 'bg-blue-500 text-white border-blue-600',
     4: 'bg-green-500 text-white border-green-600',
@@ -45,8 +50,8 @@ const getBandColor = (band) => {
 };
 
 // Band progress bar color
-const getBandProgressColor = (band) => {
-  const colors = {
+const getBandProgressColor = (band: number) => {
+  const colors: { [key: number]: string } = {
     6: 'bg-emerald-400',
     5: 'bg-blue-400',
     4: 'bg-green-400',
@@ -57,9 +62,13 @@ const getBandProgressColor = (band) => {
   return colors[band] || colors[1];
 };
 
-// Enhanced feedback component with band-level scoring display
-export function EnhancedNSWFeedback({ essay, textType }) {
-  const [feedback, setFeedback] = React.useState(null);
+interface EnhancedNSWFeedbackProps {
+  essay: string;
+  textType: string;
+}
+
+export function EnhancedNSWFeedback({ essay, textType }: EnhancedNSWFeedbackProps) {
+  const [feedback, setFeedback] = React.useState<any>(null);
   const [loading, setLoading] = React.useState(false);
   
   const getFeedback = async () => {
@@ -118,7 +127,7 @@ export function EnhancedNSWFeedback({ essay, textType }) {
           <div className="text-center">
             <div className="mb-3">
               <div className={`inline-flex items-center justify-center w-20 h-20 rounded-full text-2xl font-bold ${getBandColor(feedback.overallBand)}`}>
-                Band ${feedback.overallBand}
+                Band {feedback.overallBand}
               </div>
             </div>
             <h3 className="text-lg font-semibold text-gray-800 mb-1">Overall Band Level</h3>
@@ -168,7 +177,7 @@ export function EnhancedNSWFeedback({ essay, textType }) {
         </h3>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {feedback.criteriaFeedback && Object.entries(feedback.criteriaFeedback).map(([criterion, data]) => (
+          {feedback.criteriaFeedback && Object.entries(feedback.criteriaFeedback).map(([criterion, data]: [string, any]) => (
             <div key={criterion} className="bg-gray-50 rounded-lg p-5 border border-gray-200">
               {/* Criterion Header */}
               <div className="flex items-center justify-between mb-4">
@@ -177,7 +186,7 @@ export function EnhancedNSWFeedback({ essay, textType }) {
                 </h4>
                 <div className="flex items-center space-x-2">
                   <div className={`px-3 py-1 rounded-full text-sm font-bold ${getBandColor(data.band)}`}>
-                    Band ${data.band}
+                    Band {data.band}
                   </div>
                   <div className="text-lg font-bold text-gray-700">
                     {data.score}/{data.maxScore}
@@ -203,7 +212,7 @@ export function EnhancedNSWFeedback({ essay, textType }) {
                     Strengths
                   </h5>
                   <ul className="space-y-1">
-                    {data.strengths.map((item, index) => (
+                    {data.strengths.map((item: string, index: number) => (
                       <li key={index} className="text-green-600 text-sm flex items-start">
                         <CheckCircle className="w-3 h-3 mr-2 mt-1 flex-shrink-0" />
                         {item}
@@ -221,7 +230,7 @@ export function EnhancedNSWFeedback({ essay, textType }) {
                     Areas for Improvement
                   </h5>
                   <ul className="space-y-1">
-                    {data.improvements.map((item, index) => (
+                    {data.improvements.map((item: string, index: number) => (
                       <li key={index} className="text-amber-600 text-sm flex items-start">
                         <AlertCircle className="w-3 h-3 mr-2 mt-1 flex-shrink-0" />
                         {item}
@@ -236,7 +245,7 @@ export function EnhancedNSWFeedback({ essay, textType }) {
                 <div>
                   <h5 className="font-medium text-blue-700 mb-2">Specific Suggestions</h5>
                   <ul className="space-y-1">
-                    {data.suggestions.map((item, index) => (
+                    {data.suggestions.map((item: string, index: number) => (
                       <li key={index} className="text-blue-600 text-sm flex items-start">
                         <div className="w-2 h-2 bg-blue-400 rounded-full mr-2 mt-2 flex-shrink-0"></div>
                         {item}
@@ -261,7 +270,7 @@ export function EnhancedNSWFeedback({ essay, textType }) {
                 Priority Focus Areas
               </h4>
               <ul className="space-y-2">
-                {feedback.priorityFocus.map((item, index) => (
+                {feedback.priorityFocus.map((item: string, index: number) => (
                   <li key={index} className="text-red-700 text-sm font-medium">
                     {index + 1}. {item}
                   </li>
@@ -278,7 +287,7 @@ export function EnhancedNSWFeedback({ essay, textType }) {
                 Exam Strategies
               </h4>
               <ul className="space-y-2">
-                {feedback.examStrategies.map((item, index) => (
+                {feedback.examStrategies.map((item: string, index: number) => (
                   <li key={index} className="text-purple-700 text-sm">
                     • {item}
                   </li>
@@ -293,7 +302,7 @@ export function EnhancedNSWFeedback({ essay, textType }) {
           <div className="mt-6 bg-blue-50 rounded-lg p-4 border border-blue-200">
             <h4 className="font-semibold text-blue-800 mb-3">Questions for Reflection</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {feedback.interactiveQuestions.map((question, index) => (
+              {feedback.interactiveQuestions.map((question: string, index: number) => (
                 <div key={index} className="text-blue-700 text-sm bg-white p-3 rounded border">
                   {question}
                 </div>
@@ -307,7 +316,7 @@ export function EnhancedNSWFeedback({ essay, textType }) {
           <div className="mt-6 bg-green-50 rounded-lg p-4 border border-green-200">
             <h4 className="font-semibold text-green-800 mb-3">Next Steps - Revision Tasks</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {feedback.revisionSuggestions.map((task, index) => (
+              {feedback.revisionSuggestions.map((task: string, index: number) => (
                 <div key={index} className="text-green-700 text-sm bg-white p-3 rounded border flex items-start">
                   <div className="w-6 h-6 bg-green-100 text-green-800 rounded-full flex items-center justify-center text-xs font-bold mr-3 flex-shrink-0 mt-0.5">
                     {index + 1}
