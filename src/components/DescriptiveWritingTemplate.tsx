@@ -87,12 +87,12 @@ export function DescriptiveWritingTemplate({ content, onChange, onTimerStart, on
           }
         }
       }, 1000);
-    } else if (interval) {
-      clearInterval(interval);
     }
     
     return () => {
-      if (interval) clearInterval(interval);
+      if (interval !== null) {
+        clearInterval(interval);
+      }
     };
   }, [isPlanningTimerActive, planningMinutes, planningSeconds, isPlanningTimerCompleted]);
 
@@ -120,12 +120,12 @@ export function DescriptiveWritingTemplate({ content, onChange, onTimerStart, on
           }
         }
       }, 1000);
-    } else if (interval) {
-      clearInterval(interval);
     }
     
     return () => {
-      if (interval) clearInterval(interval);
+      if (interval !== null) {
+        clearInterval(interval);
+      }
     };
   }, [isWritingTimerActive, writingMinutes, writingSecondsState, isWritingTimerCompleted, onTimerStart]);
 
