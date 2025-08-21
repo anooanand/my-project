@@ -2,9 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { isEmailVerified, hasAnyAccess, getUserAccessStatus } from '../lib/supabase';
-import { WritingTypeSelectionModal } from './WritingTypeSelectionModal';
-import { PromptOptionsModal } from './PromptOptionsModal';
-import { generatePrompt } from '../lib/openai';
 import { 
   Mail, 
   CheckCircle, 
@@ -54,99 +51,111 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
   const [userAccessData, setUserAccessData] = useState<any>(null);
   const [showWelcomeMessage, setShowWelcomeMessage] = useState(false);
   
-  // FIXED: Modal states for proper sequence
-  const [showWritingTypeModal, setShowWritingTypeModal] = useState(false);
-  const [showPromptOptionsModal, setShowPromptOptionsModal] = useState(false);
-  const [selectedWritingType, setSelectedWritingType] = useState<string>('');
-  const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false);
-
   // Use prop user if provided, otherwise use context user
   const currentUser = propUser || user;
 
+  // FIXED: Single verification check with proper dependency array
   useEffect(() => {
+    let isMounted = true; // Prevent state updates if component unmounts
+    
     const checkVerificationStatus = async () => {
-      if (currentUser) {
-        console.log('🔍 Dashboard: Checking verification status for user:', currentUser.id);
-        setIsLoading(true);
+      if (!currentUser || !currentUser.id) {
+        setIsLoading(false);
+        return;
+      }
+
+      console.log('🔍 Dashboard: Checking verification status for user:', currentUser.id);
+      setIsLoading(true);
+      
+      try {
+        // Get detailed user access status from database
+        const accessData = await getUserAccessStatus(currentUser.id);
         
-        try {
-          // Get detailed user access status from database
-          const accessData = await getUserAccessStatus(currentUser.id);
-          setUserAccessData(accessData);
+        if (!isMounted) return; // Don't update state if component unmounted
+        
+        setUserAccessData(accessData);
+        
+        if (accessData) {
+          console.log('📊 User access data:', accessData);
           
-          if (accessData) {
-            console.log('📊 User access data:', accessData);
+          // Check if user has permanent access (payment verified or manual override)
+          if (accessData.payment_verified || accessData.manual_override || accessData.has_access) {
+            setIsVerified(true);
+            setAccessType('permanent');
             
-            // Check if user has permanent access (payment verified or manual override)
-            if (accessData.payment_verified || accessData.manual_override || accessData.has_access) {
-              setIsVerified(true);
-              setAccessType('permanent');
-              
-              // Check if this is the first time showing the welcome message
-              const hasSeenWelcome = localStorage.getItem(`welcome_shown_${currentUser.id}`);
-              if (!hasSeenWelcome) {
-                setShowWelcomeMessage(true);
-                localStorage.setItem(`welcome_shown_${currentUser.id}`, 'true');
-              }
-              
-              console.log('✅ Dashboard: Permanent access confirmed - payment verified:', accessData.payment_verified);
-              setIsLoading(false);
-              return;
+            // Check if this is the first time showing the welcome message
+            const hasSeenWelcome = localStorage.getItem(`welcome_shown_${currentUser.id}`);
+            if (!hasSeenWelcome) {
+              setShowWelcomeMessage(true);
+              localStorage.setItem(`welcome_shown_${currentUser.id}`, 'true');
             }
             
-            // Check if user has valid temporary access
-            if (accessData.temp_access_until) {
-              const tempDate = new Date(accessData.temp_access_until);
-              if (tempDate > new Date()) {
-                setIsVerified(true);
-                setAccessType('temporary');
-                setTempAccessUntil(accessData.temp_access_until);
-                console.log('✅ Dashboard: Temporary access valid until:', tempDate);
-                setIsLoading(false);
-                return;
-              }
-            }
+            console.log('✅ Dashboard: Permanent access confirmed - payment verified:', accessData.payment_verified);
+            setIsLoading(false);
+            return;
           }
           
-          // Fallback: Check for temporary access in localStorage
-          const tempAccess = localStorage.getItem('temp_access_granted');
-          const tempUntil = localStorage.getItem('temp_access_until');
-          
-          if (tempAccess === 'true' && tempUntil) {
-            const tempDate = new Date(tempUntil);
+          // Check if user has valid temporary access
+          if (accessData.temp_access_until) {
+            const tempDate = new Date(accessData.temp_access_until);
             if (tempDate > new Date()) {
               setIsVerified(true);
               setAccessType('temporary');
-              setTempAccessUntil(tempUntil);
-              console.log('✅ Dashboard: Temporary access from localStorage valid until:', tempDate);
+              setTempAccessUntil(accessData.temp_access_until);
+              console.log('✅ Dashboard: Temporary access valid until:', tempDate);
               setIsLoading(false);
               return;
-            } else {
-              // Clean up expired temporary access
-              localStorage.removeItem('temp_access_granted');
-              localStorage.removeItem('temp_access_until');
-              localStorage.removeItem('temp_access_plan');
             }
           }
-          
-          // Check basic email verification
-          const verified = isEmailVerified(currentUser);
-          setIsVerified(verified);
-          setAccessType('none');
-          console.log('📊 Dashboard: Only email verification result:', verified);
-          
-        } catch (error) {
-          console.error('❌ Error checking verification status:', error);
+        }
+        
+        // Fallback: Check for temporary access in localStorage
+        const tempAccess = localStorage.getItem('temp_access_granted');
+        const tempUntil = localStorage.getItem('temp_access_until');
+        
+        if (tempAccess === 'true' && tempUntil) {
+          const tempDate = new Date(tempUntil);
+          if (tempDate > new Date()) {
+            setIsVerified(true);
+            setAccessType('temporary');
+            setTempAccessUntil(tempUntil);
+            console.log('✅ Dashboard: Temporary access from localStorage valid until:', tempDate);
+            setIsLoading(false);
+            return;
+          } else {
+            // Clean up expired temporary access
+            localStorage.removeItem('temp_access_granted');
+            localStorage.removeItem('temp_access_until');
+            localStorage.removeItem('temp_access_plan');
+          }
+        }
+        
+        // Check basic email verification
+        const verified = isEmailVerified(currentUser);
+        setIsVerified(verified);
+        setAccessType('none');
+        console.log('📊 Dashboard: Only email verification result:', verified);
+        
+      } catch (error) {
+        console.error('❌ Error checking verification status:', error);
+        if (isMounted) {
           setIsVerified(false);
           setAccessType('none');
         }
-        
+      }
+      
+      if (isMounted) {
         setIsLoading(false);
       }
     };
 
     checkVerificationStatus();
-  }, [currentUser]);
+    
+    // Cleanup function
+    return () => {
+      isMounted = false;
+    };
+  }, [currentUser?.id]); // Only depend on user ID to prevent infinite loops
 
   const handleManualRefresh = async () => {
     if (currentUser) {
@@ -191,7 +200,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
     }
   };
 
-  // FIXED: Direct navigation to writing interface - NO MORE BROKEN MODALS!
+  // FIXED: Simple direct navigation - NO MORE MODALS!
   const handleStartWriting = () => {
     console.log('🚀 Dashboard: Starting writing flow...');
     
@@ -221,119 +230,6 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
       console.error('❌ Dashboard: Navigation error:', error);
       // Fallback navigation
       window.location.href = '/writing';
-    }
-  };
-
-  // FIXED: Step 2 - Handle writing type selection, then show prompt options
-  const handleWritingTypeSelect = (type: string) => {
-    console.log('📝 Dashboard: Writing type selected:', type);
-    
-    // Store the selected writing type
-    setSelectedWritingType(type);
-    localStorage.setItem('selectedWritingType', type);
-    
-    // Close writing type modal and open prompt options modal (Step 3)
-    setShowWritingTypeModal(false);
-    setShowPromptOptionsModal(true);
-  };
-
-  // FIXED: Step 3 - Handle prompt generation, then navigate to writing area
-  const handleGeneratePrompt = async () => {
-    console.log('🎯 Dashboard: Generating prompt for:', selectedWritingType);
-    setIsGeneratingPrompt(true);
-    
-    try {
-      // Call the OpenAI prompt generation function
-      const prompt = await generatePrompt(selectedWritingType);
-      
-      if (prompt) {
-        console.log('✅ Prompt generated successfully:', prompt);
-        
-        // CRITICAL: Save to localStorage so WritingArea can access it
-        localStorage.setItem(`${selectedWritingType}_prompt`, prompt);
-        localStorage.setItem('generatedPrompt', prompt);
-        localStorage.setItem('selectedWritingType', selectedWritingType);
-        localStorage.setItem('promptType', 'generated');
-        
-        console.log('✅ Prompt saved to localStorage');
-        
-        // Close prompt options modal
-        setShowPromptOptionsModal(false);
-        
-        // Small delay to ensure localStorage is written
-        await new Promise(resolve => setTimeout(resolve, 200));
-        
-        // Navigate to writing area AFTER prompt is generated
-        navigate('/writing');
-        console.log('✅ Dashboard: Navigation to /writing initiated');
-        
-      } else {
-        throw new Error('No prompt generated');
-      }
-      
-    } catch (error) {
-      console.error('❌ Error generating prompt:', error);
-      
-      // FALLBACK: Use high-quality static prompts if AI generation fails
-      const fallbackPrompts = {
-        narrative: "Write an engaging story about a character who discovers something unexpected that changes their life forever. Include vivid descriptions, realistic dialogue, and show the character's emotional journey. Make sure your story has a clear beginning, middle, and end with a satisfying conclusion. Focus on showing rather than telling, and use sensory details to bring your story to life.",
-        persuasive: "Choose a topic you feel strongly about and write a persuasive essay to convince others of your viewpoint. Use strong evidence, logical reasoning, and persuasive techniques like rhetorical questions and emotional appeals. Structure your argument clearly with an introduction that states your position, body paragraphs that support your argument with evidence, and a conclusion that reinforces your main point.",
-        expository: "Select a topic you know well and write an informative essay that teaches others about it. Use clear explanations, relevant examples, and organize your information in a logical sequence. Include an engaging introduction that hooks your reader, body paragraphs that explore different aspects of your topic, and a strong conclusion that summarizes your main points.",
-        reflective: "Think about a meaningful experience in your life and write a reflective piece exploring what you learned from it. Show your thoughts and feelings, and explain how this experience changed or influenced you. Be honest and thoughtful in your reflection, using specific details to help your reader understand the significance of this experience.",
-        descriptive: "Choose a place, person, or object that is special to you and write a descriptive piece that brings it to life for your reader. Use sensory details (sight, sound, smell, touch, taste) and figurative language like metaphors and similes to create vivid imagery. Paint a picture with words that allows your reader to experience what you're describing.",
-        recount: "Write about an important event or experience in your life, telling what happened in the order it occurred. Include details about who was involved, where it happened, when it took place, and why it was significant to you. Use descriptive language to help your reader visualize the events and understand their importance."
-      };
-      
-      const fallbackPrompt = fallbackPrompts[selectedWritingType as keyof typeof fallbackPrompts] || fallbackPrompts.narrative;
-      
-      console.log('🔄 Using fallback prompt:', fallbackPrompt);
-      
-      // Save fallback prompt
-      localStorage.setItem(`${selectedWritingType}_prompt`, fallbackPrompt);
-      localStorage.setItem('generatedPrompt', fallbackPrompt);
-      localStorage.setItem('selectedWritingType', selectedWritingType);
-      localStorage.setItem('promptType', 'generated');
-      
-      // Close prompt options modal
-      setShowPromptOptionsModal(false);
-      
-      // Navigate to writing area with fallback prompt
-      await new Promise(resolve => setTimeout(resolve, 200));
-      navigate('/writing');
-      
-    } finally {
-      setIsGeneratingPrompt(false);
-    }
-  };
-
-  // FIXED: Step 3 - Handle custom prompt, then navigate to writing area
-  const handleCustomPrompt = () => {
-    console.log('✏️ Dashboard: Using custom prompt for:', selectedWritingType);
-    
-    // Store the prompt type
-    localStorage.setItem('promptType', 'custom');
-    localStorage.setItem('selectedWritingType', selectedWritingType);
-    
-    // Close prompt options modal
-    setShowPromptOptionsModal(false);
-    
-    // Navigate to writing page (Step 4 - Writing Area)
-    console.log('📍 Dashboard: Navigating to writing area...');
-    
-    // FIXED: Use React Router navigate directly for consistent navigation
-    try {
-      navigate('/writing');
-      console.log('✅ Dashboard: Navigation to /writing initiated');
-    } catch (error) {
-      console.error('❌ Dashboard: Navigation error:', error);
-      // Fallback to onNavigate if available
-      if (onNavigate) {
-        console.log('📍 Dashboard: Using onNavigate fallback');
-        onNavigate('writing');
-      } else {
-        console.log('📍 Dashboard: Using window.location fallback');
-        window.location.href = '/writing';
-      }
     }
   };
 
@@ -615,27 +511,6 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
           </>
         )}
       </div>
-
-      {/* FIXED: Writing Type Selection Modal */}
-      {showWritingTypeModal && (
-        <WritingTypeSelectionModal
-          isOpen={showWritingTypeModal}
-          onClose={() => setShowWritingTypeModal(false)}
-          onSelect={handleWritingTypeSelect}
-        />
-      )}
-
-      {/* FIXED: Prompt Options Modal */}
-      {showPromptOptionsModal && (
-        <PromptOptionsModal
-          isOpen={showPromptOptionsModal}
-          onClose={() => setShowPromptOptionsModal(false)}
-          onGeneratePrompt={handleGeneratePrompt}
-          onCustomPrompt={handleCustomPrompt}
-          isGenerating={isGeneratingPrompt}
-          writingType={selectedWritingType}
-        />
-      )}
     </div>
   );
 }
