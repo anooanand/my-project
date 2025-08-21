@@ -25,8 +25,8 @@ const NSW_TEXT_TYPE_GUIDES = {
     focus: "Personal growth, insights, and meaningful reflection"
   },
   descriptive: {
-    structure: "Introduction to subject, detailed description paragraphs, and concluding impression",
-    language: "Vivid imagery, sensory details, and figurative language",
+    structure: "Vivid imagery, sensory details, and figurative language",
+    language: "Descriptive language, dialogue, and sensory details",
     focus: "Creating a clear picture in the reader's mind through detailed observation"
   },
   recount: {
