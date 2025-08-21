@@ -6,91 +6,37 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Ensure that the environment variables are defined
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Missing Supabase environment variables:', {
-    url: !!supabaseUrl,
-    key: !!supabaseAnonKey
-  });
   throw new Error('Supabase URL and Anon Key are required!');
 }
 
-// Enhanced client configuration with better session handling
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    // Enhanced session configuration
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-    // Storage configuration for better session persistence
-    storage: {
-      getItem: (key: string) => {
-        try {
-          return localStorage.getItem(key);
-        } catch (error) {
-          console.warn('Error accessing localStorage:', error);
-          return null;
+// Check if we're in a WebContainer environment that needs proxy
+const isWebContainer = window.location.hostname.includes('webcontainer') || 
+                      window.location.hostname.includes('credentialless') ||
+                      window.location.hostname.includes('staticblitz');
+
+// Create and export the Supabase client with proxy configuration if needed
+export const supabase = createClient(
+  supabaseUrl, 
+  supabaseAnonKey,
+  isWebContainer ? {
+    global: {
+      fetch: async (url, options = {}) => {
+        // Check if this is a REST API call that needs proxying
+        if (url.toString().includes('/rest/v1/')) {
+          const proxyUrl = url.toString().replace(supabaseUrl, '/.netlify/functions/supabase-rest-proxy');
+          console.log(`Proxying Supabase REST call: ${url} -> ${proxyUrl}`);
+          return fetch(proxyUrl, options);
         }
-      },
-      setItem: (key: string, value: string) => {
-        try {
-          localStorage.setItem(key, value);
-        } catch (error) {
-          console.warn('Error setting localStorage:', error);
-        }
-      },
-      removeItem: (key: string) => {
-        try {
-          localStorage.removeItem(key);
-        } catch (error) {
-          console.warn('Error removing from localStorage:', error);
-        }
+        // For non-REST calls (auth, etc.), use normal fetch
+        return fetch(url, options);
       }
     }
-  },
-  // Remove WebContainer proxy logic that might interfere with auth
-  global: {
-    headers: {
-      'X-Client-Info': 'supabase-js-web'
-    }
-  }
-});
+  } : undefined
+);
 
 // Helper function to check if email is verified
 export function isEmailVerified(user: any): boolean {
   return user?.email_confirmed_at !== undefined && user?.email_confirmed_at !== null;
-}
-
-// Enhanced function to safely get user session
-export async function getSafeUserSession() {
-  try {
-    const { data: { session }, error } = await supabase.auth.getSession();
-    
-    if (error) {
-      console.error('Error getting session:', error);
-      return { session: null, error };
-    }
-    
-    return { session, error: null };
-  } catch (error) {
-    console.error('Exception getting session:', error);
-    return { session: null, error };
-  }
-}
-
-// Enhanced function to safely get user
-export async function getSafeUser() {
-  try {
-    const { data: { user }, error } = await supabase.auth.getUser();
-    
-    if (error) {
-      console.error('Error getting user:', error);
-      return { user: null, error };
-    }
-    
-    return { user, error: null };
-  } catch (error) {
-    console.error('Exception getting user:', error);
-    return { user: null, error };
-  }
 }
 
 // FIXED: Updated function to properly check user access from database
@@ -151,3 +97,6 @@ export async function getUserAccessStatus(userId: string) {
     return null;
   }
 }
+
+// Export default for compatibility
+
