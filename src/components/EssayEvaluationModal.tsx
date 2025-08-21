@@ -25,7 +25,7 @@ export function EssayEvaluationModal({ isOpen, onClose, content, textType }: Ess
   }, [isOpen, content, textType]);
 
   const wordCount = content.trim().split(/\s+/).filter(word => word.length > 0).length;
-  const targetLength = wordCount >= 200 && wordCount <= 300 ? "Ideal" : 
+  const targetLength = wordCount >= 200 && wordCount <= 300 ? "Ideal" :
                       wordCount < 200 ? "Too Short" : "Too Long";
 
   if (!isOpen) return null;
@@ -109,19 +109,19 @@ export function EssayEvaluationModal({ isOpen, onClose, content, textType }: Ess
                     <div className="text-sm text-blue-600 dark:text-blue-400 mt-1">
                       {targetLength === 'Ideal' && (
                         <span className="flex items-center justify-center">
-                          <Star className="w-4 h-4 text-yellow-500 mr-1" /> 
+                          <Star className="w-4 h-4 text-yellow-500 mr-1" />
                           Perfect length!
                         </span>
                       )}
                       {targetLength === 'Too Short' && (
                         <span className="flex items-center justify-center">
-                          <AlertCircle className="w-4 h-4 text-amber-500 mr-1" /> 
+                          <AlertCircle className="w-4 h-4 text-amber-500 mr-1" />
                           Try adding more details
                         </span>
                       )}
                       {targetLength === 'Too Long' && (
                         <span className="flex items-center justify-center">
-                          <AlertCircle className="w-4 h-4 text-amber-500 mr-1" /> 
+                          <AlertCircle className="w-4 h-4 text-amber-500 mr-1" />
                           Consider being more concise
                         </span>
                       )}
