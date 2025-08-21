@@ -1,5 +1,3 @@
-// File: src/contexts/AuthContext.tsx
-
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import type { User } from '@supabase/supabase-js';
@@ -10,10 +8,13 @@ interface AuthContextType {
   loading: boolean;
   emailVerified: boolean;
   paymentCompleted: boolean;
+  isAdmin: boolean;
+  userRole: string | null;
   authSignIn: (email: string, password: string) => Promise<{ data: any; error: any }>;
   authSignUp: (email: string, password: string) => Promise<{ data: any; error: any }>;
   authSignOut: () => Promise<void>;
   forceRefreshVerification: () => void;
+  checkAdminStatus: () => Promise<boolean>;
 }
 
 // Create the AuthContext
@@ -24,6 +25,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [emailVerified, setEmailVerified] = useState(false);
   const [paymentCompleted, setPaymentCompleted] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   // IMPROVED: Helper function to create user profile with proper schema
   const ensureUserProfile = async (user: User) => {
@@ -31,13 +34,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Check if profile exists by email (matches webhook behavior)
       const { data: existingProfile, error: fetchError } = await supabase
         .from('user_profiles')
-        .select('id, email, payment_verified, payment_status')
+        .select('id, email, payment_verified, payment_status, role')
         .eq('email', user.email)
         .single();
 
       if (fetchError && fetchError.code === 'PGRST116') {
         // Profile doesn't exist, create it
         console.log('Creating user profile for:', user.email);
+        
+        // Check if this should be an admin user
+        const adminEmails = [
+          'admin@aiinstachat.com',
+          'support@aiinstachat.com',
+          'developer@aiinstachat.com'
+        ];
+        
+        const defaultRole = adminEmails.includes(user.email.toLowerCase()) ? 'admin' : 'user';
+        
         const { error: createError } = await supabase
           .from('user_profiles')
           .insert({
@@ -46,18 +59,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             payment_verified: false,
             payment_status: 'pending',
             subscription_status: 'free',
-            role: 'user',
+            role: defaultRole,
             created_at: new Date().toISOString()
-            // REMOVED: user_id field (doesn't exist in database)
           });
 
         if (createError) {
           console.error('Error creating user profile:', createError);
         } else {
-          console.log('✅ User profile created successfully');
+          console.log('✅ User profile created successfully with role:', defaultRole);
+          setUserRole(defaultRole);
+          setIsAdmin(defaultRole === 'admin' || defaultRole === 'super_admin');
         }
       } else if (existingProfile) {
         console.log('✅ User profile already exists');
+        setUserRole(existingProfile.role || 'user');
+        setIsAdmin(existingProfile.role === 'admin' || existingProfile.role === 'super_admin');
         
         // Update the profile with the correct user ID if it's missing or different
         if (existingProfile.id !== user.id) {
@@ -98,108 +114,154 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               payment_verified: false,
               has_access: false,
               access_type: 'No access',
-              subscription_status: 'free',
-              manual_override: false
+              created_at: new Date().toISOString()
             });
 
           if (createAccessError) {
-            console.warn('Could not create user access status (might be a view):', createAccessError);
-            // Don't throw - might be a view
+            console.warn('Could not create user_access_status (might be a view):', createAccessError);
           } else {
             console.log('✅ User access status created successfully');
           }
         }
       } catch (accessError) {
-        console.warn('Could not manipulate user_access_status (likely a view):', accessError);
+        console.warn('user_access_status might be a view, skipping insert:', accessError);
       }
+
     } catch (error) {
-      console.error('Error ensuring user profile:', error);
+      console.error('Error in ensureUserProfile:', error);
     }
   };
 
-  // IMPROVED: Comprehensive payment completion check
-  const isPaymentCompleted = (profile: any) => {
-    // Check multiple indicators of payment completion
-    const hasVerifiedPayment = profile?.payment_verified === true;
-    const hasVerifiedStatus = profile?.payment_status === 'verified';
-    const hasActiveSubscription = profile?.subscription_status === 'active';
-    const hasManualOverride = profile?.manual_override === true;
+  // Check admin status function
+  const checkAdminStatus = useCallback(async (): Promise<boolean> => {
+    if (!user?.email) {
+      setIsAdmin(false);
+      setUserRole(null);
+      return false;
+    }
+
+    try {
+      // Check user role from user_profiles table
+      const { data: profile, error } = await supabase
+        .from('user_profiles')
+        .select('role, email')
+        .eq('email', user.email)
+        .single();
+
+      if (error) {
+        console.warn('Error checking admin role:', error);
+        setIsAdmin(false);
+        setUserRole('user');
+        return false;
+      } else if (profile) {
+        const role = profile.role || 'user';
+        const adminStatus = role === 'admin' || role === 'super_admin';
+        
+        setUserRole(role);
+        setIsAdmin(adminStatus);
+        
+        // Also check for specific admin emails as fallback
+        const adminEmails = [
+          'admin@aiinstachat.com',
+          'support@aiinstachat.com',
+          'developer@aiinstachat.com'
+        ];
+        
+        if (!adminStatus && adminEmails.includes(user.email.toLowerCase())) {
+          setIsAdmin(true);
+          setUserRole('admin');
+          
+          // Update the role in database
+          await supabase
+            .from('user_profiles')
+            .update({ role: 'admin' })
+            .eq('email', user.email);
+          
+          return true;
+        }
+        
+        return adminStatus;
+      } else {
+        setIsAdmin(false);
+        setUserRole('user');
+        return false;
+      }
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+      setIsAdmin(false);
+      setUserRole('user');
+      return false;
+    }
+  }, [user]);
+
+  // Helper function to check if payment is completed
+  const isPaymentCompleted = (profile: any): boolean => {
+    if (!profile) return false;
     
-    // Check temporary access
-    const hasTempAccess = profile?.temp_access_until && 
-      new Date(profile.temp_access_until) > new Date();
+    // Check payment_verified flag
+    if (profile.payment_verified === true) {
+      return true;
+    }
     
-    // Log the check for debugging
-    console.log('Payment completion check:', {
-      hasVerifiedPayment,
-      hasVerifiedStatus,
-      hasActiveSubscription,
-      hasManualOverride,
-      hasTempAccess,
-      temp_access_until: profile?.temp_access_until
-    });
+    // Check subscription status
+    if (profile.subscription_status === 'active' || profile.subscription_status === 'trialing') {
+      return true;
+    }
     
-    return hasVerifiedPayment || hasVerifiedStatus || hasActiveSubscription || 
-           hasManualOverride || hasTempAccess;
+    // Check if current period is still valid
+    if (profile.current_period_end) {
+      const endDate = new Date(profile.current_period_end);
+      const now = new Date();
+      if (endDate > now) {
+        return true;
+      }
+    }
+    
+    return false;
   };
 
-  // IMPROVED: Robust user status checking
+  // IMPROVED: Main function to check user authentication and status
   const checkUserAndStatus = useCallback(async () => {
     try {
       setLoading(true);
-      const { data: { user: supabaseUser } } = await supabase.auth.getUser();
+      
+      const { data: { user: supabaseUser }, error: userError } = await supabase.auth.getUser();
+      
+      if (userError) {
+        console.error('Error getting user:', userError);
+        setUser(null);
+        setEmailVerified(false);
+        setPaymentCompleted(false);
+        setIsAdmin(false);
+        setUserRole(null);
+        return;
+      }
+
       setUser(supabaseUser);
 
       if (supabaseUser) {
         // Ensure user profile exists
         await ensureUserProfile(supabaseUser);
-
+        
         // Check email verification
-        let isEmailVerified = false;
-        
-        // Primary check: Supabase auth email_confirmed_at
-        if (supabaseUser.email_confirmed_at) {
-          isEmailVerified = true;
-          console.log('✅ Email verified via auth.users');
-        }
-        
-        // Secondary check: user_access_status table (with fallback)
-        if (!isEmailVerified) {
-          try {
-            const { data: accessStatus, error: accessError } = await supabase
-              .from('user_access_status')
-              .select('email_verified')
-              .eq('email', supabaseUser.email)
-              .single();
-            
-            if (accessError) {
-              console.warn('Could not check user_access_status:', accessError);
-            } else if (accessStatus?.email_verified) {
-              isEmailVerified = true;
-              console.log('✅ Email verified via user_access_status');
-            }
-          } catch (accessError) {
-            console.warn('Error checking user_access_status:', accessError);
-          }
-        }
-        
-        setEmailVerified(isEmailVerified);
+        const verified = !!supabaseUser.email_confirmed_at;
+        setEmailVerified(verified);
+        console.log(`Email verification status: ${verified ? '✅ Verified' : '❌ Not verified'}`);
 
-        // IMPROVED: Check payment status with multiple fallbacks
+        // Check admin status
+        await checkAdminStatus();
+
+        // Check payment status
         try {
-          // Primary check: user_profiles table (by email to match webhook)
-          // Clear cache to ensure fresh data
-          supabase.from("user_profiles").select("*").eq("email", supabaseUser.email).single().then(() => {}); // Dummy query to clear cache
           const { data: profile, error: profileError } = await supabase
-            .from("user_profiles")
+            .from('user_profiles')
             .select(`
-              payment_verified, 
-              payment_status, 
-              manual_override, 
-              subscription_status, 
-              temp_access_until,
+              payment_verified,
+              subscription_status,
+              payment_status,
               plan_type,
-              current_period_end
+              current_period_end,
+              role
             `)
             .eq("email", supabaseUser.email)
             .single();
@@ -216,6 +278,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setPaymentCompleted(completed);
             console.log(`Payment status: ${completed ? '✅ Completed' : '❌ Not completed'}`);
             console.log('Profile data:', profile);
+            
+            // Update role information if available
+            if (profile.role) {
+              setUserRole(profile.role);
+              setIsAdmin(profile.role === 'admin' || profile.role === 'super_admin');
+            }
           } else {
             setPaymentCompleted(false);
             console.log('❌ User profile not found.');
@@ -252,16 +320,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         setEmailVerified(false);
         setPaymentCompleted(false);
+        setIsAdmin(false);
+        setUserRole(null);
       }
     } catch (error) {
       console.error('Error in checkUserAndStatus:', error);
       setUser(null);
       setEmailVerified(false);
       setPaymentCompleted(false);
+      setIsAdmin(false);
+      setUserRole(null);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [checkAdminStatus]);
 
   useEffect(() => {
     checkUserAndStatus();
@@ -319,43 +391,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const authSignOut = async () => {
     try {
-      console.log('Starting sign out process...');
-      setLoading(true);
+      console.log('🔄 AuthContext: Starting sign out...');
       
-      // Clear local state first
+      // Reset local state first
       setUser(null);
       setEmailVerified(false);
       setPaymentCompleted(false);
+      setIsAdmin(false);
+      setUserRole(null);
       
-      // Clear any stored data
-      localStorage.removeItem('draft_content');
-      localStorage.removeItem('draft_text_type');
-      localStorage.removeItem('draft_timestamp');
-      localStorage.removeItem('userEmail');
-      localStorage.removeItem('payment_plan');
-      localStorage.removeItem('payment_date');
+      console.log('✅ AuthContext: Local state reset');
       
-      // Sign out from Supabase
+      // Then sign out from Supabase
       const { error } = await supabase.auth.signOut();
+      
       if (error) {
-        console.error('Supabase sign out error:', error);
-        // Don't throw error, continue with local cleanup
-      } else {
-        console.log('✅ Successfully signed out from Supabase');
+        console.error('AuthContext: Supabase sign out error:', error);
+        throw error;
       }
       
-      // Force refresh auth state
-      await checkUserAndStatus();
+      console.log('✅ AuthContext: Supabase sign out completed');
       
     } catch (error) {
-      console.error('Sign out error:', error);
-      // Even if there's an error, ensure local state is cleared
+      console.error('AuthContext: Sign out error:', error);
+      
+      // Force reset state even if sign out fails
       setUser(null);
       setEmailVerified(false);
       setPaymentCompleted(false);
-    } finally {
-      setLoading(false);
-      console.log('Sign out process completed');
+      setIsAdmin(false);
+      setUserRole(null);
+      
+      throw error;
     }
   };
 
@@ -364,10 +431,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loading,
     emailVerified,
     paymentCompleted,
+    isAdmin,
+    userRole,
     authSignIn,
     authSignUp,
     authSignOut,
-    forceRefreshVerification
+    forceRefreshVerification,
+    checkAdminStatus
   };
 
   return (
@@ -377,7 +447,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-export const useAuth = () => {
+// Custom hook to use the AuthContext
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
