@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { MessageSquare, Sparkles, ChevronDown, ChevronUp, ThumbsUp, Lightbulb, HelpCircle, Target, AlertCircle, Star, Zap, Gift, Heart, X, Send, User, RefreshCw, BookOpen, Users, Map, Palette, Clock, Award } from 'lucide-react';
+import { MessageSquare, Sparkles, ChevronDown, ChevronUp, ThumbsUp, Lightbulb, HelpCircle, Target, AlertCircle, Star, Zap, Gift, Heart, X, Send, User, RefreshCw } from 'lucide-react';
 import { getWritingFeedback } from '../lib/openai';
 import AIErrorHandler from '../utils/errorHandling';
 import { promptConfig } from '../config/prompts';
@@ -37,187 +37,184 @@ interface ChatMessage {
   conversationContext?: string;
 }
 
-interface CoachingSuggestion {
-  id: string;
-  category: string;
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  prompt: string;
-  difficulty: 'beginner' | 'intermediate' | 'advanced';
-  textTypes: string[];
-}
-
+// Enhanced question analysis and routing
 interface QuestionAnalysis {
-  type: 'vocabulary' | 'structure' | 'grammar' | 'content' | 'plot' | 'character' | 'genre' | 'general';
+  type: 'vocabulary' | 'structure' | 'grammar' | 'content' | 'general';
   operation: string;
   confidence: number;
   keywords: string[];
 }
 
-// Expanded coaching suggestions database
-const coachingSuggestions: CoachingSuggestion[] = [
-  // Plot Development
-  {
-    id: 'plot-structure',
-    category: 'Plot Development',
-    title: 'Story Structure Analysis',
-    description: 'Analyze and improve your story\'s structure and pacing',
-    icon: <Map className="h-4 w-4" />,
-    prompt: 'Help me analyze the structure of my story. What elements of plot development could be stronger?',
-    difficulty: 'intermediate',
-    textTypes: ['narrative', 'creative writing', 'short story']
-  },
-  {
-    id: 'plot-tension',
-    category: 'Plot Development',
-    title: 'Building Tension',
-    description: 'Learn techniques to create and maintain suspense',
-    icon: <Zap className="h-4 w-4" />,
-    prompt: 'How can I build more tension and suspense in my story?',
-    difficulty: 'advanced',
-    textTypes: ['narrative', 'creative writing', 'thriller']
-  },
-  {
-    id: 'plot-conflict',
-    category: 'Plot Development',
-    title: 'Conflict Development',
-    description: 'Develop compelling conflicts that drive your story',
-    icon: <Target className="h-4 w-4" />,
-    prompt: 'What types of conflict could I add to make my story more engaging?',
-    difficulty: 'intermediate',
-    textTypes: ['narrative', 'creative writing', 'drama']
-  },
-  
-  // Character Development
-  {
-    id: 'character-depth',
-    category: 'Character Development',
-    title: 'Character Depth',
-    description: 'Create multi-dimensional, believable characters',
-    icon: <Users className="h-4 w-4" />,
-    prompt: 'How can I make my characters more three-dimensional and relatable?',
-    difficulty: 'intermediate',
-    textTypes: ['narrative', 'creative writing', 'character study']
-  },
-  {
-    id: 'character-dialogue',
-    category: 'Character Development',
-    title: 'Authentic Dialogue',
-    description: 'Write dialogue that reveals character and advances plot',
-    icon: <MessageSquare className="h-4 w-4" />,
-    prompt: 'Help me improve my dialogue to better reveal character personalities.',
-    difficulty: 'advanced',
-    textTypes: ['narrative', 'creative writing', 'screenplay']
-  },
-  {
-    id: 'character-motivation',
-    category: 'Character Development',
-    title: 'Character Motivation',
-    description: 'Develop clear, compelling character motivations',
-    icon: <Heart className="h-4 w-4" />,
-    prompt: 'What motivations could drive my characters\' actions more effectively?',
-    difficulty: 'intermediate',
-    textTypes: ['narrative', 'creative writing', 'psychological']
-  },
-  
-  // Genre-Specific Advice
-  {
-    id: 'genre-fantasy',
-    category: 'Genre-Specific',
-    title: 'Fantasy Writing',
-    description: 'Master world-building and magic systems',
-    icon: <Sparkles className="h-4 w-4" />,
-    prompt: 'Give me fantasy-specific writing advice for world-building and magic systems.',
-    difficulty: 'advanced',
-    textTypes: ['fantasy', 'creative writing', 'world-building']
-  },
-  {
-    id: 'genre-mystery',
-    category: 'Genre-Specific',
-    title: 'Mystery Writing',
-    description: 'Craft compelling mysteries with fair clues',
-    icon: <HelpCircle className="h-4 w-4" />,
-    prompt: 'How can I write a mystery that\'s challenging but fair to readers?',
-    difficulty: 'advanced',
-    textTypes: ['mystery', 'detective', 'thriller']
-  },
-  {
-    id: 'genre-romance',
-    category: 'Genre-Specific',
-    title: 'Romance Writing',
-    description: 'Develop believable romantic relationships',
-    icon: <Heart className="h-4 w-4" />,
-    prompt: 'Help me write more authentic and engaging romantic relationships.',
-    difficulty: 'intermediate',
-    textTypes: ['romance', 'relationship', 'drama']
-  },
-  
-  // Writing Craft
-  {
-    id: 'craft-pacing',
-    category: 'Writing Craft',
-    title: 'Pacing Control',
-    description: 'Master the rhythm and flow of your narrative',
-    icon: <Clock className="h-4 w-4" />,
-    prompt: 'How can I improve the pacing of my story?',
-    difficulty: 'intermediate',
-    textTypes: ['narrative', 'creative writing', 'novel']
-  },
-  {
-    id: 'craft-voice',
-    category: 'Writing Craft',
-    title: 'Finding Your Voice',
-    description: 'Develop a unique and consistent writing voice',
-    icon: <User className="h-4 w-4" />,
-    prompt: 'Help me develop a stronger, more distinctive writing voice.',
-    difficulty: 'advanced',
-    textTypes: ['creative writing', 'personal essay', 'memoir']
-  },
-  {
-    id: 'craft-description',
-    category: 'Writing Craft',
-    title: 'Vivid Descriptions',
-    description: 'Create immersive, sensory-rich descriptions',
-    icon: <Palette className="h-4 w-4" />,
-    prompt: 'How can I write more vivid and engaging descriptions?',
-    difficulty: 'beginner',
-    textTypes: ['descriptive', 'narrative', 'travel writing']
-  },
-  
-  // NSW Selective Specific
-  {
-    id: 'nsw-persuasive',
-    category: 'NSW Selective',
-    title: 'Persuasive Techniques',
-    description: 'Master persuasive writing for NSW Selective exams',
-    icon: <Award className="h-4 w-4" />,
-    prompt: 'What persuasive techniques work best for NSW Selective writing tasks?',
-    difficulty: 'intermediate',
-    textTypes: ['persuasive', 'argumentative', 'opinion']
-  },
-  {
-    id: 'nsw-narrative',
-    category: 'NSW Selective',
-    title: 'NSW Narrative Structure',
-    description: 'Perfect narrative structure for selective school exams',
-    icon: <BookOpen className="h-4 w-4" />,
-    prompt: 'How should I structure my narrative for NSW Selective exam success?',
-    difficulty: 'intermediate',
-    textTypes: ['narrative', 'creative writing', 'exam preparation']
-  },
-  {
-    id: 'nsw-time-management',
-    category: 'NSW Selective',
-    title: 'Exam Time Management',
-    description: 'Strategies for writing under time pressure',
-    icon: <Clock className="h-4 w-4" />,
-    prompt: 'Give me strategies for managing time effectively during NSW Selective writing exams.',
-    difficulty: 'beginner',
-    textTypes: ['exam preparation', 'timed writing', 'test strategy']
+const extractResponseText = (response: any, questionType: string, userQuestion: string, textType: string): string => {
+  // Handle different response formats from the backend
+  if (typeof response === 'string') {
+    return response;
   }
-];
+  
+  if (response && typeof response === 'object') {
+    // Handle NSW Selective feedback format
+    if (response.overallComment && response.criteriaFeedback) {
+      let nswResponse = response.overallComment + '\n\n';
+      
+      // Add specific NSW criteria feedback based on question type
+      if (questionType === 'structure' && response.criteriaFeedback.textStructureAndOrganization) {
+        const structureFeedback = response.criteriaFeedback.textStructureAndOrganization;
+        nswResponse += `**Structure Guidance (NSW Band ${structureFeedback.band || 'Assessment'}):**\n`;
+        if (structureFeedback.suggestions && structureFeedback.suggestions.length > 0) {
+          nswResponse += structureFeedback.suggestions.slice(0, 2).join('\n') + '\n\n';
+        }
+      }
+      
+      if (questionType === 'vocabulary' && response.criteriaFeedback.languageFeaturesAndVocabulary) {
+        const vocabFeedback = response.criteriaFeedback.languageFeaturesAndVocabulary;
+        nswResponse += `**Vocabulary Enhancement (NSW Band ${vocabFeedback.band || 'Assessment'}):**\n`;
+        if (vocabFeedback.suggestions && vocabFeedback.suggestions.length > 0) {
+          nswResponse += vocabFeedback.suggestions.slice(0, 2).join('\n') + '\n\n';
+        }
+      }
+      
+      if (questionType === 'content' && response.criteriaFeedback.ideasAndContent) {
+        const contentFeedback = response.criteriaFeedback.ideasAndContent;
+        nswResponse += `**Content Development (NSW Band ${contentFeedback.band || 'Assessment'}):**\n`;
+        if (contentFeedback.suggestions && contentFeedback.suggestions.length > 0) {
+          nswResponse += contentFeedback.suggestions.slice(0, 2).join('\n') + '\n\n';
+        }
+      }
+      
+      // Add NSW-specific exam strategies if available
+      if (response.examStrategies && response.examStrategies.length > 0) {
+        nswResponse += `**NSW Selective Exam Tips:**\n`;
+        nswResponse += response.examStrategies.slice(0, 2).join('\n');
+      }
+      
+      return nswResponse;
+    }
+    
+    // Handle specific question types with contextual responses
+    if (questionType === 'vocabulary' && response.suggestions) {
+      if (Array.isArray(response.suggestions)) {
+        return `Here are some vocabulary suggestions for your ${textType} writing:\n\n` + 
+               response.suggestions.slice(0, 3).map((s: any) => {
+                 if (typeof s === 'object' && s.word && s.suggestion) {
+                   return `• Instead of "${s.word}", try: ${s.suggestion}`;
+                 }
+                 return `• ${s}`;
+               }).join('\n');
+      }
+    }
+    
+    if (questionType === 'structure' && response.structure) {
+      return `For ${textType} writing structure:\n\n${response.structure}`;
+    }
+    
+    if (questionType === 'grammar' && response.corrections) {
+      if (Array.isArray(response.corrections) && response.corrections.length > 0) {
+        return `Here are some grammar suggestions:\n\n` + 
+               response.corrections.slice(0, 3).map((c: any) => `• ${c.suggestion || c.message || c}`).join('\n');
+      }
+    }
+    
+    // Fallback for general feedback
+    if (response.feedbackItems && Array.isArray(response.feedbackItems) && response.feedbackItems.length > 0) {
+      return response.feedbackItems[0].text || 'I have some specific feedback for your writing!';
+    }
+    
+    // If it's an object but we can't extract meaningful text, provide a contextual response
+    return generateContextualResponse(questionType, userQuestion);
+  }
+  
+  return generateContextualResponse(questionType, userQuestion);
+};
 
+// Generate contextual responses based on question type and content
+const generateContextualResponse = (questionType: string, userQuestion: string): string => {
+  const responses = {
+    vocabulary: [
+      "Great question about vocabulary! For stronger word choices, try replacing simple words like 'good' with 'excellent' or 'outstanding'. What specific words would you like help improving?",
+      "Vocabulary is key for NSW Selective success! Consider using more sophisticated words - instead of 'big', try 'enormous' or 'substantial'. Which part of your writing needs stronger vocabulary?",
+      "Excellent vocabulary question! For narrative writing, use vivid action verbs and descriptive adjectives. For persuasive writing, use powerful words that convince your reader."
+    ],
+    structure: [
+      "Structure is crucial for NSW Selective writing! For narratives, use: engaging opening → rising action → climax → resolution. For persuasive essays: introduction with thesis → 3 body paragraphs with evidence → strong conclusion.",
+      "Great structure question! Make sure each paragraph has one main idea, and use connecting words like 'furthermore', 'however', and 'in conclusion' to link your ideas smoothly.",
+      "NSW Selective examiners love clear structure! Start with a hook, develop your ideas logically, and end with impact. What type of writing are you working on?"
+    ],
+    grammar: [
+      "Grammar accuracy is important for NSW Selective! Check your sentence variety - mix short and long sentences. Make sure you're using correct punctuation, especially commas and apostrophes.",
+      "Good grammar question! For NSW Selective, focus on: subject-verb agreement, consistent tense, and varied sentence beginnings. Read your work aloud to catch errors.",
+      "Grammar tip for NSW success: Use complex sentences with subordinate clauses, but make sure they're clear. Avoid run-on sentences and sentence fragments."
+    ],
+    content: [
+      "Content development is key for NSW Selective! Add specific details, examples, and evidence to support your main ideas. Show, don't just tell - use sensory details and dialogue.",
+      "Excellent content question! For narratives, develop your characters' emotions and motivations. For persuasive writing, include facts, statistics, or expert opinions to strengthen your arguments.",
+      "NSW Selective values original thinking! Develop your ideas deeply rather than just listing them. Ask yourself 'why' and 'how' to add depth to your content."
+    ],
+    general: [
+      "I'm here to help with your NSW Selective writing preparation! Ask me about specific aspects like vocabulary, structure, grammar, or content development.",
+      "Great to see you working on your writing! For NSW Selective success, focus on clear structure, sophisticated vocabulary, and well-developed ideas. What specific area would you like help with?",
+      "NSW Selective writing requires strong skills across all areas. I can help you with planning, drafting, vocabulary choices, grammar, and exam strategies. What's your main concern right now?"
+    ]
+  };
+  
+  const typeResponses = responses[questionType as keyof typeof responses] || responses.general;
+  const randomIndex = Math.floor(Math.random() * typeResponses.length);
+  return typeResponses[randomIndex];
+};
+
+// Generate intelligent local responses based on content analysis
+const generateIntelligentLocalResponse = (question: string, analysis: QuestionAnalysis, content: string, textType: string): any => {
+  const wordCount = content.trim().split(/\s+/).filter(w => w.length > 0).length;
+  const lowerQuestion = question.toLowerCase();
+  
+  // Analyze the content to provide specific feedback
+  const hasDialogue = content.includes('"') || content.includes("'");
+  const hasGoodOpening = content.length > 50 && !content.toLowerCase().startsWith('once upon a time');
+  const paragraphCount = content.split('\n\n').filter(p => p.trim().length > 0).length;
+  
+  // Provide specific responses based on question type and content analysis
+  switch (analysis.type) {
+    case 'vocabulary':
+      if (lowerQuestion.includes('better word') || lowerQuestion.includes('synonym')) {
+        return {
+          suggestions: [
+            { word: 'good', suggestion: 'excellent, outstanding, remarkable' },
+            { word: 'said', suggestion: 'exclaimed, declared, whispered' },
+            { word: 'went', suggestion: 'traveled, journeyed, ventured' },
+            { word: 'big', suggestion: 'enormous, massive, gigantic' },
+            { word: 'nice', suggestion: 'delightful, pleasant, wonderful' }
+          ]
+        };
+      }
+      return `For your ${textType} writing, try using more sophisticated vocabulary! Instead of simple words like 'good', 'big', or 'nice', use words like 'excellent', 'enormous', or 'delightful'. This will make your writing more engaging for NSW Selective assessors.`;
+      
+    case 'structure':
+      if (paragraphCount === 1) {
+        return `I notice your ${textType} is currently in one paragraph. For NSW Selective success, break it into 3-4 paragraphs: 1) Engaging introduction, 2-3) Body paragraphs developing your story/argument, 4) Strong conclusion. This will make your writing much clearer!`;
+      }
+      return `Your ${textType} structure looks good with ${paragraphCount} paragraphs! For NSW Selective, make sure each paragraph has one main idea and flows smoothly to the next. Use transition words like 'furthermore', 'however', and 'in conclusion'.`;
+      
+    case 'grammar':
+      return `For NSW Selective grammar success: 1) Vary your sentence beginnings, 2) Mix short and long sentences, 3) Use correct punctuation, 4) Keep consistent tense throughout. Read your work aloud to catch any errors!`;
+      
+    case 'content':
+      if (wordCount < 100) {
+        return `Your ${textType} is off to a good start with ${wordCount} words! For NSW Selective, aim for 250-300 words. Add more specific details, examples, and descriptions to develop your ideas fully.`;
+      }
+      if (textType === 'narrative' && !hasDialogue) {
+        return `Great ${textType} development with ${wordCount} words! Consider adding some dialogue to bring your characters to life. For example: "I can't believe this is happening!" she exclaimed.`;
+      }
+      return `Excellent content development with ${wordCount} words! Your ${textType} shows good understanding. Keep developing your ideas with specific examples and vivid details.`;
+      
+    default:
+      if (wordCount === 0) {
+        return `Ready to start your ${textType}? Begin with an engaging opening that hooks your reader. For narratives, try starting in the middle of action. For persuasive writing, start with a thought-provoking question or statistic.`;
+      }
+      if (wordCount < 50) {
+        return `Good start on your ${textType}! You have ${wordCount} words so far. Keep developing your ideas - aim for at least 250 words for NSW Selective standards.`;
+      }
+      return `Your ${textType} is developing well with ${wordCount} words! ${hasGoodOpening ? 'Great opening!' : 'Consider strengthening your opening.'} ${hasDialogue && textType === 'narrative' ? 'Nice use of dialogue!' : ''} Keep building your ideas with specific details and examples.`;
+  }
+};
 export function CoachPanel({ content, textType, assistanceLevel }: CoachPanelProps) {
   const [structuredFeedback, setStructuredFeedback] = useState<StructuredFeedback | null>(null);
   const [feedbackHistory, setFeedbackHistory] = useState<FeedbackItem[]>([]);
@@ -235,56 +232,11 @@ export function CoachPanel({ content, textType, assistanceLevel }: CoachPanelPro
   const [isChatLoading, setIsChatLoading] = useState(false);
   const [showPrompts, setShowPrompts] = useState(false);
   const [conversationContext, setConversationContext] = useState<ChatMessage[]>([]);
-  const [activeCategory, setActiveCategory] = useState<string>('all');
-  const [selectedSuggestion, setSelectedSuggestion] = useState<CoachingSuggestion | null>(null);
   const chatMessagesEndRef = useRef<HTMLDivElement>(null);
-
-  // Get relevant coaching suggestions based on text type and content
-  const getRelevantSuggestions = useCallback(() => {
-    let filtered = coachingSuggestions;
-    
-    // Filter by category
-    if (activeCategory !== 'all') {
-      filtered = filtered.filter(s => s.category === activeCategory);
-    }
-    
-    // Filter by text type relevance
-    if (textType) {
-      filtered = filtered.filter(s => 
-        s.textTypes.some(type => 
-          type.toLowerCase().includes(textType.toLowerCase()) ||
-          textType.toLowerCase().includes(type.toLowerCase())
-        )
-      );
-    }
-    
-    // If no text-type specific suggestions, show general ones
-    if (filtered.length === 0) {
-      filtered = coachingSuggestions.filter(s => 
-        s.textTypes.includes('creative writing') || 
-        s.textTypes.includes('narrative') ||
-        s.category === 'Writing Craft'
-      );
-    }
-    
-    return filtered.slice(0, 6); // Limit to 6 suggestions
-  }, [textType, activeCategory]);
 
   // Enhanced question analysis function
   const analyzeUserQuestion = useCallback((question: string): QuestionAnalysis => {
     const lowerQuestion = question.toLowerCase();
-    
-    // Plot-related keywords
-    const plotKeywords = ['plot', 'story', 'structure', 'beginning', 'middle', 'end', 'climax', 'resolution', 'conflict', 'tension', 'pacing'];
-    const plotScore = plotKeywords.filter(keyword => lowerQuestion.includes(keyword)).length;
-    
-    // Character-related keywords
-    const characterKeywords = ['character', 'dialogue', 'personality', 'motivation', 'development', 'relationship', 'protagonist', 'antagonist'];
-    const characterScore = characterKeywords.filter(keyword => lowerQuestion.includes(keyword)).length;
-    
-    // Genre-related keywords
-    const genreKeywords = ['fantasy', 'mystery', 'romance', 'thriller', 'horror', 'science fiction', 'genre', 'world-building', 'magic'];
-    const genreScore = genreKeywords.filter(keyword => lowerQuestion.includes(keyword)).length;
     
     // Vocabulary-related keywords
     const vocabularyKeywords = ['word', 'vocabulary', 'synonym', 'better word', 'stronger word', 'replace', 'enhance', 'improve word'];
@@ -304,9 +256,6 @@ export function CoachPanel({ content, textType, assistanceLevel }: CoachPanelPro
     
     // Determine the most likely question type
     const scores = {
-      plot: plotScore,
-      character: characterScore,
-      genre: genreScore,
       vocabulary: vocabularyScore,
       structure: structureScore,
       grammar: grammarScore,
@@ -318,9 +267,6 @@ export function CoachPanel({ content, textType, assistanceLevel }: CoachPanelPro
     
     // Map question types to operations
     const operationMap = {
-      plot: 'getPlotDevelopmentAdvice',
-      character: 'getCharacterDevelopmentAdvice',
-      genre: 'getGenreSpecificAdvice',
       vocabulary: 'enhanceVocabulary',
       structure: 'getWritingStructure',
       grammar: 'checkGrammarAndSpelling',
@@ -330,298 +276,252 @@ export function CoachPanel({ content, textType, assistanceLevel }: CoachPanelPro
     
     return {
       type: questionType as QuestionAnalysis['type'],
-      operation: operationMap[questionType as keyof typeof operationMap],
-      confidence: maxScore > 0 ? maxScore / Math.max(plotKeywords.length, characterKeywords.length) : 0.5,
-      keywords: [plotKeywords, characterKeywords, genreKeywords, vocabularyKeywords, structureKeywords, grammarKeywords, contentKeywords].flat().filter(keyword => lowerQuestion.includes(keyword))
+      operation: operationMap[questionType],
+      confidence: maxScore > 0 ? maxScore / vocabularyKeywords.length : 0.5,
+      keywords: [vocabularyKeywords, structureKeywords, grammarKeywords, contentKeywords].flat().filter(keyword => lowerQuestion.includes(keyword))
     };
   }, []);
 
-  // Generate contextual responses based on question type and content
-  const generateContextualResponse = (questionType: string, userQuestion: string): string => {
-    const responses = {
-      plot: [
-        "Great plot question! For strong story structure, consider the three-act structure: Setup (introduce characters and conflict), Confrontation (develop conflict and obstacles), and Resolution (climax and conclusion). What specific aspect of your plot needs work?",
-        "Plot development is crucial for engaging stories! Think about your main conflict - is it clear and compelling? Does each scene move the story forward? Consider adding obstacles that force your character to grow.",
-        "Excellent question about plot! For NSW Selective success, ensure your story has: a clear beginning that hooks the reader, rising action with increasing tension, a satisfying climax, and a meaningful resolution. What's your story about?"
-      ],
-      character: [
-        "Character development is key to great storytelling! Give your characters clear motivations, flaws, and growth arcs. What drives your main character? What do they want, and what's stopping them?",
-        "Great character question! For believable characters, think about their backstory, personality traits, and how they speak. Each character should have a unique voice. Show their personality through actions and dialogue.",
-        "Character work is essential for NSW Selective writing! Develop characters with depth - give them internal conflicts, clear goals, and realistic reactions. How does your character change throughout the story?"
-      ],
-      genre: [
-        "Genre-specific advice can really elevate your writing! Each genre has its own conventions and reader expectations. What genre are you working in? I can provide specific techniques for that style.",
-        "Excellent genre question! For fantasy, focus on consistent world-building and magic systems. For mystery, plant fair clues. For romance, develop believable relationship dynamics. What's your genre?",
-        "Genre mastery is important for targeted writing! Understanding your genre's tropes and expectations helps you either fulfill or cleverly subvert them. Which genre conventions are you exploring?"
-      ],
-      vocabulary: [
-        "Great question about vocabulary! For stronger word choices, try replacing simple words like 'good' with 'excellent' or 'outstanding'. What specific words would you like help improving?",
-        "Vocabulary is key for NSW Selective success! Consider using more sophisticated words - instead of 'big', try 'enormous' or 'substantial'. Which part of your writing needs stronger vocabulary?",
-        "Excellent vocabulary question! For narrative writing, use vivid action verbs and descriptive adjectives. For persuasive writing, use powerful words that convince your reader."
-      ],
-      structure: [
-        "Structure is crucial for NSW Selective writing! For narratives, use: engaging opening → rising action → climax → resolution. For persuasive essays: introduction with thesis → 3 body paragraphs with evidence → strong conclusion.",
-        "Great structure question! Make sure each paragraph has one main idea, and use connecting words like 'furthermore', 'however', and 'in conclusion' to link your ideas smoothly.",
-        "NSW Selective examiners love clear structure! Start with a hook, develop your ideas logically, and end with impact. What type of writing are you working on?"
-      ],
-      grammar: [
-        "Grammar accuracy is important for NSW Selective! Check your sentence variety - mix short and long sentences. Make sure you're using correct punctuation, especially commas and apostrophes.",
-        "Good grammar question! For NSW Selective, focus on: subject-verb agreement, consistent tense, and varied sentence beginnings. Read your work aloud to catch errors.",
-        "Grammar tip for NSW success: Use complex sentences with subordinate clauses, but make sure they're clear. Avoid run-on sentences and sentence fragments."
-      ],
-      content: [
-        "Content development is key for NSW Selective! Add specific details, examples, and evidence to support your main ideas. Show, don't just tell - use sensory details and dialogue.",
-        "Excellent content question! For narratives, develop your characters' emotions and motivations. For persuasive writing, include facts, statistics, or expert opinions to strengthen your arguments.",
-        "NSW Selective values original thinking! Develop your ideas deeply rather than just listing them. Ask yourself 'why' and 'how' to add depth to your content."
-      ],
-      general: [
-        "I'm here to help with your NSW Selective writing preparation! Ask me about specific aspects like vocabulary, structure, grammar, content development, plot, or character development.",
-        "Great to see you working on your writing! For NSW Selective success, focus on clear structure, sophisticated vocabulary, well-developed ideas, and engaging storytelling. What specific area would you like help with?",
-        "NSW Selective writing requires strong skills across all areas. I can help you with planning, drafting, vocabulary choices, grammar, plot development, character creation, and exam strategies. What's your main concern right now?"
-      ]
-    };
-    
-    const typeResponses = responses[questionType as keyof typeof responses] || responses.general;
-    const randomIndex = Math.floor(Math.random() * typeResponses.length);
-    return typeResponses[randomIndex];
-  };
+  // Enhanced API call routing function
+  const routeQuestionToOperation = useCallback(async (question: string, analysis: QuestionAnalysis) => {
+    try {
+      console.log(`[DEBUG] Routing question: "${question}" (type: ${analysis.type})`);
+      
+      // Try to get real AI response first
+      const response = await fetch('/.netlify/functions/ai-operations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          operation: analysis.operation,
+          question: question,
+          content: content,
+          textType: textType, // Pass textType here
+          assistanceLevel: localAssistanceLevel,
+          conversationContext: conversationContext,
+        }),
+      });
 
-  // Handle sending chat messages
-  const handleSendMessage = useCallback(async (message: string) => {
-    if (!message.trim() || isChatLoading) return;
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('AI operation failed:', errorData);
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
 
-    const userMessage: ChatMessage = {
-      id: Date.now().toString(),
-      text: message.trim(),
+      const result = await response.json();
+      console.log('[DEBUG] AI response data:', result);
+
+      // If the response is a structured feedback, process it
+      if (result.structuredFeedback) {
+        setStructuredFeedback(result.structuredFeedback);
+        return { data: result.structuredFeedback, responseQuality: 'high' };
+      } else if (result.response) {
+        // For general text responses
+        return { data: result.response, responseQuality: 'high' };
+      } else if (result.suggestions) {
+        // For vocabulary suggestions
+        return { data: result, responseQuality: 'high' };
+      } else if (result.corrections) {
+        // For grammar corrections
+        return { data: result, responseQuality: 'high' };
+      } else if (result.structure) {
+        // For structure analysis
+        return { data: result, responseQuality: 'high' };
+      }
+      
+      // Fallback to local intelligent response if AI response is not as expected
+      return { data: generateIntelligentLocalResponse(question, analysis, content, textType), responseQuality: 'fallback' };
+
+    } catch (error) {
+      console.error('Error sending message:', error);
+      setError('Oops! I encountered an error: ' + (error as Error).message + '. Please try again or rephrase your question.');
+      // Fallback to local intelligent response on error
+      return { data: generateIntelligentLocalResponse(question, analysis, content, textType), responseQuality: 'fallback' };
+    }
+  }, [content, localAssistanceLevel, conversationContext, textType]); // Add textType to dependencies
+
+  const handleSendMessage = useCallback(async (messageText: string) => {
+    if (!messageText.trim()) return;
+
+    const newUserMessage: ChatMessage = {
+      id: `user-${Date.now()}`,
+      text: messageText,
       isUser: true,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
-
-    setChatMessages(prev => [...prev, userMessage]);
+    setChatMessages((prev) => [...prev, newUserMessage]);
     setChatInput('');
     setIsChatLoading(true);
+    setError(null);
 
     try {
-      // Analyze the question
-      const analysis = analyzeUserQuestion(message);
+      const analysis = analyzeUserQuestion(messageText);
+      const routedResponse = await routeQuestionToOperation(messageText, analysis);
       
-      // Generate response based on analysis
-      const response = generateContextualResponse(analysis.type, message);
-      
-      const assistantMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        text: response,
+      const aiResponseText = extractResponseText(routedResponse.data, analysis.type, messageText, textType); // Pass textType here
+
+      const newAIMessage: ChatMessage = {
+        id: `ai-${Date.now()}`,
+        text: aiResponseText,
         isUser: false,
         timestamp: new Date(),
         questionType: analysis.type,
-        responseQuality: 'high',
-        nswSpecific: true
+        operation: analysis.operation,
+        responseQuality: routedResponse.responseQuality,
       };
+      setChatMessages((prev) => [...prev, newAIMessage]);
+      setConversationContext((prev) => [...prev, newUserMessage, newAIMessage]);
 
-      setChatMessages(prev => [...prev, assistantMessage]);
-      
-    } catch (error) {
-      console.error('Error generating response:', error);
-      
+    } catch (err) {
+      console.error('Error processing message:', err);
+      setError('Sorry, I could not process that request. Please try again.');
       const errorMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        text: "I'm having trouble responding right now, but I'm here to help! Try asking about specific aspects of your writing like plot, characters, vocabulary, or structure.",
+        id: `error-${Date.now()}`,
+        text: 'Sorry, I could not process that request. Please try again.',
         isUser: false,
         timestamp: new Date(),
-        responseQuality: 'fallback'
+        responseQuality: 'low',
       };
-
-      setChatMessages(prev => [...prev, errorMessage]);
+      setChatMessages((prev) => [...prev, errorMessage]);
     } finally {
       setIsChatLoading(false);
     }
-  }, [isChatLoading, analyzeUserQuestion]);
+  }, [analyzeUserQuestion, routeQuestionToOperation, textType]); // Add textType to dependencies
 
-  // Handle suggestion selection
-  const handleSuggestionSelect = useCallback((suggestion: CoachingSuggestion) => {
-    setSelectedSuggestion(suggestion);
-    handleSendMessage(suggestion.prompt);
-  }, [handleSendMessage]);
-
-  // Scroll to bottom of chat
   useEffect(() => {
-    chatMessagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (chatMessagesEndRef.current) {
+      chatMessagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [chatMessages]);
 
-  // Get unique categories
-  const categories = ['all', ...Array.from(new Set(coachingSuggestions.map(s => s.category)))];
+  const getMessageClass = (isUser: boolean, quality?: 'high' | 'medium' | 'low' | 'fallback') => {
+    let baseClass = isUser ? 'bg-blue-500 text-white self-end' : 'bg-gray-200 text-gray-800 self-start';
+    if (!isUser && quality === 'fallback') {
+      baseClass = 'bg-yellow-100 text-yellow-800 self-start border border-yellow-300';
+    }
+    return `${baseClass} p-3 rounded-lg max-w-[80%]`;
+  };
 
-  const relevantSuggestions = getRelevantSuggestions();
+  const getMessageIcon = (isUser: boolean, quality?: 'high' | 'medium' | 'low' | 'fallback') => {
+    if (isUser) return null;
+    if (quality === 'high') return <Sparkles size={18} className="text-purple-500 mr-2" />;
+    if (quality === 'medium') return <Lightbulb size={18} className="text-orange-500 mr-2" />;
+    if (quality === 'low' || quality === 'fallback') return <AlertCircle size={18} className="text-red-500 mr-2" />;
+    return <Bot size={18} className="text-gray-500 mr-2" />;
+  };
 
   return (
-    <div className="coach-panel bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 h-full flex flex-col">
-      {/* Header */}
-      <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg">
-              <MessageSquare className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Enhanced Writing Coach</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Advanced guidance for {textType} writing
-              </p>
+    <div className="coach-panel-container">
+      {structuredFeedback && (
+        <div className="feedback-summary">
+          <div className="summary-header">
+            <h3 className="summary-title">Your Writing Feedback</h3>
+            <div className="toggle-buttons">
+              <button onClick={() => setIsOverallCommentHidden(!isOverallCommentHidden)}>
+                {isOverallCommentHidden ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
+                Overall Comment
+              </button>
+              <button onClick={() => setIsFocusForNextTimeHidden(!isFocusForNextTimeHidden)}>
+                {isFocusForNextTimeHidden ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
+                Focus for Next Time
+              </button>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              {chatMessages.length} messages
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Coaching Suggestions */}
-      <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
-        <div className="flex items-center justify-between mb-3">
-          <h4 className="text-sm font-medium text-gray-900 dark:text-white">Quick Coaching Topics</h4>
-          <select
-            value={activeCategory}
-            onChange={(e) => setActiveCategory(e.target.value)}
-            className="text-xs px-2 py-1 border border-gray-300 dark:border-gray-600 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-          >
-            {categories.map(category => (
-              <option key={category} value={category}>
-                {category === 'all' ? 'All Topics' : category}
-              </option>
+          {!isOverallCommentHidden && (
+            <p className="overall-comment">{structuredFeedback.overallComment}</p>
+          )}
+          <div className="feedback-items">
+            {structuredFeedback.feedbackItems.map((item, index) => (
+              <div key={index} className="feedback-item">
+                <div className="item-header">
+                  {item.type === 'praise' && <ThumbsUp size={18} className="text-green-500" />}
+                  {item.type === 'suggestion' && <Lightbulb size={18} className="text-blue-500" />}
+                  {item.type === 'question' && <HelpCircle size={18} className="text-purple-500" />}
+                  {item.type === 'challenge' && <Target size={18} className="text-red-500" />}
+                  <span className="item-area">{item.area}</span>
+                </div>
+                <p className="item-text">{item.text}</p>
+                {item.exampleFromText && (
+                  <p className="item-example">Example: "{item.exampleFromText}"</p>
+                )}
+                {item.suggestionForImprovement && (
+                  <p className="item-suggestion">Suggestion: {item.suggestionForImprovement}</p>
+                )}
+              </div>
             ))}
-          </select>
+          </div>
+          {!isFocusForNextTimeHidden && structuredFeedback.focusForNextTime.length > 0 && (
+            <ul className="focus-list">
+              {structuredFeedback.focusForNextTime.map((focus, index) => (
+                <li key={index}>{focus}</li>
+              ))}
+            </ul>
+          )}
         </div>
-        
-        <div className="grid grid-cols-2 gap-2">
-          {relevantSuggestions.map((suggestion) => (
-            <button
-              key={suggestion.id}
-              onClick={() => handleSuggestionSelect(suggestion)}
-              className="p-3 text-left bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg hover:border-blue-300 dark:hover:border-blue-500 transition-colors group"
-            >
-              <div className="flex items-start space-x-2">
-                <div className="text-blue-500 dark:text-blue-400 mt-0.5">
-                  {suggestion.icon}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h5 className="text-xs font-medium text-gray-900 dark:text-white truncate">
-                    {suggestion.title}
-                  </h5>
-                  <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
-                    {suggestion.description}
-                  </p>
-                  <div className="flex items-center space-x-1 mt-1">
-                    <span className={`text-xs px-1.5 py-0.5 rounded ${
-                      suggestion.difficulty === 'beginner' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' :
-                      suggestion.difficulty === 'intermediate' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300' :
-                      'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300'
-                    }`}>
-                      {suggestion.difficulty}
-                    </span>
-                  </div>
-                </div>
+      )}
+
+      <div className="chat-section">
+        <div className="chat-messages">
+          {chatMessages.map((message) => (
+            <div key={message.id} className={`chat-message ${getMessageClass(message.isUser, message.responseQuality)}`}>
+              <div className="flex items-center">
+                {!message.isUser && getMessageIcon(message.isUser, message.responseQuality)}
+                <span>{message.text}</span>
               </div>
-            </button>
+              <span className="timestamp">{message.timestamp.toLocaleTimeString()}</span>
+            </div>
           ))}
-        </div>
-      </div>
-
-      {/* Chat Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {chatMessages.length === 0 ? (
-          <div className="text-center py-8">
-            <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h4 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              Welcome to Enhanced Writing Coach!
-            </h4>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              I'm here to help you with all aspects of writing, from plot development to character creation.
-            </p>
-            <div className="text-sm text-gray-500 dark:text-gray-400">
-              Try asking about:
-              <ul className="mt-2 space-y-1">
-                <li>• Plot structure and story development</li>
-                <li>• Character creation and dialogue</li>
-                <li>• Genre-specific writing techniques</li>
-                <li>• NSW Selective exam strategies</li>
-              </ul>
+          {isChatLoading && (
+            <div className="chat-message bg-gray-200 text-gray-800 self-start p-3 rounded-lg max-w-[80%]">
+              <div className="flex items-center">
+                <Bot size={18} className="text-gray-500 mr-2" />
+                <span>Typing...</span>
+              </div>
             </div>
-          </div>
-        ) : (
-          chatMessages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
+          )}
+          <div ref={chatMessagesEndRef} />
+        </div>
+
+        <div className="chat-input-area">
+          {showPrompts && (
+            <div className="quick-prompts">
+              {promptConfig.map((prompt, index) => (
+                <button
+                  key={index}
+                  className="quick-prompt-button"
+                  onClick={() => handleQuickPrompt(prompt.text, prompt.operation, prompt.questionType)}
+                >
+                  {getIconForQuestionType(prompt.questionType as QuestionAnalysis['type'])}
+                  {prompt.label}
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="input-container">
+            <button className="toggle-prompts-button" onClick={() => setShowPrompts(!showPrompts)}>
+              {showPrompts ? <X size={20} /> : <Sparkles size={20} />}
+            </button>
+            <input
+              type="text"
+              placeholder="Ask me a question about your writing..."
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  handleSendMessage(chatInput);
+                }
+              }}
+              className="chat-input"
+            />
+            <button
+              className="send-button"
+              onClick={() => handleSendMessage(chatInput)}
+              disabled={!chatInput.trim() || isChatLoading}
             >
-              <div
-                className={`max-w-[80%] p-3 rounded-lg ${
-                  message.isUser
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white'
-                }`}
-              >
-                <div className="text-sm whitespace-pre-wrap">{message.text}</div>
-                <div className="flex items-center justify-between mt-2">
-                  <div className="text-xs opacity-70">
-                    {message.timestamp.toLocaleTimeString()}
-                  </div>
-                  {!message.isUser && message.questionType && (
-                    <div className="text-xs opacity-70 flex items-center space-x-1">
-                      <span>{message.questionType}</span>
-                      {message.nswSpecific && (
-                        <Award className="h-3 w-3" title="NSW Selective specific advice" />
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))
-        )}
-        
-        {isChatLoading && (
-          <div className="flex justify-start">
-            <div className="bg-gray-100 dark:bg-gray-700 p-3 rounded-lg">
-              <div className="flex items-center space-x-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                <span className="text-sm text-gray-600 dark:text-gray-400">Coach is thinking...</span>
-              </div>
-            </div>
+              <Send size={20} />
+            </button>
           </div>
-        )}
-        
-        <div ref={chatMessagesEndRef} />
-      </div>
-
-      {/* Chat Input */}
-      <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-        <div className="flex space-x-2">
-          <input
-            type="text"
-            placeholder="Ask about plot, characters, genre techniques, or any writing question..."
-            value={chatInput}
-            onChange={(e) => setChatInput(e.target.value)}
-            onKeyPress={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage(chatInput);
-              }
-            }}
-            className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white text-sm"
-          />
-          <button
-            onClick={() => handleSendMessage(chatInput)}
-            disabled={!chatInput.trim() || isChatLoading}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            <Send className="h-4 w-4" />
-          </button>
-        </div>
-        
-        <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-          Enhanced with plot development, character guidance, and genre-specific advice
         </div>
       </div>
     </div>
