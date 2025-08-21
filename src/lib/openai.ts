@@ -14,7 +14,7 @@ const FALLBACK_PROMPTS = {
   
   reflective: "Think about a meaningful experience in your life and write a reflective piece exploring what you learned from it. Show your thoughts and feelings, and explain how this experience changed or influenced you. Be honest and thoughtful in your reflection, using specific details to help your reader understand the significance of this experience.",
   
-  descriptive: "Choose a place, person, or object that is special to you and write a descriptive piece that brings it to life for your reader. Use sensory details (sight, sound, smell, touch, taste) and figurative language like metaphors and similes to create vivid imagery. Paint a picture with words that allows your reader to experience what you\'re describing.",
+  descriptive: "Choose a place, person, or object that is special to you and write a descriptive piece that brings it to life for your reader. Use sensory details (sight, sound, smell, touch, taste ) and figurative language like metaphors and similes to create vivid imagery. Paint a picture with words that allows your reader to experience what you\'re describing.",
   
   recount: "Write about an important event or experience in your life, telling what happened in the order it occurred. Include details about who was involved, where it happened, when it took place, and why it was significant to you. Use descriptive language to help your reader visualize the events and understand their importance."
 };
@@ -26,7 +26,7 @@ export const openai = {
       create: async (params: any) => {
         try {
           if (!OPENAI_API_KEY) {
-            throw new Error(\'OpenAI API key not configured\');
+            throw new Error("OpenAI API key not configured");
           }
 
           const response = await fetch(`${OPENAI_API_BASE}/chat/completions`, {
