@@ -6,7 +6,7 @@ const OPENAI_API_BASE = import.meta.env.VITE_OPENAI_API_BASE || 'https://api.ope
 
 // High-quality fallback prompts for when AI generation fails
 const FALLBACK_PROMPTS = {
-  narrative: "Write an engaging story about a character who discovers something unexpected that changes their life forever. Include vivid descriptions, realistic dialogue, and show the character's emotional journey. Make sure your story has a clear beginning, middle, and end with a satisfying conclusion. Focus on showing rather than telling, and use sensory details to bring your story to life.",
+  narrative: "Write an engaging story about a character who discovers something unexpected that changes their life forever. Include vivid descriptions, realistic dialogue, and show the character\'s emotional journey. Make sure your story has a clear beginning, middle, and end with a satisfying conclusion. Focus on showing rather than telling, and use sensory details to bring your story to life.",
   
   persuasive: "Choose a topic you feel strongly about and write a persuasive essay to convince others of your viewpoint. Use strong evidence, logical reasoning, and persuasive techniques like rhetorical questions and emotional appeals. Structure your argument clearly with an introduction that states your position, body paragraphs that support your argument with evidence, and a conclusion that reinforces your main point.",
   
@@ -14,7 +14,7 @@ const FALLBACK_PROMPTS = {
   
   reflective: "Think about a meaningful experience in your life and write a reflective piece exploring what you learned from it. Show your thoughts and feelings, and explain how this experience changed or influenced you. Be honest and thoughtful in your reflection, using specific details to help your reader understand the significance of this experience.",
   
-  descriptive: "Choose a place, person, or object that is special to you and write a descriptive piece that brings it to life for your reader. Use sensory details (sight, sound, smell, touch, taste) and figurative language like metaphors and similes to create vivid imagery. Paint a picture with words that allows your reader to experience what you're describing.",
+  descriptive: "Choose a place, person, or object that is special to you and write a descriptive piece that brings it to life for your reader. Use sensory details (sight, sound, smell, touch, taste) and figurative language like metaphors and similes to create vivid imagery. Paint a picture with words that allows your reader to experience what you\'re describing.",
   
   recount: "Write about an important event or experience in your life, telling what happened in the order it occurred. Include details about who was involved, where it happened, when it took place, and why it was significant to you. Use descriptive language to help your reader visualize the events and understand their importance."
 };
@@ -26,7 +26,7 @@ export const openai = {
       create: async (params: any) => {
         try {
           if (!OPENAI_API_KEY) {
-            throw new Error('OpenAI API key not configured');
+            throw new Error(\'OpenAI API key not configured\');
           }
 
           const response = await fetch(`${OPENAI_API_BASE}/chat/completions`, {
@@ -363,29 +363,59 @@ export const getNSWSelectiveFeedback = async (content: string, textType: string,
           },
           {
             role: 'user',
-            content: `Evaluate this ${textType} writing for NSW Selective School standards. Focus on: ${focusAreas.join(', ') || 'overall quality'}. 
+            content: `Evaluate this ${textType} writing for NSW Selective School standards. Provide a comprehensive assessment in JSON format, including an overall band score (1-6), total score out of 30, a brief description of the band level, and detailed band-level descriptions for each criterion. Also include specific strengths, areas for improvement, suggestions, priority focus areas, exam strategies, interactive questions, and revision tasks.
             
-            Provide feedback in JSON format:
+            JSON format:
             {
-              "score": (number 1-10),
-              "criteria": {
-                "ideas": (number 1-10),
-                "organization": (number 1-10),
-                "voice": (number 1-10),
-                "wordChoice": (number 1-10),
-                "sentenceFluency": (number 1-10),
-                "conventions": (number 1-10)
+              "overallBand": (number 1-6),
+              "totalScore": (number 0-30),
+              "bandDescription": "brief description of this band level",
+              "bandDetails": "detailed explanation of performance at this band level",
+              "criteriaFeedback": {
+                "ideasAndContent": {
+                  "band": (number 1-6),
+                  "score": (number 0-10),
+                  "maxScore": 10,
+                  "strengths": ["strength1"],
+                  "improvements": ["improvement1"],
+                  "suggestions": ["suggestion1"]
+                },
+                "structureAndOrganization": {
+                  "band": (number 1-6),
+                  "score": (number 0-10),
+                  "maxScore": 10,
+                  "strengths": ["strength1"],
+                  "improvements": ["improvement1"],
+                  "suggestions": ["suggestion1"]
+                },
+                "languageAndVocabulary": {
+                  "band": (number 1-6),
+                  "score": (number 0-5),
+                  "maxScore": 5,
+                  "strengths": ["strength1"],
+                  "improvements": ["improvement1"],
+                  "suggestions": ["suggestion1"]
+                },
+                "grammarAndSpelling": {
+                  "band": (number 1-6),
+                  "score": (number 0-5),
+                  "maxScore": 5,
+                  "strengths": ["strength1"],
+                  "improvements": ["improvement1"],
+                  "suggestions": ["suggestion1"]
+                }
               },
-              "strengths": ["strength1", "strength2"],
-              "improvements": ["improvement1", "improvement2"],
-              "detailedFeedback": "comprehensive feedback paragraph",
-              "suggestions": ["suggestion1", "suggestion2"]
+              "overallComment": "A general comment on the essay's performance.",
+              "priorityFocus": ["focus1", "focus2"],
+              "examStrategies": ["strategy1", "strategy2"],
+              "interactiveQuestions": ["question1", "question2"],
+              "revisionSuggestions": ["task1", "task2"]
             }
             
             Writing: "${content}"`
           }
         ],
-        max_tokens: 600,
+        max_tokens: 1200,
         temperature: 0.3,
       }),
     });
@@ -415,42 +445,60 @@ export const getNSWSelectiveFeedback = async (content: string, textType: string,
   }
 };
 
-// Basic NSW feedback fallback
+// Basic NSW feedback fallback (simplified for demonstration)
 const getBasicNSWFeedback = (content: string, textType: string) => {
   const wordCount = content.trim().split(/\s+/).length;
-  const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 0);
-  const avgSentenceLength = sentences.length > 0 ? wordCount / sentences.length : 0;
-  
-  const baseScore = Math.min(10, Math.max(1, Math.round(wordCount / 30)));
-  
+  const overallBand = wordCount > 150 ? 4 : 3; // Example logic
+  const totalScore = overallBand * 5; // Example logic
+
   return {
-    score: baseScore,
-    criteria: {
-      ideas: Math.min(10, baseScore + 1),
-      organization: baseScore,
-      voice: Math.max(1, baseScore - 1),
-      wordChoice: baseScore,
-      sentenceFluency: avgSentenceLength > 8 ? Math.min(10, baseScore + 1) : Math.max(1, baseScore - 1),
-      conventions: baseScore
+    overallBand: overallBand,
+    totalScore: totalScore,
+    bandDescription: `Your ${textType} writing is at Band ${overallBand}. This means you are developing good skills but have areas for improvement.`,
+    bandDetails: `You demonstrate a ${overallBand >= 4 ? 'sound' : 'basic'} understanding of ${textType} writing. Focus on enhancing your vocabulary and sentence structure.`,
+    criteriaFeedback: {
+      ideasAndContent: {
+        band: overallBand,
+        score: Math.min(10, Math.floor(totalScore / 3)),
+        maxScore: 10,
+        strengths: ["Clear main idea"],
+        improvements: ["Expand on ideas with more details"],
+        suggestions: ["Brainstorm more before writing"]
+      },
+      structureAndOrganization: {
+        band: overallBand,
+        score: Math.min(10, Math.floor(totalScore / 3)),
+        maxScore: 10,
+        strengths: ["Logical flow"],
+        improvements: ["Vary sentence beginnings"],
+        suggestions: ["Use transition words"]
+      },
+      languageAndVocabulary: {
+        band: overallBand,
+        score: Math.min(5, Math.floor(totalScore / 6)),
+        maxScore: 5,
+        strengths: ["Appropriate word choice"],
+        improvements: ["Use more sophisticated vocabulary"],
+        suggestions: ["Look up synonyms for common words"]
+      },
+      grammarAndSpelling: {
+        band: overallBand,
+        score: Math.min(5, Math.floor(totalScore / 6)),
+        maxScore: 5,
+        strengths: ["Mostly accurate grammar"],
+        improvements: ["Proofread carefully for errors"],
+        suggestions: ["Read your essay aloud to catch mistakes"]
+      }
     },
-    strengths: [
-      wordCount >= 100 ? "Good development of ideas" : "Clear communication",
-      sentences.length > 3 ? "Uses varied sentence structures" : "Shows understanding of the task"
-    ],
-    improvements: [
-      wordCount < 150 ? "Expand your ideas with more details" : "Consider adding more sophisticated vocabulary",
-      avgSentenceLength < 8 ? "Try using longer, more complex sentences" : "Check for spelling and punctuation"
-    ],
-    detailedFeedback: `Your ${textType} writing demonstrates ${wordCount >= 150 ? 'good' : 'developing'} understanding of the task requirements. ${wordCount >= 100 ? 'You have provided sufficient detail to support your ideas.' : 'Consider expanding your ideas with more specific examples and details.'} Your sentence structure ${avgSentenceLength > 8 ? 'shows good variety' : 'could benefit from more complexity'}.`,
-    suggestions: [
-      "Use more descriptive adjectives and adverbs",
-      "Include specific examples to support your main points",
-      "Read your work aloud to check for flow and clarity"
-    ]
+    overallComment: `Overall, your ${textType} writing is progressing well. Keep practicing to reach higher bands!`,
+    priorityFocus: ["Developing ideas", "Using varied sentence structures"],
+    examStrategies: ["Plan your essay before writing", "Manage your time effectively"],
+    interactiveQuestions: ["What is one new vocabulary word you can add to your next essay?", "How can you make your introduction more engaging?"],
+    revisionSuggestions: ["Revise your introduction to hook the reader", "Add three descriptive adjectives to your body paragraphs"]
   };
 };
 
-// Additional required exports for various components
+// Enhanced text type vocabulary with fallback
 export const getTextTypeVocabulary = async (textType: string): Promise<string[]> => {
   console.log('🔄 OpenAI: Getting text type vocabulary for:', textType);
   
@@ -470,14 +518,14 @@ export const getTextTypeVocabulary = async (textType: string): Promise<string[]>
         messages: [
           {
             role: 'system',
-            content: 'You are a vocabulary expert helping Year 6 students improve their writing with appropriate vocabulary.'
+            content: `You are a helpful writing assistant. Provide age-appropriate vocabulary for Year 6 students (ages 11-12) for ${textType} writing.`
           },
           {
             role: 'user',
-            content: `Provide 10 sophisticated but age-appropriate vocabulary words for ${textType} writing. Return only the words separated by commas.`
+            content: `Provide 10 age-appropriate and relevant vocabulary words for ${textType} writing. Return only the words separated by commas, no additional text.`
           }
         ],
-        max_tokens: 150,
+        max_tokens: 100,
         temperature: 0.5,
       }),
     });
@@ -492,8 +540,8 @@ export const getTextTypeVocabulary = async (textType: string): Promise<string[]>
       const vocabulary = data.choices[0].message.content
         .trim()
         .split(',')
-        .map((word: string) => word.trim())
-        .filter((word: string) => word.length > 0);
+        .map((s: string) => s.trim())
+        .filter((s: string) => s.length > 0);
       
       console.log('✅ OpenAI: Text type vocabulary generated successfully');
       return vocabulary;
