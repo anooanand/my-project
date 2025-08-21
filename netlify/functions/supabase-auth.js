@@ -62,21 +62,6 @@ exports.handler = async (event) => {
       req.end();
     });
 
-    // Ensure the response body is always valid JSON
-    let responseBody;
-    try {
-      // Try to parse the response as JSON first
-      const parsedBody = JSON.parse(response.body);
-      responseBody = JSON.stringify(parsedBody);
-    } catch (parseError) {
-      // If parsing fails, wrap the raw response in a JSON object
-      responseBody = JSON.stringify({
-        error: 'Invalid response format',
-        message: response.body || 'Empty response',
-        statusCode: response.statusCode
-      });
-    }
-
     // Return the response with CORS headers
     return {
       statusCode: response.statusCode,
@@ -86,7 +71,7 @@ exports.handler = async (event) => {
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
         ...response.headers,
       },
-      body: responseBody,
+      body: response.body,
     };
   } catch (error) {
     return {
