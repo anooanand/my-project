@@ -279,7 +279,7 @@ export const EnhancedGrammarTextEditor: React.FC<EnhancedGrammarTextEditorProps>
             onKeyUp={handleSelectionChange}
             onClick={handleSelectionChange}
             placeholder={placeholder}
-            className="absolute inset-0 w-full h-full p-4 text-transparent bg-transparent resize-none outline-none caret-black z-10"
+            className="absolute inset-0 w-full h-full p-4 bg-transparent resize-none outline-none caret-black z-10"
             style={{ minHeight }}
           />
 
@@ -295,11 +295,11 @@ export const EnhancedGrammarTextEditor: React.FC<EnhancedGrammarTextEditorProps>
           </div>
 
           {/* Make highlights clickable */}
-          <div className="absolute inset-0 w-full h-full p-4 z-5 pointer-events-auto">
-            <div className="font-mono text-base leading-relaxed whitespace-pre-wrap break-words text-transparent">
-              {generateHighlightedText()}
-            </div>
-          </div>
+           <div className="absolute inset-0 w-full h-full p-4 z-5 pointer-events-auto">
+             <div className="font-mono text-base leading-relaxed whitespace-pre-wrap break-words">
+            {generateHighlightedText()}
+         </div>
+        </div>          
         </div>
 
         {/* Suggestion Tooltip */}
