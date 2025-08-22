@@ -135,3 +135,8 @@ code {
   background-color: #f3f4f6; /* gray-100 */
 }
 
+
+
+@import "./components/layout-fix.css";
+@import "./components/layout-fix-enhanced.css";
+
