@@ -1212,4 +1212,4 @@ export default function EnhancedCoachPanel({  content,
       </div>
     </div>
   );
-}
+} 
