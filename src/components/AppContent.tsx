@@ -43,6 +43,10 @@ import { FloatingChatWindow } from './FloatingChatWindow';
 import { WritingDemo } from './WritingDemo';
 import { checkOpenAIConnectionStatus } from '../lib/openai';
 import { AdminButton } from './AdminButton';
+import { TextTypeAnalysisComponent } from './TextTypeAnalysisComponent';
+import { VocabularySophisticationComponent } from './VocabularySophisticationComponent';
+import { ProgressTrackingComponent } from './ProgressTrackingComponent';
+import { CoachingTipsComponent } from './CoachingTipsComponent';
 
 function AppContent() {
   const { user, isLoading, paymentCompleted, emailVerified, authSignOut } = useAuth();
