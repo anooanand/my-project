@@ -367,11 +367,8 @@ function AppContent() {
                     hideTextTypeSelector={popupFlowCompleted}
                   />
                   
-                  {showExamMode ? (
-                    <ExamSimulationMode 
-                      onExit={() => setShowExamMode(false)}
-                    />
-                  ) : (
+                  {/* Always render EnhancedWritingLayout unless in exam mode */}
+                  {!showExamMode && (
                     <div className="writing-layout-content flex-1 min-h-0">
                       <ErrorBoundary>
                         <EnhancedWritingLayout
@@ -388,6 +385,13 @@ function AppContent() {
                         />
                       </ErrorBoundary>
                     </div>
+                  )}
+
+                  {/* Render ExamSimulationMode only when showExamMode is true */}
+                  {showExamMode && (
+                    <ExamSimulationMode 
+                      onExit={() => setShowExamMode(false)}
+                    />
                   )}
                 </div>
               </ErrorBoundary>
@@ -415,60 +419,21 @@ function AppContent() {
               planType={pendingPaymentPlan}
             />
           } />
-          <Route path="/auth/callback" element={<EmailVerificationHandler />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </div>
 
-      {/* Footer - Only show on certain pages */}
-      {shouldShowFooter() && <Footer />}
-
-      {/* Auth Modal */}
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        mode={authModalMode}
-        onSuccess={handleAuthSuccess}
-      />
-
-      {/* Planning Tool Modal */}
-      <PlanningToolModal
-        isOpen={showPlanningTool}
-        onClose={() => setShowPlanningTool(false)}
-        onSavePlan={(plan) => {
-          console.log('Plan saved:', plan);
-          setShowPlanningTool(false);
-        }}
-        textType={textType}
-        content={content}
-      />
-
-      {/* Help Center Modal */}
-      {showHelpCenter && (
-        <HelpCenter onClose={() => setShowHelpCenter(false)} />
+      {showAuthModal && (
+        <AuthModal
+          mode={authModalMode}
+          onClose={() => setShowAuthModal(false)}
+          onAuthSuccess={handleAuthSuccess}
+        />
       )}
 
-      {/* Admin Button - Only show for admin users */}
-      <AdminButton />
+      <FloatingChatWindow />
     </div>
   );
-}
-
-// Placeholder components for missing routes
-function TextTypeAnalysisComponent() {
-  return <div>Text Type Analysis Component</div>;
-}
-
-function VocabularySophisticationComponent() {
-  return <div>Vocabulary Sophistication Component</div>;
-}
-
-function ProgressTrackingComponent() {
-  return <div>Progress Tracking Component</div>;
-}
-
-function CoachingTipsComponent() {
-  return <div>Coaching Tips Component</div>;
 }
 
 export default AppContent;
