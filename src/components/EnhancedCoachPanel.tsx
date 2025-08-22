@@ -82,8 +82,7 @@ interface WritingAnalysis {
   improvementAreas: string[];
 }
 
-export function EnhancedCoachPanel({ 
-  content, 
+export default function EnhancedCoachPanel({  content, 
   textType, 
   assistanceLevel, 
   selectedText = '',
