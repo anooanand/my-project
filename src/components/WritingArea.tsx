@@ -221,6 +221,40 @@ export default function WritingArea({
     }
   };
 
+  // Start exam mode
+  const startExamMode = () => {
+    const confirmed = window.confirm(
+      `🎯 Start Exam Mode?\n\n` +
+      `• Duration: ${examTimeLimit / 60} minutes\n` +
+      `• Target: ${targetWordCount} words\n` +
+      `• Text Type: ${textType}\n\n` +
+      `Your current work will be saved. Ready to begin?`
+    );
+    
+    if (confirmed) {
+      setExamMode(true);
+      setExamTimeRemaining(examTimeLimit);
+      setExamStartTime(new Date());
+      setIsTimerRunning(true);
+      setFocusMode(true);
+      
+      if (window.confirm('Start with a blank document? (Current work will be saved)')) {
+        onChange(''); // Use onChange prop to clear content
+      }
+    }
+  };
+
+  // Stop exam mode
+  const stopExamMode = () => {
+    const confirmed = window.confirm('Are you sure you want to end the exam? Your work will be saved.');
+    if (confirmed) {
+      setExamMode(false);
+      setIsTimerRunning(false);
+      setFocusMode(false);
+      alert('✅ Exam completed! Your work has been saved.');
+    }
+  };
+
   // Format time for display
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -258,6 +292,28 @@ export default function WritingArea({
                 >
                   <Sparkles className="w-3 h-3 mr-1" />
                   Planning Phase
+                </button>
+                <button
+                  onClick={startExamMode}
+                  disabled={examMode}
+                  className="flex items-center px-2 py-1 bg-purple-500 text-white text-xs rounded hover:bg-purple-600 transition-colors disabled:opacity-50"
+                >
+                  <Clock className="w-3 h-3 mr-1" />
+                  {examMode ? 'Exam Active' : 'Start Exam Mode'}
+                </button>
+                <button
+                  onClick={() => setShowStructureGuide(true)}
+                  className="flex items-center px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600 transition-colors"
+                >
+                  <BookOpen className="w-3 h-3 mr-1" />
+                  Structure Guide
+                </button>
+                <button
+                  onClick={() => setShowWritingTips(!showWritingTips)}
+                  className="flex items-center px-2 py-1 bg-yellow-500 text-white text-xs rounded hover:bg-yellow-600 transition-colors"
+                >
+                  <Lightbulb className="w-3 h-3 mr-1" />
+                  Tips
                 </button>
                 <button
                   onClick={() => setFocusMode(!focusMode)}
@@ -502,6 +558,13 @@ export default function WritingArea({
                 <h4 className="font-medium mb-1 text-xs text-indigo-200">Writing Time:</h4>
                 <div className="text-lg font-bold text-white">{formatTime(timeSpent)}</div>
               </div>
+
+              {examMode && (
+                <div className="bg-red-600 rounded-lg p-3 text-center">
+                  <h4 className="font-medium mb-1 text-xs text-red-200">Exam Time Left:</h4>
+                  <div className="text-lg font-bold text-white">{formatTime(examTimeRemaining)}</div>
+                </div>
+              )}
             </div>
           )}
         </div>
