@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import EnhancedGrammarTextEditor from './EnhancedGrammarTextEditor';
 import '../styles/grammarChecker.css';
-import { Save, Download, Upload, Eye, EyeOff, RotateCcw, Sparkles, BookOpen, Target, TrendingUp, Award, CheckCircle, AlertCircle, Star, Lightbulb, MessageSquare, BarChart3, Clock, Zap, Heart, Trophy, Wand2, PenTool, FileText, Settings, RefreshCw, Play, Pause, Volume2, VolumeX, Maximize2, Minimize2, Copy, Check, X, Plus, Minus, ChevronDown, ChevronUp, Info, HelpCircle, Calendar, Users, Globe, Mic, Camera, Image, Link, Hash, Type, AlignLeft, AlignCenter, AlignRight, Bold, Italic, Underline, List, ListOrdered, Quote, Code, Scissors, Clipboard, Search, Filter, SortAsc, SortDesc, Grid, Layout, Sidebar, Menu, MoreHorizontal, MoreVertical, ChevronLeft, ChevronRight, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Timer, Send, Bot, StopCircle, MapPin, Users2, Smile } from 'lucide-react';
+import { Save, Download, Upload, Eye, EyeOff, RotateCcw, Sparkles, BookOpen, Target, TrendingUp, Award, CheckCircle, AlertCircle, Star, Lightbulb, MessageSquare, BarChart3, Clock, Zap, Heart, Trophy, PenTool, FileText, Settings, RefreshCw, Play, Pause, Volume2, VolumeX, Maximize2, Minimize2, Copy, Check, X, Plus, Minus, ChevronDown, ChevronUp, Info, HelpCircle, Calendar, Users, Globe, Mic, Camera, Image, Link, Hash, Type, AlignLeft, AlignCenter, AlignRight, Bold, Italic, Underline, List, ListOrdered, Quote, Code, Scissors, Clipboard, Search, Filter, SortAsc, SortDesc, Grid, Layout, Sidebar, Menu, MoreHorizontal, MoreVertical, ChevronLeft, ChevronRight, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Timer, Send, Bot, StopCircle, MapPin, Users2, Smile } from 'lucide-react';
 import { generatePrompt, getSynonyms, rephraseSentence, evaluateEssay } from '../lib/openai';
 import { WritingStatusBar } from './WritingStatusBar';
 import { StructuredPlanningSection } from './StructuredPlanningSection';
@@ -96,8 +96,7 @@ export default function WritingArea({
     feelings: ''
   });
   
-  // Magical prompt state
-  const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false);
+  // Prompt state - removed magical prompt generation functionality
   const [generatedPrompt, setGeneratedPrompt] = useState(prompt || '');
   
   // Refs
@@ -182,42 +181,6 @@ export default function WritingArea({
     if (!isTimerRunning && newContent.trim()) {
       setIsTimerRunning(true);
       onTimerStart(true);
-    }
-  };
-
-  // Generate magical prompt
-  const handleGenerateMagicalPrompt = async () => {
-    if (isGeneratingPrompt) return; // Prevent double-click
-    
-    setIsGeneratingPrompt(true);
-    
-    try {
-      // Simulate prompt generation (replace with actual API call)
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const prompts = {
-        narrative: "Write an engaging story about a character who discovers something unexpected that changes their life forever. Include vivid descriptions, realistic dialogue, and show the character's emotional journey. Make sure your story has a clear beginning, middle, and end with a satisfying conclusion. Focus on showing rather than telling, and use sensory details to bring your story to life.",
-        persuasive: "Write a persuasive essay arguing for or against a topic you feel strongly about. Use compelling evidence, logical reasoning, and persuasive language to convince your audience. Include counterarguments and address them effectively. Structure your essay with a clear introduction, body paragraphs with strong arguments, and a powerful conclusion.",
-        expository: "Write an informative essay explaining a complex topic or process that interests you. Use clear explanations, relevant examples, and logical organization to help your readers understand the subject. Include factual information and present it in an engaging way that makes the topic accessible to your audience.",
-        descriptive: "Write a detailed description of a place, person, or object that has special meaning to you. Use vivid sensory details (sight, sound, smell, taste, touch) to paint a picture with words. Help your readers feel as if they are experiencing what you're describing through your carefully chosen language and imagery."
-      };
-      
-      const defaultPrompt = "Write a creative piece that showcases your writing skills. Choose a topic that interests you and develop it with clear structure, engaging content, and appropriate language for your audience. Focus on expressing your ideas clearly and creatively.";
-      
-      const newPrompt = prompts[textType.toLowerCase() as keyof typeof prompts] || defaultPrompt;
-      
-      setGeneratedPrompt(newPrompt);
-      
-      // Call the onPromptGenerated callback if provided
-      if (onPromptGenerated) {
-        onPromptGenerated(newPrompt);
-      }
-      
-    } catch (error) {
-      console.error('Error generating prompt:', error);
-      alert('Sorry, there was an error generating your prompt. Please try again.');
-    } finally {
-      setIsGeneratingPrompt(false);
     }
   };
 
@@ -313,7 +276,7 @@ export default function WritingArea({
     <div className="h-full flex bg-gray-50 overflow-hidden">
       {/* Main Writing Section */}
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-        {/* Prompt Display */}
+        {/* Prompt Display - Only show if prompt exists */}
         {generatedPrompt && (
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg mx-3 mt-3 overflow-hidden shadow-sm">
             <div className="flex items-center gap-2 px-4 py-3 bg-blue-100 border-b border-blue-200">
@@ -329,27 +292,10 @@ export default function WritingArea({
         {/* Main Writing Area */}
         <div className="flex-1 flex flex-col px-3 pb-3 pt-3">
           <div className={`${focusMode ? 'bg-gray-800 border-gray-700' : 'bg-white'} rounded-lg shadow-sm flex-1 flex flex-col overflow-hidden transition-colors duration-300`}>
-            {/* Writing Area Header */}
+            {/* Writing Area Header - Removed Magical Prompt button */}
             <div className={`px-3 py-2 ${focusMode ? 'border-gray-700' : 'border-gray-200'} border-b flex items-center justify-between`}>
               <h3 className={`text-sm font-medium ${focusMode ? 'text-gray-200' : 'text-gray-900'}`}>Your Writing</h3>
               <div className="flex items-center space-x-2">
-                <button
-                  onClick={handleGenerateMagicalPrompt}
-                  disabled={isGeneratingPrompt}
-                  className="flex items-center px-2 py-1 bg-purple-500 text-white text-xs rounded hover:bg-purple-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isGeneratingPrompt ? (
-                    <>
-                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
-                      Generating...
-                    </>
-                  ) : (
-                    <>
-                      <Wand2 className="w-3 h-3 mr-1" />
-                      Magical Prompt
-                    </>
-                  )}
-                </button>
                 <button
                   onClick={() => setShowKidPlanningModal(true)}
                   className="flex items-center px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition-colors"
@@ -363,276 +309,239 @@ export default function WritingArea({
                   className="flex items-center px-2 py-1 bg-purple-500 text-white text-xs rounded hover:bg-purple-600 transition-colors disabled:opacity-50"
                 >
                   <Clock className="w-3 h-3 mr-1" />
-                  {examMode ? 'Exam Active' : 'Start Exam Mode'}
+                  Start Exam Mode
                 </button>
                 <button
-                  onClick={() => setShowStructureGuide(true)}
+                  onClick={() => setShowStructureGuide(!showStructureGuide)}
                   className="flex items-center px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600 transition-colors"
                 >
                   <BookOpen className="w-3 h-3 mr-1" />
                   Structure Guide
                 </button>
                 <button
-                  onClick={() => setShowWritingTips(!showWritingTips)}
-                  className="flex items-center px-2 py-1 bg-yellow-500 text-white text-xs rounded hover:bg-yellow-600 transition-colors"
-                >
-                  <Lightbulb className="w-3 h-3 mr-1" />
-                  Tips
-                </button>
-                <button
                   onClick={() => setFocusMode(!focusMode)}
                   className="flex items-center px-2 py-1 bg-gray-500 text-white text-xs rounded hover:bg-gray-600 transition-colors"
                 >
-                  <Eye className="w-3 h-3 mr-1" />
-                  Focus
+                  <Target className="w-3 h-3 mr-1" />
+                  Focus Mode
                 </button>
               </div>
             </div>
 
-            {/* Enhanced Grammar Text Editor - Fixed to be visible */}
-            <div className="flex-1 relative">
-              {/* Simple fallback textarea if EnhancedGrammarTextEditor fails */}
-              <textarea
-                ref={textareaRef}
-                value={content}
-                onChange={(e) => handleContentChange(e.target.value)}
-                placeholder="Start writing your amazing story here! Let your creativity flow and bring your ideas to life..."
-                className={`w-full h-full p-4 border-none outline-none resize-none font-sans text-base leading-relaxed ${
+            {/* Structure Guide */}
+            {showStructureGuide && (
+              <div className="bg-green-50 border-b border-green-200 p-3">
+                <div className="text-sm text-green-800">
+                  <h4 className="font-semibold mb-2">{textType} Structure Guide:</h4>
+                  {textType.toLowerCase() === 'narrative' && (
+                    <ul className="space-y-1 text-xs">
+                      <li>• <strong>Opening:</strong> Hook your reader and introduce your character</li>
+                      <li>• <strong>Rising Action:</strong> Build tension and develop the conflict</li>
+                      <li>• <strong>Climax:</strong> The turning point of your story</li>
+                      <li>• <strong>Resolution:</strong> Wrap up the story and show character growth</li>
+                    </ul>
+                  )}
+                  {textType.toLowerCase() === 'persuasive' && (
+                    <ul className="space-y-1 text-xs">
+                      <li>• <strong>Introduction:</strong> State your position clearly</li>
+                      <li>• <strong>Arguments:</strong> Present evidence and reasoning</li>
+                      <li>• <strong>Counter-arguments:</strong> Address opposing views</li>
+                      <li>• <strong>Conclusion:</strong> Reinforce your main argument</li>
+                    </ul>
+                  )}
+                  {textType.toLowerCase() === 'expository' && (
+                    <ul className="space-y-1 text-xs">
+                      <li>• <strong>Introduction:</strong> Introduce your topic</li>
+                      <li>• <strong>Body:</strong> Explain with facts and examples</li>
+                      <li>• <strong>Organization:</strong> Use clear topic sentences</li>
+                      <li>• <strong>Conclusion:</strong> Summarize key points</li>
+                    </ul>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Exam Mode Banner */}
+            {examMode && (
+              <div className="bg-red-500 text-white px-3 py-2 flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Clock className="w-4 h-4" />
+                  <span className="text-sm font-medium">EXAM MODE</span>
+                  <span className="text-sm">Time: {formatTime(examTimeRemaining)}</span>
+                  <span className="text-sm">Target: {targetWordCount} words</span>
+                </div>
+                <button
+                  onClick={stopExamMode}
+                  className="text-sm bg-red-600 hover:bg-red-700 px-2 py-1 rounded transition-colors"
+                >
+                  End Exam
+                </button>
+              </div>
+            )}
+
+            {/* Enhanced Grammar Text Editor */}
+            <div className="flex-1 overflow-hidden">
+              <EnhancedGrammarTextEditor
+                content={content}
+                onChange={handleContentChange}
+                placeholder={generatedPrompt ? "Start writing your amazing story here! Let your creativity flow and bring your ideas to life..." : "Start writing here..."}
+                className={`w-full h-full resize-none border-0 outline-none p-4 ${
                   focusMode 
-                    ? 'bg-gray-800 text-gray-100' 
-                    : 'bg-white text-gray-900'
-                } transition-colors duration-300`}
-                style={{ 
-                  minHeight: '400px',
-                  fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+                    ? 'bg-gray-800 text-gray-100 placeholder-gray-400' 
+                    : 'bg-white text-gray-900 placeholder-gray-500'
+                }`}
+                style={{
+                  fontSize: `${fontSize}px`,
+                  lineHeight: lineHeight,
+                  fontFamily: 'Inter, system-ui, sans-serif'
                 }}
+                ref={textareaRef}
               />
             </div>
-            
-            {/* Status Bar */}
-            <div className={`px-3 py-2 ${focusMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'} border-t flex items-center justify-between transition-colors duration-300`}>
-              <div className={`flex items-center space-x-4 text-xs ${focusMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                <div className="flex items-center space-x-1">
-                  <FileText className="w-3 h-3" />
-                  <span>{wordCount} words</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <Clock className="w-3 h-3" />
-                  <span>{characterCount} characters</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <Eye className="w-3 h-3" />
-                  <span>{readingTime} min read</span>
-                </div>
-                {isAutoSaving && (
-                  <div className="flex items-center space-x-1 text-blue-500">
-                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-500"></div>
-                    <span>Saving...</span>
-                  </div>
-                )}
-              </div>
-              
-              <button
-                onClick={onSubmit}
-                className="flex items-center px-3 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600 focus:outline-none focus:ring-1 focus:ring-green-500 focus:ring-opacity-50"
-              >
-                <Send className="w-3 h-3 mr-1" />
-                Submit for Evaluation
-              </button>
-            </div>
+
+            {/* Writing Status Bar */}
+            <WritingStatusBar
+              wordCount={wordCount}
+              characterCount={characterCount}
+              readingTime={readingTime}
+              timeSpent={timeSpent}
+              isAutoSaving={isAutoSaving}
+              lastSaved={lastSaved}
+              targetWordCount={targetWordCount}
+              showWordCount={showWordCount}
+              examMode={examMode}
+            />
           </div>
         </div>
       </div>
 
-      {/* Right Sidebar - Writing Buddy */}
-      <div className="w-80 bg-gradient-to-b from-indigo-600 to-purple-700 text-white flex flex-col shadow-lg">
-        {/* Header */}
-        <div className="p-3 border-b border-indigo-500 bg-indigo-700">
-          <div className="flex items-center justify-between mb-1">
-            <h2 className="text-sm font-bold flex items-center text-white">
-              <Bot className="w-4 h-4 mr-2" />
-              Writing Buddy
-            </h2>
-            <button className="p-1 rounded-full hover:bg-white hover:bg-opacity-20 transition-colors">
-              <Settings className="w-3 h-3 text-indigo-200" />
-            </button>
-          </div>
-          <p className="text-indigo-200 text-xs">Your AI writing assistant</p>
-        </div>
-
-        {/* Tabs */}
-        <div className="flex border-b border-indigo-500 bg-indigo-600">
-          {[
-            { id: 'ai-coach', label: 'Coach', icon: Bot },
-            { id: 'analysis', label: 'Analysis', icon: BarChart3 },
-            { id: 'vocabulary', label: 'Vocabulary', icon: BookOpen },
-            { id: 'progress', label: 'Progress', icon: TrendingUp }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 py-2 px-1 text-xs font-medium transition-colors flex flex-col items-center ${
-                activeTab === tab.id 
-                  ? 'bg-indigo-800 text-white border-b-2 border-yellow-400' 
-                  : 'text-indigo-200 hover:bg-indigo-700 hover:text-white'
-              }`}
-            >
-              <tab.icon className="w-3 h-3 mb-1" />
-              <span className="text-xs leading-tight">{tab.label}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Tab Content */}
-        <div className="flex-1 p-3 overflow-y-auto bg-indigo-600">
-          {activeTab === 'ai-coach' && (
-            <div className="flex flex-col h-full">
-              <h3 className="text-xs font-semibold mb-3 text-indigo-100 text-center">AI Coach</h3>
-              <div className="flex-1 overflow-y-auto mb-3 bg-indigo-700 rounded-lg p-3">
-                {chatMessages.length === 0 && (
-                  <div className="text-center">
-                    <p className="text-indigo-200 text-xs mb-3 font-medium">Ask your Writing Buddy anything!</p>
-                    <div className="text-xs text-indigo-300 space-y-2 text-left">
-                      <p className="flex items-start">
-                        <span className="text-yellow-400 mr-2">•</span>
-                        "How can I improve my introduction?"
-                      </p>
-                      <p className="flex items-start">
-                        <span className="text-yellow-400 mr-2">•</span>
-                        "What's a good synonym for 'said'?"
-                      </p>
-                      <p className="flex items-start">
-                        <span className="text-yellow-400 mr-2">•</span>
-                        "Help me with my conclusion"
-                      </p>
-                    </div>
-                  </div>
-                )}
-                {chatMessages.map((message) => (
-                  <div key={message.id} className={`mb-3 ${message.sender === 'user' ? 'text-right' : 'text-left'}`}>
-                    <div className={`inline-block p-2 rounded-lg text-xs max-w-[90%] leading-relaxed ${
-                      message.sender === 'user' 
-                        ? 'bg-blue-500 text-white' 
-                        : 'bg-white text-gray-800 shadow-sm'
-                    }`}>
-                      {message.text.split('\n').map((line, index) => (
-                        <div key={index}>{line}</div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-                {isChatLoading && (
-                  <div className="text-center py-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-200 mx-auto"></div>
-                  </div>
-                )}
-                <div ref={chatEndRef} />
-              </div>
-              
-              <form onSubmit={handleChatSubmit} className="flex space-x-2">
-                <input
-                  type="text"
-                  value={chatInput}
-                  onChange={(e) => setChatInput(e.target.value)}
-                  placeholder="Ask for help..."
-                  className="flex-1 px-3 py-2 text-xs text-gray-900 bg-white rounded border-none focus:outline-none focus:ring-2 focus:ring-yellow-400"
-                />
+      {/* Kid Planning Modal */}
+      {showKidPlanningModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 flex items-center">
+                  <Sparkles className="w-6 h-6 mr-2 text-purple-500" />
+                  Story Planning Helper
+                </h2>
                 <button
-                  type="submit"
-                  disabled={!chatInput.trim() || isChatLoading}
-                  className="px-3 py-2 bg-yellow-500 hover:bg-yellow-600 text-indigo-900 rounded disabled:opacity-50 text-xs font-medium transition-colors"
+                  onClick={() => setShowKidPlanningModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
                 >
-                  <Send className="w-3 h-3" />
+                  <X className="w-6 h-6" />
                 </button>
-              </form>
-            </div>
-          )}
-
-          {activeTab === 'analysis' && (
-            <div className="space-y-3">
-              <h3 className="text-xs font-semibold mb-3 text-indigo-100 text-center">Writing Analysis</h3>
-              
-              <div className="bg-indigo-700 rounded-lg p-3 text-center">
-                <h4 className="font-medium mb-1 text-xs text-indigo-200">Words:</h4>
-                <div className="text-2xl font-bold text-white">{wordCount}</div>
-              </div>
-              
-              <div className="bg-indigo-700 rounded-lg p-3 text-center">
-                <h4 className="font-medium mb-1 text-xs text-indigo-200">Characters:</h4>
-                <div className="text-2xl font-bold text-white">{characterCount}</div>
-              </div>
-              
-              <div className="bg-indigo-700 rounded-lg p-3 text-center">
-                <h4 className="font-medium mb-1 text-xs text-indigo-200">Reading Time:</h4>
-                <div className="text-2xl font-bold text-white">{readingTime} min</div>
-              </div>
-              
-              <button 
-                onClick={onSubmit}
-                className="w-full bg-yellow-500 hover:bg-yellow-600 text-indigo-900 py-3 px-3 rounded-lg text-xs font-medium transition-colors"
-              >
-                Submit for Evaluation
-              </button>
-            </div>
-          )}
-          
-          {activeTab === 'vocabulary' && (
-            <div className="space-y-3">
-              <h3 className="text-xs font-semibold mb-3 text-indigo-100 text-center">Vocabulary</h3>
-              <div className="bg-indigo-700 rounded-lg p-3 text-center">
-                <p className="text-indigo-200 text-xs mb-3">Select text to see suggestions</p>
-                <div className="text-xs text-indigo-300 space-y-2 text-left">
-                  <p className="flex items-start">
-                    <span className="text-yellow-400 mr-2">•</span>
-                    Highlight any word in your writing
-                  </p>
-                  <p className="flex items-start">
-                    <span className="text-yellow-400 mr-2">•</span>
-                    Get instant synonym suggestions
-                  </p>
-                  <p className="flex items-start">
-                    <span className="text-yellow-400 mr-2">•</span>
-                    Improve your vocabulary
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {activeTab === 'progress' && (
-            <div className="space-y-3">
-              <h3 className="text-xs font-semibold mb-3 text-indigo-100 text-center">Progress</h3>
-              <div className="bg-indigo-700 rounded-lg p-3">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-xs text-indigo-200">Word Goal:</span>
-                  <span className="font-bold text-sm text-white">{targetWordCount}</span>
-                </div>
-                <div className="w-full bg-indigo-800 rounded-full h-3 mb-2">
-                  <div 
-                    className="bg-yellow-400 h-3 rounded-full transition-all duration-300"
-                    style={{ width: `${Math.min((wordCount / targetWordCount) * 100, 100)}%` }}
-                  ></div>
-                </div>
-                <p className="text-xs text-indigo-200 text-center">
-                  {wordCount >= targetWordCount ? '🎉 Goal achieved!' : `${targetWordCount - wordCount} words to go`}
-                </p>
-              </div>
-              
-              <div className="bg-indigo-700 rounded-lg p-3 text-center">
-                <h4 className="font-medium mb-1 text-xs text-indigo-200">Writing Time:</h4>
-                <div className="text-lg font-bold text-white">{formatTime(timeSpent)}</div>
               </div>
 
-              {examMode && (
-                <div className="bg-red-600 rounded-lg p-3 text-center">
-                  <h4 className="font-medium mb-1 text-xs text-red-200">Exam Time Left:</h4>
-                  <div className="text-lg font-bold text-white">{formatTime(examTimeRemaining)}</div>
+              <div className="space-y-6">
+                <div className="bg-blue-50 rounded-lg p-4">
+                  <h3 className="font-semibold text-blue-900 mb-2">Let's plan your amazing story!</h3>
+                  <p className="text-blue-800 text-sm">Answer these questions to help organize your thoughts before writing.</p>
                 </div>
-              )}
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Who are the main characters in your story?
+                    </label>
+                    <textarea
+                      value={kidPlanningData.characters}
+                      onChange={(e) => setKidPlanningData(prev => ({ ...prev, characters: e.target.value }))}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      rows={2}
+                      placeholder="Describe your main characters..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Where and when does your story take place?
+                    </label>
+                    <textarea
+                      value={kidPlanningData.setting}
+                      onChange={(e) => setKidPlanningData(prev => ({ ...prev, setting: e.target.value }))}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      rows={2}
+                      placeholder="Describe the setting..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      What problem or challenge will your character face?
+                    </label>
+                    <textarea
+                      value={kidPlanningData.problem}
+                      onChange={(e) => setKidPlanningData(prev => ({ ...prev, problem: e.target.value }))}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      rows={2}
+                      placeholder="What conflict or problem happens?"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      What important events will happen in your story?
+                    </label>
+                    <textarea
+                      value={kidPlanningData.events}
+                      onChange={(e) => setKidPlanningData(prev => ({ ...prev, events: e.target.value }))}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      rows={3}
+                      placeholder="List the main events..."
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      How will the problem be solved?
+                    </label>
+                    <textarea
+                      value={kidPlanningData.solution}
+                      onChange={(e) => setKidPlanningData(prev => ({ ...prev, solution: e.target.value }))}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      rows={2}
+                      placeholder="How does it end?"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      What feelings or emotions will be important in your story?
+                    </label>
+                    <textarea
+                      value={kidPlanningData.feelings}
+                      onChange={(e) => setKidPlanningData(prev => ({ ...prev, feelings: e.target.value }))}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      rows={2}
+                      placeholder="What emotions will your characters feel?"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex justify-end space-x-3 pt-4">
+                  <button
+                    onClick={() => setShowKidPlanningModal(false)}
+                    className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowKidPlanningModal(false);
+                      // You could save the planning data here
+                      console.log('Planning data:', kidPlanningData);
+                    }}
+                    className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  >
+                    Save Plan & Start Writing
+                  </button>
+                </div>
+              </div>
             </div>
-          )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
