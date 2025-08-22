@@ -1,3 +1,5 @@
+import EnhancedGrammarTextEditor from './EnhancedGrammarTextEditor';
+import '../styles/grammarChecker.css';
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Save, Download, Upload, Eye, EyeOff, RotateCcw, Sparkles, BookOpen, Target, TrendingUp, Award, CheckCircle, AlertCircle, Star, Lightbulb, MessageSquare, BarChart3, Clock, Zap, Heart, Trophy, Wand2, PenTool, FileText, Settings, RefreshCw, Play, Pause, Volume2, VolumeX, Maximize2, Minimize2, Copy, Check, X, Plus, Minus, ChevronDown, ChevronUp, Info, HelpCircle, Calendar, Users, Globe, Mic, Camera, Image, Link, Hash, Type, AlignLeft, AlignCenter, AlignRight, Bold, Italic, Underline, List, ListOrdered, Quote, Code, Scissors, Clipboard, Search, Filter, SortAsc, SortDesc, Grid, Layout, Sidebar, Menu, MoreHorizontal, MoreVertical, ChevronLeft, ChevronRight, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Timer, Send, Bot, StopCircle, MapPin, Users2, Smile } from 'lucide-react';
 import { generatePrompt, getSynonyms, rephraseSentence, evaluateEssay } from '../lib/openai';
@@ -155,9 +157,8 @@ export default function WritingArea({ onContentChange, initialContent = '', text
   }, [chatMessages]);
 
   // Handle content change
-  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    const newContent = e.target.value;
-    setContent(newContent);
+ const handleContentChange = (newContent: string) => {
+  setContent(newContent);
     if (!isTimerRunning && newContent.trim()) {
       setIsTimerRunning(true);
     }
@@ -542,21 +543,24 @@ export default function WritingArea({ onContentChange, initialContent = '', text
               </div>
             </div>
 
-            {/* Text Area */}
-            <textarea
-              ref={textareaRef}
-              value={content}
-              onChange={handleContentChange}
-              onMouseUp={handleTextSelection}
-              onKeyUp={handleTextSelection}
-              placeholder="Start writing your amazing story here! Let your creativity flow and bring your ideas to life..."
-              className={`flex-1 p-4 text-sm leading-relaxed ${
-                focusMode 
-                  ? 'text-gray-100 bg-gray-800 placeholder-gray-500' 
-                  : 'text-gray-900 bg-white placeholder-gray-400'
-              } focus:outline-none resize-none transition-colors duration-300`}
-              style={{ fontSize: `${fontSize}px`, lineHeight: lineHeight }}
-            />
+         {/* Enhanced Grammar Text Editor */}
+<div className="flex-1">
+  <EnhancedGrammarTextEditor
+    content={content}
+    onChange={handleContentChange}
+    textType={textType}
+    showAnalyzer={true}
+    enableRealTimeChecking={true}
+    placeholder="Start writing your amazing story here! The system will provide real-time grammar, spelling, and vocabulary feedback..."
+    minHeight="400px"
+    className={`w-full ${
+      focusMode 
+        ? 'bg-gray-800 text-gray-100' 
+        : 'bg-white text-gray-900'
+    }`}
+  />
+</div>
+
             
             {/* Status Bar */}
             <div className={`px-3 py-2 ${focusMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'} border-t flex items-center justify-between transition-colors duration-300`}>

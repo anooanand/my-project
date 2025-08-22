@@ -10,8 +10,9 @@ import {
   WritingMetrics,
   TextHighlight
 } from './grammarTypes';
-import { languageToolService } from './languageToolService';
-import { vocabularyService } from './vocabularyService';
+
+import { languageToolService } from '../services/languageToolService';
+import { vocabularyService } from '../services/vocabularyService';
 
 interface UseGrammarSpellCheckerOptions {
   debounceMs?: number;

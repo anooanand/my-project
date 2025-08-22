@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { AlertCircle, CheckCircle, Lightbulb, X, RefreshCw, Zap } from 'lucide-react';
-import { useGrammarSpellChecker } from './useGrammarSpellChecker';
+import { useGrammarSpellChecker } from '../hooks/useGrammarSpellChecker';
 import { NSWWritingAnalyzer } from './NSWWritingAnalyzer';
 import { 
   GrammarError, 
