@@ -4,7 +4,6 @@ import App from './App';
 import './index.css';
 import './darkmode.css';
 import './styles/kid-theme.css';
-import './components/layout-fix-enhanced.css'; // Import the enhanced layout fix
 import { AuthProvider } from './contexts/AuthContext';
 import { LearningProvider } from './contexts/LearningContext';
 
