@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import WritingArea from './WritingArea';
+import EnhancedCoachPanel from './EnhancedCoachPanel'; // Import the new component
 import { PlanningToolModal } from './PlanningToolModal';
 import { 
   PenTool,
@@ -48,9 +49,9 @@ export function EnhancedWritingLayout({
   };
 
   return (
-    <div className="enhanced-writing-layout h-full bg-gray-50 overflow-hidden">
-      {/* Main Writing Area - Full height */}
-      <div className="h-full">
+    <div className="enhanced-writing-layout h-full flex bg-gray-50 overflow-hidden">
+      {/* Main Writing Area */}
+      <div className="w-1/2 h-full">
         <WritingArea
           content={content}
           onChange={onChange}
@@ -61,6 +62,17 @@ export function EnhancedWritingLayout({
           onPopupCompleted={onPopupCompleted}
           onPromptGenerated={handlePromptGenerated}
           prompt={generatedPrompt}
+        />
+      </div>
+
+      {/* Enhanced Coach Panel */}
+      <div className="w-1/2 h-full border-l border-gray-200">
+        <EnhancedCoachPanel 
+          content={content} 
+          textType={textType} 
+          assistanceLevel={assistanceLevel} 
+          selectedText={selectedText} 
+          onContentChange={onChange} 
         />
       </div>
 
