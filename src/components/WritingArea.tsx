@@ -96,9 +96,20 @@ export default function WritingArea({
     feelings: ''
   });
   
+  // Magical prompt state
+  const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false);
+  const [generatedPrompt, setGeneratedPrompt] = useState(prompt || '');
+  
   // Refs
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  // Update generatedPrompt when prompt prop changes
+  useEffect(() => {
+    if (prompt) {
+      setGeneratedPrompt(prompt);
+    }
+  }, [prompt]);
 
   // Timer effect
   useEffect(() => {
@@ -171,6 +182,42 @@ export default function WritingArea({
     if (!isTimerRunning && newContent.trim()) {
       setIsTimerRunning(true);
       onTimerStart(true);
+    }
+  };
+
+  // Generate magical prompt
+  const handleGenerateMagicalPrompt = async () => {
+    if (isGeneratingPrompt) return; // Prevent double-click
+    
+    setIsGeneratingPrompt(true);
+    
+    try {
+      // Simulate prompt generation (replace with actual API call)
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      const prompts = {
+        narrative: "Write an engaging story about a character who discovers something unexpected that changes their life forever. Include vivid descriptions, realistic dialogue, and show the character's emotional journey. Make sure your story has a clear beginning, middle, and end with a satisfying conclusion. Focus on showing rather than telling, and use sensory details to bring your story to life.",
+        persuasive: "Write a persuasive essay arguing for or against a topic you feel strongly about. Use compelling evidence, logical reasoning, and persuasive language to convince your audience. Include counterarguments and address them effectively. Structure your essay with a clear introduction, body paragraphs with strong arguments, and a powerful conclusion.",
+        expository: "Write an informative essay explaining a complex topic or process that interests you. Use clear explanations, relevant examples, and logical organization to help your readers understand the subject. Include factual information and present it in an engaging way that makes the topic accessible to your audience.",
+        descriptive: "Write a detailed description of a place, person, or object that has special meaning to you. Use vivid sensory details (sight, sound, smell, taste, touch) to paint a picture with words. Help your readers feel as if they are experiencing what you're describing through your carefully chosen language and imagery."
+      };
+      
+      const defaultPrompt = "Write a creative piece that showcases your writing skills. Choose a topic that interests you and develop it with clear structure, engaging content, and appropriate language for your audience. Focus on expressing your ideas clearly and creatively.";
+      
+      const newPrompt = prompts[textType.toLowerCase() as keyof typeof prompts] || defaultPrompt;
+      
+      setGeneratedPrompt(newPrompt);
+      
+      // Call the onPromptGenerated callback if provided
+      if (onPromptGenerated) {
+        onPromptGenerated(newPrompt);
+      }
+      
+    } catch (error) {
+      console.error('Error generating prompt:', error);
+      alert('Sorry, there was an error generating your prompt. Please try again.');
+    } finally {
+      setIsGeneratingPrompt(false);
     }
   };
 
@@ -267,25 +314,42 @@ export default function WritingArea({
       {/* Main Writing Section */}
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
         {/* Prompt Display */}
-        {prompt && (
-          <div className="prompt-display">
-            <div className="prompt-header">
-              <PenTool className="w-4 h-4" />
-              <span>Your Writing Prompt</span>
+        {generatedPrompt && (
+          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg mx-3 mt-3 overflow-hidden shadow-sm">
+            <div className="flex items-center gap-2 px-4 py-3 bg-blue-100 border-b border-blue-200">
+              <PenTool className="w-4 h-4 text-blue-600" />
+              <span className="text-sm font-semibold text-blue-800">Your Writing Prompt</span>
             </div>
-            <div className="prompt-content">
-              {prompt}
+            <div className="px-4 py-3 text-sm text-gray-800 leading-relaxed bg-white">
+              {generatedPrompt}
             </div>
           </div>
         )}
 
         {/* Main Writing Area */}
-        <div className="flex-1 flex flex-col px-3 pb-3">
+        <div className="flex-1 flex flex-col px-3 pb-3 pt-3">
           <div className={`${focusMode ? 'bg-gray-800 border-gray-700' : 'bg-white'} rounded-lg shadow-sm flex-1 flex flex-col overflow-hidden transition-colors duration-300`}>
             {/* Writing Area Header */}
             <div className={`px-3 py-2 ${focusMode ? 'border-gray-700' : 'border-gray-200'} border-b flex items-center justify-between`}>
               <h3 className={`text-sm font-medium ${focusMode ? 'text-gray-200' : 'text-gray-900'}`}>Your Writing</h3>
               <div className="flex items-center space-x-2">
+                <button
+                  onClick={handleGenerateMagicalPrompt}
+                  disabled={isGeneratingPrompt}
+                  className="flex items-center px-2 py-1 bg-purple-500 text-white text-xs rounded hover:bg-purple-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isGeneratingPrompt ? (
+                    <>
+                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Wand2 className="w-3 h-3 mr-1" />
+                      Magical Prompt
+                    </>
+                  )}
+                </button>
                 <button
                   onClick={() => setShowKidPlanningModal(true)}
                   className="flex items-center px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition-colors"

@@ -1,381 +1,42 @@
-/* Writing Area Layout Fixes - Comprehensive Solution */
-
-/* Ensure full height for the writing route */
-.writing-route,
-.enhanced-writing-layout {
-  height: 100vh !important;
-  min-height: 100vh !important;
-  display: flex !important;
-  flex-direction: column !important;
-  overflow: hidden !important;
+/* Writing Area Fixes */
+.writing-area {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
-/* Main writing container */
-.writing-main-container {
-  flex: 1 !important;
-  display: flex !important;
-  flex-direction: column !important;
-  min-height: 0 !important;
-  overflow: hidden !important;
-  background: #f8fafc !important;
-}
-
-/* Writing area container */
-.writing-area-container {
-  flex: 1 !important;
-  display: flex !important;
-  min-height: 0 !important;
-  overflow: hidden !important;
-  padding: 12px !important;
-}
-
-/* Main writing section (left side) */
-.writing-section {
-  flex: 1 !important;
-  display: flex !important;
-  flex-direction: column !important;
-  min-height: 0 !important;
-  overflow: hidden !important;
-  background: white !important;
-  border-radius: 8px !important;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
-}
-
-/* Writing input area */
-.writing-input-area {
-  flex: 1 !important;
-  position: relative !important;
-  min-height: 0 !important;
-  overflow: hidden !important;
-}
-
-/* Main textarea styling */
 .writing-textarea {
   width: 100% !important;
   height: 100% !important;
   min-height: 400px !important;
-  padding: 20px !important;
+  padding: 16px !important;
   border: none !important;
   outline: none !important;
   resize: none !important;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
   font-size: 16px !important;
   line-height: 1.6 !important;
+  background-color: white !important;
   color: #1f2937 !important;
-  background: white !important;
-  box-sizing: border-box !important;
-  overflow-y: auto !important;
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  z-index: 10 !important;
-}
-
-.writing-textarea:focus {
-  outline: none !important;
-  box-shadow: none !important;
-  border: none !important;
-}
-
-.writing-textarea::placeholder {
-  color: #9ca3af !important;
-  opacity: 1 !important;
-}
-
-/* Focus mode styles */
-.writing-textarea.focus-mode {
-  background: #1f2937 !important;
-  color: #f3f4f6 !important;
-}
-
-.writing-textarea.focus-mode::placeholder {
-  color: #6b7280 !important;
-}
-
-/* Writing buddy sidebar */
-.writing-buddy-sidebar {
-  width: 320px !important;
-  min-width: 320px !important;
-  max-width: 320px !important;
-  display: flex !important;
-  flex-direction: column !important;
-  background: linear-gradient(180deg, #4f46e5 0%, #7c3aed 100%) !important;
-  color: white !important;
-  overflow: hidden !important;
-}
-
-/* Header section */
-.writing-header {
-  flex-shrink: 0 !important;
-  padding: 12px 16px !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-  background: rgba(0, 0, 0, 0.1) !important;
-}
-
-/* Tab navigation */
-.tab-navigation {
-  flex-shrink: 0 !important;
-  display: flex !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-  background: rgba(0, 0, 0, 0.1) !important;
-}
-
-.tab-button {
-  flex: 1 !important;
-  padding: 12px 8px !important;
-  border: none !important;
-  background: transparent !important;
-  color: rgba(255, 255, 255, 0.7) !important;
-  cursor: pointer !important;
-  transition: all 0.2s ease !important;
-  font-size: 12px !important;
-  font-weight: 500 !important;
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  gap: 4px !important;
-}
-
-.tab-button.active {
-  background: rgba(255, 255, 255, 0.1) !important;
-  color: white !important;
-  border-bottom: 2px solid #fbbf24 !important;
-}
-
-.tab-button:hover {
-  background: rgba(255, 255, 255, 0.05) !important;
-  color: white !important;
-}
-
-/* Tab content area */
-.tab-content {
-  flex: 1 !important;
-  padding: 16px !important;
-  overflow-y: auto !important;
-  min-height: 0 !important;
-}
-
-/* Chat area */
-.chat-area {
-  display: flex !important;
-  flex-direction: column !important;
-  height: 100% !important;
-  min-height: 0 !important;
-}
-
-.chat-messages {
-  flex: 1 !important;
-  overflow-y: auto !important;
-  padding: 16px !important;
-  background: rgba(0, 0, 0, 0.1) !important;
-  border-radius: 8px !important;
-  margin-bottom: 16px !important;
-  min-height: 0 !important;
-}
-
-.chat-input-form {
-  flex-shrink: 0 !important;
-  display: flex !important;
-  gap: 8px !important;
-}
-
-.chat-input {
-  flex: 1 !important;
-  padding: 8px 12px !important;
-  border: none !important;
-  border-radius: 6px !important;
-  font-size: 14px !important;
-  outline: none !important;
-  background: white !important;
-  color: #1f2937 !important;
-}
-
-.chat-submit {
-  padding: 8px 12px !important;
-  background: #fbbf24 !important;
-  color: #1f2937 !important;
-  border: none !important;
-  border-radius: 6px !important;
-  cursor: pointer !important;
-  font-weight: 600 !important;
-  transition: background-color 0.2s ease !important;
-}
-
-.chat-submit:hover {
-  background: #f59e0b !important;
-}
-
-.chat-submit:disabled {
-  opacity: 0.5 !important;
-  cursor: not-allowed !important;
-}
-
-/* Status bar */
-.status-bar {
-  flex-shrink: 0 !important;
-  padding: 12px 20px !important;
-  background: #f9fafb !important;
-  border-top: 1px solid #e5e7eb !important;
-  display: flex !important;
-  justify-content: space-between !important;
-  align-items: center !important;
-  font-size: 14px !important;
-  color: #6b7280 !important;
-}
-
-.status-info {
-  display: flex !important;
-  align-items: center !important;
-  gap: 16px !important;
-}
-
-.status-item {
-  display: flex !important;
-  align-items: center !important;
-  gap: 4px !important;
-}
-
-.submit-button {
-  padding: 8px 16px !important;
-  background: #10b981 !important;
-  color: white !important;
-  border: none !important;
-  border-radius: 6px !important;
-  cursor: pointer !important;
-  font-size: 12px !important;
-  font-weight: 600 !important;
-  transition: background-color 0.2s ease !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 4px !important;
-}
-
-.submit-button:hover {
-  background: #059669 !important;
-}
-
-/* Prompt display */
-.prompt-display {
-  flex-shrink: 0 !important;
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%) !important;
-  border: 1px solid #0ea5e9 !important;
-  border-radius: 8px !important;
-  margin: 16px 16px 0 16px !important;
-  overflow: hidden !important;
-  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.1) !important;
-}
-
-.prompt-header {
-  display: flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-  padding: 12px 16px !important;
-  background: rgba(14, 165, 233, 0.1) !important;
-  border-bottom: 1px solid rgba(14, 165, 233, 0.2) !important;
-  font-weight: 600 !important;
-  font-size: 14px !important;
-  color: #0369a1 !important;
-}
-
-.prompt-content {
-  padding: 16px !important;
-  font-size: 15px !important;
-  line-height: 1.6 !important;
-  color: #1e293b !important;
-  background: white !important;
-}
-
-/* Responsive design */
-@media (max-width: 1024px) {
-  .writing-buddy-sidebar {
-    width: 280px !important;
-    min-width: 280px !important;
-    max-width: 280px !important;
-  }
-}
-
-@media (max-width: 768px) {
-  .writing-area-container {
-    flex-direction: column !important;
-    padding: 8px !important;
-  }
-  
-  .writing-buddy-sidebar {
-    width: 100% !important;
-    min-width: auto !important;
-    max-width: none !important;
-    height: 300px !important;
-    order: 2 !important;
-  }
-  
-  .writing-section {
-    order: 1 !important;
-    margin-bottom: 8px !important;
-  }
-  
-  .writing-textarea {
-    padding: 16px !important;
-    font-size: 15px !important;
-    min-height: 300px !important;
-  }
-  
-  .prompt-display {
-    margin: 8px 8px 0 8px !important;
-  }
-}
-
-/* Force visibility and prevent hiding */
-.writing-textarea,
-.writing-input-area,
-.writing-section {
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
+  z-index: 1 !important;
   position: relative !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
-/* Remove any potential conflicting styles */
-.writing-textarea {
-  transform: none !important;
-  clip: none !important;
-  clip-path: none !important;
-  margin: 0 !important;
-}
-
-/* Scrollbar styling */
-.writing-textarea::-webkit-scrollbar {
-  width: 8px !important;
-}
-
-.writing-textarea::-webkit-scrollbar-track {
-  background: #f1f5f9 !important;
-}
-
-.writing-textarea::-webkit-scrollbar-thumb {
-  background: #cbd5e0 !important;
-  border-radius: 4px !important;
-}
-
-.writing-textarea::-webkit-scrollbar-thumb:hover {
-  background: #a0aec0 !important;
-}
-
-/* Animation for smooth transitions */
-.writing-section,
-.writing-textarea {
-  transition: background-color 0.3s ease, color 0.3s ease !important;
-}
-
-/* Ensure proper stacking */
+/* Ensure textarea is always visible and functional */
 .writing-input-area {
+  position: relative !important;
+  height: 100% !important;
+  width: 100% !important;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
   z-index: 1 !important;
 }
 
-.writing-textarea {
-  z-index: 2 !important;
-}
-
-/* Fix any potential overlay issues */
+/* Remove any overlay elements that might hide the textarea */
 .writing-input-area::before,
 .writing-input-area::after {
   display: none !important;
@@ -387,4 +48,232 @@
   -webkit-user-select: text !important;
   -moz-user-select: text !important;
   -ms-user-select: text !important;
+}
+
+/* Prompt Display Styles */
+.prompt-display {
+  background: linear-gradient(to right, #dbeafe, #e0e7ff);
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  margin: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.prompt-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background-color: #dbeafe;
+  border-bottom: 1px solid #bfdbfe;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e40af;
+}
+
+.prompt-content {
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #374151;
+  line-height: 1.5;
+  background-color: white;
+}
+
+/* Button Styles */
+.writing-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.writing-button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: white;
+}
+
+.writing-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.writing-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.writing-button.magical-prompt {
+  background-color: #7c3aed;
+}
+
+.writing-button.magical-prompt:hover {
+  background-color: #6d28d9;
+}
+
+.writing-button.planning-phase {
+  background-color: #3b82f6;
+}
+
+.writing-button.planning-phase:hover {
+  background-color: #2563eb;
+}
+
+.writing-button.exam-mode {
+  background-color: #7c3aed;
+}
+
+.writing-button.exam-mode:hover {
+  background-color: #6d28d9;
+}
+
+.writing-button.structure-guide {
+  background-color: #10b981;
+}
+
+.writing-button.structure-guide:hover {
+  background-color: #059669;
+}
+
+.writing-button.tips {
+  background-color: #f59e0b;
+}
+
+.writing-button.tips:hover {
+  background-color: #d97706;
+}
+
+.writing-button.focus {
+  background-color: #6b7280;
+}
+
+.writing-button.focus:hover {
+  background-color: #4b5563;
+}
+
+/* Loading spinner for magical prompt */
+.loading-spinner {
+  animation: spin 1s linear infinite;
+  border-radius: 50%;
+  width: 12px;
+  height: 12px;
+  border: 2px solid transparent;
+  border-top: 2px solid white;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Focus mode styles */
+.focus-mode .writing-textarea {
+  background-color: #1f2937 !important;
+  color: #f3f4f6 !important;
+}
+
+.focus-mode .prompt-display {
+  background: linear-gradient(to right, #374151, #4b5563);
+  border-color: #6b7280;
+}
+
+.focus-mode .prompt-header {
+  background-color: #374151;
+  border-color: #6b7280;
+  color: #e5e7eb;
+}
+
+.focus-mode .prompt-content {
+  background-color: #1f2937;
+  color: #e5e7eb;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .writing-buttons {
+    gap: 4px;
+  }
+  
+  .writing-button {
+    padding: 3px 6px;
+    font-size: 11px;
+  }
+  
+  .prompt-display {
+    margin: 8px;
+  }
+  
+  .prompt-header,
+  .prompt-content {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+}
+
+/* Ensure proper layout hierarchy */
+.writing-area-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.writing-main-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.writing-content-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  padding-bottom: 12px;
+}
+
+.writing-editor-container {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.writing-header {
+  padding: 8px 12px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.writing-editor-area {
+  flex: 1;
+  position: relative;
+}
+
+.writing-status-bar {
+  padding: 8px 12px;
+  background-color: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.3s ease;
 }
