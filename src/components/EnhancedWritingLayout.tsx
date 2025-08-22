@@ -48,7 +48,7 @@ export function EnhancedWritingLayout({
   };
 
   return (
-    <div className="enhanced-writing-layout h-full bg-gray-50 overflow-hidden">
+    <div className="h-full bg-gray-50 overflow-hidden">
       {/* Main Writing Area - Full height */}
       <div className="h-full">
         <WritingArea
