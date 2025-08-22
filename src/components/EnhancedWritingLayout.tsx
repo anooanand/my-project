@@ -51,7 +51,7 @@ export function EnhancedWritingLayout({
   return (
     <div className="enhanced-writing-layout h-full flex bg-gray-50 overflow-hidden">
       {/* Main Writing Area */}
-      <div className="w-1/2 h-full">
+      <div className="writing-left-section">
         <WritingArea
           content={content}
           onChange={onChange}
@@ -66,7 +66,7 @@ export function EnhancedWritingLayout({
       </div>
 
       {/* Enhanced Coach Panel */}
-      <div className="w-1/2 h-full border-l border-gray-200">
+      <div className="writing-buddy-panel">
         <EnhancedCoachPanel 
           content={content} 
           textType={textType} 
