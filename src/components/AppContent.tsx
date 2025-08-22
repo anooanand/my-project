@@ -25,7 +25,7 @@ import { ErrorBoundary } from './ErrorBoundary';
 // Writing components
 import { SplitScreen } from './SplitScreen';
 import { WritingArea } from './WritingArea';
-import { TabbedCoachPanel } from './TabbedCoachPanel';
+import EnhancedCoachPanel from './EnhancedCoachPanel';
 import { EnhancedWritingLayout } from './EnhancedWritingLayout';
 import { LearningPage } from './LearningPage';
 import { ExamSimulationMode } from './ExamSimulationMode';
