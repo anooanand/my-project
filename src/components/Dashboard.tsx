@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { isEmailVerified, hasAnyAccess, getUserAccessStatus } from '../lib/supabase';
 import { WritingTypeSelectionModal } from './WritingTypeSelectionModal';
-import { PromptSelectionModal } from './PromptSelectionModal';
+import { PromptOptionsModal } from './PromptOptionsModal';
 import { generatePrompt } from '../lib/openai';
 import { 
   Mail, 
@@ -54,9 +54,9 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
   const [userAccessData, setUserAccessData] = useState<any>(null);
   const [showWelcomeMessage, setShowWelcomeMessage] = useState(false);
   
-  // UPDATED: Modal states for the new flow
+  // FIXED: Modal states for proper sequence
   const [showWritingTypeModal, setShowWritingTypeModal] = useState(false);
-  const [showPromptSelectionModal, setShowPromptSelectionModal] = useState(false);
+  const [showPromptOptionsModal, setShowPromptOptionsModal] = useState(false);
   const [selectedWritingType, setSelectedWritingType] = useState<string>('');
   const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false);
 
@@ -191,7 +191,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
     }
   };
 
-  // UPDATED: Step 1 - "Write Story" button opens writing type selection modal
+  // FIXED: Step 1 - "Write Story" button opens writing type selection modal
   const handleStartWriting = () => {
     console.log('🚀 Dashboard: Starting writing flow...');
     
@@ -209,7 +209,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
     setShowWritingTypeModal(true);
   };
 
-  // UPDATED: Step 2 - Handle writing type selection, then show prompt selection modal
+  // FIXED: Step 2 - Handle writing type selection, then show prompt options
   const handleWritingTypeSelect = (type: string) => {
     console.log('📝 Dashboard: Writing type selected:', type);
     
@@ -217,14 +217,14 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
     setSelectedWritingType(type);
     localStorage.setItem('selectedWritingType', type);
     
-    // Close writing type modal and open prompt selection modal (Step 3)
+    // Close writing type modal and open prompt options modal (Step 3)
     setShowWritingTypeModal(false);
-    setShowPromptSelectionModal(true);
+    setShowPromptOptionsModal(true);
   };
 
-  // UPDATED: Step 3a - Handle magical prompt generation
-  const handleMagicalPrompt = async () => {
-    console.log('🎯 Dashboard: Generating magical prompt for:', selectedWritingType);
+  // FIXED: Step 3 - Handle prompt generation, then navigate to writing area
+  const handleGeneratePrompt = async () => {
+    console.log('🎯 Dashboard: Generating prompt for:', selectedWritingType);
     setIsGeneratingPrompt(true);
     
     try {
@@ -232,18 +232,18 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
       const prompt = await generatePrompt(selectedWritingType);
       
       if (prompt) {
-        console.log('✅ Magical prompt generated successfully:', prompt);
+        console.log('✅ Prompt generated successfully:', prompt);
         
-        // Save to localStorage so WritingArea can access it
+        // CRITICAL: Save to localStorage so WritingArea can access it
         localStorage.setItem(`${selectedWritingType}_prompt`, prompt);
         localStorage.setItem('generatedPrompt', prompt);
         localStorage.setItem('selectedWritingType', selectedWritingType);
-        localStorage.setItem('promptType', 'magical');
+        localStorage.setItem('promptType', 'generated');
         
-        console.log('✅ Magical prompt saved to localStorage');
+        console.log('✅ Prompt saved to localStorage');
         
-        // Close prompt selection modal
-        setShowPromptSelectionModal(false);
+        // Close prompt options modal
+        setShowPromptOptionsModal(false);
         
         // Small delay to ensure localStorage is written
         await new Promise(resolve => setTimeout(resolve, 200));
@@ -257,7 +257,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
       }
       
     } catch (error) {
-      console.error('❌ Error generating magical prompt:', error);
+      console.error('❌ Error generating prompt:', error);
       
       // FALLBACK: Use high-quality static prompts if AI generation fails
       const fallbackPrompts = {
@@ -271,16 +271,16 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
       
       const fallbackPrompt = fallbackPrompts[selectedWritingType as keyof typeof fallbackPrompts] || fallbackPrompts.narrative;
       
-      console.log('🔄 Using fallback magical prompt:', fallbackPrompt);
+      console.log('🔄 Using fallback prompt:', fallbackPrompt);
       
       // Save fallback prompt
       localStorage.setItem(`${selectedWritingType}_prompt`, fallbackPrompt);
       localStorage.setItem('generatedPrompt', fallbackPrompt);
       localStorage.setItem('selectedWritingType', selectedWritingType);
-      localStorage.setItem('promptType', 'magical');
+      localStorage.setItem('promptType', 'generated');
       
-      // Close prompt selection modal
-      setShowPromptSelectionModal(false);
+      // Close prompt options modal
+      setShowPromptOptionsModal(false);
       
       // Navigate to writing area with fallback prompt
       await new Promise(resolve => setTimeout(resolve, 200));
@@ -291,7 +291,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
     }
   };
 
-  // UPDATED: Step 3b - Handle custom prompt selection
+  // FIXED: Step 3 - Handle custom prompt, then navigate to writing area
   const handleCustomPrompt = () => {
     console.log('✏️ Dashboard: Using custom prompt for:', selectedWritingType);
     
@@ -299,12 +299,13 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
     localStorage.setItem('promptType', 'custom');
     localStorage.setItem('selectedWritingType', selectedWritingType);
     
-    // Close prompt selection modal
-    setShowPromptSelectionModal(false);
+    // Close prompt options modal
+    setShowPromptOptionsModal(false);
     
     // Navigate to writing page (Step 4 - Writing Area)
     console.log('📍 Dashboard: Navigating to writing area...');
     
+    // FIXED: Use React Router navigate directly for consistent navigation
     try {
       navigate('/writing');
       console.log('✅ Dashboard: Navigation to /writing initiated');
@@ -391,217 +392,252 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-32 h-32 bg-yellow-200 rounded-full opacity-20 animate-pulse"></div>
         <div className="absolute top-40 right-20 w-24 h-24 bg-pink-200 rounded-full opacity-30 animate-bounce"></div>
-        <div className="absolute bottom-32 left-1/4 w-40 h-40 bg-blue-200 rounded-full opacity-25 animate-pulse"></div>
-        <div className="absolute bottom-20 right-1/3 w-28 h-28 bg-purple-200 rounded-full opacity-20 animate-bounce"></div>
+        <div className="absolute bottom-32 left-1/4 w-40 h-40 bg-purple-200 rounded-full opacity-15 animate-pulse"></div>
+        <div className="absolute bottom-20 right-1/3 w-28 h-28 bg-green-200 rounded-full opacity-25 animate-bounce"></div>
       </div>
 
-      {/* Welcome Message */}
-      {showWelcomeMessage && (
-        <div className="fixed top-4 right-4 bg-gradient-to-r from-green-400 to-blue-500 text-white p-6 rounded-2xl shadow-2xl z-50 max-w-sm animate-slide-in-right">
-          <button
-            onClick={handleDismissWelcome}
-            className="absolute top-2 right-2 text-white hover:text-gray-200 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-          <div className="flex items-center space-x-3 mb-3">
-            <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-              <Trophy className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h3 className="font-bold text-lg">Welcome, {getUserName()}! 🎉</h3>
-              <p className="text-sm opacity-90">You're all set to start writing!</p>
-            </div>
-          </div>
-          <p className="text-sm opacity-90 leading-relaxed">
-            Your account is verified and ready. Click "Write Story" below to begin your writing journey!
-          </p>
-        </div>
-      )}
-
-      {/* Main Content */}
-      <div className="relative z-10 min-h-screen flex flex-col">
-        {/* Header */}
-        <div className="bg-white bg-opacity-80 backdrop-blur-sm border-b border-white border-opacity-20 shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center py-6">
-              <div className="flex items-center space-x-4">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-                  <PenTool className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">Writing Dashboard</h1>
-                  <p className="text-gray-600">Ready to create something amazing?</p>
-                </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
+        
+        {/* Enhanced Header with Animated Mascot */}
+        <div className="mb-8 text-center">
+          <div className="flex items-center justify-center mb-6">
+            <div className="relative">
+              <div className="w-20 h-20 bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-400 rounded-full flex items-center justify-center mr-6 shadow-2xl transform hover:scale-110 transition-all duration-300 animate-pulse">
+                <Sparkles className="h-10 w-10 text-white animate-spin" style={{ animationDuration: '3s' }} />
               </div>
-              <div className="flex items-center space-x-4">
-                <button
-                  onClick={handleManualRefresh}
-                  className="text-gray-600 hover:text-gray-900 transition-colors"
-                  title="Refresh status"
-                >
-                  <Settings className="w-5 h-5" />
-                </button>
-                {onSignOut && (
-                  <button
-                    onClick={onSignOut}
-                    className="text-red-600 hover:text-red-800 transition-colors text-sm font-medium"
-                  >
-                    Sign Out
-                  </button>
-                )}
+              <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-green-400 to-blue-400 rounded-full flex items-center justify-center shadow-lg animate-bounce">
+                <Crown className="h-4 w-4 text-white" />
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Main Dashboard Content */}
-        <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {isLoading ? (
-            <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading your dashboard...</p>
-            </div>
-          ) : !isVerified ? (
-            <div className="text-center py-12">
-              <div className="w-20 h-20 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Mail className="h-10 w-10 text-yellow-600" />
-              </div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">Almost There!</h2>
-              <p className="text-gray-600 text-lg mb-6">
-                Please check your email and verify your account to start writing.
+            <div className="text-left">
+              <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-2">
+                Hi there, {getUserName()}! 🌟
+              </h1>
+              <p className="text-2xl text-gray-700 font-medium bg-gradient-to-r from-orange-500 to-pink-500 bg-clip-text text-transparent">
+                Let's write something awesome today!
               </p>
-              <button
-                onClick={handleManualRefresh}
-                className="bg-blue-500 text-white px-6 py-3 rounded-lg hover:bg-blue-600 transition-colors font-medium"
-              >
-                I've Verified My Email
-              </button>
             </div>
-          ) : (
-            <div className="space-y-8">
-              {/* Welcome Section */}
-              <div className="text-center">
-                <h2 className="text-4xl font-bold text-gray-900 mb-4">
-                  Hello, {getUserName()}! 👋
-                </h2>
-                <p className="text-xl text-gray-600 mb-2">
-                  Ready to unleash your creativity?
-                </p>
-                {accessType === 'temporary' && tempAccessUntil && (
-                  <div className="inline-flex items-center space-x-2 bg-yellow-100 text-yellow-800 px-4 py-2 rounded-full text-sm font-medium">
-                    <Clock className="w-4 h-4" />
-                    <span>Trial access: {getTimeRemaining(tempAccessUntil)}</span>
-                  </div>
-                )}
-                {accessType === 'permanent' && (
-                  <div className="inline-flex items-center space-x-2 bg-green-100 text-green-800 px-4 py-2 rounded-full text-sm font-medium">
-                    <CheckCircle className="w-4 h-4" />
-                    <span>Full Access Activated</span>
-                  </div>
-                )}
-              </div>
+          </div>
+        </div>
 
-              {/* Main Action Cards */}
-              <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                {/* Write Story Card */}
-                <div className="group">
-                  <div className="bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 group-hover:scale-105 border border-white border-opacity-20">
-                    <div className="text-center">
-                      <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                        <PenTool className="h-10 w-10 text-white" />
-                      </div>
-                      <h3 className="text-2xl font-bold text-gray-900 mb-4">Write Story</h3>
-                      <p className="text-gray-600 mb-6 leading-relaxed">
-                        Start your creative writing journey with guided prompts and AI assistance.
-                      </p>
-                      <button
-                        onClick={handleStartWriting}
-                        className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-4 px-6 rounded-2xl font-semibold text-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 shadow-lg hover:shadow-xl"
-                      >
-                        Start Writing ✨
-                      </button>
+        {/* Enhanced Welcome Message for Premium Users */}
+        {showWelcomeMessage && accessType === 'permanent' && (
+          <div className="bg-gradient-to-r from-green-100 via-blue-100 to-purple-100 border-4 border-green-300 rounded-3xl p-8 mb-8 relative overflow-hidden shadow-2xl">
+            <div className="absolute top-0 right-0 w-40 h-40 bg-yellow-200 rounded-full -mr-20 -mt-20 opacity-30 animate-pulse"></div>
+            <div className="absolute bottom-0 left-0 w-32 h-32 bg-pink-200 rounded-full -ml-16 -mb-16 opacity-40 animate-bounce"></div>
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-purple-200 to-blue-200 rounded-full opacity-10 animate-spin" style={{ animationDuration: '20s' }}></div>
+            
+            <button
+              onClick={handleDismissWelcome}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 bg-white rounded-full p-3 shadow-lg hover:shadow-xl transform hover:scale-110 transition-all duration-300"
+            >
+              <X className="h-6 w-6" />
+            </button>
+            
+            <div className="flex items-center relative z-10">
+              <div className="w-24 h-24 bg-gradient-to-r from-green-400 via-blue-400 to-purple-400 rounded-full flex items-center justify-center mr-8 shadow-2xl animate-bounce">
+                <Trophy className="h-12 w-12 text-white" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-4xl font-bold text-green-900 mb-4 flex items-center">
+                  🎉 Hooray! You're All Set! 
+                  <Gem className="h-8 w-8 text-yellow-500 ml-3 animate-pulse" />
+                </h3>
+                <p className="text-green-800 mb-6 text-xl font-medium">
+                  Welcome to your writing adventure! You now have access to all the cool features:
+                </p>
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="flex items-center text-green-700 font-medium">
+                    <PenTool className="h-5 w-5 mr-3 text-green-600" />
+                    ✨ AI Writing Assistant
+                  </div>
+                  <div className="flex items-center text-green-700 font-medium">
+                    <BarChart3 className="h-5 w-5 mr-3 text-green-600" />
+                    📊 Progress Tracking
+                  </div>
+                  <div className="flex items-center text-green-700 font-medium">
+                    <Target className="h-5 w-5 mr-3 text-green-600" />
+                    🎯 Practice Exams
+                  </div>
+                  <div className="flex items-center text-green-700 font-medium">
+                    <Award className="h-5 w-5 mr-3 text-green-600" />
+                    🏆 NSW Selective Prep
+                  </div>
+                </div>
+                <p className="text-green-700 text-lg">
+                  Ready to become an amazing writer? Let's start your first story! 🚀
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Loading State */}
+        {isLoading && (
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+            <p className="text-gray-600 text-lg">Loading your dashboard...</p>
+          </div>
+        )}
+
+        {/* Access Status Display */}
+        {!isLoading && (
+          <>
+            {/* Temporary Access Banner */}
+            {accessType === 'temporary' && tempAccessUntil && (
+              <div className="bg-gradient-to-r from-yellow-100 to-orange-100 border-2 border-yellow-300 rounded-2xl p-6 mb-8 shadow-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="w-16 h-16 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full flex items-center justify-center mr-6 shadow-xl">
+                      <Clock className="h-8 w-8 text-white" />
                     </div>
+                    <div>
+                      <h3 className="text-2xl font-bold text-yellow-900 mb-2">⏰ Temporary Access Active!</h3>
+                      <p className="text-yellow-800 text-lg">
+                        You have temporary access until: <strong>{formatDateTime(tempAccessUntil)}</strong>
+                      </p>
+                      <p className="text-yellow-700 font-medium">
+                        {getTimeRemaining(tempAccessUntil)}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleManualRefresh}
+                    className="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                  >
+                    Refresh Status
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Main Action Cards */}
+            {(isVerified && (accessType === 'permanent' || accessType === 'temporary')) ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+                {/* FIXED: Write Story Card with proper flow */}
+                <div className="bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 rounded-3xl p-8 text-white shadow-2xl transform hover:scale-105 transition-all duration-300 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
+                  <div className="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-10 rounded-full -ml-12 -mb-12"></div>
+                  
+                  <div className="relative z-10">
+                    <div className="flex items-center mb-6">
+                      <div className="w-16 h-16 bg-white bg-opacity-20 rounded-2xl flex items-center justify-center mr-4 shadow-xl">
+                        <PenTool className="h-8 w-8 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-3xl font-bold mb-2">Write Story</h3>
+                        <p className="text-blue-100 text-lg">Create amazing stories with AI help!</p>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-3 mb-8">
+                      <div className="flex items-center text-blue-100">
+                        <Sparkles className="h-5 w-5 mr-3" />
+                        <span>AI-powered writing prompts</span>
+                      </div>
+                      <div className="flex items-center text-blue-100">
+                        <Target className="h-5 w-5 mr-3" />
+                        <span>NSW Selective School prep</span>
+                      </div>
+                      <div className="flex items-center text-blue-100">
+                        <Award className="h-5 w-5 mr-3" />
+                        <span>Real-time feedback & tips</span>
+                      </div>
+                    </div>
+                    
+                    <button
+                      onClick={handleStartWriting}
+                      className="w-full bg-white text-purple-600 py-4 px-6 rounded-2xl font-bold text-xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center"
+                    >
+                      <Rocket className="h-6 w-6 mr-3" />
+                      Start Writing Now!
+                    </button>
                   </div>
                 </div>
 
                 {/* Practice Exam Card */}
-                <div className="group">
-                  <div className="bg-white rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 group-hover:scale-105 border border-white border-opacity-20">
-                    <div className="text-center">
-                      <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-500 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
-                        <Target className="h-10 w-10 text-white" />
+                <div className="bg-gradient-to-br from-green-500 via-teal-500 to-blue-500 rounded-3xl p-8 text-white shadow-2xl transform hover:scale-105 transition-all duration-300 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-16 -mt-16"></div>
+                  <div className="absolute bottom-0 left-0 w-24 h-24 bg-white opacity-10 rounded-full -ml-12 -mb-12"></div>
+                  
+                  <div className="relative z-10">
+                    <div className="flex items-center mb-6">
+                      <div className="w-16 h-16 bg-white bg-opacity-20 rounded-2xl flex items-center justify-center mr-4 shadow-xl">
+                        <BarChart3 className="h-8 w-8 text-white" />
                       </div>
-                      <h3 className="text-2xl font-bold text-gray-900 mb-4">Practice Exam</h3>
-                      <p className="text-gray-600 mb-6 leading-relaxed">
-                        Simulate real exam conditions with timed writing exercises and instant feedback.
-                      </p>
-                      <button
-                        onClick={handlePracticeExam}
-                        className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-4 px-6 rounded-2xl font-semibold text-lg hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 shadow-lg hover:shadow-xl"
-                      >
-                        Start Practice 🎯
-                      </button>
+                      <div>
+                        <h3 className="text-3xl font-bold mb-2">Practice Exam</h3>
+                        <p className="text-green-100 text-lg">Test your skills with real exams!</p>
+                      </div>
                     </div>
+                    
+                    <div className="space-y-3 mb-8">
+                      <div className="flex items-center text-green-100">
+                        <Clock className="h-5 w-5 mr-3" />
+                        <span>Timed practice sessions</span>
+                      </div>
+                      <div className="flex items-center text-green-100">
+                        <Trophy className="h-5 w-5 mr-3" />
+                        <span>Detailed performance analysis</span>
+                      </div>
+                      <div className="flex items-center text-green-100">
+                        <TrendingUp className="h-5 w-5 mr-3" />
+                        <span>Track your improvement</span>
+                      </div>
+                    </div>
+                    
+                    <button
+                      onClick={handlePracticeExam}
+                      className="w-full bg-white text-green-600 py-4 px-6 rounded-2xl font-bold text-xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 flex items-center justify-center"
+                    >
+                      <Zap className="h-6 w-6 mr-3" />
+                      Take Practice Exam
+                    </button>
                   </div>
                 </div>
               </div>
-
-              {/* Quick Stats */}
-              <div className="bg-white bg-opacity-60 backdrop-blur-sm rounded-3xl p-8 shadow-lg">
-                <h3 className="text-xl font-bold text-gray-900 mb-6 text-center">Your Writing Journey</h3>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                  <div className="text-center">
-                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <FileText className="w-6 h-6 text-blue-600" />
-                    </div>
-                    <div className="text-2xl font-bold text-gray-900">0</div>
-                    <div className="text-sm text-gray-600">Stories Written</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <Trophy className="w-6 h-6 text-green-600" />
-                    </div>
-                    <div className="text-2xl font-bold text-gray-900">0</div>
-                    <div className="text-sm text-gray-600">Achievements</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <Zap className="w-6 h-6 text-purple-600" />
-                    </div>
-                    <div className="text-2xl font-bold text-gray-900">0</div>
-                    <div className="text-sm text-gray-600">Writing Streak</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <Star className="w-6 h-6 text-yellow-600" />
-                    </div>
-                    <div className="text-2xl font-bold text-gray-900">0</div>
-                    <div className="text-sm text-gray-600">Total Words</div>
-                  </div>
+            ) : (
+              /* No Access State */
+              <div className="text-center py-16">
+                <div className="w-32 h-32 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-8">
+                  <Mail className="h-16 w-16 text-red-600" />
                 </div>
+                <h2 className="text-4xl font-bold text-gray-900 mb-4">Almost There!</h2>
+                <p className="text-gray-600 text-xl mb-8 max-w-2xl mx-auto">
+                  Please verify your email or complete your subscription to access all the amazing writing features.
+                </p>
+                <button
+                  onClick={handleManualRefresh}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-2xl font-semibold text-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
+                >
+                  Check Status Again
+                </button>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </>
+        )}
       </div>
 
-      {/* UPDATED: Writing Type Selection Modal */}
-      <WritingTypeSelectionModal
-        isOpen={showWritingTypeModal}
-        onClose={() => setShowWritingTypeModal(false)}
-        onSelect={handleWritingTypeSelect}
-      />
+      {/* FIXED: Writing Type Selection Modal */}
+      {showWritingTypeModal && (
+        <WritingTypeSelectionModal
+          isOpen={showWritingTypeModal}
+          onClose={() => setShowWritingTypeModal(false)}
+          onSelect={handleWritingTypeSelect}
+        />
+      )}
 
-      {/* NEW: Prompt Selection Modal */}
-      <PromptSelectionModal
-        isOpen={showPromptSelectionModal}
-        onClose={() => setShowPromptSelectionModal(false)}
-        textType={selectedWritingType}
-        onMagicalPrompt={handleMagicalPrompt}
-        onCustomPrompt={handleCustomPrompt}
-        isGeneratingPrompt={isGeneratingPrompt}
-      />
+      {/* FIXED: Prompt Options Modal */}
+      {showPromptOptionsModal && (
+        <PromptOptionsModal
+          isOpen={showPromptOptionsModal}
+          onClose={() => setShowPromptOptionsModal(false)}
+          onGeneratePrompt={handleGeneratePrompt}
+          onCustomPrompt={handleCustomPrompt}
+          isGenerating={isGeneratingPrompt}
+          writingType={selectedWritingType}
+        />
+      )}
     </div>
   );
 }
