@@ -10,12 +10,12 @@ interface PromptOptionsModalProps {
   textType: string;
 }
 
-export function PromptOptionsModal({ 
-  isOpen, 
-  onClose, 
-  onGeneratePrompt, 
-  onCustomPrompt, 
-  textType 
+export function PromptOptionsModal({
+  isOpen,
+  onClose,
+  onGeneratePrompt,
+  onCustomPrompt,
+  textType
 }: PromptOptionsModalProps) {
   const navigate = useNavigate();
 
@@ -24,22 +24,22 @@ export function PromptOptionsModal({
   // FIXED: Let parent component handle the flow instead of navigating directly
   const handleGeneratePrompt = () => {
     console.log('🎯 PromptOptionsModal: Generate prompt clicked for:', textType);
-    
+
     // Store the choice for the parent component to handle
     localStorage.setItem('promptType', 'generated');
     localStorage.setItem('selectedWritingType', textType);
-    
+
     // Call the parent's callback to handle prompt generation
     onGeneratePrompt();
   };
 
   const handleCustomPrompt = () => {
     console.log('✏️ PromptOptionsModal: Custom prompt clicked for:', textType);
-    
+
     // Store the choice for the parent component to handle
     localStorage.setItem('promptType', 'custom');
     localStorage.setItem('selectedWritingType', textType);
-    
+
     // Call the parent's callback to handle custom prompt
     onCustomPrompt();
   };
@@ -69,12 +69,12 @@ export function PromptOptionsModal({
             </button>
           </div>
         </div>
-        
+
         <div className="p-6">
           <p className="text-gray-700 dark:text-gray-300 mb-6 text-lg text-center font-medium">
             How would you like to get your <span className="font-bold text-blue-600 dark:text-blue-400">{textType}</span> writing prompt?
           </p>
-          
+
           <div className="space-y-6">
             <button
               onClick={handleGeneratePrompt}
@@ -114,7 +114,7 @@ export function PromptOptionsModal({
               </div>
             </button>
           </div>
-          
+
           <div className="mt-8 bg-gradient-to-r from-yellow-50 to-amber-50 dark:from-yellow-900/20 dark:to-amber-900/20 p-4 rounded-xl border-2 border-yellow-200 dark:border-yellow-800">
             <div className="flex items-start">
               <Star className="w-5 h-5 text-yellow-500 mr-2 mt-0.5 flex-shrink-0" />
@@ -123,7 +123,7 @@ export function PromptOptionsModal({
               </p>
             </div>
           </div>
-          
+
           {/* DEBUG INFO - Remove in production */}
           <div className="mt-4 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg text-xs text-gray-600 dark:text-gray-400">
             <p>🔍 Debug Info:</p>
