@@ -35,24 +35,58 @@ export function WritingStatusBar({
   targetWordCountMin = 100,
   targetWordCountMax = 500,
 }: WritingStatusBarProps) {
-  const [characterCount, setCharacterCount] = useState(0);
   const [readingTime, setReadingTime] = useState(0);
+  const [typingStartTime, setTypingStartTime] = useState<number | null>(null);
+  const [wordsPerMinute, setWordsPerMinute] = useState(0);
+  const [currentTime, setCurrentTime] = useState(new Date());
   const [showWordCountWarning, setShowWordCountWarning] = useState(false);
   const [timeLeft, setTimeLeft] = useState(examDurationMinutes * 60);
   const [timerActive, setTimerActive] = useState(false);
+  const [sentenceCount, setSentenceCount] = useState(0);
+  const [paragraphCount, setParagraphCount] = useState(0);
+  const [averageWordsPerSentence, setAverageWordsPerSentence] = useState(0);
 
   // Calculate statistics
   useEffect(() => {
     const words = content && content.trim() ? content.trim().split(/\s+/).filter(Boolean) : [];
-    setCharacterCount(content ? content.length : 0);
     setReadingTime(Math.ceil(words.length / 200));
+
+    // Calculate sentence count (sentences end with . ! ?)
+    const sentences = content ? content.split(/[.!?]+/).filter(s => s.trim().length > 0) : [];
+    setSentenceCount(sentences.length);
+
+    // Calculate paragraph count (paragraphs separated by double line breaks or single line breaks)
+    const paragraphs = content ? content.split(/\n\s*\n|\n/).filter(p => p.trim().length > 0) : [];
+    setParagraphCount(Math.max(paragraphs.length, content && content.trim() ? 1 : 0));
+
+    // Calculate average words per sentence
+    if (sentences.length > 0 && words.length > 0) {
+      setAverageWordsPerSentence(Math.round(words.length / sentences.length));
+    } else {
+      setAverageWordsPerSentence(0);
+    }
+
+    if (content && content.length > 0 && typingStartTime === null) {
+      setTypingStartTime(Date.now());
+    } else if (!content || content.length === 0) {
+      setTypingStartTime(null);
+      setWordsPerMinute(0);
+    }
+
+    if (typingStartTime !== null && words.length > 0) {
+      const timeElapsedSeconds = (Date.now() - typingStartTime) / 1000;
+      if (timeElapsedSeconds > 5) { // Only calculate WPM after 5 seconds of typing
+        const minutes = timeElapsedSeconds / 60;
+        setWordsPerMinute(Math.round(words.length / minutes));
+      }
+    }
     
     if (examMode) {
       setShowWordCountWarning(words.length < targetWordCountMin || words.length > targetWordCountMax);
     } else {
       setShowWordCountWarning(words.length < 100 || words.length > 500);
     }
-  }, [content, examMode, targetWordCountMin, targetWordCountMax]);
+  }, [content, examMode, targetWordCountMin, targetWordCountMax, typingStartTime]);
 
   // Timer logic
   useEffect(() => {
@@ -73,6 +107,14 @@ export function WritingStatusBar({
     }
   }, [examMode]);
 
+  // Real-time clock update
+  useEffect(() => {
+    const clockTimer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(clockTimer);
+  }, []);
+
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
@@ -88,6 +130,12 @@ export function WritingStatusBar({
             <span>Time Left: {formatTime(timeLeft)}</span>
           </div>
         )}
+
+        {/* Real-time Clock */}
+        <div className="flex items-center bg-white bg-opacity-70 px-3 py-1.5 rounded-full shadow-sm">
+          <Clock className="w-5 h-5 mr-2 text-blue-600" />
+          <span className="font-bold">{currentTime.toLocaleTimeString()}</span>
+        </div>
 
         <div className="flex items-center bg-white bg-opacity-70 px-3 py-1.5 rounded-full shadow-sm">
           <FileText className="w-5 h-5 mr-2 text-blue-500" />
@@ -105,10 +153,44 @@ export function WritingStatusBar({
             </div>
           )}
         </div>
+
+        {/* Sentence Count */}
+        <div className="flex items-center bg-white bg-opacity-70 px-3 py-1.5 rounded-full shadow-sm">
+          <FileText className="w-5 h-5 mr-2 text-indigo-500" />
+          <span className="font-bold">{sentenceCount} sentences</span>
+        </div>
+
+        {/* Paragraph Count */}
+        <div className="flex items-center bg-white bg-opacity-70 px-3 py-1.5 rounded-full shadow-sm">
+          <FileText className="w-5 h-5 mr-2 text-purple-500" />
+          <span className="font-bold">{paragraphCount} paragraphs</span>
+        </div>
+
+        {/* Average Words per Sentence */}
+        {averageWordsPerSentence > 0 && (
+          <div className="flex items-center bg-white bg-opacity-70 px-3 py-1.5 rounded-full shadow-sm">
+            <Zap className="w-5 h-5 mr-2 text-pink-500" />
+            <span className="font-bold">{averageWordsPerSentence} words/sentence</span>
+            {averageWordsPerSentence < 8 && (
+              <div className="ml-2">
+                <span className="bg-amber-100 text-amber-700 px-2 py-1 rounded-full text-xs font-bold">
+                  Try longer sentences!
+                </span>
+              </div>
+            )}
+            {averageWordsPerSentence > 20 && (
+              <div className="ml-2">
+                <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs font-bold">
+                  Try shorter sentences!
+                </span>
+              </div>
+            )}
+          </div>
+        )}
         
         <div className="flex items-center bg-white bg-opacity-70 px-3 py-1.5 rounded-full shadow-sm">
-          <Zap className="w-5 h-5 mr-2 text-purple-500" />
-          <span className="font-bold">{characterCount} characters</span>
+          <Clock className="w-5 h-5 mr-2 text-orange-500" />
+          <span className="font-bold">{wordsPerMinute} WPM</span>
         </div>
         
         <div className="flex items-center bg-white bg-opacity-70 px-3 py-1.5 rounded-full shadow-sm">
