@@ -35,9 +35,8 @@ export function WritingStatusBar({
   targetWordCountMin = 100,
   targetWordCountMax = 500,
 }: WritingStatusBarProps) {
+  const [characterCount, setCharacterCount] = useState(0);
   const [readingTime, setReadingTime] = useState(0);
-  const [typingStartTime, setTypingStartTime] = useState<number | null>(null);
-  const [wordsPerMinute, setWordsPerMinute] = useState(0);
   const [showWordCountWarning, setShowWordCountWarning] = useState(false);
   const [timeLeft, setTimeLeft] = useState(examDurationMinutes * 60);
   const [timerActive, setTimerActive] = useState(false);
@@ -45,29 +44,15 @@ export function WritingStatusBar({
   // Calculate statistics
   useEffect(() => {
     const words = content && content.trim() ? content.trim().split(/\s+/).filter(Boolean) : [];
+    setCharacterCount(content ? content.length : 0);
     setReadingTime(Math.ceil(words.length / 200));
-
-    if (content && content.length > 0 && typingStartTime === null) {
-      setTypingStartTime(Date.now());
-    } else if (!content || content.length === 0) {
-      setTypingStartTime(null);
-      setWordsPerMinute(0);
-    }
-
-    if (typingStartTime !== null && words.length > 0) {
-      const timeElapsedSeconds = (Date.now() - typingStartTime) / 1000;
-      if (timeElapsedSeconds > 5) { // Only calculate WPM after 5 seconds of typing
-        const minutes = timeElapsedSeconds / 60;
-        setWordsPerMinute(Math.round(words.length / minutes));
-      }
-    }
     
     if (examMode) {
       setShowWordCountWarning(words.length < targetWordCountMin || words.length > targetWordCountMax);
     } else {
       setShowWordCountWarning(words.length < 100 || words.length > 500);
     }
-  }, [content, examMode, targetWordCountMin, targetWordCountMax, typingStartTime]);
+  }, [content, examMode, targetWordCountMin, targetWordCountMax]);
 
   // Timer logic
   useEffect(() => {
@@ -122,8 +107,8 @@ export function WritingStatusBar({
         </div>
         
         <div className="flex items-center bg-white bg-opacity-70 px-3 py-1.5 rounded-full shadow-sm">
-          <Clock className="w-5 h-5 mr-2 text-orange-500" />
-          <span className="font-bold">{wordsPerMinute} WPM</span>
+          <Zap className="w-5 h-5 mr-2 text-purple-500" />
+          <span className="font-bold">{characterCount} characters</span>
         </div>
         
         <div className="flex items-center bg-white bg-opacity-70 px-3 py-1.5 rounded-full shadow-sm">
