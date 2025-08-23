@@ -1,234 +1,15 @@
-/* Writing Area Fixes */
-.writing-area {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
+/* Writing Area Layout Fixes */
 
-.writing-textarea {
-  width: 100% !important;
-  height: 100% !important;
-  min-height: 400px !important;
-  padding: 16px !important;
-  border: none !important;
-  outline: none !important;
-  resize: none !important;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-  font-size: 16px !important;
-  line-height: 1.6 !important;
-  background-color: white !important;
-  color: #1f2937 !important;
-  z-index: 1 !important;
-  position: relative !important;
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-}
-
-/* Ensure textarea is always visible and functional */
-.writing-input-area {
-  position: relative !important;
-  height: 100% !important;
-  width: 100% !important;
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  z-index: 1 !important;
-}
-
-/* Remove any overlay elements that might hide the textarea */
-.writing-input-area::before,
-.writing-input-area::after {
-  display: none !important;
-}
-
-/* Ensure text is selectable */
-.writing-textarea {
-  user-select: text !important;
-  -webkit-user-select: text !important;
-  -moz-user-select: text !important;
-  -ms-user-select: text !important;
-}
-
-/* Prompt Display Styles */
-.prompt-display {
-  background: linear-gradient(to right, #dbeafe, #e0e7ff);
-  border: 1px solid #bfdbfe;
-  border-radius: 8px;
-  margin: 12px;
-  overflow: hidden;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-}
-
-.prompt-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 12px 16px;
-  background-color: #dbeafe;
-  border-bottom: 1px solid #bfdbfe;
-  font-size: 14px;
-  font-weight: 600;
-  color: #1e40af;
-}
-
-.prompt-content {
-  padding: 12px 16px;
-  font-size: 14px;
-  color: #374151;
-  line-height: 1.5;
-  background-color: white;
-}
-
-/* Button Styles */
-.writing-buttons {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.writing-button {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 4px 8px;
-  font-size: 12px;
-  font-weight: 500;
-  border-radius: 4px;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  color: white;
-}
-
-.writing-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.writing-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.writing-button.magical-prompt {
-  background-color: #7c3aed;
-}
-
-.writing-button.magical-prompt:hover {
-  background-color: #6d28d9;
-}
-
-.writing-button.planning-phase {
-  background-color: #3b82f6;
-}
-
-.writing-button.planning-phase:hover {
-  background-color: #2563eb;
-}
-
-.writing-button.exam-mode {
-  background-color: #7c3aed;
-}
-
-.writing-button.exam-mode:hover {
-  background-color: #6d28d9;
-}
-
-.writing-button.structure-guide {
-  background-color: #10b981;
-}
-
-.writing-button.structure-guide:hover {
-  background-color: #059669;
-}
-
-.writing-button.tips {
-  background-color: #f59e0b;
-}
-
-.writing-button.tips:hover {
-  background-color: #d97706;
-}
-
-.writing-button.focus {
-  background-color: #6b7280;
-}
-
-.writing-button.focus:hover {
-  background-color: #4b5563;
-}
-
-/* Loading spinner for magical prompt */
-.loading-spinner {
-  animation: spin 1s linear infinite;
-  border-radius: 50%;
-  width: 12px;
-  height: 12px;
-  border: 2px solid transparent;
-  border-top: 2px solid white;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* Focus mode styles */
-.focus-mode .writing-textarea {
-  background-color: #1f2937 !important;
-  color: #f3f4f6 !important;
-}
-
-.focus-mode .prompt-display {
-  background: linear-gradient(to right, #374151, #4b5563);
-  border-color: #6b7280;
-}
-
-.focus-mode .prompt-header {
-  background-color: #374151;
-  border-color: #6b7280;
-  color: #e5e7eb;
-}
-
-.focus-mode .prompt-content {
-  background-color: #1f2937;
-  color: #e5e7eb;
-}
-
-/* Responsive design */
-@media (max-width: 768px) {
-  .writing-buttons {
-    gap: 4px;
-  }
-  
-  .writing-button {
-    padding: 3px 6px;
-    font-size: 11px;
-  }
-  
-  .prompt-display {
-    margin: 8px;
-  }
-  
-  .prompt-header,
-  .prompt-content {
-    padding: 8px 12px;
-    font-size: 13px;
-  }
-}
-
-/* Ensure proper layout hierarchy */
-.writing-area-container {
-  height: 100%;
+/* Main writing page layout */
+.writing-route {
+  height: 100vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
-.writing-main-section {
+/* Enhanced writing layout container */
+.enhanced-writing-layout {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -236,44 +17,387 @@
   overflow: hidden;
 }
 
-.writing-content-area {
+/* Main content area with sidebar */
+.writing-layout-content {
   flex: 1;
   display: flex;
-  flex-direction: column;
-  padding: 12px;
-  padding-bottom: 12px;
-}
-
-.writing-editor-container {
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
-  flex: 1;
-  display: flex;
-  flex-direction: column;
+  min-height: 0;
   overflow: hidden;
-  transition: all 0.3s ease;
 }
 
-.writing-header {
-  padding: 8px 12px;
-  border-bottom: 1px solid #e5e7eb;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.writing-editor-area {
+/* Left side - main writing area */
+.writing-main-section {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  background: #f8fafc;
+}
+
+/* Writing area container */
+.writing-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
   position: relative;
 }
 
+/* Writing container - main writing interface */
+.writing-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  background: white;
+  border-radius: 8px;
+  margin: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Writing input container */
+.writing-input-container {
+  flex: 1;
+  position: relative;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Writing textarea */
+.writing-textarea {
+  width: 100% !important;
+  height: 100% !important;
+  padding: 20px !important;
+  border: none !important;
+  outline: none !important;
+  resize: none !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  font-size: 16px !important;
+  line-height: 1.6 !important;
+  color: #1f2937 !important;
+  background: transparent !important;
+  box-sizing: border-box !important;
+}
+
+.writing-textarea:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Highlight layer */
+.highlight-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 20px;
+  pointer-events: none;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: transparent;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow: hidden;
+  z-index: 1;
+}
+
+/* Writing buddy panel - right sidebar */
+.writing-buddy-panel {
+  width: 350px;
+  min-width: 350px;
+  max-width: 350px;
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border-left: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+/* Writing buddy header */
+.writing-buddy-header {
+  flex-shrink: 0;
+  padding: 16px;
+  border-bottom: 1px solid #e5e7eb;
+  background: linear-gradient(135deg, #f3e8ff 0%, #fce7f3 100%);
+}
+
+/* Tabbed coach panel container */
+.coach-panel-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Tab navigation */
+.coach-panel-tabs {
+  flex-shrink: 0;
+  display: flex;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.coach-panel-tab {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  transition: all 0.2s;
+}
+
+.coach-panel-tab.active {
+  color: #7c3aed;
+  background: white;
+  border-bottom: 2px solid #7c3aed;
+}
+
+.coach-panel-tab:hover {
+  color: #7c3aed;
+  background: #f3f4f6;
+}
+
+/* Tab content */
+.coach-panel-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  min-height: 0;
+}
+
+/* Chat section */
+.chat-section {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+}
+
+.chat-input-area {
+  flex-shrink: 0;
+  padding: 16px;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.chat-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.chat-input:focus {
+  border-color: #7c3aed;
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+/* Writing status bar */
 .writing-status-bar {
-  padding: 8px 12px;
-  background-color: #f9fafb;
+  flex-shrink: 0;
+  padding: 12px 20px;
+  background: #f9fafb;
   border-top: 1px solid #e5e7eb;
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  transition: all 0.3s ease;
+  align-items: center;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* NSW Analysis section */
+.nsw-analysis-section {
+  flex-shrink: 0;
+  background: white;
+  border-top: 1px solid #e5e7eb;
+  max-height: 300px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.nsw-tab-navigation {
+  display: flex;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.nsw-tab-button {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+  transition: all 0.2s;
+}
+
+.nsw-tab-button.active {
+  color: #3b82f6;
+  background: white;
+  border-bottom: 2px solid #3b82f6;
+}
+
+.nsw-tab-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  min-height: 0;
+}
+
+/* Responsive design */
+@media (max-width: 1200px) {
+  .writing-buddy-panel {
+    width: 300px;
+    min-width: 300px;
+    max-width: 300px;
+  }
+}
+
+@media (max-width: 768px) {
+  .writing-layout-content {
+    flex-direction: column;
+  }
+  
+  .writing-buddy-panel {
+    width: 100%;
+    min-width: auto;
+    max-width: none;
+    height: 300px;
+    border-left: none;
+    border-top: 1px solid #e5e7eb;
+  }
+  
+  .writing-container {
+    margin: 8px;
+  }
+  
+  .writing-textarea {
+    padding: 16px !important;
+    font-size: 15px !important;
+  }
+  
+  .highlight-layer {
+    padding: 16px;
+    font-size: 15px;
+  }
+}
+
+/* Fix for overlapping elements */
+.writing-area * {
+  box-sizing: border-box;
+}
+
+/* Ensure proper z-index stacking */
+.writing-textarea {
+  z-index: 2;
+}
+
+.highlight-layer {
+  z-index: 1;
+}
+
+/* Hide scrollbars but keep functionality */
+.writing-textarea::-webkit-scrollbar,
+.chat-messages::-webkit-scrollbar,
+.coach-panel-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.writing-textarea::-webkit-scrollbar-track,
+.chat-messages::-webkit-scrollbar-track,
+.coach-panel-content::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+.writing-textarea::-webkit-scrollbar-thumb,
+.chat-messages::-webkit-scrollbar-thumb,
+.coach-panel-content::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 3px;
+}
+
+.writing-textarea::-webkit-scrollbar-thumb:hover,
+.chat-messages::-webkit-scrollbar-thumb:hover,
+.coach-panel-content::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
+
+/* Prompt Display Styles */
+.prompt-display {
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 1px solid #0ea5e9;
+  border-radius: 8px;
+  margin: 16px 16px 0 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.1);
+}
+
+.prompt-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: rgba(14, 165, 233, 0.1);
+  border-bottom: 1px solid rgba(14, 165, 233, 0.2);
+  font-weight: 600;
+  font-size: 14px;
+  color: #0369a1;
+}
+
+.prompt-content {
+  padding: 16px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #1e293b;
+  background: white;
+  border-radius: 0 0 8px 8px;
+}
+
+/* Adjust writing container margin when prompt is shown */
+.writing-container:has(.prompt-display) {
+  margin-top: 0;
+}
+
+/* Mobile responsive for prompt */
+@media (max-width: 768px) {
+  .prompt-display {
+    margin: 8px 8px 0 8px;
+  }
+  
+  .prompt-header {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+  
+  .prompt-content {
+    padding: 12px;
+    font-size: 14px;
+  }
 }
