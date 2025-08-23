@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { X, BookOpen, Lightbulb, MessageSquare, Megaphone, ScrollText, Sparkles, Newspaper, Mail, Calendar, Rocket, Puzzle, Wand, Compass, MapPin, Target, Mic, Search, Filter, Star, Heart, Zap, Crown, Gem } from 'lucide-react';
+import { X, BookOpen, Lightbulb, MessageSquare, Megaphone, ScrollText, Sparkles, Newspaper, Mail, Calendar, Rocket, Puzzle, Wand, Compass, MapPin, Target, Mic, Search, Filter, Star, Heart, Zap, Crown, Gem, Edit3, Brain } from 'lucide-react';
 
 interface WritingTypeSelectionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelect: (type: string) => void; // FIXED: Changed from onSelectType to onSelect
+  onSelect: (type: string, customPrompt?: string) => void; // UPDATED: Added customPrompt parameter
 }
 
 const writingTypes = [
@@ -135,6 +135,8 @@ export function WritingTypeSelectionModal({ isOpen, onClose, onSelect }: Writing
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDifficulty, setSelectedDifficulty] = useState('All');
   const [showPopularOnly, setShowPopularOnly] = useState(false);
+  const [showCustomPrompt, setShowCustomPrompt] = useState(false); // NEW: State for custom prompt modal
+  const [customPrompt, setCustomPrompt] = useState(''); // NEW: State for custom prompt text
 
   if (!isOpen) return null;
 
@@ -161,6 +163,36 @@ export function WritingTypeSelectionModal({ isOpen, onClose, onSelect }: Writing
     onClose();
   };
 
+  // NEW: Handler for custom prompt option
+  const handleCustomPromptSelect = () => {
+    setShowCustomPrompt(true);
+  };
+
+  // NEW: Handler for submitting custom prompt
+  const handleCustomPromptSubmit = () => {
+    if (customPrompt.trim()) {
+      console.log('🎯 WritingTypeSelectionModal: Custom prompt selected:', customPrompt);
+      
+      // Store in localStorage for persistence
+      localStorage.setItem('selectedWritingType', 'custom');
+      localStorage.setItem('customWritingPrompt', customPrompt);
+      
+      // Call the parent's onSelect callback with custom prompt
+      onSelect('custom', customPrompt);
+      
+      // Close the modal
+      onClose();
+      setShowCustomPrompt(false);
+      setCustomPrompt('');
+    }
+  };
+
+  // NEW: Handler for canceling custom prompt
+  const handleCustomPromptCancel = () => {
+    setShowCustomPrompt(false);
+    setCustomPrompt('');
+  };
+
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case 'Easy': return 'text-green-600 bg-green-100';
@@ -169,6 +201,97 @@ export function WritingTypeSelectionModal({ isOpen, onClose, onSelect }: Writing
       default: return 'text-gray-600 bg-gray-100';
     }
   };
+
+  // NEW: Custom Prompt Modal
+  if (showCustomPrompt) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+        <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl max-w-2xl w-full border-4 border-teal-300 dark:border-teal-700 relative">
+          
+          {/* Custom Prompt Header */}
+          <div className="bg-gradient-to-r from-teal-100 via-blue-100 to-purple-100 dark:from-teal-900/30 dark:via-blue-900/30 dark:to-purple-900/30 p-8 border-b-4 border-teal-300 dark:border-teal-700 relative">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="w-16 h-16 bg-gradient-to-r from-teal-500 via-blue-500 to-purple-500 rounded-full flex items-center justify-center mr-6 shadow-2xl animate-pulse">
+                  <Edit3 className="h-8 w-8 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-teal-600 via-blue-600 to-purple-600 dark:from-teal-400 dark:via-blue-400 dark:to-purple-400 mb-2">
+                    Use My Own Idea 🧠
+                  </h2>
+                  <p className="text-gray-700 dark:text-gray-300 text-lg font-medium">
+                    Type in your own narrative writing prompt or topic. Great for when you have a specific idea!
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleCustomPromptCancel}
+                className="p-3 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors shadow-lg hover:shadow-xl transform hover:scale-110"
+              >
+                <X className="h-8 w-8 text-gray-600 dark:text-gray-300" />
+              </button>
+            </div>
+          </div>
+
+          {/* Custom Prompt Input */}
+          <div className="p-8">
+            <div className="mb-6">
+              <label className="block text-lg font-bold text-gray-800 dark:text-white mb-3">
+                Your Writing Prompt:
+              </label>
+              <textarea
+                value={customPrompt}
+                onChange={(e) => setCustomPrompt(e.target.value)}
+                placeholder="Write your own creative writing prompt here... For example: 'Write a story about a magical library where books come to life at midnight' or 'Describe your perfect adventure day with your best friend'"
+                className="w-full h-32 p-4 border-2 border-gray-300 rounded-2xl focus:border-teal-500 focus:outline-none text-lg font-medium shadow-lg resize-none"
+                maxLength={500}
+              />
+              <div className="flex justify-between items-center mt-2">
+                <p className="text-sm text-gray-500">
+                  Be creative! This is your chance to write about exactly what interests you.
+                </p>
+                <span className="text-sm text-gray-400">
+                  {customPrompt.length}/500
+                </span>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-4 justify-end">
+              <button
+                onClick={handleCustomPromptCancel}
+                className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-2xl font-bold text-lg hover:bg-gray-50 transition-colors shadow-lg"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCustomPromptSubmit}
+                disabled={!customPrompt.trim()}
+                className={`px-8 py-3 rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center gap-2 ${
+                  customPrompt.trim()
+                    ? 'bg-gradient-to-r from-teal-500 to-blue-500 text-white hover:from-teal-600 hover:to-blue-600'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                <Brain className="h-5 w-5" />
+                Start Writing!
+              </button>
+            </div>
+          </div>
+
+          {/* Tip Section */}
+          <div className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 p-6 border-t-2 border-gray-200 dark:border-gray-600 rounded-b-3xl">
+            <div className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
+              <Star className="h-5 w-5 text-yellow-500" />
+              <span className="font-medium text-base">
+                <strong>Tip:</strong> A good prompt will help you write an amazing narrative story! Choose the option that sounds most exciting to you. Remember, there's no wrong choice - both will lead to great writing adventures!
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
@@ -196,10 +319,10 @@ export function WritingTypeSelectionModal({ isOpen, onClose, onSelect }: Writing
               </div>
               <div>
                 <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 dark:from-blue-400 dark:via-purple-400 dark:to-pink-400 mb-2">
-                  Choose Your Story Type! ✨
+                  How would you like to get your narrative writing prompt?
                 </h2>
                 <p className="text-gray-700 dark:text-gray-300 text-lg font-medium">
-                  What kind of writing adventure do you want to go on today?
+                  Choose how you want to start your writing adventure today!
                 </p>
               </div>
             </div>
@@ -212,114 +335,102 @@ export function WritingTypeSelectionModal({ isOpen, onClose, onSelect }: Writing
           </div>
         </div>
 
-        {/* Search and Filter Section */}
-        <div className="p-8 border-b-2 border-gray-200 dark:border-gray-600 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-800 dark:to-blue-900/20 relative z-10">
-          <div className="flex flex-col md:flex-row gap-4 items-center">
-            <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search writing types..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-2xl focus:border-blue-500 focus:outline-none text-lg font-medium shadow-lg"
-              />
-            </div>
+        {/* NEW: Prompt Selection Options */}
+        <div className="p-8 relative z-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             
-            <select
-              value={selectedDifficulty}
-              onChange={(e) => setSelectedDifficulty(e.target.value)}
-              className="px-6 py-3 border-2 border-gray-300 rounded-2xl focus:border-blue-500 focus:outline-none text-lg font-medium shadow-lg bg-white"
-            >
-              <option value="All">All Levels</option>
-              <option value="Easy">Easy</option>
-              <option value="Medium">Medium</option>
-              <option value="Hard">Hard</option>
-            </select>
-            
+            {/* Magic Prompt Generator Option */}
             <button
-              onClick={() => setShowPopularOnly(!showPopularOnly)}
-              className={`px-6 py-3 rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center gap-2 ${
-                showPopularOnly 
-                  ? 'bg-yellow-400 text-yellow-900 border-2 border-yellow-500' 
-                  : 'bg-white border-2 border-gray-300 text-gray-700 hover:border-yellow-400'
-              }`}
+              onClick={() => handleTypeSelect('narrative')}
+              className="relative p-8 border-4 border-purple-300 rounded-3xl hover:border-purple-400 bg-gradient-to-br from-purple-50 to-pink-50 hover:shadow-2xl transition-all duration-300 text-left group transform hover:scale-105 overflow-hidden"
             >
-              <Star className={`h-5 w-5 ${showPopularOnly ? 'fill-current' : ''}`} />
-              Popular
+              {/* Background Pattern */}
+              <div className="absolute inset-0 opacity-5">
+                <div className="absolute top-0 right-0 w-20 h-20 bg-purple-500 rounded-full -mr-10 -mt-10"></div>
+                <div className="absolute bottom-0 left-0 w-16 h-16 bg-pink-500 rounded-full -ml-8 -mb-8"></div>
+              </div>
+
+              {/* Icon and Title */}
+              <div className="flex items-center gap-4 mb-4 relative z-10">
+                <div className="p-4 bg-gradient-to-r from-purple-400 to-pink-500 rounded-2xl group-hover:scale-110 transition-transform shadow-xl">
+                  <Sparkles className="w-10 h-10 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-2xl text-gray-900 dark:text-white mb-2">Magic Prompt Generator</h3>
+                  <div className="inline-block px-3 py-1 rounded-full text-sm font-bold bg-purple-100 text-purple-600">
+                    ✨
+                  </div>
+                </div>
+              </div>
+
+              {/* Description */}
+              <p className="text-lg text-gray-700 dark:text-gray-300 font-medium leading-relaxed relative z-10">
+                Let our AI create an awesome narrative prompt just for you! Perfect for getting started quickly.
+              </p>
+
+              {/* Hover Effect Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-3xl"></div>
+            </button>
+
+            {/* Use My Own Idea Option */}
+            <button
+              onClick={handleCustomPromptSelect}
+              className="relative p-8 border-4 border-teal-300 rounded-3xl hover:border-teal-400 bg-gradient-to-br from-teal-50 to-blue-50 hover:shadow-2xl transition-all duration-300 text-left group transform hover:scale-105 overflow-hidden border-blue-400"
+            >
+              {/* Background Pattern */}
+              <div className="absolute inset-0 opacity-5">
+                <div className="absolute top-0 right-0 w-20 h-20 bg-teal-500 rounded-full -mr-10 -mt-10"></div>
+                <div className="absolute bottom-0 left-0 w-16 h-16 bg-blue-500 rounded-full -ml-8 -mb-8"></div>
+              </div>
+
+              {/* Icon and Title */}
+              <div className="flex items-center gap-4 mb-4 relative z-10">
+                <div className="p-4 bg-gradient-to-r from-teal-400 to-blue-500 rounded-2xl group-hover:scale-110 transition-transform shadow-xl">
+                  <Edit3 className="w-10 h-10 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-2xl text-gray-900 dark:text-white mb-2">Use My Own Idea 🧠</h3>
+                  <div className="inline-block px-3 py-1 rounded-full text-sm font-bold bg-teal-100 text-teal-600">
+                    Selected
+                  </div>
+                </div>
+              </div>
+
+              {/* Description */}
+              <p className="text-lg text-gray-700 dark:text-gray-300 font-medium leading-relaxed relative z-10">
+                Type in your own narrative writing prompt or topic. Great for when you have a specific idea!
+              </p>
+
+              {/* Hover Effect Overlay */}
+              <div className="absolute inset-0 bg-gradient-to-r from-teal-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-3xl"></div>
             </button>
           </div>
         </div>
-        
-        {/* Enhanced Grid Section */}
-        <div className="p-8 overflow-y-auto max-h-[60vh] relative z-10">
-          {filteredTypes.length === 0 ? (
-            <div className="text-center py-16">
-              <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Search className="h-12 w-12 text-gray-400" />
-              </div>
-              <h3 className="text-2xl font-bold text-gray-600 mb-3">No writing types found</h3>
-              <p className="text-gray-500 text-lg">Try adjusting your search or filters</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredTypes.map((type) => {
-                const IconComponent = type.icon;
-                return (
-                  <button
-                    key={type.value}
-                    onClick={() => handleTypeSelect(type.value)}
-                    className={`relative p-8 border-4 ${type.borderColor} rounded-3xl hover:border-opacity-80 bg-gradient-to-br ${type.bgColor} hover:shadow-2xl transition-all duration-300 text-left group transform hover:scale-105 overflow-hidden`}
-                  >
-                    {/* Background Pattern */}
-                    <div className="absolute inset-0 opacity-5">
-                      <div className="absolute top-0 right-0 w-20 h-20 bg-current rounded-full -mr-10 -mt-10"></div>
-                      <div className="absolute bottom-0 left-0 w-16 h-16 bg-current rounded-full -ml-8 -mb-8"></div>
-                    </div>
 
-                    {/* Popular Badge */}
-                    {type.popular && (
-                      <div className="absolute top-4 right-4 bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-3 py-1 rounded-full text-sm font-bold flex items-center shadow-lg">
-                        <Star className="h-3 w-3 mr-1 fill-current" />
-                        Popular
-                      </div>
-                    )}
-
-                    {/* Icon and Title */}
-                    <div className="flex items-center gap-4 mb-4 relative z-10">
-                      <div className={`p-4 bg-gradient-to-r ${type.color} rounded-2xl group-hover:scale-110 transition-transform shadow-xl`}>
-                        <IconComponent className="w-10 h-10 text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-bold text-xl text-gray-900 dark:text-white mb-1">{type.label}</h3>
-                        <div className={`inline-block px-3 py-1 rounded-full text-sm font-bold ${getDifficultyColor(type.difficulty)}`}>
-                          {type.difficulty}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Description */}
-                    <p className="text-base text-gray-700 dark:text-gray-300 font-medium leading-relaxed relative z-10">
-                      {type.description}
-                    </p>
-
-                    {/* Hover Effect Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-3xl"></div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Enhanced Footer */}
-        <div className="bg-gradient-to-r from-gray-100 to-blue-100 dark:from-gray-800 dark:to-blue-900/20 p-6 border-t-2 border-gray-200 dark:border-gray-600 relative z-10">
+        {/* Tip Section */}
+        <div className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 p-6 border-t-2 border-gray-200 dark:border-gray-600 relative z-10">
           <div className="flex items-center justify-center">
-            <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
-              <Heart className="h-5 w-5 text-pink-500 animate-pulse" />
-              <span className="font-medium text-lg">Choose the one that excites you most!</span>
+            <div className="flex items-center gap-3 text-gray-700 dark:text-gray-300">
+              <Star className="h-5 w-5 text-yellow-500 animate-pulse" />
+              <span className="font-medium text-lg">
+                <strong>A good prompt will help you write an amazing narrative story!</strong> Choose the option that sounds most exciting to you. Remember, there's no wrong choice - both will lead to great writing adventures!
+              </span>
               <Gem className="h-5 w-5 text-purple-500 animate-pulse" />
             </div>
+          </div>
+          
+          {/* Debug Info */}
+          <div className="mt-4 p-4 bg-blue-100 dark:bg-blue-900/20 rounded-2xl border-2 border-blue-200 dark:border-blue-700">
+            <div className="flex items-center gap-2 mb-2">
+              <Search className="h-4 w-4 text-blue-600" />
+              <span className="font-bold text-blue-800 dark:text-blue-300">Debug Info:</span>
+            </div>
+            <p className="text-blue-700 dark:text-blue-300 text-sm">
+              <strong>Text Type:</strong> narrative
+            </p>
+            <p className="text-blue-700 dark:text-blue-300 text-sm">
+              <strong>Mode:</strong> Prompt Selection Mode
+            </p>
           </div>
         </div>
       </div>
