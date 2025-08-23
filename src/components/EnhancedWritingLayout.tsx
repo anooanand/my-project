@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import WritingArea from './WritingArea';
 import { PlanningToolModal } from './PlanningToolModal';
-import {
+import { 
   PenTool,
   ToggleRight
 } from 'lucide-react';
@@ -19,7 +19,6 @@ interface EnhancedWritingLayoutProps {
   onPopupCompleted?: () => void;
   assistanceLevel?: 'beginner' | 'intermediate' | 'advanced';
   selectedText?: string;
-  initialPrompt?: string; // Add initialPrompt prop
 }
 
 export function EnhancedWritingLayout({
@@ -34,32 +33,11 @@ export function EnhancedWritingLayout({
   onShowHelpCenter,
   onPopupCompleted,
   assistanceLevel = 'intermediate',
-  selectedText = '',
-  initialPrompt = '' // Default to empty string
+  selectedText = ''
 }: EnhancedWritingLayoutProps) {
   const [showPlanningTool, setShowPlanningTool] = useState(false);
   const [plan, setPlan] = useState('');
   const [generatedPrompt, setGeneratedPrompt] = useState('');
-
-  // Initialize with a default prompt for narrative text type
-  useEffect(() => {
-    if (initialPrompt) {
-      setGeneratedPrompt(initialPrompt);
-    } else if (textType && !generatedPrompt) {
-      // Set a default prompt based on text type
-      const defaultPrompts = {
-        narrative: "Write an engaging story about a character who discovers something unexpected that changes their life forever. Include vivid descriptions, realistic dialogue, and show the character's emotional journey. Make sure your story has a clear beginning, middle, and end with a satisfying conclusion. Focus on showing rather than telling, and use sensory details to bring your story to life.",
-        persuasive: "Write a persuasive essay arguing for or against a topic you feel strongly about. Use compelling evidence, logical reasoning, and persuasive language to convince your audience. Include counterarguments and address them effectively. Structure your essay with a clear introduction, body paragraphs with strong arguments, and a powerful conclusion.",
-        expository: "Write an informative essay explaining a complex topic or process that interests you. Use clear explanations, relevant examples, and logical organization to help your readers understand the subject. Include factual information and present it in an engaging way that makes the topic accessible to your audience.",
-        descriptive: "Write a detailed description of a place, person, or object that has special meaning to you. Use vivid sensory details (sight, sound, smell, taste, touch) to paint a picture with words. Help your readers feel as if they are experiencing what you're describing through your carefully chosen language and imagery."
-      };
-      
-      const defaultPrompt = defaultPrompts[textType.toLowerCase() as keyof typeof defaultPrompts] || 
-        "Write a creative piece that showcases your writing skills. Choose a topic that interests you and develop it with clear structure, engaging content, and appropriate language for your audience. Focus on expressing your ideas clearly and creatively.";
-      
-      setGeneratedPrompt(defaultPrompt);
-    }
-  }, [initialPrompt, textType, generatedPrompt]);
 
   const handleTogglePlanning = () => {
     setShowPlanningTool(!showPlanningTool);
@@ -70,7 +48,7 @@ export function EnhancedWritingLayout({
   };
 
   return (
-    <div className="h-full bg-gray-50 overflow-hidden">
+    <div className="enhanced-writing-layout h-full bg-gray-50 overflow-hidden">
       {/* Main Writing Area - Full height */}
       <div className="h-full">
         <WritingArea
