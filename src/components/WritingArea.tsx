@@ -3,7 +3,6 @@ import { Save, Download, Upload, Eye, EyeOff, RotateCcw, Sparkles, BookOpen, Tar
 import { generatePrompt, getSynonyms, rephraseSentence, evaluateEssay } from '../lib/openai';
 import { WritingStatusBar } from './WritingStatusBar';
 import { StructuredPlanningSection } from './StructuredPlanningSection';
-import { EvaluationModal } from './EvaluationModal';
 
 interface WritingAreaProps {
   onContentChange?: (content: string) => void;
@@ -82,9 +81,6 @@ export default function WritingArea({ onContentChange, initialContent = '', text
     solution: '',
     feelings: ''
   });
-  
-  // FIXED: Add evaluation modal state
-  const [showEvaluationModal, setShowEvaluationModal] = useState(false);
   
   // Refs
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -215,7 +211,7 @@ export default function WritingArea({ onContentChange, initialContent = '', text
     }
   };
 
-  // FIXED: Enhanced evaluate function that shows popup
+  // FIXED: Enhanced evaluate function with better error handling
   const handleEvaluate = async () => {
     if (!content.trim()) {
       alert('Please write something before submitting for evaluation!');
@@ -231,9 +227,7 @@ export default function WritingArea({ onContentChange, initialContent = '', text
       const result = await evaluateEssay(content, textType);
       console.log('✅ Evaluation completed:', result);
       setEvaluation(result);
-      
-      // FIXED: Show the full NSW evaluation modal instead of just updating the coach panel
-      setShowEvaluationModal(true);
+      setActiveTab('ai-coach');
       
     } catch (error) {
       console.error('❌ Error evaluating writing:', error);
@@ -273,9 +267,7 @@ export default function WritingArea({ onContentChange, initialContent = '', text
       };
       
       setEvaluation(fallbackEvaluation);
-      
-      // FIXED: Show the full NSW evaluation modal even for fallback
-      setShowEvaluationModal(true);
+      setActiveTab('ai-coach');
       console.log('🔄 Using fallback evaluation due to API error');
       
     } finally {
@@ -469,15 +461,6 @@ export default function WritingArea({ onContentChange, initialContent = '', text
     <div className={`min-h-screen transition-all duration-300 ${
       darkMode ? 'bg-gray-900' : 'bg-gray-50'
     } ${isFullscreen ? 'fixed inset-0 z-50' : ''}`}>
-      
-      {/* FIXED: Add the evaluation modal */}
-      <EvaluationModal
-        isOpen={showEvaluationModal}
-        onClose={() => setShowEvaluationModal(false)}
-        content={content}
-        textType={textType}
-      />
-
       {/* Header */}
       <div className={`border-b transition-colors ${
         darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
@@ -641,21 +624,61 @@ export default function WritingArea({ onContentChange, initialContent = '', text
                       AI Writing Coach
                     </h3>
                     
-                    {/* FIXED: Simplified evaluation display - no longer shows full report here */}
+                    {/* FIXED: Enhanced Evaluation Display */}
                     {evaluation && (
                       <div className={`mb-4 p-3 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-blue-50'}`}>
                         <h4 className={`font-medium text-sm mb-2 ${darkMode ? 'text-blue-400' : 'text-blue-800'}`}>
-                          📝 Evaluation Complete
+                          📝 Your Evaluation Results
                         </h4>
-                        <p className={`text-xs mb-2 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                          Your writing has been evaluated using NSW Selective criteria.
-                        </p>
-                        <button
-                          onClick={() => setShowEvaluationModal(true)}
-                          className="w-full py-2 px-3 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-lg transition-colors"
-                        >
-                          View Full Report
-                        </button>
+                        
+                        <div className="space-y-3 text-xs">
+                          <div className={`rounded p-2 ${darkMode ? 'bg-gray-800' : 'bg-blue-100'}`}>
+                            <div className="flex justify-between items-center mb-1">
+                              <span className={`${darkMode ? 'text-gray-300' : 'text-blue-800'}`}>Overall Score:</span>
+                              <span className={`font-bold ${darkMode ? 'text-yellow-400' : 'text-blue-900'}`}>{evaluation.overallScore || evaluation.score}/10</span>
+                            </div>
+                          </div>
+                          
+                          {evaluation.strengths && (
+                            <div>
+                              <h5 className={`font-medium mb-1 ${darkMode ? 'text-green-400' : 'text-green-700'}`}>✅ Strengths:</h5>
+                              <ul className="space-y-1">
+                                {evaluation.strengths.map((strength: string, index: number) => (
+                                  <li key={index} className={`text-xs ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>• {strength}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          
+                          {evaluation.improvements && (
+                            <div>
+                              <h5 className={`font-medium mb-1 ${darkMode ? 'text-orange-400' : 'text-orange-700'}`}>🎯 Areas to Improve:</h5>
+                              <ul className="space-y-1">
+                                {evaluation.improvements.map((improvement: string, index: number) => (
+                                  <li key={index} className={`text-xs ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>• {improvement}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          
+                          {evaluation.specificFeedback && (
+                            <div>
+                              <h5 className={`font-medium mb-1 ${darkMode ? 'text-blue-400' : 'text-blue-700'}`}>💬 Detailed Feedback:</h5>
+                              <p className={`text-xs leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>{evaluation.specificFeedback}</p>
+                            </div>
+                          )}
+                          
+                          {evaluation.nextSteps && (
+                            <div>
+                              <h5 className={`font-medium mb-1 ${darkMode ? 'text-purple-400' : 'text-purple-700'}`}>🚀 Next Steps:</h5>
+                              <ul className="space-y-1">
+                                {evaluation.nextSteps.map((step: string, index: number) => (
+                                  <li key={index} className={`text-xs ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>• {step}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
                     
