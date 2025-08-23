@@ -58,7 +58,7 @@ export function PromptOptionsModal({
                 <Wand className="h-6 w-6 text-white" />
               </div>
               <h2 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400">
-                Choose Your Prompt
+                How would you like to get your {textType} writing prompt?
               </h2>
             </div>
             <button
@@ -68,13 +68,12 @@ export function PromptOptionsModal({
               <X className="w-6 h-6" />
             </button>
           </div>
+          <p className="text-gray-700 dark:text-gray-300 mt-2 text-center">
+            Choose how you want to start your writing adventure today!
+          </p>
         </div>
 
         <div className="p-6">
-          <p className="text-gray-700 dark:text-gray-300 mb-6 text-lg text-center font-medium">
-            How would you like to get your <span className="font-bold text-blue-600 dark:text-blue-400">{textType}</span> writing prompt?
-          </p>
-
           <div className="space-y-6">
             <button
               onClick={handleGeneratePrompt}
@@ -122,14 +121,6 @@ export function PromptOptionsModal({
                 A good prompt will help you write an amazing {textType} story! Choose the option that sounds most exciting to you. Remember, there's no wrong choice - both will lead to great writing adventures!
               </p>
             </div>
-          </div>
-
-          {/* DEBUG INFO - Remove in production */}
-          <div className="mt-4 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg text-xs text-gray-600 dark:text-gray-400">
-            <p>🔍 Debug Info:</p>
-            <p>Text Type: {textType}</p>
-            <p>Navigation Source: {localStorage.getItem('navigationSource') || 'unknown'}</p>
-            <p>Modal Timestamp: {localStorage.getItem('modalTimestamp') || 'none'}</p>
           </div>
         </div>
       </div>
