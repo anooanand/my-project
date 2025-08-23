@@ -229,9 +229,6 @@ export default function WritingArea({ onContentChange, initialContent = '', text
       setEvaluation(result);
       setActiveTab('ai-coach');
       
-      // Show success message
-      console.log('🎉 Evaluation successful! Check the AI Coach tab for feedback.');
-      
     } catch (error) {
       console.error('❌ Error evaluating writing:', error);
       
@@ -437,172 +434,29 @@ export default function WritingArea({ onContentChange, initialContent = '', text
 
   return (
     <div className={`flex h-screen ${isFullscreen ? 'fixed inset-0 z-50' : ''} ${focusMode ? 'bg-gray-900' : 'bg-gray-100'} transition-colors duration-300`}>
-      {/* Left Sidebar - Tools and Controls */}
-      <div className={`w-64 ${focusMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-r flex flex-col shadow-sm transition-colors duration-300`}>
-        {/* Header */}
-        <div className={`p-3 ${focusMode ? 'border-gray-700' : 'border-gray-200'} border-b`}>
-          <h2 className={`text-lg font-bold ${focusMode ? 'text-gray-100' : 'text-gray-900'}`}>Writing Tools</h2>
-          <p className={`text-sm ${focusMode ? 'text-gray-400' : 'text-gray-600'}`}>NSW Selective Prep</p>
-        </div>
-
-        {/* Writing Tips Section */}
-        {showWritingTips && (
-          <div className={`p-3 ${focusMode ? 'border-gray-700' : 'border-gray-200'} border-b`}>
-            <h3 className={`text-sm font-semibold mb-2 ${focusMode ? 'text-gray-200' : 'text-gray-800'}`}>
-              {textType.charAt(0).toUpperCase() + textType.slice(1)} Tips
-            </h3>
-            <div className="space-y-1">
-              {getWritingTips().map((tip, index) => (
-                <p key={index} className={`text-xs ${focusMode ? 'text-gray-300' : 'text-gray-600'} leading-relaxed`}>
-                  {tip}
-                </p>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Exam Mode Controls */}
-        {examMode && (
-          <div className="p-3 bg-red-50 border-b border-red-200">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-semibold text-red-800">🎯 Exam Mode</h3>
-              <button
-                onClick={stopExamMode}
-                className="text-xs text-red-600 hover:text-red-800"
-              >
-                End Exam
-              </button>
-            </div>
-            <div className="text-xs text-red-700 space-y-1">
-              <div>Time: {formatTime(examTimeRemaining)}</div>
-              <div>Target: {targetWordCount} words</div>
-              <div>Current: {wordCount} words</div>
-            </div>
-          </div>
-        )}
-
-        {/* Synonym Panel */}
-        {showSynonyms && (
-          <div className={`p-3 ${focusMode ? 'bg-gray-700 border-gray-600' : 'bg-blue-50 border-blue-200'} border-b transition-colors duration-300`}>
-            <div className="flex items-center justify-between mb-2">
-              <h3 className={`text-sm font-semibold ${focusMode ? 'text-gray-200' : 'text-blue-800'}`}>
-                Synonyms for "{selectedText}"
-              </h3>
-              <button
-                onClick={() => setShowSynonyms(false)}
-                className={`text-xs ${focusMode ? 'text-gray-400 hover:text-gray-200' : 'text-blue-600 hover:text-blue-800'}`}
-              >
-                ✕
-              </button>
-            </div>
-            {isLoadingSynonyms ? (
-              <div className={`text-xs ${focusMode ? 'text-gray-400' : 'text-blue-600'}`}>Loading...</div>
-            ) : (
-              <div className="space-y-1">
-                {synonyms.map((synonym, index) => (
-                  <button
-                    key={index}
-                    onClick={() => replaceSynonym(synonym)}
-                    className={`block w-full text-left text-xs px-2 py-1 rounded ${
-                      focusMode 
-                        ? 'text-gray-300 hover:bg-gray-600' 
-                        : 'text-blue-700 hover:bg-blue-100'
-                    } transition-colors`}
-                  >
-                    {synonym}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Controls */}
-        <div className="flex-1 p-3 space-y-3 overflow-y-auto">
-          <div className="space-y-2">
-            <h3 className={`text-sm font-semibold ${focusMode ? 'text-gray-200' : 'text-gray-800'}`}>Quick Actions</h3>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                onClick={() => setShowKidPlanningModal(true)}
-                className="flex items-center justify-center px-2 py-2 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition-colors"
-              >
-                <Sparkles className="w-3 h-3 mr-1" />
-                Plan
-              </button>
-              <button
-                onClick={startExamMode}
-                disabled={examMode}
-                className="flex items-center justify-center px-2 py-2 bg-purple-500 text-white text-xs rounded hover:bg-purple-600 transition-colors disabled:opacity-50"
-              >
-                <Clock className="w-3 h-3 mr-1" />
-                Exam
-              </button>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <h3 className={`text-sm font-semibold ${focusMode ? 'text-gray-200' : 'text-gray-800'}`}>Settings</h3>
-            <div className="space-y-2">
-              <div>
-                <label className={`text-xs ${focusMode ? 'text-gray-300' : 'text-gray-600'}`}>Font Size</label>
-                <input
-                  type="range"
-                  min="12"
-                  max="24"
-                  value={fontSize}
-                  onChange={(e) => setFontSize(Number(e.target.value))}
-                  className="w-full"
-                />
-              </div>
-              <div>
-                <label className={`text-xs ${focusMode ? 'text-gray-300' : 'text-gray-600'}`}>Target Words</label>
-                <input
-                  type="number"
-                  value={targetWordCount}
-                  onChange={(e) => setTargetWordCount(Number(e.target.value))}
-                  className={`w-full px-2 py-1 text-xs rounded border ${
-                    focusMode 
-                      ? 'bg-gray-700 border-gray-600 text-gray-200' 
-                      : 'bg-white border-gray-300 text-gray-900'
-                  }`}
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Writing Area */}
+      {/* Main Content Area */}
       <div className="flex-1 flex flex-col">
-        {/* Top Bar */}
-        <div className={`px-4 py-2 ${focusMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-b flex items-center justify-between transition-colors duration-300`}>
-          <div className="flex items-center space-x-4">
-            <h1 className={`text-lg font-bold ${focusMode ? 'text-gray-100' : 'text-gray-900'}`}>
-              {textType.charAt(0).toUpperCase() + textType.slice(1)} Writing
-            </h1>
-            {examMode && (
-              <div className="flex items-center space-x-2 text-red-600">
-                <Clock className="w-4 h-4" />
-                <span className="font-mono text-sm">{formatTime(examTimeRemaining)}</span>
-              </div>
-            )}
-          </div>
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={toggleFullscreen}
-              className={`p-1 rounded ${focusMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-600 hover:text-gray-800'}`}
-            >
-              {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-            </button>
+        {/* Writing Prompt Section - RESTORED */}
+        <div className={`p-4 ${focusMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-b transition-colors duration-300`}>
+          <div className="flex items-start space-x-2 mb-2">
+            <div className="w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+              <Lightbulb className="w-3 h-3 text-yellow-800" />
+            </div>
+            <div className="flex-1">
+              <h2 className={`text-lg font-bold ${focusMode ? 'text-gray-100' : 'text-gray-900'} mb-2`}>Your Writing Prompt</h2>
+              <p className={`text-sm ${focusMode ? 'text-gray-300' : 'text-gray-700'} leading-relaxed`}>
+                {prompt || `Write an engaging story about a character who discovers something unexpected that changes their life forever. Include vivid descriptions, realistic dialogue, and show the character's emotional journey. Make sure your story has a clear beginning, middle, and end with a satisfying conclusion. Focus on showing rather than telling, and use sensory details to bring your story to life.`}
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Writing Container */}
+        {/* Writing Area Container */}
         <div className="flex-1 flex">
-          {/* Text Area Container */}
-          <div className={`${focusMode ? 'bg-gray-800 border-gray-700' : 'bg-white'} rounded-lg shadow-sm flex-1 flex flex-col overflow-hidden transition-colors duration-300`}>
+          {/* Main Writing Section */}
+          <div className="flex-1 flex flex-col">
             {/* Writing Area Header */}
-            <div className={`px-3 py-2 ${focusMode ? 'border-gray-700' : 'border-gray-200'} border-b flex items-center justify-between`}>
+            <div className={`px-4 py-2 ${focusMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-b flex items-center justify-between transition-colors duration-300`}>
               <h3 className={`text-sm font-medium ${focusMode ? 'text-gray-200' : 'text-gray-900'}`}>Your Writing</h3>
               <div className="flex items-center space-x-2">
                 <button
@@ -618,7 +472,7 @@ export default function WritingArea({ onContentChange, initialContent = '', text
                   className="flex items-center px-2 py-1 bg-purple-500 text-white text-xs rounded hover:bg-purple-600 transition-colors disabled:opacity-50"
                 >
                   <Clock className="w-3 h-3 mr-1" />
-                  {examMode ? 'Exam Active' : 'Start Exam Mode'}
+                  Start Exam Mode
                 </button>
                 <button
                   onClick={() => setShowStructureGuide(true)}
@@ -660,8 +514,8 @@ export default function WritingArea({ onContentChange, initialContent = '', text
               style={{ fontSize: `${fontSize}px`, lineHeight: lineHeight }}
             />
             
-            {/* Status Bar */}
-            <div className={`px-3 py-2 ${focusMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'} border-t flex items-center justify-between transition-colors duration-300`}>
+            {/* Status Bar with FIXED Submit Button */}
+            <div className={`px-4 py-2 ${focusMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'} border-t flex items-center justify-between transition-colors duration-300`}>
               <div className={`flex items-center space-x-4 text-xs ${focusMode ? 'text-gray-300' : 'text-gray-600'}`}>
                 <div className="flex items-center space-x-1">
                   <FileText className="w-3 h-3" />
@@ -964,6 +818,38 @@ export default function WritingArea({ onContentChange, initialContent = '', text
           )}
         </div>
       </div>
+
+      {/* Synonym Panel - Floating */}
+      {showSynonyms && (
+        <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg shadow-xl p-4 z-50 max-w-sm">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-gray-800">
+              Synonyms for "{selectedText}"
+            </h3>
+            <button
+              onClick={() => setShowSynonyms(false)}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          {isLoadingSynonyms ? (
+            <div className="text-sm text-gray-600">Loading...</div>
+          ) : (
+            <div className="grid grid-cols-2 gap-2">
+              {synonyms.map((synonym, index) => (
+                <button
+                  key={index}
+                  onClick={() => replaceSynonym(synonym)}
+                  className="text-left text-sm px-3 py-2 rounded bg-blue-50 hover:bg-blue-100 text-blue-700 transition-colors"
+                >
+                  {synonym}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Kid-Friendly Planning Modal */}
       {showKidPlanningModal && (
