@@ -1442,4 +1442,4 @@ Question: ${coachInput}`
   );
 };
 
-export default WritingAr
+export default WritingArea;
