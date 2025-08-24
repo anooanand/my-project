@@ -3,9 +3,9 @@ import OpenAI from 'openai';
 // Initialize OpenAI with error handling
 let openai = null;
 try {
-  if (process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY.startsWith('sk-')) {
+  if (process.env.VITE_OPENAI_API_KEY && process.env.VITE_OPENAI_API_KEY.startsWith("sk-")) {
     openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
+      apiKey: process.env.VITE_OPENAI_API_KEY,
     });
   }
 } catch (error) {
