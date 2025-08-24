@@ -23,364 +23,363 @@ interface WritingIssue {
   severity: 'error' | 'warning' | 'suggestion';
 }
 
-// AI-Powered Writing Checker for NSW Selective Tests
-class AIWritingChecker {
-  private openaiApiKey: string;
-  private openaiApiBase: string;
+// AI Writing Analysis Functions
+async function checkSpellingAI(text: string): Promise<WritingIssue[]> {
+  try {
+    const prompt = `You are a spelling checker for NSW Selective School writing tests. Analyze this text and identify ONLY genuinely misspelled words (not proper nouns, names, or creative terms). 
 
-  constructor() {
-    this.openaiApiKey = process.env.OPENAI_API_KEY || '';
-    this.openaiApiBase = process.env.OPENAI_API_BASE || 'https://api.openai.com/v1';
+Text: "${text}"
+
+Return a JSON array of objects with this exact format:
+[
+  {
+    "word": "misspelled_word",
+    "start_index": number,
+    "end_index": number,
+    "suggestions": ["correction1", "correction2", "correction3"],
+    "message": "Possible spelling error"
+  }
+]
+
+Be very conservative - only flag obvious spelling errors. Return empty array [] if no errors found.`;
+
+    const response = await fetch('/api/openai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt,
+        maxTokens: 1000,
+        temperature: 0.1
+      })
+    });
+
+    if (!response.ok) throw new Error('API request failed');
+    
+    const data = await response.json();
+    const content = data.response || '';
+    
+    try {
+      const results = JSON.parse(content);
+      return Array.isArray(results) ? results.map((item: any) => ({
+        type: 'spelling' as const,
+        word: item.word || '',
+        start: item.start_index || 0,
+        end: item.end_index || 0,
+        suggestions: Array.isArray(item.suggestions) ? item.suggestions : [],
+        message: item.message || 'Possible spelling error',
+        severity: 'error' as const
+      })) : [];
+    } catch (parseError) {
+      console.error('Failed to parse spelling results:', parseError);
+      return [];
+    }
+  } catch (error) {
+    console.error('Spelling check error:', error);
+    return [];
+  }
+}
+
+async function checkGrammarAI(text: string): Promise<WritingIssue[]> {
+  try {
+    const prompt = `You are a grammar checker for NSW Selective School writing. Identify grammar errors like subject-verb disagreement, sentence fragments, run-on sentences, incorrect tense usage.
+
+Text: "${text}"
+
+Return a JSON array with this format:
+[
+  {
+    "word": "problematic_phrase",
+    "start_index": number,
+    "end_index": number,
+    "suggestions": ["correction1", "correction2"],
+    "message": "Grammar issue description",
+    "severity": "error"
+  }
+]
+
+Return empty array [] if no errors found.`;
+
+    const response = await fetch('/api/openai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt,
+        maxTokens: 1000,
+        temperature: 0.1
+      })
+    });
+
+    if (!response.ok) throw new Error('API request failed');
+    
+    const data = await response.json();
+    const content = data.response || '';
+    
+    try {
+      const results = JSON.parse(content);
+      return Array.isArray(results) ? results.map((item: any) => ({
+        type: 'grammar' as const,
+        word: item.word || '',
+        start: item.start_index || 0,
+        end: item.end_index || 0,
+        suggestions: Array.isArray(item.suggestions) ? item.suggestions : [],
+        message: item.message || 'Grammar issue',
+        severity: (item.severity as 'error' | 'warning' | 'suggestion') || 'error'
+      })) : [];
+    } catch (parseError) {
+      return [];
+    }
+  } catch (error) {
+    console.error('Grammar check error:', error);
+    return [];
+  }
+}
+
+async function checkVocabularyAI(text: string): Promise<WritingIssue[]> {
+  try {
+    const prompt = `You are a vocabulary enhancer for NSW Selective School writing. Identify basic words that could be upgraded to more sophisticated alternatives. Focus on overused words like "good", "bad", "said", "went", "big", "small".
+
+Text: "${text}"
+
+Return a JSON array with this format:
+[
+  {
+    "word": "basic_word",
+    "start_index": number,
+    "end_index": number,
+    "suggestions": ["sophisticated1", "sophisticated2", "sophisticated3"],
+    "message": "Consider a more sophisticated word",
+    "severity": "suggestion"
+  }
+]
+
+Return empty array [] if no improvements needed.`;
+
+    const response = await fetch('/api/openai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt,
+        maxTokens: 1000,
+        temperature: 0.3
+      })
+    });
+
+    if (!response.ok) throw new Error('API request failed');
+    
+    const data = await response.json();
+    const content = data.response || '';
+    
+    try {
+      const results = JSON.parse(content);
+      return Array.isArray(results) ? results.map((item: any) => ({
+        type: 'vocabulary' as const,
+        word: item.word || '',
+        start: item.start_index || 0,
+        end: item.end_index || 0,
+        suggestions: Array.isArray(item.suggestions) ? item.suggestions : [],
+        message: item.message || 'Consider a more sophisticated word',
+        severity: 'suggestion' as const
+      })) : [];
+    } catch (parseError) {
+      return [];
+    }
+  } catch (error) {
+    console.error('Vocabulary check error:', error);
+    return [];
+  }
+}
+
+async function checkPunctuationAI(text: string): Promise<WritingIssue[]> {
+  try {
+    const prompt = `You are a punctuation checker for NSW Selective School writing. Identify missing or incorrect punctuation: missing periods, commas, apostrophes, quotation marks.
+
+Text: "${text}"
+
+Return a JSON array with this format:
+[
+  {
+    "word": "text_around_issue",
+    "start_index": number,
+    "end_index": number,
+    "suggestions": ["corrected_punctuation"],
+    "message": "Punctuation issue description",
+    "severity": "error"
+  }
+]
+
+Return empty array [] if no errors found.`;
+
+    const response = await fetch('/api/openai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt,
+        maxTokens: 1000,
+        temperature: 0.1
+      })
+    });
+
+    if (!response.ok) throw new Error('API request failed');
+    
+    const data = await response.json();
+    const content = data.response || '';
+    
+    try {
+      const results = JSON.parse(content);
+      return Array.isArray(results) ? results.map((item: any) => ({
+        type: 'punctuation' as const,
+        word: item.word || '',
+        start: item.start_index || 0,
+        end: item.end_index || 0,
+        suggestions: Array.isArray(item.suggestions) ? item.suggestions : [],
+        message: item.message || 'Punctuation issue',
+        severity: (item.severity as 'error' | 'warning' | 'suggestion') || 'error'
+      })) : [];
+    } catch (parseError) {
+      return [];
+    }
+  } catch (error) {
+    console.error('Punctuation check error:', error);
+    return [];
+  }
+}
+
+async function checkSentenceStructureAI(text: string): Promise<WritingIssue[]> {
+  try {
+    const prompt = `You are a sentence structure analyzer for NSW Selective School writing. Identify issues: repetitive sentence beginnings, lack of sentence variety, overly simple sentences.
+
+Text: "${text}"
+
+Return a JSON array with this format:
+[
+  {
+    "word": "sentence_beginning",
+    "start_index": number,
+    "end_index": number,
+    "suggestions": ["improvement1", "improvement2"],
+    "message": "Sentence structure suggestion",
+    "severity": "suggestion"
+  }
+]
+
+Return empty array [] if no issues found.`;
+
+    const response = await fetch('/api/openai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt,
+        maxTokens: 1000,
+        temperature: 0.2
+      })
+    });
+
+    if (!response.ok) throw new Error('API request failed');
+    
+    const data = await response.json();
+    const content = data.response || '';
+    
+    try {
+      const results = JSON.parse(content);
+      return Array.isArray(results) ? results.map((item: any) => ({
+        type: 'sentence' as const,
+        word: item.word || '',
+        start: item.start_index || 0,
+        end: item.end_index || 0,
+        suggestions: Array.isArray(item.suggestions) ? item.suggestions : [],
+        message: item.message || 'Sentence structure suggestion',
+        severity: 'suggestion' as const
+      })) : [];
+    } catch (parseError) {
+      return [];
+    }
+  } catch (error) {
+    console.error('Sentence structure check error:', error);
+    return [];
+  }
+}
+
+async function checkParagraphStructureAI(text: string): Promise<WritingIssue[]> {
+  try {
+    const paragraphs = text.split('\n\n').filter(p => p.trim().length > 0);
+    if (paragraphs.length < 2) return [];
+
+    const prompt = `You are a paragraph structure analyzer for NSW Selective School writing. Identify issues: paragraphs too short/long, lack of topic sentences, poor transitions.
+
+Text: "${text}"
+
+Return a JSON array with this format:
+[
+  {
+    "word": "paragraph_beginning",
+    "start_index": number,
+    "end_index": number,
+    "suggestions": ["improvement1", "improvement2"],
+    "message": "Paragraph structure suggestion",
+    "severity": "suggestion"
+  }
+]
+
+Return empty array [] if no issues found.`;
+
+    const response = await fetch('/api/openai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt,
+        maxTokens: 1000,
+        temperature: 0.2
+      })
+    });
+
+    if (!response.ok) throw new Error('API request failed');
+    
+    const data = await response.json();
+    const content = data.response || '';
+    
+    try {
+      const results = JSON.parse(content);
+      return Array.isArray(results) ? results.map((item: any) => ({
+        type: 'paragraph' as const,
+        word: item.word || '',
+        start: item.start_index || 0,
+        end: item.end_index || 0,
+        suggestions: Array.isArray(item.suggestions) ? item.suggestions : [],
+        message: item.message || 'Paragraph structure suggestion',
+        severity: 'suggestion' as const
+      })) : [];
+    } catch (parseError) {
+      return [];
+    }
+  } catch (error) {
+    console.error('Paragraph structure check error:', error);
+    return [];
+  }
+}
+
+// Main AI Writing Checker
+async function checkAllWritingAI(text: string, enabledChecks: any): Promise<WritingIssue[]> {
+  if (!text.trim() || text.length < 10) {
+    return [];
   }
 
-  // Main method to check all writing aspects using AI
-  async checkText(text: string): Promise<WritingIssue[]> {
-    if (!text.trim() || text.length < 10) {
-      return [];
-    }
+  try {
+    const checks = [];
+    
+    if (enabledChecks.spelling) checks.push(checkSpellingAI(text));
+    if (enabledChecks.punctuation) checks.push(checkPunctuationAI(text));
+    if (enabledChecks.grammar) checks.push(checkGrammarAI(text));
+    if (enabledChecks.vocabulary) checks.push(checkVocabularyAI(text));
+    if (enabledChecks.sentence) checks.push(checkSentenceStructureAI(text));
+    if (enabledChecks.paragraph) checks.push(checkParagraphStructureAI(text));
 
-    try {
-      const issues: WritingIssue[] = [];
-      
-      // Run all checks in parallel for better performance
-      const [
-        spellingIssues,
-        punctuationIssues,
-        grammarIssues,
-        vocabularyIssues,
-        sentenceIssues,
-        paragraphIssues
-      ] = await Promise.all([
-        this.checkSpelling(text),
-        this.checkPunctuation(text),
-        this.checkGrammar(text),
-        this.checkVocabulary(text),
-        this.checkSentenceStructure(text),
-        this.checkParagraphStructure(text)
-      ]);
-
-      issues.push(...spellingIssues);
-      issues.push(...punctuationIssues);
-      issues.push(...grammarIssues);
-      issues.push(...vocabularyIssues);
-      issues.push(...sentenceIssues);
-      issues.push(...paragraphIssues);
-
-      return issues.sort((a, b) => a.start - b.start);
-    } catch (error) {
-      console.error('AI Writing Check Error:', error);
-      return [];
-    }
-  }
-
-  // AI-powered spelling checker
-  private async checkSpelling(text: string): Promise<WritingIssue[]> {
-    try {
-      const response = await fetch(`${this.openaiApiBase}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.openaiApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'gpt-3.5-turbo',
-          messages: [
-            {
-              role: 'system',
-              content: `You are a spelling checker for NSW Selective School writing tests. Identify ONLY genuinely misspelled words, not proper nouns, names, or creative writing terms. Return a JSON array of objects with: word, start_index, end_index, suggestions (array of up to 3 corrections), message. Be very conservative - only flag obvious spelling errors.`
-            },
-            {
-              role: 'user',
-              content: `Check spelling in this text: "${text}"`
-            }
-          ],
-          temperature: 0.1,
-          max_tokens: 1000
-        })
-      });
-
-      const data = await response.json();
-      const content = data.choices?.[0]?.message?.content;
-      
-      if (!content) return [];
-
-      try {
-        const aiResults = JSON.parse(content);
-        return aiResults.map((item: any) => ({
-          type: 'spelling' as const,
-          word: item.word,
-          start: item.start_index,
-          end: item.end_index,
-          suggestions: item.suggestions || [],
-          message: item.message || `Possible spelling error: "${item.word}"`,
-          severity: 'error' as const
-        }));
-      } catch (parseError) {
-        console.error('Failed to parse spelling results:', parseError);
-        return [];
-      }
-    } catch (error) {
-      console.error('Spelling check error:', error);
-      return [];
-    }
-  }
-
-  // AI-powered punctuation checker
-  private async checkPunctuation(text: string): Promise<WritingIssue[]> {
-    try {
-      const response = await fetch(`${this.openaiApiBase}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.openaiApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'gpt-3.5-turbo',
-          messages: [
-            {
-              role: 'system',
-              content: `You are a punctuation checker for NSW Selective School writing. Identify missing or incorrect punctuation: missing periods, commas, apostrophes, quotation marks. Return JSON array with: word (text around the issue), start_index, end_index, suggestions, message, severity (error/warning/suggestion).`
-            },
-            {
-              role: 'user',
-              content: `Check punctuation in: "${text}"`
-            }
-          ],
-          temperature: 0.1,
-          max_tokens: 1000
-        })
-      });
-
-      const data = await response.json();
-      const content = data.choices?.[0]?.message?.content;
-      
-      if (!content) return [];
-
-      try {
-        const aiResults = JSON.parse(content);
-        return aiResults.map((item: any) => ({
-          type: 'punctuation' as const,
-          word: item.word,
-          start: item.start_index,
-          end: item.end_index,
-          suggestions: item.suggestions || [],
-          message: item.message || 'Punctuation issue',
-          severity: item.severity || 'error' as const
-        }));
-      } catch (parseError) {
-        return [];
-      }
-    } catch (error) {
-      console.error('Punctuation check error:', error);
-      return [];
-    }
-  }
-
-  // AI-powered grammar checker
-  private async checkGrammar(text: string): Promise<WritingIssue[]> {
-    try {
-      const response = await fetch(`${this.openaiApiBase}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.openaiApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'gpt-3.5-turbo',
-          messages: [
-            {
-              role: 'system',
-              content: `You are a grammar checker for NSW Selective School writing. Identify grammar errors: subject-verb disagreement, sentence fragments, run-on sentences, incorrect tense usage. Return JSON array with: word, start_index, end_index, suggestions, message, severity.`
-            },
-            {
-              role: 'user',
-              content: `Check grammar in: "${text}"`
-            }
-          ],
-          temperature: 0.1,
-          max_tokens: 1000
-        })
-      });
-
-      const data = await response.json();
-      const content = data.choices?.[0]?.message?.content;
-      
-      if (!content) return [];
-
-      try {
-        const aiResults = JSON.parse(content);
-        return aiResults.map((item: any) => ({
-          type: 'grammar' as const,
-          word: item.word,
-          start: item.start_index,
-          end: item.end_index,
-          suggestions: item.suggestions || [],
-          message: item.message || 'Grammar issue',
-          severity: item.severity || 'error' as const
-        }));
-      } catch (parseError) {
-        return [];
-      }
-    } catch (error) {
-      console.error('Grammar check error:', error);
-      return [];
-    }
-  }
-
-  // AI-powered vocabulary enhancement
-  private async checkVocabulary(text: string): Promise<WritingIssue[]> {
-    try {
-      const response = await fetch(`${this.openaiApiBase}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.openaiApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'gpt-3.5-turbo',
-          messages: [
-            {
-              role: 'system',
-              content: `You are a vocabulary enhancer for NSW Selective School writing. Identify basic words that could be upgraded to more sophisticated alternatives appropriate for selective school level. Focus on overused words like "good", "bad", "said", "went", "big", "small". Return JSON array with: word, start_index, end_index, suggestions (3-5 sophisticated alternatives), message, severity: "suggestion".`
-            },
-            {
-              role: 'user',
-              content: `Suggest vocabulary improvements for: "${text}"`
-            }
-          ],
-          temperature: 0.3,
-          max_tokens: 1000
-        })
-      });
-
-      const data = await response.json();
-      const content = data.choices?.[0]?.message?.content;
-      
-      if (!content) return [];
-
-      try {
-        const aiResults = JSON.parse(content);
-        return aiResults.map((item: any) => ({
-          type: 'vocabulary' as const,
-          word: item.word,
-          start: item.start_index,
-          end: item.end_index,
-          suggestions: item.suggestions || [],
-          message: item.message || `Consider a more sophisticated word than "${item.word}"`,
-          severity: 'suggestion' as const
-        }));
-      } catch (parseError) {
-        return [];
-      }
-    } catch (error) {
-      console.error('Vocabulary check error:', error);
-      return [];
-    }
-  }
-
-  // AI-powered sentence structure analysis
-  private async checkSentenceStructure(text: string): Promise<WritingIssue[]> {
-    try {
-      const response = await fetch(`${this.openaiApiBase}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.openaiApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'gpt-3.5-turbo',
-          messages: [
-            {
-              role: 'system',
-              content: `You are a sentence structure analyzer for NSW Selective School writing. Identify issues: repetitive sentence beginnings, lack of sentence variety, overly simple sentences, run-on sentences. Return JSON array with: word (first few words of sentence), start_index, end_index, suggestions, message, severity.`
-            },
-            {
-              role: 'user',
-              content: `Analyze sentence structure in: "${text}"`
-            }
-          ],
-          temperature: 0.2,
-          max_tokens: 1000
-        })
-      });
-
-      const data = await response.json();
-      const content = data.choices?.[0]?.message?.content;
-      
-      if (!content) return [];
-
-      try {
-        const aiResults = JSON.parse(content);
-        return aiResults.map((item: any) => ({
-          type: 'sentence' as const,
-          word: item.word,
-          start: item.start_index,
-          end: item.end_index,
-          suggestions: item.suggestions || [],
-          message: item.message || 'Sentence structure suggestion',
-          severity: item.severity || 'suggestion' as const
-        }));
-      } catch (parseError) {
-        return [];
-      }
-    } catch (error) {
-      console.error('Sentence structure check error:', error);
-      return [];
-    }
-  }
-
-  // AI-powered paragraph structure analysis
-  private async checkParagraphStructure(text: string): Promise<WritingIssue[]> {
-    try {
-      const paragraphs = text.split('\n\n').filter(p => p.trim().length > 0);
-      if (paragraphs.length < 2) return [];
-
-      const response = await fetch(`${this.openaiApiBase}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.openaiApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'gpt-3.5-turbo',
-          messages: [
-            {
-              role: 'system',
-              content: `You are a paragraph structure analyzer for NSW Selective School writing. Identify issues: paragraphs too short/long, lack of topic sentences, poor transitions, underdeveloped ideas. Return JSON array with: word (first few words of paragraph), start_index, end_index, suggestions, message, severity.`
-            },
-            {
-              role: 'user',
-              content: `Analyze paragraph structure in: "${text}"`
-            }
-          ],
-          temperature: 0.2,
-          max_tokens: 1000
-        })
-      });
-
-      const data = await response.json();
-      const content = data.choices?.[0]?.message?.content;
-      
-      if (!content) return [];
-
-      try {
-        const aiResults = JSON.parse(content);
-        return aiResults.map((item: any) => ({
-          type: 'paragraph' as const,
-          word: item.word,
-          start: item.start_index,
-          end: item.end_index,
-          suggestions: item.suggestions || [],
-          message: item.message || 'Paragraph structure suggestion',
-          severity: item.severity || 'suggestion' as const
-        }));
-      } catch (parseError) {
-        return [];
-      }
-    } catch (error) {
-      console.error('Paragraph structure check error:', error);
-      return [];
-    }
+    const results = await Promise.all(checks);
+    const allIssues = results.flat();
+    
+    return allIssues.sort((a, b) => a.start - b.start);
+  } catch (error) {
+    console.error('AI writing check failed:', error);
+    return [];
   }
 }
 
@@ -473,7 +472,6 @@ export default function WritingArea({ onContentChange, initialContent = '', text
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
-  const aiWritingChecker = useRef(new AIWritingChecker());
   const checkTimeoutRef = useRef<NodeJS.Timeout>();
 
   // Timer effect
@@ -549,10 +547,8 @@ export default function WritingArea({ onContentChange, initialContent = '', text
       if (content.trim() && content.length > 20) {
         setIsCheckingWriting(true);
         try {
-          const issues = await aiWritingChecker.current.checkText(content);
-          // Filter issues based on enabled checks
-          const filteredIssues = issues.filter(issue => enabledChecks[issue.type]);
-          setWritingIssues(filteredIssues);
+          const issues = await checkAllWritingAI(content, enabledChecks);
+          setWritingIssues(issues);
         } catch (error) {
           console.error('AI writing check failed:', error);
           setWritingIssues([]);
@@ -563,7 +559,7 @@ export default function WritingArea({ onContentChange, initialContent = '', text
         setWritingIssues([]);
         setIsCheckingWriting(false);
       }
-    }, 2000); // Increased delay to reduce API calls
+    }, 3000); // 3 second delay to reduce API calls
 
     return () => {
       if (checkTimeoutRef.current) {
@@ -804,36 +800,14 @@ export default function WritingArea({ onContentChange, initialContent = '', text
     setIsChatLoading(true);
 
     try {
-      // Use OpenAI API for chat responses
-      const response = await fetch(`${process.env.OPENAI_API_BASE || 'https://api.openai.com/v1'}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'gpt-3.5-turbo',
-          messages: [
-            {
-              role: 'system',
-              content: 'You are a helpful writing assistant for NSW Selective School students. Provide encouraging, constructive feedback and suggestions to help improve their writing. Keep responses concise and age-appropriate.'
-            },
-            {
-              role: 'user',
-              content: `Context: Student is writing a ${textType} piece. Current text: "${content.substring(0, 200)}..." Question: ${chatInput}`
-            }
-          ],
-          temperature: 0.7,
-          max_tokens: 200
-        })
-      });
-
-      const data = await response.json();
-      const aiResponseText = data.choices?.[0]?.message?.content || "I'd be happy to help you with your writing! Can you tell me more about what specific aspect you'd like assistance with?";
-
+      // Use existing OpenAI integration
+      const contextPrompt = `You are a helpful writing assistant for NSW Selective School students. The student is writing a ${textType} piece. Current text: "${content.substring(0, 200)}..." Student question: ${chatInput}`;
+      
+      const response = await generatePrompt(contextPrompt);
+      
       const aiResponse = {
         id: (Date.now() + 1).toString(),
-        text: aiResponseText,
+        text: response || "I'd be happy to help you with your writing! Can you tell me more about what specific aspect you'd like assistance with?",
         sender: 'ai' as const,
         timestamp: new Date()
       };
