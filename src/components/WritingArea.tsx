@@ -3,7 +3,6 @@ import { Save, Download, Upload, Eye, EyeOff, RotateCcw, Sparkles, BookOpen, Tar
 import { generatePrompt, getSynonyms, rephraseSentence, evaluateEssay } from '../lib/openai';
 import { WritingStatusBar } from './WritingStatusBar';
 import { StructuredPlanningSection } from './StructuredPlanningSection';
-import SpellCheckTextarea from './SpellCheckTextarea';
 
 interface WritingAreaProps {
   onContentChange?: (content: string) => void;
@@ -11,6 +10,213 @@ interface WritingAreaProps {
   textType?: string;
   prompt?: string;
   onPromptChange?: (prompt: string) => void;
+}
+
+// Simple spell checker class embedded in the component
+class SimpleSpellChecker {
+  private dictionary: Set<string>;
+  private commonMisspellings: Map<string, string>;
+
+  constructor() {
+    // Common English words dictionary (expanded set)
+    this.dictionary = new Set([
+      'a', 'about', 'above', 'after', 'again', 'against', 'all', 'am', 'an', 'and', 'any', 'are', 'as', 'at',
+      'be', 'because', 'been', 'before', 'being', 'below', 'between', 'both', 'but', 'by',
+      'can', 'could', 'did', 'do', 'does', 'doing', 'down', 'during', 'each', 'few', 'for', 'from',
+      'further', 'had', 'has', 'have', 'having', 'he', 'her', 'here', 'hers', 'herself', 'him',
+      'himself', 'his', 'how', 'i', 'if', 'in', 'into', 'is', 'it', 'its', 'itself', 'just',
+      'me', 'more', 'most', 'my', 'myself', 'no', 'nor', 'not', 'now', 'of', 'off', 'on',
+      'once', 'only', 'or', 'other', 'our', 'ours', 'ourselves', 'out', 'over', 'own',
+      'same', 'she', 'should', 'so', 'some', 'such', 'than', 'that', 'the', 'their', 'theirs',
+      'them', 'themselves', 'then', 'there', 'these', 'they', 'this', 'those', 'through', 'to',
+      'too', 'under', 'until', 'up', 'very', 'was', 'we', 'were', 'what', 'when', 'where',
+      'which', 'while', 'who', 'whom', 'why', 'will', 'with', 'would', 'you', 'your', 'yours',
+      'yourself', 'yourselves',
+      // Story and writing words
+      'story', 'character', 'characters', 'adventure', 'journey', 'magical', 'forest', 'castle',
+      'princess', 'prince', 'dragon', 'treasure', 'friend', 'friends', 'family', 'home', 'school',
+      'teacher', 'student', 'book', 'books', 'read', 'reading', 'write', 'writing', 'amazing',
+      'wonderful', 'beautiful', 'exciting', 'scary', 'happy', 'sad', 'angry', 'surprised',
+      'discovered', 'found', 'looked', 'walked', 'ran', 'jumped', 'climbed', 'flew', 'swam',
+      'talked', 'said', 'asked', 'answered', 'thought', 'felt', 'knew', 'learned', 'taught',
+      'helped', 'saved', 'protected', 'loved', 'cared', 'shared', 'gave', 'received', 'took',
+      'brought', 'carried', 'held', 'opened', 'closed', 'started', 'finished', 'began', 'ended',
+      'suddenly', 'quickly', 'slowly', 'carefully', 'quietly', 'loudly', 'gently', 'softly',
+      'brightly', 'darkly', 'clearly', 'finally', 'eventually', 'immediately', 'always', 'never',
+      'sometimes', 'often', 'usually', 'rarely', 'everywhere', 'somewhere', 'nowhere', 'anywhere',
+      'everyone', 'someone', 'nobody', 'anybody', 'everything', 'something', 'nothing', 'anything',
+      'first', 'second', 'third', 'last', 'next', 'previous', 'new', 'old', 'young', 'big', 'small',
+      'large', 'little', 'long', 'short', 'tall', 'high', 'low', 'wide', 'narrow', 'thick', 'thin',
+      'heavy', 'light', 'strong', 'weak', 'fast', 'slow', 'hot', 'cold', 'warm', 'cool', 'dry', 'wet',
+      'clean', 'dirty', 'fresh', 'old', 'new', 'good', 'bad', 'best', 'worst', 'better', 'worse',
+      'right', 'wrong', 'correct', 'incorrect', 'true', 'false', 'real', 'fake', 'original', 'copy',
+      'inside', 'outside', 'upstairs', 'downstairs', 'nearby', 'far', 'close', 'distant', 'here', 'there',
+      'today', 'tomorrow', 'yesterday', 'morning', 'afternoon', 'evening', 'night', 'day', 'week', 'month', 'year',
+      'time', 'hour', 'minute', 'second', 'moment', 'while', 'during', 'before', 'after', 'since', 'until',
+      'color', 'red', 'blue', 'green', 'yellow', 'orange', 'purple', 'pink', 'brown', 'black', 'white', 'gray',
+      'number', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten',
+      'hundred', 'thousand', 'million', 'billion', 'first', 'second', 'third', 'fourth', 'fifth',
+      'place', 'room', 'house', 'building', 'street', 'city', 'town', 'country', 'world', 'earth',
+      'water', 'fire', 'air', 'ground', 'sky', 'sun', 'moon', 'star', 'cloud', 'rain', 'snow', 'wind',
+      'tree', 'flower', 'grass', 'leaf', 'branch', 'root', 'seed', 'fruit', 'vegetable', 'plant',
+      'animal', 'dog', 'cat', 'bird', 'fish', 'horse', 'cow', 'pig', 'sheep', 'chicken', 'mouse', 'lion',
+      'tiger', 'elephant', 'bear', 'rabbit', 'deer', 'wolf', 'fox', 'snake', 'frog', 'butterfly', 'bee',
+      'food', 'eat', 'drink', 'hungry', 'thirsty', 'breakfast', 'lunch', 'dinner', 'meal', 'bread', 'meat',
+      'milk', 'cheese', 'egg', 'apple', 'orange', 'banana', 'cake', 'cookie', 'candy', 'chocolate',
+      'body', 'head', 'face', 'eye', 'nose', 'mouth', 'ear', 'hair', 'hand', 'finger', 'arm', 'leg', 'foot',
+      'heart', 'mind', 'brain', 'voice', 'smile', 'laugh', 'cry', 'sleep', 'dream', 'wake', 'rest',
+      'work', 'job', 'play', 'game', 'sport', 'music', 'song', 'dance', 'art', 'picture', 'movie', 'show',
+      'party', 'birthday', 'holiday', 'vacation', 'trip', 'visit', 'travel', 'drive', 'ride', 'walk', 'run',
+      'money', 'buy', 'sell', 'pay', 'cost', 'price', 'cheap', 'expensive', 'free', 'gift', 'present',
+      'clothes', 'shirt', 'pants', 'dress', 'shoes', 'hat', 'coat', 'jacket', 'wear', 'put', 'take',
+      'make', 'build', 'create', 'design', 'draw', 'paint', 'cut', 'fix', 'break', 'clean', 'wash',
+      'cook', 'bake', 'grow', 'plant', 'water', 'feed', 'care', 'help', 'teach', 'learn', 'study',
+      'remember', 'forget', 'think', 'know', 'understand', 'believe', 'hope', 'wish', 'want', 'need',
+      'like', 'love', 'hate', 'enjoy', 'prefer', 'choose', 'decide', 'try', 'attempt', 'succeed', 'fail',
+      'win', 'lose', 'fight', 'argue', 'agree', 'disagree', 'talk', 'speak', 'tell', 'say', 'ask', 'answer',
+      'call', 'shout', 'whisper', 'listen', 'hear', 'see', 'look', 'watch', 'find', 'search', 'lose',
+      'keep', 'save', 'throw', 'catch', 'drop', 'pick', 'lift', 'push', 'pull', 'move', 'stop', 'start',
+      'begin', 'end', 'finish', 'complete', 'continue', 'pause', 'wait', 'hurry', 'rush', 'slow', 'fast',
+      'quick', 'brown', 'fox', 'jumps', 'lazy', 'dog', 'friendship'
+    ]);
+
+    // Common misspellings and their corrections
+    this.commonMisspellings = new Map([
+      ['teh', 'the'],
+      ['adn', 'and'],
+      ['hte', 'the'],
+      ['taht', 'that'],
+      ['thier', 'their'],
+      ['recieve', 'receive'],
+      ['seperate', 'separate'],
+      ['definately', 'definitely'],
+      ['occured', 'occurred'],
+      ['begining', 'beginning'],
+      ['writting', 'writing'],
+      ['freind', 'friend'],
+      ['becuase', 'because'],
+      ['wich', 'which'],
+      ['woudl', 'would'],
+      ['coudl', 'could'],
+      ['shoudl', 'should'],
+      ['alot', 'a lot'],
+      ['cant', "can't"],
+      ['wont', "won't"],
+      ['dont', "don't"],
+      ['isnt', "isn't"],
+      ['wasnt', "wasn't"],
+      ['werent', "weren't"],
+      ['havent', "haven't"],
+      ['hasnt', "hasn't"],
+      ['hadnt', "hadn't"],
+      ['wouldnt', "wouldn't"],
+      ['couldnt', "couldn't"],
+      ['shouldnt', "shouldn't"],
+      ['wonderfull', 'wonderful'],
+      ['adventur', 'adventure'],
+      ['freindship', 'friendship']
+    ]);
+  }
+
+  isWordCorrect(word: string): boolean {
+    if (!word || word.length === 0) return true;
+    
+    const cleanWord = word.toLowerCase().replace(/[^\w']/g, '');
+    if (cleanWord.length === 0) return true;
+    
+    // Check if it's in our dictionary
+    if (this.dictionary.has(cleanWord)) return true;
+    
+    // Check if it's a number
+    if (/^\d+$/.test(cleanWord)) return true;
+    
+    // Check if it's a proper noun (starts with capital letter)
+    if (word[0] === word[0].toUpperCase() && word.length > 1) {
+      return true; // Assume proper nouns are correct
+    }
+    
+    // Check if it's a contraction
+    if (word.includes("'")) {
+      // Handle common contractions
+      const contractions = ["can't", "won't", "don't", "isn't", "wasn't", "weren't", "haven't", "hasn't", "hadn't", "wouldn't", "couldn't", "shouldn't", "you're", "we're", "they're", "i'm", "he's", "she's", "it's", "we've", "they've", "i've", "you've", "he'd", "she'd", "we'd", "they'd", "i'd", "you'd", "i'll", "you'll", "he'll", "she'll", "we'll", "they'll"];
+      if (contractions.includes(cleanWord)) return true;
+    }
+    
+    return false;
+  }
+
+  getSuggestions(word: string): string[] {
+    const cleanWord = word.toLowerCase().replace(/[^\w']/g, '');
+    
+    // Check common misspellings first
+    if (this.commonMisspellings.has(cleanWord)) {
+      return [this.commonMisspellings.get(cleanWord)!];
+    }
+    
+    const suggestions: string[] = [];
+    
+    // Simple suggestions based on dictionary words
+    for (const dictWord of this.dictionary) {
+      if (this.editDistance(cleanWord, dictWord) <= 2 && dictWord.length > 2) {
+        suggestions.push(dictWord);
+      }
+      if (suggestions.length >= 5) break; // Limit suggestions
+    }
+    
+    return suggestions;
+  }
+
+  private editDistance(str1: string, str2: string): number {
+    const matrix: number[][] = [];
+    
+    for (let i = 0; i <= str2.length; i++) {
+      matrix[i] = [i];
+    }
+    
+    for (let j = 0; j <= str1.length; j++) {
+      matrix[0][j] = j;
+    }
+    
+    for (let i = 1; i <= str2.length; i++) {
+      for (let j = 1; j <= str1.length; j++) {
+        if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
+          matrix[i][j] = matrix[i - 1][j - 1];
+        } else {
+          matrix[i][j] = Math.min(
+            matrix[i - 1][j - 1] + 1, // substitution
+            matrix[i][j - 1] + 1,     // insertion
+            matrix[i - 1][j] + 1      // deletion
+          );
+        }
+      }
+    }
+    
+    return matrix[str2.length][str1.length];
+  }
+
+  checkText(text: string): Array<{word: string, start: number, end: number, suggestions: string[]}> {
+    const errors: Array<{word: string, start: number, end: number, suggestions: string[]}> = [];
+    const wordRegex = /\b\w+(?:'\w+)?\b/g;
+    let match;
+    
+    while ((match = wordRegex.exec(text)) !== null) {
+      const word = match[0];
+      if (!this.isWordCorrect(word)) {
+        errors.push({
+          word,
+          start: match.index,
+          end: match.index + word.length,
+          suggestions: this.getSuggestions(word)
+        });
+      }
+    }
+    
+    return errors;
+  }
+
+  addToDictionary(word: string) {
+    this.dictionary.add(word.toLowerCase());
+  }
 }
 
 export default function WritingArea({ onContentChange, initialContent = '', textType = 'narrative', prompt: propPrompt, onPromptChange }: WritingAreaProps) {
@@ -82,10 +288,19 @@ export default function WritingArea({ onContentChange, initialContent = '', text
     solution: '',
     feelings: ''
   });
+
+  // Spell checking state
+  const [spellingErrors, setSpellingErrors] = useState<Array<{word: string, start: number, end: number, suggestions: string[]}>>([]);
+  const [selectedError, setSelectedError] = useState<{word: string, start: number, end: number, suggestions: string[]} | null>(null);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [suggestionPosition, setSuggestionPosition] = useState({ x: 0, y: 0 });
   
   // Refs
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const overlayRef = useRef<HTMLDivElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const spellChecker = useRef(new SimpleSpellChecker());
+  const checkTimeoutRef = useRef<NodeJS.Timeout>();
 
   // Timer effect
   useEffect(() => {
@@ -150,14 +365,40 @@ export default function WritingArea({ onContentChange, initialContent = '', text
     }));
   }, [content, onContentChange, timeSpent]);
 
+  // Spell checking effect
+  useEffect(() => {
+    if (checkTimeoutRef.current) {
+      clearTimeout(checkTimeoutRef.current);
+    }
+
+    checkTimeoutRef.current = setTimeout(() => {
+      if (content.trim()) {
+        const errors = spellChecker.current.checkText(content);
+        setSpellingErrors(errors);
+      } else {
+        setSpellingErrors([]);
+      }
+    }, 500);
+
+    return () => {
+      if (checkTimeoutRef.current) {
+        clearTimeout(checkTimeoutRef.current);
+      }
+    };
+  }, [content]);
+
+  // Sync scroll between textarea and overlay
+  const handleScroll = () => {
+    if (textareaRef.current && overlayRef.current) {
+      overlayRef.current.scrollTop = textareaRef.current.scrollTop;
+      overlayRef.current.scrollLeft = textareaRef.current.scrollLeft;
+    }
+  };
+
   // Handle content change
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setContent(e.target.value);
-  };
-
-  // Handle content change for SpellCheckTextarea
-  const handleSpellCheckContentChange = (newContent: string) => {
-    setContent(newContent);
+    setShowSuggestions(false);
   };
 
   // Handle text selection for synonyms
@@ -174,6 +415,97 @@ export default function WritingArea({ onContentChange, initialContent = '', text
         setShowSynonyms(false);
       }
     }
+  };
+
+  // Handle click on highlighted error
+  const handleErrorClick = (error: any, event: React.MouseEvent) => {
+    event.preventDefault();
+    setSelectedError(error);
+    setShowSuggestions(true);
+    
+    // Position suggestions popup
+    const rect = textareaRef.current?.getBoundingClientRect();
+    if (rect) {
+      setSuggestionPosition({
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top + 25
+      });
+    }
+  };
+
+  // Apply suggestion
+  const applySuggestion = (suggestion: string) => {
+    if (selectedError) {
+      const newValue = content.substring(0, selectedError.start) + 
+                      suggestion + 
+                      content.substring(selectedError.end);
+      setContent(newValue);
+    }
+    setShowSuggestions(false);
+    setSelectedError(null);
+  };
+
+  // Ignore error (add to dictionary)
+  const ignoreError = () => {
+    if (selectedError) {
+      spellChecker.current.addToDictionary(selectedError.word);
+      // Recheck to remove the error
+      const errors = spellChecker.current.checkText(content);
+      setSpellingErrors(errors);
+    }
+    setShowSuggestions(false);
+    setSelectedError(null);
+  };
+
+  // Create highlighted text with error overlays
+  const createHighlightedText = () => {
+    if (spellingErrors.length === 0) {
+      return <span style={{ whiteSpace: 'pre-wrap' }}>{content}</span>;
+    }
+
+    const parts = [];
+    let lastIndex = 0;
+
+    spellingErrors.forEach((error, index) => {
+      // Add text before error
+      if (error.start > lastIndex) {
+        parts.push(
+          <span key={`text-${index}`} style={{ whiteSpace: 'pre-wrap' }}>
+            {content.substring(lastIndex, error.start)}
+          </span>
+        );
+      }
+
+      // Add highlighted error
+      parts.push(
+        <span
+          key={`error-${index}`}
+          style={{
+            backgroundColor: '#fef3c7', // yellow-100
+            borderBottom: '2px wavy #f59e0b', // yellow-500 wavy underline
+            cursor: 'pointer',
+            whiteSpace: 'pre-wrap'
+          }}
+          onClick={(e) => handleErrorClick(error, e)}
+          title={`Possible spelling error: ${error.word}. Click for suggestions.`}
+        >
+          {error.word}
+        </span>
+      );
+
+      lastIndex = error.end;
+    });
+
+    // Add remaining text
+    if (lastIndex < content.length) {
+      parts.push(
+        <span key="text-end" style={{ whiteSpace: 'pre-wrap' }}>
+          {content.substring(lastIndex)}
+        </span>
+      );
+    }
+
+    return parts;
   };
 
   // Start exam mode
@@ -226,6 +558,40 @@ export default function WritingArea({ onContentChange, initialContent = '', text
       console.error('Synonyms error:', error);
     } finally {
       setIsLoadingSynonyms(false);
+    }
+  };
+
+  // Chat submission handler
+  const handleChatSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatInput.trim() || isChatLoading) return;
+
+    const userMessage = {
+      id: Date.now().toString(),
+      text: chatInput,
+      sender: 'user' as const,
+      timestamp: new Date()
+    };
+
+    setChatMessages(prev => [...prev, userMessage]);
+    setChatInput('');
+    setIsChatLoading(true);
+
+    try {
+      // Simulate AI response (replace with actual API call)
+      setTimeout(() => {
+        const aiResponse = {
+          id: (Date.now() + 1).toString(),
+          text: "I'd be happy to help you with your writing! Can you tell me more about what specific aspect you'd like assistance with?",
+          sender: 'ai' as const,
+          timestamp: new Date()
+        };
+        setChatMessages(prev => [...prev, aiResponse]);
+        setIsChatLoading(false);
+      }, 1000);
+    } catch (error) {
+      console.error('Chat error:', error);
+      setIsChatLoading(false);
     }
   };
 
@@ -415,25 +781,109 @@ export default function WritingArea({ onContentChange, initialContent = '', text
             </div>
 
             {/* Enhanced Text Area with Spell Checking */}
-            <SpellCheckTextarea
-              value={content}
-              onChange={handleSpellCheckContentChange}
-              onMouseUp={handleTextSelection}
-              onKeyUp={handleTextSelection}
-              placeholder="Start writing your amazing story here! Let your creativity flow and bring your ideas to life..."
-              className={`flex-1 text-sm leading-relaxed ${
-                focusMode 
-                  ? 'text-gray-100 bg-gray-800 placeholder-gray-500' 
-                  : 'text-gray-900 bg-white placeholder-gray-400'
-              } focus:outline-none resize-none transition-colors duration-300`}
-              style={{ 
-                fontSize: `${fontSize}px`, 
-                lineHeight: lineHeight,
-                padding: '1rem',
-                border: 'none',
-                borderRadius: '0'
-              }}
-            />
+            <div className="flex-1 relative">
+              {/* Overlay for highlighting */}
+              <div
+                ref={overlayRef}
+                className="absolute inset-0 pointer-events-none overflow-hidden"
+                style={{
+                  color: 'transparent',
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  resize: 'none',
+                  whiteSpace: 'pre-wrap',
+                  wordWrap: 'break-word',
+                  zIndex: 1,
+                  pointerEvents: spellingErrors.length > 0 ? 'auto' : 'none'
+                }}
+              >
+                <div
+                  style={{
+                    padding: '1rem',
+                    fontSize: `${fontSize}px`,
+                    fontFamily: 'Georgia, serif',
+                    lineHeight: lineHeight,
+                    minHeight: '100%',
+                    pointerEvents: spellingErrors.length > 0 ? 'auto' : 'none'
+                  }}
+                >
+                  {createHighlightedText()}
+                </div>
+              </div>
+
+              {/* Actual textarea */}
+              <textarea
+                ref={textareaRef}
+                value={content}
+                onChange={handleContentChange}
+                onScroll={handleScroll}
+                onMouseUp={handleTextSelection}
+                onKeyUp={handleTextSelection}
+                placeholder="Start writing your amazing story here! Let your creativity flow and bring your ideas to life..."
+                className={`w-full h-full p-4 text-sm leading-relaxed ${
+                  focusMode 
+                    ? 'text-gray-100 bg-gray-800 placeholder-gray-500' 
+                    : 'text-gray-900 bg-white placeholder-gray-400'
+                } focus:outline-none resize-none transition-colors duration-300 relative z-2`}
+                style={{ 
+                  fontSize: `${fontSize}px`, 
+                  lineHeight: lineHeight,
+                  fontFamily: 'Georgia, serif',
+                  backgroundColor: spellingErrors.length > 0 ? 'transparent' : undefined,
+                  position: 'relative',
+                  zIndex: 2
+                }}
+                spellCheck={false}
+              />
+
+              {/* Suggestions popup */}
+              {showSuggestions && selectedError && (
+                <div
+                  className="absolute bg-white border border-gray-300 rounded-lg shadow-lg p-3 z-50 min-w-48"
+                  style={{
+                    left: suggestionPosition.x,
+                    top: suggestionPosition.y,
+                    maxWidth: '250px'
+                  }}
+                >
+                  <div className="mb-2">
+                    <div className="text-sm font-medium text-gray-700 mb-1">
+                      Spelling suggestion for "{selectedError.word}":
+                    </div>
+                    {selectedError.suggestions.length > 0 ? (
+                      <div className="space-y-1">
+                        {selectedError.suggestions.map((suggestion, index) => (
+                          <button
+                            key={index}
+                            className="block w-full text-left px-2 py-1 text-sm hover:bg-blue-50 rounded"
+                            onClick={() => applySuggestion(suggestion)}
+                          >
+                            {suggestion}
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-sm text-gray-500 italic">No suggestions available</div>
+                    )}
+                  </div>
+                  
+                  <div className="border-t pt-2 flex space-x-2">
+                    <button
+                      className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded"
+                      onClick={ignoreError}
+                    >
+                      Ignore
+                    </button>
+                    <button
+                      className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded"
+                      onClick={() => setShowSuggestions(false)}
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
             
             {/* Status Bar */}
             <div className={`px-3 py-2 ${focusMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'} border-t flex items-center justify-between transition-colors duration-300`}>
@@ -481,6 +931,201 @@ export default function WritingArea({ onContentChange, initialContent = '', text
               </button>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Right Sidebar - Writing Buddy */}
+      <div className="w-80 bg-gradient-to-b from-indigo-600 to-purple-700 text-white flex flex-col shadow-lg">
+        {/* Header */}
+        <div className="p-3 border-b border-indigo-500 bg-indigo-700">
+          <div className="flex items-center justify-between mb-1">
+            <h2 className="text-sm font-bold flex items-center text-white">
+              <Bot className="w-4 h-4 mr-2" />
+              Writing Buddy
+            </h2>
+            <button className="p-1 rounded-full hover:bg-white hover:bg-opacity-20 transition-colors">
+              <Settings className="w-3 h-3 text-indigo-200" />
+            </button>
+          </div>
+          <p className="text-indigo-200 text-xs">Your AI writing assistant</p>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex border-b border-indigo-500 bg-indigo-600">
+          {[
+            { id: 'ai-coach', label: 'Coach', icon: Bot },
+            { id: 'analysis', label: 'Analysis', icon: BarChart3 },
+            { id: 'vocabulary', label: 'Vocabulary', icon: BookOpen },
+            { id: 'progress', label: 'Progress', icon: TrendingUp }
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 py-2 px-1 text-xs font-medium transition-colors flex flex-col items-center ${
+                activeTab === tab.id 
+                  ? 'bg-indigo-800 text-white border-b-2 border-yellow-400' 
+                  : 'text-indigo-200 hover:bg-indigo-700 hover:text-white'
+              }`}
+            >
+              <tab.icon className="w-3 h-3 mb-1" />
+              <span className="text-xs leading-tight">{tab.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Tab Content */}
+        <div className="flex-1 p-3 overflow-y-auto bg-indigo-600">
+          {activeTab === 'ai-coach' && (
+            <div className="flex flex-col h-full">
+              <h3 className="text-xs font-semibold mb-3 text-indigo-100 text-center">AI Coach</h3>
+              <div className="flex-1 overflow-y-auto mb-3 bg-indigo-700 rounded-lg p-3">
+                {chatMessages.length === 0 && (
+                  <div className="text-center">
+                    <p className="text-indigo-200 text-xs mb-3 font-medium">Ask your Writing Buddy anything!</p>
+                    <div className="text-xs text-indigo-300 space-y-2 text-left">
+                      <p className="flex items-start">
+                        <span className="text-yellow-400 mr-2">•</span>
+                        "How can I improve my introduction?"
+                      </p>
+                      <p className="flex items-start">
+                        <span className="text-yellow-400 mr-2">•</span>
+                        "What's a good synonym for 'said'?"
+                      </p>
+                      <p className="flex items-start">
+                        <span className="text-yellow-400 mr-2">•</span>
+                        "Help me with my conclusion"
+                      </p>
+                    </div>
+                  </div>
+                )}
+                {chatMessages.map((message) => (
+                  <div key={message.id} className={`mb-3 ${message.sender === 'user' ? 'text-right' : 'text-left'}`}>
+                    <div className={`inline-block p-2 rounded-lg text-xs max-w-[90%] leading-relaxed ${
+                      message.sender === 'user' 
+                        ? 'bg-blue-500 text-white' 
+                        : 'bg-white text-gray-800 shadow-sm'
+                    }`}>
+                      {message.text.split('\n').map((line, index) => (
+                        <div key={index}>{line}</div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+                {isChatLoading && (
+                  <div className="text-center py-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-200 mx-auto"></div>
+                  </div>
+                )}
+                <div ref={chatEndRef} />
+              </div>
+              
+              <form onSubmit={handleChatSubmit} className="flex space-x-2">
+                <input
+                  type="text"
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  placeholder="Ask for help..."
+                  className="flex-1 px-3 py-2 text-xs text-gray-900 bg-white rounded border-none focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                />
+                <button
+                  type="submit"
+                  disabled={!chatInput.trim() || isChatLoading}
+                  className="px-3 py-2 bg-yellow-500 hover:bg-yellow-600 text-indigo-900 rounded disabled:opacity-50 text-xs font-medium transition-colors"
+                >
+                  <Send className="w-3 h-3" />
+                </button>
+              </form>
+            </div>
+          )}
+
+          {activeTab === 'analysis' && (
+            <div className="space-y-3">
+              <h3 className="text-xs font-semibold mb-3 text-indigo-100 text-center">Writing Analysis</h3>
+              
+              <div className="bg-indigo-700 rounded-lg p-3 text-center">
+                <h4 className="font-medium mb-1 text-xs text-indigo-200">Words:</h4>
+                <div className="text-2xl font-bold text-white">{wordCount}</div>
+              </div>
+              
+              <div className="bg-indigo-700 rounded-lg p-3 text-center">
+                <h4 className="font-medium mb-1 text-xs text-indigo-200">Characters:</h4>
+                <div className="text-2xl font-bold text-white">{characterCount}</div>
+              </div>
+              
+              <div className="bg-indigo-700 rounded-lg p-3 text-center">
+                <h4 className="font-medium mb-1 text-xs text-indigo-200">Reading Time:</h4>
+                <div className="text-2xl font-bold text-white">{readingTime} min</div>
+              </div>
+
+              <div className="bg-indigo-700 rounded-lg p-3 text-center">
+                <h4 className="font-medium mb-1 text-xs text-indigo-200">Spelling Errors:</h4>
+                <div className="text-2xl font-bold text-white">{spellingErrors.length}</div>
+              </div>
+              
+              <button 
+                onClick={handleEvaluate}
+                className="w-full bg-yellow-500 hover:bg-yellow-600 text-indigo-900 py-3 px-3 rounded-lg text-xs font-medium transition-colors"
+              >
+                Submit for Evaluation
+              </button>
+            </div>
+          )}
+          
+          {activeTab === 'vocabulary' && (
+            <div className="space-y-3">
+              <h3 className="text-xs font-semibold mb-3 text-indigo-100 text-center">Vocabulary</h3>
+              <div className="bg-indigo-700 rounded-lg p-3 text-center">
+                <p className="text-indigo-200 text-xs mb-3">Select text to see suggestions</p>
+                <div className="text-xs text-indigo-300 space-y-2 text-left">
+                  <p className="flex items-start">
+                    <span className="text-yellow-400 mr-2">•</span>
+                    Highlight any word in your writing
+                  </p>
+                  <p className="flex items-start">
+                    <span className="text-yellow-400 mr-2">•</span>
+                    Get instant synonym suggestions
+                  </p>
+                  <p className="flex items-start">
+                    <span className="text-yellow-400 mr-2">•</span>
+                    Improve your vocabulary
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {activeTab === 'progress' && (
+            <div className="space-y-3">
+              <h3 className="text-xs font-semibold mb-3 text-indigo-100 text-center">Progress</h3>
+              <div className="bg-indigo-700 rounded-lg p-3">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-xs text-indigo-200">Word Goal:</span>
+                  <span className="font-bold text-sm text-white">{targetWordCount}</span>
+                </div>
+                <div className="w-full bg-indigo-800 rounded-full h-3 mb-2">
+                  <div 
+                    className="bg-yellow-400 h-3 rounded-full transition-all duration-300"
+                    style={{ width: `${Math.min((wordCount / targetWordCount) * 100, 100)}%` }}
+                  ></div>
+                </div>
+                <p className="text-xs text-indigo-200 text-center">
+                  {wordCount >= targetWordCount ? '🎉 Goal achieved!' : `${targetWordCount - wordCount} words to go`}
+                </p>
+              </div>
+              
+              <div className="bg-indigo-700 rounded-lg p-3 text-center">
+                <h4 className="font-medium mb-1 text-xs text-indigo-200">Writing Time:</h4>
+                <div className="text-lg font-bold text-white">{formatTime(timeSpent)}</div>
+              </div>
+
+              {examMode && (
+                <div className="bg-red-600 rounded-lg p-3 text-center">
+                  <h4 className="font-medium mb-1 text-xs text-red-200">Exam Time Left:</h4>
+                  <div className="text-lg font-bold text-white">{formatTime(examTimeRemaining)}</div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
