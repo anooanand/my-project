@@ -1,4 +1,4 @@
-const OpenAI = require("openai");
+import OpenAI from "openai";
 
 // Initialize OpenAI with server-side API key
 const openai = new OpenAI({
@@ -44,53 +44,8 @@ async function getNSWTextTypeAnalysis(content, textType) {
   try {
     const analysis = analyzeContentStructure(content);
 
-    const prompt = `You are an expert NSW Selective School writing assessor specializing in text type analysis. Analyze this ${textType} writing sample and provide detailed feedback on how well it adheres to the specific requirements and conventions of this text type.
-
-STUDENT'S WRITING:
-"${content}"
-
-TEXT TYPE: ${textType}
-
-CONTENT ANALYSIS:
-- Word count: ${analysis.wordCount}
-- Sentence count: ${analysis.sentenceCount}
-- Paragraph count: ${analysis.paragraphCount}
-- Has dialogue: ${analysis.hasDialogue}
-- Potential characters: ${analysis.potentialCharacters.join(', ') || 'None identified'}
-
-TEXT TYPE SPECIFIC ANALYSIS FOR ${textType.toUpperCase()}:
-
-${getTextTypeRequirements(textType)}
-
-INSTRUCTIONS:
-1. Assess how well the writing meets the specific requirements of ${textType}
-2. Identify which text type features are present and which are missing
-3. Provide specific examples from the student's text
-4. Suggest improvements specific to this text type
-5. Rate adherence to text type conventions (1-10)
-
-Format your response as a JSON object with this structure:
-{
-  "textType": "${textType}",
-  "adherenceScore": number (1-10),
-  "textTypeFeatures": {
-    "present": ["features that are well demonstrated"],
-    "partial": ["features that are partially demonstrated"],
-    "missing": ["features that are missing or weak"]
-  },
-  "structuralAnalysis": {
-    "opening": "analysis of how well the opening meets text type requirements",
-    "body": "analysis of body paragraphs/development",
-    "conclusion": "analysis of conclusion effectiveness"
-  },
-  "languageFeatures": {
-    "appropriate": ["language features used well for this text type"],
-    "needsWork": ["language features that need improvement"]
-  },
-  "specificSuggestions": ["actionable suggestions specific to improving this text type"],
-  "textTypeExamples": ["examples of how to improve specific elements"],
-  "nextSteps": ["specific tasks to better meet text type requirements"]
-}`;
+    const prompt = `You are an expert NSW Selective School writing assessor specializing in text type analysis. Analyze this ${textType} writing sample and provide detailed feedback on how well it adheres to the specific requirements and conventions of this text type.\n\nSTUDENT\'S WRITING:\n"${content}"\n\nTEXT TYPE: ${textType}\n\nCONTENT ANALYSIS:\n- Word count: ${analysis.wordCount}\n- Sentence count: ${analysis.sentenceCount}\n- Paragraph count: ${analysis.paragraphCount}\n- Has dialogue: ${analysis.hasDialogue}\n- Potential characters: ${analysis.potentialCharacters.join(\", \") || \'None identified\'}\n\nTEXT TYPE SPECIFIC ANALYSIS FOR ${textType.toUpperCase()}:\n\n${getTextTypeRequirements(textType)}\n\nINSTRUCTIONS:\n1. Assess how well the writing meets the specific requirements of ${textType}\n2. Identify which text type features are present and which are missing\n3. Provide specific examples from the student\'s text\n4. Suggest improvements specific to this text type\n5. Rate adherence to text type conventions (1-10)\n\nFormat your response as a JSON object with this structure:\n{\n  \"textType\": \"${textType}\",\n  \"adherenceScore\": number (1-10),\n  \"textTypeFeatures\": {\n    \"present\": [\"features that are well demonstrated\"],\n    \"partial\": [\"features that are partially demonstrated\"],\n    \"missing\": [\"features that are missing or weak\"]\n  },\n  \"structuralAnalysis\": {\n    \"opening\": \"analysis of how well the opening meets text type requirements\",\n    \"body\": \"analysis of body paragraphs/development\",\n    \"conclusion\": \"analysis of conclusion effectiveness\"\n  },\n  \"languageFeatures\": {\n    \"appropriate\": [\"language features used well for this text type\"],\n    \"needsWork\": [\"language features that need improvement\"]\n  },\n  \"specificSuggestions\": [\"actionable suggestions specific to improving this text type\"],\n  \"textTypeExamples\": [\"examples of how to improve specific elements\"],\n  \"nextSteps\": [\"specific tasks to better meet text type requirements\"]\n}\
+`;
 
     const response = await openai.chat.completions.create({
       model: "gpt-4",
@@ -143,69 +98,18 @@ Format your response as a JSON object with this structure:
 // Helper function to get text type requirements
 function getTextTypeRequirements(textType) {
   const requirements = {
-    narrative: `
-    NARRATIVE REQUIREMENTS:
-    - Clear story structure (orientation, complication, resolution)
-    - Well-developed characters with clear motivations
-    - Engaging plot with conflict and resolution
-    - Descriptive language and imagery
-    - Dialogue that advances the story
-    - Consistent point of view and tense
-    - Engaging opening that hooks the reader
-    - Satisfying conclusion that resolves the conflict`,
+    narrative: `\n    NARRATIVE REQUIREMENTS:\n    - Clear story structure (orientation, complication, resolution)\n    - Well-developed characters with clear motivations\n    - Engaging plot with conflict and resolution\n    - Descriptive language and imagery\n    - Dialogue that advances the story\n    - Consistent point of view and tense\n    - Engaging opening that hooks the reader\n    - Satisfying conclusion that resolves the conflict`,
     
-    persuasive: `
-    PERSUASIVE REQUIREMENTS:
-    - Clear thesis/position statement
-    - Logical argument structure with supporting evidence
-    - Use of persuasive techniques (rhetorical questions, repetition, emotive language)
-    - Acknowledgment of counterarguments
-    - Strong conclusion that reinforces the position
-    - Appropriate tone for the intended audience
-    - Facts, statistics, or examples to support claims
-    - Call to action or clear recommendation`,
+    persuasive: `\n    PERSUASIVE REQUIREMENTS:\n    - Clear thesis/position statement\n    - Logical argument structure with supporting evidence\n    - Use of persuasive techniques (rhetorical questions, repetition, emotive language)\n    - Acknowledgment of counterarguments\n    - Strong conclusion that reinforces the position\n    - Appropriate tone for the intended audience\n    - Facts, statistics, or examples to support claims\n    - Call to action or clear recommendation`,
     
-    expository: `
-    EXPOSITORY REQUIREMENTS:
-    - Clear topic introduction and thesis
-    - Logical organization of information
-    - Use of topic sentences and supporting details
-    - Objective, informative tone
-    - Clear explanations and definitions
-    - Use of examples and evidence
-    - Smooth transitions between ideas
-    - Conclusion that summarizes key points`,
+    expository: `\n    EXPOSITORY REQUIREMENTS:\n    - Clear topic introduction and thesis\n    - Logical organization of information\n    - Use of topic sentences and supporting details\n    - Objective, informative tone\n    - Clear explanations and definitions\n    - Use of examples and evidence\n    - Smooth transitions between ideas\n    - Conclusion that summarizes key points`,
     
-    recount: `
-    RECOUNT REQUIREMENTS:
-    - Chronological sequence of events
-    - Clear orientation (who, what, when, where)
-    - Personal experience or factual events
-    - Past tense throughout
-    - First or third person perspective
-    - Descriptive details that bring events to life
-    - Clear sequence markers (first, then, next, finally)
-    - Reflection on the significance of events`,
+    recount: `\n    RECOUNT REQUIREMENTS:\n    - Chronological sequence of events\n    - Clear orientation (who, what, when, where)\n    - Personal experience or factual events\n    - Past tense throughout\n    - First or third person perspective\n    - Descriptive details that bring events to life\n    - Clear sequence markers (first, then, next, finally)\n    - Reflection on the significance of events`,
     
-    descriptive: `
-    DESCRIPTIVE REQUIREMENTS:
-    - Rich sensory details (sight, sound, smell, touch, taste)
-    - Vivid imagery and figurative language
-    - Clear focus on a person, place, object, or experience
-    - Organized spatial or logical structure
-    - Varied sentence structures for rhythm
-    - Precise vocabulary and word choice
-    - Creates a clear mental picture for the reader
-    - Engages the reader's senses and emotions`
+    descriptive: `\n    DESCRIPTIVE REQUIREMENTS:\n    - Rich sensory details (sight, sound, smell, touch, taste)\n    - Vivid imagery and figurative language\n    - Clear focus on a person, place, object, or experience\n    - Organized spatial or logical structure\n    - Varied sentence structures for rhythm\n    - Precise vocabulary and word choice\n    - Creates a clear mental picture for the reader\n    - Engages the reader\'s senses and emotions`
   };
   
-  return requirements[textType.toLowerCase()] || `
-  GENERAL TEXT TYPE REQUIREMENTS:
-  - Clear structure appropriate to the text type
-  - Consistent tone and style
-  - Appropriate language features
-  - Engaging content that meets the purpose
-  - Clear beginning, middle, and end`;
+  return requirements[textType.toLowerCase()] || `\n  GENERAL TEXT TYPE REQUIREMENTS:\n  - Clear structure appropriate to the text type\n  - Consistent tone and style\n  - Appropriate language features\n  - Engaging content that meets the purpose\n  - Clear beginning, middle, and end`;
 }
 
 // 2. NSW Vocabulary Sophistication Analysis Endpoint
@@ -219,59 +123,8 @@ async function getNSWVocabularySophistication(content) {
     const longWords = words.filter(w => w.length > 6);
     const academicWords = words.filter(w => isAcademicWord(w.toLowerCase()));
 
-    const prompt = `You are an expert NSW Selective School writing assessor specializing in vocabulary sophistication analysis. Analyze this writing sample for vocabulary complexity, variety, and sophistication appropriate for NSW Selective standards.
-
-STUDENT'S WRITING:
-"${content}"
-
-BASIC VOCABULARY METRICS:
-- Total words: ${words.length}
-- Unique words: ${uniqueWords.length}
-- Vocabulary diversity ratio: ${(uniqueWords.length / words.length * 100).toFixed(1)}%
-- Words over 6 letters: ${longWords.length}
-- Potential academic words: ${academicWords.length}
-
-VOCABULARY SOPHISTICATION ANALYSIS:
-1. Assess vocabulary complexity and variety
-2. Identify sophisticated word choices
-3. Find opportunities for vocabulary enhancement
-4. Suggest specific word improvements
-5. Rate overall vocabulary sophistication (1-10)
-
-Format your response as a JSON object:
-{
-  "vocabularyScore": number (1-10),
-  "sophisticationLevel": "emerging|developing|proficient|advanced",
-  "vocabularyMetrics": {
-    "totalWords": ${words.length},
-    "uniqueWords": ${uniqueWords.length},
-    "diversityRatio": ${(uniqueWords.length / words.length * 100).toFixed(1)},
-    "averageWordLength": number,
-    "complexWords": number
-  },
-  "strengths": {
-    "sophisticatedWords": ["list of sophisticated words used well"],
-    "varietyExamples": ["examples of good vocabulary variety"],
-    "appropriateChoices": ["words that are well-chosen for context"]
-  },
-  "improvements": {
-    "basicWords": ["simple words that could be enhanced"],
-    "repetitiveWords": ["words that are overused"],
-    "missedOpportunities": ["places where more sophisticated words could be used"]
-  },
-  "suggestions": {
-    "wordReplacements": [
-      {
-        "original": "simple word",
-        "suggestions": ["sophisticated alternative 1", "sophisticated alternative 2"],
-        "context": "explanation of when to use"
-      }
-    ],
-    "vocabularyTechniques": ["specific techniques to improve vocabulary"],
-    "practiceActivities": ["activities to build vocabulary sophistication"]
-  },
-  "nextSteps": ["specific actions to improve vocabulary sophistication"]
-}`;
+    const prompt = `You are an expert NSW Selective School writing assessor specializing in vocabulary sophistication analysis. Analyze this writing sample for vocabulary complexity, variety, and sophistication appropriate for NSW Selective standards.\n\nSTUDENT\'S WRITING:\n"${content}"\n\nBASIC VOCABULARY METRICS:\n- Total words: ${words.length}\n- Unique words: ${uniqueWords.length}\n- Vocabulary diversity ratio: ${(uniqueWords.length / words.length * 100).toFixed(1)}%\n- Words over 6 letters: ${longWords.length}\n- Potential academic words: ${academicWords.length}\n\nVOCABULARY SOPHISTICATION ANALYSIS:\n1. Assess vocabulary complexity and variety\n2. Identify sophisticated word choices\n3. Find opportunities for vocabulary enhancement\n4. Suggest specific word improvements\n5. Rate overall vocabulary sophistication (1-10)\n\nFormat your response as a JSON object:\n{\n  \"vocabularyScore\": number (1-10),\n  \"sophisticationLevel\": \"emerging|developing|proficient|advanced\",\n  \"vocabularyMetrics\": {\n    \"totalWords\": ${words.length},\n    \"uniqueWords\": ${uniqueWords.length},\n    \"diversityRatio\": ${(uniqueWords.length / words.length * 100).toFixed(1)},\n    \"averageWordLength\": number,\n    \"complexWords\": number\n  },\n  \"strengths\": {\n    \"sophisticatedWords\": [\"list of sophisticated words used well\"],\n    \"varietyExamples\": [\"examples of good vocabulary variety\"],\n    \"appropriateChoices\": [\"words that are well-chosen for context\"]\n  },\n  \"improvements\": {\n    \"basicWords\": [\"simple words that could be enhanced\"],\n    \"repetitiveWords\": [\"words that are overused\"],\n    \"missedOpportunities\": [\"places where more sophisticated words could be used\"]\n  },\n  \"suggestions\": {\n    \"wordReplacements\": [\n      {\n        \"original\": \"simple word\",\n        \"suggestions\": [\"sophisticated alternative 1\", \"sophisticated alternative 2\"],\n        \"context\": \"explanation of when to use\"\n      }\n    ],\n    \"vocabularyTechniques\": [\"specific techniques to improve vocabulary\"],\n    \"practiceActivities\": [\"activities to build vocabulary sophistication\"]\n  },\n  \"nextSteps\": [\"specific actions to improve vocabulary sophistication\"]\n}\
+`;
 
     const response = await openai.chat.completions.create({
       model: "gpt-4",
@@ -441,205 +294,624 @@ function identifyStrengths(assessment) {
 function identifyImprovements(assessment) {
   const improvements = [];
   const criteria = assessment.criteriaFeedback || {};
-  
+
   Object.entries(criteria).forEach(([key, value]) => {
-    if (value.score && value.maxScore && (value.score / value.maxScore) < 0.6) {
+    if (value.score && value.maxScore && (value.score / value.maxScore) < 0.5) {
       improvements.push(key.replace(/([A-Z])/g, ' $1').toLowerCase());
     }
   });
-  
-  return improvements.length > 0 ? improvements : ["Continue developing all areas"];
+
+  return improvements.length > 0 ? improvements : ["Continue to refine all areas"];
 }
 
 function getFocusAreas(assessment) {
-  const totalScore = assessment.totalScore || 0;
-  
-  if (totalScore < 15) {
-    return ["Basic writing structure", "Idea development", "Grammar fundamentals"];
-  } else if (totalScore < 22) {
-    return ["Vocabulary sophistication", "Text organization", "Language features"];
-  } else {
-    return ["Advanced techniques", "Exam strategies", "Time management"];
-  }
+  const focusAreas = [];
+  const criteria = assessment.criteriaFeedback || {};
+
+  // Prioritize areas with lower scores
+  const sortedCriteria = Object.entries(criteria).sort(([, a], [, b]) => (a.score || 0) - (b.score || 0));
+
+  sortedCriteria.forEach(([key, value]) => {
+    if (value.score && value.maxScore && (value.score / value.maxScore) < 0.7) {
+      focusAreas.push(key.replace(/([A-Z])/g, ' $1').toLowerCase());
+    }
+  });
+
+  return focusAreas.length > 0 ? focusAreas : ["Maintain strong performance across all areas"];
 }
 
 function getPracticeActivities(assessment) {
-  const band = assessment.overallBand || 1;
-  
-  const activities = {
-    1: ["Daily writing practice", "Basic grammar exercises", "Simple vocabulary building"],
-    2: ["Structured paragraph writing", "Grammar review", "Word choice exercises"],
-    3: ["Text type practice", "Sentence variety exercises", "Vocabulary expansion"],
-    4: ["Advanced text structures", "Literary device practice", "Complex sentence construction"],
-    5: ["Sophisticated writing techniques", "Advanced vocabulary", "Exam simulation"],
-    6: ["Refinement exercises", "Creative challenges", "Peer review activities"]
-  };
-  
-  return activities[band] || activities[1];
+  const activities = [
+    "Practice writing different text types (narrative, persuasive, expository, recount, descriptive)",
+    "Focus on expanding vocabulary and using sophisticated language",
+    "Work on structuring arguments and ideas logically",
+    "Refine grammar, spelling, and punctuation",
+    "Read widely to understand different writing styles"
+  ];
+
+  // Tailor activities based on areas needing improvement
+  const improvementAreas = identifyImprovements(assessment);
+  if (improvementAreas.includes("ideas and content")) {
+    activities.unshift("Brainstorming and planning exercises");
+  }
+  if (improvementAreas.includes("text structure and organization")) {
+    activities.unshift("Outlining and paragraph structuring drills");
+  }
+  if (improvementAreas.includes("language features and vocabulary")) {
+    activities.unshift("Vocabulary building and figurative language practice");
+  }
+  if (improvementAreas.includes("spelling punctuation grammar")) {
+    activities.unshift("Grammar and punctuation exercises");
+  }
+
+  return activities;
 }
 
 function getStudyPlan(assessment) {
-  const totalScore = assessment.totalScore || 0;
-  
-  if (totalScore < 15) {
-    return {
-      phase: "Foundation Building",
-      duration: "4-6 weeks",
-      focus: "Basic skills development",
-      activities: ["Daily 15-minute writing", "Grammar practice", "Reading comprehension"]
-    };
-  } else if (totalScore < 22) {
-    return {
-      phase: "Skill Enhancement",
-      duration: "3-4 weeks", 
-      focus: "Intermediate skill development",
-      activities: ["Text type practice", "Vocabulary building", "Timed writing exercises"]
-    };
-  } else {
-    return {
-      phase: "Exam Preparation",
-      duration: "2-3 weeks",
-      focus: "Exam readiness and refinement",
-      activities: ["Mock exams", "Strategy practice", "Final review"]
-    };
+  const plan = [
+    "Review feedback from previous assessments",
+    "Set specific, measurable goals for each writing criteria",
+    "Dedicate regular time to writing practice",
+    "Seek feedback from teachers or mentors",
+    "Analyze sample high-scoring responses"
+  ];
+
+  // Add more specific plan items based on readiness level
+  const readinessLevel = getReadinessLevel(assessment.totalScore || 0);
+  if (readinessLevel === "Early Development") {
+    plan.unshift("Focus on understanding basic text type conventions");
+  } else if (readinessLevel === "Building Skills") {
+    plan.unshift("Practice applying specific writing techniques");
+  } else if (readinessLevel === "Developing Well") {
+    plan.unshift("Work on integrating advanced language features");
+  } else if (readinessLevel === "Nearly Ready") {
+    plan.unshift("Simulate exam conditions for practice");
   }
+
+  return plan;
 }
 
-// 4. NSW Coaching Tips Endpoint
-async function getNSWCoachingTips(content, textType, currentScore, focusArea) {
+// 4. NSW Essay Scoring Endpoint
+async function getNSWEssayScore(content, textType) {
   try {
     const analysis = analyzeContentStructure(content);
 
-    const prompt = `You are an expert NSW Selective School writing coach. Provide personalized, actionable coaching tips for this student based on their writing sample, current performance level, and specific focus area.
+    const prompt = `You are an expert NSW Selective School writing assessor. Your task is to score the provided student writing sample based on the NSW Selective School marking criteria for ${textType} writing. Provide a score out of 30 and detailed feedback across the four key criteria:
 
-STUDENT'S WRITING:
-"${content}"
+1. Ideas and Content (9 marks)
+2. Text Structure and Organization (7.5 marks)
+3. Language Features and Vocabulary (7.5 marks)
+4. Spelling, Punctuation, and Grammar (6 marks)
 
-CONTEXT:
-- Text Type: ${textType}
-- Current Score: ${currentScore}/30
-- Focus Area: ${focusArea}
-- Word Count: ${analysis.wordCount}
-- Sentence Count: ${analysis.sentenceCount}
+STUDENT\'S WRITING:\n"${content}"\n\nTEXT TYPE: ${textType}\n\nINSTRUCTIONS:\n1. Provide a score for each of the four criteria.
+2. Provide specific, actionable feedback for each criterion, referencing the student\'s text where possible.
+3. Suggest clear next steps for improvement for each criterion.
+4. Calculate an overall score out of 30.
+5. Assign an overall band level (1-6) based on the total score (e.g., 25-30 = Band 6, 20-24 = Band 5, 15-19 = Band 4, 10-14 = Band 3, 5-9 = Band 2, 0-4 = Band 1).
 
-COACHING REQUIREMENTS:
-1. Provide specific, actionable tips tailored to this student's level
-2. Focus on the specified area while maintaining overall writing quality
-3. Include immediate actions the student can take
-4. Provide examples relevant to their writing
-5. Suggest practice exercises
-6. Give encouragement and motivation
-
-Format your response as a JSON object:
-{
-  "coachingLevel": "beginner|intermediate|advanced",
-  "primaryFocus": "${focusArea}",
-  "immediateActions": [
-    {
-      "action": "specific action to take right now",
-      "example": "concrete example from their writing",
-      "improvement": "how this will improve their writing"
-    }
-  ],
-  "strategicTips": [
-    {
-      "strategy": "broader writing strategy",
-      "application": "how to apply it to their writing",
-      "benefit": "why this helps with NSW Selective"
-    }
-  ],
-  "practiceExercises": [
-    {
-      "exercise": "specific practice activity",
-      "duration": "time needed",
-      "outcome": "what they'll achieve"
-    }
-  ],
-  "examStrategies": [
-    {
-      "strategy": "exam-specific tip",
-      "timing": "when to use in exam",
-      "impact": "how it improves exam performance"
-    }
-  ],
-  "motivationalMessage": "encouraging message tailored to their progress",
-  "nextSession": {
-    "focus": "what to work on next",
-    "goal": "specific goal for next writing session",
-    "success_indicator": "how they'll know they've improved"
-  }
-}`;
+Format your response as a JSON object with this structure:\n{\n  \"overallScore\": number (out of 30),\n  \"overallBand\": number (1-6),\n  \"criteriaFeedback\": {\n    \"ideasAndContent\": {\n      \"score\": number (out of 9),\n      \"feedback\": \"detailed feedback\",\n      \"nextSteps\": [\"actionable next steps\"]\n    },\n    \"textStructureAndOrganization\": {\n      \"score\": number (out of 7.5),\n      \"feedback\": \"detailed feedback\",\n      \"nextSteps\": [\"actionable next steps\"]\n    },\n    \"languageFeaturesAndVocabulary\": {\n      \"score\": number (out of 7.5),\n      \"feedback\": \"detailed feedback\",\n      \"nextSteps\": [\"actionable next steps\"]\n    },\n    \"spellingPunctuationGrammar\": {\n      \"score\": number (out of 6),\n      \"feedback\": \"detailed feedback\",\n      \"nextSteps\": [\"actionable next steps\"]\n    }\n  },\n  \"overallRecommendations\": [\"general recommendations for overall improvement\"]\n}\
+`;
 
     const response = await openai.chat.completions.create({
       model: "gpt-4",
       messages: [
         {
           role: "system",
-          content: "You are an expert NSW Selective School writing coach who provides personalized, encouraging, and actionable guidance to help students improve their writing skills and exam performance."
+          content: "You are an expert NSW Selective School writing assessor. Your task is to score student writing samples based on the NSW Selective School marking criteria and provide detailed, actionable feedback."
         },
         {
           role: "user",
           content: prompt
         }
       ],
-      temperature: 0.4,
+      temperature: 0.3,
       max_tokens: 2000
     });
 
-    const coachingText = response.choices[0].message.content;
+    const feedbackText = response.choices[0].message.content;
 
     try {
-      const coachingJson = JSON.parse(coachingText);
+      const feedbackJson = JSON.parse(feedbackText);
       return {
         success: true,
-        ...coachingJson,
-        studentLevel: getStudentLevel(currentScore),
-        sessionTimestamp: new Date().toISOString(),
-        followUpReminder: getFollowUpReminder(focusArea)
+        ...feedbackJson,
+        analysisTimestamp: new Date().toISOString()
       };
     } catch (parseError) {
-      console.error("Failed to parse coaching tips as JSON:", parseError);
+      console.error("Failed to parse essay score analysis as JSON:", parseError);
       return {
         success: false,
-        error: "Failed to generate coaching tips",
-        message: "Please try again to get personalized coaching guidance."
+        error: "Failed to score essay",
+        overallScore: 0,
+        overallBand: 1,
+        message: "Please try again to get detailed essay scoring."
       };
     }
 
   } catch (error) {
-    console.error("Error in NSW coaching tips:", error);
+    console.error("Error in NSW essay scoring:", error);
     return {
       success: false,
       error: error.message,
-      message: "Unable to provide coaching tips at this time."
+      message: "Unable to score essay at this time."
     };
   }
 }
 
-// Helper functions for coaching tips
-function getStudentLevel(score) {
-  if (score >= 25) return "advanced";
-  if (score >= 18) return "intermediate";
-  return "beginner";
+// 5. NSW Writing Improvement Suggestions Endpoint
+async function getNSWWritingImprovementSuggestions(content, textType, feedback) {
+  try {
+    const prompt = `You are an expert NSW Selective School writing coach. Based on the student\'s writing and the provided feedback, generate specific, actionable suggestions for improving the writing. Focus on practical advice that a student can immediately apply.\n\nSTUDENT\'S WRITING:\n"${content}"\n\nTEXT TYPE: ${textType}\n\nPREVIOUS FEEDBACK (if any):\n${JSON.stringify(feedback, null, 2)}\n\nINSTRUCTIONS:\n1. Identify 3-5 key areas for improvement based on the writing and feedback.\n2. For each area, provide 2-3 concrete, actionable suggestions.\n3. Suggestions should be easy for a student to understand and implement.\n4. Ensure suggestions are relevant to NSW Selective School writing standards.\n\nFormat your response as a JSON object with this structure:\n{\n  \"improvementAreas\": [\n    {\n      \"area\": \"e.g., Developing stronger topic sentences\",\n      \"suggestions\": [\"suggestion 1\", \"suggestion 2\"]\n    }\n  ],\n  \"generalTips\": [\"general advice for writing improvement\"]\n}\
+`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert NSW Selective School writing coach providing actionable advice for student improvement."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      temperature: 0.3,
+      max_tokens: 1500
+    });
+
+    const suggestionsText = response.choices[0].message.content;
+
+    try {
+      const suggestionsJson = JSON.parse(suggestionsText);
+      return {
+        success: true,
+        ...suggestionsJson,
+        analysisTimestamp: new Date().toISOString()
+      };
+    } catch (parseError) {
+      console.error("Failed to parse improvement suggestions as JSON:", parseError);
+      return {
+        success: false,
+        error: "Failed to generate improvement suggestions",
+        message: "Please try again to get detailed improvement suggestions."
+      };
+    }
+
+  } catch (error) {
+    console.error("Error in NSW writing improvement suggestions:", error);
+    return {
+      success: false,
+      error: error.message,
+      message: "Unable to generate improvement suggestions at this time."
+    };
+  }
 }
 
-function getFollowUpReminder(focusArea) {
-  const reminders = {
-    "ideas": "Remember to practice brainstorming techniques daily",
-    "structure": "Work on outlining before writing your next piece",
-    "language": "Keep a vocabulary journal and add 3 new words daily",
-    "grammar": "Proofread your work carefully and read it aloud",
-    "vocabulary": "Practice using sophisticated words in context",
-    "texttype": "Study examples of excellent text types in your reading"
+// 6. NSW Writing Prompt Generation Endpoint
+async function getNSWWritingPrompt(textType, difficulty, theme) {
+  try {
+    const prompt = `You are an expert NSW Selective School writing prompt generator. Create a unique and engaging writing prompt for a ${textType} piece, suitable for a student preparing for the NSW Selective School Test. The difficulty should be ${difficulty} and the theme should be related to ${theme}.\n\nINSTRUCTIONS:\n1. The prompt should clearly specify the text type.\n2. It should be challenging but achievable for a selective school candidate.\n3. Incorporate the theme naturally.\n4. Provide a word count guideline (e.g., 300-500 words).\n5. Include a brief context or scenario.\n\nFormat your response as a JSON object with this structure:\n{\n  \"textType\": \"${textType}\",\n  \"difficulty\": \"${difficulty}\",\n  \"theme\": \"${theme}\",\n  \"promptTitle\": \"A creative title for the prompt\",\n  \"promptText\": \"The full writing prompt text\",\n  \"wordCountGuideline\": \"e.g., 300-500 words\",\n  \"markingCriteriaOverview\": [\"brief overview of what will be assessed\"]\n}\
+`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert NSW Selective School writing prompt generator."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 500
+    });
+
+    const promptText = response.choices[0].message.content;
+
+    try {
+      const promptJson = JSON.parse(promptText);
+      return {
+        success: true,
+        ...promptJson,
+        generationTimestamp: new Date().toISOString()
+      };
+    } catch (parseError) {
+      console.error("Failed to parse prompt generation as JSON:", parseError);
+      return {
+        success: false,
+        error: "Failed to generate writing prompt",
+        message: "Please try again to generate a writing prompt."
+      };
+    }
+
+  } catch (error) {
+    console.error("Error in NSW writing prompt generation:", error);
+    return {
+      success: false,
+      error: error.message,
+      message: "Unable to generate writing prompt at this time."
+    };
+  }
+}
+
+// 7. NSW Model Response Generation Endpoint
+async function getNSWModelResponse(prompt, textType, difficulty) {
+  try {
+    const modelPrompt = `You are an expert NSW Selective School writer. Write a high-quality model response to the following writing prompt. The response should be a ${textType} piece, suitable for a student aiming for a top score in the NSW Selective School Test. The difficulty level is ${difficulty}.\n\nWRITING PROMPT:\n"${prompt}"\n\nTEXT TYPE: ${textType}\nDIFFICULTY: ${difficulty}\n\nINSTRUCTIONS:\n1. Write a complete, well-structured response that perfectly adheres to the ${textType} conventions.\n2. Demonstrate sophisticated vocabulary, complex sentence structures, and advanced language features.\n3. Ensure the content is engaging, insightful, and directly addresses the prompt.\n4. Aim for a length appropriate for a top-scoring selective school response (e.g., 400-600 words).\n\nFormat your response as a JSON object with this structure:\n{\n  \"textType\": \"${textType}\",\n  \"difficulty\": \"${difficulty}\",\n  \"prompt\": \"${prompt}\",\n  \"modelResponseTitle\": \"A suitable title for the model response\",\n  \"modelResponseText\": \"The full model response text\",\n  \"wordCount\": number,\n  \"keyFeaturesDemonstrated\": [\"list key features demonstrated in this model response\"]\n}\
+`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert NSW Selective School writer, capable of producing high-quality model responses."
+        },
+        {
+          role: "user",
+          content: modelPrompt
+        }
+      ],
+      temperature: 0.7,
+      max_tokens: 2500
+    });
+
+    const modelResponseText = response.choices[0].message.content;
+
+    try {
+      const modelResponseJson = JSON.parse(modelResponseText);
+      return {
+        success: true,
+        ...modelResponseJson,
+        generationTimestamp: new Date().toISOString()
+      };
+    } catch (parseError) {
+      console.error("Failed to parse model response generation as JSON:", parseError);
+      return {
+        success: false,
+        error: "Failed to generate model response",
+        message: "Please try again to generate a model response."
+      };
+    }
+
+  } catch (error) {
+    console.error("Error in NSW model response generation:", error);
+    return {
+      success: false,
+      error: error.message,
+      message: "Unable to generate model response at this time."
+    };
+  }
+}
+
+// 8. NSW Grammar and Spelling Checker Endpoint
+async function getNSWGrammarSpellingCheck(content) {
+  try {
+    const prompt = `You are an expert NSW Selective School writing assessor specializing in grammar, spelling, and punctuation. Analyze the following student writing sample and identify all errors. Provide corrections and explanations for each error.\n\nSTUDENT\'S WRITING:\n"${content}"\n\nINSTRUCTIONS:\n1. Identify all grammar, spelling, and punctuation errors.\n2. For each error, provide the original sentence, the corrected sentence, and a brief explanation of the rule violated.\n3. Categorize errors (e.g., spelling, punctuation, subject-verb agreement, tense, etc.).\n4. Provide an overall summary of the student\'s grammar and spelling proficiency.\n\nFormat your response as a JSON object with this structure:\n{\n  \"overallProficiency\": \"e.g., Needs significant improvement|Developing|Proficient|Strong\",\n  \"errorCount\": number,\n  \"errors\": [\n    {\n      \"type\": \"e.g., Spelling|Grammar|Punctuation\",\n      \"original\": \"Original sentence with error\",\n      \"corrected\": \"Corrected sentence\",\n      \"explanation\": \"Explanation of the rule and why it was an error\"\n    }\n  ],\n  \"summary\": \"Overall summary of grammar and spelling proficiency\",\n  \"nextSteps\": [\"actionable next steps for improvement\"]\n}\
+`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert NSW Selective School writing assessor specializing in grammar, spelling, and punctuation."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      temperature: 0.3,
+      max_tokens: 2000
+    });
+
+    const checkText = response.choices[0].message.content;
+
+    try {
+      const checkJson = JSON.parse(checkText);
+      return {
+        success: true,
+        ...checkJson,
+        analysisTimestamp: new Date().toISOString()
+      };
+    } catch (parseError) {
+      console.error("Failed to parse grammar/spelling check as JSON:", parseError);
+      return {
+        success: false,
+        error: "Failed to perform grammar and spelling check",
+        message: "Please try again to get detailed grammar and spelling check."
+      };
+    }
+
+  } catch (error) {
+    console.error("Error in NSW grammar and spelling check:", error);
+    return {
+      success: false,
+      error: error.message,
+      message: "Unable to perform grammar and spelling check at this time."
+    };
+  }
+}
+
+// 9. NSW Writing Style and Tone Analysis Endpoint
+async function getNSWWritingStyleToneAnalysis(content, textType) {
+  try {
+    const prompt = `You are an expert NSW Selective School writing assessor specializing in writing style and tone. Analyze the following student writing sample for its overall style, tone, and effectiveness in conveying its message for a ${textType} piece.\n\nSTUDENT\'S WRITING:\n"${content}"\n\nTEXT TYPE: ${textType}\n\nINSTRUCTIONS:\n1. Assess the overall writing style (e.g., formal, informal, academic, creative).\n2. Analyze the tone (e.g., objective, persuasive, reflective, engaging).\n3. Comment on the effectiveness of the style and tone for the given text type and purpose.\n4. Provide specific examples from the text to support your analysis.\n5. Suggest improvements to enhance style and tone.\n\nFormat your response as a JSON object with this structure:\n{\n  \"overallStyle\": \"e.g., Formal and descriptive\",\n  \"overallTone\": \"e.g., Reflective and engaging\",\n  \"effectivenessRating\": number (1-10),\n  \"styleAnalysis\": {\n    \"strengths\": [\"aspects of style done well\"],\n    \"improvements\": [\"aspects of style needing improvement\"]\n  },\n  \"toneAnalysis\": {\n    \"strengths\": [\"aspects of tone done well\"],\n    \"improvements\": [\"aspects of tone needing improvement\"]\n  },\n  \"specificExamples\": [\n    {\n      \"excerpt\": \"Text excerpt\",\n      \"comment\": \"Analysis of style/tone in this excerpt\"\n    }\n  ],\n  \"suggestions\": [\"actionable suggestions to improve style and tone\"]\n}\
+`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert NSW Selective School writing assessor specializing in writing style and tone."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      temperature: 0.3,
+      max_tokens: 2000
+    });
+
+    const styleToneText = response.choices[0].message.content;
+
+    try {
+      const styleToneJson = JSON.parse(styleToneText);
+      return {
+        success: true,
+        ...styleToneJson,
+        analysisTimestamp: new Date().toISOString()
+      };
+    } catch (parseError) {
+      console.error("Failed to parse style/tone analysis as JSON:", parseError);
+      return {
+        success: false,
+        error: "Failed to analyze writing style and tone",
+        message: "Please try again to get detailed style and tone analysis."
+      };
+    }
+
+  } catch (error) {
+    console.error("Error in NSW writing style and tone analysis:", error);
+    return {
+      success: false,
+      error: error.message,
+      message: "Unable to analyze writing style and tone at this time."
+    };
+  }
+}
+
+// 10. NSW Writing Cohesion and Coherence Analysis Endpoint
+async function getNSWWritingCohesionCoherenceAnalysis(content, textType) {
+  try {
+    const prompt = `You are an expert NSW Selective School writing assessor specializing in cohesion and coherence. Analyze the following student writing sample for its overall flow, logical progression of ideas, and effective use of cohesive devices for a ${textType} piece.\n\nSTUDENT\'S WRITING:\n"${content}"\n\nTEXT TYPE: ${textType}\n\nINSTRUCTIONS:\n1. Assess the overall cohesion (how well parts of the text stick together) and coherence (how easily the text is understood).\n2. Comment on the logical progression of ideas and arguments.\n3. Identify effective and ineffective use of cohesive devices (e.g., transition words, pronouns, repetition, conjunctions).\n4. Provide specific examples from the text to support your analysis.\n5. Suggest improvements to enhance cohesion and coherence.\n\nFormat your response as a JSON object with this structure:\n{\n  \"overallCohesion\": \"e.g., Strong and fluid\",\n  \"overallCoherence\": \"e.g., Clear and logical\",\n  \"effectivenessRating\": number (1-10),\n  \"cohesionAnalysis\": {\n    \"strengths\": [\"aspects of cohesion done well\"],\n    \"improvements\": [\"aspects of cohesion needing improvement\"]\n  },\n  \"coherenceAnalysis\": {\n    \"strengths\": [\"aspects of coherence done well\"],\n    \"improvements\": [\"aspects of coherence needing improvement\"]\n  },\n  \"cohesiveDevicesAnalysis\": {\n    \"effectiveExamples\": [\"examples of well-used cohesive devices\"],\n    \"ineffectiveExamples\": [\"examples of poorly used cohesive devices\"],\n    \"suggestions\": [\"suggestions for improving cohesive device usage\"]\n  },\n  \"suggestions\": [\"actionable suggestions to improve cohesion and coherence\"]\n}\
+`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert NSW Selective School writing assessor specializing in cohesion and coherence."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      temperature: 0.3,
+      max_tokens: 2000
+    });
+
+    const cohesionCoherenceText = response.choices[0].message.content;
+
+    try {
+      const cohesionCoherenceJson = JSON.parse(cohesionCoherenceText);
+      return {
+        success: true,
+        ...cohesionCoherenceJson,
+        analysisTimestamp: new Date().toISOString()
+      };
+    } catch (parseError) {
+      console.error("Failed to parse cohesion/coherence analysis as JSON:", parseError);
+      return {
+        success: false,
+        error: "Failed to analyze writing cohesion and coherence",
+        message: "Please try again to get detailed cohesion and coherence analysis."
+      };
+    }
+
+  } catch (error) {
+    console.error("Error in NSW writing cohesion and coherence analysis:", error);
+    return {
+      success: false,
+      error: error.message,
+      message: "Unable to analyze writing cohesion and coherence at this time."
+    };
+  }
+}
+
+// 11. NSW Critical Thinking and Argumentation Analysis Endpoint (for persuasive/expository)
+async function getNSWCriticalThinkingArgumentationAnalysis(content, textType) {
+  try {
+    const prompt = `You are an expert NSW Selective School writing assessor specializing in critical thinking and argumentation. Analyze the following student writing sample for its logical reasoning, depth of thought, and effectiveness of arguments for a ${textType} piece.\n\nSTUDENT\'S WRITING:\n"${content}"\n\nTEXT TYPE: ${textType}\n\nINSTRUCTIONS:\n1. Assess the clarity and strength of the thesis statement/main argument.\n2. Evaluate the logical flow and coherence of arguments.\n3. Comment on the use of evidence, examples, and reasoning to support claims.\n4. Identify any fallacies, inconsistencies, or weaknesses in argumentation.\n5. Suggest improvements to enhance critical thinking and argumentation.\n\nFormat your response as a JSON object with this structure:\n{\n  \"overallCriticalThinking\": \"e.g., Strong and insightful\",\n  \"argumentStrengthRating\": number (1-10),\n  \"thesisAnalysis\": {\n    \"clarity\": \"analysis of thesis clarity\",\n    \"strength\": \"analysis of thesis strength\"\n  },\n  \"argumentationAnalysis\": {\n    \"strengths\": [\"aspects of argumentation done well\"],\n    \"improvements\": [\"aspects of argumentation needing improvement\"]\n  },\n  \"evidenceAnalysis\": {\n    \"effectiveExamples\": [\"examples of well-used evidence\"],\n    \"ineffectiveExamples\": [\"examples of poorly used evidence\"],\n    \"suggestions\": [\"suggestions for improving evidence usage\"]\n  },\n  \"suggestions\": [\"actionable suggestions to improve critical thinking and argumentation\"]\n}\
+`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert NSW Selective School writing assessor specializing in critical thinking and argumentation."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      temperature: 0.3,
+      max_tokens: 2000
+    });
+
+    const criticalThinkingText = response.choices[0].message.content;
+
+    try {
+      const criticalThinkingJson = JSON.parse(criticalThinkingText);
+      return {
+        success: true,
+        ...criticalThinkingJson,
+        analysisTimestamp: new Date().toISOString()
+      };
+    } catch (parseError) {
+      console.error("Failed to parse critical thinking analysis as JSON:", parseError);
+      return {
+        success: false,
+        error: "Failed to analyze critical thinking and argumentation",
+        message: "Please try again to get detailed critical thinking and argumentation analysis."
+      };
+    }
+
+  } catch (error) {
+    console.error("Error in NSW critical thinking and argumentation analysis:", error);
+    return {
+      success: false,
+      error: error.message,
+      message: "Unable to analyze critical thinking and argumentation at this time."
+    };
+  }
+}
+
+// 12. NSW Creative Writing Elements Analysis Endpoint (for narrative/descriptive)
+async function getNSWCreativeWritingElementsAnalysis(content, textType) {
+  try {
+    const prompt = `You are an expert NSW Selective School writing assessor specializing in creative writing elements. Analyze the following student writing sample for its use of literary devices, originality, character development, and imaginative qualities for a ${textType} piece.\n\nSTUDENT\'S WRITING:\n"${content}"\n\nTEXT TYPE: ${textType}\n\nINSTRUCTIONS:\n1. Assess the effectiveness of literary devices (e.g., metaphors, similes, personification, imagery).\n2. Comment on the originality and creativity of the ideas.\n3. Evaluate character development and emotional depth.\n4. Analyze the use of setting and atmosphere.\n5. Suggest improvements to enhance creative writing elements.\n\nFormat your response as a JSON object with this structure:\n{\n  \"overallCreativity\": \"e.g., Highly imaginative and original\",\n  \"literaryDevicesAnalysis\": {\n    \"effectiveExamples\": [\"examples of well-used literary devices\"],\n    \"ineffectiveExamples\": [\"examples of poorly used literary devices\"],\n    \""suggestions\": [\"suggestions for improving literary device usage\"]\n  },\n  \"originalityAnalysis\": {\n    \"strengths\": [\"aspects of originality done well\"],\n    \"improvements\": [\"aspects of originality needing improvement\"]\n  },\n  \"characterDevelopmentAnalysis\": {\n    \"strengths\": [\"aspects of character development done well\"],\n    \"improvements\": [\"aspects of character development needing improvement\"]\n  },\n  \"settingAtmosphereAnalysis\": {\n    \"strengths\": [\"aspects of setting/atmosphere done well\"],\n    \"improvements\": [\"aspects of setting/atmosphere needing improvement\"]\n  },\n  \"suggestions\": [\"actionable suggestions to improve creative writing elements\"]\n}\
+`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        {
+          role: "system",
+          content: "You are an expert NSW Selective School writing assessor specializing in creative writing elements."
+        },
+        {
+          role: "user",
+          content: prompt
+        }
+      ],
+      temperature: 0.3,
+      max_tokens: 2000
+    });
+
+    const creativeWritingText = response.choices[0].message.content;
+
+    try {
+      const creativeWritingJson = JSON.parse(creativeWritingText);
+      return {
+        success: true,
+        ...creativeWritingJson,
+        analysisTimestamp: new Date().toISOString()
+      };
+    } catch (parseError) {
+      console.error("Failed to parse creative writing analysis as JSON:", parseError);
+      return {
+        success: false,
+        error: "Failed to analyze creative writing elements",
+        message: "Please try again to get detailed creative writing elements analysis."
+      };
+    }
+
+  } catch (error) {
+    console.error("Error in NSW creative writing elements analysis:", error);
+    return {
+      success: false,
+      error: error.message,
+      message: "Unable to analyze creative writing elements at this time."
+    };
+  }
+}
+
+// Main handler for Netlify Function
+export async function handler(event, context) {
+  const { path, httpMethod, body } = event;
+
+  // Only allow POST requests
+  if (httpMethod !== "POST") {
+    return {
+      statusCode: 405,
+      body: "Method Not Allowed"
+    };
+  }
+
+  // Parse the request body
+  let requestBody;
+  try {
+    requestBody = JSON.parse(body);
+  } catch (error) {
+    return {
+      statusCode: 400,
+      body: "Invalid JSON in request body"
+    };
+  }
+
+  const { endpoint, content, textType, userId, assessmentData, feedback, difficulty, theme, prompt } = requestBody;
+
+  let result;
+
+  switch (endpoint) {
+    case "getNSWTextTypeAnalysis":
+      result = await getNSWTextTypeAnalysis(content, textType);
+      break;
+    case "getNSWVocabularySophistication":
+      result = await getNSWVocabularySophistication(content);
+      break;
+    case "getNSWProgressTracking":
+      result = await getNSWProgressTracking(userId, assessmentData);
+      break;
+    case "getNSWEssayScore":
+      result = await getNSWEssayScore(content, textType);
+      break;
+    case "getNSWWritingImprovementSuggestions":
+      result = await getNSWWritingImprovementSuggestions(content, textType, feedback);
+      break;
+    case "getNSWWritingPrompt":
+      result = await getNSWWritingPrompt(textType, difficulty, theme);
+      break;
+    case "getNSWModelResponse":
+      result = await getNSWModelResponse(prompt, textType, difficulty);
+      break;
+    case "getNSWGrammarSpellingCheck":
+      result = await getNSWGrammarSpellingCheck(content);
+      break;
+    case "getNSWWritingStyleToneAnalysis":
+      result = await getNSWWritingStyleToneAnalysis(content, textType);
+      break;
+    case "getNSWWritingCohesionCoherenceAnalysis":
+      result = await getNSWWritingCohesionCoherenceAnalysis(content, textType);
+      break;
+    case "getNSWCriticalThinkingArgumentationAnalysis":
+      result = await getNSWCriticalThinkingArgumentationAnalysis(content, textType);
+      break;
+    case "getNSWCreativeWritingElementsAnalysis":
+      result = await getNSWCreativeWritingElementsAnalysis(content, textType);
+      break;
+    default:
+      result = {
+        success: false,
+        error: "Invalid endpoint",
+        message: "The requested API endpoint does not exist."
+      };
+  }
+
+  return {
+    statusCode: result.success ? 200 : 500,
+    body: JSON.stringify(result)
   };
-  
-  return reminders[focusArea.toLowerCase()] || "Keep practicing regularly and track your progress";
 }
-
-// Export functions for use in Netlify Functions
-module.exports = {
-  getNSWTextTypeAnalysis,
-  getNSWVocabularySophistication,
-  getNSWProgressTracking,
-  getNSWCoachingTips
-};
