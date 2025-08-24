@@ -23,541 +23,364 @@ interface WritingIssue {
   severity: 'error' | 'warning' | 'suggestion';
 }
 
-// Comprehensive Writing Checker for NSW Selective Tests
-class NSWSelectiveWritingChecker {
-  private dictionary: Set<string>;
-  private commonMisspellings: Map<string, string>;
-  private sophisticatedVocabulary: Set<string>;
-  private basicWords: Set<string>;
-  private transitionWords: Set<string>;
-  private strongVerbs: Set<string>;
+// AI-Powered Writing Checker for NSW Selective Tests
+class AIWritingChecker {
+  private openaiApiKey: string;
+  private openaiApiBase: string;
 
   constructor() {
-    // Enhanced dictionary with more words
-    this.dictionary = new Set([
-      'a', 'about', 'above', 'after', 'again', 'against', 'all', 'am', 'an', 'and', 'any', 'are', 'as', 'at',
-      'be', 'because', 'been', 'before', 'being', 'below', 'between', 'both', 'but', 'by',
-      'can', 'could', 'did', 'do', 'does', 'doing', 'down', 'during', 'each', 'few', 'for', 'from',
-      'further', 'had', 'has', 'have', 'having', 'he', 'her', 'here', 'hers', 'herself', 'him',
-      'himself', 'his', 'how', 'i', 'if', 'in', 'into', 'is', 'it', 'its', 'itself', 'just',
-      'me', 'more', 'most', 'my', 'myself', 'no', 'nor', 'not', 'now', 'of', 'off', 'on',
-      'once', 'only', 'or', 'other', 'our', 'ours', 'ourselves', 'out', 'over', 'own',
-      'same', 'she', 'should', 'so', 'some', 'such', 'than', 'that', 'the', 'their', 'theirs',
-      'them', 'themselves', 'then', 'there', 'these', 'they', 'this', 'those', 'through', 'to',
-      'too', 'under', 'until', 'up', 'very', 'was', 'we', 'were', 'what', 'when', 'where',
-      'which', 'while', 'who', 'whom', 'why', 'will', 'with', 'would', 'you', 'your', 'yours',
-      'yourself', 'yourselves',
-      // Story and writing words
-      'story', 'character', 'characters', 'adventure', 'journey', 'magical', 'forest', 'castle',
-      'princess', 'prince', 'dragon', 'treasure', 'friend', 'friends', 'family', 'home', 'school',
-      'teacher', 'student', 'book', 'books', 'read', 'reading', 'write', 'writing', 'amazing',
-      'wonderful', 'beautiful', 'exciting', 'scary', 'happy', 'sad', 'angry', 'surprised',
-      'discovered', 'found', 'looked', 'walked', 'ran', 'jumped', 'climbed', 'flew', 'swam',
-      'talked', 'said', 'asked', 'answered', 'thought', 'felt', 'knew', 'learned', 'taught',
-      'helped', 'saved', 'protected', 'loved', 'cared', 'shared', 'gave', 'received', 'took',
-      'brought', 'carried', 'held', 'opened', 'closed', 'started', 'finished', 'began', 'ended',
-      'suddenly', 'quickly', 'slowly', 'carefully', 'quietly', 'loudly', 'gently', 'softly',
-      'brightly', 'darkly', 'clearly', 'finally', 'eventually', 'immediately', 'always', 'never',
-      'sometimes', 'often', 'usually', 'rarely', 'everywhere', 'somewhere', 'nowhere', 'anywhere',
-      'everyone', 'someone', 'nobody', 'anybody', 'everything', 'something', 'nothing', 'anything',
-      'first', 'second', 'third', 'last', 'next', 'previous', 'new', 'old', 'young', 'big', 'small',
-      'large', 'little', 'long', 'short', 'tall', 'high', 'low', 'wide', 'narrow', 'thick', 'thin',
-      'heavy', 'light', 'strong', 'weak', 'fast', 'slow', 'hot', 'cold', 'warm', 'cool', 'dry', 'wet',
-      'clean', 'dirty', 'fresh', 'old', 'new', 'good', 'bad', 'best', 'worst', 'better', 'worse',
-      'right', 'wrong', 'correct', 'incorrect', 'true', 'false', 'real', 'fake', 'original', 'copy',
-      'inside', 'outside', 'upstairs', 'downstairs', 'nearby', 'far', 'close', 'distant', 'here', 'there',
-      'today', 'tomorrow', 'yesterday', 'morning', 'afternoon', 'evening', 'night', 'day', 'week', 'month', 'year',
-      'time', 'hour', 'minute', 'second', 'moment', 'while', 'during', 'before', 'after', 'since', 'until',
-      'color', 'red', 'blue', 'green', 'yellow', 'orange', 'purple', 'pink', 'brown', 'black', 'white', 'gray',
-      'number', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten',
-      'hundred', 'thousand', 'million', 'billion', 'first', 'second', 'third', 'fourth', 'fifth',
-      'place', 'room', 'house', 'building', 'street', 'city', 'town', 'country', 'world', 'earth',
-      'water', 'fire', 'air', 'ground', 'sky', 'sun', 'moon', 'star', 'cloud', 'rain', 'snow', 'wind',
-      'tree', 'flower', 'grass', 'leaf', 'branch', 'root', 'seed', 'fruit', 'vegetable', 'plant',
-      'animal', 'dog', 'cat', 'bird', 'fish', 'horse', 'cow', 'pig', 'sheep', 'chicken', 'mouse', 'lion',
-      'tiger', 'elephant', 'bear', 'rabbit', 'deer', 'wolf', 'fox', 'snake', 'frog', 'butterfly', 'bee',
-      'food', 'eat', 'drink', 'hungry', 'thirsty', 'breakfast', 'lunch', 'dinner', 'meal', 'bread', 'meat',
-      'milk', 'cheese', 'egg', 'apple', 'orange', 'banana', 'cake', 'cookie', 'candy', 'chocolate',
-      'body', 'head', 'face', 'eye', 'nose', 'mouth', 'ear', 'hair', 'hand', 'finger', 'arm', 'leg', 'foot',
-      'heart', 'mind', 'brain', 'voice', 'smile', 'laugh', 'cry', 'sleep', 'dream', 'wake', 'rest',
-      'work', 'job', 'play', 'game', 'sport', 'music', 'song', 'dance', 'art', 'picture', 'movie', 'show',
-      'party', 'birthday', 'holiday', 'vacation', 'trip', 'visit', 'travel', 'drive', 'ride', 'walk', 'run',
-      'money', 'buy', 'sell', 'pay', 'cost', 'price', 'cheap', 'expensive', 'free', 'gift', 'present',
-      'clothes', 'shirt', 'pants', 'dress', 'shoes', 'hat', 'coat', 'jacket', 'wear', 'put', 'take',
-      'make', 'build', 'create', 'design', 'draw', 'paint', 'cut', 'fix', 'break', 'clean', 'wash',
-      'cook', 'bake', 'grow', 'plant', 'water', 'feed', 'care', 'help', 'teach', 'learn', 'study',
-      'remember', 'forget', 'think', 'know', 'understand', 'believe', 'hope', 'wish', 'want', 'need',
-      'like', 'love', 'hate', 'enjoy', 'prefer', 'choose', 'decide', 'try', 'attempt', 'succeed', 'fail',
-      'win', 'lose', 'fight', 'argue', 'agree', 'disagree', 'talk', 'speak', 'tell', 'say', 'ask', 'answer',
-      'call', 'shout', 'whisper', 'listen', 'hear', 'see', 'look', 'watch', 'find', 'search', 'lose',
-      'keep', 'save', 'throw', 'catch', 'drop', 'pick', 'lift', 'push', 'pull', 'move', 'stop', 'start',
-      'begin', 'end', 'finish', 'complete', 'continue', 'pause', 'wait', 'hurry', 'rush', 'slow', 'fast',
-      'quick', 'brown', 'fox', 'jumps', 'lazy', 'dog', 'friendship'
-    ]);
-
-    // Common misspellings
-    this.commonMisspellings = new Map([
-      ['teh', 'the'], ['adn', 'and'], ['hte', 'the'], ['taht', 'that'], ['thier', 'their'],
-      ['recieve', 'receive'], ['seperate', 'separate'], ['definately', 'definitely'],
-      ['occured', 'occurred'], ['begining', 'beginning'], ['writting', 'writing'],
-      ['freind', 'friend'], ['becuase', 'because'], ['wich', 'which'], ['woudl', 'would'],
-      ['coudl', 'could'], ['shoudl', 'should'], ['alot', 'a lot'], ['cant', "can't"],
-      ['wont', "won't"], ['dont', "don't"], ['isnt', "isn't"], ['wasnt', "wasn't"],
-      ['werent', "weren't"], ['havent', "haven't"], ['hasnt', "hasn't"], ['hadnt', "hadn't"],
-      ['wouldnt', "wouldn't"], ['couldnt', "couldn't"], ['shouldnt', "shouldn't"],
-      ['wonderfull', 'wonderful'], ['adventur', 'adventure'], ['freindship', 'friendship']
-    ]);
-
-    // Sophisticated vocabulary for NSW Selective level
-    this.sophisticatedVocabulary = new Set([
-      'magnificent', 'extraordinary', 'phenomenal', 'remarkable', 'exceptional', 'outstanding',
-      'tremendous', 'spectacular', 'marvelous', 'incredible', 'astonishing', 'breathtaking',
-      'captivating', 'mesmerizing', 'enchanting', 'fascinating', 'intriguing', 'compelling',
-      'profound', 'significant', 'substantial', 'considerable', 'immense', 'colossal',
-      'elaborate', 'intricate', 'sophisticated', 'complex', 'comprehensive', 'extensive',
-      'meticulous', 'precise', 'accurate', 'thorough', 'detailed', 'specific',
-      'vivid', 'vibrant', 'brilliant', 'radiant', 'luminous', 'gleaming',
-      'serene', 'tranquil', 'peaceful', 'harmonious', 'melodious', 'rhythmic',
-      'turbulent', 'chaotic', 'tumultuous', 'frenzied', 'intense', 'fierce',
-      'gentle', 'delicate', 'subtle', 'graceful', 'elegant', 'refined',
-      'mysterious', 'enigmatic', 'puzzling', 'perplexing', 'bewildering', 'confusing',
-      'triumphant', 'victorious', 'successful', 'accomplished', 'achieved', 'fulfilled',
-      'devastated', 'shattered', 'crushed', 'overwhelmed', 'distraught', 'anguished',
-      'elated', 'ecstatic', 'jubilant', 'exhilarated', 'thrilled', 'delighted',
-      'contemplated', 'pondered', 'reflected', 'considered', 'deliberated', 'meditated',
-      'whispered', 'murmured', 'proclaimed', 'declared', 'announced', 'exclaimed',
-      'scrutinized', 'examined', 'investigated', 'explored', 'discovered', 'unveiled'
-    ]);
-
-    // Basic words that could be upgraded
-    this.basicWords = new Set([
-      'good', 'bad', 'nice', 'big', 'small', 'pretty', 'ugly', 'happy', 'sad',
-      'mad', 'angry', 'funny', 'scary', 'cool', 'hot', 'cold', 'fast', 'slow',
-      'said', 'went', 'got', 'put', 'came', 'looked', 'saw', 'walked', 'ran',
-      'very', 'really', 'a lot', 'lots', 'stuff', 'things', 'okay', 'fine'
-    ]);
-
-    // Transition words for better flow
-    this.transitionWords = new Set([
-      'furthermore', 'moreover', 'additionally', 'consequently', 'therefore', 'however',
-      'nevertheless', 'nonetheless', 'meanwhile', 'subsequently', 'ultimately', 'initially',
-      'eventually', 'particularly', 'specifically', 'especially', 'notably', 'significantly',
-      'alternatively', 'conversely', 'similarly', 'likewise', 'comparatively', 'accordingly'
-    ]);
-
-    // Strong action verbs
-    this.strongVerbs = new Set([
-      'sprinted', 'dashed', 'bolted', 'charged', 'lunged', 'pounced', 'soared', 'plummeted',
-      'whispered', 'bellowed', 'shrieked', 'proclaimed', 'declared', 'announced', 'revealed',
-      'grasped', 'clutched', 'seized', 'snatched', 'embraced', 'caressed', 'stroked',
-      'glared', 'peered', 'gazed', 'stared', 'glimpsed', 'observed', 'witnessed', 'scrutinized'
-    ]);
+    this.openaiApiKey = process.env.OPENAI_API_KEY || '';
+    this.openaiApiBase = process.env.OPENAI_API_BASE || 'https://api.openai.com/v1';
   }
 
-  // Check all writing aspects
-  checkText(text: string): WritingIssue[] {
-    const issues: WritingIssue[] = [];
-    
-    // Check spelling
-    issues.push(...this.checkSpelling(text));
-    
-    // Check punctuation
-    issues.push(...this.checkPunctuation(text));
-    
-    // Check grammar
-    issues.push(...this.checkGrammar(text));
-    
-    // Check vocabulary sophistication
-    issues.push(...this.checkVocabulary(text));
-    
-    // Check sentence structure
-    issues.push(...this.checkSentenceStructure(text));
-    
-    // Check paragraph structure
-    issues.push(...this.checkParagraphStructure(text));
-    
-    return issues.sort((a, b) => a.start - b.start);
-  }
-
-  // Spelling checker (enhanced from original)
-  private checkSpelling(text: string): WritingIssue[] {
-    const issues: WritingIssue[] = [];
-    const wordRegex = /\b\w+(?:'\w+)?\b/g;
-    let match;
-    
-    while ((match = wordRegex.exec(text)) !== null) {
-      const word = match[0];
-      if (!this.isWordCorrect(word)) {
-        issues.push({
-          type: 'spelling',
-          word,
-          start: match.index,
-          end: match.index + word.length,
-          suggestions: this.getSpellingSuggestions(word),
-          message: `Possible spelling error: "${word}"`,
-          severity: 'error'
-        });
-      }
-    }
-    
-    return issues;
-  }
-
-  // Punctuation checker
-  private checkPunctuation(text: string): WritingIssue[] {
-    const issues: WritingIssue[] = [];
-    
-    // Check for missing periods at end of sentences
-    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
-    sentences.forEach((sentence, index) => {
-      const trimmed = sentence.trim();
-      if (trimmed.length > 0 && index < sentences.length - 1) {
-        const sentenceEnd = text.indexOf(trimmed) + trimmed.length;
-        const nextChar = text[sentenceEnd];
-        if (nextChar && !['.', '!', '?'].includes(nextChar)) {
-          issues.push({
-            type: 'punctuation',
-            word: trimmed.slice(-10),
-            start: sentenceEnd - 1,
-            end: sentenceEnd,
-            suggestions: ['.', '!', '?'],
-            message: 'Missing punctuation at end of sentence',
-            severity: 'error'
-          });
-        }
-      }
-    });
-
-    // Check for missing commas in lists
-    const listPattern = /\b\w+\s+\w+\s+and\s+\w+\b/g;
-    let listMatch;
-    while ((listMatch = listPattern.exec(text)) !== null) {
-      const listText = listMatch[0];
-      if (!listText.includes(',')) {
-        issues.push({
-          type: 'punctuation',
-          word: listText,
-          start: listMatch.index,
-          end: listMatch.index + listText.length,
-          suggestions: [listText.replace(/(\w+)\s+(\w+)\s+and/, '$1, $2, and')],
-          message: 'Consider adding commas in this list',
-          severity: 'suggestion'
-        });
-      }
+  // Main method to check all writing aspects using AI
+  async checkText(text: string): Promise<WritingIssue[]> {
+    if (!text.trim() || text.length < 10) {
+      return [];
     }
 
-    // Check for missing apostrophes in contractions
-    const contractionPattern = /\b(cant|wont|dont|isnt|wasnt|werent|havent|hasnt|hadnt|wouldnt|couldnt|shouldnt)\b/gi;
-    let contractionMatch;
-    while ((contractionMatch = contractionPattern.exec(text)) !== null) {
-      const word = contractionMatch[0];
-      const corrected = this.commonMisspellings.get(word.toLowerCase()) || word;
-      issues.push({
-        type: 'punctuation',
-        word,
-        start: contractionMatch.index,
-        end: contractionMatch.index + word.length,
-        suggestions: [corrected],
-        message: 'Missing apostrophe in contraction',
-        severity: 'error'
+    try {
+      const issues: WritingIssue[] = [];
+      
+      // Run all checks in parallel for better performance
+      const [
+        spellingIssues,
+        punctuationIssues,
+        grammarIssues,
+        vocabularyIssues,
+        sentenceIssues,
+        paragraphIssues
+      ] = await Promise.all([
+        this.checkSpelling(text),
+        this.checkPunctuation(text),
+        this.checkGrammar(text),
+        this.checkVocabulary(text),
+        this.checkSentenceStructure(text),
+        this.checkParagraphStructure(text)
+      ]);
+
+      issues.push(...spellingIssues);
+      issues.push(...punctuationIssues);
+      issues.push(...grammarIssues);
+      issues.push(...vocabularyIssues);
+      issues.push(...sentenceIssues);
+      issues.push(...paragraphIssues);
+
+      return issues.sort((a, b) => a.start - b.start);
+    } catch (error) {
+      console.error('AI Writing Check Error:', error);
+      return [];
+    }
+  }
+
+  // AI-powered spelling checker
+  private async checkSpelling(text: string): Promise<WritingIssue[]> {
+    try {
+      const response = await fetch(`${this.openaiApiBase}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.openaiApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-3.5-turbo',
+          messages: [
+            {
+              role: 'system',
+              content: `You are a spelling checker for NSW Selective School writing tests. Identify ONLY genuinely misspelled words, not proper nouns, names, or creative writing terms. Return a JSON array of objects with: word, start_index, end_index, suggestions (array of up to 3 corrections), message. Be very conservative - only flag obvious spelling errors.`
+            },
+            {
+              role: 'user',
+              content: `Check spelling in this text: "${text}"`
+            }
+          ],
+          temperature: 0.1,
+          max_tokens: 1000
+        })
       });
-    }
 
-    return issues;
-  }
-
-  // Grammar checker
-  private checkGrammar(text: string): WritingIssue[] {
-    const issues: WritingIssue[] = [];
-    
-    // Check subject-verb agreement
-    const svPatterns = [
-      { pattern: /\b(he|she|it)\s+(are|were)\b/gi, suggestion: 'is/was', message: 'Subject-verb disagreement' },
-      { pattern: /\b(they|we|you)\s+(is|was)\b/gi, suggestion: 'are/were', message: 'Subject-verb disagreement' },
-      { pattern: /\bthere\s+is\s+\w+\s+\w+/gi, suggestion: 'there are', message: 'Consider "there are" for plural subjects' }
-    ];
-
-    svPatterns.forEach(({ pattern, suggestion, message }) => {
-      let match;
-      while ((match = pattern.exec(text)) !== null) {
-        issues.push({
-          type: 'grammar',
-          word: match[0],
-          start: match.index,
-          end: match.index + match[0].length,
-          suggestions: [suggestion],
-          message,
-          severity: 'error'
-        });
-      }
-    });
-
-    // Check for sentence fragments
-    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
-    sentences.forEach(sentence => {
-      const trimmed = sentence.trim();
-      if (trimmed.length > 0 && trimmed.length < 10 && !trimmed.match(/\b(yes|no|okay|oh|wow|hey)\b/i)) {
-        const start = text.indexOf(trimmed);
-        issues.push({
-          type: 'grammar',
-          word: trimmed,
-          start,
-          end: start + trimmed.length,
-          suggestions: ['Consider expanding this sentence'],
-          message: 'Possible sentence fragment',
-          severity: 'warning'
-        });
-      }
-    });
-
-    // Check for run-on sentences
-    sentences.forEach(sentence => {
-      const trimmed = sentence.trim();
-      const wordCount = trimmed.split(/\s+/).length;
-      if (wordCount > 30) {
-        const start = text.indexOf(trimmed);
-        issues.push({
-          type: 'grammar',
-          word: trimmed.substring(0, 50) + '...',
-          start,
-          end: start + Math.min(50, trimmed.length),
-          suggestions: ['Consider breaking into shorter sentences'],
-          message: 'Very long sentence - consider breaking it up',
-          severity: 'suggestion'
-        });
-      }
-    });
-
-    return issues;
-  }
-
-  // Vocabulary sophistication checker
-  private checkVocabulary(text: string): WritingIssue[] {
-    const issues: WritingIssue[] = [];
-    const wordRegex = /\b\w+\b/g;
-    let match;
-    
-    while ((match = wordRegex.exec(text)) !== null) {
-      const word = match[0].toLowerCase();
+      const data = await response.json();
+      const content = data.choices?.[0]?.message?.content;
       
-      // Check for basic words that could be upgraded
-      if (this.basicWords.has(word)) {
-        const suggestions = this.getVocabularySuggestions(word);
-        if (suggestions.length > 0) {
-          issues.push({
-            type: 'vocabulary',
-            word: match[0],
-            start: match.index,
-            end: match.index + match[0].length,
-            suggestions,
-            message: `Consider using a more sophisticated word than "${word}"`,
-            severity: 'suggestion'
-          });
-        }
-      }
-    }
+      if (!content) return [];
 
-    // Check for overuse of "said"
-    const saidCount = (text.match(/\bsaid\b/gi) || []).length;
-    if (saidCount > 3) {
-      const saidMatches = [...text.matchAll(/\bsaid\b/gi)];
-      saidMatches.slice(2).forEach(match => {
-        issues.push({
-          type: 'vocabulary',
-          word: 'said',
-          start: match.index!,
-          end: match.index! + 4,
-          suggestions: ['whispered', 'exclaimed', 'declared', 'announced', 'replied', 'responded'],
-          message: 'Consider varying your dialogue tags',
-          severity: 'suggestion'
-        });
+      try {
+        const aiResults = JSON.parse(content);
+        return aiResults.map((item: any) => ({
+          type: 'spelling' as const,
+          word: item.word,
+          start: item.start_index,
+          end: item.end_index,
+          suggestions: item.suggestions || [],
+          message: item.message || `Possible spelling error: "${item.word}"`,
+          severity: 'error' as const
+        }));
+      } catch (parseError) {
+        console.error('Failed to parse spelling results:', parseError);
+        return [];
+      }
+    } catch (error) {
+      console.error('Spelling check error:', error);
+      return [];
+    }
+  }
+
+  // AI-powered punctuation checker
+  private async checkPunctuation(text: string): Promise<WritingIssue[]> {
+    try {
+      const response = await fetch(`${this.openaiApiBase}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.openaiApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-3.5-turbo',
+          messages: [
+            {
+              role: 'system',
+              content: `You are a punctuation checker for NSW Selective School writing. Identify missing or incorrect punctuation: missing periods, commas, apostrophes, quotation marks. Return JSON array with: word (text around the issue), start_index, end_index, suggestions, message, severity (error/warning/suggestion).`
+            },
+            {
+              role: 'user',
+              content: `Check punctuation in: "${text}"`
+            }
+          ],
+          temperature: 0.1,
+          max_tokens: 1000
+        })
       });
-    }
 
-    return issues;
+      const data = await response.json();
+      const content = data.choices?.[0]?.message?.content;
+      
+      if (!content) return [];
+
+      try {
+        const aiResults = JSON.parse(content);
+        return aiResults.map((item: any) => ({
+          type: 'punctuation' as const,
+          word: item.word,
+          start: item.start_index,
+          end: item.end_index,
+          suggestions: item.suggestions || [],
+          message: item.message || 'Punctuation issue',
+          severity: item.severity || 'error' as const
+        }));
+      } catch (parseError) {
+        return [];
+      }
+    } catch (error) {
+      console.error('Punctuation check error:', error);
+      return [];
+    }
   }
 
-  // Sentence structure checker
-  private checkSentenceStructure(text: string): WritingIssue[] {
-    const issues: WritingIssue[] = [];
-    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
-    
-    // Check for sentence variety
-    let simpleCount = 0;
-    let complexCount = 0;
-    
-    sentences.forEach((sentence, index) => {
-      const trimmed = sentence.trim();
-      const hasConjunction = /\b(and|but|or|because|since|although|while|if|when|after|before)\b/i.test(trimmed);
-      const hasComma = trimmed.includes(',');
-      
-      if (!hasConjunction && !hasComma) {
-        simpleCount++;
-      } else {
-        complexCount++;
-      }
-      
-      // Check for sentences starting with the same word
-      if (index > 0) {
-        const currentStart = trimmed.split(' ')[0]?.toLowerCase();
-        const previousStart = sentences[index - 1].trim().split(' ')[0]?.toLowerCase();
-        
-        if (currentStart === previousStart && currentStart !== 'the' && currentStart !== 'a') {
-          const start = text.indexOf(trimmed);
-          issues.push({
-            type: 'sentence',
-            word: currentStart,
-            start,
-            end: start + currentStart.length,
-            suggestions: ['Consider varying sentence beginnings'],
-            message: 'Consecutive sentences start with the same word',
-            severity: 'suggestion'
-          });
-        }
-      }
-    });
-
-    // Suggest more sentence variety if too many simple sentences
-    if (sentences.length > 3 && simpleCount / sentences.length > 0.7) {
-      issues.push({
-        type: 'sentence',
-        word: 'Overall structure',
-        start: 0,
-        end: 0,
-        suggestions: ['Add more complex sentences with conjunctions'],
-        message: 'Consider adding more sentence variety',
-        severity: 'suggestion'
+  // AI-powered grammar checker
+  private async checkGrammar(text: string): Promise<WritingIssue[]> {
+    try {
+      const response = await fetch(`${this.openaiApiBase}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.openaiApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-3.5-turbo',
+          messages: [
+            {
+              role: 'system',
+              content: `You are a grammar checker for NSW Selective School writing. Identify grammar errors: subject-verb disagreement, sentence fragments, run-on sentences, incorrect tense usage. Return JSON array with: word, start_index, end_index, suggestions, message, severity.`
+            },
+            {
+              role: 'user',
+              content: `Check grammar in: "${text}"`
+            }
+          ],
+          temperature: 0.1,
+          max_tokens: 1000
+        })
       });
-    }
 
-    return issues;
-  }
-
-  // Paragraph structure checker
-  private checkParagraphStructure(text: string): WritingIssue[] {
-    const issues: WritingIssue[] = [];
-    const paragraphs = text.split('\n\n').filter(p => p.trim().length > 0);
-    
-    paragraphs.forEach((paragraph, index) => {
-      const sentences = paragraph.split(/[.!?]+/).filter(s => s.trim().length > 0);
+      const data = await response.json();
+      const content = data.choices?.[0]?.message?.content;
       
-      // Check paragraph length
-      if (sentences.length === 1 && paragraph.trim().length > 100) {
-        issues.push({
-          type: 'paragraph',
-          word: 'Long paragraph',
-          start: text.indexOf(paragraph),
-          end: text.indexOf(paragraph) + Math.min(50, paragraph.length),
-          suggestions: ['Consider breaking into multiple sentences'],
-          message: 'Very long paragraph with only one sentence',
-          severity: 'suggestion'
-        });
+      if (!content) return [];
+
+      try {
+        const aiResults = JSON.parse(content);
+        return aiResults.map((item: any) => ({
+          type: 'grammar' as const,
+          word: item.word,
+          start: item.start_index,
+          end: item.end_index,
+          suggestions: item.suggestions || [],
+          message: item.message || 'Grammar issue',
+          severity: item.severity || 'error' as const
+        }));
+      } catch (parseError) {
+        return [];
       }
+    } catch (error) {
+      console.error('Grammar check error:', error);
+      return [];
+    }
+  }
+
+  // AI-powered vocabulary enhancement
+  private async checkVocabulary(text: string): Promise<WritingIssue[]> {
+    try {
+      const response = await fetch(`${this.openaiApiBase}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.openaiApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-3.5-turbo',
+          messages: [
+            {
+              role: 'system',
+              content: `You are a vocabulary enhancer for NSW Selective School writing. Identify basic words that could be upgraded to more sophisticated alternatives appropriate for selective school level. Focus on overused words like "good", "bad", "said", "went", "big", "small". Return JSON array with: word, start_index, end_index, suggestions (3-5 sophisticated alternatives), message, severity: "suggestion".`
+            },
+            {
+              role: 'user',
+              content: `Suggest vocabulary improvements for: "${text}"`
+            }
+          ],
+          temperature: 0.3,
+          max_tokens: 1000
+        })
+      });
+
+      const data = await response.json();
+      const content = data.choices?.[0]?.message?.content;
       
-      // Check for very short paragraphs (except dialogue)
-      if (sentences.length === 1 && paragraph.trim().length < 30 && !paragraph.includes('"')) {
-        issues.push({
-          type: 'paragraph',
-          word: paragraph.trim(),
-          start: text.indexOf(paragraph),
-          end: text.indexOf(paragraph) + paragraph.length,
-          suggestions: ['Consider expanding this paragraph'],
-          message: 'Very short paragraph - consider adding more detail',
-          severity: 'suggestion'
-        });
+      if (!content) return [];
+
+      try {
+        const aiResults = JSON.parse(content);
+        return aiResults.map((item: any) => ({
+          type: 'vocabulary' as const,
+          word: item.word,
+          start: item.start_index,
+          end: item.end_index,
+          suggestions: item.suggestions || [],
+          message: item.message || `Consider a more sophisticated word than "${item.word}"`,
+          severity: 'suggestion' as const
+        }));
+      } catch (parseError) {
+        return [];
       }
-    });
-
-    return issues;
-  }
-
-  // Helper methods
-  private isWordCorrect(word: string): boolean {
-    if (!word || word.length === 0) return true;
-    
-    const cleanWord = word.toLowerCase().replace(/[^\w']/g, '');
-    if (cleanWord.length === 0) return true;
-    
-    if (this.dictionary.has(cleanWord)) return true;
-    if (/^\d+$/.test(cleanWord)) return true;
-    if (word[0] === word[0].toUpperCase() && word.length > 1) return true;
-    if (word.includes("'")) return true;
-    
-    return false;
-  }
-
-  private getSpellingSuggestions(word: string): string[] {
-    const cleanWord = word.toLowerCase().replace(/[^\w']/g, '');
-    
-    if (this.commonMisspellings.has(cleanWord)) {
-      return [this.commonMisspellings.get(cleanWord)!];
+    } catch (error) {
+      console.error('Vocabulary check error:', error);
+      return [];
     }
-    
-    const suggestions: string[] = [];
-    for (const dictWord of this.dictionary) {
-      if (this.editDistance(cleanWord, dictWord) <= 2 && dictWord.length > 2) {
-        suggestions.push(dictWord);
+  }
+
+  // AI-powered sentence structure analysis
+  private async checkSentenceStructure(text: string): Promise<WritingIssue[]> {
+    try {
+      const response = await fetch(`${this.openaiApiBase}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.openaiApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-3.5-turbo',
+          messages: [
+            {
+              role: 'system',
+              content: `You are a sentence structure analyzer for NSW Selective School writing. Identify issues: repetitive sentence beginnings, lack of sentence variety, overly simple sentences, run-on sentences. Return JSON array with: word (first few words of sentence), start_index, end_index, suggestions, message, severity.`
+            },
+            {
+              role: 'user',
+              content: `Analyze sentence structure in: "${text}"`
+            }
+          ],
+          temperature: 0.2,
+          max_tokens: 1000
+        })
+      });
+
+      const data = await response.json();
+      const content = data.choices?.[0]?.message?.content;
+      
+      if (!content) return [];
+
+      try {
+        const aiResults = JSON.parse(content);
+        return aiResults.map((item: any) => ({
+          type: 'sentence' as const,
+          word: item.word,
+          start: item.start_index,
+          end: item.end_index,
+          suggestions: item.suggestions || [],
+          message: item.message || 'Sentence structure suggestion',
+          severity: item.severity || 'suggestion' as const
+        }));
+      } catch (parseError) {
+        return [];
       }
-      if (suggestions.length >= 5) break;
+    } catch (error) {
+      console.error('Sentence structure check error:', error);
+      return [];
     }
-    
-    return suggestions;
   }
 
-  private getVocabularySuggestions(word: string): string[] {
-    const suggestions: { [key: string]: string[] } = {
-      'good': ['excellent', 'outstanding', 'remarkable', 'exceptional', 'superb'],
-      'bad': ['terrible', 'awful', 'dreadful', 'horrible', 'atrocious'],
-      'big': ['enormous', 'massive', 'gigantic', 'colossal', 'immense'],
-      'small': ['tiny', 'minuscule', 'petite', 'compact', 'diminutive'],
-      'nice': ['pleasant', 'delightful', 'charming', 'lovely', 'wonderful'],
-      'pretty': ['beautiful', 'gorgeous', 'stunning', 'elegant', 'attractive'],
-      'happy': ['joyful', 'elated', 'ecstatic', 'delighted', 'jubilant'],
-      'sad': ['sorrowful', 'melancholy', 'dejected', 'despondent', 'mournful'],
-      'angry': ['furious', 'enraged', 'livid', 'irate', 'incensed'],
-      'scary': ['terrifying', 'frightening', 'spine-chilling', 'horrifying', 'menacing'],
-      'funny': ['hilarious', 'amusing', 'comical', 'entertaining', 'witty'],
-      'said': ['whispered', 'exclaimed', 'declared', 'announced', 'proclaimed'],
-      'went': ['traveled', 'journeyed', 'ventured', 'proceeded', 'departed'],
-      'looked': ['gazed', 'peered', 'glanced', 'observed', 'examined'],
-      'walked': ['strolled', 'wandered', 'ambled', 'strode', 'marched'],
-      'ran': ['sprinted', 'dashed', 'bolted', 'charged', 'raced'],
-      'very': ['extremely', 'incredibly', 'remarkably', 'exceptionally', 'tremendously']
-    };
-    
-    return suggestions[word] || [];
-  }
+  // AI-powered paragraph structure analysis
+  private async checkParagraphStructure(text: string): Promise<WritingIssue[]> {
+    try {
+      const paragraphs = text.split('\n\n').filter(p => p.trim().length > 0);
+      if (paragraphs.length < 2) return [];
 
-  private editDistance(str1: string, str2: string): number {
-    const matrix: number[][] = [];
-    
-    for (let i = 0; i <= str2.length; i++) {
-      matrix[i] = [i];
-    }
-    
-    for (let j = 0; j <= str1.length; j++) {
-      matrix[0][j] = j;
-    }
-    
-    for (let i = 1; i <= str2.length; i++) {
-      for (let j = 1; j <= str1.length; j++) {
-        if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
-          matrix[i][j] = matrix[i - 1][j - 1];
-        } else {
-          matrix[i][j] = Math.min(
-            matrix[i - 1][j - 1] + 1,
-            matrix[i][j - 1] + 1,
-            matrix[i - 1][j] + 1
-          );
-        }
+      const response = await fetch(`${this.openaiApiBase}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.openaiApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-3.5-turbo',
+          messages: [
+            {
+              role: 'system',
+              content: `You are a paragraph structure analyzer for NSW Selective School writing. Identify issues: paragraphs too short/long, lack of topic sentences, poor transitions, underdeveloped ideas. Return JSON array with: word (first few words of paragraph), start_index, end_index, suggestions, message, severity.`
+            },
+            {
+              role: 'user',
+              content: `Analyze paragraph structure in: "${text}"`
+            }
+          ],
+          temperature: 0.2,
+          max_tokens: 1000
+        })
+      });
+
+      const data = await response.json();
+      const content = data.choices?.[0]?.message?.content;
+      
+      if (!content) return [];
+
+      try {
+        const aiResults = JSON.parse(content);
+        return aiResults.map((item: any) => ({
+          type: 'paragraph' as const,
+          word: item.word,
+          start: item.start_index,
+          end: item.end_index,
+          suggestions: item.suggestions || [],
+          message: item.message || 'Paragraph structure suggestion',
+          severity: item.severity || 'suggestion' as const
+        }));
+      } catch (parseError) {
+        return [];
       }
+    } catch (error) {
+      console.error('Paragraph structure check error:', error);
+      return [];
     }
-    
-    return matrix[str2.length][str1.length];
-  }
-
-  addToDictionary(word: string) {
-    this.dictionary.add(word.toLowerCase());
   }
 }
 
@@ -631,7 +454,7 @@ export default function WritingArea({ onContentChange, initialContent = '', text
     feelings: ''
   });
 
-  // Enhanced writing checking state
+  // AI-Enhanced writing checking state
   const [writingIssues, setWritingIssues] = useState<WritingIssue[]>([]);
   const [selectedIssue, setSelectedIssue] = useState<WritingIssue | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -644,12 +467,13 @@ export default function WritingArea({ onContentChange, initialContent = '', text
     sentence: true,
     paragraph: true
   });
+  const [isCheckingWriting, setIsCheckingWriting] = useState(false);
   
   // Refs
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const overlayRef = useRef<HTMLDivElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
-  const writingChecker = useRef(new NSWSelectiveWritingChecker());
+  const aiWritingChecker = useRef(new AIWritingChecker());
   const checkTimeoutRef = useRef<NodeJS.Timeout>();
 
   // Timer effect
@@ -715,22 +539,31 @@ export default function WritingArea({ onContentChange, initialContent = '', text
     }));
   }, [content, onContentChange, timeSpent]);
 
-  // Enhanced writing checking effect
+  // AI-Enhanced writing checking effect
   useEffect(() => {
     if (checkTimeoutRef.current) {
       clearTimeout(checkTimeoutRef.current);
     }
 
-    checkTimeoutRef.current = setTimeout(() => {
-      if (content.trim()) {
-        const issues = writingChecker.current.checkText(content);
-        // Filter issues based on enabled checks
-        const filteredIssues = issues.filter(issue => enabledChecks[issue.type]);
-        setWritingIssues(filteredIssues);
+    checkTimeoutRef.current = setTimeout(async () => {
+      if (content.trim() && content.length > 20) {
+        setIsCheckingWriting(true);
+        try {
+          const issues = await aiWritingChecker.current.checkText(content);
+          // Filter issues based on enabled checks
+          const filteredIssues = issues.filter(issue => enabledChecks[issue.type]);
+          setWritingIssues(filteredIssues);
+        } catch (error) {
+          console.error('AI writing check failed:', error);
+          setWritingIssues([]);
+        } finally {
+          setIsCheckingWriting(false);
+        }
       } else {
         setWritingIssues([]);
+        setIsCheckingWriting(false);
       }
-    }, 500);
+    }, 2000); // Increased delay to reduce API calls
 
     return () => {
       if (checkTimeoutRef.current) {
@@ -799,13 +632,6 @@ export default function WritingArea({ onContentChange, initialContent = '', text
 
   // Ignore issue
   const ignoreIssue = () => {
-    if (selectedIssue && selectedIssue.type === 'spelling') {
-      writingChecker.current.addToDictionary(selectedIssue.word);
-      // Recheck to remove the issue
-      const issues = writingChecker.current.checkText(content);
-      const filteredIssues = issues.filter(issue => enabledChecks[issue.type]);
-      setWritingIssues(filteredIssues);
-    }
     setShowSuggestions(false);
     setSelectedIssue(null);
   };
@@ -978,19 +804,50 @@ export default function WritingArea({ onContentChange, initialContent = '', text
     setIsChatLoading(true);
 
     try {
-      // Simulate AI response (replace with actual API call)
-      setTimeout(() => {
-        const aiResponse = {
-          id: (Date.now() + 1).toString(),
-          text: "I'd be happy to help you with your writing! Can you tell me more about what specific aspect you'd like assistance with?",
-          sender: 'ai' as const,
-          timestamp: new Date()
-        };
-        setChatMessages(prev => [...prev, aiResponse]);
-        setIsChatLoading(false);
-      }, 1000);
+      // Use OpenAI API for chat responses
+      const response = await fetch(`${process.env.OPENAI_API_BASE || 'https://api.openai.com/v1'}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'gpt-3.5-turbo',
+          messages: [
+            {
+              role: 'system',
+              content: 'You are a helpful writing assistant for NSW Selective School students. Provide encouraging, constructive feedback and suggestions to help improve their writing. Keep responses concise and age-appropriate.'
+            },
+            {
+              role: 'user',
+              content: `Context: Student is writing a ${textType} piece. Current text: "${content.substring(0, 200)}..." Question: ${chatInput}`
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 200
+        })
+      });
+
+      const data = await response.json();
+      const aiResponseText = data.choices?.[0]?.message?.content || "I'd be happy to help you with your writing! Can you tell me more about what specific aspect you'd like assistance with?";
+
+      const aiResponse = {
+        id: (Date.now() + 1).toString(),
+        text: aiResponseText,
+        sender: 'ai' as const,
+        timestamp: new Date()
+      };
+      setChatMessages(prev => [...prev, aiResponse]);
     } catch (error) {
       console.error('Chat error:', error);
+      const errorResponse = {
+        id: (Date.now() + 1).toString(),
+        text: "I'm having trouble connecting right now, but I'm here to help! Try asking your question again.",
+        sender: 'ai' as const,
+        timestamp: new Date()
+      };
+      setChatMessages(prev => [...prev, errorResponse]);
+    } finally {
       setIsChatLoading(false);
     }
   };
@@ -1111,14 +968,17 @@ export default function WritingArea({ onContentChange, initialContent = '', text
           </p>
         </div>
 
-        {/* Optimized NSW Selective Writing Checks - Compact Version */}
+        {/* Optimized NSW Selective Writing Checks - Compact Version with AI */}
         <div className={`${focusMode ? 'bg-gray-800 border-gray-700' : 'bg-white'} rounded-lg shadow-sm p-3 mb-3 mx-3 transition-colors duration-300`}>
           <div className="flex items-center justify-between mb-2">
-            <h4 className={`text-sm font-semibold ${focusMode ? 'text-gray-200' : 'text-gray-800'}`}>
+            <h4 className={`text-sm font-semibold ${focusMode ? 'text-gray-200' : 'text-gray-800'} flex items-center`}>
               NSW Selective Writing Checks
+              {isCheckingWriting && (
+                <div className="ml-2 animate-spin rounded-full h-3 w-3 border-b-2 border-blue-500"></div>
+              )}
             </h4>
             <div className={`text-xs ${focusMode ? 'text-gray-400' : 'text-gray-600'}`}>
-              {issueCounts.total} issues found
+              {isCheckingWriting ? 'AI analyzing...' : `${issueCounts.total} issues found`}
             </div>
           </div>
           
@@ -1233,7 +1093,7 @@ export default function WritingArea({ onContentChange, initialContent = '', text
               </div>
             </div>
 
-            {/* Enhanced Text Area with Comprehensive Writing Checking */}
+            {/* Enhanced Text Area with AI-Powered Writing Checking */}
             <div className="flex-1 relative">
               {/* Overlay for highlighting */}
               <div
@@ -1314,7 +1174,7 @@ export default function WritingArea({ onContentChange, initialContent = '', text
                     </div>
                     {selectedIssue.suggestions.length > 0 ? (
                       <div className="space-y-1">
-                        <div className="text-xs font-medium text-gray-700 mb-1">Suggestions:</div>
+                        <div className="text-xs font-medium text-gray-700 mb-1">AI Suggestions:</div>
                         {selectedIssue.suggestions.map((suggestion, index) => (
                           <button
                             key={index}
@@ -1331,14 +1191,12 @@ export default function WritingArea({ onContentChange, initialContent = '', text
                   </div>
                   
                   <div className="border-t pt-2 flex space-x-2">
-                    {selectedIssue.type === 'spelling' && (
-                      <button
-                        className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded"
-                        onClick={ignoreIssue}
-                      >
-                        Add to Dictionary
-                      </button>
-                    )}
+                    <button
+                      className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded"
+                      onClick={ignoreIssue}
+                    >
+                      Ignore
+                    </button>
                     <button
                       className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded"
                       onClick={() => setShowSuggestions(false)}
@@ -1373,7 +1231,7 @@ export default function WritingArea({ onContentChange, initialContent = '', text
                 )}
                 <div className="flex items-center space-x-1 text-green-600">
                   <CheckCircle className="w-3 h-3" />
-                  <span>NSW Checks Active</span>
+                  <span>AI Checks Active</span>
                 </div>
                 <div className="flex items-center space-x-1">
                   <AlertCircle className="w-3 h-3" />
@@ -1509,7 +1367,7 @@ export default function WritingArea({ onContentChange, initialContent = '', text
 
           {activeTab === 'analysis' && (
             <div className="space-y-3">
-              <h3 className="text-xs font-semibold mb-3 text-indigo-100 text-center">Writing Analysis</h3>
+              <h3 className="text-xs font-semibold mb-3 text-indigo-100 text-center">AI Writing Analysis</h3>
               
               <div className="bg-indigo-700 rounded-lg p-3 text-center">
                 <h4 className="font-medium mb-1 text-xs text-indigo-200">Words:</h4>
@@ -1527,7 +1385,7 @@ export default function WritingArea({ onContentChange, initialContent = '', text
               </div>
 
               <div className="bg-indigo-700 rounded-lg p-3">
-                <h4 className="font-medium mb-2 text-xs text-indigo-200 text-center">Writing Issues:</h4>
+                <h4 className="font-medium mb-2 text-xs text-indigo-200 text-center">AI Writing Issues:</h4>
                 <div className="space-y-1 text-xs">
                   <div className="flex justify-between">
                     <span className="text-indigo-300">Spelling:</span>
@@ -1560,22 +1418,28 @@ export default function WritingArea({ onContentChange, initialContent = '', text
                     </div>
                   </div>
                 </div>
+                {isCheckingWriting && (
+                  <div className="mt-2 text-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-200 mx-auto"></div>
+                    <p className="text-xs text-indigo-300 mt-1">AI analyzing...</p>
+                  </div>
+                )}
               </div>
               
               <button 
                 onClick={handleEvaluate}
                 className="w-full bg-yellow-500 hover:bg-yellow-600 text-indigo-900 py-3 px-3 rounded-lg text-xs font-medium transition-colors"
               >
-                Submit for Evaluation
+                Submit for AI Evaluation
               </button>
             </div>
           )}
           
           {activeTab === 'vocabulary' && (
             <div className="space-y-3">
-              <h3 className="text-xs font-semibold mb-3 text-indigo-100 text-center">Vocabulary</h3>
+              <h3 className="text-xs font-semibold mb-3 text-indigo-100 text-center">AI Vocabulary</h3>
               <div className="bg-indigo-700 rounded-lg p-3 text-center">
-                <p className="text-indigo-200 text-xs mb-3">Select text to see suggestions</p>
+                <p className="text-indigo-200 text-xs mb-3">Select text to see AI suggestions</p>
                 <div className="text-xs text-indigo-300 space-y-2 text-left">
                   <p className="flex items-start">
                     <span className="text-yellow-400 mr-2">•</span>
@@ -1583,15 +1447,15 @@ export default function WritingArea({ onContentChange, initialContent = '', text
                   </p>
                   <p className="flex items-start">
                     <span className="text-yellow-400 mr-2">•</span>
-                    Get instant synonym suggestions
+                    Get AI-powered synonym suggestions
                   </p>
                   <p className="flex items-start">
                     <span className="text-yellow-400 mr-2">•</span>
-                    Improve your vocabulary
+                    Improve your vocabulary with AI
                   </p>
                   <p className="flex items-start">
                     <span className="text-yellow-400 mr-2">•</span>
-                    NSW Selective level words
+                    NSW Selective level recommendations
                   </p>
                 </div>
               </div>
@@ -1821,7 +1685,7 @@ export default function WritingArea({ onContentChange, initialContent = '', text
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl p-4 max-w-sm w-full mx-4">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-semibold">Synonyms for "{selectedText}"</h3>
+              <h3 className="text-lg font-semibold">AI Synonyms for "{selectedText}"</h3>
               <button
                 onClick={() => setShowSynonyms(false)}
                 className="text-gray-400 hover:text-gray-600"
@@ -1832,6 +1696,7 @@ export default function WritingArea({ onContentChange, initialContent = '', text
             {isLoadingSynonyms ? (
               <div className="text-center py-4">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto"></div>
+                <p className="text-sm text-gray-600 mt-2">AI generating synonyms...</p>
               </div>
             ) : (
               <div className="space-y-2">
