@@ -1111,7 +1111,7 @@ export default function WritingArea({ onContentChange, initialContent = '', text
           </p>
         </div>
 
-        {/* Writing Checker Controls */}
+        {/* Optimized NSW Selective Writing Checks - Compact Version */}
         <div className={`${focusMode ? 'bg-gray-800 border-gray-700' : 'bg-white'} rounded-lg shadow-sm p-3 mb-3 mx-3 transition-colors duration-300`}>
           <div className="flex items-center justify-between mb-2">
             <h4 className={`text-sm font-semibold ${focusMode ? 'text-gray-200' : 'text-gray-800'}`}>
@@ -1121,20 +1121,44 @@ export default function WritingArea({ onContentChange, initialContent = '', text
               {issueCounts.total} issues found
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-2 text-xs">
-            {Object.entries(enabledChecks).map(([type, enabled]) => (
-              <label key={type} className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  checked={enabled}
-                  onChange={(e) => setEnabledChecks(prev => ({ ...prev, [type]: e.target.checked }))}
-                  className="rounded"
-                />
-                <span className={`capitalize ${focusMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  {type} ({issueCounts[type as keyof typeof issueCounts]})
-                </span>
-              </label>
-            ))}
+          
+          {/* Compact Color-Coded Check Indicators */}
+          <div className="flex flex-wrap items-center gap-3 text-xs">
+            {Object.entries(enabledChecks).map(([type, enabled]) => {
+              const colors = {
+                spelling: { bg: '#fef3c7', border: '#f59e0b', text: '#92400e' },
+                punctuation: { bg: '#fecaca', border: '#ef4444', text: '#991b1b' },
+                grammar: { bg: '#ddd6fe', border: '#8b5cf6', text: '#5b21b6' },
+                vocabulary: { bg: '#bbf7d0', border: '#10b981', text: '#065f46' },
+                sentence: { bg: '#fed7aa', border: '#f97316', text: '#9a3412' },
+                paragraph: { bg: '#bfdbfe', border: '#3b82f6', text: '#1e40af' }
+              };
+              
+              const color = colors[type as keyof typeof colors];
+              const count = issueCounts[type as keyof typeof issueCounts];
+              
+              return (
+                <label key={type} className="flex items-center space-x-1 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={enabled}
+                    onChange={(e) => setEnabledChecks(prev => ({ ...prev, [type]: e.target.checked }))}
+                    className="w-3 h-3 rounded"
+                  />
+                  <div 
+                    className="flex items-center px-2 py-1 rounded-full border"
+                    style={{ 
+                      backgroundColor: enabled ? color.bg : '#f3f4f6',
+                      borderColor: enabled ? color.border : '#d1d5db',
+                      color: enabled ? color.text : '#6b7280'
+                    }}
+                  >
+                    <span className="capitalize font-medium">{type}</span>
+                    <span className="ml-1 font-bold">({count})</span>
+                  </div>
+                </label>
+              );
+            })}
           </div>
         </div>
 
