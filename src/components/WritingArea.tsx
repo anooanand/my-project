@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Save, Download, Upload, Eye, EyeOff, RotateCcw, Sparkles, BookOpen, Target, TrendingUp, Award, CheckCircle, AlertCircle, Star, Lightbulb, MessageSquare, BarChart3, Clock, Zap, Heart, Trophy, Wand2, PenTool, FileText, Settings, RefreshCw, Play, Pause, Volume2, VolumeX, Maximize2, Minimize2, Copy, Check, X, Plus, Minus, ChevronDown, ChevronUp, Info, HelpCircle, Calendar, Users, Globe, Mic, Camera, Image, Link, Hash, Type, AlignLeft, AlignCenter, AlignRight, Bold, Italic, Underline, List, ListOrdered, Quote, Code, Scissors, Clipboard, Search, Filter, SortAsc, SortDesc, Grid, Layout, Sidebar, Menu, MoreHorizontal, MoreVertical, ChevronLeft, ChevronRight, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Timer, Send, Bot, StopCircle, MapPin, Users2, Smile } from 'lucide-react';
-import { generatePrompt, getSynonyms, rephraseSentence, evaluateEssay } from '../lib/openai';
+import { generatePrompt, getSynonyms, rephraseSentence, evaluateEssay, openai } from '../lib/openai';
 import { WritingStatusBar } from './WritingStatusBar';
 import { StructuredPlanningSection } from './StructuredPlanningSection';
 
@@ -23,14 +23,19 @@ interface WritingIssue {
   severity: 'error' | 'warning' | 'suggestion';
 }
 
-// AI Writing Analysis Functions
+// AI Writing Analysis Functions using existing OpenAI integration
 async function checkSpellingAI(text: string): Promise<WritingIssue[]> {
   try {
-    const prompt = `You are a spelling checker for NSW Selective School writing tests. Analyze this text and identify ONLY genuinely misspelled words (not proper nouns, names, or creative terms). 
-
-Text: "${text}"
-
-Return a JSON array of objects with this exact format:
+    const response = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a spelling checker for NSW Selective School writing tests. Identify ONLY genuinely misspelled words (not proper nouns, names, or creative terms). Be very conservative.'
+        },
+        {
+          role: 'user',
+          content: `Analyze this text and identify ONLY genuinely misspelled words. Return a JSON array with this exact format:
 [
   {
     "word": "misspelled_word",
@@ -41,22 +46,16 @@ Return a JSON array of objects with this exact format:
   }
 ]
 
-Be very conservative - only flag obvious spelling errors. Return empty array [] if no errors found.`;
+Text: "${text}"
 
-    const response = await fetch('/api/openai', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        prompt,
-        maxTokens: 1000,
-        temperature: 0.1
-      })
+Be very conservative - only flag obvious spelling errors. Return empty array [] if no errors found.`
+        }
+      ],
+      max_tokens: 1000,
+      temperature: 0.1
     });
 
-    if (!response.ok) throw new Error('API request failed');
-    
-    const data = await response.json();
-    const content = data.response || '';
+    const content = response.choices[0]?.message?.content || '';
     
     try {
       const results = JSON.parse(content);
@@ -81,11 +80,16 @@ Be very conservative - only flag obvious spelling errors. Return empty array [] 
 
 async function checkGrammarAI(text: string): Promise<WritingIssue[]> {
   try {
-    const prompt = `You are a grammar checker for NSW Selective School writing. Identify grammar errors like subject-verb disagreement, sentence fragments, run-on sentences, incorrect tense usage.
-
-Text: "${text}"
-
-Return a JSON array with this format:
+    const response = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a grammar checker for NSW Selective School writing. Identify grammar errors like subject-verb disagreement, sentence fragments, run-on sentences, incorrect tense usage.'
+        },
+        {
+          role: 'user',
+          content: `Identify grammar errors in this text. Return a JSON array with this format:
 [
   {
     "word": "problematic_phrase",
@@ -97,22 +101,16 @@ Return a JSON array with this format:
   }
 ]
 
-Return empty array [] if no errors found.`;
+Text: "${text}"
 
-    const response = await fetch('/api/openai', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        prompt,
-        maxTokens: 1000,
-        temperature: 0.1
-      })
+Return empty array [] if no errors found.`
+        }
+      ],
+      max_tokens: 1000,
+      temperature: 0.1
     });
 
-    if (!response.ok) throw new Error('API request failed');
-    
-    const data = await response.json();
-    const content = data.response || '';
+    const content = response.choices[0]?.message?.content || '';
     
     try {
       const results = JSON.parse(content);
@@ -136,11 +134,16 @@ Return empty array [] if no errors found.`;
 
 async function checkVocabularyAI(text: string): Promise<WritingIssue[]> {
   try {
-    const prompt = `You are a vocabulary enhancer for NSW Selective School writing. Identify basic words that could be upgraded to more sophisticated alternatives. Focus on overused words like "good", "bad", "said", "went", "big", "small".
-
-Text: "${text}"
-
-Return a JSON array with this format:
+    const response = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a vocabulary enhancer for NSW Selective School writing. Identify basic words that could be upgraded to more sophisticated alternatives. Focus on overused words like "good", "bad", "said", "went", "big", "small".'
+        },
+        {
+          role: 'user',
+          content: `Identify basic words that could be upgraded to more sophisticated alternatives. Return a JSON array with this format:
 [
   {
     "word": "basic_word",
@@ -152,22 +155,16 @@ Return a JSON array with this format:
   }
 ]
 
-Return empty array [] if no improvements needed.`;
+Text: "${text}"
 
-    const response = await fetch('/api/openai', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        prompt,
-        maxTokens: 1000,
-        temperature: 0.3
-      })
+Return empty array [] if no improvements needed.`
+        }
+      ],
+      max_tokens: 1000,
+      temperature: 0.3
     });
 
-    if (!response.ok) throw new Error('API request failed');
-    
-    const data = await response.json();
-    const content = data.response || '';
+    const content = response.choices[0]?.message?.content || '';
     
     try {
       const results = JSON.parse(content);
@@ -191,11 +188,16 @@ Return empty array [] if no improvements needed.`;
 
 async function checkPunctuationAI(text: string): Promise<WritingIssue[]> {
   try {
-    const prompt = `You are a punctuation checker for NSW Selective School writing. Identify missing or incorrect punctuation: missing periods, commas, apostrophes, quotation marks.
-
-Text: "${text}"
-
-Return a JSON array with this format:
+    const response = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a punctuation checker for NSW Selective School writing. Identify missing or incorrect punctuation: missing periods, commas, apostrophes, quotation marks.'
+        },
+        {
+          role: 'user',
+          content: `Identify punctuation errors in this text. Return a JSON array with this format:
 [
   {
     "word": "text_around_issue",
@@ -207,22 +209,16 @@ Return a JSON array with this format:
   }
 ]
 
-Return empty array [] if no errors found.`;
+Text: "${text}"
 
-    const response = await fetch('/api/openai', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        prompt,
-        maxTokens: 1000,
-        temperature: 0.1
-      })
+Return empty array [] if no errors found.`
+        }
+      ],
+      max_tokens: 1000,
+      temperature: 0.1
     });
 
-    if (!response.ok) throw new Error('API request failed');
-    
-    const data = await response.json();
-    const content = data.response || '';
+    const content = response.choices[0]?.message?.content || '';
     
     try {
       const results = JSON.parse(content);
@@ -246,11 +242,16 @@ Return empty array [] if no errors found.`;
 
 async function checkSentenceStructureAI(text: string): Promise<WritingIssue[]> {
   try {
-    const prompt = `You are a sentence structure analyzer for NSW Selective School writing. Identify issues: repetitive sentence beginnings, lack of sentence variety, overly simple sentences.
-
-Text: "${text}"
-
-Return a JSON array with this format:
+    const response = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a sentence structure analyzer for NSW Selective School writing. Identify issues: repetitive sentence beginnings, lack of sentence variety, overly simple sentences.'
+        },
+        {
+          role: 'user',
+          content: `Analyze sentence structure in this text. Return a JSON array with this format:
 [
   {
     "word": "sentence_beginning",
@@ -262,22 +263,16 @@ Return a JSON array with this format:
   }
 ]
 
-Return empty array [] if no issues found.`;
+Text: "${text}"
 
-    const response = await fetch('/api/openai', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        prompt,
-        maxTokens: 1000,
-        temperature: 0.2
-      })
+Return empty array [] if no issues found.`
+        }
+      ],
+      max_tokens: 1000,
+      temperature: 0.2
     });
 
-    if (!response.ok) throw new Error('API request failed');
-    
-    const data = await response.json();
-    const content = data.response || '';
+    const content = response.choices[0]?.message?.content || '';
     
     try {
       const results = JSON.parse(content);
@@ -304,11 +299,16 @@ async function checkParagraphStructureAI(text: string): Promise<WritingIssue[]> 
     const paragraphs = text.split('\n\n').filter(p => p.trim().length > 0);
     if (paragraphs.length < 2) return [];
 
-    const prompt = `You are a paragraph structure analyzer for NSW Selective School writing. Identify issues: paragraphs too short/long, lack of topic sentences, poor transitions.
-
-Text: "${text}"
-
-Return a JSON array with this format:
+    const response = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a paragraph structure analyzer for NSW Selective School writing. Identify issues: paragraphs too short/long, lack of topic sentences, poor transitions.'
+        },
+        {
+          role: 'user',
+          content: `Analyze paragraph structure in this text. Return a JSON array with this format:
 [
   {
     "word": "paragraph_beginning",
@@ -320,22 +320,16 @@ Return a JSON array with this format:
   }
 ]
 
-Return empty array [] if no issues found.`;
+Text: "${text}"
 
-    const response = await fetch('/api/openai', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        prompt,
-        maxTokens: 1000,
-        temperature: 0.2
-      })
+Return empty array [] if no issues found.`
+        }
+      ],
+      max_tokens: 1000,
+      temperature: 0.2
     });
 
-    if (!response.ok) throw new Error('API request failed');
-    
-    const data = await response.json();
-    const content = data.response || '';
+    const content = response.choices[0]?.message?.content || '';
     
     try {
       const results = JSON.parse(content);
@@ -783,7 +777,7 @@ export default function WritingArea({ onContentChange, initialContent = '', text
     }
   };
 
-  // Chat submission handler
+  // Chat submission handler using existing OpenAI integration
   const handleChatSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!chatInput.trim() || isChatLoading) return;
@@ -801,13 +795,25 @@ export default function WritingArea({ onContentChange, initialContent = '', text
 
     try {
       // Use existing OpenAI integration
-      const contextPrompt = `You are a helpful writing assistant for NSW Selective School students. The student is writing a ${textType} piece. Current text: "${content.substring(0, 200)}..." Student question: ${chatInput}`;
-      
-      const response = await generatePrompt(contextPrompt);
+      const response = await openai.chat.completions.create({
+        model: 'gpt-3.5-turbo',
+        messages: [
+          {
+            role: 'system',
+            content: `You are a helpful writing assistant for NSW Selective School students. The student is writing a ${textType} piece.`
+          },
+          {
+            role: 'user',
+            content: `Current text: "${content.substring(0, 200)}..." Student question: ${chatInput}`
+          }
+        ],
+        max_tokens: 200,
+        temperature: 0.7
+      });
       
       const aiResponse = {
         id: (Date.now() + 1).toString(),
-        text: response || "I'd be happy to help you with your writing! Can you tell me more about what specific aspect you'd like assistance with?",
+        text: response.choices[0]?.message?.content || "I'd be happy to help you with your writing! Can you tell me more about what specific aspect you'd like assistance with?",
         sender: 'ai' as const,
         timestamp: new Date()
       };
