@@ -2,7 +2,7 @@ import OpenAI from "openai";
 
 // Initialize OpenAI with server-side API key
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+  apiKey: process.env.VITE_OPENAI_API_KEY
 });
 
 // Helper function to analyze content structure (reused from existing code)
