@@ -1,4 +1,4 @@
-const OpenAI = require('openai');
+import OpenAI from 'openai';
 
 // Initialize OpenAI with error handling
 let openai = null;
@@ -52,7 +52,7 @@ function createFallbackResponse(operation, data) {
   }
 }
 
-exports.handler = async (event, context) => {
+export async function handler(event, context) {
   // Handle CORS preflight
   if (event.httpMethod === 'OPTIONS') {
     return {
