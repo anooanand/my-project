@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Initialize Supabase client
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = "https://bcrzbrbkhpnzsmqfljty.supabase.co";
+const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjcnpicmJraHBuenNtcWZsanR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTc0MzE4MTcsImV4cCI6MjAzMjkxNjgxN30.iH-4_1S-3Uv_i_V8h1v1OIyv-1_1S-3Uv_i_V8h1v1OI";
 
 // Ensure that the environment variables are defined
 if (!supabaseUrl || !supabaseAnonKey) {
@@ -99,4 +99,3 @@ export async function getUserAccessStatus(userId: string) {
 }
 
 // Export default for compatibility
-
