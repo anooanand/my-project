@@ -1,9 +1,18 @@
 import { createClient } from '@supabase/supabase-js';
 import type { User } from '@supabase/supabase-js';
 
-// Supabase project configuration
-const supabaseUrl = 'https://bcrzbrbkhpnzsmqfljty.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjcnpicmJraHBuenNtcWZsanR5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTc0MzE4MTcsImV4cCI6MjAzMjkxNjgxN30.iH-4_1S-3Uv_i_V8h1v1OIyv-1_1S-3Uv_i_V8h1v1OI';
+// Supabase project configuration using environment variables
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://rvlotczavccreigdzczo.supabase.co';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ2bG90Y3phdmNjcmVpZ2R6Y3pvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzQ5NzI2MzQsImV4cCI6MjA1MDU0ODYzNH0.YOUR_ACTUAL_ANON_KEY_HERE';
+
+// Validate required environment variables
+if (!supabaseUrl) {
+  throw new Error('Missing VITE_SUPABASE_URL environment variable');
+}
+
+if (!supabaseAnonKey) {
+  throw new Error('Missing VITE_SUPABASE_ANON_KEY environment variable');
+}
 
 // Create and export the Supabase client
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
@@ -12,7 +21,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     detectSessionInUrl: true
   }
-} );
+});
 
 // Utility function to check if email is verified
 export const isEmailVerified = (user?: User | null): boolean => {
