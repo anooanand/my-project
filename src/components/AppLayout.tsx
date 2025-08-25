@@ -22,7 +22,7 @@ import { DemoPage } from './DemoPage';
 
 // Writing components
 import { SplitScreen } from './SplitScreen';
-import WritingArea from './WritingArea';
+import { WritingArea } from './WritingArea';
 import { CoachPanel } from './CoachPanel';
 import { ParaphrasePanel } from './ParaphrasePanel';
 import { TabbedCoachPanel } from './TabbedCoachPanel';
@@ -407,3 +407,4 @@ function EmailVerificationSuccess({ onContinue }: { onContinue: () => void }) {
 }
 
 export default AppLayout;
+
