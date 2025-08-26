@@ -1,6 +1,6 @@
-const { getNSWCoachingTips } = require('./nsw-api-endpoints');
+import { getNSWCoachingTips } from './nsw-api-endpoints.js';
 
-exports.handler = async (event, context) => {
+export const handler = async (event, context) => {
   // Handle CORS
   const headers = {
     'Access-Control-Allow-Origin': '*',
@@ -8,7 +8,7 @@ exports.handler = async (event, context) => {
     'Access-Control-Allow-Methods': 'POST, OPTIONS'
   };
 
-  if (event.httpMethod === 'OPTIONS') {
+  if (event.httpMethod === 'OPTIONS' ) {
     return {
       statusCode: 200,
       headers,
@@ -16,7 +16,7 @@ exports.handler = async (event, context) => {
     };
   }
 
-  if (event.httpMethod !== 'POST') {
+  if (event.httpMethod !== 'POST' ) {
     return {
       statusCode: 405,
       headers,
