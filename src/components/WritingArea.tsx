@@ -23,7 +23,24 @@ interface WritingIssue {
   severity: 'error' | 'warning' | 'suggestion';
 }
 
-// FIXED: Improved content analysis with correct word positioning
+// Enhanced Evaluation Interface
+interface DetailedEvaluation {
+  score: number;
+  strengths: string;
+  improvements: string;
+  writingIssues: {
+    spelling: WritingIssue[];
+    punctuation: WritingIssue[];
+    grammar: WritingIssue[];
+    vocabulary: WritingIssue[];
+    sentence: WritingIssue[];
+    paragraph: WritingIssue[];
+  };
+  detailedFeedback: string;
+  recommendations: string[];
+}
+
+// IMPROVED: Content analysis with better issue detection
 function analyzeContentBasic(text: string): WritingIssue[] {
   const issues: WritingIssue[] = [];
   const words = text.trim().split(/\s+/).filter(word => word.length > 0);
@@ -55,24 +72,36 @@ function analyzeContentBasic(text: string): WritingIssue[] {
     });
   }
   
-  // FIXED: Check for basic words with correct positioning
-  const basicWords = ['good', 'bad', 'nice', 'big', 'small', 'said', 'went', 'got', 'very', 'really', 'wint'];
+  // Check for basic words and common misspellings
+  const basicWords = ['good', 'bad', 'nice', 'big', 'small', 'said', 'went', 'got', 'very', 'really'];
+  const commonMisspellings = {
+    'wint': ['went', 'want', 'win'],
+    'teh': ['the'],
+    'adn': ['and'],
+    'recieve': ['receive'],
+    'seperate': ['separate'],
+    'definately': ['definitely'],
+    'occured': ['occurred'],
+    'begining': ['beginning'],
+    'writting': ['writing'],
+    'grammer': ['grammar']
+  };
+  
   let currentPosition = 0;
   
   words.forEach((word) => {
-    // Find the actual position of this word in the text
     const wordStart = text.indexOf(word, currentPosition);
     if (wordStart !== -1) {
       const cleanWord = word.toLowerCase().replace(/[^\w]/g, '');
       
-      // Check for obvious misspellings
-      if (cleanWord === 'wint') {
+      // Check for misspellings
+      if (commonMisspellings[cleanWord]) {
         issues.push({
           type: 'spelling',
           word: word,
           start: wordStart,
           end: wordStart + word.length,
-          suggestions: ['went', 'want', 'win'],
+          suggestions: commonMisspellings[cleanWord],
           message: 'Possible spelling error',
           severity: 'error'
         });
@@ -127,7 +156,7 @@ function getBasicSynonyms(word: string): string[] {
   return synonyms[word] || ['improved word', 'better alternative', 'more sophisticated term'];
 }
 
-// FIXED: AI Writing Analysis Functions with better position handling
+// AI Writing Analysis Functions
 async function checkSpellingAI(text: string): Promise<WritingIssue[]> {
   try {
     const response = await openai.chat.completions.create({
@@ -139,7 +168,7 @@ async function checkSpellingAI(text: string): Promise<WritingIssue[]> {
         },
         {
           role: 'user',
-          content: `Find spelling errors in this text and return the exact word positions. Text: "${text}"
+          content: `Find spelling errors in this text: "${text}"
 
 Return a JSON array with this format:
 [
@@ -162,7 +191,6 @@ Only return genuinely misspelled words. Return empty array [] if no errors.`
     try {
       const results = JSON.parse(content);
       return Array.isArray(results) ? results.map((item: any) => {
-        // Find the actual position of the word in the text
         const wordToFind = item.word || '';
         const wordStart = text.indexOf(wordToFind);
         
@@ -175,7 +203,7 @@ Only return genuinely misspelled words. Return empty array [] if no errors.`
           message: item.message || 'Spelling error',
           severity: 'error' as const
         };
-      }).filter(issue => issue.start !== -1) : []; // Filter out words not found
+      }).filter(issue => issue.start !== -1) : [];
     } catch (parseError) {
       console.error('Failed to parse spelling results:', parseError);
       return [];
@@ -469,7 +497,7 @@ Return empty array [] if no issues found.`
   }
 }
 
-// Main AI Writing Checker - FIXED to work with short content
+// Main AI Writing Checker
 async function checkAllWritingAI(text: string, enabledChecks: any): Promise<WritingIssue[]> {
   if (!text.trim()) {
     return [];
@@ -512,6 +540,106 @@ async function checkAllWritingAI(text: string, enabledChecks: any): Promise<Writ
   }
 }
 
+// ENHANCED: Detailed evaluation function that includes all writing issues
+async function evaluateEssayDetailed(text: string, textType: string, writingIssues: WritingIssue[]): Promise<DetailedEvaluation> {
+  try {
+    // Organize issues by type
+    const organizedIssues = {
+      spelling: writingIssues.filter(issue => issue.type === 'spelling'),
+      punctuation: writingIssues.filter(issue => issue.type === 'punctuation'),
+      grammar: writingIssues.filter(issue => issue.type === 'grammar'),
+      vocabulary: writingIssues.filter(issue => issue.type === 'vocabulary'),
+      sentence: writingIssues.filter(issue => issue.type === 'sentence'),
+      paragraph: writingIssues.filter(issue => issue.type === 'paragraph')
+    };
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        {
+          role: 'system',
+          content: `You are an expert NSW Selective School writing evaluator. Provide detailed feedback on ${textType} writing.`
+        },
+        {
+          role: 'user',
+          content: `Evaluate this ${textType} writing and provide detailed feedback:
+
+Text: "${text}"
+
+Writing Issues Found:
+- Spelling errors: ${organizedIssues.spelling.length} (${organizedIssues.spelling.map(i => i.word).join(', ')})
+- Punctuation issues: ${organizedIssues.punctuation.length} (${organizedIssues.punctuation.map(i => i.word).join(', ')})
+- Grammar issues: ${organizedIssues.grammar.length} (${organizedIssues.grammar.map(i => i.word).join(', ')})
+- Vocabulary suggestions: ${organizedIssues.vocabulary.length} (${organizedIssues.vocabulary.map(i => i.word).join(', ')})
+- Sentence structure: ${organizedIssues.sentence.length} issues
+- Paragraph structure: ${organizedIssues.paragraph.length} issues
+
+Provide a comprehensive evaluation including:
+1. Overall score (0-100)
+2. Strengths of the writing
+3. Areas for improvement
+4. Detailed feedback addressing the specific issues found
+5. Specific recommendations for improvement
+
+Format your response as JSON:
+{
+  "score": number,
+  "strengths": "string",
+  "improvements": "string", 
+  "detailedFeedback": "string",
+  "recommendations": ["recommendation1", "recommendation2", "recommendation3"]
+}`
+        }
+      ],
+      max_tokens: 1500,
+      temperature: 0.3
+    });
+
+    const content = response.choices[0]?.message?.content || '';
+    
+    try {
+      const evaluation = JSON.parse(content);
+      return {
+        score: evaluation.score || 50,
+        strengths: evaluation.strengths || 'Good effort on your writing!',
+        improvements: evaluation.improvements || 'Continue practicing to improve your skills.',
+        writingIssues: organizedIssues,
+        detailedFeedback: evaluation.detailedFeedback || 'Keep working on developing your writing skills.',
+        recommendations: evaluation.recommendations || ['Practice writing regularly', 'Read more books', 'Ask for feedback']
+      };
+    } catch (parseError) {
+      console.error('Failed to parse evaluation:', parseError);
+      return {
+        score: 50,
+        strengths: 'Good effort on your writing!',
+        improvements: 'Continue practicing to improve your skills.',
+        writingIssues: organizedIssues,
+        detailedFeedback: 'Keep working on developing your writing skills.',
+        recommendations: ['Practice writing regularly', 'Read more books', 'Ask for feedback']
+      };
+    }
+  } catch (error) {
+    console.error('Evaluation error:', error);
+    const organizedIssues = {
+      spelling: writingIssues.filter(issue => issue.type === 'spelling'),
+      punctuation: writingIssues.filter(issue => issue.type === 'punctuation'),
+      grammar: writingIssues.filter(issue => issue.type === 'grammar'),
+      vocabulary: writingIssues.filter(issue => issue.type === 'vocabulary'),
+      sentence: writingIssues.filter(issue => issue.type === 'sentence'),
+      paragraph: writingIssues.filter(issue => issue.type === 'paragraph')
+    };
+    
+    return {
+      score: 50,
+      strengths: 'Good effort on your writing!',
+      improvements: 'Continue practicing to improve your skills.',
+      writingIssues: organizedIssues,
+      detailedFeedback: 'Keep working on developing your writing skills.',
+      recommendations: ['Practice writing regularly', 'Read more books', 'Ask for feedback']
+    };
+  }
+}
+
 export default function WritingArea({ onContentChange, initialContent = '', textType = 'narrative', prompt: propPrompt, onPromptChange }: WritingAreaProps) {
   // State management
   const [content, setContent] = useState(initialContent);
@@ -531,7 +659,7 @@ export default function WritingArea({ onContentChange, initialContent = '', text
   const [showSynonyms, setShowSynonyms] = useState(false);
   const [synonyms, setSynonyms] = useState<string[]>([]);
   const [isLoadingSynonyms, setIsLoadingSynonyms] = useState(false);
-  const [evaluation, setEvaluation] = useState<any>(null);
+  const [evaluation, setEvaluation] = useState<DetailedEvaluation | null>(null);
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [planningNotes, setPlanningNotes] = useState('');
   const [writingGoals, setWritingGoals] = useState('');
@@ -582,11 +710,8 @@ export default function WritingArea({ onContentChange, initialContent = '', text
     feelings: ''
   });
 
-  // AI-Enhanced writing checking state
+  // AI-Enhanced writing checking state (NO HIGHLIGHTING)
   const [writingIssues, setWritingIssues] = useState<WritingIssue[]>([]);
-  const [selectedIssue, setSelectedIssue] = useState<WritingIssue | null>(null);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [suggestionPosition, setSuggestionPosition] = useState({ x: 0, y: 0 });
   const [enabledChecks, setEnabledChecks] = useState({
     spelling: true,
     punctuation: true,
@@ -600,7 +725,6 @@ export default function WritingArea({ onContentChange, initialContent = '', text
 
   // Refs
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const overlayRef = useRef<HTMLDivElement>(null);
   const checkTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -651,14 +775,13 @@ export default function WritingArea({ onContentChange, initialContent = '', text
     }));
   }, [content, onContentChange, timeSpent]);
 
-  // FIXED AI-Enhanced writing checking effect - Now works with ANY content length
+  // AI-Enhanced writing checking effect - Background analysis only
   useEffect(() => {
     if (checkTimeoutRef.current) {
       clearTimeout(checkTimeoutRef.current);
     }
 
     checkTimeoutRef.current = setTimeout(async () => {
-      // FIXED: Now analyzes content of any length, not just > 20 characters
       if (content.trim()) {
         setIsCheckingWriting(true);
         try {
@@ -666,7 +789,6 @@ export default function WritingArea({ onContentChange, initialContent = '', text
           setWritingIssues(issues);
         } catch (error) {
           console.error('AI writing check failed:', error);
-          // Fallback to basic analysis if AI fails
           const basicIssues = analyzeContentBasic(content);
           setWritingIssues(basicIssues);
         } finally {
@@ -676,7 +798,7 @@ export default function WritingArea({ onContentChange, initialContent = '', text
         setWritingIssues([]);
         setIsCheckingWriting(false);
       }
-    }, 2000); // Reduced delay for faster feedback
+    }, 2000);
 
     return () => {
       if (checkTimeoutRef.current) {
@@ -685,18 +807,9 @@ export default function WritingArea({ onContentChange, initialContent = '', text
     };
   }, [content, enabledChecks]);
 
-  // Sync scroll between textarea and overlay
-  const handleScroll = () => {
-    if (textareaRef.current && overlayRef.current) {
-      overlayRef.current.scrollTop = textareaRef.current.scrollTop;
-      overlayRef.current.scrollLeft = textareaRef.current.scrollLeft;
-    }
-  };
-
   // Handle content change
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setContent(e.target.value);
-    setShowSuggestions(false);
   };
 
   // Handle text selection for synonyms
@@ -713,128 +826,6 @@ export default function WritingArea({ onContentChange, initialContent = '', text
         setShowSynonyms(false);
       }
     }
-  };
-
-  // Handle click on highlighted issue
-  const handleIssueClick = (issue: WritingIssue, event: React.MouseEvent) => {
-    event.preventDefault();
-    setSelectedIssue(issue);
-    setShowSuggestions(true);
-    
-    // Position suggestions popup
-    const rect = textareaRef.current?.getBoundingClientRect();
-    if (rect) {
-      setSuggestionPosition({
-        x: event.clientX - rect.left,
-        y: event.clientY - rect.top + 25
-      });
-    }
-  };
-
-  // Apply suggestion
-  const applySuggestion = (suggestion: string) => {
-    if (selectedIssue) {
-      const newValue = content.substring(0, selectedIssue.start) + 
-                      suggestion + 
-                      content.substring(selectedIssue.end);
-      setContent(newValue);
-    }
-    setShowSuggestions(false);
-    setSelectedIssue(null);
-  };
-
-  // Ignore issue
-  const ignoreIssue = () => {
-    setShowSuggestions(false);
-    setSelectedIssue(null);
-  };
-
-  // Get issue color based on type and severity
-  const getIssueColor = (issue: WritingIssue) => {
-    const colors = {
-      spelling: { error: '#fef3c7', warning: '#fef3c7', suggestion: '#fef3c7' }, // yellow
-      punctuation: { error: '#fecaca', warning: '#fed7d7', suggestion: '#fee2e2' }, // red
-      grammar: { error: '#ddd6fe', warning: '#e0e7ff', suggestion: '#eef2ff' }, // purple
-      vocabulary: { error: '#bbf7d0', warning: '#c6f6d5', suggestion: '#d1fae5' }, // green
-      sentence: { error: '#fed7aa', warning: '#fde68a', suggestion: '#fef3c7' }, // orange
-      paragraph: { error: '#bfdbfe', warning: '#dbeafe', suggestion: '#eff6ff' } // blue
-    };
-    
-    return colors[issue.type][issue.severity];
-  };
-
-  // Get issue border color
-  const getIssueBorderColor = (issue: WritingIssue) => {
-    const colors = {
-      spelling: '#f59e0b', // yellow-500
-      punctuation: '#ef4444', // red-500
-      grammar: '#8b5cf6', // purple-500
-      vocabulary: '#10b981', // green-500
-      sentence: '#f97316', // orange-500
-      paragraph: '#3b82f6' // blue-500
-    };
-    
-    return colors[issue.type];
-  };
-
-  // FIXED: Create highlighted text with proper positioning
-  const createHighlightedText = () => {
-    if (writingIssues.length === 0) {
-      return <span style={{ whiteSpace: 'pre-wrap' }}>{content}</span>;
-    }
-
-    const parts = [];
-    let lastIndex = 0;
-
-    // Sort issues by start position to ensure proper rendering
-    const sortedIssues = [...writingIssues].sort((a, b) => a.start - b.start);
-
-    sortedIssues.forEach((issue, index) => {
-      // Validate positions
-      const start = Math.max(0, Math.min(issue.start, content.length));
-      const end = Math.max(start, Math.min(issue.end, content.length));
-      
-      // Add text before issue
-      if (start > lastIndex) {
-        parts.push(
-          <span key={`text-${index}`} style={{ whiteSpace: 'pre-wrap' }}>
-            {content.substring(lastIndex, start)}
-          </span>
-        );
-      }
-
-      // Add highlighted issue
-      if (start < end) {
-        const issueText = content.substring(start, end);
-        parts.push(
-          <span
-            key={`issue-${index}`}
-            style={{
-              backgroundColor: getIssueColor(issue),
-              borderBottom: `2px wavy ${getIssueBorderColor(issue)}`,
-              cursor: 'pointer',
-              whiteSpace: 'pre-wrap'
-            }}
-            onClick={(e) => handleIssueClick(issue, e)}
-            title={`${issue.type.charAt(0).toUpperCase() + issue.type.slice(1)} ${issue.severity}: ${issue.message}`}
-          >
-            {issueText}
-          </span>
-        );
-        lastIndex = end;
-      }
-    });
-
-    // Add remaining text
-    if (lastIndex < content.length) {
-      parts.push(
-        <span key="text-end" style={{ whiteSpace: 'pre-wrap' }}>
-          {content.substring(lastIndex)}
-        </span>
-      );
-    }
-
-    return parts;
   };
 
   // Get issue counts by type
@@ -856,7 +847,7 @@ export default function WritingArea({ onContentChange, initialContent = '', text
     return counts;
   };
 
-  // FIXED: Calculate realistic quality score based on content and issues
+  // Calculate realistic quality score based on content and issues
   const getQualityScore = () => {
     const wordCount = content.trim().split(/\s+/).filter(word => word.length > 0).length;
     const issueCount = writingIssues.length;
@@ -896,13 +887,21 @@ export default function WritingArea({ onContentChange, initialContent = '', text
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
-  // Handle evaluation - CHANGED BUTTON TEXT TO "Analyze My Writing"
+  // ENHANCED: Handle evaluation with detailed report including all issues
   const handleEvaluate = async () => {
     if (!content.trim()) return;
     
     setIsEvaluating(true);
     try {
-      const result = await evaluateEssay(content, textType);
+      // First ensure we have the latest writing issues
+      let currentIssues = writingIssues;
+      if (content.trim()) {
+        currentIssues = await checkAllWritingAI(content, enabledChecks);
+        setWritingIssues(currentIssues);
+      }
+      
+      // Get detailed evaluation including all issues
+      const result = await evaluateEssayDetailed(content, textType, currentIssues);
       setEvaluation(result);
     } catch (error) {
       console.error('Evaluation error:', error);
@@ -1265,43 +1264,12 @@ export default function WritingArea({ onContentChange, initialContent = '', text
               </div>
             </div>
 
-            {/* Enhanced Text Area with AI-Powered Writing Checking */}
+            {/* SIMPLIFIED Text Area - NO HIGHLIGHTING OVERLAY */}
             <div className="flex-1 relative">
-              {/* Overlay for highlighting */}
-              <div
-                ref={overlayRef}
-                className="absolute inset-0 pointer-events-none overflow-hidden"
-                style={{
-                  color: 'transparent',
-                  backgroundColor: 'transparent',
-                  border: 'none',
-                  resize: 'none',
-                  whiteSpace: 'pre-wrap',
-                  wordWrap: 'break-word',
-                  zIndex: 1,
-                  pointerEvents: writingIssues.length > 0 ? 'auto' : 'none'
-                }}
-              >
-                <div
-                  style={{
-                    padding: '1rem',
-                    fontSize: `${fontSize}px`,
-                    fontFamily: 'Georgia, serif',
-                    lineHeight: lineHeight,
-                    minHeight: '100%',
-                    pointerEvents: writingIssues.length > 0 ? 'auto' : 'none'
-                  }}
-                >
-                  {createHighlightedText()}
-                </div>
-              </div>
-
-              {/* Actual textarea */}
               <textarea
                 ref={textareaRef}
                 value={content}
                 onChange={handleContentChange}
-                onScroll={handleScroll}
                 onMouseUp={handleTextSelection}
                 onKeyUp={handleTextSelection}
                 placeholder="Start writing your amazing story here! Let your creativity flow and bring your ideas to life..."
@@ -1309,75 +1277,14 @@ export default function WritingArea({ onContentChange, initialContent = '', text
                   focusMode 
                     ? 'text-gray-100 bg-gray-800 placeholder-gray-500' 
                     : 'text-gray-900 bg-white placeholder-gray-400'
-                } focus:outline-none resize-none transition-colors duration-300 relative z-2`}
+                } focus:outline-none resize-none transition-colors duration-300`}
                 style={{ 
                   fontSize: `${fontSize}px`, 
                   lineHeight: lineHeight,
-                  fontFamily: 'Georgia, serif',
-                  backgroundColor: writingIssues.length > 0 ? 'transparent' : undefined,
-                  position: 'relative',
-                  zIndex: 2
+                  fontFamily: 'Georgia, serif'
                 }}
                 spellCheck={false}
               />
-
-              {/* Enhanced suggestions popup */}
-              {showSuggestions && selectedIssue && (
-                <div
-                  className="absolute bg-white border border-gray-300 rounded-lg shadow-lg p-3 z-50 min-w-48"
-                  style={{
-                    left: suggestionPosition.x,
-                    top: suggestionPosition.y,
-                    maxWidth: '300px'
-                  }}
-                >
-                  <div className="mb-2">
-                    <div className="flex items-center mb-1">
-                      <div 
-                        className="w-3 h-3 rounded-full mr-2"
-                        style={{ backgroundColor: getIssueBorderColor(selectedIssue) }}
-                      ></div>
-                      <div className="text-sm font-medium text-gray-700 capitalize">
-                        {selectedIssue.type} {selectedIssue.severity}
-                      </div>
-                    </div>
-                    <div className="text-xs text-gray-600 mb-2">
-                      {selectedIssue.message}
-                    </div>
-                    {selectedIssue.suggestions.length > 0 ? (
-                      <div className="space-y-1">
-                        <div className="text-xs font-medium text-gray-700 mb-1">AI Suggestions:</div>
-                        {selectedIssue.suggestions.map((suggestion, index) => (
-                          <button
-                            key={index}
-                            className="block w-full text-left px-2 py-1 text-sm hover:bg-blue-50 rounded"
-                            onClick={() => applySuggestion(suggestion)}
-                          >
-                            {suggestion}
-                          </button>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-sm text-gray-500 italic">No suggestions available</div>
-                    )}
-                  </div>
-                  
-                  <div className="border-t pt-2 flex space-x-2">
-                    <button
-                      className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded"
-                      onClick={ignoreIssue}
-                    >
-                      Ignore
-                    </button>
-                    <button
-                      className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 rounded"
-                      onClick={() => setShowSuggestions(false)}
-                    >
-                      Close
-                    </button>
-                  </div>
-                </div>
-              )}
             </div>
             
             {/* Enhanced Status Bar */}
@@ -1411,7 +1318,7 @@ export default function WritingArea({ onContentChange, initialContent = '', text
                 </div>
               </div>
               
-              {/* CHANGED BUTTON TEXT FROM "Submit for Evaluation" TO "Analyze My Writing" */}
+              {/* CHANGED BUTTON TEXT TO "Submit for Evaluation Report" */}
               <button
                 onClick={handleEvaluate}
                 disabled={isEvaluating}
@@ -1420,12 +1327,12 @@ export default function WritingArea({ onContentChange, initialContent = '', text
                 {isEvaluating ? (
                   <>
                     <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
-                    Analyzing...
+                    Generating Report...
                   </>
                 ) : (
                   <>
-                    <BarChart3 className="w-3 h-3 mr-1" />
-                    Analyze My Writing
+                    <FileText className="w-3 h-3 mr-1" />
+                    Submit for Evaluation Report
                   </>
                 )}
               </button>
@@ -1542,7 +1449,6 @@ export default function WritingArea({ onContentChange, initialContent = '', text
             <div className="space-y-3">
               <h3 className="text-xs font-semibold mb-3 text-indigo-100 text-center">Writing Analysis</h3>
               
-              {/* FIXED: Realistic Analysis Display */}
               <div className="bg-indigo-700 rounded-lg p-3">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-medium text-indigo-200">Overall Score</span>
@@ -1569,7 +1475,6 @@ export default function WritingArea({ onContentChange, initialContent = '', text
                   </div>
                 )}
                 
-                {/* Content feedback */}
                 {content.trim().length < 50 && (
                   <div className="mt-2 p-2 bg-indigo-800 rounded text-xs">
                     <p className="text-yellow-300">💡 Tip: Add more content to get a complete analysis!</p>
@@ -1577,13 +1482,59 @@ export default function WritingArea({ onContentChange, initialContent = '', text
                 )}
               </div>
 
+              {/* ENHANCED: Show detailed evaluation with all issues */}
               {evaluation && (
-                <div className="bg-indigo-700 rounded-lg p-3">
-                  <h4 className="text-xs font-medium text-indigo-200 mb-2">Detailed Evaluation</h4>
-                  <div className="text-xs text-indigo-100 space-y-1">
-                    <p><strong>Score:</strong> {evaluation.score}/100</p>
-                    <p><strong>Strengths:</strong> {evaluation.strengths}</p>
-                    <p><strong>Areas for improvement:</strong> {evaluation.improvements}</p>
+                <div className="bg-indigo-700 rounded-lg p-3 max-h-96 overflow-y-auto">
+                  <h4 className="text-xs font-medium text-indigo-200 mb-2">📊 Detailed Evaluation Report</h4>
+                  <div className="text-xs text-indigo-100 space-y-2">
+                    <div className="border-b border-indigo-600 pb-2">
+                      <p><strong>Overall Score:</strong> <span className={`${evaluation.score >= 70 ? 'text-green-400' : evaluation.score >= 50 ? 'text-yellow-400' : 'text-red-400'}`}>{evaluation.score}/100</span></p>
+                    </div>
+                    
+                    <div className="border-b border-indigo-600 pb-2">
+                      <p><strong>✅ Strengths:</strong></p>
+                      <p className="text-green-300">{evaluation.strengths}</p>
+                    </div>
+                    
+                    <div className="border-b border-indigo-600 pb-2">
+                      <p><strong>🎯 Areas for Improvement:</strong></p>
+                      <p className="text-yellow-300">{evaluation.improvements}</p>
+                    </div>
+
+                    {/* Show all writing issues found */}
+                    <div className="border-b border-indigo-600 pb-2">
+                      <p><strong>🔍 Issues Found:</strong></p>
+                      {Object.entries(evaluation.writingIssues).map(([type, issues]) => (
+                        issues.length > 0 && (
+                          <div key={type} className="mt-1">
+                            <p className="text-red-300 capitalize font-medium">{type} ({issues.length}):</p>
+                            {issues.slice(0, 3).map((issue, index) => (
+                              <div key={index} className="ml-2 text-xs">
+                                • "{issue.word}" - {issue.message}
+                                {issue.suggestions.length > 0 && (
+                                  <span className="text-green-300"> → {issue.suggestions.slice(0, 2).join(', ')}</span>
+                                )}
+                              </div>
+                            ))}
+                            {issues.length > 3 && (
+                              <p className="ml-2 text-xs text-indigo-300">...and {issues.length - 3} more</p>
+                            )}
+                          </div>
+                        )
+                      ))}
+                    </div>
+
+                    <div className="border-b border-indigo-600 pb-2">
+                      <p><strong>💡 Detailed Feedback:</strong></p>
+                      <p className="text-indigo-200">{evaluation.detailedFeedback}</p>
+                    </div>
+
+                    <div>
+                      <p><strong>📝 Recommendations:</strong></p>
+                      {evaluation.recommendations.map((rec, index) => (
+                        <p key={index} className="text-blue-300">• {rec}</p>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
