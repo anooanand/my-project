@@ -1,6 +1,6 @@
-const { getNSWTextTypeAnalysis } = require('./nsw-api-endpoints');
+import { getNSWTextTypeAnalysis } from './nsw-api-endpoints.js';
 
-exports.handler = async (event, context) => {
+export const handler = async (event, context) => {
   // Handle CORS
   const headers = {
     'Access-Control-Allow-Origin': '*',
