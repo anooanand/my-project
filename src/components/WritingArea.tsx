@@ -1,10 +1,121 @@
-// AI-Powered WritingArea Component with Automatic Feedback
-// Save this as: src/components/WritingArea.tsx (replace existing file)
+// AI-Powered WritingArea Component with Embedded OpenAI Service
+// This version embeds the OpenAI service directly to avoid import issues
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, MessageCircle, BarChart3, BookOpen, TrendingUp, Lightbulb } from 'lucide-react';
-import { openAIService, FeedbackRequest, ChatRequest } from '../lib/openai-service';
 
+// Embedded OpenAI Service
+interface FeedbackRequest {
+  paragraphContent: string;
+  paragraphNumber: number;
+  textType: string;
+  previousParagraphs?: string[];
+  studentLevel?: 'beginner' | 'intermediate' | 'advanced';
+}
+
+interface ChatRequest {
+  userMessage: string;
+  textType: string;
+  currentContent: string;
+  wordCount: number;
+  context?: string;
+}
+
+class EmbeddedOpenAIService {
+  private apiKey: string;
+  private apiBase: string;
+
+  constructor() {
+    this.apiKey = import.meta.env.VITE_OPENAI_API_KEY || '';
+    this.apiBase = import.meta.env.VITE_OPENAI_API_BASE || 'https://api.openai.com/v1';
+  }
+
+  private async callOpenAI(messages: any[]): Promise<string> {
+    try {
+      const response = await fetch(`${this.apiBase}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.apiKey}`
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: messages,
+          max_tokens: 200,
+          temperature: 0.7,
+          stream: false
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`OpenAI API error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.choices[0].message.content.trim();
+    } catch (error) {
+      console.error('OpenAI API call failed:', error);
+      throw error;
+    }
+  }
+
+  async generateParagraphFeedback(request: FeedbackRequest): Promise<string> {
+    const systemMessage = `You are an encouraging AI writing coach for students preparing for NSW Selective School exams. Provide supportive, constructive feedback in 2-3 sentences maximum. Focus on what the student did well and provide 1-2 actionable suggestions.`;
+    
+    const userPrompt = `Please provide encouraging feedback for paragraph ${request.paragraphNumber} of this ${request.textType.toLowerCase()} story: "${request.paragraphContent}"`;
+
+    const messages = [
+      { role: 'system', content: systemMessage },
+      { role: 'user', content: userPrompt }
+    ];
+
+    try {
+      return await this.callOpenAI(messages);
+    } catch (error) {
+      return `Great work on paragraph ${request.paragraphNumber}! You're building your story well. Keep focusing on showing your character's emotions through their actions and thoughts.`;
+    }
+  }
+
+  async generateChatResponse(request: ChatRequest): Promise<string> {
+    const systemMessage = `You are a helpful AI writing coach for students aged 10-12 preparing for NSW Selective School exams. Provide encouraging, age-appropriate writing advice in 2-4 sentences.`;
+    
+    const userPrompt = `Student's question: "${request.userMessage}". They're working on ${request.textType.toLowerCase()} writing and have written ${request.wordCount} words so far.`;
+
+    const messages = [
+      { role: 'system', content: systemMessage },
+      { role: 'user', content: userPrompt }
+    ];
+
+    try {
+      return await this.callOpenAI(messages);
+    } catch (error) {
+      return "I'm having trouble responding right now. Please try again in a moment, or feel free to continue writing!";
+    }
+  }
+
+  isConfigured(): boolean {
+    return !!this.apiKey;
+  }
+
+  async testConnection(): Promise<boolean> {
+    try {
+      const testMessages = [
+        { role: 'system', content: 'You are a helpful assistant.' },
+        { role: 'user', content: 'Say "Hello" if you can hear me.' }
+      ];
+      
+      const response = await this.callOpenAI(testMessages);
+      return response.toLowerCase().includes('hello');
+    } catch (error) {
+      return false;
+    }
+  }
+}
+
+// Create service instance
+const embeddedOpenAIService = new EmbeddedOpenAIService();
+
+// Component interfaces
 interface ChatMessage {
   id: string;
   text: string;
@@ -39,7 +150,6 @@ const WritingArea: React.FC = () => {
   const [chatInput, setChatInput] = useState('');
   const [activeTab, setActiveTab] = useState('coach');
   const [textType, setTextType] = useState('Narrative');
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [wordCount, setWordCount] = useState(0);
   const [charCount, setCharCount] = useState(0);
   const [readTime, setReadTime] = useState(0);
@@ -60,12 +170,12 @@ const WritingArea: React.FC = () => {
 
   useEffect(() => {
     const checkApiConfig = async () => {
-      const isConfigured = openAIService.isConfigured();
+      const isConfigured = embeddedOpenAIService.isConfigured();
       setAutoFeedback(prev => ({ ...prev, isApiConfigured: isConfigured }));
       
       if (isConfigured) {
         try {
-          const connectionTest = await openAIService.testConnection();
+          const connectionTest = await embeddedOpenAIService.testConnection();
           if (!connectionTest) {
             console.warn('OpenAI API connection test failed');
           }
@@ -78,23 +188,9 @@ const WritingArea: React.FC = () => {
     checkApiConfig();
   }, []);
 
-  const debugLog = (message: string, data?: any) => {
-    if (autoFeedback.debugMode) {
-      console.log(`[AutoFeedback] ${message}`, data || '');
-    }
-  };
-
   const detectParagraphCompletion = (currentContent: string, previousContent: string) => {
-    debugLog('Checking paragraph completion', { 
-      currentLength: currentContent.length, 
-      previousLength: previousContent.length 
-    });
-
     const doubleBreakPattern = /\n\n/;
     const hasDoubleBreak = doubleBreakPattern.test(currentContent);
-    
-    const singleBreakPattern = /\n/;
-    const hasSingleBreak = singleBreakPattern.test(currentContent);
     
     const sentenceEndPattern = /[.!?]\s*$/;
     const endsWithSentence = sentenceEndPattern.test(currentContent.trim());
@@ -110,23 +206,9 @@ const WritingArea: React.FC = () => {
     const hasSignificantContent = lastParagraph.split(' ').length >= 8;
     const hasProperSentence = /[.!?]/.test(lastParagraph);
 
-    debugLog('Detection results', {
-      hasDoubleBreak,
-      hasSingleBreak,
-      endsWithSentence,
-      hasMinimumLength,
-      isNewParagraph,
-      hasContentChange,
-      hasSignificantContent,
-      hasProperSentence,
-      lastParagraphLength: lastParagraph.length,
-      currentParagraphCount,
-      storedParagraphCount: autoFeedback.paragraphCount
-    });
-
     const shouldTrigger = hasContentChange && hasMinimumLength && hasSignificantContent && hasProperSentence && (
       (hasDoubleBreak && isNewParagraph) ||
-      (hasSingleBreak && endsWithSentence && lastParagraph.length > 50) ||
+      (endsWithSentence && lastParagraph.length > 50) ||
       (isNewParagraph && lastParagraph.length > 60)
     );
 
@@ -135,8 +217,7 @@ const WritingArea: React.FC = () => {
         shouldTrigger: true,
         paragraphContent: lastParagraph,
         paragraphNumber: currentParagraphCount,
-        allParagraphs: paragraphs,
-        detectionMethod: hasDoubleBreak ? 'double_break' : hasSingleBreak ? 'single_break' : 'new_paragraph'
+        allParagraphs: paragraphs
       };
     }
 
@@ -146,17 +227,9 @@ const WritingArea: React.FC = () => {
   const generateAutomaticFeedback = async (
     paragraphContent: string, 
     paragraphNumber: number, 
-    allParagraphs: string[],
-    detectionMethod: string
+    allParagraphs: string[]
   ) => {
-    debugLog('Starting AI feedback generation', { 
-      paragraphNumber, 
-      contentLength: paragraphContent.length,
-      detectionMethod 
-    });
-
     if (!autoFeedback.isApiConfigured) {
-      debugLog('OpenAI API not configured, skipping automatic feedback');
       return;
     }
 
@@ -165,7 +238,6 @@ const WritingArea: React.FC = () => {
     );
 
     if (existingFeedback) {
-      debugLog('Duplicate feedback detected, skipping');
       return;
     }
 
@@ -180,7 +252,7 @@ const WritingArea: React.FC = () => {
         studentLevel: 'intermediate'
       };
 
-      const feedbackResponse = await openAIService.generateParagraphFeedback(feedbackRequest);
+      const feedbackResponse = await embeddedOpenAIService.generateParagraphFeedback(feedbackRequest);
       
       const automaticMessage: ChatMessage = {
         id: `auto_${Date.now()}_${paragraphNumber}`,
@@ -210,19 +282,13 @@ const WritingArea: React.FC = () => {
         feedbackHistory: [...prev.feedbackHistory, feedbackRecord]
       }));
 
-      debugLog('AI feedback generated successfully', { 
-        messageId: automaticMessage.id,
-        paragraphNumber,
-        feedbackLength: feedbackResponse.length
-      });
-
     } catch (error) {
-      debugLog('Error generating AI feedback', error);
+      console.error('Error generating AI feedback:', error);
       setAutoFeedback(prev => ({ ...prev, isGenerating: false }));
       
       const errorMessage: ChatMessage = {
         id: `error_${Date.now()}`,
-        text: `I'm having trouble generating feedback right now. Please try asking me a question manually, and I'll be happy to help!`,
+        text: `I'm having trouble generating feedback right now. Please try asking me a question manually!`,
         sender: 'ai',
         timestamp: new Date(),
         isAutomatic: true,
@@ -259,10 +325,10 @@ const WritingArea: React.FC = () => {
         textType,
         currentContent: content,
         wordCount,
-        context: `The student is working on paragraph ${autoFeedback.paragraphCount + 1} of their ${textType.toLowerCase()} story.`
+        context: `Working on paragraph ${autoFeedback.paragraphCount + 1}`
       };
 
-      const aiResponse = await openAIService.generateChatResponse(chatRequest);
+      const aiResponse = await embeddedOpenAIService.generateChatResponse(chatRequest);
 
       const aiMessage: ChatMessage = {
         id: `ai_${Date.now()}`,
@@ -280,7 +346,7 @@ const WritingArea: React.FC = () => {
       const errorMessage: ChatMessage = {
         id: `ai_error_${Date.now()}`,
         text: autoFeedback.isApiConfigured 
-          ? "I'm having trouble responding right now. Please try again in a moment!"
+          ? "I'm having trouble responding right now. Please try again!"
           : "AI features are not configured. Please check your OpenAI API settings.",
         sender: 'ai',
         timestamp: new Date(),
@@ -294,28 +360,18 @@ const WritingArea: React.FC = () => {
   };
 
   useEffect(() => {
-    debugLog('Content changed', { 
-      newLength: content.length, 
-      oldLength: lastContentRef.current.length 
-    });
-
     if (feedbackTimerRef.current) {
       clearTimeout(feedbackTimerRef.current);
-      debugLog('Cleared existing timer');
     }
 
     const detection = detectParagraphCompletion(content, lastContentRef.current);
     
     if (detection.shouldTrigger && autoFeedback.isApiConfigured) {
-      debugLog('Paragraph completion detected, setting timer', detection);
-      
       feedbackTimerRef.current = setTimeout(() => {
-        debugLog('Timer triggered, generating AI feedback');
         generateAutomaticFeedback(
           detection.paragraphContent!, 
           detection.paragraphNumber!,
-          detection.allParagraphs!,
-          detection.detectionMethod!
+          detection.allParagraphs!
         );
       }, 3000);
     }
@@ -381,23 +437,13 @@ const WritingArea: React.FC = () => {
           <h2 className="text-xl font-bold text-gray-800 mb-3">Your Writing Prompt</h2>
           <p className="text-gray-600">
             Write an engaging story about a character who discovers something unexpected that changes their life forever. 
-            Include vivid descriptions, realistic dialogue, and show the character's emotional journey. Make sure your story 
-            has a clear beginning, middle, and end with a satisfying conclusion. Focus on showing rather than telling, 
-            and use sensory details to bring your story to life.
+            Include vivid descriptions, realistic dialogue, and show the character's emotional journey.
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             <div className="bg-white rounded-lg shadow-lg p-6">
-              <div className="flex items-center space-x-2 mb-4">
-                <button className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded text-sm">Planning Phase</button>
-                <button className="px-3 py-1 bg-green-100 text-green-800 rounded text-sm">Start Exam Mode</button>
-                <button className="px-3 py-1 bg-blue-100 text-blue-800 rounded text-sm">Structure Guide</button>
-                <button className="px-3 py-1 bg-pink-100 text-pink-800 rounded text-sm">Tips</button>
-                <button className="px-3 py-1 bg-purple-100 text-purple-800 rounded text-sm">Focus</button>
-              </div>
-
               <textarea
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
@@ -413,33 +459,25 @@ const WritingArea: React.FC = () => {
                   {autoFeedback.isGenerating && (
                     <div className="flex items-center space-x-1 text-purple-500">
                       <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-purple-500"></div>
-                      <span>AI is analyzing your paragraph...</span>
+                      <span>AI is analyzing...</span>
                     </div>
                   )}
                 </div>
                 <div className="flex items-center space-x-4">
                   <span className={`${autoFeedback.isApiConfigured ? 'text-green-600' : 'text-gray-400'}`}>
-                    AI Analysis {autoFeedback.isApiConfigured ? 'Active' : 'Inactive'}
+                    AI {autoFeedback.isApiConfigured ? 'Active' : 'Inactive'}
                   </span>
-                  <span>{issues} issues</span>
                 </div>
               </div>
-
-              <button className="w-full mt-4 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">
-                Submit for Evaluation Report
-              </button>
             </div>
           </div>
 
           <div className="bg-white rounded-lg shadow-lg p-6">
-            <h3 className="text-lg font-bold text-gray-800 mb-4">Writing Buddy</h3>
-            <p className="text-gray-600 text-sm mb-4">Your AI writing assistant</p>
+            <h3 className="text-lg font-bold text-gray-800 mb-4">AI Writing Coach</h3>
 
             <div className="flex space-x-1 mb-4">
               {[
                 { id: 'coach', label: 'Coach', icon: MessageCircle },
-                { id: 'analysis', label: 'Analysis', icon: BarChart3 },
-                { id: 'vocabulary', label: 'Vocabulary', icon: BookOpen },
                 { id: 'progress', label: 'Progress', icon: TrendingUp }
               ].map(tab => (
                 <button
@@ -459,19 +497,11 @@ const WritingArea: React.FC = () => {
 
             {activeTab === 'coach' && (
               <div>
-                <h4 className="font-medium text-gray-800 mb-3">AI Coach</h4>
-                
                 <div className="mb-4 p-3 bg-purple-50 rounded-lg text-xs">
                   {autoFeedback.isApiConfigured ? (
-                    <>
-                      <p className="text-purple-700 font-medium">✨ I'll automatically give you AI-powered feedback as you complete each paragraph!</p>
-                      <p className="text-purple-600 mt-1">Powered by advanced AI to help improve your writing.</p>
-                    </>
+                    <p className="text-purple-700 font-medium">✨ I'll automatically give you AI feedback as you complete paragraphs!</p>
                   ) : (
-                    <>
-                      <p className="text-gray-600 font-medium">🤖 AI features are currently unavailable</p>
-                      <p className="text-gray-500 mt-1">Configure OpenAI API to enable automatic feedback.</p>
-                    </>
+                    <p className="text-gray-600 font-medium">🤖 Add your OpenAI API key to enable AI features</p>
                   )}
                 </div>
 
@@ -481,7 +511,7 @@ const WritingArea: React.FC = () => {
                       {message.isAutomatic && (
                         <div className="text-center">
                           <span className="text-xs text-purple-300 bg-purple-800 px-2 py-1 rounded-full">
-                            ✨ AI Auto Feedback - Paragraph {message.paragraphNumber}
+                            ✨ Auto Feedback - Paragraph {message.paragraphNumber}
                           </span>
                         </div>
                       )}
@@ -506,26 +536,6 @@ const WritingArea: React.FC = () => {
                   )}
                 </div>
 
-                <div className="space-y-2 mb-4">
-                  <p className="text-xs text-gray-600">Ask your AI Writing Buddy anything!</p>
-                  {[
-                    "How can I improve my introduction?",
-                    "What's a good synonym for 'said'?",
-                    "Help me with my conclusion",
-                    "How can I add more descriptive details?",
-                    "What makes good dialogue?"
-                  ].map(suggestion => (
-                    <button
-                      key={suggestion}
-                      onClick={() => setChatInput(suggestion)}
-                      className="block w-full text-left text-xs text-purple-600 hover:text-purple-800 p-1 disabled:text-gray-400"
-                      disabled={!autoFeedback.isApiConfigured}
-                    >
-                      • "{suggestion}"
-                    </button>
-                  ))}
-                </div>
-
                 <div className="flex space-x-2">
                   <input
                     type="text"
@@ -539,7 +549,7 @@ const WritingArea: React.FC = () => {
                   <button
                     onClick={handleSendMessage}
                     disabled={!autoFeedback.isApiConfigured || isChatLoading || !chatInput.trim()}
-                    className="px-3 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    className="px-3 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:bg-gray-400"
                   >
                     <Send className="w-3 h-3" />
                   </button>
@@ -549,10 +559,9 @@ const WritingArea: React.FC = () => {
 
             {activeTab === 'progress' && (
               <div>
-                <h4 className="font-medium text-gray-800 mb-3">Writing Progress</h4>
                 <div className="space-y-3 text-xs">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Words Written:</span>
+                    <span className="text-gray-600">Words:</span>
                     <span className="font-medium">{wordCount}</span>
                   </div>
                   <div className="flex justify-between">
@@ -569,42 +578,7 @@ const WritingArea: React.FC = () => {
                       {autoFeedback.isApiConfigured ? 'Connected' : 'Disconnected'}
                     </span>
                   </div>
-                  
-                  {autoFeedback.feedbackHistory.length > 0 && (
-                    <div className="mt-4 p-3 bg-purple-50 rounded-lg">
-                      <h5 className="text-xs font-medium text-purple-800 mb-2">Recent AI Feedback</h5>
-                      <div className="space-y-2">
-                        {autoFeedback.feedbackHistory.slice(-3).map(feedback => (
-                          <div key={feedback.id} className="text-xs text-purple-700">
-                            <span className="font-medium">P{feedback.paragraphNumber}:</span> {feedback.feedback.substring(0, 50)}...
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
-              </div>
-            )}
-
-            {activeTab === 'analysis' && (
-              <div>
-                <h4 className="font-medium text-gray-800 mb-3">AI Analysis</h4>
-                <p className="text-xs text-gray-600">
-                  {autoFeedback.isApiConfigured 
-                    ? "Real-time AI writing analysis will appear here." 
-                    : "AI analysis requires OpenAI API configuration."}
-                </p>
-              </div>
-            )}
-
-            {activeTab === 'vocabulary' && (
-              <div>
-                <h4 className="font-medium text-gray-800 mb-3">Vocabulary</h4>
-                <p className="text-xs text-gray-600">
-                  {autoFeedback.isApiConfigured 
-                    ? "AI-powered vocabulary suggestions will appear here." 
-                    : "Vocabulary suggestions require OpenAI API configuration."}
-                </p>
               </div>
             )}
           </div>
