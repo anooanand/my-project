@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Badge } from '@/components/ui/badge'
+import { Button } from './components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs'
+import { Badge } from './components/ui/badge'
 import { 
   MessageCircle, 
   BarChart3, 
@@ -32,13 +32,6 @@ interface ChatMessage {
   paragraphNumber?: number;
 }
 
-interface WritingStats {
-  wordCount: number;
-  charCount: number;
-  readTime: number;
-  qualityScore: number;
-}
-
 interface PlanningData {
   characters: string;
   setting: string;
@@ -57,11 +50,11 @@ function App(): JSX.Element {
   const [activeTab, setActiveTab] = useState<ActiveTab>('coach')
   const [chatInput, setChatInput] = useState<string>('')
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
-  const [isAIConnected, setIsAIConnected] = useState<boolean>(true)
+  const [isAIConnected] = useState<boolean>(true)
   const [wordCount, setWordCount] = useState<number>(0)
   const [charCount, setCharCount] = useState<number>(0)
   const [readTime, setReadTime] = useState<number>(0)
-  const [qualityScore, setQualityScore] = useState<number>(75)
+  const [qualityScore] = useState<number>(75)
   const [showPlanningModal, setShowPlanningModal] = useState<boolean>(false)
   const [showStructureGuide, setShowStructureGuide] = useState<boolean>(false)
   const [planningStep, setPlanningStep] = useState<number>(1)
@@ -378,7 +371,7 @@ function App(): JSX.Element {
               </CardHeader>
               
               <CardContent className="flex-1 flex flex-col p-0">
-                <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as ActiveTab)} className="flex-1 flex flex-col">
+                <Tabs value={activeTab} onValueChange={(value: string) => setActiveTab(value as ActiveTab)} className="flex-1 flex flex-col">
                   <TabsList className="grid w-full grid-cols-4 mx-4">
                     <TabsTrigger value="coach" className="text-xs">
                       <MessageCircle className="w-3 h-3 mr-1" />
