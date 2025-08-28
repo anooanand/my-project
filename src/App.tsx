@@ -10,10 +10,8 @@ import {
   TrendingUp, 
   Lightbulb,
   Send,
-  PenTool,
   Eye,
   Target,
-  HelpCircle,
   Play,
   CheckCircle,
   Zap,
@@ -21,7 +19,6 @@ import {
   Star,
   Clock,
   FileText,
-  Settings,
   X
 } from 'lucide-react'
 import './App.css'
@@ -60,7 +57,7 @@ function App(): JSX.Element {
   const [activeTab, setActiveTab] = useState<ActiveTab>('coach')
   const [chatInput, setChatInput] = useState<string>('')
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
-  const [isAIConnected, setIsAIConnected] = useState<boolean>(true) // Simulated for demo
+  const [isAIConnected, setIsAIConnected] = useState<boolean>(true)
   const [wordCount, setWordCount] = useState<number>(0)
   const [charCount, setCharCount] = useState<number>(0)
   const [readTime, setReadTime] = useState<number>(0)
@@ -81,7 +78,7 @@ function App(): JSX.Element {
   useEffect(() => {
     const words = content.trim() ? content.trim().split(/\s+/).length : 0
     const chars = content.length
-    const readingTime = Math.ceil(words / 200) // Average reading speed
+    const readingTime = Math.ceil(words / 200)
     
     setWordCount(words)
     setCharCount(chars)
@@ -139,7 +136,6 @@ function App(): JSX.Element {
     if (planningStep < 6) {
       setPlanningStep(planningStep + 1)
     } else {
-      // Finish planning
       setShowPlanningModal(false)
       setPlanningStep(1)
     }
@@ -209,7 +205,13 @@ function App(): JSX.Element {
           field: 'feelings' as keyof PlanningData
         }
       default:
-        return getPlanningStepContent()
+        return {
+          emoji: '👥',
+          title: 'Who are your characters?',
+          description: 'Tell us about the main character in your story.',
+          placeholder: 'Example: Sarah is a brave 12-year-old girl...',
+          field: 'characters' as keyof PlanningData
+        }
     }
   }
 
@@ -661,4 +663,3 @@ function App(): JSX.Element {
 }
 
 export default App
-
