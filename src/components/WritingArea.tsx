@@ -49,6 +49,463 @@ interface DetailedEvaluation {
   recommendations: string[];
 }
 
+// IMPROVED: Content analysis with better issue detection
+function analyzeContentBasic(text: string): WritingIssue[] {
+  const issues: WritingIssue[] = [];
+  const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+  
+  // If content is too short, provide feedback
+  if (text.trim().length < 50) {
+    issues.push({
+      type: 'paragraph',
+      word: text.substring(0, Math.min(20, text.length)),
+      start: 0,
+      end: Math.min(20, text.length),
+      suggestions: ['Add more content to develop your ideas', 'Expand with more details and examples'],
+      message: 'Content is too short for a complete analysis',
+      severity: 'warning'
+    });
+  }
+  
+  // Check for basic punctuation issues
+  if (!text.trim().endsWith('.') && !text.trim().endsWith('!') && !text.trim().endsWith('?') && text.trim().length > 10) {
+    const lastFewChars = text.substring(Math.max(0, text.length - 5));
+    issues.push({
+      type: 'punctuation',
+      word: lastFewChars,
+      start: Math.max(0, text.length - 5),
+      end: text.length,
+      suggestions: [lastFewChars + '.', lastFewChars + '!', lastFewChars + '?'],
+      message: 'Consider ending with proper punctuation',
+      severity: 'suggestion'
+    });
+  }
+  
+  // Check for basic words and common misspellings
+  const basicWords = ['good', 'bad', 'nice', 'big', 'small', 'said', 'went', 'got', 'very', 'really'];
+  const commonMisspellings = {
+    'wint': ['went', 'want', 'win'],
+    'teh': ['the'],
+    'adn': ['and'],
+    'recieve': ['receive'],
+    'seperate': ['separate'],
+    'definately': ['definitely'],
+    'occured': ['occurred'],
+    'begining': ['beginning'],
+    'writting': ['writing'],
+    'grammer': ['grammar']
+  };
+  
+  let currentPosition = 0;
+  
+  words.forEach((word) => {
+    const wordStart = text.indexOf(word, currentPosition);
+    if (wordStart !== -1) {
+      const cleanWord = word.toLowerCase().replace(/[^\w]/g, '');
+      
+      // Check for misspellings
+      if (commonMisspellings[cleanWord]) {
+        issues.push({
+          type: 'spelling',
+          word: word,
+          start: wordStart,
+          end: wordStart + word.length,
+          suggestions: commonMisspellings[cleanWord],
+          message: 'Possible spelling error',
+          severity: 'error'
+        });
+      }
+      // Check for basic vocabulary
+      else if (basicWords.includes(cleanWord)) {
+        issues.push({
+          type: 'vocabulary',
+          word: word,
+          start: wordStart,
+          end: wordStart + word.length,
+          suggestions: getBasicSynonyms(cleanWord),
+          message: 'Consider using a more sophisticated word',
+          severity: 'suggestion'
+        });
+      }
+      
+      currentPosition = wordStart + word.length;
+    }
+  });
+  
+  // Check for sentence structure issues
+  if (words.length > 0 && words.length < 5) {
+    issues.push({
+      type: 'sentence',
+      word: text.substring(0, Math.min(20, text.length)),
+      start: 0,
+      end: Math.min(20, text.length),
+      suggestions: ['Expand this into a complete sentence', 'Add more details to develop your idea'],
+      message: 'This appears to be a fragment rather than a complete sentence',
+      severity: 'warning'
+    });
+  }
+  
+  return issues;
+}
+
+function getBasicSynonyms(word: string): string[] {
+  const synonyms: { [key: string]: string[] } = {
+    'good': ['excellent', 'wonderful', 'fantastic', 'outstanding'],
+    'bad': ['terrible', 'awful', 'dreadful', 'horrible'],
+    'nice': ['pleasant', 'delightful', 'charming', 'lovely'],
+    'big': ['enormous', 'massive', 'gigantic', 'colossal'],
+    'small': ['tiny', 'miniature', 'petite', 'compact'],
+    'said': ['declared', 'announced', 'exclaimed', 'whispered'],
+    'went': ['traveled', 'journeyed', 'ventured', 'proceeded'],
+    'got': ['obtained', 'acquired', 'received', 'gained'],
+    'very': ['extremely', 'incredibly', 'remarkably', 'exceptionally'],
+    'really': ['truly', 'genuinely', 'absolutely', 'certainly']
+  };
+  
+  return synonyms[word] || ['improved word', 'better alternative', 'more sophisticated term'];
+}
+
+// AI Writing Analysis Functions
+async function checkSpellingAI(text: string): Promise<WritingIssue[]> {
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a spelling checker for NSW Selective School writing tests. Find misspelled words and return their exact positions in the text.'
+        },
+        {
+          role: 'user',
+          content: `Find spelling errors in this text: "${text}"
+
+Return a JSON array with this format:
+[
+  {
+    "word": "exact_misspelled_word_from_text",
+    "suggestions": ["correction1", "correction2"],
+    "message": "Spelling error"
+  }
+]
+
+Only return genuinely misspelled words. Return empty array [] if no errors.`
+        }
+      ],
+      max_tokens: 1000,
+      temperature: 0.1
+    });
+
+    const content = response.choices[0]?.message?.content || '';
+    
+    try {
+      const results = JSON.parse(content);
+      return Array.isArray(results) ? results.map((item: any) => {
+        const wordToFind = item.word || '';
+        const wordStart = text.indexOf(wordToFind);
+        
+        return {
+          type: 'spelling' as const,
+          word: wordToFind,
+          start: wordStart !== -1 ? wordStart : 0,
+          end: wordStart !== -1 ? wordStart + wordToFind.length : wordToFind.length,
+          suggestions: Array.isArray(item.suggestions) ? item.suggestions : [],
+          message: item.message || 'Spelling error',
+          severity: 'error' as const
+        };
+      }).filter(issue => issue.start !== -1) : [];
+    } catch (parseError) {
+      console.error('Failed to parse spelling results:', parseError);
+      return [];
+    }
+  } catch (error) {
+    console.error('Spelling check error:', error);
+    return [];
+  }
+}
+
+async function checkGrammarAI(text: string): Promise<WritingIssue[]> {
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a grammar checker for NSW Selective School writing. Find grammar errors and return the exact problematic phrases.'
+        },
+        {
+          role: 'user',
+          content: `Find grammar errors in this text: "${text}"
+
+Return a JSON array with this format:
+[
+  {
+    "word": "exact_problematic_phrase_from_text",
+    "suggestions": ["correction1", "correction2"],
+    "message": "Grammar issue description"
+  }
+]
+
+Return empty array [] if no errors found.`
+        }
+      ],
+      max_tokens: 1000,
+      temperature: 0.1
+    });
+
+    const content = response.choices[0]?.message?.content || '';
+    
+    try {
+      const results = JSON.parse(content);
+      return Array.isArray(results) ? results.map((item: any) => {
+        const phraseToFind = item.word || '';
+        const phraseStart = text.indexOf(phraseToFind);
+        
+        return {
+          type: 'grammar' as const,
+          word: phraseToFind,
+          start: phraseStart !== -1 ? phraseStart : 0,
+          end: phraseStart !== -1 ? phraseStart + phraseToFind.length : phraseToFind.length,
+          suggestions: Array.isArray(item.suggestions) ? item.suggestions : [],
+          message: item.message || 'Grammar issue',
+          severity: 'error' as const
+        };
+      }).filter(issue => issue.start !== -1) : [];
+    } catch (parseError) {
+      return [];
+    }
+  } catch (error) {
+    console.error('Grammar check error:', error);
+    return [];
+  }
+}
+
+async function checkVocabularyAI(text: string): Promise<WritingIssue[]> {
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a vocabulary enhancer for NSW Selective School writing. Find basic words that could be upgraded.'
+        },
+        {
+          role: 'user',
+          content: `Find basic words that could be improved in this text: "${text}"
+
+Return a JSON array with this format:
+[
+  {
+    "word": "exact_basic_word_from_text",
+    "suggestions": ["sophisticated1", "sophisticated2", "sophisticated3"],
+    "message": "Consider a more sophisticated word"
+  }
+]
+
+Focus on words like "good", "bad", "said", "went", "big", "small". Return empty array [] if no improvements needed.`
+        }
+      ],
+      max_tokens: 1000,
+      temperature: 0.3
+    });
+
+    const content = response.choices[0]?.message?.content || '';
+    
+    try {
+      const results = JSON.parse(content);
+      return Array.isArray(results) ? results.map((item: any) => {
+        const wordToFind = item.word || '';
+        const wordStart = text.indexOf(wordToFind);
+        
+        return {
+          type: 'vocabulary' as const,
+          word: wordToFind,
+          start: wordStart !== -1 ? wordStart : 0,
+          end: wordStart !== -1 ? wordStart + wordToFind.length : wordToFind.length,
+          suggestions: Array.isArray(item.suggestions) ? item.suggestions : [],
+          message: item.message || 'Consider a more sophisticated word',
+          severity: 'suggestion' as const
+        };
+      }).filter(issue => issue.start !== -1) : [];
+    } catch (parseError) {
+      return [];
+    }
+  } catch (error) {
+    console.error('Vocabulary check error:', error);
+    return [];
+  }
+}
+
+async function checkPunctuationAI(text: string): Promise<WritingIssue[]> {
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a punctuation checker for NSW Selective School writing. Find punctuation errors.'
+        },
+        {
+          role: 'user',
+          content: `Find punctuation errors in this text: "${text}"
+
+Return a JSON array with this format:
+[
+  {
+    "word": "text_around_punctuation_issue",
+    "suggestions": ["corrected_version"],
+    "message": "Punctuation issue description"
+  }
+]
+
+Return empty array [] if no errors found.`
+        }
+      ],
+      max_tokens: 1000,
+      temperature: 0.1
+    });
+
+    const content = response.choices[0]?.message?.content || '';
+    
+    try {
+      const results = JSON.parse(content);
+      return Array.isArray(results) ? results.map((item: any) => {
+        const phraseToFind = item.word || '';
+        const phraseStart = text.indexOf(phraseToFind);
+        
+        return {
+          type: 'punctuation' as const,
+          word: phraseToFind,
+          start: phraseStart !== -1 ? phraseStart : 0,
+          end: phraseStart !== -1 ? phraseStart + phraseToFind.length : phraseToFind.length,
+          suggestions: Array.isArray(item.suggestions) ? item.suggestions : [],
+          message: item.message || 'Punctuation issue',
+          severity: 'error' as const
+        };
+      }).filter(issue => issue.start !== -1) : [];
+    } catch (parseError) {
+      return [];
+    }
+  } catch (error) {
+    console.error('Punctuation check error:', error);
+    return [];
+  }
+}
+
+async function checkSentenceStructureAI(text: string): Promise<WritingIssue[]> {
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a sentence structure analyzer for NSW Selective School writing. Find sentence structure issues.'
+        },
+        {
+          role: 'user',
+          content: `Analyze sentence structure in this text: "${text}"
+
+Return a JSON array with this format:
+[
+  {
+    "word": "sentence_or_phrase_with_issue",
+    "suggestions": ["improvement1", "improvement2"],
+    "message": "Sentence structure suggestion"
+  }
+]
+
+Return empty array [] if no issues found.`
+        }
+      ],
+      max_tokens: 1000,
+      temperature: 0.2
+    });
+
+    const content = response.choices[0]?.message?.content || '';
+    
+    try {
+      const results = JSON.parse(content);
+      return Array.isArray(results) ? results.map((item: any) => {
+        const phraseToFind = item.word || '';
+        const phraseStart = text.indexOf(phraseToFind);
+        
+        return {
+          type: 'sentence' as const,
+          word: phraseToFind,
+          start: phraseStart !== -1 ? phraseStart : 0,
+          end: phraseStart !== -1 ? phraseStart + phraseToFind.length : phraseToFind.length,
+          suggestions: Array.isArray(item.suggestions) ? item.suggestions : [],
+          message: item.message || 'Sentence structure suggestion',
+          severity: 'suggestion' as const
+        };
+      }).filter(issue => issue.start !== -1) : [];
+    } catch (parseError) {
+      return [];
+    }
+  } catch (error) {
+    console.error('Sentence structure check error:', error);
+    return [];
+  }
+}
+
+async function checkParagraphStructureAI(text: string): Promise<WritingIssue[]> {
+  try {
+    const paragraphs = text.split('\n\n').filter(p => p.trim().length > 0);
+    if (paragraphs.length < 2) return [];
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a paragraph structure analyzer for NSW Selective School writing. Find paragraph structure issues.'
+        },
+        {
+          role: 'user',
+          content: `Analyze paragraph structure in this text: "${text}"
+
+Return a JSON array with this format:
+[
+  {
+    "word": "paragraph_beginning_or_issue",
+    "suggestions": ["improvement1", "improvement2"],
+    "message": "Paragraph structure suggestion"
+  }
+]
+
+Return empty array [] if no issues found.`
+        }
+      ],
+      max_tokens: 1000,
+      temperature: 0.2
+    });
+
+    const content = response.choices[0]?.message?.content || '';
+    
+    try {
+      const results = JSON.parse(content);
+      return Array.isArray(results) ? results.map((item: any) => {
+        const phraseToFind = item.word || '';
+        const phraseStart = text.indexOf(phraseToFind);
+        
+        return {
+          type: 'paragraph' as const,
+          word: phraseToFind,
+          start: phraseStart !== -1 ? phraseStart : 0,
+          end: phraseStart !== -1 ? phraseStart + phraseToFind.length : phraseToFind.length,
+          suggestions: Array.isArray(item.suggestions) ? item.suggestions : [],
+          message: item.message || 'Paragraph structure suggestion',
+          severity: 'suggestion' as const
+        };
+      }).filter(issue => issue.start !== -1) : [];
+    } catch (parseError) {
+      return [];
+    }
+  } catch (error) {
+    console.error('Paragraph structure check error:', error);
+    return [];
+  }
+}
+
 interface ChatMessage {
   id: string;
   text: string;
@@ -86,6 +543,14 @@ export function WritingArea({
   const [isCheckingWriting, setIsCheckingWriting] = useState(false);
   const [qualityScore, setQualityScore] = useState(85);
   const [showAnalysisDetails, setShowAnalysisDetails] = useState(false);
+  const [enabledChecks, setEnabledChecks] = useState({
+    spelling: true,
+    punctuation: true,
+    grammar: true,
+    vocabulary: true,
+    sentence: true,
+    paragraph: true
+  });
   
   // Evaluation state
   const [evaluation, setEvaluation] = useState<DetailedEvaluation | null>(null);
@@ -157,6 +622,62 @@ export function WritingArea({
       onChange(content);
     }
   }, [content, onChange]);
+
+  // Real-time writing analysis with debouncing
+  useEffect(() => {
+    if (content.trim().length < 10) {
+      setWritingIssues([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsCheckingWriting(true);
+      
+      try {
+        // Start with basic analysis
+        let allIssues = analyzeContentBasic(content);
+        
+        // Add AI-powered checks if enabled
+        const aiChecks = [];
+        if (enabledChecks.spelling) aiChecks.push(checkSpellingAI(content));
+        if (enabledChecks.grammar) aiChecks.push(checkGrammarAI(content));
+        if (enabledChecks.vocabulary) aiChecks.push(checkVocabularyAI(content));
+        if (enabledChecks.punctuation) aiChecks.push(checkPunctuationAI(content));
+        if (enabledChecks.sentence) aiChecks.push(checkSentenceStructureAI(content));
+        if (enabledChecks.paragraph) aiChecks.push(checkParagraphStructureAI(content));
+        
+        const aiResults = await Promise.all(aiChecks);
+        allIssues = [...allIssues, ...aiResults.flat()];
+        
+        // Remove duplicates and sort by position
+        const uniqueIssues = allIssues.filter((issue, index, self) => 
+          index === self.findIndex(i => i.start === issue.start && i.word === issue.word)
+        ).sort((a, b) => a.start - b.start);
+        
+        setWritingIssues(uniqueIssues);
+        
+        // Calculate quality score
+        const errorCount = uniqueIssues.filter(issue => issue.severity === 'error').length;
+        const warningCount = uniqueIssues.filter(issue => issue.severity === 'warning').length;
+        const suggestionCount = uniqueIssues.filter(issue => issue.severity === 'suggestion').length;
+        
+        const baseScore = 100;
+        const errorPenalty = errorCount * 10;
+        const warningPenalty = warningCount * 5;
+        const suggestionPenalty = suggestionCount * 2;
+        
+        const newScore = Math.max(0, baseScore - errorPenalty - warningPenalty - suggestionPenalty);
+        setQualityScore(newScore);
+        
+      } catch (error) {
+        console.error('Writing analysis error:', error);
+      } finally {
+        setIsCheckingWriting(false);
+      }
+    }, 2000); // 2 second debounce
+
+    return () => clearTimeout(timer);
+  }, [content, enabledChecks]);
 
   // Exam mode timer
   useEffect(() => {
@@ -377,7 +898,7 @@ Please provide helpful, age-appropriate advice.`
 
   return (
     <div className="h-screen flex bg-gray-100">
-      {/* Main Writing Area - Full width */}
+      {/* Main Content Area - Full Width */}
       <div className="flex-1 bg-white shadow-lg flex flex-col">
         {/* Prompt Section */}
         <div className={`${focusMode ? 'bg-gray-800 border-gray-700' : 'bg-white'} rounded-lg shadow-sm p-4 mb-3 mx-3 mt-3 transition-colors duration-300`}>
@@ -505,6 +1026,14 @@ Please provide helpful, age-appropriate advice.`
                     <span>Saving...</span>
                   </div>
                 )}
+                <div className="flex items-center space-x-1 text-green-600">
+                  <CheckCircle className="w-3 h-3" />
+                  <span>AI Analysis Active</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <AlertCircle className="w-3 h-3" />
+                  <span>{issueCounts.total} issues</span>
+                </div>
               </div>
               
               <button
@@ -645,6 +1174,24 @@ Please provide helpful, age-appropriate advice.`
                   </span>
                 </div>
                 
+                <div className="space-y-2">
+                  {Object.entries(issueCounts).filter(([key]) => key !== 'total').map(([type, count]) => (
+                    <div key={type} className="flex justify-between items-center">
+                      <span className="text-xs text-indigo-200 capitalize">{type}</span>
+                      <span className={`text-xs font-medium ${count === 0 ? 'text-green-400' : count <= 2 ? 'text-yellow-400' : 'text-red-400'}`}>
+                        {count === 0 ? '✓ Good' : count === 1 ? '1 issue' : `${count} issues`}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+                
+                {isCheckingWriting && (
+                  <div className="mt-2 text-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-indigo-200 mx-auto"></div>
+                    <p className="text-xs text-indigo-300 mt-1">AI analyzing your writing...</p>
+                  </div>
+                )}
+                
                 {content.trim().length < 50 && (
                   <div className="mt-2 p-2 bg-indigo-800 rounded text-xs">
                     <p className="text-yellow-300">💡 Tip: Add more content to get a complete analysis!</p>
@@ -669,6 +1216,29 @@ Please provide helpful, age-appropriate advice.`
                       <p><strong>🎯 Areas for Improvement:</strong></p>
                       <p className="text-yellow-300">{evaluation.improvements}</p>
                     </div>
+
+                    {/* Show all writing issues found */}
+                    <div className="border-b border-indigo-600 pb-2">
+                      <p><strong>🔍 Issues Found:</strong></p>
+                      {Object.entries(evaluation.writingIssues).map(([type, issues]) => (
+                        issues.length > 0 && (
+                          <div key={type} className="mt-1">
+                            <p className="text-red-300 capitalize font-medium">{type} ({issues.length}):</p>
+                            {issues.slice(0, 3).map((issue, index) => (
+                              <div key={index} className="ml-2 text-xs">
+                                • "{issue.word}" - {issue.message}
+                                {issue.suggestions.length > 0 && (
+                                  <span className="text-green-300"> → {issue.suggestions.slice(0, 2).join(', ')}</span>
+                                )}
+                              </div>
+                            ))}
+                            {issues.length > 3 && (
+                              <p className="ml-2 text-xs text-indigo-300">...and {issues.length - 3} more</p>
+                            )}
+                          </div>
+                        )
+                      ))}
+                    </div>
                     
                     <div>
                       <p><strong>💡 Recommendations:</strong></p>
@@ -690,6 +1260,18 @@ Please provide helpful, age-appropriate advice.`
                 <h4 className="text-xs font-medium text-indigo-200 mb-2">Word Enhancer</h4>
                 <p className="text-xs text-indigo-300 mb-3">Select a word in your writing to get better alternatives!</p>
                 
+                {selectedText && (
+                  <div className="mb-3">
+                    <p className="text-xs text-indigo-200 mb-1">Selected: "{selectedText}"</p>
+                    <button
+                      onClick={handleGetSynonyms}
+                      className="px-2 py-1 bg-yellow-500 text-indigo-900 text-xs rounded hover:bg-yellow-600 transition-colors"
+                    >
+                      Get Synonyms
+                    </button>
+                  </div>
+                )}
+                
                 <div className="space-y-2">
                   <h5 className="text-xs font-medium text-indigo-200">Quick Vocabulary Tips:</h5>
                   <div className="text-xs text-indigo-300 space-y-1">
@@ -700,6 +1282,21 @@ Please provide helpful, age-appropriate advice.`
                   </div>
                 </div>
               </div>
+              
+              {/* Vocabulary issues from analysis */}
+              {writingIssues.filter(issue => issue.type === 'vocabulary').length > 0 && (
+                <div className="bg-indigo-700 rounded-lg p-3">
+                  <h4 className="text-xs font-medium text-indigo-200 mb-2">Vocabulary Suggestions</h4>
+                  <div className="space-y-2">
+                    {writingIssues.filter(issue => issue.type === 'vocabulary').slice(0, 5).map((issue, index) => (
+                      <div key={index} className="text-xs">
+                        <p className="text-yellow-300">"{issue.word}"</p>
+                        <p className="text-indigo-300 ml-2">Try: {issue.suggestions.slice(0, 3).join(', ')}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -720,6 +1317,29 @@ Please provide helpful, age-appropriate advice.`
                       {qualityScore}%
                     </span>
                   </div>
+                  <div className="flex justify-between">
+                    <span className="text-indigo-300">Issues Fixed:</span>
+                    <span className="text-white font-medium">0</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-indigo-700 rounded-lg p-3">
+                <h4 className="text-xs font-medium text-indigo-200 mb-2">Writing Goals</h4>
+                <div className="space-y-2 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-indigo-300">Daily Word Goal:</span>
+                    <span className="text-white font-medium">200 words</span>
+                  </div>
+                  <div className="w-full bg-indigo-800 rounded-full h-2">
+                    <div 
+                      className="bg-yellow-400 h-2 rounded-full transition-all duration-300" 
+                      style={{ width: `${Math.min(100, (wordCount / 200) * 100)}%` }}
+                    ></div>
+                  </div>
+                  <p className="text-indigo-300 text-center">
+                    {wordCount >= 200 ? '🎉 Goal achieved!' : `${Math.max(0, 200 - wordCount)} words to go`}
+                  </p>
                 </div>
               </div>
             </div>
