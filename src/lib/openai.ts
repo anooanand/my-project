@@ -1,4 +1,3 @@
-// OpenAI Service Module for Automatic Feedback System
 // Save this as: src/lib/openai.ts (replace existing file)
 
 interface OpenAIConfig {
@@ -354,4 +353,324 @@ export async function rephraseSentence(sentence: string): Promise<string> {
     console.error('Error rephrasing sentence:', error);
     return sentence; // Return original if rephrasing fails
   }
+}
+
+
+// Add the missing getTextTypeVocabulary function
+export async function getTextTypeVocabulary(textType: string, content: string): Promise<{
+  textType: string;
+  categories: Array<{
+    name: string;
+    words: string[];
+    examples: string[];
+  }>;
+  phrasesAndExpressions: string[];
+  transitionWords: string[];
+}> {
+  try {
+    const systemPrompt = `You are a vocabulary enhancement expert for NSW Selective School exam preparation. Generate vocabulary suggestions for ${textType.toLowerCase()} writing that will help students aged 10-12 improve their writing quality.
+
+Analyze the provided text and suggest:
+1. Vocabulary categories with relevant words and usage examples
+2. Useful phrases and expressions for ${textType.toLowerCase()} writing
+3. Transition words to improve flow
+
+Return the response in this exact JSON format:
+{
+  "textType": "${textType}",
+  "categories": [
+    {
+      "name": "Category Name",
+      "words": ["word1", "word2", "word3"],
+      "examples": ["Example usage 1", "Example usage 2"]
+    }
+  ],
+  "phrasesAndExpressions": ["phrase1", "phrase2", "phrase3"],
+  "transitionWords": ["word1", "word2", "word3"]
+}`;
+
+    const userPrompt = `Analyze this ${textType.toLowerCase()} writing and provide vocabulary enhancement suggestions:\n\n"${content}"\n\nProvide vocabulary that would enhance this specific piece of writing while being appropriate for NSW Selective School exam standards.`;
+
+    const response = await makeOpenAICall(systemPrompt, userPrompt, 400);
+    
+    try {
+      // Try to parse the JSON response
+      const parsedResponse = JSON.parse(response);
+      return parsedResponse;
+    } catch (parseError) {
+      console.warn('Failed to parse AI response as JSON, using fallback vocabulary');
+      // Return fallback vocabulary if parsing fails
+      return getFallbackVocabularyData(textType);
+    }
+  } catch (error) {
+    console.error('Error getting text type vocabulary:', error);
+    // Return fallback vocabulary on error
+    return getFallbackVocabularyData(textType);
+  }
+}
+
+// Helper function to provide fallback vocabulary data
+function getFallbackVocabularyData(textType: string): {
+  textType: string;
+  categories: Array<{
+    name: string;
+    words: string[];
+    examples: string[];
+  }>;
+  phrasesAndExpressions: string[];
+  transitionWords: string[];
+} {
+  const vocabularyMap: { [key: string]: any } = {
+    'narrative': {
+      categories: [
+        {
+          name: 'Character Description',
+          words: ['courageous', 'determined', 'mysterious', 'compassionate', 'resilient', 'adventurous'],
+          examples: ['The courageous hero faced the challenge head-on.', 'Her mysterious smile hinted at secrets untold.']
+        },
+        {
+          name: 'Setting and Atmosphere',
+          words: ['enchanting', 'ominous', 'serene', 'bustling', 'desolate', 'magnificent'],
+          examples: ['The enchanting forest whispered ancient secrets.', 'An ominous shadow crept across the valley.']
+        },
+        {
+          name: 'Action and Movement',
+          words: ['sprinted', 'crept', 'soared', 'plunged', 'wandered', 'dashed'],
+          examples: ['She sprinted through the maze of corridors.', 'The eagle soared majestically above the mountains.']
+        }
+      ],
+      phrasesAndExpressions: [
+        'In the blink of an eye...',
+        'Without warning...',
+        'As fate would have it...',
+        'Little did they know...',
+        'Against all odds...',
+        'In that moment of truth...'
+      ]
+    },
+    'persuasive': {
+      categories: [
+        {
+          name: 'Strong Arguments',
+          words: ['compelling', 'undeniable', 'crucial', 'significant', 'essential', 'vital'],
+          examples: ['This compelling evidence supports our position.', 'It is crucial that we act now.']
+        },
+        {
+          name: 'Opinion Markers',
+          words: ['undoubtedly', 'certainly', 'clearly', 'obviously', 'surely', 'definitely'],
+          examples: ['Undoubtedly, this is the best solution.', 'Clearly, we must consider all options.']
+        }
+      ],
+      phrasesAndExpressions: [
+        'It is imperative that...',
+        'We must consider...',
+        'The evidence clearly shows...',
+        'Without a doubt...',
+        'It cannot be denied that...',
+        'The facts speak for themselves...'
+      ]
+    },
+    'descriptive': {
+      categories: [
+        {
+          name: 'Sensory Details',
+          words: ['glistening', 'aromatic', 'melodious', 'velvety', 'crisp', 'luminous'],
+          examples: ['The glistening dewdrops caught the morning light.', 'A melodious tune drifted through the air.']
+        },
+        {
+          name: 'Vivid Adjectives',
+          words: ['spectacular', 'breathtaking', 'exquisite', 'magnificent', 'stunning', 'remarkable'],
+          examples: ['The spectacular sunset painted the sky in brilliant colors.', 'Her exquisite artwork captured everyone\'s attention.']
+        }
+      ],
+      phrasesAndExpressions: [
+        'A sight to behold...',
+        'As beautiful as...',
+        'Like a work of art...',
+        'Beyond description...',
+        'A feast for the senses...',
+        'Picture this...'
+      ]
+    }
+  };
+
+  const defaultVocab = vocabularyMap[textType.toLowerCase()] || vocabularyMap['narrative'];
+  
+  return {
+    textType: textType,
+    categories: defaultVocab.categories,
+    phrasesAndExpressions: defaultVocab.phrasesAndExpressions || [
+      'In addition to this...',
+      'Furthermore...',
+      'As a result...',
+      'On the other hand...',
+      'In conclusion...',
+      'Most importantly...'
+    ],
+    transitionWords: [
+      'However', 'Therefore', 'Moreover', 'Nevertheless', 'Consequently', 
+      'Furthermore', 'Additionally', 'Meanwhile', 'Subsequently', 'Finally',
+      'Initially', 'Eventually', 'Suddenly', 'Gradually', 'Immediately'
+    ]
+  };
+}
+
+
+// Add the missing identifyCommonMistakes function
+export async function identifyCommonMistakes(content: string, textType: string): Promise<{
+  overallAssessment: string;
+  mistakesIdentified: Array<{
+    category: string;
+    issue: string;
+    example: string;
+    impact: string;
+    correction: string;
+    preventionTip: string;
+  }>;
+  patternAnalysis: string;
+  priorityFixes: string[];
+  positiveElements: string[];
+}> {
+  try {
+    const systemPrompt = `You are an expert writing coach for NSW Selective School exam preparation. Analyze the provided ${textType.toLowerCase()} writing and identify common mistakes that students aged 10-12 typically make.
+
+Focus on:
+1. Grammar and punctuation errors
+2. Sentence structure issues
+3. Vocabulary usage problems
+4. Text type specific issues (narrative structure, persuasive arguments, etc.)
+5. Spelling and word choice errors
+
+Return the response in this exact JSON format:
+{
+  "overallAssessment": "Brief overall assessment of the writing quality",
+  "mistakesIdentified": [
+    {
+      "category": "Grammar/Punctuation/Structure/Vocabulary/Content",
+      "issue": "Description of the specific mistake",
+      "example": "Quote from the text showing the mistake",
+      "impact": "How this affects the writing quality",
+      "correction": "How to fix this specific instance",
+      "preventionTip": "General advice to avoid this mistake in future"
+    }
+  ],
+  "patternAnalysis": "Analysis of recurring patterns or themes in mistakes",
+  "priorityFixes": ["Most important fixes to focus on"],
+  "positiveElements": ["Things the student did well"]
+}`;
+
+    const userPrompt = `Analyze this ${textType.toLowerCase()} writing for common mistakes and areas for improvement:\n\n"${content}"\n\nProvide constructive feedback that helps the student improve their writing for NSW Selective School exam standards.`;
+
+    const response = await makeOpenAICall(systemPrompt, userPrompt, 500);
+    
+    try {
+      // Try to parse the JSON response
+      const parsedResponse = JSON.parse(response);
+      return parsedResponse;
+    } catch (parseError) {
+      console.warn('Failed to parse AI response as JSON, using fallback analysis');
+      // Return fallback analysis if parsing fails
+      return getFallbackMistakeAnalysis(textType, content);
+    }
+  } catch (error) {
+    console.error('Error identifying common mistakes:', error);
+    // Return fallback analysis on error
+    return getFallbackMistakeAnalysis(textType, content);
+  }
+}
+
+// Helper function to provide fallback mistake analysis
+function getFallbackMistakeAnalysis(textType: string, content: string): {
+  overallAssessment: string;
+  mistakesIdentified: Array<{
+    category: string;
+    issue: string;
+    example: string;
+    impact: string;
+    correction: string;
+    preventionTip: string;
+  }>;
+  patternAnalysis: string;
+  priorityFixes: string[];
+  positiveElements: string[];
+} {
+  // Basic analysis based on common patterns
+  const wordCount = content.split(/\s+/).length;
+  const sentenceCount = content.split(/[.!?]+/).filter(s => s.trim().length > 0).length;
+  const avgWordsPerSentence = wordCount / sentenceCount;
+  
+  const commonMistakes = [];
+  
+  // Check for common issues
+  if (avgWordsPerSentence > 25) {
+    commonMistakes.push({
+      category: "Sentence Structure",
+      issue: "Sentences may be too long and complex",
+      example: "Some sentences in your writing are quite lengthy",
+      impact: "Long sentences can be hard to follow and may lose the reader's attention",
+      correction: "Try breaking longer sentences into shorter, clearer ones",
+      preventionTip: "Aim for 15-20 words per sentence for better readability"
+    });
+  }
+  
+  if (avgWordsPerSentence < 8) {
+    commonMistakes.push({
+      category: "Sentence Structure",
+      issue: "Sentences may be too short and choppy",
+      example: "Your sentences tend to be quite brief",
+      impact: "Very short sentences can make writing feel disconnected",
+      correction: "Try combining some short sentences or adding more descriptive details",
+      preventionTip: "Vary your sentence lengths for better flow and rhythm"
+    });
+  }
+  
+  // Check for repetitive words
+  const words = content.toLowerCase().split(/\s+/);
+  const wordFreq: { [key: string]: number } = {};
+  words.forEach(word => {
+    const cleanWord = word.replace(/[^\w]/g, '');
+    if (cleanWord.length > 3) {
+      wordFreq[cleanWord] = (wordFreq[cleanWord] || 0) + 1;
+    }
+  });
+  
+  const repeatedWords = Object.entries(wordFreq)
+    .filter(([word, count]) => count > 3 && !['that', 'with', 'they', 'were', 'have', 'this', 'from'].includes(word))
+    .map(([word]) => word);
+  
+  if (repeatedWords.length > 0) {
+    commonMistakes.push({
+      category: "Vocabulary",
+      issue: "Some words are used repeatedly",
+      example: `Words like "${repeatedWords[0]}" appear multiple times`,
+      impact: "Repetitive vocabulary can make writing less engaging",
+      correction: "Try using synonyms or alternative expressions",
+      preventionTip: "Keep a list of synonyms handy when writing"
+    });
+  }
+  
+  return {
+    overallAssessment: `Your ${textType.toLowerCase()} writing shows good effort with ${wordCount} words across ${sentenceCount} sentences. There are some areas where you can improve to meet NSW Selective School standards.`,
+    mistakesIdentified: commonMistakes.length > 0 ? commonMistakes : [
+      {
+        category: "General",
+        issue: "Continue developing your writing skills",
+        example: "Your writing shows good foundation skills",
+        impact: "Consistent practice will help you improve",
+        correction: "Keep writing and focus on clear expression",
+        preventionTip: "Read widely and practice writing regularly"
+      }
+    ],
+    patternAnalysis: commonMistakes.length > 0 
+      ? "The main areas for improvement focus on sentence structure and vocabulary variety."
+      : "Your writing shows good basic structure. Continue practicing to develop more advanced techniques.",
+    priorityFixes: commonMistakes.length > 0 
+      ? commonMistakes.slice(0, 2).map(m => m.correction)
+      : ["Focus on clear, engaging expression", "Practice varying sentence structure"],
+    positiveElements: [
+      "Shows good effort and engagement with the topic",
+      "Demonstrates understanding of basic writing structure",
+      "Uses appropriate length for the text type"
+    ]
+  };
 }
