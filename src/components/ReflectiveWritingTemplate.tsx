@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Clock, Play, Pause, RotateCcw, Heart, Lightbulb, Eye, CheckCircle, Send, ThoughtBubble } from 'lucide-react';
+import { Clock, Play, Pause, RotateCcw, Heart, Lightbulb, Eye, CheckCircle, Send } from 'lucide-react';
 
 interface ReflectiveWritingTemplateProps {
   content: string;
