@@ -409,7 +409,7 @@ export function WordMagicHelper({ selectedText, onWordSelect, onClose }: WordMag
                 >
                   <span>Keep Looking</span>
                 </button>
-              }
+              </div>
             </div>
           </div>
         )}
