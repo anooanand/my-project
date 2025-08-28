@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import { Button } from './components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/ui/tabs'
-import { Badge } from './components/ui/badge'
+import { Button } from './components/\\ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from './components/\\ui/card'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './components/\\ui/tabs'
+import { Badge } from './components/\\ui/badge'
 import { 
   MessageCircle, 
   BarChart3, 
@@ -414,7 +414,8 @@ function App(): JSX.Element {
                         {chatMessages.length === 0 && (
                           <div className="text-center text-gray-500 dark:text-gray-400 py-8">
                             <MessageCircle className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                            <p className="text-sm">Start writing to get AI feedback!</p>
+                            <p className="text-sm">Ask me anything about your writing!</p>
+                            <p className="text-xs mt-1">I'll help you improve your story.</p>
                           </div>
                         )}
                       </div>
@@ -425,109 +426,146 @@ function App(): JSX.Element {
                           value={chatInput}
                           onChange={handleChatInputChange}
                           onKeyPress={handleKeyPress}
-                          placeholder="Ask your AI coach anything..."
-                          className="flex-1 px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white dark:bg-gray-700 dark:text-white"
+                          placeholder="Ask for writing help..."
+                          className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                         />
-                        <Button
+                        <Button 
                           onClick={handleSendMessage}
                           size="sm"
-                          className="bg-purple-600 hover:bg-purple-700"
+                          className="bg-purple-600 hover:bg-purple-700 text-white"
                         >
                           <Send className="w-4 h-4" />
                         </Button>
                       </div>
                     </TabsContent>
 
-                    <TabsContent value="analysis" className="mt-0">
+                    <TabsContent value="analysis" className="h-full mt-0">
                       <div className="space-y-4">
-                        <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30 p-4 rounded-lg">
-                          <h4 className="text-sm font-medium text-green-800 dark:text-green-300 mb-2">Writing Quality</h4>
-                          <div className="flex justify-between text-sm mb-2">
-                            <span className="text-green-700 dark:text-green-400">Overall Quality:</span>
-                            <span className="font-medium text-green-800 dark:text-green-300">{qualityScore}%</span>
-                          </div>
-                          <div className="w-full bg-green-200 dark:bg-green-800 rounded-full h-2">
-                            <div 
-                              className="h-2 rounded-full bg-green-500 transition-all duration-300"
-                              style={{ width: `${qualityScore}%` }}
-                            ></div>
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-gray-600 dark:text-gray-400">Grammar Score:</span>
-                            <span className="font-medium text-green-600">85%</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600 dark:text-gray-400">Vocabulary Level:</span>
-                            <span className="font-medium text-blue-600">Advanced</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600 dark:text-gray-400">Structure:</span>
-                            <span className="font-medium text-purple-600">Good</span>
-                          </div>
-                        </div>
-                      </div>
-                    </TabsContent>
-
-                    <TabsContent value="vocabulary" className="mt-0">
-                      <div className="space-y-4">
-                        <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg">
-                          <h4 className="text-sm font-medium text-blue-800 dark:text-blue-300 mb-2">Vocabulary Sophistication</h4>
+                        <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                          <h4 className="font-medium text-blue-800 dark:text-blue-300 mb-2">Writing Analysis</h4>
                           <div className="space-y-2 text-sm">
                             <div className="flex justify-between">
-                              <span className="text-blue-700 dark:text-blue-400">Advanced Words:</span>
-                              <span className="font-medium">12</span>
+                              <span>Readability:</span>
+                              <span className="font-medium">Good</span>
                             </div>
                             <div className="flex justify-between">
-                              <span className="text-blue-700 dark:text-blue-400">Unique Words:</span>
-                              <span className="font-medium">89%</span>
+                              <span>Sentence Variety:</span>
+                              <span className="font-medium">Excellent</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Paragraph Structure:</span>
+                              <span className="font-medium">Needs Work</span>
                             </div>
                           </div>
                         </div>
                         
-                        <div>
-                          <h5 className="text-sm font-medium mb-2">Suggested Improvements:</h5>
-                          <div className="space-y-2">
-                            <div className="text-xs bg-yellow-50 dark:bg-yellow-900/30 p-2 rounded">
-                              Try using "magnificent" instead of "big"
+                        <div className="p-4 bg-green-50 dark:bg-green-900/30 rounded-lg">
+                          <h4 className="font-medium text-green-800 dark:text-green-300 mb-2">Strengths</h4>
+                          <ul className="text-sm space-y-1 text-green-700 dark:text-green-300">
+                            <li>• Creative use of descriptive language</li>
+                            <li>• Strong character development</li>
+                            <li>• Engaging opening paragraph</li>
+                          </ul>
+                        </div>
+                        
+                        <div className="p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg">
+                          <h4 className="font-medium text-yellow-800 dark:text-yellow-300 mb-2">Areas to Improve</h4>
+                          <ul className="text-sm space-y-1 text-yellow-700 dark:text-yellow-300">
+                            <li>• Add more dialogue between characters</li>
+                            <li>• Vary sentence beginnings</li>
+                            <li>• Include more sensory details</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </TabsContent>
+
+                    <TabsContent value="vocabulary" className="h-full mt-0">
+                      <div className="space-y-4">
+                        <div className="p-4 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
+                          <h4 className="font-medium text-purple-800 dark:text-purple-300 mb-2">Vocabulary Level</h4>
+                          <div className="flex items-center space-x-2">
+                            <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                              <div className="bg-purple-600 h-2 rounded-full" style={{ width: '70%' }}></div>
                             </div>
-                            <div className="text-xs bg-yellow-50 dark:bg-yellow-900/30 p-2 rounded">
-                              Consider "whispered" instead of "said quietly"
+                            <span className="text-sm font-medium">70%</span>
+                          </div>
+                          <p className="text-sm text-purple-700 dark:text-purple-300 mt-2">
+                            Good use of varied vocabulary! Try incorporating more advanced words.
+                          </p>
+                        </div>
+                        
+                        <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                          <h4 className="font-medium text-blue-800 dark:text-blue-300 mb-2">Suggested Words</h4>
+                          <div className="space-y-2 text-sm">
+                            <div>
+                              <span className="text-gray-600 dark:text-gray-400">Instead of "big":</span>
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                <Badge variant="secondary">enormous</Badge>
+                                <Badge variant="secondary">massive</Badge>
+                                <Badge variant="secondary">gigantic</Badge>
+                              </div>
+                            </div>
+                            <div>
+                              <span className="text-gray-600 dark:text-gray-400">Instead of "said":</span>
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                <Badge variant="secondary">whispered</Badge>
+                                <Badge variant="secondary">exclaimed</Badge>
+                                <Badge variant="secondary">declared</Badge>
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
                     </TabsContent>
 
-                    <TabsContent value="progress" className="mt-0">
+                    <TabsContent value="progress" className="h-full mt-0">
                       <div className="space-y-4">
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-                          <div className="text-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                            <div className="text-2xl font-bold text-purple-600">{wordCount}</div>
-                            <div className="text-gray-600 dark:text-gray-400">Words</div>
-                          </div>
-                          <div className="text-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                            <div className="text-2xl font-bold text-green-600">3</div>
-                            <div className="text-gray-600 dark:text-gray-400">Paragraphs</div>
+                        <div className="p-4 bg-green-50 dark:bg-green-900/30 rounded-lg">
+                          <h4 className="font-medium text-green-800 dark:text-green-300 mb-2">Writing Progress</h4>
+                          <div className="space-y-3">
+                            <div>
+                              <div className="flex justify-between text-sm mb-1">
+                                <span>Word Goal</span>
+                                <span>{wordCount}/500</span>
+                              </div>
+                              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                <div 
+                                  className="bg-green-600 h-2 rounded-full transition-all duration-300" 
+                                  style={{ width: `${Math.min((wordCount / 500) * 100, 100)}%` }}
+                                ></div>
+                              </div>
+                            </div>
+                            
+                            <div>
+                              <div className="flex justify-between text-sm mb-1">
+                                <span>Quality Score</span>
+                                <span>{qualityScore}%</span>
+                              </div>
+                              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                                <div 
+                                  className="bg-blue-600 h-2 rounded-full" 
+                                  style={{ width: `${qualityScore}%` }}
+                                ></div>
+                              </div>
+                            </div>
                           </div>
                         </div>
                         
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-gray-600 dark:text-gray-400">AI Feedback:</span>
-                            <span className="font-medium text-purple-600">5 tips</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600 dark:text-gray-400">Time Writing:</span>
-                            <span className="font-medium">12 min</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600 dark:text-gray-400">AI Status:</span>
-                            <span className={`font-medium ${isAIConnected ? 'text-green-600' : 'text-red-600'}`}>
-                              {isAIConnected ? 'Connected' : 'Disconnected'}
-                            </span>
+                        <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                          <h4 className="font-medium text-blue-800 dark:text-blue-300 mb-2">Recent Achievements</h4>
+                          <div className="space-y-2">
+                            <div className="flex items-center space-x-2 text-sm">
+                              <Star className="w-4 h-4 text-yellow-500" />
+                              <span>First paragraph completed!</span>
+                            </div>
+                            <div className="flex items-center space-x-2 text-sm">
+                              <CheckCircle className="w-4 h-4 text-green-500" />
+                              <span>Used descriptive language</span>
+                            </div>
+                            <div className="flex items-center space-x-2 text-sm">
+                              <Zap className="w-4 h-4 text-purple-500" />
+                              <span>Creative story opening</span>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -542,113 +580,134 @@ function App(): JSX.Element {
 
       {/* Planning Modal */}
       {showPlanningModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-xl">Story Planning Helper</CardTitle>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Story Planning</h2>
                 <Button 
-                  variant="ghost" 
+                  variant="outline" 
                   size="sm"
                   onClick={() => setShowPlanningModal(false)}
                 >
                   <X className="w-4 h-4" />
                 </Button>
               </div>
-              <p className="text-gray-600 dark:text-gray-400">Let's plan your amazing story step by step!</p>
-              <div className="flex justify-center mt-4">
-                <div className="flex space-x-2">
-                  {[1, 2, 3, 4, 5, 6].map((step) => (
-                    <div
-                      key={step}
-                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                        step <= planningStep 
-                          ? 'bg-blue-500 text-white' 
-                          : 'bg-gray-200 text-gray-600'
-                      }`}
-                    >
-                      {step}
-                    </div>
-                  ))}
+              
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Step {planningStep} of 6</span>
+                  <div className="flex space-x-1">
+                    {[1, 2, 3, 4, 5, 6].map(step => (
+                      <div 
+                        key={step}
+                        className={`w-2 h-2 rounded-full ${
+                          step <= planningStep ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'
+                        }`}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="text-center">
-                <div className="text-6xl mb-4">{currentStepContent.emoji}</div>
-                <h3 className="text-lg font-semibold mb-2">{currentStepContent.title}</h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-4">{currentStepContent.description}</p>
+                
+                <div className="text-center mb-6">
+                  <div className="text-4xl mb-2">{currentStepContent.emoji}</div>
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                    {currentStepContent.title}
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {currentStepContent.description}
+                  </p>
+                </div>
+                
                 <textarea
                   value={planningData[currentStepContent.field]}
                   onChange={(e) => updatePlanningData(currentStepContent.field, e.target.value)}
                   placeholder={currentStepContent.placeholder}
-                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white"
-                  rows={4}
+                  className="w-full h-32 p-4 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white resize-none"
                 />
               </div>
+              
               <div className="flex justify-between">
                 <Button 
                   variant="outline"
                   onClick={handlePlanningPrev}
                   disabled={planningStep === 1}
                 >
-                  ← Previous
+                  Previous
                 </Button>
                 <Button 
-                  onClick={() => setShowPlanningModal(false)} 
-                  variant="destructive"
+                  onClick={handlePlanningNext}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
                 >
-                  Cancel
-                </Button>
-                <Button onClick={handlePlanningNext}>
-                  {planningStep === 6 ? 'Finish Plan! 🎉' : 'Next →'}
+                  {planningStep === 6 ? 'Finish Planning' : 'Next'}
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       )}
 
       {/* Structure Guide Modal */}
       {showStructureGuide && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-xl">{textType} Writing Structure</CardTitle>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Narrative Structure Guide</h2>
                 <Button 
-                  variant="ghost" 
+                  variant="outline" 
                   size="sm"
                   onClick={() => setShowStructureGuide(false)}
                 >
                   <X className="w-4 h-4" />
                 </Button>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg">
-                <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-300 mb-2">Narrative Story Structure</h3>
-                <p className="text-blue-700 dark:text-blue-400 mb-3">A narrative tells a story with characters, setting, and events:</p>
+              
+              <div className="space-y-6">
+                <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                  <h3 className="font-semibold text-blue-800 dark:text-blue-300 mb-2">1. Opening (Hook)</h3>
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                    Start with an exciting moment, interesting dialogue, or intriguing question to grab your reader's attention.
+                  </p>
+                </div>
                 
-                <div className="space-y-3">
-                  <div className="border-l-4 border-blue-500 pl-3">
-                    <h4 className="font-semibold">1. Beginning (Introduction)</h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">• Introduce your main character<br/>• Describe the setting (where and when)<br/>• Start with an exciting hook to grab attention</p>
-                  </div>
-                  
-                  <div className="border-l-4 border-green-500 pl-3">
-                    <h4 className="font-semibold">2. Middle (Problem & Events)</h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">• Present the main problem or challenge<br/>• Show what the character does to solve it<br/>• Include exciting events and dialogue</p>
-                  </div>
-                  
-                  <div className="border-l-4 border-purple-500 pl-3">
-                    <h4 className="font-semibold">3. End (Solution)</h4>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">• Show how the problem is solved<br/>• Describe how characters feel<br/>• End with a satisfying conclusion</p>
-                  </div>
+                <div className="p-4 bg-green-50 dark:bg-green-900/30 rounded-lg">
+                  <h3 className="font-semibold text-green-800 dark:text-green-300 mb-2">2. Setting & Characters</h3>
+                  <p className="text-sm text-green-700 dark:text-green-300">
+                    Introduce your main character and describe where and when your story takes place.
+                  </p>
+                </div>
+                
+                <div className="p-4 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg">
+                  <h3 className="font-semibold text-yellow-800 dark:text-yellow-300 mb-2">3. Problem/Conflict</h3>
+                  <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                    Present the main challenge or problem that your character needs to solve.
+                  </p>
+                </div>
+                
+                <div className="p-4 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
+                  <h3 className="font-semibold text-purple-800 dark:text-purple-300 mb-2">4. Rising Action</h3>
+                  <p className="text-sm text-purple-700 dark:text-purple-300">
+                    Show the events that happen as your character tries to solve the problem. Build excitement!
+                  </p>
+                </div>
+                
+                <div className="p-4 bg-red-50 dark:bg-red-900/30 rounded-lg">
+                  <h3 className="font-semibold text-red-800 dark:text-red-300 mb-2">5. Climax</h3>
+                  <p className="text-sm text-red-700 dark:text-red-300">
+                    The most exciting part! This is where the main problem reaches its peak.
+                  </p>
+                </div>
+                
+                <div className="p-4 bg-indigo-50 dark:bg-indigo-900/30 rounded-lg">
+                  <h3 className="font-semibold text-indigo-800 dark:text-indigo-300 mb-2">6. Resolution</h3>
+                  <p className="text-sm text-indigo-700 dark:text-indigo-300">
+                    Show how the problem is solved and what happens to your characters at the end.
+                  </p>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       )}
     </div>
