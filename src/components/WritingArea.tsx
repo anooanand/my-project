@@ -1,5 +1,5 @@
-// AI-Powered WritingArea Component with Embedded OpenAI Service
-// This version embeds the OpenAI service directly to avoid import issues
+// AI-Powered WritingArea Component with Automatic Feedback
+// Fixed version with named export for compatibility
 
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, MessageCircle, BarChart3, BookOpen, TrendingUp, Lightbulb } from 'lucide-react';
@@ -588,4 +588,4 @@ const WritingArea: React.FC = () => {
   );
 };
 
-export default WritingArea;
+export { WritingArea };
