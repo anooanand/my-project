@@ -57,7 +57,7 @@ const wordSuggestions: Record<string, WordSuggestion[]> = {
     { word: 'excellent', meaning: 'really, really good', example: 'She did excellent work on her project', difficulty: 'easy', category: 'general' },
     { word: 'fantastic', meaning: 'amazingly good', example: 'The show was fantastic!', difficulty: 'easy', category: 'general' },
     { word: 'marvelous', meaning: 'wonderfully good', example: 'What a marvelous idea!', difficulty: 'medium', category: 'general' },
-    { word: 'spectacular', meaning: 'so good it's like a show', example: 'The fireworks were spectacular', difficulty: 'medium', category: 'general' }
+    { word: 'spectacular', meaning: 'so good it\'s like a show', example: 'The fireworks were spectacular', difficulty: 'medium', category: 'general' }
   ],
   'bad': [
     { word: 'awful', meaning: 'really bad', example: 'The weather was awful today', difficulty: 'easy', category: 'general' },
@@ -335,44 +335,85 @@ export function WordMagicHelper({ selectedText, onWordSelect, onClose }: WordMag
             </p>
             <button
               onClick={() => {
-                const randomWords = ['big', 'happy', 'run', 'good', 'walk'];
-                const randomWord = randomWords[Math.floor(Math.random() * randomWords.length)];
-                setCurrentWord(randomWord);
-                searchForWord(randomWord);
+                setCurrentWord('');
+                setSuggestions([]);
+                setSelectedSuggestion(null);
               }}
               className="
-                bg-gradient-to-r from-primary-400 to-magic-400
+                bg-gradient-to-r from-sky-400 to-sky-600 hover:from-sky-500 hover:to-sky-700
                 text-white font-display font-bold text-kid-base
-                px-6 py-3 rounded-kid shadow-fun
+                px-6 py-3 rounded-kid shadow-sky
                 hover:scale-105 active:scale-95 transition-all duration-300
                 flex items-center space-x-2 mx-auto
               "
             >
               <RefreshCw className="h-5 w-5" />
-              <span>Try a Random Word!</span>
+              <span>Clear Search</span>
             </button>
           </div>
         )}
 
-        {/* Tips section */}
-        <div className="mt-6 bg-gradient-to-r from-sky-50 to-primary-50 rounded-kid p-4 border-2 border-sky-200">
-          <div className="flex items-start space-x-3">
-            <Zap className="h-6 w-6 text-sky-600 flex-shrink-0 mt-1" />
-            <div>
-              <h4 className="text-kid-base font-display font-bold text-neutral-800 mb-1">
-                Word Magic Tips! 💡
-              </h4>
-              <ul className="text-kid-sm font-body text-neutral-600 space-y-1">
-                <li>• Use easy words when you're starting out</li>
-                <li>• Try medium words to challenge yourself</li>
-                <li>• Hard words will really impress your readers!</li>
-                <li>• Always make sure the new word fits your sentence</li>
-              </ul>
+        {/* Selected suggestion details */}
+        {selectedSuggestion && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-kid-lg shadow-bounce border-2 border-magic-200 p-6 max-w-md w-full relative">
+              <button
+                onClick={() => setSelectedSuggestion(null)}
+                className="absolute top-3 right-3 w-8 h-8 bg-neutral-100 hover:bg-neutral-200 rounded-full flex items-center justify-center transition-colors"
+              >
+                <span className="text-neutral-600 text-lg">×</span>
+              </button>
+              <h3 className="text-kid-xl font-display font-bold text-neutral-800 mb-4">
+                {selectedSuggestion.word} {getCategoryEmoji(selectedSuggestion.category)}
+              </h3>
+              <p className="text-kid-base font-body text-neutral-600 mb-2">
+                <strong>Meaning:</strong> {selectedSuggestion.meaning}
+              </p>
+              <p className="text-kid-base font-body text-neutral-600 mb-4">
+                <strong>Example:</strong> "{selectedSuggestion.example}"
+              </p>
+              <div className={`
+                px-3 py-1 rounded-full text-kid-sm font-body font-bold inline-block
+                ${getColorClasses(getDifficultyColor(selectedSuggestion.difficulty)).split(' ')[3]}
+                text-${getDifficultyColor(selectedSuggestion.difficulty)}-700
+                mb-4
+              `}>
+                {getDifficultyLabel(selectedSuggestion.difficulty)}
+              </div>
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => {
+                    onWordSelect?.(selectedSuggestion.word);
+                    setSelectedSuggestion(null);
+                  }}
+                  className="
+                    flex-1 bg-gradient-to-r from-success-400 to-primary-400
+                    text-white font-display font-bold text-kid-base
+                    px-6 py-3 rounded-kid shadow-success
+                    hover:scale-105 active:scale-95 transition-all duration-300
+                    flex items-center justify-center space-x-2
+                  "
+                >
+                  <Star className="h-5 w-5" />
+                  <span>Use This Word!</span>
+                </button>
+                <button
+                  onClick={() => setSelectedSuggestion(null)}
+                  className="
+                    flex-1 bg-neutral-100 hover:bg-neutral-200 border-2 border-neutral-200
+                    text-neutral-700 font-display font-bold text-kid-base
+                    px-6 py-3 rounded-kid
+                    hover:scale-105 active:scale-95 transition-all duration-300
+                    flex items-center justify-center space-x-2
+                  "
+                >
+                  <span>Keep Looking</span>
+                </button>
+              }
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
 }
-
