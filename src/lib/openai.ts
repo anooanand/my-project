@@ -1,5 +1,5 @@
 // OpenAI Service Module for Automatic Feedback System
-// Save this as: src/lib/openai-service.ts
+// Save this as: src/lib/openai.ts (replace existing file)
 
 interface OpenAIConfig {
   apiKey: string;
@@ -238,3 +238,123 @@ You can help with:
 
 export const openAIService = new OpenAIService();
 export type { FeedbackRequest, ChatRequest, OpenAIConfig };
+
+// Backward compatibility functions for existing components
+export const openai = openAIService;
+
+// Helper function to make API calls using the service
+async function makeOpenAICall(systemPrompt: string, userPrompt: string, maxTokens: number = 200): Promise<string> {
+  try {
+    // Use the chat request method as a workaround
+    const request: ChatRequest = {
+      userMessage: userPrompt,
+      textType: 'General',
+      currentContent: '',
+      wordCount: 0,
+      context: systemPrompt
+    };
+    
+    return await openAIService.generateChatResponse(request);
+  } catch (error) {
+    console.error('OpenAI call failed:', error);
+    throw error;
+  }
+}
+
+export async function generatePrompt(textType: string, topic?: string): Promise<string> {
+  try {
+    const systemPrompt = `You are a creative writing prompt generator for NSW Selective School exam preparation. Generate engaging, age-appropriate prompts for ${textType.toLowerCase()} writing.`;
+    const userPrompt = `Generate a creative writing prompt for ${textType.toLowerCase()} writing${topic ? ` about ${topic}` : ''}. Make it engaging for students aged 10-12.`;
+
+    return await makeOpenAICall(systemPrompt, userPrompt, 150);
+  } catch (error) {
+    console.error('Error generating prompt:', error);
+    return `Write an engaging ${textType.toLowerCase()} story about a character who discovers something unexpected that changes their life forever.`;
+  }
+}
+
+export async function evaluateEssay(content: string, textType: string): Promise<string> {
+  try {
+    const systemPrompt = `You are an expert writing evaluator for NSW Selective School exams. Provide constructive feedback on ${textType.toLowerCase()} writing for students aged 10-12.`;
+    const userPrompt = `Please evaluate this ${textType.toLowerCase()} writing and provide constructive feedback:\n\n${content}`;
+
+    return await makeOpenAICall(systemPrompt, userPrompt, 300);
+  } catch (error) {
+    console.error('Error evaluating essay:', error);
+    return 'Great effort on your writing! Keep practicing to improve your skills.';
+  }
+}
+
+export async function getNSWSelectiveFeedback(content: string, textType: string): Promise<string> {
+  try {
+    const systemPrompt = `You are a NSW Selective School writing coach. Provide specific, actionable feedback for ${textType.toLowerCase()} writing that helps students improve their exam performance.`;
+    const userPrompt = `Provide NSW Selective School exam feedback for this ${textType.toLowerCase()} writing:\n\n${content}`;
+
+    return await makeOpenAICall(systemPrompt, userPrompt, 250);
+  } catch (error) {
+    console.error('Error getting NSW feedback:', error);
+    return 'Your writing shows good potential. Focus on clear structure, vivid descriptions, and engaging characters.';
+  }
+}
+
+export async function getWritingStructure(textType: string): Promise<string> {
+  try {
+    const systemPrompt = `You are a writing structure expert for NSW Selective School exams. Provide clear, actionable structure guidance for ${textType.toLowerCase()} writing.`;
+    const userPrompt = `Provide a clear writing structure guide for ${textType.toLowerCase()} writing suitable for NSW Selective School exam preparation.`;
+
+    return await makeOpenAICall(systemPrompt, userPrompt, 200);
+  } catch (error) {
+    console.error('Error getting writing structure:', error);
+    return `For ${textType.toLowerCase()} writing, focus on: 1) Strong opening, 2) Clear development, 3) Engaging conclusion.`;
+  }
+}
+
+export async function getWritingFeedback(content: string, textType: string): Promise<string> {
+  try {
+    const systemPrompt = `You are a supportive writing coach for students aged 10-12. Provide encouraging, specific feedback for ${textType.toLowerCase()} writing.`;
+    const userPrompt = `Please provide encouraging feedback for this ${textType.toLowerCase()} writing:\n\n${content}`;
+
+    return await makeOpenAICall(systemPrompt, userPrompt, 200);
+  } catch (error) {
+    console.error('Error getting writing feedback:', error);
+    return 'Great work on your writing! Keep practicing and your skills will continue to improve.';
+  }
+}
+
+export async function checkOpenAIConnectionStatus(): Promise<boolean> {
+  try {
+    return await openAIService.testConnection();
+  } catch (error) {
+    console.error('Error checking OpenAI connection:', error);
+    return false;
+  }
+}
+
+// Additional utility functions
+export function getSynonyms(word: string): string[] {
+  // Simple synonym suggestions - in a real app, you might use an API
+  const synonymMap: { [key: string]: string[] } = {
+    'said': ['whispered', 'shouted', 'exclaimed', 'murmured', 'declared', 'announced'],
+    'happy': ['joyful', 'delighted', 'cheerful', 'elated', 'content', 'pleased'],
+    'sad': ['sorrowful', 'melancholy', 'dejected', 'downhearted', 'gloomy', 'mournful'],
+    'big': ['enormous', 'massive', 'gigantic', 'huge', 'immense', 'colossal'],
+    'small': ['tiny', 'miniature', 'petite', 'compact', 'minute', 'diminutive']
+  };
+  
+  return synonymMap[word.toLowerCase()] || [];
+}
+
+export async function rephraseSentence(sentence: string): Promise<string> {
+  try {
+    const systemPrompt = 'You are a writing assistant. Rephrase sentences to be more engaging and varied while maintaining the original meaning.';
+    const userPrompt = `Please rephrase this sentence to make it more engaging: "${sentence}"`;
+
+    return await makeOpenAICall(systemPrompt, userPrompt, 100);
+  } catch (error) {
+    console.error('Error rephrasing sentence:', error);
+    return sentence; // Return original if rephrasing fails
+  }
+}
+
+
+
