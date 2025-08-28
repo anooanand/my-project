@@ -29,4 +29,13 @@
   "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
-
+{
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "skipLibCheck": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "resolveJsonModule": true,
+    "strict": true
+  }
+}
