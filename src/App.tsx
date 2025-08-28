@@ -21,8 +21,10 @@ import {
   Star,
   Clock,
   FileText,
-  Settings
+  Settings,
+  X
 } from 'lucide-react'
+import './App.css'
 
 interface ChatMessage {
   id: number;
@@ -38,6 +40,15 @@ interface WritingStats {
   charCount: number;
   readTime: number;
   qualityScore: number;
+}
+
+interface PlanningData {
+  characters: string;
+  setting: string;
+  problem: string;
+  events: string;
+  solution: string;
+  feelings: string;
 }
 
 type TextType = 'Narrative' | 'Persuasive' | 'Expository' | 'Descriptive' | 'Creative';
@@ -56,6 +67,15 @@ function App(): JSX.Element {
   const [qualityScore, setQualityScore] = useState<number>(75)
   const [showPlanningModal, setShowPlanningModal] = useState<boolean>(false)
   const [showStructureGuide, setShowStructureGuide] = useState<boolean>(false)
+  const [planningStep, setPlanningStep] = useState<number>(1)
+  const [planningData, setPlanningData] = useState<PlanningData>({
+    characters: '',
+    setting: '',
+    problem: '',
+    events: '',
+    solution: '',
+    feelings: ''
+  })
 
   // Calculate stats
   useEffect(() => {
@@ -115,6 +135,86 @@ function App(): JSX.Element {
     }
   }
 
+  const handlePlanningNext = (): void => {
+    if (planningStep < 6) {
+      setPlanningStep(planningStep + 1)
+    } else {
+      // Finish planning
+      setShowPlanningModal(false)
+      setPlanningStep(1)
+    }
+  }
+
+  const handlePlanningPrev = (): void => {
+    if (planningStep > 1) {
+      setPlanningStep(planningStep - 1)
+    }
+  }
+
+  const updatePlanningData = (field: keyof PlanningData, value: string): void => {
+    setPlanningData(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
+
+  const getPlanningStepContent = () => {
+    switch (planningStep) {
+      case 1:
+        return {
+          emoji: '👥',
+          title: 'Who are your characters?',
+          description: 'Tell us about the main character in your story. What do they look like? What are they like?',
+          placeholder: 'Example: Sarah is a brave 12-year-old girl with curly red hair...',
+          field: 'characters' as keyof PlanningData
+        }
+      case 2:
+        return {
+          emoji: '🏞️',
+          title: 'Where does your story happen?',
+          description: 'Describe the place where your story takes place. Is it a school, forest, city, or somewhere magical?',
+          placeholder: 'Example: A mysterious old library with tall bookshelves and dusty books...',
+          field: 'setting' as keyof PlanningData
+        }
+      case 3:
+        return {
+          emoji: '⚡',
+          title: "What's the problem?",
+          description: 'Every good story has a problem or challenge. What goes wrong? What needs to be solved?',
+          placeholder: 'Example: Sarah discovers that all the books in the library are disappearing one by one...',
+          field: 'problem' as keyof PlanningData
+        }
+      case 4:
+        return {
+          emoji: '🎬',
+          title: 'What happens in your story?',
+          description: 'List the main events. What does your character do to try to solve the problem?',
+          placeholder: 'Example: Sarah searches the library, finds clues, meets a magical librarian...',
+          field: 'events' as keyof PlanningData
+        }
+      case 5:
+        return {
+          emoji: '✅',
+          title: 'How is the problem solved?',
+          description: 'How does your story end? How is the problem fixed? What happens to your characters?',
+          placeholder: 'Example: Sarah learns a magic spell that brings all the books back to the library...',
+          field: 'solution' as keyof PlanningData
+        }
+      case 6:
+        return {
+          emoji: '😊',
+          title: 'How do the characters feel?',
+          description: 'Describe the emotions in your story. How do characters feel at different parts?',
+          placeholder: 'Example: Sarah feels scared at first, then excited when she discovers the magic...',
+          field: 'feelings' as keyof PlanningData
+        }
+      default:
+        return getPlanningStepContent()
+    }
+  }
+
+  const currentStepContent = getPlanningStepContent()
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 dark:from-gray-900 dark:to-gray-800">
       {/* Header */}
@@ -125,7 +225,7 @@ function App(): JSX.Element {
               <select 
                 value={textType}
                 onChange={handleTextTypeChange}
-                className="px-3 py-2 rounded-lg border border-gray-200 bg-white dark:bg-gray-700 dark:border-gray-600"
+                className="px-3 py-2 rounded-lg border border-gray-200 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               >
                 <option value="Narrative">Narrative</option>
                 <option value="Persuasive">Persuasive</option>
@@ -222,7 +322,7 @@ function App(): JSX.Element {
                   value={content}
                   onChange={handleContentChange}
                   placeholder="Start writing your amazing story here! Let your creativity flow and bring your ideas to life..."
-                  className="w-full h-full p-6 border-none resize-none focus:outline-none focus:ring-0 text-base leading-relaxed font-['Inter'] bg-transparent"
+                  className="w-full h-full p-6 border-none resize-none focus:outline-none focus:ring-0 text-base leading-relaxed font-['Inter'] bg-transparent dark:text-white"
                   style={{ minHeight: '500px' }}
                 />
               </CardContent>
@@ -270,7 +370,7 @@ function App(): JSX.Element {
                   </CardTitle>
                   <div className="flex items-center space-x-2">
                     <Star className="w-4 h-4 text-yellow-500" />
-                    <span className="text-sm text-gray-600">Quality: {qualityScore}%</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Quality: {qualityScore}%</span>
                   </div>
                 </div>
               </CardHeader>
@@ -331,7 +431,7 @@ function App(): JSX.Element {
                           onChange={handleChatInputChange}
                           onKeyPress={handleKeyPress}
                           placeholder="Ask your AI coach anything..."
-                          className="flex-1 px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white dark:bg-gray-700"
+                          className="flex-1 px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 bg-white dark:bg-gray-700 dark:text-white"
                         />
                         <Button
                           onClick={handleSendMessage}
@@ -457,26 +557,57 @@ function App(): JSX.Element {
                   size="sm"
                   onClick={() => setShowPlanningModal(false)}
                 >
-                  ✕
+                  <X className="w-4 h-4" />
                 </Button>
               </div>
               <p className="text-gray-600 dark:text-gray-400">Let's plan your amazing story step by step!</p>
+              <div className="flex justify-center mt-4">
+                <div className="flex space-x-2">
+                  {[1, 2, 3, 4, 5, 6].map((step) => (
+                    <div
+                      key={step}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
+                        step <= planningStep 
+                          ? 'bg-blue-500 text-white' 
+                          : 'bg-gray-200 text-gray-600'
+                      }`}
+                    >
+                      {step}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="text-center">
-                <div className="text-6xl mb-4">👥</div>
-                <h3 className="text-lg font-semibold mb-2">Who are your characters?</h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-4">Tell us about the main character in your story. What do they look like? What are they like?</p>
+                <div className="text-6xl mb-4">{currentStepContent.emoji}</div>
+                <h3 className="text-lg font-semibold mb-2">{currentStepContent.title}</h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-4">{currentStepContent.description}</p>
                 <textarea
-                  placeholder="Example: Sarah is a brave 12-year-old girl with curly red hair..."
-                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700"
+                  value={planningData[currentStepContent.field]}
+                  onChange={(e) => updatePlanningData(currentStepContent.field, e.target.value)}
+                  placeholder={currentStepContent.placeholder}
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 dark:text-white"
                   rows={4}
                 />
               </div>
               <div className="flex justify-between">
-                <Button variant="outline">← Previous</Button>
-                <Button onClick={() => setShowPlanningModal(false)} variant="destructive">Cancel</Button>
-                <Button>Next →</Button>
+                <Button 
+                  variant="outline"
+                  onClick={handlePlanningPrev}
+                  disabled={planningStep === 1}
+                >
+                  ← Previous
+                </Button>
+                <Button 
+                  onClick={() => setShowPlanningModal(false)} 
+                  variant="destructive"
+                >
+                  Cancel
+                </Button>
+                <Button onClick={handlePlanningNext}>
+                  {planningStep === 6 ? 'Finish Plan! 🎉' : 'Next →'}
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -495,7 +626,7 @@ function App(): JSX.Element {
                   size="sm"
                   onClick={() => setShowStructureGuide(false)}
                 >
-                  ✕
+                  <X className="w-4 h-4" />
                 </Button>
               </div>
             </CardHeader>
