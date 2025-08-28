@@ -1,0 +1,173 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Custom styles for the writing interface */
+.writing-area-container {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.5;
+}
+
+.writing-textarea {
+  font-size: 15px !important;
+  line-height: 1.6 !important;
+  padding: 16px !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  letter-spacing: 0.01em;
+  color: #1f2937 !important;
+  background: transparent !important;
+  resize: none;
+  border: none;
+  outline: none;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db #f9fafb;
+}
+
+.writing-textarea::-webkit-scrollbar {
+  width: 6px;
+}
+
+.writing-textarea::-webkit-scrollbar-track {
+  background: #f9fafb;
+  border-radius: 3px;
+}
+
+.writing-textarea::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.writing-textarea::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Dark mode support */
+.dark .writing-textarea {
+  color: #f9fafb !important;
+  scrollbar-color: #4b5563 #374151;
+}
+
+.dark .writing-textarea::-webkit-scrollbar-track {
+  background: #374151;
+}
+
+.dark .writing-textarea::-webkit-scrollbar-thumb {
+  background: #4b5563;
+}
+
+.dark .writing-textarea::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+/* Enhanced feedback items */
+.feedback-item {
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  line-height: 1.5;
+  border-left: 4px solid;
+}
+
+.feedback-item-praise {
+  background: #f0fdf4;
+  border-left-color: #22c55e;
+  color: #166534;
+}
+
+.feedback-item-suggestion {
+  background: #fffbeb;
+  border-left-color: #f59e0b;
+  color: #92400e;
+}
+
+.feedback-item-question {
+  background: #eff6ff;
+  border-left-color: #3b82f6;
+  color: #1e40af;
+}
+
+.feedback-item-challenge {
+  background: #faf5ff;
+  border-left-color: #a855f7;
+  color: #7c2d12;
+}
+
+/* Dark mode feedback items */
+.dark .feedback-item-praise {
+  background: #064e3b;
+  color: #86efac;
+}
+
+.dark .feedback-item-suggestion {
+  background: #451a03;
+  color: #fbbf24;
+}
+
+.dark .feedback-item-question {
+  background: #1e3a8a;
+  color: #93c5fd;
+}
+
+.dark .feedback-item-challenge {
+  background: #581c87;
+  color: #c4b5fd;
+}
+
