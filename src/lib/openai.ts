@@ -355,6 +355,3 @@ export async function rephraseSentence(sentence: string): Promise<string> {
     return sentence; // Return original if rephrasing fails
   }
 }
-
-
-
