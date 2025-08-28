@@ -41,3 +41,13 @@
     "vite": "^5.4.2"
   }
 }
+{
+  "dependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "lucide-react": "latest",
+    "@radix-ui/react-tabs": "latest",
+    "@radix-ui/react-dialog": "latest",
+    "tailwindcss": "latest"
+  }
+}
