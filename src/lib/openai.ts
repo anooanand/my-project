@@ -1,5 +1,5 @@
 // OpenAI Service Module for Automatic Feedback System
-// This module handles all AI interactions for the writing application
+// Save this as: src/lib/openai-service.ts
 
 interface OpenAIConfig {
   apiKey: string;
@@ -30,19 +30,18 @@ class OpenAIService {
 
   constructor() {
     this.config = {
-      apiKey: process.env.OPENAI_API_KEY || '',
-      apiBase: process.env.OPENAI_API_BASE || 'https://api.openai.com/v1',
-      model: 'gpt-4o-mini', // Efficient model for educational feedback
+      apiKey: import.meta.env.VITE_OPENAI_API_KEY || '',
+      apiBase: import.meta.env.VITE_OPENAI_API_BASE || 'https://api.openai.com/v1',
+      model: 'gpt-4o-mini',
       maxTokens: 200,
       temperature: 0.7
     };
 
     if (!this.config.apiKey) {
-      console.warn('OpenAI API key not found. Please set OPENAI_API_KEY environment variable.');
+      console.warn('OpenAI API key not found. Please set VITE_OPENAI_API_KEY environment variable.');
     }
   }
 
-  // Core API call method
   private async callOpenAI(messages: any[], options?: Partial<OpenAIConfig>): Promise<string> {
     try {
       const response = await fetch(`${this.config.apiBase}/chat/completions`, {
@@ -78,7 +77,6 @@ class OpenAIService {
     }
   }
 
-  // Generate automatic paragraph feedback
   async generateParagraphFeedback(request: FeedbackRequest): Promise<string> {
     const { paragraphContent, paragraphNumber, textType, previousParagraphs, studentLevel = 'intermediate' } = request;
 
@@ -98,7 +96,6 @@ class OpenAIService {
     }
   }
 
-  // Handle manual chat interactions
   async generateChatResponse(request: ChatRequest): Promise<string> {
     const { userMessage, textType, currentContent, wordCount, context } = request;
 
@@ -118,7 +115,6 @@ class OpenAIService {
     }
   }
 
-  // Create system message for paragraph feedback
   private createFeedbackSystemMessage(textType: string, studentLevel: string): string {
     const levelGuidance = {
       beginner: 'Use simple language and focus on basic writing elements like complete sentences and clear ideas.',
@@ -150,7 +146,6 @@ For ${textType.toLowerCase()} writing, focus on:
 Always start with something positive the student did well, then provide specific, actionable advice.`;
   }
 
-  // Create system message for chat interactions
   private createChatSystemMessage(textType: string, wordCount: number): string {
     return `You are a helpful AI writing coach for students preparing for NSW Selective School exams. You're currently helping with ${textType.toLowerCase()} writing.
 
@@ -178,7 +173,6 @@ You can help with:
 - Exam-specific writing strategies`;
   }
 
-  // Create feedback prompt for paragraphs
   private createFeedbackPrompt(paragraphContent: string, paragraphNumber: number, previousParagraphs?: string[]): string {
     let prompt = `Please provide encouraging feedback for paragraph ${paragraphNumber} of this narrative story:\n\n"${paragraphContent}"\n\n`;
 
@@ -191,7 +185,6 @@ You can help with:
     return prompt;
   }
 
-  // Create chat prompt for manual interactions
   private createChatPrompt(userMessage: string, currentContent: string, context?: string): string {
     let prompt = `Student's question: "${userMessage}"\n\n`;
 
@@ -211,7 +204,6 @@ You can help with:
     return prompt;
   }
 
-  // Fallback feedback for when AI fails
   private getFallbackFeedback(paragraphNumber: number): string {
     const fallbacks = [
       `Great work on paragraph ${paragraphNumber}! You're building your story well. Keep focusing on showing your character's emotions through their actions and thoughts.`,
@@ -224,12 +216,10 @@ You can help with:
     return fallbacks[paragraphNumber % fallbacks.length];
   }
 
-  // Validate API configuration
   isConfigured(): boolean {
     return !!this.config.apiKey;
   }
 
-  // Test API connection
   async testConnection(): Promise<boolean> {
     try {
       const testMessages = [
@@ -246,8 +236,5 @@ You can help with:
   }
 }
 
-// Export singleton instance
 export const openAIService = new OpenAIService();
-
-// Export types for use in components
 export type { FeedbackRequest, ChatRequest, OpenAIConfig };
