@@ -49,6 +49,27 @@ interface DetailedEvaluation {
   recommendations: string[];
 }
 
+// Enhanced Chat Message Interface with automatic feedback support
+interface ChatMessage {
+  id: string;
+  text: string;
+  sender: 'user' | 'ai';
+  timestamp: Date;
+  isAutomatic?: boolean;
+  paragraphNumber?: number;
+  messageType?: 'manual' | 'automatic_feedback';
+}
+
+// Paragraph Feedback Tracking Interface
+interface ParagraphFeedback {
+  id: string;
+  paragraphNumber: number;
+  content: string;
+  feedback: string;
+  timestamp: Date;
+  isAutomatic: boolean;
+}
+
 // IMPROVED: Content analysis with better issue detection
 function analyzeContentBasic(text: string): WritingIssue[] {
   const issues: WritingIssue[] = [];
@@ -165,7 +186,72 @@ function getBasicSynonyms(word: string): string[] {
   return synonyms[word] || ['improved word', 'better alternative', 'more sophisticated term'];
 }
 
-// AI Writing Analysis Functions
+// NEW: Paragraph Detection Logic
+function detectParagraphCompletion(content: string, lastContent: string): {
+  isNewParagraph: boolean;
+  paragraphContent?: string;
+  paragraphNumber?: number;
+} {
+  const paragraphs = content.split('\n\n').filter(p => p.trim().length > 0);
+  const lastParagraphs = lastContent.split('\n\n').filter(p => p.trim().length > 0);
+  
+  // New paragraph detected if count increased and previous paragraph is substantial
+  if (paragraphs.length > lastParagraphs.length && paragraphs.length > 1) {
+    const completedParagraph = paragraphs[paragraphs.length - 2]; // Previous paragraph (completed)
+    if (completedParagraph && completedParagraph.trim().length >= 50) {
+      return {
+        isNewParagraph: true,
+        paragraphContent: completedParagraph.trim(),
+        paragraphNumber: paragraphs.length - 1
+      };
+    }
+  }
+  
+  return { isNewParagraph: false };
+}
+
+// NEW: Generate Automatic Paragraph Feedback
+async function generateParagraphFeedback(
+  paragraphContent: string, 
+  paragraphNumber: number, 
+  textType: string
+): Promise<string> {
+  try {
+    const response = await openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        {
+          role: 'system',
+          content: `You are a friendly writing coach for NSW Selective School students aged 9-11. Provide encouraging, specific feedback about individual paragraphs. Be positive and constructive.`
+        },
+        {
+          role: 'user',
+          content: `The student just completed paragraph ${paragraphNumber} of their ${textType} writing:
+
+"${paragraphContent}"
+
+Provide encouraging, specific feedback about this paragraph. Focus on:
+- What they did well (be specific)
+- One specific suggestion for improvement
+- Keep it under 50 words
+- Be positive and constructive
+- Use simple, age-appropriate language
+
+Start with "Great work on paragraph ${paragraphNumber}!" or similar encouraging phrase.`
+        }
+      ],
+      max_tokens: 100,
+      temperature: 0.7
+    });
+
+    return response.choices[0]?.message?.content || `Great work on paragraph ${paragraphNumber}! Keep writing - you're doing well!`;
+  } catch (error) {
+    console.error('Error generating paragraph feedback:', error);
+    return `Nice work on paragraph ${paragraphNumber}! Your writing is developing well. Keep it up!`;
+  }
+}
+
+// AI Writing Analysis Functions (keeping existing ones)
 async function checkSpellingAI(text: string): Promise<WritingIssue[]> {
   try {
     const response = await openai.chat.completions.create({
@@ -506,13 +592,6 @@ Return empty array [] if no issues found.`
   }
 }
 
-interface ChatMessage {
-  id: string;
-  text: string;
-  sender: 'user' | 'ai';
-  timestamp: Date;
-}
-
 export function WritingArea({ 
   content,
   onChange,
@@ -569,6 +648,12 @@ export function WritingArea({
   const [chatInput, setChatInput] = useState('');
   const [isChatLoading, setIsChatLoading] = useState(false);
   
+  // NEW: Automatic feedback state
+  const [lastContent, setLastContent] = useState('');
+  const [paragraphFeedbacks, setParagraphFeedbacks] = useState<ParagraphFeedback[]>([]);
+  const [isGeneratingAutoFeedback, setIsGeneratingAutoFeedback] = useState(false);
+  const [paragraphCompletionTimer, setParagraphCompletionTimer] = useState<NodeJS.Timeout | null>(null);
+  
   // Synonyms state
   const [showSynonyms, setShowSynonyms] = useState(false);
   const [synonyms, setSynonyms] = useState<string[]>([]);
@@ -599,6 +684,86 @@ export function WritingArea({
     paragraph: writingIssues.filter(issue => issue.type === 'paragraph').length,
     total: writingIssues.length
   };
+
+  // NEW: Automatic Paragraph Feedback Handler
+  const handleAutomaticFeedback = async (paragraphContent: string, paragraphNumber: number) => {
+    // Check if we already have feedback for this paragraph
+    const existingFeedback = paragraphFeedbacks.find(
+      pf => pf.paragraphNumber === paragraphNumber && pf.content === paragraphContent
+    );
+    
+    if (existingFeedback) {
+      return; // Don't generate duplicate feedback
+    }
+
+    setIsGeneratingAutoFeedback(true);
+    
+    try {
+      const feedback = await generateParagraphFeedback(paragraphContent, paragraphNumber, textType);
+      
+      // Create automatic feedback message
+      const autoMessage: ChatMessage = {
+        id: `auto-${Date.now()}`,
+        text: feedback,
+        sender: 'ai',
+        timestamp: new Date(),
+        isAutomatic: true,
+        paragraphNumber: paragraphNumber,
+        messageType: 'automatic_feedback'
+      };
+      
+      // Add to chat messages
+      setChatMessages(prev => [...prev, autoMessage]);
+      
+      // Track the feedback
+      const paragraphFeedback: ParagraphFeedback = {
+        id: `pf-${Date.now()}`,
+        paragraphNumber,
+        content: paragraphContent,
+        feedback,
+        timestamp: new Date(),
+        isAutomatic: true
+      };
+      
+      setParagraphFeedbacks(prev => [...prev, paragraphFeedback]);
+      
+    } catch (error) {
+      console.error('Error generating automatic feedback:', error);
+    } finally {
+      setIsGeneratingAutoFeedback(false);
+    }
+  };
+
+  // NEW: Paragraph Detection Effect
+  useEffect(() => {
+    // Clear existing timer
+    if (paragraphCompletionTimer) {
+      clearTimeout(paragraphCompletionTimer);
+    }
+
+    // Only check for paragraph completion if content has changed and is substantial
+    if (content !== lastContent && content.trim().length > 50) {
+      const detection = detectParagraphCompletion(content, lastContent);
+      
+      if (detection.isNewParagraph && detection.paragraphContent && detection.paragraphNumber) {
+        // Set a timer to generate feedback after user stops typing (3 seconds)
+        const timer = setTimeout(() => {
+          handleAutomaticFeedback(detection.paragraphContent!, detection.paragraphNumber!);
+        }, 3000);
+        
+        setParagraphCompletionTimer(timer);
+      }
+    }
+    
+    setLastContent(content);
+    
+    // Cleanup timer on unmount
+    return () => {
+      if (paragraphCompletionTimer) {
+        clearTimeout(paragraphCompletionTimer);
+      }
+    };
+  }, [content, lastContent, textType]);
 
   // Auto-save functionality
   useEffect(() => {
@@ -778,7 +943,8 @@ export function WritingArea({
       id: Date.now().toString(),
       text: chatInput.trim(),
       sender: 'user',
-      timestamp: new Date()
+      timestamp: new Date(),
+      messageType: 'manual'
     };
 
     setChatMessages(prev => [...prev, userMessage]);
@@ -810,7 +976,8 @@ Please provide helpful, age-appropriate advice.`
         id: (Date.now() + 1).toString(),
         text: response.choices[0]?.message?.content || 'Sorry, I couldn\'t understand that. Can you try asking in a different way?',
         sender: 'ai',
-        timestamp: new Date()
+        timestamp: new Date(),
+        messageType: 'manual'
       };
 
       setChatMessages(prev => [...prev, aiMessage]);
@@ -820,7 +987,8 @@ Please provide helpful, age-appropriate advice.`
         id: (Date.now() + 1).toString(),
         text: 'Sorry, I\'m having trouble right now. Please try again in a moment!',
         sender: 'ai',
-        timestamp: new Date()
+        timestamp: new Date(),
+        messageType: 'manual'
       };
       setChatMessages(prev => [...prev, errorMessage]);
     } finally {
@@ -936,68 +1104,108 @@ Please provide helpful, age-appropriate advice.`
           </div>
         )}
 
-        {/* Writing Area */}
-        <div className="flex-1 flex flex-col px-3 pb-3">
-          <div className={`${focusMode ? 'bg-gray-800 border-gray-700' : 'bg-white'} rounded-lg shadow-sm flex-1 flex flex-col overflow-hidden transition-colors duration-300`}>
-            {/* Writing Area Header */}
-            <div className={`px-3 py-2 ${focusMode ? 'border-gray-700' : 'border-gray-200'} border-b flex items-center justify-between`}>
-              <h3 className={`text-sm font-medium ${focusMode ? 'text-gray-200' : 'text-gray-900'}`}>Your Writing</h3>
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => setShowKidPlanningModal(true)}
-                  className="flex items-center px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition-colors"
-                >
-                  <Sparkles className="w-3 h-3 mr-1" />
-                  Planning Phase
-                </button>
-                <button
-                  onClick={startExamMode}
-                  disabled={examMode}
-                  className="flex items-center px-2 py-1 bg-purple-500 text-white text-xs rounded hover:bg-purple-600 transition-colors disabled:opacity-50"
-                >
-                  <Clock className="w-3 h-3 mr-1" />
-                  {examMode ? 'Exam Active' : 'Start Exam Mode'}
-                </button>
-                <button
-                  onClick={() => setShowStructureGuide(true)}
-                  className="flex items-center px-2 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600 transition-colors"
-                >
-                  <BookOpen className="w-3 h-3 mr-1" />
-                  Structure Guide
-                </button>
-                <button
-                  onClick={() => setShowWritingTips(!showWritingTips)}
-                  className="flex items-center px-2 py-1 bg-yellow-500 text-white text-xs rounded hover:bg-yellow-600 transition-colors"
-                >
-                  <Lightbulb className="w-3 h-3 mr-1" />
-                  Tips
-                </button>
-                <button
-                  onClick={() => setFocusMode(!focusMode)}
-                  className="flex items-center px-2 py-1 bg-gray-500 text-white text-xs rounded hover:bg-gray-600 transition-colors"
-                >
-                  <Eye className="w-3 h-3 mr-1" />
-                  Focus
-                </button>
-              </div>
+        {/* Toolbar */}
+        <div className={`flex items-center justify-between px-3 py-2 ${focusMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'} border-b transition-colors duration-300`}>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setShowKidPlanningModal(true)}
+              className={`flex items-center px-3 py-1 text-xs rounded transition-colors ${
+                focusMode 
+                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
+                  : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+              }`}
+            >
+              <Target className="w-3 h-3 mr-1" />
+              Planning Phase
+            </button>
+            
+            <button
+              onClick={startExamMode}
+              className={`flex items-center px-3 py-1 text-xs rounded transition-colors ${
+                examMode 
+                  ? 'bg-red-500 text-white' 
+                  : focusMode 
+                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
+                    : 'bg-green-100 text-green-700 hover:bg-green-200'
+              }`}
+            >
+              <Timer className="w-3 h-3 mr-1" />
+              {examMode ? `Exam Mode: ${formatTime(examTimeLeft)}` : 'Start Exam Mode'}
+            </button>
+            
+            <button
+              onClick={() => setShowStructureGuide(!showStructureGuide)}
+              className={`flex items-center px-3 py-1 text-xs rounded transition-colors ${
+                focusMode 
+                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
+                  : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+              }`}
+            >
+              <BookOpen className="w-3 h-3 mr-1" />
+              Structure Guide
+            </button>
+            
+            <button
+              onClick={() => setShowWritingTips(!showWritingTips)}
+              className={`flex items-center px-3 py-1 text-xs rounded transition-colors ${
+                focusMode 
+                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
+                  : 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200'
+              }`}
+            >
+              <Lightbulb className="w-3 h-3 mr-1" />
+              Tips
+            </button>
+            
+            <button
+              onClick={() => setFocusMode(!focusMode)}
+              className={`flex items-center px-3 py-1 text-xs rounded transition-colors ${
+                focusMode 
+                  ? 'bg-orange-500 text-white hover:bg-orange-600' 
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {focusMode ? <EyeOff className="w-3 h-3 mr-1" /> : <Eye className="w-3 h-3 mr-1" />}
+              Focus
+            </button>
+          </div>
+          
+          <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1">
+              <button
+                onClick={() => setFontSize(Math.max(10, fontSize - 1))}
+                className={`p-1 rounded ${focusMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-800'}`}
+              >
+                <Minus className="w-3 h-3" />
+              </button>
+              <span className={`text-xs ${focusMode ? 'text-gray-300' : 'text-gray-600'}`}>{fontSize}px</span>
+              <button
+                onClick={() => setFontSize(Math.min(24, fontSize + 1))}
+                className={`p-1 rounded ${focusMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-800'}`}
+              >
+                <Plus className="w-3 h-3" />
+              </button>
             </div>
+          </div>
+        </div>
 
-            {/* Text Area */}
-            <div className="flex-1 relative">
+        {/* Main Writing Area */}
+        <div className="flex-1 flex flex-col">
+          <div className="flex-1 p-3">
+            <div className={`h-full ${focusMode ? 'bg-gray-900' : 'bg-white'} rounded-lg shadow-sm border ${focusMode ? 'border-gray-700' : 'border-gray-200'} transition-colors duration-300`}>
               <textarea
                 ref={textareaRef}
                 value={content}
                 onChange={handleContentChange}
-                onMouseUp={handleTextSelection}
-                onKeyUp={handleTextSelection}
+                onSelect={handleTextSelection}
                 placeholder="Start writing your amazing story here! Let your creativity flow and bring your ideas to life..."
-                className={`w-full h-full p-4 text-sm leading-relaxed ${
+                className={`w-full h-full p-4 resize-none border-none outline-none rounded-lg transition-colors duration-300 ${
                   focusMode 
-                    ? 'text-gray-100 bg-gray-800 placeholder-gray-500' 
-                    : 'text-gray-900 bg-white placeholder-gray-400'
-                } focus:outline-none resize-none transition-colors duration-300`}
-                style={{ 
-                  fontSize: `${fontSize}px`, 
+                    ? 'bg-gray-900 text-gray-100 placeholder-gray-500' 
+                    : 'bg-white text-gray-900 placeholder-gray-400'
+                }`}
+                style={{
+                  fontSize: fontSize,
                   lineHeight: lineHeight,
                   fontFamily: 'Georgia, serif'
                 }}
@@ -1034,6 +1242,13 @@ Please provide helpful, age-appropriate advice.`
                   <AlertCircle className="w-3 h-3" />
                   <span>{issueCounts.total} issues</span>
                 </div>
+                {/* NEW: Auto Feedback Indicator */}
+                {isGeneratingAutoFeedback && (
+                  <div className="flex items-center space-x-1 text-purple-500">
+                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-purple-500"></div>
+                    <span>Generating feedback...</span>
+                  </div>
+                )}
               </div>
               
               <button
@@ -1120,14 +1335,28 @@ Please provide helpful, age-appropriate advice.`
                         "Help me with my conclusion"
                       </p>
                     </div>
+                    {/* NEW: Auto feedback info */}
+                    <div className="mt-4 p-2 bg-indigo-800 rounded text-xs">
+                      <p className="text-purple-300">✨ I'll automatically give you feedback as you complete each paragraph!</p>
+                    </div>
                   </div>
                 )}
                 {chatMessages.map((message) => (
                   <div key={message.id} className={`mb-3 ${message.sender === 'user' ? 'text-right' : 'text-left'}`}>
+                    {/* NEW: Show automatic feedback indicator */}
+                    {message.isAutomatic && (
+                      <div className="text-center mb-1">
+                        <span className="text-xs text-purple-300 bg-purple-800 px-2 py-1 rounded-full">
+                          ✨ Auto Feedback - Paragraph {message.paragraphNumber}
+                        </span>
+                      </div>
+                    )}
                     <div className={`inline-block p-2 rounded-lg text-xs max-w-[90%] leading-relaxed ${
                       message.sender === 'user' 
                         ? 'bg-blue-500 text-white' 
-                        : 'bg-white text-gray-800 shadow-sm'
+                        : message.isAutomatic
+                          ? 'bg-purple-100 text-purple-900 shadow-sm border border-purple-200'
+                          : 'bg-white text-gray-800 shadow-sm'
                     }`}>
                       {message.text.split('\n').map((line, index) => (
                         <div key={index}>{line}</div>
@@ -1318,30 +1547,30 @@ Please provide helpful, age-appropriate advice.`
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-indigo-300">Issues Fixed:</span>
-                    <span className="text-white font-medium">0</span>
+                    <span className="text-indigo-300">Paragraphs:</span>
+                    <span className="text-white font-medium">{content.split('\n\n').filter(p => p.trim().length > 0).length}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-indigo-300">Auto Feedback:</span>
+                    <span className="text-purple-300 font-medium">{paragraphFeedbacks.length}</span>
                   </div>
                 </div>
               </div>
               
-              <div className="bg-indigo-700 rounded-lg p-3">
-                <h4 className="text-xs font-medium text-indigo-200 mb-2">Writing Goals</h4>
-                <div className="space-y-2 text-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="text-indigo-300">Daily Word Goal:</span>
-                    <span className="text-white font-medium">200 words</span>
+              {/* NEW: Paragraph feedback history */}
+              {paragraphFeedbacks.length > 0 && (
+                <div className="bg-indigo-700 rounded-lg p-3">
+                  <h4 className="text-xs font-medium text-indigo-200 mb-2">Feedback History</h4>
+                  <div className="space-y-2 max-h-32 overflow-y-auto">
+                    {paragraphFeedbacks.slice(-3).map((pf) => (
+                      <div key={pf.id} className="text-xs">
+                        <p className="text-purple-300">Paragraph {pf.paragraphNumber}:</p>
+                        <p className="text-indigo-300 ml-2 truncate">{pf.feedback.substring(0, 50)}...</p>
+                      </div>
+                    ))}
                   </div>
-                  <div className="w-full bg-indigo-800 rounded-full h-2">
-                    <div 
-                      className="bg-yellow-400 h-2 rounded-full transition-all duration-300" 
-                      style={{ width: `${Math.min(100, (wordCount / 200) * 100)}%` }}
-                    ></div>
-                  </div>
-                  <p className="text-indigo-300 text-center">
-                    {wordCount >= 200 ? '🎉 Goal achieved!' : `${Math.max(0, 200 - wordCount)} words to go`}
-                  </p>
                 </div>
-              </div>
+              )}
             </div>
           )}
         </div>
@@ -1349,43 +1578,44 @@ Please provide helpful, age-appropriate advice.`
 
       {/* Kid Planning Modal */}
       {showKidPlanningModal && (
-        <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96 max-h-[80vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-900">Story Planning</h2>
+              <h3 className="text-lg font-bold text-gray-800">Story Planning Helper</h3>
               <button
                 onClick={() => setShowKidPlanningModal(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="text-gray-500 hover:text-gray-700"
               >
-                <X className="w-6 h-6" />
+                <X className="w-5 h-5" />
               </button>
             </div>
             
             <div className="mb-4">
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium text-gray-700">Step {planningStep} of 6</span>
+              <div className="flex items-center mb-2">
                 <div className="flex space-x-1">
                   {[1, 2, 3, 4, 5, 6].map((step) => (
                     <div
                       key={step}
-                      className={`w-2 h-2 rounded-full ${
+                      className={`w-3 h-3 rounded-full ${
                         step <= planningStep ? 'bg-blue-500' : 'bg-gray-300'
                       }`}
                     />
                   ))}
                 </div>
+                <span className="ml-2 text-sm text-gray-600">Step {planningStep} of 6</span>
               </div>
             </div>
 
             <div className="space-y-4">
               {planningStep === 1 && (
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">Who is your main character?</h3>
+                  <h4 className="text-md font-semibold text-gray-800 mb-2">Who is your main character?</h4>
+                  <p className="text-sm text-gray-600 mb-3">Think about who your story is about. What's their name? How old are they?</p>
                   <input
                     type="text"
                     value={kidPlanningData.character}
                     onChange={(e) => updateKidPlanningData('character', e.target.value)}
-                    placeholder="e.g., A brave young girl named Sarah"
+                    placeholder="e.g., Emma, a curious 10-year-old girl"
                     className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -1393,12 +1623,13 @@ Please provide helpful, age-appropriate advice.`
 
               {planningStep === 2 && (
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">Where does your story take place?</h3>
+                  <h4 className="text-md font-semibold text-gray-800 mb-2">Where does your story happen?</h4>
+                  <p className="text-sm text-gray-600 mb-3">Describe the place where your story takes place.</p>
                   <input
                     type="text"
                     value={kidPlanningData.setting}
                     onChange={(e) => updateKidPlanningData('setting', e.target.value)}
-                    placeholder="e.g., A magical forest, a busy city, a school"
+                    placeholder="e.g., an old attic in her grandmother's house"
                     className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -1406,12 +1637,13 @@ Please provide helpful, age-appropriate advice.`
 
               {planningStep === 3 && (
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">What problem does your character face?</h3>
+                  <h4 className="text-md font-semibold text-gray-800 mb-2">What problem does your character face?</h4>
+                  <p className="text-sm text-gray-600 mb-3">Every good story has a problem or challenge to solve.</p>
                   <input
                     type="text"
                     value={kidPlanningData.problem}
                     onChange={(e) => updateKidPlanningData('problem', e.target.value)}
-                    placeholder="e.g., Gets lost, loses something important, faces a challenge"
+                    placeholder="e.g., she finds a mysterious locked box"
                     className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -1419,24 +1651,26 @@ Please provide helpful, age-appropriate advice.`
 
               {planningStep === 4 && (
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">What exciting things happen?</h3>
+                  <h4 className="text-md font-semibold text-gray-800 mb-2">What happens in your story?</h4>
+                  <p className="text-sm text-gray-600 mb-3">Describe the main events that happen.</p>
                   <textarea
                     value={kidPlanningData.events}
                     onChange={(e) => updateKidPlanningData('events', e.target.value)}
-                    placeholder="e.g., Meets helpful friends, discovers clues, faces obstacles"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 h-20"
+                    placeholder="e.g., she searches for the key, asks her grandmother about it, discovers family secrets"
+                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 h-24 resize-none"
                   />
                 </div>
               )}
 
               {planningStep === 5 && (
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">How is the problem solved?</h3>
+                  <h4 className="text-md font-semibold text-gray-800 mb-2">How is the problem solved?</h4>
+                  <p className="text-sm text-gray-600 mb-3">How does your character solve the problem or challenge?</p>
                   <input
                     type="text"
                     value={kidPlanningData.solution}
                     onChange={(e) => updateKidPlanningData('solution', e.target.value)}
-                    placeholder="e.g., Uses creativity, gets help from friends, learns something new"
+                    placeholder="e.g., she finds the key and discovers old family photos"
                     className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -1444,12 +1678,13 @@ Please provide helpful, age-appropriate advice.`
 
               {planningStep === 6 && (
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">How does your character feel at the end?</h3>
+                  <h4 className="text-md font-semibold text-gray-800 mb-2">How does your character feel?</h4>
+                  <p className="text-sm text-gray-600 mb-3">What emotions does your character experience throughout the story?</p>
                   <input
                     type="text"
                     value={kidPlanningData.feelings}
                     onChange={(e) => updateKidPlanningData('feelings', e.target.value)}
-                    placeholder="e.g., Happy, proud, excited, relieved"
+                    placeholder="e.g., curious, excited, surprised, happy"
                     className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -1460,110 +1695,17 @@ Please provide helpful, age-appropriate advice.`
               <button
                 onClick={handleKidPlanningPrev}
                 disabled={planningStep === 1}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 disabled:opacity-50"
+                className="px-4 py-2 text-sm bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                ← Back
+                Previous
               </button>
-              
               <button
                 onClick={handleKidPlanningNext}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                className="px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600"
               >
-                {planningStep === 6 ? 'Finish Plan! 🎉' : 'Next →'}
+                {planningStep === 6 ? 'Finish Planning' : 'Next'}
               </button>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Structure Guide Modal */}
-      {showStructureGuide && (
-        <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto relative">
-            <button
-              onClick={() => setShowStructureGuide(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-            >
-              <X className="w-6 h-6" />
-            </button>
-            
-            <div className="pr-8">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-                {textType.charAt(0).toUpperCase() + textType.slice(1)} Writing Structure
-              </h2>
-              
-              {/* Narrative Structure */}
-              {(textType.toLowerCase() === 'narrative' || textType.toLowerCase() === 'story') && (
-                <div className="space-y-4">
-                  <div className="bg-blue-50 dark:bg-blue-900/30 p-4 rounded-lg">
-                    <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-300 mb-2">Narrative Story Structure</h3>
-                    <p className="text-blue-700 dark:text-blue-400 mb-3">A narrative tells a story with characters, setting, and events:</p>
-                    
-                    <div className="space-y-3">
-                      <div className="border-l-4 border-blue-500 pl-3">
-                        <h4 className="font-semibold text-gray-800 dark:text-gray-200">1. Beginning (Introduction)</h4>
-                        <p className="text-gray-600 dark:text-gray-400 text-sm">• Introduce your main character<br/>• Describe the setting (where and when)<br/>• Start with an exciting hook to grab attention</p>
-                      </div>
-                      
-                      <div className="border-l-4 border-green-500 pl-3">
-                        <h4 className="font-semibold text-gray-800 dark:text-gray-200">2. Middle (Problem & Events)</h4>
-                        <p className="text-gray-600 dark:text-gray-400 text-sm">• Present the main problem or challenge<br/>• Show what the character does to solve it<br/>• Include exciting events and dialogue</p>
-                      </div>
-                      
-                      <div className="border-l-4 border-purple-500 pl-3">
-                        <h4 className="font-semibold text-gray-800 dark:text-gray-200">3. End (Solution)</h4>
-                        <p className="text-gray-600 dark:text-gray-400 text-sm">• Show how the problem is solved<br/>• Describe how characters feel<br/>• End with a satisfying conclusion</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Synonyms Popup */}
-      {showSynonyms && selectedText && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-4 max-w-sm w-full mx-4">
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-semibold">AI Synonyms for "{selectedText}"</h3>
-              <button
-                onClick={() => setShowSynonyms(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            {isLoadingSynonyms ? (
-              <div className="text-center py-4">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto"></div>
-                <p className="text-sm text-gray-600 mt-2">AI generating synonyms...</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {synonyms.map((synonym, index) => (
-                  <button
-                    key={index}
-                    className="block w-full text-left px-3 py-2 hover:bg-gray-100 rounded"
-                    onClick={() => {
-                      // Replace selected text with synonym
-                      const textarea = textareaRef.current;
-                      if (textarea) {
-                        const start = textarea.selectionStart;
-                        const end = textarea.selectionEnd;
-                        const newContent = content.substring(0, start) + synonym + content.substring(end);
-                        onChange(newContent);
-                        setShowSynonyms(false);
-                      }
-                    }}
-                  >
-                    {synonym}
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
         </div>
       )}
