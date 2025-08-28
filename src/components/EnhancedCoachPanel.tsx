@@ -507,12 +507,13 @@ export const EnhancedCoachPanel: React.FC<EnhancedCoachPanelProps> = ({
     setIsProcessing(true);
     
     try {
-      // Analyze in    const { type, confidence, suggestedOperations } = InputAnalyzer.analyzeInput(currentInput, {
-      writingStage: contextSummary.currentStage,
-      wordCount: contextSummary.wordCount,
-      conversationHistory: messages,
-      textType: textType,
-    });
+      // Analyze input
+      const analysis = InputAnalyzer.analyzeInput(currentInput, {
+        writingStage: contextSummary.currentStage,
+        wordCount: contextSummary.wordCount,
+        conversationHistory: messages,
+        textType: textType,
+      });
       
       // Update user message with metadata
       userMessage.metadata = {
