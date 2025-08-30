@@ -7,11 +7,9 @@ import type { User } from '@supabase/supabase-js';
 // Define the AuthContext interface
 interface AuthContextType {
   user: User | null;
-  isLoading: boolean;
   loading: boolean;
   emailVerified: boolean;
   paymentCompleted: boolean;
-  isAdmin: boolean;
   authSignIn: (email: string, password: string) => Promise<{ data: any; error: any }>;
   authSignUp: (email: string, password: string) => Promise<{ data: any; error: any }>;
   authSignOut: () => Promise<void>;
@@ -23,11 +21,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [loading, setLoading] = useState(true);
   const [emailVerified, setEmailVerified] = useState(false);
   const [paymentCompleted, setPaymentCompleted] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
 
   // IMPROVED: Helper function to create user profile with proper schema
   const ensureUserProfile = async (user: User) => {
@@ -252,13 +248,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } catch (profileError) {
           console.error('Error checking payment status:', profileError);
           setPaymentCompleted(false);
-        setIsLoading(false);
         }
       } else {
         setEmailVerified(false);
         setPaymentCompleted(false);
-        setIsAdmin(false);
-        setIsLoading(false);
       }
     } catch (error) {
       console.error('Error in checkUserAndStatus:', error);
@@ -274,7 +267,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     checkUserAndStatus();
 
     const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsLoading(false);
       console.log('Auth state change:', _event);
       checkUserAndStatus();
     });
@@ -369,11 +361,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const value: AuthContextType = {
     user,
-    isLoading,
     loading,
     emailVerified,
     paymentCompleted,
-    isAdmin,
     authSignIn,
     authSignUp,
     authSignOut,
