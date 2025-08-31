@@ -378,4 +378,3 @@ export function NavBar({
     </nav>
   );
 }
-
