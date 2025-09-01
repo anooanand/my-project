@@ -439,7 +439,7 @@ Return empty array [] if no issues found.`
   }
 }
 
-// Main AI Writing Checker
+// Main AI Writing Checker.
 async function checkAllWritingAI(text: string, enabledChecks: any): Promise<WritingIssue[]> {
   if (!text.trim()) {
     return [];
