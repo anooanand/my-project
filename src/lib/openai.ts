@@ -244,7 +244,7 @@ function getFallbackSynonyms(word: string): string[] {
 }
 
 // Make sure you have the makeOpenAICall function - add this if it doesn't exist
-async function makeOpenAICall(systemPrompt: string, userPrompt: string, maxTokens: number = 200): Promise<string> {
+export async function makeOpenAICall(systemPrompt: string, userPrompt: string, maxTokens: number = 200): Promise<string> {
   const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
   const apiBase = import.meta.env.VITE_OPENAI_API_BASE || 'https://api.openai.com/v1';
   
@@ -413,4 +413,107 @@ export async function getContextualSuggestions(content: string, textType: string
       "Develop your character's emotions and motivations"
     ];
   }
+}
+
+
+// Get vocabulary suggestions for specific text types
+export async function getTextTypeVocabulary(textType: string): Promise<string[]> {
+  const systemPrompt = `You are a vocabulary assistant for NSW Selective School writing. Provide 10 sophisticated vocabulary words that are particularly useful for ${textType} writing.`;
+  
+  const userPrompt = `Provide 10 advanced vocabulary words that would enhance ${textType} writing, suitable for NSW Selective level students.`;
+  
+  try {
+    const response = await makeOpenAICall(systemPrompt, userPrompt, 200);
+    // Parse response into array
+    const words = response.split(/[,\n]/)
+      .map(word => word.trim().replace(/^\d+\.?\s*/, ''))
+      .filter(word => word.length > 0)
+      .slice(0, 10);
+    
+    return words.length > 0 ? words : getFallbackVocabulary(textType);
+  } catch (error) {
+    console.error('Error getting text type vocabulary:', error);
+    return getFallbackVocabulary(textType);
+  }
+}
+
+// Fallback vocabulary for different text types
+function getFallbackVocabulary(textType: string): string[] {
+  const vocabularyMap = {
+    narrative: ['captivating', 'mesmerizing', 'extraordinary', 'bewildering', 'exhilarating', 'profound', 'mysterious', 'enchanting', 'compelling', 'remarkable'],
+    persuasive: ['compelling', 'convincing', 'substantial', 'irrefutable', 'paramount', 'crucial', 'imperative', 'undeniable', 'significant', 'essential'],
+    expository: ['comprehensive', 'systematic', 'analytical', 'methodical', 'thorough', 'precise', 'detailed', 'extensive', 'fundamental', 'intricate'],
+    descriptive: ['vivid', 'picturesque', 'breathtaking', 'magnificent', 'splendid', 'radiant', 'serene', 'majestic', 'pristine', 'luminous'],
+    creative: ['innovative', 'imaginative', 'ingenious', 'inventive', 'original', 'visionary', 'artistic', 'inspired', 'unique', 'brilliant']
+  };
+  
+  return vocabularyMap[textType.toLowerCase()] || vocabularyMap.narrative;
+}
+
+
+// Identify common mistakes in writing
+export async function identifyCommonMistakes(content: string, textType: string): Promise<any[]> {
+  if (!content.trim()) {
+    return [];
+  }
+
+  const systemPrompt = `You are a writing teacher specializing in identifying common mistakes in ${textType} writing for NSW Selective School students. Analyze the text and identify specific errors and areas for improvement.`;
+  
+  const userPrompt = `Analyze this ${textType} writing and identify common mistakes:\n\n${content}\n\nReturn a JSON array of mistakes with this format:\n[{"type": "grammar|spelling|punctuation|vocabulary|structure", "issue": "description", "suggestion": "how to fix it", "location": "text snippet"}]`;
+  
+  try {
+    const response = await makeOpenAICall(systemPrompt, userPrompt, 300);
+    const mistakes = JSON.parse(response);
+    return Array.isArray(mistakes) ? mistakes : [];
+  } catch (error) {
+    console.error('Error identifying mistakes:', error);
+    return getFallbackMistakes(content);
+  }
+}
+
+// Fallback mistake identification
+function getFallbackMistakes(content: string): any[] {
+  const mistakes = [];
+  
+  // Check for basic issues
+  if (content.length < 50) {
+    mistakes.push({
+      type: 'structure',
+      issue: 'Content is too short',
+      suggestion: 'Develop your ideas with more details and examples',
+      location: 'Overall content'
+    });
+  }
+  
+  if (!content.trim().endsWith('.') && !content.trim().endsWith('!') && !content.trim().endsWith('?')) {
+    mistakes.push({
+      type: 'punctuation',
+      issue: 'Missing ending punctuation',
+      suggestion: 'End your writing with appropriate punctuation',
+      location: 'End of text'
+    });
+  }
+  
+  // Check for repeated words
+  const words = content.toLowerCase().split(/\s+/);
+  const wordCount = {};
+  const basicWords = ['good', 'bad', 'nice', 'said', 'went'];
+  
+  words.forEach(word => {
+    const cleanWord = word.replace(/[^\w]/g, '');
+    if (cleanWord.length > 0) {
+      wordCount[cleanWord] = (wordCount[cleanWord] || 0) + 1;
+      
+      if (basicWords.includes(cleanWord)) {
+        mistakes.push({
+          type: 'vocabulary',
+          issue: `Basic word "${cleanWord}" could be improved`,
+          suggestion: 'Use more sophisticated vocabulary',
+          location: `Word: ${cleanWord}`
+        });
+      }
+    }
+  });
+  
+  return mistakes.slice(0, 5); // Limit to 5 mistakes
 }
