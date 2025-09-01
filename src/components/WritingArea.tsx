@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Save, Download, Upload, Eye, EyeOff, RotateCcw, Sparkles, BookOpen, Target, TrendingUp, Award, CheckCircle, AlertCircle, Star, Lightbulb, MessageSquare, BarChart3, Clock, Zap, Heart, Trophy, Wand2, PenTool, FileText, Settings, RefreshCw, Play, Pause, Volume2, VolumeX, Maximize2, Minimize2, Copy, Check, X, Plus, Minus, ChevronDown, ChevronUp, Info, HelpCircle, Calendar, Users, Globe, Mic, Camera, Image, Link, Hash, Type, AlignLeft, AlignCenter, AlignRight, Bold, Italic, Underline, List, ListOrdered, Quote, Code, Scissors, Clipboard, Search, Filter, SortAsc, SortDesc, Grid, Layout, Sidebar, Menu, MoreHorizontal, MoreVertical, ChevronLeft, ChevronRight, ArrowUp, ArrowDown, ArrowLeft, ArrowRight, Timer, Send, Bot, StopCircle, MapPin, Users2, Smile } from 'lucide-react';
-import { generatePrompt, getSynonyms, rephraseSentence, evaluateEssay, openai } from '../lib/openai';
+import { generatePrompt, getSynonyms, rephraseSentence, evaluateEssay, makeOpenAICall } from '../lib/openai';
 import { WritingStatusBar } from './WritingStatusBar';
 import { StructuredPlanningSection } from './StructuredPlanningSection';
 
@@ -158,39 +158,11 @@ function getBasicSynonyms(word: string): string[] {
 
 // AI Writing Analysis Functions
 async function checkSpellingAI(text: string): Promise<WritingIssue[]> {
-  try {
-    const response = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a spelling checker for NSW Selective School writing tests. Find misspelled words and return their exact positions in the text.'
-        },
-        {
-          role: 'user',
-          content: `Find spelling errors in this text: "${text}"
-
-Return a JSON array with this format:
-[
-  {
-    "word": "exact_misspelled_word_from_text",
-    "suggestions": ["correction1", "correction2"],
-    "message": "Spelling error"
-  }
-]
-
-Only return genuinely misspelled words. Return empty array [] if no errors.`
-        }
-      ],
-      max_tokens: 1000,
-      temperature: 0.1
-    });
-
-    const content = response.choices[0]?.message?.content || '';
-    
-    try {
-      const results = JSON.parse(content);
-      return Array.isArray(results) ? results.map((item: any) => {
+  try    const content = await makeOpenAICall(
+      'You are a spelling checker for NSW Selective School writing tests. Find misspelled words and return their exact positions in the text.',
+      `Find spelling errors in this text: "${text}"\n\nReturn a JSON array with this format:\n[\n  {\n    "word": "exact_misspelled_word_from_text",\n    "suggestions": ["correction1", "correction2"],\n    "message": "Spelling error"\n  }\n]\n\nOnly return genuinely misspelled words. Return empty array [] if no errors.`,
+      1000
+    );return Array.isArray(results) ? results.map((item: any) => {
         const wordToFind = item.word || '';
         const wordStart = text.indexOf(wordToFind);
         
@@ -216,34 +188,6 @@ Only return genuinely misspelled words. Return empty array [] if no errors.`
 
 async function checkGrammarAI(text: string): Promise<WritingIssue[]> {
   try {
-    const response = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a grammar checker for NSW Selective School writing. Find grammar errors and return the exact problematic phrases.'
-        },
-        {
-          role: 'user',
-          content: `Find grammar errors in this text: "${text}"
-
-Return a JSON array with this format:
-[
-  {
-    "word": "exact_problematic_phrase_from_text",
-    "suggestions": ["correction1", "correction2"],
-    "message": "Grammar issue description"
-  }
-]
-
-Return empty array [] if no errors found.`
-        }
-      ],
-      max_tokens: 1000,
-      temperature: 0.1
-    });
-
-    const content = response.choices[0]?.message?.content || '';
     
     try {
       const results = JSON.parse(content);
@@ -944,21 +888,11 @@ export default function WritingArea({ onContentChange, initialContent = '', text
 
     try {
       // Use existing OpenAI integration
-      const response = await openai.chat.completions.create({
-        model: 'gpt-3.5-turbo',
-        messages: [
-          {
-            role: 'system',
-            content: `You are a helpful writing assistant for NSW Selective School students. The student is writing a ${textType} piece.`
-          },
-          {
-            role: 'user',
-            content: `Current text: "${content.substring(0, 200)}..." Student question: ${chatInput}`
-          }
-        ],
-        max_tokens: 200,
-        temperature: 0.7
-      });
+const content = await makeOpenAICall(
+      'You are a spelling checker for NSW Selective School writing tests. Find misspelled words and return their exact positions in the text.',
+      `Find spelling errors in this text: "${text}"\n\nReturn a JSON array with this format:\n[\n  {\n    "word": "exact_misspelled_word_from_text",\n    "suggestions": ["correction1", "correction2"],\n    "message": "Spelling error"\n  }\n]\n\nOnly return genuinely misspelled words. Return empty array [] if no errors.`,
+      1000
+    );
       
       const aiResponse = {
         id: (Date.now() + 1).toString(),
