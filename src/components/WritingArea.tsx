@@ -166,21 +166,21 @@ async function checkSpellingAI(text: string): Promise<WritingIssue[]> {
     );
     const results = JSON.parse(content);
     return Array.isArray(results) ? results.map((item: any) => {
-        const wordToFind = item.word || \'\';
+        const wordToFind = item.word || '';
         const wordStart = text.indexOf(wordToFind);
         
         return {
-          type: \'spelling\' as const,
+          type: 'spelling' as const,
           word: wordToFind,
           start: wordStart !== -1 ? wordStart : 0,
           end: wordStart !== -1 ? wordStart + wordToFind.length : wordToFind.length,
           suggestions: Array.isArray(item.suggestions) ? item.suggestions : [],
-          message: item.message || \'Spelling error\',
-          severity: \'error\' as const
+          message: item.message || 'Spelling error',
+          severity: 'error' as const
         };
       }).filter(issue => issue.start !== -1) : [];
   } catch (error) {
-    console.error(\'Spelling check error:\', error);
+    console.error('Spelling check error:', error);
     return [];
   }
 
@@ -1026,7 +1026,7 @@ const content = await makeOpenAICall(
             <span className={`text-base font-bold ${focusMode ? 'text-gray-200' : 'text-gray-800'}`}>Your Writing Prompt</span>
           </div>
           <p className={`${focusMode ? 'text-gray-300' : 'text-gray-600'} text-sm leading-relaxed`}>
-            {prompt || 'Write an engaging story about a character who discovers something unexpected that changes their life forever. Include vivid descriptions, realistic dialogue, and show the character\'s emotional journey. Make sure your story has a clear beginning, middle, and end with a satisfying conclusion. Focus on showing rather than telling, and use sensory details to bring your story to life.'}
+           {prompt || 'Write an engaging story about a character who discovers something unexpected that changes their life forever. Include vivid descriptions, realistic dialogue, and show the character\'s emotional journey. Make sure your story has a clear beginning, middle, and end with a satisfying conclusion. Focus on showing rather than telling, and use sensory details to bring your story to life.'}
           </p>
         </div>
 
