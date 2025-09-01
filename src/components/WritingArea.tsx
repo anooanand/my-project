@@ -183,6 +183,7 @@ async function checkSpellingAI(text: string): Promise<WritingIssue[]> {
     console.error('Spelling check error:', error);
     return [];
   }
+}
 
 async function checkGrammarAI(text: string): Promise<WritingIssue[]> {
   try {
