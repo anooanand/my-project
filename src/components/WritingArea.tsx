@@ -439,7 +439,7 @@ Return empty array [] if no issues found.`
   }
 }
 
-// Main AI Writing Checker.
+// Main AI Writing Checker
 async function checkAllWritingAI(text: string, enabledChecks: any): Promise<WritingIssue[]> {
   if (!text.trim()) {
     return [];
@@ -582,7 +582,7 @@ Format your response as JSON:
   }
 }
 
-export default function WritingArea({ onContentChange, initialContent = '', textType = 'narrative', prompt: propPrompt, onPromptChange }: WritingAreaProps) {
+export function WritingArea({ onContentChange, initialContent = '', textType = 'narrative', prompt: propPrompt, onPromptChange }: WritingAreaProps) {
   // State management
   const [content, setContent] = useState(initialContent);
   const [prompt, setPrompt] = useState(propPrompt || '');
