@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { SplitScreen } from './SplitScreen';
-import WritingArea from './WritingArea';
+import { WritingArea } from './WritingArea';
 import { FloatingChatWindow } from './FloatingChatWindow';
 import { EnhancedHeader } from './EnhancedHeader';
 import { WritingToolbar } from './WritingToolbar';
