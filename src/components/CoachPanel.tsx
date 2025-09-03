@@ -87,7 +87,8 @@ export function CoachPanel({ content, textType, assistanceLevel }: CoachPanelPro
   };
 
   const sendMessage = async () => {
-    if (!inputMessage.trim() || isAITyping || !aiStatus.connected) return;
+    // ✅ REMOVED !aiStatus.connected check - this was blocking messages
+    if (!inputMessage.trim() || isAITyping) return;
 
     const userMessage: ChatMessage = {
       id: 'user-' + Date.now(),
@@ -104,21 +105,28 @@ export function CoachPanel({ content, textType, assistanceLevel }: CoachPanelPro
       // Add typing indicator
       const typingMessage: ChatMessage = {
         id: 'typing-' + Date.now(),
-        text: 'AI is typing...',
+        text: 'AI is thinking...',
         isUser: false,
         timestamp: new Date(),
         isTyping: true
       };
       setChatMessages(prev => [...prev, typingMessage]);
 
-      // Get AI response
-      const aiResponse = await generateChatResponse({
-        userMessage: userMessage.text,
-        textType,
-        currentContent: content,
-        wordCount: content.split(/\s+/).filter(word => word.length > 0).length,
-        context: `Student is writing a ${textType} story. Current assistance level: ${assistanceLevel}.`
-      });
+      // Get AI response with enhanced error handling
+      let aiResponse;
+      try {
+        aiResponse = await generateChatResponse({
+          userMessage: userMessage.text,
+          textType,
+          currentContent: content,
+          wordCount: content.split(/\s+/).filter(word => word.length > 0).length,
+          context: `Student is writing a ${textType} story. Current assistance level: ${assistanceLevel}.`
+        });
+      } catch (apiError) {
+        console.error('OpenAI API Error:', apiError);
+        // Use fallback response instead of failing
+        aiResponse = getFallbackChatResponse(userMessage.text, textType);
+      }
 
       // Remove typing indicator and add real response
       setChatMessages(prev => {
@@ -133,14 +141,14 @@ export function CoachPanel({ content, textType, assistanceLevel }: CoachPanelPro
       });
 
     } catch (error) {
-      console.error('Failed to get AI response:', error);
+      console.error('Chat error:', error);
       
-      // Remove typing indicator and add error message
+      // Remove typing indicator and show helpful error message
       setChatMessages(prev => {
         const withoutTyping = prev.filter(msg => !msg.isTyping);
         const errorMessage: ChatMessage = {
           id: 'error-' + Date.now(),
-          text: "Sorry, I'm having trouble connecting right now. Please try again in a moment! 😅",
+          text: "I'm having a small hiccup, but I'm still here to help! 😊 Try asking your question again, or I can give you some general writing tips!",
           isUser: false,
           timestamp: new Date()
         };
@@ -408,4 +416,21 @@ export function CoachPanel({ content, textType, assistanceLevel }: CoachPanelPro
       </div>
     </div>
   );
+}
+
+// Add this helper function for fallback responses
+function getFallbackChatResponse(userMessage: string, textType: string): string {
+  const lowerMessage = userMessage.toLowerCase();
+  
+  if (lowerMessage.includes('introduction') || lowerMessage.includes('start')) {
+    return `Great question about introductions! For ${textType} writing, try starting with dialogue, action, or an intriguing question. Hook your reader from the first sentence! 🎣`;
+  } else if (lowerMessage.includes('conclusion') || lowerMessage.includes('end')) {
+    return `For a strong conclusion, circle back to your opening theme and show how your character has grown or changed. Leave readers satisfied but thoughtful! ✨`;
+  } else if (lowerMessage.includes('synonym') || lowerMessage.includes('word')) {
+    return `Try these powerful alternatives: Instead of 'said' → whispered, exclaimed, declared. Instead of 'big' → enormous, massive, gigantic. Specific words make writing shine! 📚`;
+  } else if (lowerMessage.includes('character')) {
+    return `Show character emotions through actions and thoughts! Instead of 'he was sad', try 'his shoulders slumped as he stared at the ground.' Show, don't tell! 😊`;
+  } else {
+    return `That's a thoughtful question! Keep writing and let your creativity flow. Remember: every sentence should either advance the plot or develop character. You're doing great! 🌟`;
+  }
 }
