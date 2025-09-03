@@ -433,4 +433,4 @@ function getFallbackChatResponse(userMessage: string, textType: string): string 
   } else {
     return `That's a thoughtful question! Keep writing and let your creativity flow. Remember: every sentence should either advance the plot or develop character. You're doing great! 🌟`;
   }
-}
+} 
