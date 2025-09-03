@@ -249,6 +249,60 @@ function getFallbackPrompt(textType: string, topic?: string): string {
   return topic ? `${randomPrompt} (Focus on: ${topic})` : randomPrompt;
 }
 
+// Get synonyms for words - MISSING FUNCTION ADDED
+export async function getSynonyms(word: string): Promise<string[]> {
+  const systemPrompt = `You are a vocabulary assistant. Provide 5 sophisticated synonyms for the given word that would be appropriate for NSW Selective level writing.`;
+
+  const userPrompt = `Provide synonyms for: ${word}`;
+
+  try {
+    const response = await makeOpenAICall(systemPrompt, userPrompt, 100);
+    // Parse the response to extract synonyms
+    const synonyms = response.split(/[,\n]/)
+      .map(s => s.trim().replace(/^\d+\.?\s*/, ''))
+      .filter(s => s.length > 0 && s !== word)
+      .slice(0, 5);
+    
+    return synonyms.length > 0 ? synonyms : getFallbackSynonyms(word);
+  } catch (error) {
+    console.error('Error getting synonyms:', error);
+    return getFallbackSynonyms(word);
+  }
+}
+
+// Fallback synonyms for common words
+function getFallbackSynonyms(word: string): string[] {
+  const synonymMap = {
+    'said': ['whispered', 'exclaimed', 'muttered', 'declared', 'announced'],
+    'big': ['enormous', 'massive', 'gigantic', 'colossal', 'immense'],
+    'small': ['tiny', 'miniature', 'petite', 'minuscule', 'compact'],
+    'good': ['excellent', 'outstanding', 'remarkable', 'exceptional', 'superb'],
+    'bad': ['terrible', 'awful', 'dreadful', 'horrible', 'atrocious'],
+    'happy': ['delighted', 'ecstatic', 'joyful', 'elated', 'cheerful'],
+    'sad': ['melancholy', 'sorrowful', 'dejected', 'despondent', 'mournful'],
+    'fast': ['swift', 'rapid', 'speedy', 'quick', 'hasty'],
+    'slow': ['sluggish', 'leisurely', 'gradual', 'unhurried', 'deliberate'],
+    'beautiful': ['gorgeous', 'stunning', 'magnificent', 'breathtaking', 'exquisite']
+  };
+
+  return synonymMap[word.toLowerCase()] || ['sophisticated', 'enhanced', 'improved', 'refined', 'elevated'];
+}
+
+// Rephrase sentences for better vocabulary - MISSING FUNCTION ADDED
+export async function rephraseSentence(sentence: string): Promise<string> {
+  const systemPrompt = `You are a vocabulary enhancement assistant. Rephrase the given sentence to make it more sophisticated and engaging while maintaining the original meaning. Focus on improving word choice and sentence structure.`;
+
+  const userPrompt = `Please rephrase this sentence to make it more sophisticated: "${sentence}"`;
+
+  try {
+    const response = await makeOpenAICall(systemPrompt, userPrompt, 100);
+    return response;
+  } catch (error) {
+    console.error('Error rephrasing sentence:', error);
+    return `Try using more specific verbs and descriptive adjectives in: "${sentence}"`;
+  }
+}
+
 // Evaluate essay content and provide feedback
 export async function evaluateEssay(content: string, textType: string): Promise<string> {
   if (!content.trim()) {
@@ -303,3 +357,250 @@ function getFallbackEvaluation(content: string, textType: string): string {
   
   return feedback;
 }
+
+// Get NSW Selective specific feedback
+export async function getNSWSelectiveFeedback(content: string, textType: string): Promise<string> {
+  const systemPrompt = `You are an NSW Selective School writing examiner. Evaluate this ${textType} writing against NSW Selective criteria:
+
+CRITERIA:
+- Ideas and Content (25%)
+- Structure and Organization (25%) 
+- Language Use and Style (25%)
+- Grammar and Mechanics (25%)
+
+Provide specific feedback aligned with NSW Selective standards and expectations.`;
+
+  const userPrompt = `Evaluate this ${textType} writing sample against NSW Selective criteria:
+
+${content}
+
+Provide detailed feedback with a focus on meeting NSW Selective standards.`;
+
+  try {
+    const response = await makeOpenAICall(systemPrompt, userPrompt, 250);
+    return response;
+  } catch (error) {
+    console.error('Error getting NSW feedback:', error);
+    return `NSW Selective Feedback for your ${textType} writing:
+
+• Focus on developing clear, engaging ideas that capture the reader's attention
+• Ensure your writing has a strong structure with clear beginning, middle, and end
+• Use sophisticated vocabulary and varied sentence structures
+• Check grammar, spelling, and punctuation carefully
+
+Your writing shows promise! Keep practicing to meet NSW Selective standards. 🎯`;
+  }
+}
+
+// Get writing structure guidance
+export async function getWritingStructure(textType: string): Promise<string> {
+  const systemPrompt = `You are a writing teacher specializing in ${textType} writing structure. Provide clear, practical guidance on how to structure a ${textType} piece for NSW Selective exam success.`;
+
+  const userPrompt = `Explain the ideal structure for ${textType} writing, including what should be in each section and how to organize ideas effectively.`;
+
+  try {
+    const response = await makeOpenAICall(systemPrompt, userPrompt, 200);
+    return response;
+  } catch (error) {
+    console.error('Error getting structure guidance:', error);
+    return getFallbackStructure(textType);
+  }
+}
+
+// Fallback structure guidance
+function getFallbackStructure(textType: string): string {
+  const structures = {
+    narrative: `Narrative Structure:
+• Opening: Hook the reader with an engaging start
+• Rising Action: Build tension and develop characters
+• Climax: The turning point or main conflict
+• Falling Action: Resolve the conflict
+• Resolution: Satisfying conclusion that ties everything together`,
+    
+    persuasive: `Persuasive Structure:
+• Introduction: State your position clearly
+• Body Paragraph 1: Strongest argument with evidence
+• Body Paragraph 2: Additional supporting argument
+• Counter-argument: Address opposing views
+• Conclusion: Reinforce your position and call to action`,
+    
+    expository: `Expository Structure:
+• Introduction: Introduce the topic and main idea
+• Body Paragraph 1: First main point with examples
+• Body Paragraph 2: Second main point with examples
+• Body Paragraph 3: Third main point with examples
+• Conclusion: Summarize key points and significance`,
+    
+    descriptive: `Descriptive Structure:
+• Introduction: Set the scene or introduce what you're describing
+• Body: Use spatial, chronological, or importance order
+• Sensory Details: Include sight, sound, smell, touch, taste
+• Conclusion: Leave the reader with a lasting impression`,
+    
+    creative: `Creative Structure:
+• Hook: Start with something intriguing
+• Development: Build your creative concept
+• Climax/Turning Point: Key moment or revelation
+• Resolution: Bring your creative piece to a satisfying end`
+  };
+
+  return structures[textType.toLowerCase()] || structures.narrative;
+}
+
+// Get general writing feedback
+export async function getWritingFeedback(content: string, textType: string): Promise<string> {
+  if (!content.trim()) {
+    return "Start writing and I'll provide helpful feedback as you go! 📝";
+  }
+
+  const systemPrompt = `You are a supportive writing coach for NSW Selective exam preparation. Provide encouraging, specific feedback on this ${textType} writing that helps the student improve.`;
+
+  const userPrompt = `Please provide constructive feedback on this ${textType} writing:
+
+${content}
+
+Focus on what's working well and specific suggestions for improvement.`;
+
+  try {
+    const response = await makeOpenAICall(systemPrompt, userPrompt, 200);
+    return response;
+  } catch (error) {
+    console.error('Error getting writing feedback:', error);
+    return `Great start on your ${textType} writing! Here are some tips:
+• Keep developing your ideas with more specific details
+• Use varied sentence lengths to create rhythm
+• Show emotions through actions and dialogue
+• Check your spelling and grammar
+
+You're on the right track! Keep writing! 🌟`;
+  }
+}
+
+
+// Get vocabulary suggestions for specific text types - MISSING FUNCTION ADDED
+export async function getTextTypeVocabulary(textType: string): Promise<string[]> {
+  const systemPrompt = `You are a vocabulary assistant for NSW Selective School writing. Provide 10 sophisticated vocabulary words that are particularly useful for ${textType} writing.`;
+  
+  const userPrompt = `Provide 10 advanced vocabulary words that would enhance ${textType} writing, suitable for NSW Selective level students.`;
+  
+  try {
+    const response = await makeOpenAICall(systemPrompt, userPrompt, 200);
+    // Parse response into array
+    const words = response.split(/[,\n]/)
+      .map(word => word.trim().replace(/^\d+\.?\s*/, ''))
+      .filter(word => word.length > 0)
+      .slice(0, 10);
+    
+    return words.length > 0 ? words : getFallbackVocabulary(textType);
+  } catch (error) {
+    console.error('Error getting text type vocabulary:', error);
+    return getFallbackVocabulary(textType);
+  }
+}
+
+// Fallback vocabulary for different text types
+function getFallbackVocabulary(textType: string): string[] {
+  const vocabularyMap = {
+    narrative: ['captivating', 'mesmerizing', 'extraordinary', 'bewildering', 'exhilarating', 'profound', 'mysterious', 'enchanting', 'compelling', 'remarkable'],
+    persuasive: ['compelling', 'convincing', 'substantial', 'irrefutable', 'paramount', 'crucial', 'imperative', 'undeniable', 'significant', 'essential'],
+    expository: ['comprehensive', 'systematic', 'analytical', 'methodical', 'thorough', 'precise', 'detailed', 'extensive', 'fundamental', 'intricate'],
+    descriptive: ['vivid', 'picturesque', 'breathtaking', 'magnificent', 'splendid', 'radiant', 'serene', 'majestic', 'pristine', 'luminous'],
+    creative: ['innovative', 'imaginative', 'ingenious', 'inventive', 'original', 'visionary', 'artistic', 'inspired', 'unique', 'brilliant']
+  };
+  
+  return vocabularyMap[textType.toLowerCase()] || vocabularyMap.narrative;
+}
+
+// Identify common mistakes in writing - MISSING FUNCTION ADDED
+export async function identifyCommonMistakes(content: string, textType: string): Promise<any[]> {
+  if (!content.trim()) {
+    return [];
+  }
+
+  const systemPrompt = `You are a writing teacher specializing in identifying common mistakes in ${textType} writing for NSW Selective School students. Analyze the text and identify specific errors and areas for improvement.`;
+  
+  const userPrompt = `Analyze this ${textType} writing and identify common mistakes:
+
+${content}
+
+Return a JSON array of mistakes with this format:
+[{"type": "grammar|spelling|punctuation|vocabulary|structure", "issue": "description", "suggestion": "how to fix it", "location": "text snippet"}]`;
+  
+  try {
+    const response = await makeOpenAICall(systemPrompt, userPrompt, 300);
+    const mistakes = JSON.parse(response);
+    return Array.isArray(mistakes) ? mistakes : [];
+  } catch (error) {
+    console.error('Error identifying mistakes:', error);
+    return getFallbackMistakes(content);
+  }
+}
+
+// Fallback mistake identification
+function getFallbackMistakes(content: string): any[] {
+  const mistakes = [];
+  
+  // Check for basic issues
+  if (content.length < 50) {
+    mistakes.push({
+      type: 'structure',
+      issue: 'Content is too short',
+      suggestion: 'Develop your ideas with more details and examples',
+      location: 'Overall content'
+    });
+  }
+  
+  if (!content.trim().endsWith('.') && !content.trim().endsWith('!') && !content.trim().endsWith('?')) {
+    mistakes.push({
+      type: 'punctuation',
+      issue: 'Missing ending punctuation',
+      suggestion: 'End your writing with appropriate punctuation',
+      location: 'End of text'
+    });
+  }
+  
+  // Check for repeated words
+  const words = content.toLowerCase().split(/\s+/);
+  const basicWords = ['good', 'bad', 'nice', 'said', 'went'];
+  
+  words.forEach(word => {
+    const cleanWord = word.replace(/[^\w]/g, '');
+    if (basicWords.includes(cleanWord)) {
+      mistakes.push({
+        type: 'vocabulary',
+        issue: `Basic word "${cleanWord}" could be improved`,
+        suggestion: 'Use more sophisticated vocabulary',
+        location: `Word: ${cleanWord}`
+      });
+    }
+  });
+  
+  return mistakes.slice(0, 5); // Limit to 5 mistakes
+}
+
+// OpenAI client export for compatibility - MISSING EXPORT ADDED
+export const openai = {
+  chat: {
+    completions: {
+      create: async (params: any) => {
+        const { messages, model, max_tokens } = params;
+        const systemMessage = messages.find((m: any) => m.role === 'system');
+        const userMessage = messages.find((m: any) => m.role === 'user');
+        
+        const response = await makeOpenAICall(
+          systemMessage?.content || 'You are a helpful assistant.',
+          userMessage?.content || '',
+          max_tokens || 200
+        );
+        
+        return {
+          choices: [{
+            message: {
+              content: response
+            }
+          }]
+        };
+      }
+    }
+  }
+};
