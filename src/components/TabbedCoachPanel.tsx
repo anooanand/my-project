@@ -102,6 +102,27 @@ export function TabbedCoachPanel({
     }
   };
 
+  // Enhanced fallback chat responses
+  const getFallbackChatResponse = (userMessage: string, textType: string): string => {
+    const lowerMessage = userMessage.toLowerCase();
+    
+    if (lowerMessage.includes('introduction') || lowerMessage.includes('start') || lowerMessage.includes('beginning')) {
+      return `Great question about introductions! Start with a hook - maybe an intriguing question, exciting action, or mysterious statement. For ${textType} writing, try to grab your reader's attention right from the first sentence! 🎣`;
+    } else if (lowerMessage.includes('conclusion') || lowerMessage.includes('end') || lowerMessage.includes('finish')) {
+      return `For a strong conclusion, circle back to your opening theme and show how your character has grown or changed. Leave readers satisfied but thoughtful! ✨`;
+    } else if (lowerMessage.includes('synonym') || lowerMessage.includes('word') || lowerMessage.includes('vocabulary')) {
+      return `Try these powerful alternatives: Instead of 'said' → whispered, exclaimed, declared. Instead of 'big' → enormous, massive, gigantic. Specific words make writing shine! 📚`;
+    } else if (lowerMessage.includes('character') || lowerMessage.includes('personality')) {
+      return `Show character emotions through actions and thoughts! Instead of 'he was sad', try 'his shoulders slumped as he stared at the ground.' Show, don't tell! 😊`;
+    } else if (lowerMessage.includes('dialogue') || lowerMessage.includes('conversation')) {
+      return `Make dialogue sound natural! Read it aloud - does it sound like how people really talk? Add action beats between speech to show what characters are doing. 💬`;
+    } else if (lowerMessage.includes('description') || lowerMessage.includes('setting')) {
+      return `Use your five senses! Don't just tell us what things look like - what do they sound, smell, feel, or taste like? This brings your world to life! 🌟`;
+    } else {
+      return `That's a thoughtful question! Keep writing and let your creativity flow. Remember: every sentence should either advance the plot or develop character. You're doing great! 🌟`;
+    }
+  };
+
   const sendMessage = async () => {
     if (!inputMessage.trim() || isAITyping) return;
 
@@ -146,39 +167,36 @@ export function TabbedCoachPanel({
       // Remove typing indicator and add real response
       setChatMessages(prev => {
         const withoutTyping = prev.filter(msg => !msg.isTyping);
-        const aiMessage: ChatMessage = {
+        return [...withoutTyping, {
           id: 'ai-' + Date.now(),
           text: aiResponse,
           isUser: false,
           timestamp: new Date()
-        };
-        return [...withoutTyping, aiMessage];
+        }];
       });
 
     } catch (error) {
       console.error('Chat error:', error);
       
-      // Remove typing indicator and show helpful error message
+      // Remove typing indicator and add fallback response
       setChatMessages(prev => {
         const withoutTyping = prev.filter(msg => !msg.isTyping);
-        const errorMessage: ChatMessage = {
-          id: 'error-' + Date.now(),
-          text: "I'm having a small hiccup, but I'm still here to help! 😊 Try asking your question again, or I can give you some general writing tips!",
+        return [...withoutTyping, {
+          id: 'ai-' + Date.now(),
+          text: getFallbackChatResponse(userMessage.text, textType),
           isUser: false,
           timestamp: new Date()
-        };
-        return [...withoutTyping, errorMessage];
+        }];
       });
     } finally {
       setIsAITyping(false);
     }
   };
 
-  const handleQuickQuestion = (question: string) => {
+  const handleQuickQuestion = async (question: string) => {
     setInputMessage(question);
-    setTimeout(() => {
-      sendMessage();
-    }, 100);
+    // Trigger send after setting the message
+    setTimeout(() => sendMessage(), 100);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -188,79 +206,87 @@ export function TabbedCoachPanel({
     }
   };
 
-  // Calculate stats
-  const wordCount = content.split(/\s+/).filter(word => word.length > 0).length;
+  const refreshConnection = () => {
+    checkAIConnection();
+  };
+
+  // Calculate writing statistics
+  const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
   const charCount = content.length;
-  const readingTime = Math.max(1, Math.ceil(wordCount / 200));
-  const qualityScore = Math.min(100, Math.max(0, (wordCount / 5) + (charCount / 20)));
+  const sentenceCount = content.split(/[.!?]+/).filter(s => s.trim().length > 0).length;
+  const paragraphCount = content.split(/\n\s*\n/).filter(p => p.trim().length > 0).length;
+  const readingTime = Math.ceil(wordCount / 200);
+  const gradeLevel = Math.min(12, Math.max(1, Math.round(wordCount / 100 + sentenceCount / 10)));
+
+  const qualityScore = Math.min(100, Math.max(0, 
+    (wordCount > 50 ? 25 : wordCount / 2) +
+    (sentenceCount > 3 ? 25 : sentenceCount * 8) +
+    (paragraphCount > 1 ? 25 : paragraphCount * 25) +
+    (content.includes('"') ? 25 : 0)
+  ));
 
   return (
-    <div className="h-full flex flex-col bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-700 text-white">
+    <div className="h-full bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-700 rounded-lg shadow-lg overflow-hidden">
       {/* Header */}
-      <div className="p-4 border-b border-white/20">
-        <div className="flex items-center justify-between mb-4">
+      <div className="bg-white/10 backdrop-blur-sm p-4 border-b border-white/20">
+        <div className="flex items-center justify-between mb-2">
+          <h2 className="text-white font-semibold">Writing Buddy</h2>
           <div className="flex items-center space-x-2">
-            <Bot className="w-6 h-6" />
-            <h2 className="text-lg font-semibold">Writing Buddy</h2>
-          </div>
-          <div className="flex items-center space-x-2">
-            {aiStatus.connected ? (
-              <div className="flex items-center space-x-1 text-green-300">
-                <Wifi className="w-4 h-4" />
-                <span className="text-xs">AI Connected</span>
-              </div>
+            {aiStatus.loading ? (
+              <Loader className="w-4 h-4 text-white animate-spin" />
             ) : (
-              <div className="flex items-center space-x-1 text-red-300">
-                <WifiOff className="w-4 h-4" />
-                <span className="text-xs">AI Offline</span>
+              <div className="flex items-center space-x-1">
+                {aiStatus.connected ? (
+                  <Wifi className="w-4 h-4 text-green-300" />
+                ) : (
+                  <WifiOff className="w-4 h-4 text-red-300" />
+                )}
+                <span className={`text-xs ${aiStatus.connected ? 'text-green-300' : 'text-red-300'}`}>
+                  {aiStatus.connected ? 'AI Connected' : 'AI Offline'}
+                </span>
+                <button
+                  onClick={refreshConnection}
+                  className="text-white/70 hover:text-white transition-colors"
+                  title="Refresh connection"
+                >
+                  <RefreshCw className="w-3 h-3" />
+                </button>
               </div>
             )}
-            <button
-              onClick={checkAIConnection}
-              disabled={aiStatus.loading}
-              className="p-1 hover:bg-white/10 rounded transition-colors"
-            >
-              <RefreshCw className={`w-4 h-4 ${aiStatus.loading ? 'animate-spin' : ''}`} />
-            </button>
           </div>
         </div>
-        
-        <p className="text-sm text-white/80">Your AI writing assistant</p>
+        <p className="text-white/80 text-sm">Ask your Writing Buddy anything!</p>
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-white/20">
-        {[
-          { id: 'coach', label: 'Coach', icon: MessageSquare },
-          { id: 'analysis', label: 'Analysis', icon: BarChart3 },
-          { id: 'vocabulary', label: 'Vocabulary', icon: BookOpen },
-          { id: 'progress', label: 'Progress', icon: TrendingUp }
-        ].map(({ id, label, icon: Icon }) => (
-          <button
-            key={id}
-            onClick={() => setActiveTab(id as TabType)}
-            className={`flex-1 flex flex-col items-center py-3 px-2 text-xs transition-all duration-200 ${
-              activeTab === id
-                ? 'bg-white/20 text-white border-b-2 border-white'
-                : 'text-white/70 hover:text-white hover:bg-white/10'
-            }`}
-          >
-            <Icon className="w-4 h-4 mb-1" />
-            <span>{label}</span>
-          </button>
-        ))}
+      <div className="bg-white/10 backdrop-blur-sm">
+        <div className="flex">
+          {[
+            { id: 'coach', label: 'Coach', icon: MessageSquare },
+            { id: 'analysis', label: 'Analysis', icon: BarChart3 },
+            { id: 'vocabulary', label: 'Vocabulary', icon: BookOpen },
+            { id: 'progress', label: 'Progress', icon: TrendingUp }
+          ].map(({ id, label, icon: Icon }) => (
+            <button
+              key={id}
+              onClick={() => setActiveTab(id as TabType)}
+              className={`flex-1 flex flex-col items-center py-3 px-2 text-xs transition-all duration-200 ${
+                activeTab === id
+                  ? 'bg-white/20 text-white border-b-2 border-white'
+                  : 'text-white/70 hover:text-white hover:bg-white/10'
+              }`}
+            >
+              <Icon className="w-4 h-4 mb-1" />
+              <span>{label}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Tab Content */}
+      {/* Content */}
       <div className="flex-1 overflow-hidden">
         {activeTab === 'coach' && (
           <div className="h-full flex flex-col">
-            {/* AI Coach Header */}
-            <div className="p-4 bg-white/10 backdrop-blur-sm">
-              <h3 className="font-semibold text-center mb-2">AI Coach</h3>
-              <p className="text-xs text-center text-white/80">Ask your Writing Buddy anything!</p>
-            </div>
-
             {/* Chat Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-3">
               {chatMessages.map((message) => (
@@ -269,22 +295,18 @@ export function TabbedCoachPanel({
                   className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[80%] p-3 rounded-lg text-sm ${
+                    className={`max-w-[80%] p-3 rounded-lg ${
                       message.isUser
-                        ? 'bg-white/20 text-white ml-4'
+                        ? 'bg-white text-gray-800'
                         : message.isTyping
-                        ? 'bg-white/10 text-white/70 italic'
-                        : 'bg-white/30 text-white mr-4'
+                        ? 'bg-white/20 text-white/70 animate-pulse'
+                        : 'bg-white/20 text-white'
                     }`}
                   >
-                    {message.isTyping ? (
-                      <div className="flex items-center space-x-2">
-                        <Loader className="w-3 h-3 animate-spin" />
-                        <span>{message.text}</span>
-                      </div>
-                    ) : (
-                      message.text
-                    )}
+                    <p className="text-sm">{message.text}</p>
+                    <p className="text-xs opacity-70 mt-1">
+                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -293,8 +315,8 @@ export function TabbedCoachPanel({
 
             {/* Quick Questions */}
             {showQuickQuestions && chatMessages.length <= 2 && (
-              <div className="p-4 bg-white/5">
-                <h4 className="text-sm font-medium mb-3">Quick Questions:</h4>
+              <div className="p-4 border-t border-white/20">
+                <p className="text-white/80 text-xs mb-3">Quick questions to get started:</p>
                 <div className="space-y-2">
                   {[
                     "How can I improve my introduction?",
@@ -304,7 +326,7 @@ export function TabbedCoachPanel({
                     <button
                       key={index}
                       onClick={() => handleQuickQuestion(question)}
-                      className="w-full text-left p-2 bg-white/10 hover:bg-white/20 rounded text-xs transition-colors"
+                      className="w-full text-left p-2 bg-white/10 hover:bg-white/20 rounded text-white/90 text-xs transition-colors"
                     >
                       • {question}
                     </button>
@@ -314,7 +336,7 @@ export function TabbedCoachPanel({
             )}
 
             {/* Chat Input */}
-            <div className="p-4 bg-white/10 backdrop-blur-sm">
+            <div className="p-4 border-t border-white/20">
               <div className="flex space-x-2">
                 <input
                   ref={inputRef}
@@ -323,13 +345,13 @@ export function TabbedCoachPanel({
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="Ask for help..."
-                  className="flex-1 bg-white/20 border border-white/30 rounded-lg px-3 py-2 text-white placeholder-white/70 text-sm focus:outline-none focus:ring-2 focus:ring-white/50"
+                  className="flex-1 bg-white/20 text-white placeholder-white/60 px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-white/30"
                   disabled={isAITyping}
                 />
                 <button
                   onClick={sendMessage}
                   disabled={!inputMessage.trim() || isAITyping}
-                  className="bg-white/20 hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed border border-white/30 rounded-lg px-3 py-2 transition-colors"
+                  className="bg-white/20 hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed text-white p-2 rounded-lg transition-colors"
                 >
                   <Send className="w-4 h-4" />
                 </button>
@@ -339,115 +361,165 @@ export function TabbedCoachPanel({
         )}
 
         {activeTab === 'analysis' && (
-          <div className="p-4 space-y-4">
-            <h3 className="font-semibold text-center">Writing Analysis</h3>
-            <div className="space-y-3">
-              <div className="bg-white/10 rounded-lg p-3">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm">Quality Score</span>
-                  <span className="text-sm font-semibold">{Math.round(qualityScore)}%</span>
+          <div className="p-4 space-y-4 overflow-y-auto h-full">
+            <div className="bg-white/10 rounded-lg p-4">
+              <h3 className="text-white font-semibold mb-3 flex items-center">
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Writing Statistics
+              </h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between text-white/90">
+                  <span>Words:</span>
+                  <span>{wordCount}</span>
                 </div>
-                <div className="w-full bg-white/20 rounded-full h-2">
+                <div className="flex justify-between text-white/90">
+                  <span>Sentences:</span>
+                  <span>{sentenceCount}</span>
+                </div>
+                <div className="flex justify-between text-white/90">
+                  <span>Paragraphs:</span>
+                  <span>{paragraphCount}</span>
+                </div>
+                <div className="flex justify-between text-white/90">
+                  <span>Reading Time:</span>
+                  <span>{readingTime} min</span>
+                </div>
+                <div className="flex justify-between text-white/90">
+                  <span>Grade Level:</span>
+                  <span>{gradeLevel}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white/10 rounded-lg p-4">
+              <h3 className="text-white font-semibold mb-3 flex items-center">
+                <Star className="w-4 h-4 mr-2" />
+                Quality Score
+              </h3>
+              <div className="flex items-center space-x-3">
+                <div className="flex-1 bg-white/20 rounded-full h-2">
                   <div
-                    className="bg-gradient-to-r from-green-400 to-blue-500 h-2 rounded-full transition-all duration-500"
+                    className="bg-gradient-to-r from-yellow-400 to-green-400 h-2 rounded-full transition-all duration-500"
                     style={{ width: `${qualityScore}%` }}
                   />
                 </div>
+                <span className="text-white font-semibold">{Math.round(qualityScore)}%</span>
               </div>
-              
-              <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="bg-white/10 rounded p-2 text-center">
-                  <div className="font-semibold">{wordCount}</div>
-                  <div className="text-white/70">Words</div>
-                </div>
-                <div className="bg-white/10 rounded p-2 text-center">
-                  <div className="font-semibold">{charCount}</div>
-                  <div className="text-white/70">Characters</div>
-                </div>
-                <div className="bg-white/10 rounded p-2 text-center">
-                  <div className="font-semibold">{readingTime}</div>
-                  <div className="text-white/70">Min Read</div>
-                </div>
-                <div className="bg-white/10 rounded p-2 text-center">
-                  <div className="font-semibold">0</div>
-                  <div className="text-white/70">Issues</div>
-                </div>
-              </div>
+              <p className="text-white/80 text-xs mt-2">
+                {qualityScore >= 80 ? 'Excellent work!' : 
+                 qualityScore >= 60 ? 'Good progress!' : 
+                 qualityScore >= 40 ? 'Keep writing!' : 
+                 'Just getting started!'}
+              </p>
             </div>
           </div>
         )}
 
         {activeTab === 'vocabulary' && (
-          <div className="p-4 space-y-4">
-            <h3 className="font-semibold text-center">Vocabulary Builder</h3>
-            <div className="space-y-3">
-              <div className="bg-white/10 rounded-lg p-3">
-                <h4 className="text-sm font-medium mb-2">Suggested Words</h4>
-                <div className="space-y-2 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-white/70">Instead of "big":</span>
-                    <span>enormous, massive</span>
+          <div className="p-4 space-y-4 overflow-y-auto h-full">
+            <div className="bg-white/10 rounded-lg p-4">
+              <h3 className="text-white font-semibold mb-3 flex items-center">
+                <BookOpen className="w-4 h-4 mr-2" />
+                Word Suggestions
+              </h3>
+              <div className="space-y-3">
+                <div>
+                  <p className="text-white/90 text-sm font-medium">Instead of "said":</p>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {['whispered', 'exclaimed', 'declared', 'muttered', 'shouted'].map(word => (
+                      <span key={word} className="bg-white/20 text-white/90 px-2 py-1 rounded text-xs">
+                        {word}
+                      </span>
+                    ))}
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-white/70">Instead of "said":</span>
-                    <span>whispered, exclaimed</span>
+                </div>
+                <div>
+                  <p className="text-white/90 text-sm font-medium">Instead of "big":</p>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {['enormous', 'massive', 'gigantic', 'colossal', 'immense'].map(word => (
+                      <span key={word} className="bg-white/20 text-white/90 px-2 py-1 rounded text-xs">
+                        {word}
+                      </span>
+                    ))}
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-white/70">Instead of "good":</span>
-                    <span>excellent, wonderful</span>
+                </div>
+                <div>
+                  <p className="text-white/90 text-sm font-medium">Instead of "good":</p>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {['excellent', 'outstanding', 'remarkable', 'superb', 'fantastic'].map(word => (
+                      <span key={word} className="bg-white/20 text-white/90 px-2 py-1 rounded text-xs">
+                        {word}
+                      </span>
+                    ))}
                   </div>
                 </div>
               </div>
-              
-              <div className="bg-white/10 rounded-lg p-3">
-                <h4 className="text-sm font-medium mb-2">Vocabulary Level</h4>
-                <div className="flex items-center space-x-2">
-                  <div className="flex-1 bg-white/20 rounded-full h-2">
-                    <div className="bg-gradient-to-r from-yellow-400 to-green-500 h-2 rounded-full w-3/4" />
-                  </div>
-                  <span className="text-xs">Advanced</span>
-                </div>
+            </div>
+
+            <div className="bg-white/10 rounded-lg p-4">
+              <h3 className="text-white font-semibold mb-3 flex items-center">
+                <Sparkles className="w-4 h-4 mr-2" />
+                Writing Techniques
+              </h3>
+              <div className="space-y-2 text-sm text-white/90">
+                <p>• Use sensory details (sight, sound, smell, touch, taste)</p>
+                <p>• Show emotions through actions, not just words</p>
+                <p>• Vary your sentence lengths for better flow</p>
+                <p>• Use dialogue to reveal character personality</p>
               </div>
             </div>
           </div>
         )}
 
         {activeTab === 'progress' && (
-          <div className="p-4 space-y-4">
-            <h3 className="font-semibold text-center">Progress Tracking</h3>
-            <div className="space-y-3">
-              <div className="bg-white/10 rounded-lg p-3">
-                <h4 className="text-sm font-medium mb-2">Writing Goals</h4>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span>Word Count Goal</span>
-                    <span>{wordCount}/300</span>
+          <div className="p-4 space-y-4 overflow-y-auto h-full">
+            <div className="bg-white/10 rounded-lg p-4">
+              <h3 className="text-white font-semibold mb-3 flex items-center">
+                <TrendingUp className="w-4 h-4 mr-2" />
+                Writing Progress
+              </h3>
+              <div className="space-y-3">
+                <div>
+                  <div className="flex justify-between text-white/90 text-sm mb-1">
+                    <span>Story Length</span>
+                    <span>{wordCount}/500 words</span>
                   </div>
-                  <div className="w-full bg-white/20 rounded-full h-1">
+                  <div className="bg-white/20 rounded-full h-2">
                     <div
-                      className="bg-green-400 h-1 rounded-full"
-                      style={{ width: `${Math.min(100, (wordCount / 300) * 100)}%` }}
+                      className="bg-gradient-to-r from-blue-400 to-purple-400 h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min(100, (wordCount / 500) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <div className="flex justify-between text-white/90 text-sm mb-1">
+                    <span>Structure</span>
+                    <span>{paragraphCount >= 3 ? 'Complete' : 'In Progress'}</span>
+                  </div>
+                  <div className="bg-white/20 rounded-full h-2">
+                    <div
+                      className="bg-gradient-to-r from-green-400 to-blue-400 h-2 rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min(100, (paragraphCount / 3) * 100)}%` }}
                     />
                   </div>
                 </div>
               </div>
-              
-              <div className="bg-white/10 rounded-lg p-3">
-                <h4 className="text-sm font-medium mb-2">Achievements</h4>
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="text-center">
-                    <Star className="w-6 h-6 mx-auto mb-1 text-yellow-400" />
-                    <div className="text-xs">First Draft</div>
-                  </div>
-                  <div className="text-center opacity-50">
-                    <Trophy className="w-6 h-6 mx-auto mb-1" />
-                    <div className="text-xs">100 Words</div>
-                  </div>
-                  <div className="text-center opacity-50">
-                    <Award className="w-6 h-6 mx-auto mb-1" />
-                    <div className="text-xs">Perfect Score</div>
-                  </div>
-                </div>
+            </div>
+
+            <div className="bg-white/10 rounded-lg p-4">
+              <h3 className="text-white font-semibold mb-3 flex items-center">
+                <Target className="w-4 h-4 mr-2" />
+                Next Steps
+              </h3>
+              <div className="space-y-2 text-sm text-white/90">
+                {wordCount < 100 && <p>• Keep writing to develop your story</p>}
+                {paragraphCount < 3 && <p>• Add more paragraphs for better structure</p>}
+                {!content.includes('"') && <p>• Try adding some dialogue</p>}
+                {sentenceCount < 5 && <p>• Expand with more detailed sentences</p>}
+                {wordCount >= 100 && paragraphCount >= 3 && content.includes('"') && (
+                  <p>• Great work! Consider adding more descriptive details</p>
+                )}
               </div>
             </div>
           </div>
@@ -455,21 +527,4 @@ export function TabbedCoachPanel({
       </div>
     </div>
   );
-}
-
-// Add this helper function for fallback responses
-function getFallbackChatResponse(userMessage: string, textType: string): string {
-  const lowerMessage = userMessage.toLowerCase();
-  
-  if (lowerMessage.includes('introduction') || lowerMessage.includes('start')) {
-    return `Great question about introductions! For ${textType} writing, try starting with dialogue, action, or an intriguing question. Hook your reader from the first sentence! 🎣`;
-  } else if (lowerMessage.includes('conclusion') || lowerMessage.includes('end')) {
-    return `For a strong conclusion, circle back to your opening theme and show how your character has grown or changed. Leave readers satisfied but thoughtful! ✨`;
-  } else if (lowerMessage.includes('synonym') || lowerMessage.includes('word')) {
-    return `Try these powerful alternatives: Instead of 'said' → whispered, exclaimed, declared. Instead of 'big' → enormous, massive, gigantic. Specific words make writing shine! 📚`;
-  } else if (lowerMessage.includes('character')) {
-    return `Show character emotions through actions and thoughts! Instead of 'he was sad', try 'his shoulders slumped as he stared at the ground.' Show, don't tell! 😊`;
-  } else {
-    return `That's a thoughtful question! Keep writing and let your creativity flow. Remember: every sentence should either advance the plot or develop character. You're doing great! 🌟`;
-  }
 }
