@@ -439,7 +439,7 @@ export const WritingArea: React.FC<WritingAreaProps> = ({
         timestamp: new Date(),
         isAutomatic: true,
         paragraphNumber: paragraphNumber,
-        type: 'feedback'
+        type: 'encouragement'
       };
       setChatMessages(prev => [...prev, feedbackMessage]);
       setAiFeedback(prev => ({
@@ -539,7 +539,6 @@ export const WritingArea: React.FC<WritingAreaProps> = ({
         timestamp: new Date(),
         type: 'encouragement'
       };
-      
       setChatMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsChatLoading(false);
