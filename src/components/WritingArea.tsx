@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Send, MessageCircle, BarChart3, BookOpen, TrendingUp, Lightbulb, Play, Pause, Volume2, VolumeX, Settings, RefreshCw, Eye, EyeOff, Maximize2, Minimize2, Timer, Target, Award, Sparkles, Bot, User, CheckCircle, AlertTriangle, Info } from 'lucide-react';
+import { Send, MessageCircle, BarChart3, BookOpen, TrendingUp, Lightbulb, Play, Pause, Volume2, VolumeX, Settings, RefreshCw, Eye, EyeOff, Maximize2, Minimize2, Timer, Target, Award, Sparkles, Bot, User, CheckCircle, AlertTriangle, Info, Minus, Plus } from 'lucide-react';
 
 // Enhanced interfaces for better type safety
 interface WritingAreaProps {
