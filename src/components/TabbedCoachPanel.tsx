@@ -1,10 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { User, RefreshCw, Sparkles, Wand, Star, Bot, MessageSquare, BarChart3, BookOpen, TrendingUp, Wifi, WifiOff } from 'lucide-react';
-import { CoachPanel } from './CoachPanel';
-import { ParaphrasePanel } from './ParaphrasePanel';
-import { checkOpenAIConnectionStatus } from '../lib/openai';
-import './improved-layout.css';
-import './writing-area-fix.css';
+import React, { useState, useEffect, useRef } from 'react';
+import { User, RefreshCw, Sparkles, Wand, Star, Bot, MessageSquare, BarChart3, BookOpen, TrendingUp, Wifi, WifiOff, Send, Loader, ChevronDown, ChevronUp, ThumbsUp, Lightbulb, HelpCircle, Target, AlertCircle, Zap, Gift, Heart, X } from 'lucide-react';
+import { generateChatResponse, checkOpenAIConnectionStatus } from '../lib/openai';
 
 interface TabbedCoachPanelProps {
   content: string;
@@ -22,6 +18,14 @@ interface AIConnectionStatus {
   lastChecked: Date | null;
 }
 
+interface ChatMessage {
+  id: string;
+  text: string;
+  isUser: boolean;
+  timestamp: Date;
+  isTyping?: boolean;
+}
+
 export function TabbedCoachPanel({
   content,
   textType,
@@ -37,6 +41,16 @@ export function TabbedCoachPanel({
     lastChecked: null
   });
 
+  // Chat state
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [inputMessage, setInputMessage] = useState('');
+  const [isAITyping, setIsAITyping] = useState(false);
+  const [showQuickQuestions, setShowQuickQuestions] = useState(true);
+
+  // Refs
+  const chatEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
   // Update local assistance level when prop changes
   useEffect(() => {
     setLocalAssistanceLevel(assistanceLevel);
@@ -51,17 +65,35 @@ export function TabbedCoachPanel({
     return () => clearInterval(interval);
   }, []);
 
+  // Initialize welcome message
+  useEffect(() => {
+    if (chatMessages.length === 0) {
+      setChatMessages([{
+        id: '1',
+        text: "Hi! I'm your AI Writing Buddy! 🤖 I'm here to help you write amazing stories. Ask me anything about writing!",
+        isUser: false,
+        timestamp: new Date()
+      }]);
+    }
+  }, []);
+
+  // Auto-scroll chat to bottom
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages]);
+
   const checkAIConnection = async () => {
     setAIStatus(prev => ({ ...prev, loading: true }));
+    
     try {
-      const connected = await checkOpenAIConnectionStatus();
+      const isConnected = await checkOpenAIConnectionStatus();
       setAIStatus({
-        connected,
+        connected: isConnected,
         loading: false,
         lastChecked: new Date()
       });
     } catch (error) {
-      console.error('Failed to check AI connection:', error);
+      console.error('AI connection check failed:', error);
       setAIStatus({
         connected: false,
         loading: false,
@@ -70,214 +102,275 @@ export function TabbedCoachPanel({
     }
   };
 
-  const tabs = [
-    {
-      id: 'coach' as TabType,
-      label: 'Coach',
-      icon: Bot,
-      description: 'Chat with your AI writing assistant',
-      badge: aiStatus.connected ? '🤖' : '⚠️'
-    },
-    {
-      id: 'analysis' as TabType,
-      label: 'Analysis',
-      icon: BarChart3,
-      description: 'Real-time writing analysis and feedback'
-    },
-    {
-      id: 'vocabulary' as TabType,
-      label: 'Vocabulary',
-      icon: BookOpen,
-      description: 'Enhance your word choice and sophistication'
-    },
-    {
-      id: 'progress' as TabType,
-      label: 'Progress',
-      icon: TrendingUp,
-      description: 'Track your writing improvement over time'
+  const sendMessage = async () => {
+    if (!inputMessage.trim() || isAITyping) return;
+
+    const userMessage: ChatMessage = {
+      id: 'user-' + Date.now(),
+      text: inputMessage.trim(),
+      isUser: true,
+      timestamp: new Date()
+    };
+
+    setChatMessages(prev => [...prev, userMessage]);
+    setInputMessage('');
+    setIsAITyping(true);
+
+    try {
+      // Add typing indicator
+      const typingMessage: ChatMessage = {
+        id: 'typing-' + Date.now(),
+        text: 'AI is thinking...',
+        isUser: false,
+        timestamp: new Date(),
+        isTyping: true
+      };
+      setChatMessages(prev => [...prev, typingMessage]);
+
+      // Get AI response with enhanced error handling
+      let aiResponse;
+      try {
+        aiResponse = await generateChatResponse({
+          userMessage: userMessage.text,
+          textType,
+          currentContent: content,
+          wordCount: content.split(/\s+/).filter(word => word.length > 0).length,
+          context: `Student is writing a ${textType} story. Current assistance level: ${assistanceLevel}.`
+        });
+      } catch (apiError) {
+        console.error('OpenAI API Error:', apiError);
+        // Use fallback response instead of failing
+        aiResponse = getFallbackChatResponse(userMessage.text, textType);
+      }
+
+      // Remove typing indicator and add real response
+      setChatMessages(prev => {
+        const withoutTyping = prev.filter(msg => !msg.isTyping);
+        const aiMessage: ChatMessage = {
+          id: 'ai-' + Date.now(),
+          text: aiResponse,
+          isUser: false,
+          timestamp: new Date()
+        };
+        return [...withoutTyping, aiMessage];
+      });
+
+    } catch (error) {
+      console.error('Chat error:', error);
+      
+      // Remove typing indicator and show helpful error message
+      setChatMessages(prev => {
+        const withoutTyping = prev.filter(msg => !msg.isTyping);
+        const errorMessage: ChatMessage = {
+          id: 'error-' + Date.now(),
+          text: "I'm having a small hiccup, but I'm still here to help! 😊 Try asking your question again, or I can give you some general writing tips!",
+          isUser: false,
+          timestamp: new Date()
+        };
+        return [...withoutTyping, errorMessage];
+      });
+    } finally {
+      setIsAITyping(false);
     }
-  ];
-
-  const getWordCount = () => {
-    return content.split(/\s+/).filter(word => word.length > 0).length;
   };
 
-  const getCharCount = () => {
-    return content.length;
+  const handleQuickQuestion = (question: string) => {
+    setInputMessage(question);
+    setTimeout(() => {
+      sendMessage();
+    }, 100);
   };
 
-  const getReadingTime = () => {
-    const wordCount = getWordCount();
-    return Math.ceil(wordCount / 200); // Average reading speed
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
   };
+
+  // Calculate stats
+  const wordCount = content.split(/\s+/).filter(word => word.length > 0).length;
+  const charCount = content.length;
+  const readingTime = Math.max(1, Math.ceil(wordCount / 200));
+  const qualityScore = Math.min(100, Math.max(0, (wordCount / 5) + (charCount / 20)));
 
   return (
-    <div className="h-full flex flex-col bg-white rounded-lg shadow-sm border border-gray-200">
-      {/* Header with AI Status */}
-      <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-              <Bot className="w-5 h-5 mr-2 text-blue-600" />
-              Writing Buddy
-            </h3>
-            <p className="text-sm text-gray-600">Your AI writing assistant</p>
-          </div>
-          
-          {/* AI Status Indicator */}
+    <div className="h-full flex flex-col bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-700 text-white">
+      {/* Header */}
+      <div className="p-4 border-b border-white/20">
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-2">
-            <div className="flex items-center space-x-1">
-              {aiStatus.loading ? (
-                <RefreshCw className="w-4 h-4 text-yellow-500 animate-spin" />
-              ) : aiStatus.connected ? (
-                <Wifi className="w-4 h-4 text-green-500" />
-              ) : (
-                <WifiOff className="w-4 h-4 text-red-500" />
-              )}
-              <span className={`text-xs font-medium ${
-                aiStatus.loading ? 'text-yellow-600' : 
-                aiStatus.connected ? 'text-green-600' : 'text-red-600'
-              }`}>
-                {aiStatus.loading ? 'Connecting...' : 
-                 aiStatus.connected ? 'AI Connected' : 'AI Offline'}
-              </span>
-            </div>
-            
-            {/* Quality Score */}
-            <div className="flex items-center space-x-1">
-              <Star className="w-4 h-4 text-yellow-500" />
-              <span className="text-sm font-medium text-gray-700">Quality: 75%</span>
-            </div>
+            <Bot className="w-6 h-6" />
+            <h2 className="text-lg font-semibold">Writing Buddy</h2>
+          </div>
+          <div className="flex items-center space-x-2">
+            {aiStatus.connected ? (
+              <div className="flex items-center space-x-1 text-green-300">
+                <Wifi className="w-4 h-4" />
+                <span className="text-xs">AI Connected</span>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-1 text-red-300">
+                <WifiOff className="w-4 h-4" />
+                <span className="text-xs">AI Offline</span>
+              </div>
+            )}
+            <button
+              onClick={checkAIConnection}
+              disabled={aiStatus.loading}
+              className="p-1 hover:bg-white/10 rounded transition-colors"
+            >
+              <RefreshCw className={`w-4 h-4 ${aiStatus.loading ? 'animate-spin' : ''}`} />
+            </button>
           </div>
         </div>
+        
+        <p className="text-sm text-white/80">Your AI writing assistant</p>
+      </div>
 
-        {/* Tab Navigation */}
-        <div className="flex space-x-1 bg-white rounded-lg p-1 shadow-sm">
-          {tabs.map((tab) => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 flex flex-col items-center py-2 px-2 rounded-md text-xs font-medium transition-all duration-200 ${
-                  activeTab === tab.id
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
-                }`}
-                title={tab.description}
-              >
-                <div className="flex items-center space-x-1">
-                  <Icon className="w-4 h-4" />
-                  {tab.badge && (
-                    <span className="text-xs">{tab.badge}</span>
-                  )}
-                </div>
-                <span className="mt-1">{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
+      {/* Tabs */}
+      <div className="flex border-b border-white/20">
+        {[
+          { id: 'coach', label: 'Coach', icon: MessageSquare },
+          { id: 'analysis', label: 'Analysis', icon: BarChart3 },
+          { id: 'vocabulary', label: 'Vocabulary', icon: BookOpen },
+          { id: 'progress', label: 'Progress', icon: TrendingUp }
+        ].map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            onClick={() => setActiveTab(id as TabType)}
+            className={`flex-1 flex flex-col items-center py-3 px-2 text-xs transition-all duration-200 ${
+              activeTab === id
+                ? 'bg-white/20 text-white border-b-2 border-white'
+                : 'text-white/70 hover:text-white hover:bg-white/10'
+            }`}
+          >
+            <Icon className="w-4 h-4 mb-1" />
+            <span>{label}</span>
+          </button>
+        ))}
       </div>
 
       {/* Tab Content */}
       <div className="flex-1 overflow-hidden">
         {activeTab === 'coach' && (
-          <CoachPanel
-            content={content}
-            textType={textType}
-            assistanceLevel={localAssistanceLevel}
-          />
+          <div className="h-full flex flex-col">
+            {/* AI Coach Header */}
+            <div className="p-4 bg-white/10 backdrop-blur-sm">
+              <h3 className="font-semibold text-center mb-2">AI Coach</h3>
+              <p className="text-xs text-center text-white/80">Ask your Writing Buddy anything!</p>
+            </div>
+
+            {/* Chat Messages */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {chatMessages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-[80%] p-3 rounded-lg text-sm ${
+                      message.isUser
+                        ? 'bg-white/20 text-white ml-4'
+                        : message.isTyping
+                        ? 'bg-white/10 text-white/70 italic'
+                        : 'bg-white/30 text-white mr-4'
+                    }`}
+                  >
+                    {message.isTyping ? (
+                      <div className="flex items-center space-x-2">
+                        <Loader className="w-3 h-3 animate-spin" />
+                        <span>{message.text}</span>
+                      </div>
+                    ) : (
+                      message.text
+                    )}
+                  </div>
+                </div>
+              ))}
+              <div ref={chatEndRef} />
+            </div>
+
+            {/* Quick Questions */}
+            {showQuickQuestions && chatMessages.length <= 2 && (
+              <div className="p-4 bg-white/5">
+                <h4 className="text-sm font-medium mb-3">Quick Questions:</h4>
+                <div className="space-y-2">
+                  {[
+                    "How can I improve my introduction?",
+                    "What's a good synonym for 'said'?",
+                    "Help me with my conclusion"
+                  ].map((question, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleQuickQuestion(question)}
+                      className="w-full text-left p-2 bg-white/10 hover:bg-white/20 rounded text-xs transition-colors"
+                    >
+                      • {question}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Chat Input */}
+            <div className="p-4 bg-white/10 backdrop-blur-sm">
+              <div className="flex space-x-2">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={inputMessage}
+                  onChange={(e) => setInputMessage(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Ask for help..."
+                  className="flex-1 bg-white/20 border border-white/30 rounded-lg px-3 py-2 text-white placeholder-white/70 text-sm focus:outline-none focus:ring-2 focus:ring-white/50"
+                  disabled={isAITyping}
+                />
+                <button
+                  onClick={sendMessage}
+                  disabled={!inputMessage.trim() || isAITyping}
+                  className="bg-white/20 hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed border border-white/30 rounded-lg px-3 py-2 transition-colors"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
         {activeTab === 'analysis' && (
-          <div className="p-4 h-full overflow-y-auto">
-            <div className="space-y-4">
-              {/* Writing Statistics */}
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="font-semibold text-gray-800 mb-3 flex items-center">
-                  <BarChart3 className="w-4 h-4 mr-2" />
-                  Writing Statistics
-                </h4>
-                <div className="grid grid-cols-3 gap-4 text-center">
-                  <div>
-                    <div className="text-2xl font-bold text-blue-600">{getWordCount()}</div>
-                    <div className="text-xs text-gray-600">Words</div>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-green-600">{getCharCount()}</div>
-                    <div className="text-xs text-gray-600">Characters</div>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-purple-600">{getReadingTime()}</div>
-                    <div className="text-xs text-gray-600">Min Read</div>
-                  </div>
+          <div className="p-4 space-y-4">
+            <h3 className="font-semibold text-center">Writing Analysis</h3>
+            <div className="space-y-3">
+              <div className="bg-white/10 rounded-lg p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm">Quality Score</span>
+                  <span className="text-sm font-semibold">{Math.round(qualityScore)}%</span>
+                </div>
+                <div className="w-full bg-white/20 rounded-full h-2">
+                  <div
+                    className="bg-gradient-to-r from-green-400 to-blue-500 h-2 rounded-full transition-all duration-500"
+                    style={{ width: `${qualityScore}%` }}
+                  />
                 </div>
               </div>
-
-              {/* AI Writing Analysis */}
-              <div className="bg-blue-50 rounded-lg p-4">
-                <h4 className="font-semibold text-blue-800 mb-3">AI Writing Analysis</h4>
-                {aiStatus.connected ? (
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-blue-700">Spelling</span>
-                      <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs">0 issues</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-blue-700">Grammar</span>
-                      <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs">0 issues</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-blue-700">Vocabulary</span>
-                      <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs">Good</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-blue-700">Structure</span>
-                      <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs">Clear</span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-4">
-                    <WifiOff className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-sm text-gray-600">AI analysis unavailable</p>
-                    <p className="text-xs text-gray-500">Check your connection</p>
-                  </div>
-                )}
-              </div>
-
-              {/* NSW Selective Criteria */}
-              <div className="bg-purple-50 rounded-lg p-4">
-                <h4 className="font-semibold text-purple-800 mb-3">NSW Selective Criteria</h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-purple-700">Ideas & Content</span>
-                    <div className="flex space-x-1">
-                      {[1,2,3,4].map(i => (
-                        <Star key={i} className="w-3 h-3 text-yellow-500 fill-current" />
-                      ))}
-                      <Star className="w-3 h-3 text-gray-300" />
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-purple-700">Structure</span>
-                    <div className="flex space-x-1">
-                      {[1,2,3].map(i => (
-                        <Star key={i} className="w-3 h-3 text-yellow-500 fill-current" />
-                      ))}
-                      {[4,5].map(i => (
-                        <Star key={i} className="w-3 h-3 text-gray-300" />
-                      ))}
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-purple-700">Language Use</span>
-                    <div className="flex space-x-1">
-                      {[1,2,3,4].map(i => (
-                        <Star key={i} className="w-3 h-3 text-yellow-500 fill-current" />
-                      ))}
-                      <Star className="w-3 h-3 text-gray-300" />
-                    </div>
-                  </div>
+              
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <div className="bg-white/10 rounded p-2 text-center">
+                  <div className="font-semibold">{wordCount}</div>
+                  <div className="text-white/70">Words</div>
+                </div>
+                <div className="bg-white/10 rounded p-2 text-center">
+                  <div className="font-semibold">{charCount}</div>
+                  <div className="text-white/70">Characters</div>
+                </div>
+                <div className="bg-white/10 rounded p-2 text-center">
+                  <div className="font-semibold">{readingTime}</div>
+                  <div className="text-white/70">Min Read</div>
+                </div>
+                <div className="bg-white/10 rounded p-2 text-center">
+                  <div className="font-semibold">0</div>
+                  <div className="text-white/70">Issues</div>
                 </div>
               </div>
             </div>
@@ -285,110 +378,74 @@ export function TabbedCoachPanel({
         )}
 
         {activeTab === 'vocabulary' && (
-          <div className="p-4 h-full overflow-y-auto">
-            <div className="space-y-4">
-              <div className="bg-green-50 rounded-lg p-4">
-                <h4 className="font-semibold text-green-800 mb-3 flex items-center">
-                  <BookOpen className="w-4 h-4 mr-2" />
-                  Vocabulary Enhancement
-                </h4>
-                {aiStatus.connected ? (
-                  <div className="space-y-3">
-                    <div className="p-3 bg-white rounded border">
-                      <p className="text-sm text-gray-700 mb-2">
-                        <strong>Suggestion:</strong> Instead of "said", try:
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {['whispered', 'exclaimed', 'muttered', 'declared'].map(word => (
-                          <span key={word} className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs cursor-pointer hover:bg-blue-200">
-                            {word}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="p-3 bg-white rounded border">
-                      <p className="text-sm text-gray-700 mb-2">
-                        <strong>Advanced words for {textType}:</strong>
-                      </p>
-                      <div className="flex flex-wrap gap-2">
-                        {['magnificent', 'extraordinary', 'bewildering', 'captivating'].map(word => (
-                          <span key={word} className="px-2 py-1 bg-purple-100 text-purple-800 rounded text-xs cursor-pointer hover:bg-purple-200">
-                            {word}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
+          <div className="p-4 space-y-4">
+            <h3 className="font-semibold text-center">Vocabulary Builder</h3>
+            <div className="space-y-3">
+              <div className="bg-white/10 rounded-lg p-3">
+                <h4 className="text-sm font-medium mb-2">Suggested Words</h4>
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-white/70">Instead of "big":</span>
+                    <span>enormous, massive</span>
                   </div>
-                ) : (
-                  <div className="text-center py-4">
-                    <BookOpen className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-sm text-gray-600">AI vocabulary help unavailable</p>
-                    <button 
-                      onClick={checkAIConnection}
-                      className="text-xs text-blue-600 hover:text-blue-800 mt-1"
-                    >
-                      Try reconnecting
-                    </button>
+                  <div className="flex justify-between">
+                    <span className="text-white/70">Instead of "said":</span>
+                    <span>whispered, exclaimed</span>
                   </div>
-                )}
+                  <div className="flex justify-between">
+                    <span className="text-white/70">Instead of "good":</span>
+                    <span>excellent, wonderful</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white/10 rounded-lg p-3">
+                <h4 className="text-sm font-medium mb-2">Vocabulary Level</h4>
+                <div className="flex items-center space-x-2">
+                  <div className="flex-1 bg-white/20 rounded-full h-2">
+                    <div className="bg-gradient-to-r from-yellow-400 to-green-500 h-2 rounded-full w-3/4" />
+                  </div>
+                  <span className="text-xs">Advanced</span>
+                </div>
               </div>
             </div>
           </div>
         )}
 
         {activeTab === 'progress' && (
-          <div className="p-4 h-full overflow-y-auto">
-            <div className="space-y-4">
-              <div className="bg-indigo-50 rounded-lg p-4">
-                <h4 className="font-semibold text-indigo-800 mb-3 flex items-center">
-                  <TrendingUp className="w-4 h-4 mr-2" />
-                  Writing Progress
-                </h4>
-                <div className="space-y-3">
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-indigo-700">Overall Quality</span>
-                      <span className="text-indigo-800 font-medium">75%</span>
-                    </div>
-                    <div className="w-full bg-indigo-200 rounded-full h-2">
-                      <div className="bg-indigo-600 h-2 rounded-full" style={{ width: '75%' }}></div>
-                    </div>
+          <div className="p-4 space-y-4">
+            <h3 className="font-semibold text-center">Progress Tracking</h3>
+            <div className="space-y-3">
+              <div className="bg-white/10 rounded-lg p-3">
+                <h4 className="text-sm font-medium mb-2">Writing Goals</h4>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span>Word Count Goal</span>
+                    <span>{wordCount}/300</span>
                   </div>
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-indigo-700">Vocabulary Sophistication</span>
-                      <span className="text-indigo-800 font-medium">68%</span>
-                    </div>
-                    <div className="w-full bg-indigo-200 rounded-full h-2">
-                      <div className="bg-indigo-600 h-2 rounded-full" style={{ width: '68%' }}></div>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-indigo-700">Structure & Flow</span>
-                      <span className="text-indigo-800 font-medium">82%</span>
-                    </div>
-                    <div className="w-full bg-indigo-200 rounded-full h-2">
-                      <div className="bg-indigo-600 h-2 rounded-full" style={{ width: '82%' }}></div>
-                    </div>
+                  <div className="w-full bg-white/20 rounded-full h-1">
+                    <div
+                      className="bg-green-400 h-1 rounded-full"
+                      style={{ width: `${Math.min(100, (wordCount / 300) * 100)}%` }}
+                    />
                   </div>
                 </div>
               </div>
-
-              <div className="bg-yellow-50 rounded-lg p-4">
-                <h4 className="font-semibold text-yellow-800 mb-3">Recent Achievements</h4>
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Star className="w-4 h-4 text-yellow-600" />
-                    <span className="text-sm text-yellow-800">Used advanced vocabulary</span>
+              
+              <div className="bg-white/10 rounded-lg p-3">
+                <h4 className="text-sm font-medium mb-2">Achievements</h4>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="text-center">
+                    <Star className="w-6 h-6 mx-auto mb-1 text-yellow-400" />
+                    <div className="text-xs">First Draft</div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Star className="w-4 h-4 text-yellow-600" />
-                    <span className="text-sm text-yellow-800">Strong story structure</span>
+                  <div className="text-center opacity-50">
+                    <Trophy className="w-6 h-6 mx-auto mb-1" />
+                    <div className="text-xs">100 Words</div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Star className="w-4 h-4 text-yellow-600" />
-                    <span className="text-sm text-yellow-800">Engaging introduction</span>
+                  <div className="text-center opacity-50">
+                    <Award className="w-6 h-6 mx-auto mb-1" />
+                    <div className="text-xs">Perfect Score</div>
                   </div>
                 </div>
               </div>
@@ -398,4 +455,21 @@ export function TabbedCoachPanel({
       </div>
     </div>
   );
+}
+
+// Add this helper function for fallback responses
+function getFallbackChatResponse(userMessage: string, textType: string): string {
+  const lowerMessage = userMessage.toLowerCase();
+  
+  if (lowerMessage.includes('introduction') || lowerMessage.includes('start')) {
+    return `Great question about introductions! For ${textType} writing, try starting with dialogue, action, or an intriguing question. Hook your reader from the first sentence! 🎣`;
+  } else if (lowerMessage.includes('conclusion') || lowerMessage.includes('end')) {
+    return `For a strong conclusion, circle back to your opening theme and show how your character has grown or changed. Leave readers satisfied but thoughtful! ✨`;
+  } else if (lowerMessage.includes('synonym') || lowerMessage.includes('word')) {
+    return `Try these powerful alternatives: Instead of 'said' → whispered, exclaimed, declared. Instead of 'big' → enormous, massive, gigantic. Specific words make writing shine! 📚`;
+  } else if (lowerMessage.includes('character')) {
+    return `Show character emotions through actions and thoughts! Instead of 'he was sad', try 'his shoulders slumped as he stared at the ground.' Show, don't tell! 😊`;
+  } else {
+    return `That's a thoughtful question! Keep writing and let your creativity flow. Remember: every sentence should either advance the plot or develop character. You're doing great! 🌟`;
+  }
 }
