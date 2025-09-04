@@ -57,7 +57,7 @@ class KidFriendlyAIService {
     this.studentAge = studentAge;
   }
 
-  private async callOpenAI(messages: any[], maxTokens: number = 200 ): Promise<string> {
+  private async callOpenAI(messages: any[], maxTokens: number = 200  ): Promise<string> {
     try {
       const response = await fetch(`${this.apiBase}/chat/completions`, {
         method: 'POST',
@@ -426,73 +426,59 @@ export const WritingArea: React.FC<WritingAreaProps> = ({
   }, [chatMessages]);
   
   // Generate automatic feedback for completed paragraphs
-  const generateAutomaticFeedback = async (paragraphContent: string, paragraphNumber: number) => {
-    if (!aiFeedback.isConfigured || aiFeedback.isGenerating) return;
-    
-    // Check if we already have feedback for this exact content
-    const existingFeedback = aiFeedback.feedbackHistory.find(
-      f => f.content === paragraphContent && f.paragraphNumber === paragraphNumber
-    );
-    
-    if (existingFeedback) return;
-    
+  const generateAutomaticFeedback = useCallback(async (paragraphContent: string, paragraphNumber: number) => {
+    if (!aiFeedback.isConfigured) return;
+
     setAiFeedback(prev => ({ ...prev, isGenerating: true }));
-    
     try {
-      const feedbackText = await aiService.generateParagraphFeedback(
-        paragraphContent,
-        paragraphNumber,
-        textType
-      );
-      
+      const feedback = await aiService.generateParagraphFeedback(paragraphContent, paragraphNumber, textType);
       const feedbackMessage: ChatMessage = {
-        id: `auto_feedback_${Date.now()}_${paragraphNumber}`,
-        text: feedbackText,
+        id: `feedback_${Date.now()}`,
+        text: feedback,
         sender: 'ai',
         timestamp: new Date(),
         isAutomatic: true,
         paragraphNumber: paragraphNumber,
         type: 'feedback'
       };
-      
       setChatMessages(prev => [...prev, feedbackMessage]);
-      
-      const feedbackRecord = {
-        id: feedbackMessage.id,
-        content: paragraphContent,
-        feedback: feedbackText,
-        timestamp: new Date(),
-        paragraphNumber
-      };
-      
       setAiFeedback(prev => ({
         ...prev,
-        isGenerating: false,
-        feedbackHistory: [...prev.feedbackHistory, feedbackRecord]
+        feedbackHistory: [...prev.feedbackHistory, {
+          id: feedbackMessage.id,
+          content: paragraphContent,
+          feedback: feedback,
+          timestamp: feedbackMessage.timestamp,
+          paragraphNumber: paragraphNumber
+        }]
       }));
-      
     } catch (error) {
       console.error('Error generating automatic feedback:', error);
+      const errorMessage: ChatMessage = {
+        id: `feedback_error_${Date.now()}`,
+        text: "I'm having trouble generating automatic feedback right now, but keep up the great work!",
+        sender: 'ai',
+        timestamp: new Date(),
+        isAutomatic: true,
+        paragraphNumber: paragraphNumber,
+        type: 'encouragement'
+      };
+      setChatMessages(prev => [...prev, errorMessage]);
+    } finally {
       setAiFeedback(prev => ({ ...prev, isGenerating: false }));
     }
-  };
-  
-  // Handle content change
+  }, [aiService, aiFeedback.isConfigured, textType]);
+
+  // Handle content changes in the textarea
   const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setContent(e.target.value);
-    
-    // Start timer if not running and content is being added
-    if (!isTimerRunning && e.target.value.trim() && !sessionStartTime) {
-      setIsTimerRunning(true);
-      setSessionStartTime(new Date());
-    }
   };
-  
-  // Handle chat submission
+
+  // Handle chat input submission
   const handleChatSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!chatInput.trim() || isChatLoading) return;
-    
+
     const userMessage: ChatMessage = {
       id: `user_${Date.now()}`,
       text: chatInput,
@@ -898,106 +884,86 @@ export const WritingArea: React.FC<WritingAreaProps> = ({
                 
                 {/* Chat Tab */}
                 {activeTab === 'coach' && (
-                  <div>
-                    <div className="space-y-3 mb-4 max-h-64 overflow-y-auto">
-                      {chatMessages.map(message => (
-                        <div key={message.id} className="space-y-1">
-                          {message.isAutomatic && (
-                            <div className="text-center">
-                              <span className="text-xs text-purple-300 bg-purple-800 px-2 py-1 rounded-full">
-                                ✨ Auto Feedback - Paragraph {message.paragraphNumber}
-                              </span>
-                            </div>
-                          )}
-                          
-                          <div className={`p-3 rounded-lg text-sm ${
+                  <div className="space-y-4">
+                    <div className="h-64 overflow-y-auto p-3 border rounded-lg bg-gray-50 dark:bg-gray-700 dark:border-gray-600">
+                      {chatMessages.map((message) => (
+                        <div key={message.id} className={`mb-3 ${
+                          message.sender === 'user' ? 'text-right' : 'text-left'
+                        }`}>
+                          <div className={`inline-block p-2 rounded-lg max-w-[80%] ${
                             message.sender === 'user' 
-                              ? 'bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 ml-4' 
-                              : message.isAutomatic
-                                ? 'bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 mr-4 border-l-4 border-purple-500'
-                                : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 mr-4'
+                              ? 'bg-blue-500 text-white' 
+                              : 'bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-gray-200'
                           }`}>
-                            <div className="flex items-start space-x-2">
-                              {message.sender === 'ai' && (
-                                <Bot className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                              )}
-                              {message.sender === 'user' && (
-                                <User className="w-4 h-4 mt-0.5 flex-shrink-0" />
-                              )}
-                              <span>{message.text}</span>
-                            </div>
+                            <p className="text-sm">{message.text}</p>
+                            <span className="block text-xs mt-1 opacity-75">
+                              {message.timestamp.toLocaleTimeString()}
+                            </span>
                           </div>
                         </div>
                       ))}
-                      
-                      {isChatLoading && (
-                        <div className="flex items-center space-x-2 text-purple-500 text-sm">
-                          <RefreshCw className="w-4 h-4 animate-spin" />
-                          <span>AI is thinking...</span>
-                        </div>
-                      )}
-                      
                       <div ref={chatEndRef} />
                     </div>
-                    
                     <form onSubmit={handleChatSubmit} className="flex space-x-2">
                       <input
                         type="text"
                         value={chatInput}
                         onChange={(e) => setChatInput(e.target.value)}
-                        placeholder={aiFeedback.isConfigured ? "Ask your AI coach anything..." : "AI chat unavailable"}
-                        className={`flex-1 px-3 py-2 text-sm border rounded focus:outline-none focus:ring-1 focus:ring-purple-500 ${
+                        placeholder="Ask your AI coach..."
+                        className={`flex-grow p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 ${
                           darkMode 
                             ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
                             : 'border-gray-200 bg-white'
-                        } disabled:opacity-50`}
+                        }`}
                         disabled={!aiFeedback.isConfigured || isChatLoading}
                       />
                       <button
                         type="submit"
-                        disabled={!aiFeedback.isConfigured || isChatLoading || !chatInput.trim()}
-                        className="px-3 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:bg-gray-400 transition-colors"
+                        className={`p-2 rounded-lg ${
+                          !aiFeedback.isConfigured || isChatLoading 
+                            ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 cursor-not-allowed' 
+                            : 'bg-purple-500 hover:bg-purple-600 text-white'
+                        }`}
+                        disabled={!aiFeedback.isConfigured || isChatLoading}
                       >
-                        <Send className="w-4 h-4" />
+                        {isChatLoading ? (
+                          <RefreshCw className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <Send className="w-5 h-5" />
+                        )}
                       </button>
                     </form>
+                    {!aiFeedback.isConfigured && (
+                      <p className="text-xs text-red-500 dark:text-red-400 mt-2">
+                        AI is offline. Please configure your OpenAI API key.
+                      </p>
+                    )}
                   </div>
                 )}
                 
                 {/* Progress Tab */}
                 {activeTab === 'progress' && (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div className="text-center p-3 bg-blue-50 dark:bg-blue-900 rounded-lg">
-                        <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                          {metrics.wordCount}
-                        </div>
-                        <div className="text-blue-600 dark:text-blue-400">Words</div>
+                  <div className="space-y-3">
+                    <h4 className="font-medium text-purple-600 dark:text-purple-400 mb-3">
+                      Your Writing Progress
+                    </h4>
+                    <div className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
+                      <div className="flex justify-between">
+                        <span>Word count:</span>
+                        <span className="font-medium">{metrics.wordCount}</span>
                       </div>
-                      
-                      <div className="text-center p-3 bg-green-50 dark:bg-green-900 rounded-lg">
-                        <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                          {formatTime(timeSpent)}
-                        </div>
-                        <div className="text-green-600 dark:text-green-400">Time</div>
+                      <div className="flex justify-between">
+                        <span>Character count:</span>
+                        <span className="font-medium">{metrics.characterCount}</span>
                       </div>
-                      
-                      <div className="text-center p-3 bg-purple-50 dark:bg-purple-900 rounded-lg">
-                        <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                          {aiFeedback.feedbackHistory.length}
-                        </div>
-                        <div className="text-purple-600 dark:text-purple-400">AI Tips</div>
+                      <div className="flex justify-between">
+                        <span>Paragraph count:</span>
+                        <span className="font-medium">{metrics.paragraphCount}</span>
                       </div>
-                      
-                      <div className="text-center p-3 bg-yellow-50 dark:bg-yellow-900 rounded-lg">
-                        <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-                          {metrics.paragraphCount}
-                        </div>
-                        <div className="text-yellow-600 dark:text-yellow-400">Paragraphs</div>
+                      <div className="flex justify-between">
+                        <span>Sentence count:</span>
+                        <span className="font-medium">{metrics.sentenceCount}</span>
                       </div>
-                    </div>
-                    
-                    <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span>Average words per sentence:</span>
                         <span className="font-medium">{metrics.averageWordsPerSentence}</span>
@@ -1041,5 +1007,3 @@ export const WritingArea: React.FC<WritingAreaProps> = ({
     </div>
   );
 };
-
-export { WritingArea };
