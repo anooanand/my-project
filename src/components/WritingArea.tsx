@@ -380,7 +380,8 @@ export function WritingArea({ onContentChange, initialContent = '', textType = '
         setIssues(basicIssues);
         
         // Get detailed evaluation
-        getDetailedEvaluation(content, textType).then(eval => {
+        getDetailedEvaluation(content, textType).then(evalResult => {
+
           setEvaluation(eval);
           setIsAnalyzing(false);
         });
