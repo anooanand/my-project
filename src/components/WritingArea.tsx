@@ -57,7 +57,7 @@ class KidFriendlyAIService {
     this.studentAge = studentAge;
   }
 
-  private async callOpenAI(messages: any[], maxTokens: number = 200): Promise<string> {
+  private async callOpenAI(messages: any[], maxTokens: number = 200 ): Promise<string> {
     try {
       const response = await fetch(`${this.apiBase}/chat/completions`, {
         method: 'POST',
@@ -240,7 +240,7 @@ const detectParagraphCompletion = (currentContent: string, previousContent: stri
 };
 
 // Main ImprovedWritingArea Component
-export const ImprovedWritingArea: React.FC<WritingAreaProps> = ({
+export const WritingArea: React.FC<WritingAreaProps> = ({
   onContentChange,
   initialContent = '',
   textType = 'narrative',
@@ -527,7 +527,7 @@ export const ImprovedWritingArea: React.FC<WritingAreaProps> = ({
         const fallbackResponses = [
           "That's a great question! 🤔 Try thinking about what your main character wants and what's stopping them from getting it.",
           "I love your curiosity! 💡 Remember to use descriptive words that help readers picture what's happening in your story.",
-          "Keep going - you're doing amazing! ✨ Try adding some dialogue to make your characters come alive.",
+          "Keep going - you're doing amazing! ✨ Try adding some dialogue to make your characters come alive!",
           "Great thinking! 🌟 Consider showing your character's emotions through their actions and thoughts."
         ];
         aiResponse = fallbackResponses[Math.floor(Math.random() * fallbackResponses.length)];
@@ -1042,4 +1042,4 @@ export const ImprovedWritingArea: React.FC<WritingAreaProps> = ({
   );
 };
 
-export default ImprovedWritingArea;
+export { WritingArea };
