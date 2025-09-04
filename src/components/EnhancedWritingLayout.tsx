@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { WritingArea } from './WritingArea';
+import WritingArea from './WritingArea';
 import { PlanningToolModal } from './PlanningToolModal';
 import { 
   PenTool,
