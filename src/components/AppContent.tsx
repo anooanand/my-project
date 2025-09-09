@@ -43,7 +43,7 @@ import { FloatingChatWindow } from './FloatingChatWindow';
 import { WritingDemo } from './WritingDemo';
 import { checkOpenAIConnectionStatus } from '../lib/openai';
 import { AdminButton } from './AdminButton';
-import NSWDemoPage from './NSWDemoPage';
+import { default as NSWDemoPage } from './NSWDemoPage';
 
 function AppContent() {
   const { user, isLoading, paymentCompleted, emailVerified, authSignOut } = useAuth();
