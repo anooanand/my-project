@@ -33,7 +33,9 @@ import {
   Palette,
   Music,
   Camera,
-  Gamepad2
+  Gamepad2,
+  HelpCircle,
+  ArrowRight
 } from 'lucide-react';
 
 interface DashboardProps {
@@ -44,7 +46,7 @@ interface DashboardProps {
   onSignOut?: () => void;
 }
 
-export function Dashboard({ user: propUser, emailVerified: propEmailVerified, paymentCompleted: propPaymentCompleted, onNavigate, onSignOut }: DashboardProps) {
+export function ImprovedDashboard({ user: propUser, emailVerified: propEmailVerified, paymentCompleted: propPaymentCompleted, onNavigate, onSignOut }: DashboardProps) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [isVerified, setIsVerified] = useState(false);
@@ -53,8 +55,9 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
   const [isLoading, setIsLoading] = useState(true);
   const [userAccessData, setUserAccessData] = useState<any>(null);
   const [showWelcomeMessage, setShowWelcomeMessage] = useState(false);
+  const [showStartHereGuide, setShowStartHereGuide] = useState(false);
 
-  // FIXED: Modal states for proper sequence
+  // Modal states for proper sequence
   const [showWritingTypeModal, setShowWritingTypeModal] = useState(false);
   const [showPromptOptionsModal, setShowPromptOptionsModal] = useState(false);
   const [selectedWritingType, setSelectedWritingType] = useState<string>('');
@@ -89,6 +92,12 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
                 localStorage.setItem(`welcome_shown_${currentUser.id}`, 'true');
               }
 
+              // Check if user needs the "Start Here" guide
+              const hasSeenGuide = localStorage.getItem(`start_guide_shown_${currentUser.id}`);
+              if (!hasSeenGuide) {
+                setShowStartHereGuide(true);
+              }
+
               console.log('✅ Dashboard: Permanent access confirmed - payment verified:', accessData.payment_verified);
               setIsLoading(false);
               return;
@@ -101,101 +110,65 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
                 setIsVerified(true);
                 setAccessType('temporary');
                 setTempAccessUntil(accessData.temp_access_until);
-                console.log('✅ Dashboard: Temporary access valid until:', tempDate);
+                console.log('⏰ Dashboard: Temporary access confirmed until:', accessData.temp_access_until);
                 setIsLoading(false);
                 return;
               }
             }
           }
 
-          // Fallback: Check for temporary access in localStorage
-          const tempAccess = localStorage.getItem('temp_access_granted');
-          const tempUntil = localStorage.getItem('temp_access_until');
-
-          if (tempAccess === 'true' && tempUntil) {
-            const tempDate = new Date(tempUntil);
-            if (tempDate > new Date()) {
-              setIsVerified(true);
-              setAccessType('temporary');
-              setTempAccessUntil(tempUntil);
-              console.log('✅ Dashboard: Temporary access from localStorage valid until:', tempDate);
-              setIsLoading(false);
-              return;
-            } else {
-              // Clean up expired temporary access
-              localStorage.removeItem('temp_access_granted');
-              localStorage.removeItem('temp_access_until');
-              localStorage.removeItem('temp_access_plan');
-            }
-          }
-
-          // Check basic email verification
-          const verified = isEmailVerified(currentUser);
-          setIsVerified(verified);
-          setAccessType('none');
-          console.log('📊 Dashboard: Only email verification result:', verified);
-
-        } catch (error) {
-          console.error('❌ Error checking verification status:', error);
+          // No valid access found
           setIsVerified(false);
           setAccessType('none');
-        }
+          console.log('❌ Dashboard: No valid access found');
 
-        setIsLoading(false);
+        } catch (error) {
+          console.error('❌ Dashboard: Error checking verification status:', error);
+          setIsVerified(false);
+          setAccessType('none');
+        } finally {
+          setIsLoading(false);
+        }
       }
     };
 
     checkVerificationStatus();
   }, [currentUser]);
 
-  const handleManualRefresh = async () => {
-    if (currentUser) {
-      setIsLoading(true);
-      try {
-        // Refresh user access status from database
-        const accessData = await getUserAccessStatus(currentUser.id);
-        setUserAccessData(accessData);
-
-        if (accessData && (accessData.payment_verified || accessData.manual_override || accessData.has_access)) {
-          setIsVerified(true);
-          setAccessType('permanent');
-
-          // Check if this is the first time showing the welcome message after manual refresh
-          const hasSeenWelcome = localStorage.getItem(`welcome_shown_${currentUser.id}`);
-          if (!hasSeenWelcome) {
-            setShowWelcomeMessage(true);
-            localStorage.setItem(`welcome_shown_${currentUser.id}`, 'true');
-          }
-
-          console.log('✅ Refresh: Permanent access confirmed');
-        } else if (accessData && accessData.temp_access_until) {
-          const tempDate = new Date(accessData.temp_access_until);
-          if (tempDate > new Date()) {
-            setIsVerified(true);
-            setAccessType('temporary');
-            setTempAccessUntil(accessData.temp_access_until);
-            console.log('✅ Refresh: Temporary access confirmed');
-          } else {
-            setIsVerified(false);
-            setAccessType('none');
-          }
-        } else {
-          const verified = isEmailVerified(currentUser);
-          setIsVerified(verified);
-          setAccessType('none');
-        }
-      } catch (error) {
-        console.error('❌ Error refreshing status:', error);
-      }
-      setIsLoading(false);
+  const getUserName = () => {
+    if (currentUser?.user_metadata?.full_name) {
+      return currentUser.user_metadata.full_name.split(' ')[0];
     }
+    if (currentUser?.email) {
+      return currentUser.email.split('@')[0];
+    }
+    return 'Writer';
   };
 
-  // FIXED: Step 1 - "Write Story" button opens writing type selection modal
+  const handleDismissWelcome = () => {
+    setShowWelcomeMessage(false);
+  };
+
+  const handleDismissGuide = () => {
+    setShowStartHereGuide(false);
+    localStorage.setItem(`start_guide_shown_${currentUser.id}`, 'true');
+  };
+
+  const handleManualRefresh = async () => {
+    setIsLoading(true);
+    // Trigger a re-check of verification status
+    const event = new Event('checkVerificationStatus');
+    window.dispatchEvent(event);
+    
+    // Refresh the page data
+    window.location.reload();
+  };
+
+  // FIXED: Step 1 - Clear any existing data and start the flow
   const handleStartWriting = () => {
     console.log('🚀 Dashboard: Starting writing flow...');
-
-    // Clear any existing navigation data to ensure fresh start
+    
+    // Clear any existing data to start fresh
     localStorage.removeItem('selectedWritingType');
     localStorage.removeItem('promptType');
     localStorage.removeItem('navigationSource');
@@ -355,68 +328,93 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
     }
   };
 
-  const handleDismissWelcome = () => {
-    setShowWelcomeMessage(false);
-  };
-
-  // Get user's first name from email
-  const getUserName = () => {
-    if (currentUser?.email) {
-      const emailPart = currentUser.email.split('@')[0];
-      // Capitalize first letter and handle dots
-      const namePart = emailPart.split('.')[0];
-      return namePart.charAt(0).toUpperCase() + namePart.slice(1);
-    }
-    return 'Friend';
-  };
-
-  if (!currentUser) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center">
-        <div className="text-center bg-white rounded-3xl p-12 shadow-xl max-w-md mx-4">
-          <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <BookOpen className="h-10 w-10 text-blue-600" />
-          </div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Oops!</h2>
-          <p className="text-gray-600 text-lg">You need to sign in first to start your writing adventure!</p>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400 text-lg">Loading your dashboard...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 relative overflow-hidden">
-      {/* Floating Background Elements */}
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 relative overflow-hidden">
+      {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 w-32 h-32 bg-yellow-200 rounded-full opacity-20 animate-pulse"></div>
-        <div className="absolute top-40 right-20 w-24 h-24 bg-pink-200 rounded-full opacity-30 animate-bounce"></div>
-        <div className="absolute bottom-20 left-1/4 w-40 h-40 bg-purple-200 rounded-full opacity-15 animate-pulse"></div>
-        <div className="absolute bottom-10 right-1/3 w-36 h-36 bg-green-200 rounded-full opacity-25 animate-bounce"></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-200 rounded-full opacity-20 animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-200 rounded-full opacity-20 animate-pulse"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-pink-200 rounded-full opacity-10 animate-pulse"></div>
       </div>
 
-      {/* Welcome Message Modal */}
+      {/* Welcome Message Modal - Improved for kids */}
       {showWelcomeMessage && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl max-w-md w-full border-4 border-green-300 dark:border-green-700 relative">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl max-w-md w-full relative transform animate-bounce">
             <button
               onClick={handleDismissWelcome}
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors bg-white dark:bg-gray-700 p-2 rounded-full shadow-md hover:shadow-lg transform hover:scale-110 transition-all duration-300"
             >
-              <X className="w-6 h-6" />
+              <X className="w-5 h-5" />
             </button>
             <div className="p-8 text-center">
-              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Smile className="h-10 w-10 text-green-600" />
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Smile className="h-8 w-8 text-green-600" />
               </div>
-              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Welcome, {getUserName()}!</h2>
-              <p className="text-gray-700 dark:text-gray-300 text-lg mb-6">
-                We're so excited to have you here. Let's start your writing journey!
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Welcome, {getUserName()}!</h2>
+              <p className="text-gray-700 dark:text-gray-300 text-base mb-6">
+                We're excited to help you become an amazing writer! Let's get started.
               </p>
               <button
                 onClick={handleDismissWelcome}
-                className="bg-green-500 text-white px-8 py-3 rounded-full font-bold text-lg shadow-lg hover:bg-green-600 transition-colors transform hover:scale-105"
+                className="kid-btn kid-btn-success kid-btn-large"
               >
-                Let's Go!
+                Let's Write! <ArrowRight className="w-5 h-5 ml-2" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Start Here Guide - New feature for first-time users */}
+      {showStartHereGuide && !showWelcomeMessage && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl max-w-lg w-full relative">
+            <button
+              onClick={handleDismissGuide}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors bg-white dark:bg-gray-700 p-2 rounded-full shadow-md hover:shadow-lg transform hover:scale-110 transition-all duration-300"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <div className="p-8 text-center">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <HelpCircle className="h-8 w-8 text-blue-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">New Here? Start Here!</h2>
+              <div className="text-left space-y-3 mb-6">
+                <div className="flex items-center text-gray-700 dark:text-gray-300">
+                  <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">1</div>
+                  <span>Click "Start Writing" to begin</span>
+                </div>
+                <div className="flex items-center text-gray-700 dark:text-gray-300">
+                  <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">2</div>
+                  <span>Choose what type of story you want to write</span>
+                </div>
+                <div className="flex items-center text-gray-700 dark:text-gray-300">
+                  <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">3</div>
+                  <span>Get a fun writing prompt or use your own idea</span>
+                </div>
+                <div className="flex items-center text-gray-700 dark:text-gray-300">
+                  <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">4</div>
+                  <span>Start writing and get help from your AI buddy!</span>
+                </div>
+              </div>
+              <button
+                onClick={handleDismissGuide}
+                className="kid-btn kid-btn-primary kid-btn-large"
+              >
+                Got It! <ArrowRight className="w-5 h-5 ml-2" />
               </button>
             </div>
           </div>
@@ -424,230 +422,255 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
       )}
 
       {/* Main Dashboard Content */}
-      <div className="relative z-10 p-8">
-        <div className="max-w-7xl mx-auto bg-white dark:bg-gray-900 rounded-3xl shadow-2xl p-8 md:p-12 border-4 border-blue-200 dark:border-blue-800">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 pb-6 border-b-2 border-gray-200 dark:border-gray-700">
+      <div className="relative z-10 p-6">
+        <div className="max-w-6xl mx-auto bg-white dark:bg-gray-900 rounded-3xl shadow-2xl p-6 md:p-8 border-4 border-blue-200 dark:border-blue-800">
+          
+          {/* Header Section - Simplified */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 pb-4 border-b-2 border-gray-200 dark:border-gray-700">
             <div className="flex items-center mb-4 md:mb-0">
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mr-4 shadow-lg">
-                <Rocket className="h-8 w-8 text-white" />
+              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mr-3 shadow-lg">
+                <Rocket className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 mb-1">
-                  Your Creative Hub
+                <h1 className="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 mb-1">
+                  Your Writing Space
                 </h1>
-                <p className="text-gray-600 dark:text-gray-300 text-lg">
-                  Welcome back, {getUserName()}! What will you create today?
+                <p className="text-gray-600 dark:text-gray-300 text-base">
+                  Hi {getUserName()}! Ready to write something awesome?
                 </p>
               </div>
             </div>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <button
-                onClick={onSignOut}
-                className="px-6 py-3 bg-red-500 text-white rounded-full font-bold text-lg shadow-lg hover:bg-red-600 transition-colors transform hover:scale-105"
-              >
-                Sign Out
-              </button>
+            <div className="flex flex-col sm:flex-row gap-2">
               <button
                 onClick={() => onNavigate('settings')}
-                className="px-6 py-3 bg-gray-200 text-gray-800 rounded-full font-bold text-lg shadow-lg hover:bg-gray-300 transition-colors transform hover:scale-105 flex items-center justify-center gap-2"
+                className="kid-btn kid-btn-outline flex items-center justify-center gap-2"
               >
-                <Settings className="h-5 w-5" /> Settings
+                <Settings className="h-4 w-4" /> Settings
+              </button>
+              <button
+                onClick={onSignOut}
+                className="kid-btn kid-btn-danger"
+              >
+                Sign Out
               </button>
             </div>
           </div>
 
-          {/* Access Status Section */}
-          <div className="mb-10 p-6 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-inner border border-blue-100 dark:border-gray-700">
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
-              <Zap className="h-6 w-6 text-yellow-500 fill-yellow-500" /> Your Access Status
+          {/* Access Status Section - Simplified */}
+          <div className="mb-8 p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-inner border border-blue-100 dark:border-gray-700">
+            <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-3 flex items-center gap-2">
+              <Zap className="h-5 w-5 text-yellow-500 fill-yellow-500" /> Your Access
             </h2>
             {isLoading ? (
               <div className="flex items-center text-gray-600 dark:text-gray-400">
-                <Clock className="h-5 w-5 animate-spin mr-2" /> Checking access...
+                <Clock className="h-4 w-4 animate-spin mr-2" /> Checking...
               </div>
             ) : (
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between">
-                <div className="flex items-center text-lg font-medium">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center text-base font-medium">
                   {isVerified ? (
-                    <CheckCircle className="h-6 w-6 text-green-500 mr-2" />
+                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
                   ) : (
-                    <X className="h-6 w-6 text-red-500 mr-2" />
+                    <X className="h-5 w-5 text-red-500 mr-2" />
                   )}
                   <span className="text-gray-700 dark:text-gray-300">
                     {isVerified ? (
                       accessType === 'permanent' ? (
-                        'Full Access (Permanent)'
+                        'Full Access ✨'
                       ) : (
-                        `Temporary Access (Expires: ${formatDateTime(tempAccessUntil || '')})`
+                        `Access Until: ${formatDateTime(tempAccessUntil || '')}`
                       )
                     ) : (
-                      'No Active Access'
+                      'No Access Yet'
                     )}
                   </span>
                 </div>
-                {!isVerified && (
+                <div className="flex gap-2">
+                  {!isVerified && (
+                    <button
+                      onClick={() => onNavigate('pricing')}
+                      className="kid-btn kid-btn-primary"
+                    >
+                      Get Access
+                    </button>
+                  )}
+                  {isVerified && accessType === 'temporary' && (
+                    <button
+                      onClick={() => onNavigate('pricing')}
+                      className="kid-btn kid-btn-fun"
+                    >
+                      Keep Forever
+                    </button>
+                  )}
                   <button
-                    onClick={() => onNavigate('pricing')}
-                    className="mt-4 sm:mt-0 px-6 py-3 bg-blue-500 text-white rounded-full font-bold text-lg shadow-lg hover:bg-blue-600 transition-colors transform hover:scale-105"
+                    onClick={handleManualRefresh}
+                    className="kid-btn kid-btn-outline flex items-center justify-center gap-2"
                   >
-                    Unlock Full Access
+                    <Mail className="h-4 w-4" /> Refresh
                   </button>
-                )}
-                {isVerified && accessType === 'temporary' && (
-                  <button
-                    onClick={() => onNavigate('pricing')}
-                    className="mt-4 sm:mt-0 px-6 py-3 bg-purple-500 text-white rounded-full font-bold text-lg shadow-lg hover:bg-purple-600 transition-colors transform hover:scale-105"
-                  >
-                    Upgrade to Permanent
-                  </button>
-                )}
-                <button
-                  onClick={handleManualRefresh}
-                  className="mt-4 sm:mt-0 px-6 py-3 bg-gray-200 text-gray-800 rounded-full font-bold text-lg shadow-lg hover:bg-gray-300 transition-colors transform hover:scale-105 flex items-center justify-center gap-2"
-                >
-                  <Mail className="h-5 w-5" /> Refresh Status
-                </button>
+                </div>
               </div>
             )}
           </div>
 
-          {/* Main Actions Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-10">
-            {/* Start Writing Card */}
+          {/* Main Actions Grid - Improved sizing and spacing */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            
+            {/* Start Writing Card - Reduced size, clearer language */}
             <div
               onClick={handleStartWriting}
-              className="relative bg-gradient-to-br from-blue-500 to-purple-600 rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 cursor-pointer overflow-hidden group"
+              className="kid-card kid-card-interactive relative bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 cursor-pointer overflow-hidden group"
             >
-              <div className="absolute inset-0 bg-black opacity-10 rounded-3xl"></div>
-              <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-blue-400 opacity-20 group-hover:scale-125 transition-transform"></div>
-              <div className="absolute bottom-0 left-0 -ml-8 -mb-8 w-24 h-24 rounded-full bg-purple-400 opacity-20 group-hover:scale-125 transition-transform"></div>
+              <div className="absolute inset-0 bg-black opacity-10 rounded-2xl"></div>
+              <div className="absolute top-0 right-0 -mr-6 -mt-6 w-24 h-24 rounded-full bg-blue-400 opacity-20 group-hover:scale-125 transition-transform"></div>
+              <div className="absolute bottom-0 left-0 -ml-6 -mb-6 w-20 h-20 rounded-full bg-purple-400 opacity-20 group-hover:scale-125 transition-transform"></div>
+              
               <div className="flex items-center mb-4 relative z-10">
-                <div className="p-4 bg-white/20 rounded-full mr-4 shadow-md">
-                  <PenTool className="h-8 w-8 text-white" />
+                <div className="p-3 bg-white/20 rounded-full mr-3 shadow-md">
+                  <PenTool className="h-6 w-6 text-white" />
                 </div>
-                <h2 className="text-3xl font-bold text-white">Start Writing</h2>
+                <h2 className="text-2xl font-bold text-white">Start Writing</h2>
               </div>
-              <p className="text-blue-100 text-lg mb-6 relative z-10">
-                Dive into your next masterpiece. Choose your writing type and get a prompt!
+              
+              <p className="text-blue-100 text-base mb-4 relative z-10">
+                Ready to write? Pick a story type and get started!
               </p>
-              <button className="px-6 py-3 bg-white text-blue-600 rounded-full font-bold text-lg shadow-lg group-hover:bg-blue-100 transition-colors transform group-hover:scale-105 relative z-10">
-                Begin Your Story <span className="ml-2 text-blue-400 group-hover:text-blue-600">→</span>
-              </button>
+              
+              <div className="flex items-center text-white font-semibold relative z-10">
+                <span>Let's Go</span>
+                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              </div>
             </div>
 
-            {/* Practice Exam Card */}
+            {/* Practice Exam Card - Reduced size, clearer language */}
             <div
               onClick={handlePracticeExam}
-              className="relative bg-gradient-to-br from-green-500 to-teal-600 rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 cursor-pointer overflow-hidden group"
+              className="kid-card kid-card-interactive relative bg-gradient-to-br from-green-500 to-teal-600 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 cursor-pointer overflow-hidden group"
             >
-              <div className="absolute inset-0 bg-black opacity-10 rounded-3xl"></div>
-              <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-green-400 opacity-20 group-hover:scale-125 transition-transform"></div>
-              <div className="absolute bottom-0 left-0 -ml-8 -mb-8 w-24 h-24 rounded-full bg-teal-400 opacity-20 group-hover:scale-125 transition-transform"></div>
+              <div className="absolute inset-0 bg-black opacity-10 rounded-2xl"></div>
+              <div className="absolute top-0 right-0 -mr-6 -mt-6 w-24 h-24 rounded-full bg-green-400 opacity-20 group-hover:scale-125 transition-transform"></div>
+              <div className="absolute bottom-0 left-0 -ml-6 -mb-6 w-20 h-20 rounded-full bg-teal-400 opacity-20 group-hover:scale-125 transition-transform"></div>
+              
               <div className="flex items-center mb-4 relative z-10">
-                <div className="p-4 bg-white/20 rounded-full mr-4 shadow-md">
-                  <FileText className="h-8 w-8 text-white" />
+                <div className="p-3 bg-white/20 rounded-full mr-3 shadow-md">
+                  <FileText className="h-6 w-6 text-white" />
                 </div>
-                <h2 className="text-3xl font-bold text-white">Practice Exam</h2>
+                <h2 className="text-2xl font-bold text-white">Practice Test</h2>
               </div>
-              <p className="text-green-100 text-lg mb-6 relative z-10">
-                Prepare for your selective school exam with timed practice sessions.
+              
+              <p className="text-green-100 text-base mb-4 relative z-10">
+                Practice writing like it's a real test. Get ready to ace it!
               </p>
-              <button className="px-6 py-3 bg-white text-green-600 rounded-full font-bold text-lg shadow-lg group-hover:bg-green-100 transition-colors transform group-hover:scale-105 relative z-10">
-                Start Exam Prep <span className="ml-2 text-green-400 group-hover:text-green-600">→</span>
-              </button>
-            </div>
-
-            {/* Progress Tracking Card */}
-            <div
-              onClick={() => onNavigate('progress-tracking')}
-              className="relative bg-gradient-to-br from-yellow-500 to-orange-600 rounded-3xl p-8 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 cursor-pointer overflow-hidden group"
-            >
-              <div className="absolute inset-0 bg-black opacity-10 rounded-3xl"></div>
-              <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full bg-yellow-400 opacity-20 group-hover:scale-125 transition-transform"></div>
-              <div className="absolute bottom-0 left-0 -ml-8 -mb-8 w-24 h-24 rounded-full bg-orange-400 opacity-20 group-hover:scale-125 transition-transform"></div>
-              <div className="flex items-center mb-4 relative z-10">
-                <div className="p-4 bg-white/20 rounded-full mr-4 shadow-md">
-                  <BarChart3 className="h-8 w-8 text-white" />
-                </div>
-                <h2 className="text-3xl font-bold text-white">Track Progress</h2>
+              
+              <div className="flex items-center text-white font-semibold relative z-10">
+                <span>Start Practice</span>
+                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </div>
-              <p className="text-yellow-100 text-lg mb-6 relative z-10">
-                See how much you've grown and where you can improve.
-              </p>
-              <button className="px-6 py-3 bg-white text-yellow-600 rounded-full font-bold text-lg shadow-lg group-hover:bg-yellow-100 transition-colors transform group-hover:scale-105 relative z-10">
-                View Analytics <span className="ml-2 text-yellow-400 group-hover:text-yellow-600">→</span>
-              </button>
             </div>
           </div>
 
-          {/* Additional Features Section */}
-          <div className="mb-10 p-6 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-inner border border-gray-200 dark:border-gray-700">
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
-              <Star className="h-6 w-6 text-blue-500 fill-blue-500" /> Explore More Features
+          {/* Quick Tools Section - Simplified with smaller icons */}
+          <div className="mb-8">
+            <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-purple-500" /> Quick Tools
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              
+              <button
+                onClick={() => onNavigate('progress')}
+                className="kid-card kid-card-interactive p-4 text-center hover:bg-blue-50 dark:hover:bg-gray-800 transition-colors"
+              >
+                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <BarChart3 className="h-5 w-5 text-blue-600" />
+                </div>
+                <h3 className="font-semibold text-gray-800 dark:text-white text-sm">My Progress</h3>
+                <p className="text-gray-600 dark:text-gray-400 text-xs">See how you're doing</p>
+              </button>
+
               <button
                 onClick={() => onNavigate('learning')}
-                className="flex items-center p-4 bg-white dark:bg-gray-700 rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 border border-gray-200 dark:border-gray-600"
+                className="kid-card kid-card-interactive p-4 text-center hover:bg-green-50 dark:hover:bg-gray-800 transition-colors"
               >
-                <BookOpen className="h-6 w-6 text-blue-500 mr-3" />
-                <span className="text-gray-800 dark:text-white font-medium">Learning Hub</span>
+                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <BookOpen className="h-5 w-5 text-green-600" />
+                </div>
+                <h3 className="font-semibold text-gray-800 dark:text-white text-sm">Learn</h3>
+                <p className="text-gray-600 dark:text-gray-400 text-xs">Writing tips & tricks</p>
               </button>
+
               <button
-                onClick={() => onNavigate('supportive-features')}
-                className="flex items-center p-4 bg-white dark:bg-gray-700 rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 border border-gray-200 dark:border-gray-600"
+                onClick={() => onNavigate('help')}
+                className="kid-card kid-card-interactive p-4 text-center hover:bg-purple-50 dark:hover:bg-gray-800 transition-colors"
               >
-                <Heart className="h-6 w-6 text-pink-500 mr-3" />
-                <span className="text-gray-800 dark:text-white font-medium">Supportive Features</span>
+                <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <HelpCircle className="h-5 w-5 text-purple-600" />
+                </div>
+                <h3 className="font-semibold text-gray-800 dark:text-white text-sm">Help</h3>
+                <p className="text-gray-600 dark:text-gray-400 text-xs">Need assistance?</p>
               </button>
+
               <button
-                onClick={() => onNavigate('essay-feedback')}
-                className="flex items-center p-4 bg-white dark:bg-gray-700 rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 border border-gray-200 dark:border-gray-600"
+                onClick={() => onNavigate('achievements')}
+                className="kid-card kid-card-interactive p-4 text-center hover:bg-yellow-50 dark:hover:bg-gray-800 transition-colors"
               >
-                <Trophy className="h-6 w-6 text-yellow-500 mr-3" />
-                <span className="text-gray-800 dark:text-white font-medium">Essay Feedback</span>
-              </button>
-              <button
-                onClick={() => onNavigate('specialized-coaching')}
-                className="flex items-center p-4 bg-white dark:bg-gray-700 rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 border border-gray-200 dark:border-gray-600"
-              >
-                <Sparkles className="h-6 w-6 text-purple-500 mr-3" />
-                <span className="text-gray-800 dark:text-white font-medium">Specialized Coaching</span>
-              </button>
-              <button
-                onClick={() => onNavigate('brainstorming-tools')}
-                className="flex items-center p-4 bg-white dark:bg-gray-700 rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 border border-gray-200 dark:border-gray-600"
-              >
-                <Wand2 className="h-6 w-6 text-red-500 mr-3" />
-                <span className="text-gray-800 dark:text-white font-medium">Brainstorming Tools</span>
-              </button>
-              <button
-                onClick={() => onNavigate('help-center')}
-                className="flex items-center p-4 bg-white dark:bg-gray-700 rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 border border-gray-200 dark:border-gray-600"
-              >
-                <Target className="h-6 w-6 text-cyan-500 mr-3" />
-                <span className="text-gray-800 dark:text-white font-medium">Help Center</span>
+                <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <Trophy className="h-5 w-5 text-yellow-600" />
+                </div>
+                <h3 className="font-semibold text-gray-800 dark:text-white text-sm">Achievements</h3>
+                <p className="text-gray-600 dark:text-gray-400 text-xs">Your awards</p>
               </button>
             </div>
           </div>
 
-          {/* Writing Type Selection Modal */}
-          <WritingTypeSelectionModal
-            isOpen={showWritingTypeModal}
-            onClose={() => setShowWritingTypeModal(false)}
-            onSelect={handleWritingTypeSelect}
-          />
-
-          {/* Prompt Options Modal */}
-          <PromptOptionsModal
-            isOpen={showPromptOptionsModal}
-            onClose={() => setShowPromptOptionsModal(false)}
-            onGeneratePrompt={handleGeneratePrompt}
-            onCustomPrompt={handleCustomPrompt}
-            textType={selectedWritingType}
-          />
+          {/* Recent Activity - Simplified */}
+          <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-6">
+            <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
+              <Clock className="h-5 w-5 text-gray-600" /> What's New?
+            </h2>
+            <div className="space-y-3">
+              <div className="flex items-center p-3 bg-white dark:bg-gray-700 rounded-xl shadow-sm">
+                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                  <Star className="h-4 w-4 text-blue-600" />
+                </div>
+                <div>
+                  <p className="font-medium text-gray-800 dark:text-white text-sm">New writing prompts added!</p>
+                  <p className="text-gray-600 dark:text-gray-400 text-xs">Check out the latest story ideas</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center p-3 bg-white dark:bg-gray-700 rounded-xl shadow-sm">
+                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                  <Gift className="h-4 w-4 text-green-600" />
+                </div>
+                <div>
+                  <p className="font-medium text-gray-800 dark:text-white text-sm">Writing buddy got smarter!</p>
+                  <p className="text-gray-600 dark:text-gray-400 text-xs">Better help with your stories</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* Modals */}
+      {showWritingTypeModal && (
+        <WritingTypeSelectionModal
+          isOpen={showWritingTypeModal}
+          onClose={() => setShowWritingTypeModal(false)}
+          onSelect={handleWritingTypeSelect}
+        />
+      )}
+
+      {showPromptOptionsModal && (
+        <PromptOptionsModal
+          isOpen={showPromptOptionsModal}
+          onClose={() => setShowPromptOptionsModal(false)}
+          onGeneratePrompt={handleGeneratePrompt}
+          onCustomPrompt={handleCustomPrompt}
+          writingType={selectedWritingType}
+          isGenerating={isGeneratingPrompt}
+        />
+      )}
     </div>
   );
 }
