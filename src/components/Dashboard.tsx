@@ -47,6 +47,8 @@ interface DashboardProps {
 }
 
 export function ImprovedDashboard({ user: propUser, emailVerified: propEmailVerified, paymentCompleted: propPaymentCompleted, onNavigate, onSignOut }: DashboardProps) {
+}
+
 export function Dashboard({ user: propUser, emailVerified: propEmailVerified, paymentCompleted: propPaymentCompleted, onNavigate, onSignOut }: DashboardProps) {
   const { user } = useAuth();
   const navigate = useNavigate();
