@@ -4,7 +4,7 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { AppProvider } from './contexts/AppContext';
 import AppContent from './components/AppContent';
-import { NSWDemoPage } from './components/NSWDemoPage';
+import NSWDemoPage from './components/NSWDemoPage';
 
 function App() {
   return (
