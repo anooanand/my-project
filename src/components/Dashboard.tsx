@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { isEmailVerified, hasAnyAccess, getUserAccessStatus } from '../lib/supabase';
-import { WritingTypeSelectionModal } from './WritingTypeSelectionModal';
+import { ImprovedWritingTypeSelectionModal } from './WritingTypeSelectionModal';
 import { PromptOptionsModal } from './PromptOptionsModal';
 import { generatePrompt } from '../lib/openai';
 import {
@@ -654,7 +654,7 @@ export function ImprovedDashboard({ user: propUser, emailVerified: propEmailVeri
 
       {/* Modals */}
       {showWritingTypeModal && (
-        <WritingTypeSelectionModal
+        <ImprovedWritingTypeSelectionModal
           isOpen={showWritingTypeModal}
           onClose={() => setShowWritingTypeModal(false)}
           onSelect={handleWritingTypeSelect}
