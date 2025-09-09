@@ -267,7 +267,7 @@ export default function WritingArea({
   return (
     <div className={`flex h-screen bg-gray-50 transition-all duration-300 ${showFocusMode ? 'bg-gray-900' : ''}`}>
       {/* Left side - Writing Area */}
-      <div className={`flex-1 flex flex-col transition-all duration-300 ${showFocusMode ? 'mr-0' : 'mr-4'}`}>
+      <div className={`flex-1 flex flex-col transition-all duration-300 ${showFocusMode ? 'mr-0' : 'mr-4'} max-w-[calc(100%-21rem)]`}>
         {/* Writing Prompt Section */}
         <div className={`bg-white rounded-lg shadow-sm p-6 mb-4 focus-hide ${showFocusMode ? 'opacity-30' : ''}`}>
           <div className="flex items-start space-x-3">
@@ -377,7 +377,7 @@ export default function WritingArea({
 
       {/* Right side - Writing Buddy Panel */}
       {!showFocusMode && (
-        <div className="w-96">
+        <div className="w-80 min-w-80 flex-shrink-0">
           <TabbedCoachPanel
             content={currentContent}
             textType={textType}
