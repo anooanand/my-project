@@ -406,47 +406,47 @@ export default function WritingArea({
                 <span className="text-sm font-medium text-gray-600">Step {planningStep} of {planningSteps.length}</span>
                 <div className="flex space-x-1">
                   {planningSteps.map((_, index) => (
-                    <div
+                    <span
                       key={index}
-                      className={`w-3 h-3 rounded-full ${
-                        index + 1 <= planningStep ? 'bg-blue-500' : 'bg-gray-200'
-                      }`}
-                    />
+                      className={`h-2 w-2 rounded-full ${index + 1 === planningStep ? 'bg-blue-500' : 'bg-gray-300'}`}
+                    ></span>
                   ))}
                 </div>
               </div>
-              
-              <div className="bg-blue-50 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-800 mb-3">{planningSteps[planningStep - 1].title}</h3>
-                <p className="text-gray-600 mb-4">{planningSteps[planningStep - 1].description}</p>
-                <textarea
-                  placeholder={planningSteps[planningStep - 1].placeholder}
-                  className="w-full h-24 p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
+              <h3 className="text-xl font-semibold text-gray-700 mb-3">{planningSteps[planningStep - 1].title}</h3>
+              <p className="text-gray-600 mb-4">{planningSteps[planningStep - 1].description}</p>
+              <textarea
+                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y min-h-[100px]"
+                placeholder={planningSteps[planningStep - 1].placeholder}
+              ></textarea>
             </div>
-            
+
             <div className="flex justify-between">
               <button
-                onClick={() => setPlanningStep(Math.max(1, planningStep - 1))}
+                onClick={() => setPlanningStep(prev => Math.max(1, prev - 1))}
                 disabled={planningStep === 1}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 disabled:opacity-50"
               >
-                ← Previous
+                Previous
               </button>
-              <button
-                onClick={() => {
-                  if (planningStep < planningSteps.length) {
-                    setPlanningStep(planningStep + 1);
-                  } else {
+              {planningStep < planningSteps.length ? (
+                <button
+                  onClick={() => setPlanningStep(prev => prev + 1)}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                >
+                  Next
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
                     setShowPlanningModal(false);
-                    setPlanningStep(1);
-                  }
-                }}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg"
-              >
-                {planningStep === planningSteps.length ? 'Finish Planning' : 'Next →'}
-              </button>
+                    onPopupCompleted?.();
+                  }}
+                  className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                >
+                  Finish Planning
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -457,7 +457,7 @@ export default function WritingArea({
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">📚 Story Structure Guide</h2>
+              <h2 className="text-2xl font-bold text-gray-800">📚 Structure Guide</h2>
               <button
                 onClick={() => setShowStructureModal(false)}
                 className="text-gray-500 hover:text-gray-700"
@@ -465,31 +465,24 @@ export default function WritingArea({
                 <X className="w-6 h-6" />
               </button>
             </div>
-            
-            <div className="space-y-6">
-              <div className="bg-blue-50 rounded-lg p-4">
-                <h3 className="font-semibold text-blue-800 mb-2">🚀 Beginning (Introduction)</h3>
-                <p className="text-blue-700">Start with a hook to grab attention. Introduce your main character and setting. Set up the problem or situation.</p>
-              </div>
-              
-              <div className="bg-green-50 rounded-lg p-4">
-                <h3 className="font-semibold text-green-800 mb-2">⚡ Middle (Rising Action)</h3>
-                <p className="text-green-700">Develop the story with exciting events. Show how your character tries to solve the problem. Include dialogue and action.</p>
-              </div>
-              
-              <div className="bg-purple-50 rounded-lg p-4">
-                <h3 className="font-semibold text-purple-800 mb-2">🎯 End (Resolution)</h3>
-                <p className="text-purple-700">Resolve the problem. Show how your character has changed or what they learned. End with a satisfying conclusion.</p>
-              </div>
-            </div>
-            
-            <div className="mt-6 flex justify-end">
-              <button
-                onClick={() => setShowStructureModal(false)}
-                className="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2 rounded-lg"
-              >
-                Got it!
-              </button>
+            <div className="prose max-w-none text-gray-700">
+              <h3 className="text-xl font-semibold mb-2">Narrative Writing Structure</h3>
+              <p>A typical narrative follows a story arc:</p>
+              <ol className="list-decimal list-inside space-y-2">
+                <li><strong>Exposition:</strong> Introduce characters, setting, and initial situation.</li>
+                <li><strong>Rising Action:</strong> Develop the conflict, build suspense, and introduce complications.</li>
+                <li><strong>Climax:</strong> The turning point, the most intense moment of the story.</li>
+                <li><strong>Falling Action:</strong> Events that happen after the climax, leading to the resolution.</li>
+                <li><strong>Resolution:</strong> The conclusion of the story, where conflicts are resolved.</li>
+              </ol>
+              <h3 className="text-xl font-semibold mt-6 mb-2">Tips for Each Section:</h3>
+              <ul className="list-disc list-inside space-y-2">
+                <li><strong>Exposition:</strong> "Hook" your reader with an interesting opening.</li>
+                <li><strong>Rising Action:</strong> Use vivid descriptions and strong verbs.</li>
+                <li><strong>Climax:</strong> Make it dramatic and impactful.</li>
+                <li><strong>Falling Action:</strong> Tie up loose ends.</li>
+                <li><strong>Resolution:</strong> Leave the reader with a sense of closure.</li>
+              </ul>
             </div>
           </div>
         </div>
@@ -508,46 +501,16 @@ export default function WritingArea({
                 <X className="w-6 h-6" />
               </button>
             </div>
-            
-            <div className="space-y-4">
-              <div className="bg-yellow-50 rounded-lg p-4">
-                <h3 className="font-semibold text-yellow-800 mb-2">🎣 Start with an exciting hook</h3>
-                <p className="text-yellow-700">Begin with action, dialogue, or an intriguing question to grab your reader's attention immediately.</p>
-              </div>
-              
-              <div className="bg-blue-50 rounded-lg p-4">
-                <h3 className="font-semibold text-blue-800 mb-2">👥 Create interesting characters</h3>
-                <p className="text-blue-700">Give your characters unique personalities, goals, and challenges that readers can connect with.</p>
-              </div>
-              
-              <div className="bg-green-50 rounded-lg p-4">
-                <h3 className="font-semibold text-green-800 mb-2">🎬 Show, don't tell</h3>
-                <p className="text-green-700">Use actions and dialogue instead of just describing. Let readers experience the story through the character's eyes.</p>
-              </div>
-              
-              <div className="bg-purple-50 rounded-lg p-4">
-                <h3 className="font-semibold text-purple-800 mb-2">🌈 Use vivid descriptions</h3>
-                <p className="text-purple-700">Help readers picture the scene with sensory details - what characters see, hear, smell, taste, and feel.</p>
-              </div>
-              
-              <div className="bg-pink-50 rounded-lg p-4">
-                <h3 className="font-semibold text-pink-800 mb-2">🎯 Make sure your story has a clear beginning, middle, and end</h3>
-                <p className="text-pink-700">Structure helps readers follow your story and feel satisfied when they finish reading.</p>
-              </div>
-              
-              <div className="bg-indigo-50 rounded-lg p-4">
-                <h3 className="font-semibold text-indigo-800 mb-2">💭 Include the character's thoughts and feelings</h3>
-                <p className="text-indigo-700">Let readers understand what your character is thinking and feeling to create emotional connection.</p>
-              </div>
-            </div>
-            
-            <div className="mt-6 flex justify-end">
-              <button
-                onClick={() => setShowTipsModal(false)}
-                className="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded-lg"
-              >
-                Thanks for the tips!
-              </button>
+            <div className="prose max-w-none text-gray-700">
+              <ul className="list-disc list-inside space-y-2">
+                <li><strong>Show, Don't Tell:</strong> Instead of saying a character is sad, describe their slumped shoulders and tear-filled eyes.</li>
+                <li><strong>Vary Sentence Structure:</strong> Mix short, punchy sentences with longer, more descriptive ones to keep your writing engaging.</li>
+                <li><strong>Use Sensory Details:</strong> Engage all five senses (sight, sound, smell, touch, taste) to make your descriptions come alive.</li>
+                <li><strong>Strong Verbs and Adjectives:</strong> Choose powerful words that convey meaning precisely and vividly.</li>
+                <li><strong>Realistic Dialogue:</strong> Make your characters' conversations sound natural and authentic.</li>
+                <li><strong>Pacing:</strong> Control the speed at which your story unfolds. Speed up for action, slow down for reflection.</li>
+                <li><strong>Revise and Edit:</strong> Always review your work for clarity, coherence, grammar, and spelling.</li>
+              </ul>
             </div>
           </div>
         </div>
