@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { isEmailVerified, hasAnyAccess, getUserAccessStatus } from '../lib/supabase';
-import { ImprovedWritingTypeSelectionModal } from './WritingTypeSelectionModal';
+import { WritingTypeSelectionModal } from './WritingTypeSelectionModal';
 import { PromptOptionsModal } from './PromptOptionsModal';
 import { generatePrompt } from '../lib/openai';
 import {
@@ -44,9 +44,6 @@ interface DashboardProps {
   paymentCompleted?: boolean;
   onNavigate?: (page: string) => void;
   onSignOut?: () => void;
-}
-
-export function ImprovedDashboard({ user: propUser, emailVerified: propEmailVerified, paymentCompleted: propPaymentCompleted, onNavigate, onSignOut }: DashboardProps) {
 }
 
 export function Dashboard({ user: propUser, emailVerified: propEmailVerified, paymentCompleted: propPaymentCompleted, onNavigate, onSignOut }: DashboardProps) {
@@ -371,9 +368,9 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
               </p>
               <button
                 onClick={handleDismissWelcome}
-                className="kid-btn kid-btn-success kid-btn-large"
+                className="px-8 py-3 bg-green-500 text-white rounded-full font-bold text-lg shadow-lg hover:bg-green-600 transition-colors transform hover:scale-105 flex items-center justify-center gap-2 mx-auto"
               >
-                Let's Write! <ArrowRight className="w-5 h-5 ml-2" />
+                Let's Write! <ArrowRight className="w-5 h-5" />
               </button>
             </div>
           </div>
@@ -415,9 +412,9 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
               </div>
               <button
                 onClick={handleDismissGuide}
-                className="kid-btn kid-btn-primary kid-btn-large"
+                className="px-8 py-3 bg-blue-500 text-white rounded-full font-bold text-lg shadow-lg hover:bg-blue-600 transition-colors transform hover:scale-105 flex items-center justify-center gap-2 mx-auto"
               >
-                Got It! <ArrowRight className="w-5 h-5 ml-2" />
+                Got It! <ArrowRight className="w-5 h-5" />
               </button>
             </div>
           </div>
@@ -445,14 +442,14 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
             </div>
             <div className="flex flex-col sm:flex-row gap-2">
               <button
-                onClick={() => onNavigate('settings')}
-                className="kid-btn kid-btn-outline flex items-center justify-center gap-2"
+                onClick={() => onNavigate && onNavigate('settings')}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-full font-semibold text-sm shadow-lg hover:bg-gray-300 transition-colors transform hover:scale-105 flex items-center justify-center gap-2"
               >
                 <Settings className="h-4 w-4" /> Settings
               </button>
               <button
                 onClick={onSignOut}
-                className="kid-btn kid-btn-danger"
+                className="px-4 py-2 bg-red-500 text-white rounded-full font-semibold text-sm shadow-lg hover:bg-red-600 transition-colors transform hover:scale-105"
               >
                 Sign Out
               </button>
@@ -491,23 +488,23 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
                 <div className="flex gap-2">
                   {!isVerified && (
                     <button
-                      onClick={() => onNavigate('pricing')}
-                      className="kid-btn kid-btn-primary"
+                      onClick={() => onNavigate && onNavigate('pricing')}
+                      className="px-4 py-2 bg-blue-500 text-white rounded-full font-semibold text-sm shadow-lg hover:bg-blue-600 transition-colors transform hover:scale-105"
                     >
                       Get Access
                     </button>
                   )}
                   {isVerified && accessType === 'temporary' && (
                     <button
-                      onClick={() => onNavigate('pricing')}
-                      className="kid-btn kid-btn-fun"
+                      onClick={() => onNavigate && onNavigate('pricing')}
+                      className="px-4 py-2 bg-purple-500 text-white rounded-full font-semibold text-sm shadow-lg hover:bg-purple-600 transition-colors transform hover:scale-105"
                     >
                       Keep Forever
                     </button>
                   )}
                   <button
                     onClick={handleManualRefresh}
-                    className="kid-btn kid-btn-outline flex items-center justify-center gap-2"
+                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded-full font-semibold text-sm shadow-lg hover:bg-gray-300 transition-colors transform hover:scale-105 flex items-center justify-center gap-2"
                   >
                     <Mail className="h-4 w-4" /> Refresh
                   </button>
@@ -522,7 +519,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
             {/* Start Writing Card - Reduced size, clearer language */}
             <div
               onClick={handleStartWriting}
-              className="kid-card kid-card-interactive relative bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 cursor-pointer overflow-hidden group"
+              className="relative bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 cursor-pointer overflow-hidden group"
             >
               <div className="absolute inset-0 bg-black opacity-10 rounded-2xl"></div>
               <div className="absolute top-0 right-0 -mr-6 -mt-6 w-24 h-24 rounded-full bg-blue-400 opacity-20 group-hover:scale-125 transition-transform"></div>
@@ -548,7 +545,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
             {/* Practice Exam Card - Reduced size, clearer language */}
             <div
               onClick={handlePracticeExam}
-              className="kid-card kid-card-interactive relative bg-gradient-to-br from-green-500 to-teal-600 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 cursor-pointer overflow-hidden group"
+              className="relative bg-gradient-to-br from-green-500 to-teal-600 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 cursor-pointer overflow-hidden group"
             >
               <div className="absolute inset-0 bg-black opacity-10 rounded-2xl"></div>
               <div className="absolute top-0 right-0 -mr-6 -mt-6 w-24 h-24 rounded-full bg-green-400 opacity-20 group-hover:scale-125 transition-transform"></div>
@@ -580,8 +577,8 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               
               <button
-                onClick={() => onNavigate('progress')}
-                className="kid-card kid-card-interactive p-4 text-center hover:bg-blue-50 dark:hover:bg-gray-800 transition-colors"
+                onClick={() => onNavigate && onNavigate('progress')}
+                className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-center hover:bg-blue-50 dark:hover:bg-gray-700 border-2 border-transparent hover:border-blue-300"
               >
                 <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
                   <BarChart3 className="h-5 w-5 text-blue-600" />
@@ -591,8 +588,8 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
               </button>
 
               <button
-                onClick={() => onNavigate('learning')}
-                className="kid-card kid-card-interactive p-4 text-center hover:bg-green-50 dark:hover:bg-gray-800 transition-colors"
+                onClick={() => onNavigate && onNavigate('learning')}
+                className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-center hover:bg-green-50 dark:hover:bg-gray-700 border-2 border-transparent hover:border-green-300"
               >
                 <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
                   <BookOpen className="h-5 w-5 text-green-600" />
@@ -602,8 +599,8 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
               </button>
 
               <button
-                onClick={() => onNavigate('help')}
-                className="kid-card kid-card-interactive p-4 text-center hover:bg-purple-50 dark:hover:bg-gray-800 transition-colors"
+                onClick={() => onNavigate && onNavigate('help')}
+                className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-center hover:bg-purple-50 dark:hover:bg-gray-700 border-2 border-transparent hover:border-purple-300"
               >
                 <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
                   <HelpCircle className="h-5 w-5 text-purple-600" />
@@ -613,8 +610,8 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
               </button>
 
               <button
-                onClick={() => onNavigate('achievements')}
-                className="kid-card kid-card-interactive p-4 text-center hover:bg-yellow-50 dark:hover:bg-gray-800 transition-colors"
+                onClick={() => onNavigate && onNavigate('achievements')}
+                className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-center hover:bg-yellow-50 dark:hover:bg-gray-700 border-2 border-transparent hover:border-yellow-300"
               >
                 <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-2">
                   <Trophy className="h-5 w-5 text-yellow-600" />
@@ -657,7 +654,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
 
       {/* Modals */}
       {showWritingTypeModal && (
-        <ImprovedWritingTypeSelectionModal
+        <WritingTypeSelectionModal
           isOpen={showWritingTypeModal}
           onClose={() => setShowWritingTypeModal(false)}
           onSelect={handleWritingTypeSelect}
