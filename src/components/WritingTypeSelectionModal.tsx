@@ -18,7 +18,7 @@ interface WritingType {
   color: string;
 }
 
-export function WritingTypeSelectionModal({ isOpen, onClose, onSelect }: WritingTypeSelectionModalProps) {
+export function WritingTypeSelectionModal({ isOpen, onClose, onSelect }: WritingTypeSelectionModalModalProps) {
   const [selectedLevel, setSelectedLevel] = useState<'All' | 'Easy' | 'Medium' | 'Hard'>('All');
   const [showHelp, setShowHelp] = useState<string | null>(null);
 
@@ -78,6 +78,51 @@ export function WritingTypeSelectionModal({ isOpen, onClose, onSelect }: Writing
       difficulty: 'Easy',
       examples: ['My school trip', 'A special celebration', 'What I did on the weekend'],
       color: 'from-orange-500 to-orange-600'
+    },
+    {
+      id: 'technical',
+      name: 'Technical Writing',
+      description: 'Provide clear, concise, and accurate information about a specific subject',
+      icon: <FileText className="h-5 w-5" />,
+      difficulty: 'Hard',
+      examples: ['Instruction manuals', 'User guides', 'Scientific reports'],
+      color: 'from-gray-500 to-gray-600'
+    },
+    {
+      id: 'creative',
+      name: 'Creative Writing',
+      description: 'Express thoughts and feelings in an imaginative way',
+      icon: <Star className="h-5 w-5" />,
+      difficulty: 'Medium',
+      examples: ['Poems', 'Song lyrics', 'Short stories'],
+      color: 'from-yellow-500 to-yellow-600'
+    },
+    {
+      id: 'diary-entry',
+      name: 'Diary Entry',
+      description: 'Write about personal experiences, thoughts, and feelings in a chronological order',
+      icon: <BookOpen className="h-5 w-5" />,
+      difficulty: 'Easy',
+      examples: ['A day in my life', 'My thoughts on a new experience', 'A special event'],
+      color: 'from-blue-300 to-blue-400'
+    },
+    {
+      id: 'newspaper-report',
+      name: 'Newspaper Report',
+      description: 'Report factual information about an event or topic in a clear and objective manner',
+      icon: <FileText className="h-5 w-5" />,
+      difficulty: 'Medium',
+      examples: ['School sports day report', 'Local community event', 'Science fair results'],
+      color: 'from-gray-400 to-gray-500'
+    },
+    {
+      id: 'analytical',
+      name: 'Analytical Writing',
+      description: 'Examine and evaluate information, presenting a reasoned argument or interpretation',
+      icon: <FileText className="h-5 w-5" />,
+      difficulty: 'Hard',
+      examples: ['Literary analysis', 'Argumentative essays', 'Research papers'],
+      color: 'from-teal-500 to-teal-600'
     }
   ];
 
