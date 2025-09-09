@@ -288,7 +288,7 @@ export function TabbedCoachPanel({
         {activeTab === 'coach' && (
           <div className="h-full flex flex-col">
             {/* Chat Messages */}
-            <div className="flex-1 overflow-y-auto p-3 space-y-2">
+            <div className="flex-1 overflow-y-auto p-3 space-y-1">
               {chatMessages.map((message) => (
                 <div
                   key={message.id}
@@ -304,9 +304,6 @@ export function TabbedCoachPanel({
                     }`}
                   >
                     <p className="text-xs">{message.text}</p>
-                    <p className="text-xs opacity-70 mt-1">
-                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </p>
                   </div>
                 </div>
               ))}
@@ -420,52 +417,25 @@ export function TabbedCoachPanel({
             <div className="bg-white/10 rounded-lg p-4">
               <h3 className="text-white font-semibold mb-3 flex items-center">
                 <BookOpen className="w-4 h-4 mr-2" />
-                Word Suggestions
+                Vocabulary Builder
               </h3>
+              <p className="text-white/80 text-sm mb-3">Enhance your vocabulary by exploring synonyms and definitions.</p>
               <div className="space-y-3">
-                <div>
-                  <p className="text-white/90 text-sm font-medium">Instead of "said":</p>
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {['whispered', 'exclaimed', 'declared', 'muttered', 'shouted'].map(word => (
-                      <span key={word} className="bg-white/20 text-white/90 px-2 py-1 rounded text-xs">
-                        {word}
-                      </span>
-                    ))}
-                  </div>
+                <input
+                  type="text"
+                  placeholder="Enter a word..."
+                  className="w-full bg-white/20 text-white placeholder-white/60 px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-white/30"
+                />
+                <button
+                  className="w-full bg-white/20 hover:bg-white/30 text-white px-3 py-2 rounded-lg text-sm transition-colors"
+                >
+                  <Search className="w-4 h-4 mr-2 inline-block" />
+                  Find Synonyms
+                </button>
+                <div className="bg-white/10 rounded-lg p-3">
+                  <h4 className="text-white font-semibold mb-2">Synonyms:</h4>
+                  <p className="text-white/80 text-sm">No synonyms found yet. Try searching for a word!</p>
                 </div>
-                <div>
-                  <p className="text-white/90 text-sm font-medium">Instead of "big":</p>
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {['enormous', 'massive', 'gigantic', 'colossal', 'immense'].map(word => (
-                      <span key={word} className="bg-white/20 text-white/90 px-2 py-1 rounded text-xs">
-                        {word}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <p className="text-white/90 text-sm font-medium">Instead of "good":</p>
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {['excellent', 'outstanding', 'remarkable', 'superb', 'fantastic'].map(word => (
-                      <span key={word} className="bg-white/20 text-white/90 px-2 py-1 rounded text-xs">
-                        {word}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white/10 rounded-lg p-4">
-              <h3 className="text-white font-semibold mb-3 flex items-center">
-                <Sparkles className="w-4 h-4 mr-2" />
-                Writing Techniques
-              </h3>
-              <div className="space-y-2 text-sm text-white/90">
-                <p>• Use sensory details (sight, sound, smell, touch, taste)</p>
-                <p>• Show emotions through actions, not just words</p>
-                <p>• Vary your sentence lengths for better flow</p>
-                <p>• Use dialogue to reveal character personality</p>
               </div>
             </div>
           </div>
@@ -476,50 +446,22 @@ export function TabbedCoachPanel({
             <div className="bg-white/10 rounded-lg p-4">
               <h3 className="text-white font-semibold mb-3 flex items-center">
                 <TrendingUp className="w-4 h-4 mr-2" />
-                Writing Progress
+                Your Progress
               </h3>
+              <p className="text-white/80 text-sm mb-3">Track your writing journey and see how much you've improved!</p>
               <div className="space-y-3">
-                <div>
-                  <div className="flex justify-between text-white/90 text-sm mb-1">
-                    <span>Story Length</span>
-                    <span>{wordCount}/500 words</span>
-                  </div>
-                  <div className="bg-white/20 rounded-full h-2">
-                    <div
-                      className="bg-gradient-to-r from-blue-400 to-purple-400 h-2 rounded-full transition-all duration-500"
-                      style={{ width: `${Math.min(100, (wordCount / 500) * 100)}%` }}
-                    />
-                  </div>
+                <div className="bg-white/10 rounded-lg p-3">
+                  <h4 className="text-white font-semibold mb-2">Essays Completed:</h4>
+                  <p className="text-white/80 text-2xl font-bold">5</p>
                 </div>
-                
-                <div>
-                  <div className="flex justify-between text-white/90 text-sm mb-1">
-                    <span>Structure</span>
-                    <span>{paragraphCount >= 3 ? 'Complete' : 'In Progress'}</span>
-                  </div>
-                  <div className="bg-white/20 rounded-full h-2">
-                    <div
-                      className="bg-gradient-to-r from-green-400 to-blue-400 h-2 rounded-full transition-all duration-500"
-                      style={{ width: `${Math.min(100, (paragraphCount / 3) * 100)}%` }}
-                    />
-                  </div>
+                <div className="bg-white/10 rounded-lg p-3">
+                  <h4 className="text-white font-semibold mb-2">Average Quality Score:</h4>
+                  <p className="text-white/80 text-2xl font-bold">75%</p>
                 </div>
-              </div>
-            </div>
-
-            <div className="bg-white/10 rounded-lg p-4">
-              <h3 className="text-white font-semibold mb-3 flex items-center">
-                <Target className="w-4 h-4 mr-2" />
-                Next Steps
-              </h3>
-              <div className="space-y-2 text-sm text-white/90">
-                {wordCount < 100 && <p>• Keep writing to develop your story</p>}
-                {paragraphCount < 3 && <p>• Add more paragraphs for better structure</p>}
-                {!content.includes('"') && <p>• Try adding some dialogue</p>}
-                {sentenceCount < 5 && <p>• Expand with more detailed sentences</p>}
-                {wordCount >= 100 && paragraphCount >= 3 && content.includes('"') && (
-                  <p>• Great work! Consider adding more descriptive details</p>
-                )}
+                <div className="bg-white/10 rounded-lg p-3">
+                  <h4 className="text-white font-semibold mb-2">Words Written Total:</h4>
+                  <p className="text-white/80 text-2xl font-bold">12,345</p>
+                </div>
               </div>
             </div>
           </div>
