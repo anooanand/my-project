@@ -18,7 +18,7 @@ interface WritingType {
   color: string;
 }
 
-export function ImprovedWritingTypeSelectionModal({ isOpen, onClose, onSelect }: WritingTypeSelectionModalProps) {
+export function WritingTypeSelectionModal({ isOpen, onClose, onSelect }: WritingTypeSelectionModalProps) {
   const [selectedLevel, setSelectedLevel] = useState<'All' | 'Easy' | 'Medium' | 'Hard'>('All');
   const [showHelp, setShowHelp] = useState<string | null>(null);
 
@@ -154,7 +154,7 @@ export function ImprovedWritingTypeSelectionModal({ isOpen, onClose, onSelect }:
               <div
                 key={type.id}
                 onClick={() => onSelect(type.id)}
-                className="kid-card kid-card-interactive relative p-5 cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:scale-102 border-2 border-transparent hover:border-blue-300"
+                className="relative p-5 cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:scale-102 border-2 border-transparent hover:border-blue-300 bg-white dark:bg-gray-800 rounded-2xl shadow-lg"
               >
                 {/* Popular Badge */}
                 {type.isPopular && (
@@ -253,7 +253,7 @@ export function ImprovedWritingTypeSelectionModal({ isOpen, onClose, onSelect }:
             </div>
             <button
               onClick={onClose}
-              className="kid-btn kid-btn-outline"
+              className="px-4 py-2 bg-gray-200 text-gray-800 rounded-full font-semibold text-sm shadow-lg hover:bg-gray-300 transition-colors transform hover:scale-105"
             >
               Cancel
             </button>
