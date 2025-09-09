@@ -228,18 +228,18 @@ export function TabbedCoachPanel({
   return (
     <div className="h-full bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-700 rounded-lg shadow-lg overflow-hidden">
       {/* Header */}
-      <div className="bg-white/10 backdrop-blur-sm p-4 border-b border-white/20">
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="text-white font-semibold">Writing Buddy</h2>
+      <div className="bg-white/10 backdrop-blur-sm p-3 border-b border-white/20">
+        <div className="flex items-center justify-between mb-1">
+          <h2 className="text-white font-semibold text-sm">Writing Buddy</h2>
           <div className="flex items-center space-x-2">
             {aiStatus.loading ? (
-              <Loader className="w-4 h-4 text-white animate-spin" />
+              <Loader className="w-3 h-3 text-white animate-spin" />
             ) : (
               <div className="flex items-center space-x-1">
                 {aiStatus.connected ? (
-                  <Wifi className="w-4 h-4 text-green-300" />
+                  <Wifi className="w-3 h-3 text-green-300" />
                 ) : (
-                  <WifiOff className="w-4 h-4 text-red-300" />
+                  <WifiOff className="w-3 h-3 text-red-300" />
                 )}
                 <span className={`text-xs ${aiStatus.connected ? 'text-green-300' : 'text-red-300'}`}>
                   {aiStatus.connected ? 'AI Connected' : 'AI Offline'}
@@ -255,7 +255,7 @@ export function TabbedCoachPanel({
             )}
           </div>
         </div>
-        <p className="text-white/80 text-sm">Ask your Writing Buddy anything!</p>
+        <p className="text-white/80 text-xs">Ask your Writing Buddy anything!</p>
       </div>
 
       {/* Tabs */}
@@ -264,20 +264,20 @@ export function TabbedCoachPanel({
           {[
             { id: 'coach', label: 'Coach', icon: MessageSquare },
             { id: 'analysis', label: 'Analysis', icon: BarChart3 },
-            { id: 'vocabulary', label: 'Vocabulary', icon: BookOpen },
+            { id: 'vocabulary', label: 'Vocab', icon: BookOpen },
             { id: 'progress', label: 'Progress', icon: TrendingUp }
           ].map(({ id, label, icon: Icon }) => (
             <button
               key={id}
               onClick={() => setActiveTab(id as TabType)}
-              className={`flex-1 flex flex-col items-center py-3 px-2 text-xs transition-all duration-200 ${
+              className={`flex-1 flex flex-col items-center py-2 px-1 text-xs transition-all duration-200 ${
                 activeTab === id
                   ? 'bg-white/20 text-white border-b-2 border-white'
                   : 'text-white/70 hover:text-white hover:bg-white/10'
               }`}
             >
-              <Icon className="w-4 h-4 mb-1" />
-              <span>{label}</span>
+              <Icon className="w-3 h-3 mb-1" />
+              <span className="text-xs">{label}</span>
             </button>
           ))}
         </div>
@@ -288,14 +288,14 @@ export function TabbedCoachPanel({
         {activeTab === 'coach' && (
           <div className="h-full flex flex-col">
             {/* Chat Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            <div className="flex-1 overflow-y-auto p-3 space-y-2">
               {chatMessages.map((message) => (
                 <div
                   key={message.id}
                   className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[80%] p-3 rounded-lg ${
+                    className={`max-w-[85%] p-2 rounded-lg ${
                       message.isUser
                         ? 'bg-white text-gray-800'
                         : message.isTyping
@@ -303,7 +303,7 @@ export function TabbedCoachPanel({
                         : 'bg-white/20 text-white'
                     }`}
                   >
-                    <p className="text-sm">{message.text}</p>
+                    <p className="text-xs">{message.text}</p>
                     <p className="text-xs opacity-70 mt-1">
                       {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
@@ -315,9 +315,9 @@ export function TabbedCoachPanel({
 
             {/* Quick Questions */}
             {showQuickQuestions && chatMessages.length <= 2 && (
-              <div className="p-4 border-t border-white/20">
-                <p className="text-white/80 text-xs mb-3">Quick questions to get started:</p>
-                <div className="space-y-2">
+              <div className="p-3 border-t border-white/20">
+                <p className="text-white/80 text-xs mb-2">Quick questions to get started:</p>
+                <div className="space-y-1">
                   {[
                     "How can I improve my introduction?",
                     "What's a good synonym for 'said'?",
@@ -336,7 +336,7 @@ export function TabbedCoachPanel({
             )}
 
             {/* Chat Input */}
-            <div className="p-4 border-t border-white/20">
+            <div className="p-3 border-t border-white/20">
               <div className="flex space-x-2">
                 <input
                   ref={inputRef}
@@ -345,7 +345,7 @@ export function TabbedCoachPanel({
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="Ask for help..."
-                  className="flex-1 bg-white/20 text-white placeholder-white/60 px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-white/30"
+                  className="flex-1 bg-white/20 text-white placeholder-white/60 px-2 py-2 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-white/30"
                   disabled={isAITyping}
                 />
                 <button
@@ -353,7 +353,7 @@ export function TabbedCoachPanel({
                   disabled={!inputMessage.trim() || isAITyping}
                   className="bg-white/20 hover:bg-white/30 disabled:opacity-50 disabled:cursor-not-allowed text-white p-2 rounded-lg transition-colors"
                 >
-                  <Send className="w-4 h-4" />
+                  <Send className="w-3 h-3" />
                 </button>
               </div>
             </div>
@@ -361,13 +361,13 @@ export function TabbedCoachPanel({
         )}
 
         {activeTab === 'analysis' && (
-          <div className="p-4 space-y-4 overflow-y-auto h-full">
-            <div className="bg-white/10 rounded-lg p-4">
-              <h3 className="text-white font-semibold mb-3 flex items-center">
-                <BarChart3 className="w-4 h-4 mr-2" />
+          <div className="p-3 space-y-3 overflow-y-auto h-full">
+            <div className="bg-white/10 rounded-lg p-3">
+              <h3 className="text-white font-semibold mb-2 flex items-center text-sm">
+                <BarChart3 className="w-3 h-3 mr-2" />
                 Writing Statistics
               </h3>
-              <div className="space-y-2 text-sm">
+              <div className="space-y-1 text-xs">
                 <div className="flex justify-between text-white/90">
                   <span>Words:</span>
                   <span>{wordCount}</span>
@@ -391,21 +391,21 @@ export function TabbedCoachPanel({
               </div>
             </div>
 
-            <div className="bg-white/10 rounded-lg p-4">
-              <h3 className="text-white font-semibold mb-3 flex items-center">
-                <Star className="w-4 h-4 mr-2" />
+            <div className="bg-white/10 rounded-lg p-3">
+              <h3 className="text-white font-semibold mb-2 flex items-center text-sm">
+                <Star className="w-3 h-3 mr-2" />
                 Quality Score
               </h3>
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2">
                 <div className="flex-1 bg-white/20 rounded-full h-2">
                   <div
                     className="bg-gradient-to-r from-yellow-400 to-green-400 h-2 rounded-full transition-all duration-500"
                     style={{ width: `${qualityScore}%` }}
                   />
                 </div>
-                <span className="text-white font-semibold">{Math.round(qualityScore)}%</span>
+                <span className="text-white font-semibold text-xs">{Math.round(qualityScore)}%</span>
               </div>
-              <p className="text-white/80 text-xs mt-2">
+              <p className="text-white/80 text-xs mt-1">
                 {qualityScore >= 80 ? 'Excellent work!' : 
                  qualityScore >= 60 ? 'Good progress!' : 
                  qualityScore >= 40 ? 'Keep writing!' : 
