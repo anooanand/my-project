@@ -341,6 +341,7 @@ function AppContent() {
           <Route path="/faq" element={<FAQPage onNavigate={handleNavigation} />} />
           <Route path="/about" element={<AboutPage onNavigate={handleNavigation} />} />
           <Route path="/demo" element={<DemoPage onNavigate={handleNavigation} />} />
+          <Route path="/nsw-demo" element={<NSWDemoPage />} />
           <Route path="/dashboard" element={
             user ? (
               <Dashboard 
