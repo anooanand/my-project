@@ -1,5 +1,6 @@
 /* ===================================
-   KID-FRIENDLY THEME STYLESHEET
+   IMPROVED KID-FRIENDLY THEME STYLESHEET
+   Based on recommendations for 11-12 year olds
    ================================= */
 
 /* ===================================
@@ -50,23 +51,31 @@
   --kid-text-white: #FFFFFF;
   
   /* Border and Shadow */
-  --kid-border-radius: 16px;
-  --kid-border-radius-large: 24px;
-  --kid-border-radius-small: 12px;
+  --kid-border-radius: 12px;
+  --kid-border-radius-large: 20px;
+  --kid-border-radius-small: 8px;
   --kid-shadow-soft: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   --kid-shadow-medium: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   --kid-shadow-large: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   --kid-shadow-colorful: 0 10px 25px rgba(79, 70, 229, 0.3);
   
-  /* Spacing for Touch Targets */
-  --kid-touch-target: 48px;
-  --kid-touch-target-large: 56px;
+  /* IMPROVED: Consistent Icon Sizing */
+  --kid-icon-xs: 12px;
+  --kid-icon-sm: 16px;
+  --kid-icon-md: 20px;
+  --kid-icon-lg: 24px;
+  --kid-icon-xl: 32px;
+  --kid-icon-2xl: 40px;
+  
+  /* IMPROVED: Spacing for Touch Targets - Slightly reduced */
+  --kid-touch-target: 44px;
+  --kid-touch-target-large: 52px;
   --kid-spacing-xs: 4px;
   --kid-spacing-sm: 8px;
-  --kid-spacing-md: 16px;
-  --kid-spacing-lg: 24px;
-  --kid-spacing-xl: 32px;
-  --kid-spacing-2xl: 48px;
+  --kid-spacing-md: 12px;
+  --kid-spacing-lg: 20px;
+  --kid-spacing-xl: 28px;
+  --kid-spacing-2xl: 40px;
   
   /* Animation Timing */
   --kid-transition-fast: 0.15s ease-out;
@@ -91,11 +100,11 @@
 }
 
 /* ===================================
-   TYPOGRAPHY
+   IMPROVED TYPOGRAPHY - More readable
    ================================= */
 
 .kid-heading-1 {
-  font-size: 2.5rem;
+  font-size: 2.25rem;
   font-weight: 800;
   line-height: 1.2;
   background: var(--kid-gradient-primary);
@@ -106,7 +115,7 @@
 }
 
 .kid-heading-2 {
-  font-size: 2rem;
+  font-size: 1.75rem;
   font-weight: 700;
   line-height: 1.3;
   color: var(--kid-text-primary);
@@ -114,7 +123,7 @@
 }
 
 .kid-heading-3 {
-  font-size: 1.5rem;
+  font-size: 1.375rem;
   font-weight: 600;
   line-height: 1.4;
   color: var(--kid-text-primary);
@@ -122,7 +131,7 @@
 }
 
 .kid-text-large {
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   font-weight: 500;
   line-height: 1.5;
 }
@@ -142,7 +151,7 @@
 }
 
 /* ===================================
-   BUTTONS - LARGE TOUCH TARGETS
+   IMPROVED BUTTONS - Better sizing
    ================================= */
 
 .kid-btn {
@@ -150,10 +159,10 @@
   align-items: center;
   justify-content: center;
   min-height: var(--kid-touch-target);
-  padding: var(--kid-spacing-md) var(--kid-spacing-xl);
+  padding: var(--kid-spacing-md) var(--kid-spacing-lg);
   border: none;
   border-radius: var(--kid-border-radius);
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 600;
   text-decoration: none;
   cursor: pointer;
@@ -161,10 +170,11 @@
   box-shadow: var(--kid-shadow-soft);
   position: relative;
   overflow: hidden;
+  white-space: nowrap;
 }
 
 .kid-btn:hover {
-  transform: translateY(-2px) scale(1.02);
+  transform: translateY(-1px) scale(1.02);
   box-shadow: var(--kid-shadow-medium);
 }
 
@@ -175,7 +185,7 @@
 
 .kid-btn:focus {
   outline: none;
-  box-shadow: var(--kid-shadow-medium), 0 0 0 4px rgba(79, 70, 229, 0.3);
+  box-shadow: var(--kid-shadow-medium), 0 0 0 3px rgba(79, 70, 229, 0.3);
 }
 
 /* Button Variants */
@@ -216,15 +226,16 @@
 
 .kid-btn-large {
   min-height: var(--kid-touch-target-large);
-  padding: var(--kid-spacing-lg) var(--kid-spacing-2xl);
-  font-size: 1.25rem;
+  padding: var(--kid-spacing-lg) var(--kid-spacing-xl);
+  font-size: 1.125rem;
   border-radius: var(--kid-border-radius-large);
 }
 
 .kid-btn-outline {
   background: transparent;
-  border: 3px solid var(--kid-primary-blue);
+  border: 2px solid var(--kid-primary-blue);
   color: var(--kid-primary-blue);
+  box-shadow: none;
 }
 
 .kid-btn-outline:hover {
@@ -233,16 +244,16 @@
 }
 
 /* ===================================
-   FORM ELEMENTS - LARGE TOUCH TARGETS
+   IMPROVED FORM ELEMENTS
    ================================= */
 
 .kid-input {
   width: 100%;
   min-height: var(--kid-touch-target);
   padding: var(--kid-spacing-md) var(--kid-spacing-lg);
-  border: 3px solid #E5E7EB;
+  border: 2px solid #E5E7EB;
   border-radius: var(--kid-border-radius);
-  font-size: 1.125rem;
+  font-size: 1rem;
   font-weight: 500;
   background: var(--kid-bg-card);
   color: var(--kid-text-primary);
@@ -252,8 +263,8 @@
 .kid-input:focus {
   outline: none;
   border-color: var(--kid-primary-blue);
-  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.2);
-  transform: scale(1.02);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+  transform: scale(1.01);
 }
 
 .kid-input::placeholder {
@@ -264,7 +275,7 @@
 .kid-input-large {
   min-height: var(--kid-touch-target-large);
   padding: var(--kid-spacing-lg) var(--kid-spacing-xl);
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   border-radius: var(--kid-border-radius-large);
 }
 
@@ -284,20 +295,20 @@
 }
 
 /* ===================================
-   CARDS AND CONTAINERS
+   IMPROVED CARDS AND CONTAINERS
    ================================= */
 
 .kid-card {
   background: var(--kid-bg-card);
   border-radius: var(--kid-border-radius-large);
-  padding: var(--kid-spacing-xl);
+  padding: var(--kid-spacing-lg);
   box-shadow: var(--kid-shadow-soft);
   transition: all var(--kid-transition-normal);
   border: 2px solid transparent;
 }
 
 .kid-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-2px);
   box-shadow: var(--kid-shadow-large);
   border-color: var(--kid-primary-blue);
 }
@@ -326,13 +337,47 @@
 }
 
 /* ===================================
-   NAVIGATION AND MENUS
+   CONSISTENT ICON SIZING CLASSES
+   ================================= */
+
+.kid-icon-xs {
+  width: var(--kid-icon-xs);
+  height: var(--kid-icon-xs);
+}
+
+.kid-icon-sm {
+  width: var(--kid-icon-sm);
+  height: var(--kid-icon-sm);
+}
+
+.kid-icon-md {
+  width: var(--kid-icon-md);
+  height: var(--kid-icon-md);
+}
+
+.kid-icon-lg {
+  width: var(--kid-icon-lg);
+  height: var(--kid-icon-lg);
+}
+
+.kid-icon-xl {
+  width: var(--kid-icon-xl);
+  height: var(--kid-icon-xl);
+}
+
+.kid-icon-2xl {
+  width: var(--kid-icon-2xl);
+  height: var(--kid-icon-2xl);
+}
+
+/* ===================================
+   IMPROVED NAVIGATION AND MENUS
    ================================= */
 
 .kid-nav {
   background: var(--kid-bg-card);
   border-radius: var(--kid-border-radius-large);
-  padding: var(--kid-spacing-md);
+  padding: var(--kid-spacing-sm);
   box-shadow: var(--kid-shadow-medium);
 }
 
@@ -340,7 +385,7 @@
   display: flex;
   align-items: center;
   min-height: var(--kid-touch-target);
-  padding: var(--kid-spacing-md) var(--kid-spacing-lg);
+  padding: var(--kid-spacing-sm) var(--kid-spacing-md);
   border-radius: var(--kid-border-radius);
   text-decoration: none;
   color: var(--kid-text-secondary);
@@ -351,7 +396,7 @@
 .kid-nav-item:hover {
   background: var(--kid-gradient-primary);
   color: var(--kid-text-white);
-  transform: scale(1.05);
+  transform: scale(1.02);
 }
 
 .kid-nav-item.active {
@@ -360,17 +405,17 @@
 }
 
 /* ===================================
-   ALERTS AND NOTIFICATIONS
+   IMPROVED ALERTS AND NOTIFICATIONS
    ================================= */
 
 .kid-alert {
-  padding: var(--kid-spacing-lg);
+  padding: var(--kid-spacing-md);
   border-radius: var(--kid-border-radius);
   border: 2px solid;
   font-weight: 500;
   display: flex;
   align-items: center;
-  gap: var(--kid-spacing-md);
+  gap: var(--kid-spacing-sm);
 }
 
 .kid-alert-success {
@@ -403,9 +448,9 @@
 
 .kid-progress {
   width: 100%;
-  height: 12px;
+  height: 10px;
   background: #E5E7EB;
-  border-radius: 6px;
+  border-radius: 5px;
   overflow: hidden;
   position: relative;
 }
@@ -413,7 +458,7 @@
 .kid-progress-bar {
   height: 100%;
   background: var(--kid-gradient-primary);
-  border-radius: 6px;
+  border-radius: 5px;
   transition: width var(--kid-transition-slow);
   position: relative;
 }
@@ -430,30 +475,30 @@
 }
 
 .kid-spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #E5E7EB;
-  border-top: 4px solid var(--kid-primary-blue);
+  width: 32px;
+  height: 32px;
+  border: 3px solid #E5E7EB;
+  border-top: 3px solid var(--kid-primary-blue);
   border-radius: 50%;
   animation: kid-spin 1s linear infinite;
 }
 
 .kid-spinner-large {
-  width: 60px;
-  height: 60px;
-  border-width: 6px;
+  width: 48px;
+  height: 48px;
+  border-width: 4px;
 }
 
 /* ===================================
-   BADGES AND LABELS
+   IMPROVED BADGES AND LABELS
    ================================= */
 
 .kid-badge {
   display: inline-flex;
   align-items: center;
-  padding: var(--kid-spacing-xs) var(--kid-spacing-md);
+  padding: var(--kid-spacing-xs) var(--kid-spacing-sm);
   border-radius: var(--kid-border-radius-small);
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -483,13 +528,13 @@
     transform: translate3d(0, 0, 0);
   }
   40%, 43% {
-    transform: translate3d(0, -30px, 0);
+    transform: translate3d(0, -20px, 0);
   }
   70% {
-    transform: translate3d(0, -15px, 0);
+    transform: translate3d(0, -10px, 0);
   }
   90% {
-    transform: translate3d(0, -4px, 0);
+    transform: translate3d(0, -3px, 0);
   }
 }
 
@@ -498,7 +543,7 @@
     transform: scale(1);
   }
   50% {
-    transform: scale(1.05);
+    transform: scale(1.03);
   }
   100% {
     transform: scale(1);
@@ -510,19 +555,19 @@
     transform: rotateZ(0);
   }
   15% {
-    transform: rotateZ(-15deg);
-  }
-  20% {
-    transform: rotateZ(10deg);
-  }
-  25% {
     transform: rotateZ(-10deg);
   }
+  20% {
+    transform: rotateZ(8deg);
+  }
+  25% {
+    transform: rotateZ(-6deg);
+  }
   30% {
-    transform: rotateZ(6deg);
+    transform: rotateZ(4deg);
   }
   35% {
-    transform: rotateZ(-4deg);
+    transform: rotateZ(-2deg);
   }
   40%, 100% {
     transform: rotateZ(0);
@@ -561,7 +606,7 @@
     transform: translateY(0px);
   }
   50% {
-    transform: translateY(-10px);
+    transform: translateY(-8px);
   }
 }
 
@@ -597,30 +642,30 @@
 /* Tablet Portrait (768px and up) */
 @media (min-width: 768px) {
   :root {
-    --kid-touch-target: 52px;
-    --kid-touch-target-large: 60px;
+    --kid-touch-target: 48px;
+    --kid-touch-target-large: 56px;
   }
   
   .kid-heading-1 {
-    font-size: 3rem;
+    font-size: 2.5rem;
   }
   
   .kid-heading-2 {
-    font-size: 2.25rem;
+    font-size: 2rem;
   }
   
   .kid-btn {
-    font-size: 1.25rem;
-    padding: var(--kid-spacing-lg) var(--kid-spacing-2xl);
+    font-size: 1.125rem;
+    padding: var(--kid-spacing-md) var(--kid-spacing-xl);
   }
   
   .kid-input {
-    font-size: 1.25rem;
-    padding: var(--kid-spacing-lg) var(--kid-spacing-xl);
+    font-size: 1.125rem;
+    padding: var(--kid-spacing-md) var(--kid-spacing-lg);
   }
   
   .kid-card {
-    padding: var(--kid-spacing-2xl);
+    padding: var(--kid-spacing-xl);
   }
   
   .kid-modal {
@@ -631,12 +676,12 @@
 /* Tablet Landscape (1024px and up) */
 @media (min-width: 1024px) {
   :root {
-    --kid-touch-target: 48px;
-    --kid-touch-target-large: 56px;
+    --kid-touch-target: 44px;
+    --kid-touch-target-large: 52px;
   }
   
   .kid-heading-1 {
-    font-size: 3.5rem;
+    font-size: 2.75rem;
   }
   
   .kid-grid-tablet {
@@ -746,7 +791,7 @@
 
 /* Focus indicators for keyboard navigation */
 .kid-theme *:focus {
-  outline: 3px solid var(--kid-primary-blue);
+  outline: 2px solid var(--kid-primary-blue);
   outline-offset: 2px;
 }
 
@@ -824,4 +869,106 @@
     box-shadow: none;
     border: 1px solid #ccc;
   }
+}
+
+/* ===================================
+   SPECIFIC IMPROVEMENTS FOR COMPONENTS
+   ================================= */
+
+/* Dashboard specific improvements */
+.dashboard-main-card {
+  max-width: 1000px; /* Reduced from larger size */
+}
+
+.dashboard-action-card {
+  min-height: 180px; /* Reduced from 220px */
+}
+
+.dashboard-action-card .icon-container {
+  width: 48px; /* Reduced from 64px */
+  height: 48px; /* Reduced from 64px */
+}
+
+.dashboard-action-card .icon-container svg {
+  width: 24px; /* Reduced from 32px */
+  height: 24px; /* Reduced from 32px */
+}
+
+/* Writing type selection improvements */
+.writing-type-card {
+  padding: 20px; /* Reduced from 32px */
+}
+
+.writing-type-card .icon-container {
+  width: 40px; /* Reduced from 48px */
+  height: 40px; /* Reduced from 48px */
+}
+
+.writing-type-card .icon-container svg {
+  width: 20px; /* Reduced from 24px */
+  height: 20px; /* Reduced from 24px */
+}
+
+/* Writing interface improvements */
+.writing-toolbar {
+  padding: 12px 16px; /* Reduced padding */
+}
+
+.writing-toolbar .tool-button {
+  min-height: 36px; /* Reduced from 48px */
+  padding: 8px 12px; /* Reduced padding */
+}
+
+.writing-toolbar .tool-button svg {
+  width: 16px; /* Consistent small size */
+  height: 16px; /* Consistent small size */
+}
+
+.writing-buddy-sidebar {
+  width: 320px; /* Slightly reduced from 360px */
+}
+
+.writing-buddy-message {
+  padding: 12px; /* Reduced from 16px */
+  font-size: 14px; /* Slightly smaller text */
+}
+
+/* Quick help buttons */
+.quick-help-button {
+  padding: 8px 12px; /* Reduced padding */
+  font-size: 12px; /* Smaller text */
+}
+
+.quick-help-button svg {
+  width: 14px; /* Small consistent size */
+  height: 14px; /* Small consistent size */
+}
+
+/* Progress and status indicators */
+.status-indicator {
+  padding: 8px 12px; /* Reduced padding */
+}
+
+.status-indicator svg {
+  width: 16px; /* Consistent size */
+  height: 16px; /* Consistent size */
+}
+
+/* Modal improvements */
+.modal-header {
+  padding: 20px; /* Reduced from 24px */
+}
+
+.modal-content {
+  padding: 20px; /* Reduced from 24px */
+}
+
+.modal-close-button {
+  width: 32px; /* Reduced from 40px */
+  height: 32px; /* Reduced from 40px */
+}
+
+.modal-close-button svg {
+  width: 16px; /* Reduced from 20px */
+  height: 16px; /* Reduced from 20px */
 }
