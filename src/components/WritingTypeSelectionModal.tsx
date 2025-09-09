@@ -1,325 +1,262 @@
 import React, { useState } from 'react';
-import { X, BookOpen, Lightbulb, MessageSquare, Megaphone, ScrollText, Sparkles, Newspaper, Mail, Calendar, Rocket, Puzzle, Wand, Compass, MapPin, Target, Mic, Search, Filter, Star, Heart, Zap, Crown, Gem } from 'lucide-react';
+import { X, BookOpen, MessageSquare, FileText, Heart, Eye, Clock, Star, HelpCircle } from 'lucide-react';
 
 interface WritingTypeSelectionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelect: (type: string) => void; // FIXED: Changed from onSelectType to onSelect
+  onSelect: (type: string) => void;
 }
 
-const writingTypes = [
-  { 
-    value: 'narrative', 
-    label: 'Narrative', 
-    icon: Rocket, 
-    description: 'Create exciting tales with heroes and twists!',
-    color: 'from-blue-400 to-purple-500',
-    bgColor: 'from-blue-50 to-purple-50',
-    borderColor: 'border-blue-300',
-    difficulty: 'Medium',
-    popular: true
-  },
-  { 
-    value: 'persuasive', 
-    label: 'Persuasive', 
-    icon: Megaphone, 
-    description: 'Share your strong ideas and get others to agree!',
-    color: 'from-orange-400 to-red-500',
-    bgColor: 'from-orange-50 to-red-50',
-    borderColor: 'border-orange-300',
-    difficulty: 'Hard',
-    popular: false
-  },
-  { 
-    value: 'expository', 
-    label: 'Expository / Informative', 
-    icon: Lightbulb, 
-    description: 'Teach others about cool topics with clear facts!',
-    color: 'from-yellow-400 to-orange-500',
-    bgColor: 'from-yellow-50 to-orange-50',
-    borderColor: 'border-yellow-300',
-    difficulty: 'Medium',
-    popular: true
-  },
-  { 
-    value: 'reflective', 
-    label: 'Reflective', 
-    icon: Sparkles, 
-    description: 'Explore your own experiences and what you learned!',
-    color: 'from-purple-400 to-pink-500',
-    bgColor: 'from-purple-50 to-pink-50',
-    borderColor: 'border-purple-300',
-    difficulty: 'Easy',
-    popular: false
-  },
-  { 
-    value: 'descriptive', 
-    label: 'Descriptive', 
-    icon: Wand, 
-    description: 'Use amazing words to describe people, places, and things!',
-    color: 'from-green-400 to-teal-500',
-    bgColor: 'from-green-50 to-teal-50',
-    borderColor: 'border-green-300',
-    difficulty: 'Easy',
-    popular: true
-  },
-  { 
-    value: 'recount', 
-    label: 'Recount', 
-    icon: Calendar, 
-    description: 'Tell about events in the order they happened!',
-    color: 'from-indigo-400 to-blue-500',
-    bgColor: 'from-indigo-50 to-blue-50',
-    borderColor: 'border-indigo-300',
-    difficulty: 'Easy',
-    popular: false
-  },
-  { 
-    value: 'discursive', 
-    label: 'Discursive', 
-    icon: MessageSquare, 
-    description: 'Look at different ideas about a topic, then share your view!',
-    color: 'from-pink-400 to-rose-500',
-    bgColor: 'from-pink-50 to-rose-50',
-    borderColor: 'border-pink-300',
-    difficulty: 'Hard',
-    popular: false
-  },
-  { 
-    value: 'news report', 
-    label: 'News Report', 
-    icon: Newspaper, 
-    description: 'Report the facts like a real journalist!',
-    color: 'from-gray-400 to-slate-500',
-    bgColor: 'from-gray-50 to-slate-50',
-    borderColor: 'border-gray-300',
-    difficulty: 'Medium',
-    popular: false
-  },
-  { 
-    value: 'letter', 
-    label: 'Letter', 
-    icon: Mail, 
-    description: 'Write a friendly note or an important message!',
-    color: 'from-cyan-400 to-blue-500',
-    bgColor: 'from-cyan-50 to-blue-50',
-    borderColor: 'border-cyan-300',
-    difficulty: 'Easy',
-    popular: false
-  },
-  { 
-    value: 'diary entry', 
-    label: 'Diary Entry', 
-    icon: BookOpen, 
-    description: 'Write down your daily adventures and feelings!',
-    color: 'from-emerald-400 to-green-500',
-    bgColor: 'from-emerald-50 to-green-50',
-    borderColor: 'border-emerald-300',
-    difficulty: 'Easy',
-    popular: false
-  },
-  { 
-    value: 'speech', 
-    label: 'Speech', 
-    icon: Mic, 
-    description: 'Deliver a powerful speech to inspire and engage your audience!',
-    color: 'from-violet-400 to-purple-500',
-    bgColor: 'from-violet-50 to-purple-50',
-    borderColor: 'border-violet-300',
-    difficulty: 'Hard',
-    popular: false
-  }
-];
+interface WritingType {
+  id: string;
+  name: string;
+  description: string;
+  icon: React.ReactNode;
+  difficulty: 'Easy' | 'Medium' | 'Hard';
+  isPopular?: boolean;
+  examples: string[];
+  color: string;
+}
 
-export function WritingTypeSelectionModal({ isOpen, onClose, onSelect }: WritingTypeSelectionModalProps) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedDifficulty, setSelectedDifficulty] = useState('All');
-  const [showPopularOnly, setShowPopularOnly] = useState(false);
+export function ImprovedWritingTypeSelectionModal({ isOpen, onClose, onSelect }: WritingTypeSelectionModalProps) {
+  const [selectedLevel, setSelectedLevel] = useState<'All' | 'Easy' | 'Medium' | 'Hard'>('All');
+  const [showHelp, setShowHelp] = useState<string | null>(null);
 
-  if (!isOpen) return null;
+  const writingTypes: WritingType[] = [
+    {
+      id: 'narrative',
+      name: 'Story Writing',
+      description: 'Write exciting stories with characters and adventures',
+      icon: <BookOpen className="h-6 w-6" />,
+      difficulty: 'Medium',
+      isPopular: true,
+      examples: ['Adventure stories', 'Fantasy tales', 'Mystery stories'],
+      color: 'from-blue-500 to-blue-600'
+    },
+    {
+      id: 'persuasive',
+      name: 'Convince & Persuade',
+      description: 'Write to change someone\'s mind about something',
+      icon: <MessageSquare className="h-6 w-6" />,
+      difficulty: 'Hard',
+      examples: ['Should kids have more recess?', 'Why we need to protect animals'],
+      color: 'from-red-500 to-red-600'
+    },
+    {
+      id: 'expository',
+      name: 'Explain & Teach',
+      description: 'Teach others about something you know well',
+      icon: <FileText className="h-6 w-6" />,
+      difficulty: 'Medium',
+      examples: ['How to make your favorite snack', 'All about dinosaurs'],
+      color: 'from-green-500 to-green-600'
+    },
+    {
+      id: 'reflective',
+      name: 'Personal Stories',
+      description: 'Write about your own experiences and feelings',
+      icon: <Heart className="h-6 w-6" />,
+      difficulty: 'Easy',
+      isPopular: true,
+      examples: ['My best day ever', 'When I learned something new'],
+      color: 'from-pink-500 to-pink-600'
+    },
+    {
+      id: 'descriptive',
+      name: 'Paint with Words',
+      description: 'Describe places, people, or things in detail',
+      icon: <Eye className="h-6 w-6" />,
+      difficulty: 'Easy',
+      examples: ['My favorite place', 'A person I admire'],
+      color: 'from-purple-500 to-purple-600'
+    },
+    {
+      id: 'recount',
+      name: 'Tell What Happened',
+      description: 'Share events in the order they happened',
+      icon: <Clock className="h-6 w-6" />,
+      difficulty: 'Easy',
+      examples: ['My school trip', 'A special celebration'],
+      color: 'from-orange-500 to-orange-600'
+    }
+  ];
 
-  const filteredTypes = writingTypes.filter(type => {
-    const matchesSearch = type.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         type.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDifficulty = selectedDifficulty === 'All' || type.difficulty === selectedDifficulty;
-    const matchesPopular = !showPopularOnly || type.popular;
-    
-    return matchesSearch && matchesDifficulty && matchesPopular;
-  });
-
-  // FIXED: Proper click handler that calls onSelect
-  const handleTypeSelect = (type: string) => {
-    console.log('🎯 WritingTypeSelectionModal: Type selected:', type);
-    
-    // Store in localStorage for persistence
-    localStorage.setItem('selectedWritingType', type);
-    
-    // Call the parent's onSelect callback
-    onSelect(type);
-    
-    // Close the modal
-    onClose();
-  };
+  const filteredTypes = selectedLevel === 'All' 
+    ? writingTypes 
+    : writingTypes.filter(type => type.difficulty === selectedLevel);
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case 'Easy': return 'text-green-600 bg-green-100';
-      case 'Medium': return 'text-yellow-600 bg-yellow-100';
-      case 'Hard': return 'text-red-600 bg-red-100';
-      default: return 'text-gray-600 bg-gray-100';
+      case 'Easy': return 'bg-green-100 text-green-800 border-green-200';
+      case 'Medium': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'Hard': return 'bg-red-100 text-red-800 border-red-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-      <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl max-w-6xl w-full max-h-[95vh] overflow-hidden border-4 border-blue-300 dark:border-blue-700 relative">
-        
-        {/* Floating Background Elements */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-10 left-10 w-20 h-20 bg-yellow-200 rounded-full opacity-20 animate-pulse"></div>
-          <div className="absolute top-20 right-20 w-16 h-16 bg-pink-200 rounded-full opacity-30 animate-bounce"></div>
-          <div className="absolute bottom-20 left-1/4 w-24 h-24 bg-purple-200 rounded-full opacity-15 animate-pulse"></div>
-          <div className="absolute bottom-10 right-1/3 w-18 h-18 bg-green-200 rounded-full opacity-25 animate-bounce"></div>
-        </div>
+  const getDifficultyStars = (difficulty: string) => {
+    const count = difficulty === 'Easy' ? 1 : difficulty === 'Medium' ? 2 : 3;
+    return Array.from({ length: 3 }, (_, i) => (
+      <Star 
+        key={i} 
+        className={`h-3 w-3 ${i < count ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} 
+      />
+    ));
+  };
 
-        {/* Enhanced Header */}
-        <div className="bg-gradient-to-r from-blue-100 via-purple-100 to-pink-100 dark:from-blue-900/30 dark:via-purple-900/30 dark:to-pink-900/30 p-8 border-b-4 border-blue-300 dark:border-blue-700 relative z-10">
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+        
+        {/* Header */}
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-700 dark:to-gray-800">
           <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <div className="relative">
-                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full flex items-center justify-center mr-6 shadow-2xl animate-pulse">
-                  <Rocket className="h-8 w-8 text-white" />
-                </div>
-                <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full flex items-center justify-center shadow-lg animate-bounce">
-                  <Crown className="h-4 w-4 text-white" />
-                </div>
-              </div>
-              <div>
-                <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 dark:from-blue-400 dark:via-purple-400 dark:to-pink-400 mb-2">
-                  Choose Your Story Type! ✨
-                </h2>
-                <p className="text-gray-700 dark:text-gray-300 text-lg font-medium">
-                  What kind of writing adventure do you want to go on today?
-                </p>
-              </div>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                Choose Your Writing Type
+              </h2>
+              <p className="text-gray-600 dark:text-gray-300">
+                What kind of writing do you want to do today?
+              </p>
             </div>
             <button
               onClick={onClose}
-              className="p-3 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-full transition-colors shadow-lg hover:shadow-xl transform hover:scale-110"
+              className="p-2 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full transition-colors"
             >
-              <X className="h-8 w-8 text-gray-600 dark:text-gray-300" />
+              <X className="h-6 w-6 text-gray-500 dark:text-gray-400" />
             </button>
+          </div>
+
+          {/* Filter Buttons - Improved visibility */}
+          <div className="flex flex-wrap gap-2 mt-4">
+            {['All', 'Easy', 'Medium', 'Hard'].map((level) => (
+              <button
+                key={level}
+                onClick={() => setSelectedLevel(level as any)}
+                className={`px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+                  selectedLevel === level
+                    ? 'bg-blue-500 text-white shadow-lg transform scale-105'
+                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:scale-105'
+                }`}
+              >
+                {level} Level
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Search and Filter Section */}
-        <div className="p-8 border-b-2 border-gray-200 dark:border-gray-600 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-800 dark:to-blue-900/20 relative z-10">
-          <div className="flex flex-col md:flex-row gap-4 items-center">
-            <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search writing types..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 border-2 border-gray-300 rounded-2xl focus:border-blue-500 focus:outline-none text-lg font-medium shadow-lg"
-              />
-            </div>
-            
-            <select
-              value={selectedDifficulty}
-              onChange={(e) => setSelectedDifficulty(e.target.value)}
-              className="px-6 py-3 border-2 border-gray-300 rounded-2xl focus:border-blue-500 focus:outline-none text-lg font-medium shadow-lg bg-white"
-            >
-              <option value="All">All Levels</option>
-              <option value="Easy">Easy</option>
-              <option value="Medium">Medium</option>
-              <option value="Hard">Hard</option>
-            </select>
-            
-            <button
-              onClick={() => setShowPopularOnly(!showPopularOnly)}
-              className={`px-6 py-3 rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 flex items-center gap-2 ${
-                showPopularOnly 
-                  ? 'bg-yellow-400 text-yellow-900 border-2 border-yellow-500' 
-                  : 'bg-white border-2 border-gray-300 text-gray-700 hover:border-yellow-400'
-              }`}
-            >
-              <Star className={`h-5 w-5 ${showPopularOnly ? 'fill-current' : ''}`} />
-              Popular
-            </button>
-          </div>
-        </div>
-        
-        {/* Enhanced Grid Section */}
-        <div className="p-8 overflow-y-auto max-h-[60vh] relative z-10">
-          {filteredTypes.length === 0 ? (
-            <div className="text-center py-16">
-              <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Search className="h-12 w-12 text-gray-400" />
-              </div>
-              <h3 className="text-2xl font-bold text-gray-600 mb-3">No writing types found</h3>
-              <p className="text-gray-500 text-lg">Try adjusting your search or filters</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredTypes.map((type) => {
-                const IconComponent = type.icon;
-                return (
-                  <button
-                    key={type.value}
-                    onClick={() => handleTypeSelect(type.value)}
-                    className={`relative p-8 border-4 ${type.borderColor} rounded-3xl hover:border-opacity-80 bg-gradient-to-br ${type.bgColor} hover:shadow-2xl transition-all duration-300 text-left group transform hover:scale-105 overflow-hidden`}
-                  >
-                    {/* Background Pattern */}
-                    <div className="absolute inset-0 opacity-5">
-                      <div className="absolute top-0 right-0 w-20 h-20 bg-current rounded-full -mr-10 -mt-10"></div>
-                      <div className="absolute bottom-0 left-0 w-16 h-16 bg-current rounded-full -ml-8 -mb-8"></div>
+        {/* Content */}
+        <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {filteredTypes.map((type) => (
+              <div
+                key={type.id}
+                onClick={() => onSelect(type.id)}
+                className="kid-card kid-card-interactive relative p-5 cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:scale-102 border-2 border-transparent hover:border-blue-300"
+              >
+                {/* Popular Badge */}
+                {type.isPopular && (
+                  <div className="absolute -top-2 -right-2 bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
+                    <Star className="h-3 w-3 fill-yellow-900" />
+                    Popular
+                  </div>
+                )}
+
+                {/* Header with Icon and Title */}
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center">
+                    <div className={`p-3 rounded-xl bg-gradient-to-r ${type.color} text-white shadow-md mr-3`}>
+                      {type.icon}
                     </div>
-
-                    {/* Popular Badge */}
-                    {type.popular && (
-                      <div className="absolute top-4 right-4 bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-3 py-1 rounded-full text-sm font-bold flex items-center shadow-lg">
-                        <Star className="h-3 w-3 mr-1 fill-current" />
-                        Popular
-                      </div>
-                    )}
-
-                    {/* Icon and Title */}
-                    <div className="flex items-center gap-4 mb-4 relative z-10">
-                      <div className={`p-4 bg-gradient-to-r ${type.color} rounded-2xl group-hover:scale-110 transition-transform shadow-xl`}>
-                        <IconComponent className="w-10 h-10 text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-bold text-xl text-gray-900 dark:text-white mb-1">{type.label}</h3>
-                        <div className={`inline-block px-3 py-1 rounded-full text-sm font-bold ${getDifficultyColor(type.difficulty)}`}>
-                          {type.difficulty}
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                        {type.name}
+                      </h3>
+                      <div className="flex items-center gap-2 mt-1">
+                        {/* Difficulty Stars */}
+                        <div className="flex items-center gap-1">
+                          {getDifficultyStars(type.difficulty)}
                         </div>
+                        <span className={`px-2 py-1 rounded-full text-xs font-semibold border ${getDifficultyColor(type.difficulty)}`}>
+                          {type.difficulty}
+                        </span>
                       </div>
                     </div>
-
-                    {/* Description */}
-                    <p className="text-base text-gray-700 dark:text-gray-300 font-medium leading-relaxed relative z-10">
-                      {type.description}
-                    </p>
-
-                    {/* Hover Effect Overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-3xl"></div>
+                  </div>
+                  
+                  {/* Help Button */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowHelp(showHelp === type.id ? null : type.id);
+                    }}
+                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                  >
+                    <HelpCircle className="h-4 w-4 text-gray-400" />
                   </button>
-                );
-              })}
+                </div>
+
+                {/* Description */}
+                <p className="text-gray-600 dark:text-gray-300 text-sm mb-3 leading-relaxed">
+                  {type.description}
+                </p>
+
+                {/* Examples - Show when help is clicked */}
+                {showHelp === type.id && (
+                  <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 mb-3">
+                    <h4 className="text-sm font-semibold text-gray-800 dark:text-white mb-2">
+                      Example topics:
+                    </h4>
+                    <ul className="space-y-1">
+                      {type.examples.map((example, index) => (
+                        <li key={index} className="text-sm text-gray-600 dark:text-gray-300 flex items-center">
+                          <span className="w-1.5 h-1.5 bg-blue-400 rounded-full mr-2"></span>
+                          {example}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Action Button */}
+                <button className="w-full py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-purple-600 transition-all transform hover:scale-105 shadow-md">
+                  Choose This Type
+                </button>
+              </div>
+            ))}
+          </div>
+
+          {/* No results message */}
+          {filteredTypes.length === 0 && (
+            <div className="text-center py-12">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <FileText className="h-8 w-8 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                No writing types found
+              </h3>
+              <p className="text-gray-600 dark:text-gray-300">
+                Try selecting a different difficulty level.
+              </p>
             </div>
           )}
         </div>
 
-        {/* Enhanced Footer */}
-        <div className="bg-gradient-to-r from-gray-100 to-blue-100 dark:from-gray-800 dark:to-blue-900/20 p-6 border-t-2 border-gray-200 dark:border-gray-600 relative z-10">
-          <div className="flex items-center justify-center">
-            <div className="flex items-center gap-3 text-gray-600 dark:text-gray-300">
-              <Heart className="h-5 w-5 text-pink-500 animate-pulse" />
-              <span className="font-medium text-lg">Choose the one that excites you most!</span>
-              <Gem className="h-5 w-5 text-purple-500 animate-pulse" />
+        {/* Footer */}
+        <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+              <HelpCircle className="h-4 w-4 mr-2" />
+              Click the ? button for examples
             </div>
+            <button
+              onClick={onClose}
+              className="kid-btn kid-btn-outline"
+            >
+              Cancel
+            </button>
           </div>
         </div>
       </div>
