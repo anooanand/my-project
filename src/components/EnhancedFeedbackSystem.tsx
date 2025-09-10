@@ -70,14 +70,14 @@ export function EnhancedFeedbackSystem({
     setExpandedCategories(newExpanded);
   };
 
-  const getScoreColor = (score: number, maxScore: number = 9) => {
+  const getScoreColor = (score: number, maxScore: number) => {
     const percentage = (score / maxScore) * 100;
     if (percentage >= 80) return 'text-green-600 bg-green-100';
     if (percentage >= 60) return 'text-yellow-600 bg-yellow-100';
     return 'text-red-600 bg-red-100';
   };
 
-  const getScoreBadge = (score: number, maxScore: number = 9) => {
+  const getScoreBadge = (score: number, maxScore: number) => {
     const percentage = (score / maxScore) * 100;
     if (percentage >= 80) return 'Excellent';
     if (percentage >= 60) return 'Good';
@@ -138,15 +138,15 @@ export function EnhancedFeedbackSystem({
           <div className="flex-1">
             <div className="flex items-center space-x-2 mb-2">
               <Award className="w-6 h-6 text-yellow-500" />
-              <span className="text-2xl font-bold text-gray-900">{feedback.overallScore}/36</span>
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getScoreColor(feedback.overallScore, 36)}`}>
-                {getScoreBadge(feedback.overallScore, 36)}
+              <span className="text-2xl font-bold text-gray-900">{feedback.overallScore}/100</span>
+              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getScoreColor(feedback.overallScore, 100)}`}>
+                {getScoreBadge(feedback.overallScore, 100)}
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div 
                 className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-500"
-                style={{ width: `${(feedback.overallScore / 36) * 100}%` }}
+                style={{ width: `${(feedback.overallScore / 100) * 100}%` }}
               />
             </div>
           </div>
@@ -169,14 +169,14 @@ export function EnhancedFeedbackSystem({
                   <Icon className="w-5 h-5 text-blue-500" />
                   <span className="font-medium text-gray-900 text-sm">{label}</span>
                 </div>
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getScoreColor(score)}`}>
-                  {score}/9
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getScoreColor(score, 5)}`}>
+                  {score}/5
                 </span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-1.5">
                 <div 
                   className="bg-blue-500 h-1.5 rounded-full transition-all duration-500"
-                  style={{ width: `${(score / 9) * 100}%` }}
+                  style={{ width: `${(score / 5) * 100}%` }}
                 />
               </div>
             </div>
@@ -201,8 +201,8 @@ export function EnhancedFeedbackSystem({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <span className="font-medium text-gray-900">{category.category}</span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getScoreColor(category.score)}`}>
-                      {category.score}/9
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getScoreColor(category.score, 5)}`}>
+                      {category.score}/5
                     </span>
                   </div>
                   {expandedCategories.has(category.category) ? 
