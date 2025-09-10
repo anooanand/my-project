@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Save, Download, Upload, Eye, EyeOff, RotateCcw, Sparkles, BookOpen, Target, TrendingUp, Award, CheckCircle, AlertCircle, Star, Lightbulb, MessageSquare, BarChart3, Clock, Zap, Heart, Wand2, PenTool, FileText, Settings, RefreshCw, Play, Pause, Volume2, VolumeX, Maximize2, Minimize2, Copy, Check, X, Plus, Minus, ChevronDown, ChevronUp, Info, HelpCircle, Bot, Send, Timer, Brain } from 'lucide-react';
 import { EnhancedInlineSuggestions } from './EnhancedInlineSuggestions';
 import { ContextualAIPrompts } from './ContextualAIPrompts';
@@ -8,6 +8,7 @@ import { EnhancedVocabularyBuilder } from './EnhancedVocabularyBuilder';
 import { EnhancedSentenceAnalyzer } from './EnhancedSentenceAnalyzer';
 import { AdvancedAnalyticsDashboard } from './AdvancedAnalyticsDashboard';
 import { generateChatResponse } from '../lib/openai';
+import { DetailedFeedback } from './EnhancedFeedbackSystem'; // Added import
 
 interface NSWEnhancedWritingStudioProps {
   content?: string;
@@ -52,6 +53,7 @@ export function NSWEnhancedWritingStudio({
   const [assistanceLevel, setAssistanceLevel] = useState<'minimal' | 'moderate' | 'comprehensive'>('moderate');
   const [isExamMode, setIsExamMode] = useState(false);
   const [showFocusMode, setShowFocusMode] = useState(false);
+  const [detailedFeedback, setDetailedFeedback] = useState<DetailedFeedback | null>(null); // Added state
   
   // Chat state
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -98,573 +100,328 @@ export function NSWEnhancedWritingStudio({
       setIsTyping(true);
       setLastTypingTime(now);
     }
-    
-    // Reset typing timeout
+
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
-    
-    // Stop typing after 2 seconds of inactivity
     typingTimeoutRef.current = setTimeout(() => {
       setIsTyping(false);
-      if (lastTypingTime) {
-        const typingDuration = (now.getTime() - lastTypingTime.getTime()) / 1000;
-        setTotalWritingTime(prev => prev + typingDuration);
-      }
-    }, 2000);
+      setLastTypingTime(null);
+    }, 1500); // 1.5 seconds of inactivity to consider typing stopped
   };
 
-  // Handle contextual prompt selection
-  const handlePromptSelected = async (promptText: string) => {
-    setChatInput(promptText);
-    setActivePanel('chat');
-    
-    // Auto-send the prompt
-    setTimeout(() => {
-      handleChatSend(promptText);
-    }, 100);
-  };
+  // Effect for tracking total writing time
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isTyping && startTime) {
+      interval = setInterval(() => {
+        setTotalWritingTime(Math.floor((new Date().getTime() - startTime.getTime()) / 1000));
+      }, 1000);
+    } else if (!isTyping && startTime && lastTypingTime) {
+      // Add any remaining time if typing stopped
+      setTotalWritingTime(prev => prev + Math.floor((new Date().getTime() - lastTypingTime.getTime()) / 1000));
+    }
+    return () => clearInterval(interval);
+  }, [isTyping, startTime, lastTypingTime]);
 
-  // Handle chat functionality
-  const handleChatSend = async (messageText?: string) => {
-    const message = messageText || chatInput.trim();
-    if (!message || isChatLoading) return;
+  // Handle chat message sending
+  const handleSendMessage = async () => {
+    if (chatInput.trim() === '') return;
 
-    const userMessage: ChatMessage = {
+    const newUserMessage: ChatMessage = {
       id: Date.now().toString(),
-      text: message,
+      text: chatInput,
       sender: 'user',
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
-    setChatMessages(prev => [...prev, userMessage]);
+    setChatMessages((prevMessages) => [...prevMessages, newUserMessage]);
     setChatInput('');
     setIsChatLoading(true);
 
     try {
-      const response = await generateChatResponse({
-        userMessage: message,
-        textType,
-        currentContent,
-        wordCount,
-        context: `Student is writing a ${textType} story. Current assistance level: ${assistanceLevel}. This is for NSW Selective School test preparation for ages 10-12.`
+      const aiResponse = await generateChatResponse({
+        userMessage: chatInput,
+        textType: textType,
+        currentContent: currentContent,
+        wordCount: wordCount,
+        context: 'User is asking a question within the writing studio. Provide helpful, concise advice.',
       });
 
-      const aiMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        text: response,
+      const newAiMessage: ChatMessage = {
+        id: Date.now().toString() + '-ai',
+        text: aiResponse,
         sender: 'ai',
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-
-      setChatMessages(prev => [...prev, aiMessage]);
+      setChatMessages((prevMessages) => [...prevMessages, newAiMessage]);
     } catch (error) {
-      console.error('Chat error:', error);
-      
+      console.error('Error sending chat message:', error);
       const errorMessage: ChatMessage = {
-        id: (Date.now() + 1).toString(),
-        text: "I'm having a small hiccup, but I'm still here to help! 😊 Try asking your question again, or I can give you some general writing tips!",
+        id: Date.now().toString() + '-error',
+        text: 'Sorry, I could not process your request. Please try again.',
         sender: 'ai',
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-      
-      setChatMessages(prev => [...prev, errorMessage]);
+      setChatMessages((prevMessages) => [...prevMessages, errorMessage]);
     } finally {
       setIsChatLoading(false);
+      if (chatEndRef.current) {
+        chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      }
     }
   };
 
-  // Handle word selection from vocabulary builder
-  const handleWordSelected = (original: string, replacement: string) => {
-    const newContent = currentContent.replace(new RegExp(`\\b${original}\\b`, 'gi'), replacement);
-    handleContentChange(newContent);
-  };
-
-  // Handle sentence improvement from sentence analyzer
-  const handleSentenceImproved = (original: string, improved: string) => {
-    const newContent = currentContent.replace(original, improved);
-    handleContentChange(newContent);
-  };
-
-  // Handle goal setting from analytics dashboard
-  const handleGoalSet = (goal: string, target: number) => {
-    console.log('Goal set:', goal, 'Target:', target);
-    // Here you would typically save the goal to your backend or local storage
-    // For now, we'll just show a success message
-    const goalMessage: ChatMessage = {
-      id: Date.now().toString(),
-      text: `Great! I've set your goal to ${goal} with a target of ${target}. I'll help you track your progress towards this goal! 🎯`,
-      sender: 'ai',
-      timestamp: new Date()
-    };
-    setChatMessages(prev => [...prev, goalMessage]);
-    setActivePanel('chat');
-  };
-
-  // Initialize welcome message
+  // Scroll to bottom of chat when new messages arrive
   useEffect(() => {
-    if (chatMessages.length === 0) {
-      const welcomeMessage: ChatMessage = {
-        id: 'welcome',
-        text: `Hi! I'm your AI Writing Buddy! 🤖 I'm here to help you with your ${textType} writing for the NSW Selective test. I can help you with ideas, vocabulary, structure, and making your writing more creative and engaging. What would you like to work on?`,
-        sender: 'ai',
-        timestamp: new Date()
-      };
-      setChatMessages([welcomeMessage]);
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [textType]);
-
-  // Auto-scroll chat
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages]);
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  // Toggle exam mode
-  const handleExamMode = () => {
+  // Handle timer start/stop
+  const handleTimerToggle = () => {
+    if (onTimerStart) {
+      onTimerStart(!isExamMode);
+    }
     setIsExamMode(!isExamMode);
-    onTimerStart?.(!isExamMode);
-    
-    if (!isExamMode) {
-      // Entering exam mode - hide AI assistance
-      setShowInlineSuggestions(false);
-      setShowContextualPrompts(false);
-      setActivePanel('chat'); // Keep chat available but limited
-    } else {
-      // Exiting exam mode - restore AI assistance
-      setShowInlineSuggestions(true);
-      setShowContextualPrompts(true);
-    }
   };
 
-  // Toggle focus mode
-  const handleFocusMode = () => {
-    setShowFocusMode(!showFocusMode);
-    
-    if (!showFocusMode) {
-      // Entering focus mode
-      document.body.style.backgroundColor = '#1a1a1a';
-      textareaRef.current?.focus();
-    } else {
-      // Exiting focus mode
-      document.body.style.backgroundColor = '';
+  // Handle submit (e.g., for essay submission)
+  const handleSubmit = () => {
+    if (onSubmit) {
+      onSubmit();
     }
+    alert('Essay submitted for review!');
   };
-
-  const panelTabs = [
-    { id: 'suggestions', label: 'Smart Help', icon: <Sparkles className="w-4 h-4" />, disabled: isExamMode },
-    { id: 'prompts', label: 'Questions', icon: <Lightbulb className="w-4 h-4" />, disabled: isExamMode },
-    { id: 'feedback', label: 'Feedback', icon: <Star className="w-4 h-4" />, disabled: false },
-    { id: 'grammar', label: 'Grammar', icon: <CheckCircle className="w-4 h-4" />, disabled: isExamMode },
-    { id: 'vocabulary', label: 'Vocabulary', icon: <Brain className="w-4 h-4" />, disabled: isExamMode },
-    { id: 'sentences', label: 'Sentences', icon: <BarChart3 className="w-4 h-4" />, disabled: isExamMode },
-    { id: 'analytics', label: 'Progress', icon: <TrendingUp className="w-4 h-4" />, disabled: false },
-    { id: 'chat', label: 'AI Buddy', icon: <Bot className="w-4 h-4" />, disabled: false }
-  ];
 
   return (
-    <div className={`h-full flex flex-col ${showFocusMode ? 'bg-gray-900 text-white' : 'bg-gray-50'}`}>
-      {/* Header with controls */}
-      <div className={`p-4 border-b ${showFocusMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'}`}>
-        <div className="flex items-center justify-between mb-4">
+    <div className="flex flex-col lg:flex-row h-full bg-gray-50 font-sans antialiased">
+      {/* Main Writing Area */}
+      <div className="flex-1 flex flex-col p-6 bg-white shadow-lg rounded-lg m-4 lg:m-6">
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-3xl font-extrabold text-gray-900">Writing Studio</h1>
           <div className="flex items-center space-x-4">
-            <h2 className={`text-xl font-semibold ${showFocusMode ? 'text-white' : 'text-gray-800'}`}>
-              NSW Writing Studio
-            </h2>
-            <div className="flex items-center space-x-2 text-sm text-gray-500">
-              <span>{wordCount} words</span>
-              <span>•</span>
-              <span>{readingTime} min read</span>
-              {totalWritingTime > 0 && (
-                <>
-                  <span>•</span>
-                  <span>{calculateWPM()} WPM</span>
-                </>
-              )}
-            </div>
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            {/* Assistance Level */}
-            <select
-              value={assistanceLevel}
-              onChange={(e) => setAssistanceLevel(e.target.value as any)}
-              className={`px-3 py-1 rounded border text-sm ${
-                showFocusMode 
-                  ? 'bg-gray-700 border-gray-600 text-white' 
-                  : 'bg-white border-gray-300'
-              }`}
-              disabled={isExamMode}
-            >
-              <option value="minimal">Minimal Help</option>
-              <option value="moderate">Moderate Help</option>
-              <option value="comprehensive">Full Support</option>
-            </select>
-            
-            {/* Mode toggles */}
             <button
-              onClick={handleExamMode}
-              className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
-                isExamMode
-                  ? 'bg-red-100 text-red-700 border border-red-300'
-                  : 'bg-blue-100 text-blue-700 border border-blue-300 hover:bg-blue-200'
-              }`}
+              onClick={handleTimerToggle}
+              className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
             >
-              {isExamMode ? 'Exit Exam Mode' : 'Exam Mode'}
+              {isExamMode ? <Pause className="w-5 h-5 mr-2" /> : <Play className="w-5 h-5 mr-2" />}
+              {isExamMode ? 'Pause Exam' : 'Start Exam'}
             </button>
-            
             <button
-              onClick={handleFocusMode}
-              className={`p-2 rounded transition-colors ${
-                showFocusMode
-                  ? 'bg-gray-700 text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-              title="Focus Mode"
+              onClick={handleSubmit}
+              className="flex items-center px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
             >
-              {showFocusMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              <Check className="w-5 h-5 mr-2" />
+              Submit Essay
             </button>
           </div>
         </div>
 
-        {/* Panel tabs - Updated with new tabs */}
-        <div className="flex flex-wrap gap-1">
-          {panelTabs.map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => !tab.disabled && setActivePanel(tab.id as any)}
-              disabled={tab.disabled}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                activePanel === tab.id
-                  ? showFocusMode
-                    ? 'bg-gray-700 text-white'
-                    : 'bg-blue-100 text-blue-700'
-                  : tab.disabled
-                    ? 'text-gray-400 cursor-not-allowed'
-                    : showFocusMode
-                      ? 'text-gray-400 hover:text-white hover:bg-gray-700'
-                      : 'text-gray-600 hover:text-gray-800 hover:bg-gray-100'
-              }`}
-            >
-              {tab.icon}
-              <span>{tab.label}</span>
-              {tab.disabled && <X className="w-3 h-3" />}
-            </button>
-          ))}
+        {/* Prompt Display */}
+        {currentPrompt && (
+          <div className="bg-blue-50 border-l-4 border-blue-400 text-blue-800 p-4 mb-4 rounded-md" role="alert">
+            <div className="flex items-center">
+              <Info className="w-5 h-5 mr-2" />
+              <p className="font-semibold">Writing Prompt:</p>
+            </div>
+            <p className="ml-7 text-sm">{currentPrompt}</p>
+          </div>
+        )}
+
+        {/* Textarea */}
+        <div className="relative flex-1 mb-4">
+          <textarea
+            ref={textareaRef}
+            className={`w-full h-full p-4 text-lg border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none
+              ${showFocusMode ? 'font-mono' : ''}`}
+            value={currentContent}
+            onChange={(e) => handleContentChange(e.target.value)}
+            placeholder="Start writing your essay here..."
+          />
+          {showInlineSuggestions && (
+            <EnhancedInlineSuggestions
+              text={currentContent}
+              textType={textType}
+              onApplySuggestion={(newText) => setCurrentContent(newText)}
+            />
+          )}
+        </div>
+
+        {/* Writing Metrics */}
+        <div className="flex justify-between items-center text-gray-600 text-sm">
+          <span>Words: {wordCount}</span>
+          <span>Characters: {charCount}</span>
+          <span>Reading Time: {readingTime} min</span>
+          <span>WPM: {calculateWPM()}</span>
+          <span>Time: {new Date(totalWritingTime * 1000).toISOString().substr(11, 8)}</span>
         </div>
       </div>
 
-      {/* Main content area */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Writing area */}
-        <div className="flex-1 flex flex-col">
-          {/* Prompt display */}
-          {currentPrompt && (
-            <div className={`p-4 border-b ${showFocusMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-blue-50'}`}>
-              <div className="flex items-start space-x-2">
-                <Target className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                <div>
-                  <h4 className={`font-medium ${showFocusMode ? 'text-white' : 'text-blue-800'}`}>
-                    Writing Prompt
-                  </h4>
-                  <p className={`text-sm ${showFocusMode ? 'text-gray-300' : 'text-blue-700'}`}>
-                    {currentPrompt}
-                  </p>
-                </div>
-              </div>
+      {/* Sidebar */}
+      <div className="w-full lg:w-96 bg-white shadow-lg rounded-lg m-4 lg:m-6 p-6 flex flex-col">
+        <div className="flex space-x-2 mb-4 overflow-x-auto pb-2">
+          <button onClick={() => setActivePanel('suggestions')} className={`panel-tab ${activePanel === 'suggestions' ? 'active' : ''}`}>Suggestions</button>
+          <button onClick={() => setActivePanel('prompts')} className={`panel-tab ${activePanel === 'prompts' ? 'active' : ''}`}>Prompts</button>
+          <button onClick={() => setActivePanel('feedback')} className={`panel-tab ${activePanel === 'feedback' ? 'active' : ''}`}>Feedback</button>
+          <button onClick={() => setActivePanel('grammar')} className={`panel-tab ${activePanel === 'grammar' ? 'active' : ''}`}>Grammar</button>
+          <button onClick={() => setActivePanel('vocabulary')} className={`panel-tab ${activePanel === 'vocabulary' ? 'active' : ''}`}>Vocabulary</button>
+          <button onClick={() => setActivePanel('sentences')} className={`panel-tab ${activePanel === 'sentences' ? 'active' : ''}`}>Sentences</button>
+          <button onClick={() => setActivePanel('analytics')} className={`panel-tab ${activePanel === 'analytics' ? 'active' : ''}`}>Analytics</button>
+          <button onClick={() => setActivePanel('chat')} className={`panel-tab ${activePanel === 'chat' ? 'active' : ''}`}>AI Chat</button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto pr-2 -mr-2">
+          {activePanel === 'suggestions' && (
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-gray-800">Inline Suggestions</h3>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={showInlineSuggestions}
+                  onChange={() => setShowInlineSuggestions(!showInlineSuggestions)}
+                  className="form-checkbox h-5 w-5 text-blue-600"
+                />
+                <span>Show inline writing suggestions</span>
+              </label>
+              <p className="text-gray-600 text-sm">Get real-time suggestions as you type to improve your writing flow and quality.</p>
             </div>
           )}
 
-          {/* Text area with inline suggestions */}
-          <div className="flex-1 relative">
-            {showInlineSuggestions && !isExamMode && (
-              <div className="absolute inset-0 pointer-events-none z-10">
-                <EnhancedInlineSuggestions
-                  content={currentContent}
-                  textType={textType}
-                  onContentChange={handleContentChange}
-                  isEnabled={showInlineSuggestions}
-                  assistanceLevel={assistanceLevel}
+          {activePanel === 'prompts' && (
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-gray-800">Contextual AI Prompts</h3>
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  checked={showContextualPrompts}
+                  onChange={() => setShowContextualPrompts(!showContextualPrompts)}
+                  className="form-checkbox h-5 w-5 text-blue-600"
                 />
-              </div>
-            )}
-            
-            <div className="h-full p-4">
-              <textarea
-                ref={textareaRef}
-                value={currentContent}
-                onChange={(e) => handleContentChange(e.target.value)}
-                placeholder={`Start writing your ${textType} here... ${isExamMode ? '(Exam Mode - Limited AI assistance)' : '(AI assistance available)'}`}
-                className={`w-full h-full resize-none border-none outline-none text-lg leading-relaxed relative z-20 ${
-                  showFocusMode 
-                    ? 'bg-gray-900 text-white placeholder-gray-500' 
-                    : 'bg-transparent text-gray-800 placeholder-gray-400'
-                }`}
-                style={{ fontFamily: 'Georgia, serif' }}
+                <span>Enable contextual prompts</span>
+              </label>
+              <ContextualAIPrompts
+                currentContent={currentContent}
+                textType={textType}
+                onPromptSelect={(selectedPrompt) => {
+                  onPromptChange?.(selectedPrompt);
+                  alert(`Prompt selected: ${selectedPrompt}`);
+                }}
               />
+              <p className="text-gray-600 text-sm">Receive AI-generated prompts tailored to your current writing context and goals.</p>
             </div>
-          </div>
+          )}
 
-          {/* Writing status bar */}
-          <div className={`p-3 border-t ${showFocusMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-50'}`}>
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center space-x-4">
-                <span className={showFocusMode ? 'text-gray-300' : 'text-gray-600'}>
-                  {wordCount} words • {charCount} characters
-                </span>
-                {isTyping && (
-                  <div className="flex items-center space-x-1 text-green-600">
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span className="text-xs">Writing...</span>
+          {activePanel === 'feedback' && (
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-gray-800">Detailed Feedback</h3>
+              <EnhancedFeedbackSystem
+                content={currentContent}
+                textType={textType}
+                assistanceLevel={assistanceLevel}
+                onFeedbackGenerated={setDetailedFeedback} // Updated prop
+              />
+              <p className="text-gray-600 text-sm">Get comprehensive feedback on your writing, including scores and specific areas for improvement.</p>
+            </div>
+          )}
+
+          {activePanel === 'grammar' && (
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-gray-800">Grammar & Spelling</h3>
+              <EnhancedGrammarChecker content={currentContent} />
+              <p className="text-gray-600 text-sm">Check your writing for grammar, spelling, and punctuation errors.</p>
+            </div>
+          )}
+
+          {activePanel === 'vocabulary' && (
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-gray-800">Vocabulary Builder</h3>
+              <EnhancedVocabularyBuilder content={currentContent} />
+              <p className="text-gray-600 text-sm">Discover new words and phrases to enrich your vocabulary and make your writing more impactful.</p>
+            </div>
+          )}
+
+          {activePanel === 'sentences' && (
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-gray-800">Sentence Analyzer</h3>
+              <EnhancedSentenceAnalyzer content={currentContent} />
+              <p className="text-gray-600 text-sm">Analyze your sentence structure, length, and complexity for improved readability.</p>
+            </div>
+          )}
+
+          {activePanel === 'analytics' && (
+            <div className="space-y-4">
+              <h3 className="text-xl font-semibold text-gray-800">Writing Analytics</h3>
+              <AdvancedAnalyticsDashboard
+                content={currentContent}
+                textType={textType}
+                detailedFeedback={detailedFeedback} // Passed detailedFeedback
+              />
+              <p className="text-gray-600 text-sm">View detailed analytics and insights into your writing progress and performance.</p>
+            </div>
+          )}
+
+          {activePanel === 'chat' && (
+            <div className="flex flex-col h-full">
+              <h3 className="text-xl font-semibold text-gray-800 mb-4">AI Chat Assistant</h3>
+              <div className="flex-1 overflow-y-auto p-2 border rounded-md bg-gray-50 mb-4">
+                {chatMessages.map((msg) => (
+                  <div key={msg.id} className={`mb-3 ${msg.sender === 'user' ? 'text-right' : 'text-left'}`}>
+                    <span className={`inline-block p-2 rounded-lg ${msg.sender === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-800'}`}>
+                      {msg.text}
+                    </span>
                   </div>
-                )}
+                ))}
+                <div ref={chatEndRef} />
               </div>
-              
-              <div className="flex items-center space-x-2">
-                {startTime && (
-                  <span className={`text-xs ${showFocusMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                    Started: {startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                )}
+              <div className="flex">
+                <input
+                  type="text"
+                  className="flex-1 p-2 border rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Ask your writing assistant..."
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      handleSendMessage();
+                    }
+                  }}
+                  disabled={isChatLoading}
+                />
                 <button
-                  onClick={onSubmit}
-                  disabled={wordCount < 50}
-                  className="px-4 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-sm"
+                  onClick={handleSendMessage}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-r-md hover:bg-blue-700 disabled:bg-gray-300"
+                  disabled={isChatLoading}
                 >
-                  Submit
+                  {isChatLoading ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
                 </button>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* AI assistance panel - Updated with new panels */}
-        <div className={`w-96 border-l ${showFocusMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'} flex flex-col`}>
-          <div className="flex-1 overflow-hidden">
-            {activePanel === 'suggestions' && !isExamMode && (
-              <div className="h-full overflow-y-auto p-4">
-                <h3 className={`font-semibold mb-4 ${showFocusMode ? 'text-white' : 'text-gray-800'}`}>
-                  Smart Writing Help
-                </h3>
-                <div className="space-y-4">
-                  <div className={`p-3 rounded-lg ${showFocusMode ? 'bg-gray-700' : 'bg-blue-50'}`}>
-                    <div className="flex items-center space-x-2 mb-2">
-                      <Sparkles className="w-5 h-5 text-blue-600" />
-                      <span className={`font-medium ${showFocusMode ? 'text-white' : 'text-blue-800'}`}>
-                        AI Writing Assistant
-                      </span>
-                    </div>
-                    <p className={`text-sm ${showFocusMode ? 'text-gray-300' : 'text-blue-700'}`}>
-                      I'm analyzing your writing and will suggest improvements as you type. 
-                      Look for the colored underlines in your text!
-                    </p>
-                  </div>
-                  
-                  {wordCount > 20 && (
-                    <div className={`p-3 rounded-lg ${showFocusMode ? 'bg-gray-700' : 'bg-green-50'}`}>
-                      <div className="flex items-center space-x-2 mb-2">
-                        <CheckCircle className="w-4 h-4 text-green-600" />
-                        <span className={`font-medium ${showFocusMode ? 'text-white' : 'text-green-800'}`}>
-                          Great Progress!
-                        </span>
-                      </div>
-                      <p className={`text-sm ${showFocusMode ? 'text-gray-300' : 'text-green-700'}`}>
-                        You're off to a good start. Keep writing and I'll help you make it even better!
-                      </p>
-                    </div>
-                  )}
-
-                  {wordCount > 100 && (
-                    <div className={`p-3 rounded-lg ${showFocusMode ? 'bg-gray-700' : 'bg-purple-50'}`}>
-                      <div className="flex items-center space-x-2 mb-2">
-                        <Award className="w-4 h-4 text-purple-600" />
-                        <span className={`font-medium ${showFocusMode ? 'text-white' : 'text-purple-800'}`}>
-                          NSW Selective Ready!
-                        </span>
-                      </div>
-                      <p className={`text-sm ${showFocusMode ? 'text-gray-300' : 'text-purple-700'}`}>
-                        Your writing is developing well for the selective test. Focus on creative ideas and sophisticated vocabulary.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {activePanel === 'prompts' && !isExamMode && (
-              <div className="h-full overflow-y-auto">
-                <ContextualAIPrompts
-                  content={currentContent}
-                  textType={textType}
-                  wordCount={wordCount}
-                  onPromptSelected={handlePromptSelected}
-                  assistanceLevel={assistanceLevel}
-                  isVisible={true}
-                />
-              </div>
-            )}
-
-            {activePanel === 'feedback' && (
-              <div className="h-full overflow-y-auto p-4">
-                <EnhancedFeedbackSystem
-                  content={currentContent}
-                  textType={textType}
-                  onFeedbackGenerated={(feedback) => console.log('Feedback generated:', feedback)}
-                  assistanceLevel={assistanceLevel}
-                />
-              </div>
-            )}
-
-            {/* NEW: Grammar Panel */}
-            {activePanel === 'grammar' && !isExamMode && (
-              <div className="h-full overflow-y-auto">
-                <EnhancedGrammarChecker
-                  content={currentContent}
-                  onContentChange={handleContentChange}
-                  isEnabled={true}
-                  textType={textType}
-                />
-              </div>
-            )}
-
-            {/* NEW: Vocabulary Panel */}
-            {activePanel === 'vocabulary' && !isExamMode && (
-              <div className="h-full overflow-y-auto">
-                <EnhancedVocabularyBuilder
-                  content={currentContent}
-                  textType={textType}
-                  onWordSelected={handleWordSelected}
-                  assistanceLevel={assistanceLevel}
-                  isVisible={true}
-                />
-              </div>
-            )}
-
-            {/* NEW: Sentences Panel */}
-            {activePanel === 'sentences' && !isExamMode && (
-              <div className="h-full overflow-y-auto">
-                <EnhancedSentenceAnalyzer
-                  content={currentContent}
-                  textType={textType}
-                  onSentenceImproved={handleSentenceImproved}
-                  isVisible={true}
-                  assistanceLevel={assistanceLevel}
-                />
-              </div>
-            )}
-
-            {/* NEW: Analytics Panel */}
-            {activePanel === 'analytics' && (
-              <div className="h-full overflow-y-auto">
-                <AdvancedAnalyticsDashboard
-                  isVisible={true}
-                  onGoalSet={handleGoalSet}
-                  currentSession={{
-                    textType,
-                    wordCount,
-                    timeSpent: Math.round(totalWritingTime / 60),
-                    scores: {
-                      ideas: 0,
-                      structure: 0,
-                      vocabulary: 0,
-                      grammar: 0,
-                      nswCriteria: 0,
-                      overall: 0
-                    }
-                  }}
-                />
-              </div>
-            )}
-
-            {activePanel === 'chat' && (
-              <div className="h-full flex flex-col">
-                {/* Chat messages */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                  {chatMessages.map((message) => (
-                    <div
-                      key={message.id}
-                      className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-                    >
-                      <div
-                        className={`max-w-[80%] p-3 rounded-lg ${
-                          message.sender === 'user'
-                            ? 'bg-blue-600 text-white'
-                            : showFocusMode
-                              ? 'bg-gray-700 text-gray-200'
-                              : 'bg-gray-100 text-gray-800'
-                        }`}
-                      >
-                        <p className="text-sm whitespace-pre-wrap">{message.text}</p>
-                        <p className={`text-xs mt-1 ${
-                          message.sender === 'user' 
-                            ? 'text-blue-100' 
-                            : showFocusMode 
-                              ? 'text-gray-400' 
-                              : 'text-gray-500'
-                        }`}>
-                          {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                  {isChatLoading && (
-                    <div className="flex justify-start">
-                      <div className={`p-3 rounded-lg ${showFocusMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
-                        <div className="flex items-center space-x-2">
-                          <div className="w-4 h-4 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin"></div>
-                          <span className={`text-sm ${showFocusMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                            AI is thinking...
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  <div ref={chatEndRef} />
-                </div>
-
-                {/* Chat input */}
-                <div className={`p-4 border-t ${showFocusMode ? 'border-gray-700' : 'border-gray-200'}`}>
-                  <div className="flex space-x-2">
-                    <input
-                      type="text"
-                      value={chatInput}
-                      onChange={(e) => setChatInput(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && handleChatSend()}
-                      placeholder={isExamMode ? "Limited help available in exam mode..." : "Ask your AI Writing Buddy anything..."}
-                      className={`flex-1 p-2 border rounded-lg text-sm ${
-                        showFocusMode
-                          ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
-                          : 'bg-white border-gray-300 placeholder-gray-500'
-                      }`}
-                      disabled={isChatLoading}
-                    />
-                    <button
-                      onClick={() => handleChatSend()}
-                      disabled={!chatInput.trim() || isChatLoading}
-                      className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
-                    >
-                      <Send className="w-4 h-4" />
-                    </button>
-                  </div>
-                  {isExamMode && (
-                    <p className={`text-xs mt-1 ${showFocusMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                      💡 In exam mode, I can still answer questions but won't provide direct writing suggestions.
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
+
+// Basic styling for panel tabs (you might have this in your CSS already)
+// Add this to your App.css or a relevant CSS file
+/*
+.panel-tab {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  color: #4a5568; // gray-700
+  transition: all 0.2s ease-in-out;
+}
+
+.panel-tab:hover {
+  background-color: #edf2f7; // gray-100
+}
+
+.panel-tab.active {
+  background-color: #2563eb; // blue-600
+  color: white;
+}
+*/
