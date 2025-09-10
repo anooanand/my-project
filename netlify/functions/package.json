@@ -1,0 +1,9 @@
+{
+  "name": "netlify-functions",
+  "version": "1.0.0",
+  "description": "Netlify Functions for NSW Writing Buddy",
+  "main": "index.js",
+  "dependencies": {
+    "openai": "^4.67.3"
+  }
+}
