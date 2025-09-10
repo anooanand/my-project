@@ -1,17 +1,14 @@
-"""
-Enhanced AI Operations Service for NSW Selective Writing Test
-Provides sophisticated backend integration with NSW marking rubric alignment
-"""
-
 import json
 import os
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass
-import openai
+from openai import OpenAI
 
-# Configure OpenAI
-openai.api_key = os.getenv('OPENAI_API_KEY')
-openai.api_base = os.getenv('OPENAI_API_BASE', 'https://api.openai.com/v1' )
+# Configure OpenAI client
+client = OpenAI(
+    api_key=os.getenv('OPENAI_API_KEY'),
+    base_url=os.getenv('OPENAI_API_BASE', 'https://api.openai.com/v1')
+)
 
 @dataclass
 class TextPosition:
@@ -55,10 +52,6 @@ class DetailedFeedback:
     vocabularyEnhancements: List[VocabularyEnhancement]
 
 def get_nsw_selective_feedback(content: str, text_type: str, assistance_level: str) -> Dict[str, Any]:
-    """
-    Generate comprehensive NSW Selective-aligned feedback with structured JSON output
-    """
-    
     if not content or len(content.strip()) < 20:
         return {
             "overallScore": 0,
@@ -147,7 +140,7 @@ def get_nsw_selective_feedback(content: str, text_type: str, assistance_level: s
     """
     
     try:
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-4",
             messages=[
                 {
@@ -166,10 +159,8 @@ def get_nsw_selective_feedback(content: str, text_type: str, assistance_level: s
         
         content_response = response.choices[0].message.content
         
-        # Parse and validate JSON response
         feedback_data = json.loads(content_response)
         
-        # Validate and fix positions if needed
         feedback_data = validate_feedback_positions(feedback_data, content)
         
         return feedback_data
@@ -182,43 +173,31 @@ def get_nsw_selective_feedback(content: str, text_type: str, assistance_level: s
         return create_fallback_feedback(content, word_count)
 
 def validate_feedback_positions(feedback_data: Dict[str, Any], original_text: str) -> Dict[str, Any]:
-    """
-    Validate and fix character positions in feedback data
-    """
     text_length = len(original_text)
     
-    # Validate feedback categories
     if "feedbackCategories" in feedback_data:
         for category in feedback_data["feedbackCategories"]:
-            # Validate strengths
             if "strengths" in category:
                 category["strengths"] = fix_positions_in_items(category["strengths"], original_text, text_length)
             
-            # Validate areas for improvement
             if "areasForImprovement" in category:
                 category["areasForImprovement"] = fix_positions_in_items(category["areasForImprovement"], original_text, text_length)
     
-    # Validate grammar corrections
     if "grammarCorrections" in feedback_data:
         feedback_data["grammarCorrections"] = fix_positions_in_corrections(feedback_data["grammarCorrections"], original_text, text_length)
     
-    # Validate vocabulary enhancements
     if "vocabularyEnhancements" in feedback_data:
         feedback_data["vocabularyEnhancements"] = fix_positions_in_corrections(feedback_data["vocabularyEnhancements"], original_text, text_length)
     
     return feedback_data
 
 def fix_positions_in_items(items: List[Dict], original_text: str, text_length: int) -> List[Dict]:
-    """
-    Fix positions in feedback items
-    """
     fixed_items = []
     
     for item in items:
         if "exampleFromText" in item:
             example_text = item["exampleFromText"]
             
-            # Try to find the text in the original
             start_pos = original_text.find(example_text)
             
             if start_pos != -1:
@@ -227,7 +206,6 @@ def fix_positions_in_items(items: List[Dict], original_text: str, text_length: i
                     "end": start_pos + len(example_text)
                 }
             else:
-                # If exact match not found, use safe default positions
                 item["position"] = {
                     "start": 0,
                     "end": min(len(example_text), text_length)
@@ -238,16 +216,12 @@ def fix_positions_in_items(items: List[Dict], original_text: str, text_length: i
     return fixed_items
 
 def fix_positions_in_corrections(corrections: List[Dict], original_text: str, text_length: int) -> List[Dict]:
-    """
-    Fix positions in grammar corrections and vocabulary enhancements
-    """
     fixed_corrections = []
     
     for correction in corrections:
         if "original" in correction:
             original_word = correction["original"]
             
-            # Try to find the word in the original text
             start_pos = original_text.find(original_word)
             
             if start_pos != -1:
@@ -256,7 +230,6 @@ def fix_positions_in_corrections(corrections: List[Dict], original_text: str, te
                     "end": start_pos + len(original_word)
                 }
             else:
-                # Use safe default positions
                 correction["position"] = {
                     "start": 0,
                     "end": min(len(original_word), text_length)
@@ -267,9 +240,6 @@ def fix_positions_in_corrections(corrections: List[Dict], original_text: str, te
     return fixed_corrections
 
 def create_fallback_feedback(content: str, word_count: int) -> Dict[str, Any]:
-    """
-    Create fallback feedback when AI generation fails
-    """
     return {
         "overallScore": 75,
         "criteriaScores": {
@@ -334,9 +304,6 @@ def create_fallback_feedback(content: str, word_count: int) -> Dict[str, Any]:
         ]
     }
 
-# Legacy function for backward compatibility
 async def evaluate_essay(content: str, text_type: str = "narrative", assistance_level: str = "moderate") -> Dict[str, Any]:
-    """
-    Legacy function that calls the new NSW feedback system
-    """
     return get_nsw_selective_feedback(content, text_type, assistance_level)
+
