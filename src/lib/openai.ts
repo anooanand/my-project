@@ -8,6 +8,19 @@ interface ChatRequest {
   context?: string;
 }
 
+interface DetailedFeedback {
+  overallScore: number;
+  criteriaScores: {
+    ideasAndContent: number;
+    textStructureAndOrganization: number;
+    languageFeaturesAndVocabulary: number;
+    spellingPunctuationAndGrammar: number;
+  };
+  feedbackCategories: any[]; // Adjust as per actual structure
+  grammarCorrections: any[];
+  vocabularyEnhancements: any[];
+}
+
 // Main function to make OpenAI API calls - FIXED VERSION
 export async function makeOpenAICall(systemPrompt: string, userPrompt: string, maxTokens: number = 200): Promise<string> {
   const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
@@ -105,35 +118,9 @@ export async function generateChatResponse(request: ChatRequest): Promise<string
   
   console.log('Generating chat response...');
   
-  const systemPrompt = `You are an AI Writing Buddy for NSW Selective School exam preparation. You're helping a student with their ${textType} writing.
+  const systemPrompt = `You are an AI Writing Buddy for NSW Selective School exam preparation. You're helping a student with their ${textType} writing.\n\nCONTEXT:\n- Student is writing a ${textType} story\n- Current word count: ${wordCount}\n- ${context || ''}\n\nPERSONALITY:\n- Friendly, encouraging, and supportive\n- Use emojis occasionally to be engaging\n- Speak like a helpful friend, not a formal teacher\n- Keep responses concise but helpful (2-3 sentences max)\n\nFOCUS AREAS:\n- NSW Selective writing criteria\n- Story structure and plot development\n- Character development and emotions\n- Descriptive language and vocabulary\n- Grammar and sentence structure\n- Creative ideas and inspiration\n\nCURRENT CONTENT PREVIEW:\n${currentContent.slice(0, 200)}${currentContent.length > 200 ? '...' : ''}\n\nRespond to the student's question in a helpful, encouraging way.`;
 
-CONTEXT:
-- Student is writing a ${textType} story
-- Current word count: ${wordCount}
-- ${context || ''}
-
-PERSONALITY:
-- Friendly, encouraging, and supportive
-- Use emojis occasionally to be engaging
-- Speak like a helpful friend, not a formal teacher
-- Keep responses concise but helpful (2-3 sentences max)
-
-FOCUS AREAS:
-- NSW Selective writing criteria
-- Story structure and plot development
-- Character development and emotions
-- Descriptive language and vocabulary
-- Grammar and sentence structure
-- Creative ideas and inspiration
-
-CURRENT CONTENT PREVIEW:
-${currentContent.slice(0, 200)}${currentContent.length > 200 ? '...' : ''}
-
-Respond to the student's question in a helpful, encouraging way.`;
-
-  const userPrompt = `Student question: "${userMessage}"
-
-Please provide a helpful, encouraging response.`;
+  const userPrompt = `Student question: "${userMessage}"\n\nPlease provide a helpful, encouraging response.`;
 
   try {
     const response = await makeOpenAICall(systemPrompt, userPrompt, 150);
@@ -285,17 +272,44 @@ function getFallbackEvaluation(content: string, textType: string): string {
   return feedback;
 }
 
-// Get NSW Selective specific feedback
-export async function getNSWSelectiveFeedback(content: string, textType: string): Promise<string> {
-  const systemPrompt = `You are an NSW Selective School writing examiner. Evaluate this ${textType} writing against NSW Selective criteria.`;
-  const userPrompt = `Evaluate this ${textType} writing sample against NSW Selective criteria:\n\n${content}`;
-
+// Get NSW Selective specific feedback - NOW CALLS BACKEND
+export async function getNSWSelectiveFeedback(content: string, textType: string, assistanceLevel: string): Promise<DetailedFeedback> {
   try {
-    const response = await makeOpenAICall(systemPrompt, userPrompt, 250);
-    return response;
+    const response = await fetch("/.netlify/functions/ai-feedback", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        content,
+        textType,
+        assistanceLevel,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Backend API Error:", response.status, errorText);
+      throw new Error(`Backend API error: ${response.status} - ${errorText}`);
+    }
+
+    const data: DetailedFeedback = await response.json();
+    return data;
   } catch (error) {
-    console.error('Error getting NSW feedback:', error);
-    return `NSW Selective Feedback for your ${textType} writing:\n\n• Focus on developing clear, engaging ideas\n• Ensure strong structure with clear beginning, middle, and end\n• Use sophisticated vocabulary and varied sentence structures\n• Check grammar, spelling, and punctuation carefully\n\nKeep practicing! 🎯`;
+    console.error("Error fetching NSW feedback from backend:", error);
+    // Fallback to a basic error message or simplified feedback structure
+    return {
+      overallScore: 0,
+      criteriaScores: {
+        ideasAndContent: 0,
+        textStructureAndOrganization: 0,
+        languageFeaturesAndVocabulary: 0,
+        spellingPunctuationAndGrammar: 0,
+      },
+      feedbackCategories: [],
+      grammarCorrections: [],
+      vocabularyEnhancements: [],
+    };
   }
 }
 
@@ -308,7 +322,7 @@ export async function getWritingStructure(textType: string): Promise<string> {
     const response = await makeOpenAICall(systemPrompt, userPrompt, 200);
     return response;
   } catch (error) {
-    console.error('Error getting structure guidance:', error);
+    console.error("Error getting structure guidance:", error);
     return getFallbackStructure(textType);
   }
 }
@@ -325,21 +339,17 @@ function getFallbackStructure(textType: string): string {
   return structures[textType.toLowerCase()] || structures.narrative;
 }
 
-// Get general writing feedback
-export async function getWritingFeedback(content: string, textType: string): Promise<string> {
-  if (!content.trim()) {
-    return "Start writing and I'll provide helpful feedback as you go! 📝";
-  }
-
-  const systemPrompt = `You are a supportive writing coach for NSW Selective exam preparation. Provide encouraging, specific feedback.`;
-  const userPrompt = `Please provide constructive feedback on this ${textType} writing:\n\n${content}`;
+// Identify common mistakes
+export async function identifyCommonMistakes(content: string): Promise<string[]> {
+  const systemPrompt = `You are a grammar and spelling checker. Identify common mistakes in the provided text.`;
+  const userPrompt = `Identify common mistakes in: "${content}"`;
 
   try {
     const response = await makeOpenAICall(systemPrompt, userPrompt, 200);
-    return response;
+    return response.split(/\n/).map(s => s.trim()).filter(s => s.length > 0);
   } catch (error) {
-    console.error('Error getting writing feedback:', error);
-    return `Great start on your ${textType} writing! Keep developing your ideas with specific details. You're on the right track! 🌟`;
+    console.error("Error identifying common mistakes:", error);
+    return ["Check for subject-verb agreement issues.", "Ensure consistent tense usage.", "Review punctuation, especially commas and apostrophes."];
   }
 }
 
@@ -351,13 +361,13 @@ export async function getTextTypeVocabulary(textType: string): Promise<string[]>
   try {
     const response = await makeOpenAICall(systemPrompt, userPrompt, 200);
     const words = response.split(/[,\n]/)
-      .map(word => word.trim().replace(/^\d+\.?\s*/, ''))
+      .map(word => word.trim().replace(/^\d+\.?\s*/, ""))
       .filter(word => word.length > 0)
       .slice(0, 10);
     
     return words.length > 0 ? words : getFallbackVocabulary(textType);
   } catch (error) {
-    console.error('Error getting text type vocabulary:', error);
+    console.error("Error getting text type vocabulary:", error);
     return getFallbackVocabulary(textType);
   }
 }
@@ -365,99 +375,11 @@ export async function getTextTypeVocabulary(textType: string): Promise<string[]>
 // Fallback vocabulary for different text types
 function getFallbackVocabulary(textType: string): string[] {
   const vocabularyMap = {
-    narrative: ['captivating', 'mesmerizing', 'extraordinary', 'bewildering', 'exhilarating', 'profound', 'mysterious', 'enchanting', 'compelling', 'remarkable'],
-    persuasive: ['compelling', 'convincing', 'substantial', 'irrefutable', 'paramount', 'crucial', 'imperative', 'undeniable', 'significant', 'essential'],
-    expository: ['comprehensive', 'systematic', 'analytical', 'methodical', 'thorough', 'precise', 'detailed', 'extensive', 'fundamental', 'intricate'],
-    descriptive: ['vivid', 'picturesque', 'breathtaking', 'magnificent', 'splendid', 'radiant', 'serene', 'majestic', 'pristine', 'luminous'],
-    creative: ['innovative', 'imaginative', 'ingenious', 'inventive', 'original', 'visionary', 'artistic', 'inspired', 'unique', 'brilliant']
+    narrative: ["captivating", "mesmerizing", "extraordinary", "bewildering", "exhilarating", "profound", "mysterious", "enchanting", "compelling", "remarkable"],
+    persuasive: ["compelling", "convincing", "substantial", "irrefutable", "paramount", "crucial", "imperative", "undeniable", "significant", "essential"],
+    expository: ["comprehensive", "systematic", "analytical", "methodical", "thorough", "precise", "detailed", "extensive", "fundamental", "intricate"],
+    descriptive: ["vivid", "picturesque", "breathtaking", "magnificent", "splendid", "radiant", "serene", "majestic", "pristine", "luminous"],
+    creative: ["innovative", "imaginative", "ingenious", "inventive", "original", "visionary", "artistic", "inspired", "unique", "brilliant"]
   };
   return vocabularyMap[textType.toLowerCase()] || vocabularyMap.narrative;
 }
-
-// Identify common mistakes in writing
-export async function identifyCommonMistakes(content: string, textType: string): Promise<any[]> {
-  if (!content.trim()) {
-    return [];
-  }
-
-  const systemPrompt = `You are a writing teacher. Analyze this ${textType} writing and identify specific errors.`;
-  const userPrompt = `Analyze this writing and identify mistakes:\n\n${content}\n\nReturn JSON format: [{"type": "error_type", "issue": "description", "suggestion": "fix", "location": "snippet"}]`;
-  
-  try {
-    const response = await makeOpenAICall(systemPrompt, userPrompt, 300);
-    const mistakes = JSON.parse(response);
-    return Array.isArray(mistakes) ? mistakes : [];
-  } catch (error) {
-    console.error('Error identifying mistakes:', error);
-    return getFallbackMistakes(content);
-  }
-}
-
-// Fallback mistake identification
-function getFallbackMistakes(content: string): any[] {
-  const mistakes = [];
-  
-  if (content.length < 50) {
-    mistakes.push({
-      type: 'structure',
-      issue: 'Content is too short',
-      suggestion: 'Develop your ideas with more details',
-      location: 'Overall content'
-    });
-  }
-  
-  if (!content.trim().match(/[.!?]$/)) {
-    mistakes.push({
-      type: 'punctuation',
-      issue: 'Missing ending punctuation',
-      suggestion: 'End with appropriate punctuation',
-      location: 'End of text'
-    });
-  }
-  
-  return mistakes.slice(0, 3);
-}
-
-// Add this helper function for fallback responses
-export function getFallbackChatResponse(userMessage: string, textType: string): string {
-  const lowerMessage = userMessage.toLowerCase();
-  
-  if (lowerMessage.includes('introduction') || lowerMessage.includes('start')) {
-    return `Great question about introductions! For ${textType} writing, try starting with dialogue, action, or an intriguing question. Hook your reader from the first sentence! 🎣`;
-  } else if (lowerMessage.includes('conclusion') || lowerMessage.includes('end')) {
-    return `For a strong conclusion, circle back to your opening theme and show how your character has grown or changed. Leave readers satisfied but thoughtful! ✨`;
-  } else if (lowerMessage.includes('synonym') || lowerMessage.includes('word')) {
-    return `Try these powerful alternatives: Instead of 'said' → whispered, exclaimed, declared. Instead of 'big' → enormous, massive, gigantic. Specific words make writing shine! 📚`;
-  } else if (lowerMessage.includes('character')) {
-    return `Show character emotions through actions and thoughts! Instead of 'he was sad', try 'his shoulders slumped as he stared at the ground.' Show, don't tell! 😊`;
-  } else {
-    return `That's a thoughtful question! Keep writing and let your creativity flow. Remember: every sentence should either advance the plot or develop character. You're doing great! 🌟`;
-  }
-}
-
-// OpenAI client export for compatibility
-export const openai = {
-  chat: {
-    completions: {
-      create: async (params: any) => {
-        const { messages, model, max_tokens } = params;
-        const systemMessage = messages.find((m: any) => m.role === 'system');
-        const userMessage = messages.find((m: any) => m.role === 'user');
-        
-        const response = await makeOpenAICall(
-          systemMessage?.content || 'You are a helpful assistant.',
-          userMessage?.content || '',
-          max_tokens || 200
-        );
-        
-        return {
-          choices: [{
-            message: {
-              content: response
-            }
-          }]
-        };
-      }
-    }
-  }
-};
