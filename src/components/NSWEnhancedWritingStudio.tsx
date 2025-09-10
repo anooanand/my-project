@@ -1,8 +1,12 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Save, Download, Upload, Eye, EyeOff, RotateCcw, Sparkles, BookOpen, Target, TrendingUp, Award, CheckCircle, AlertCircle, Star, Lightbulb, MessageSquare, BarChart3, Clock, Zap, Heart, Wand2, PenTool, FileText, Settings, RefreshCw, Play, Pause, Volume2, VolumeX, Maximize2, Minimize2, Copy, Check, X, Plus, Minus, ChevronDown, ChevronUp, Info, HelpCircle, Bot, Send, Timer } from 'lucide-react';
+import { Save, Download, Upload, Eye, EyeOff, RotateCcw, Sparkles, BookOpen, Target, TrendingUp, Award, CheckCircle, AlertCircle, Star, Lightbulb, MessageSquare, BarChart3, Clock, Zap, Heart, Wand2, PenTool, FileText, Settings, RefreshCw, Play, Pause, Volume2, VolumeX, Maximize2, Minimize2, Copy, Check, X, Plus, Minus, ChevronDown, ChevronUp, Info, HelpCircle, Bot, Send, Timer, Brain } from 'lucide-react';
 import { EnhancedInlineSuggestions } from './EnhancedInlineSuggestions';
 import { ContextualAIPrompts } from './ContextualAIPrompts';
 import { EnhancedFeedbackSystem } from './EnhancedFeedbackSystem';
+import { EnhancedGrammarChecker } from './EnhancedGrammarChecker';
+import { EnhancedVocabularyBuilder } from './EnhancedVocabularyBuilder';
+import { EnhancedSentenceAnalyzer } from './EnhancedSentenceAnalyzer';
+import { AdvancedAnalyticsDashboard } from './AdvancedAnalyticsDashboard';
 import { generateChatResponse } from '../lib/openai';
 
 interface NSWEnhancedWritingStudioProps {
@@ -42,7 +46,7 @@ export function NSWEnhancedWritingStudio({
   const [currentPrompt, setCurrentPrompt] = useState(prompt || '');
   
   // UI state
-  const [activePanel, setActivePanel] = useState<'suggestions' | 'prompts' | 'feedback' | 'chat'>('suggestions');
+  const [activePanel, setActivePanel] = useState<'suggestions' | 'prompts' | 'feedback' | 'grammar' | 'vocabulary' | 'sentences' | 'analytics' | 'chat'>('suggestions');
   const [showInlineSuggestions, setShowInlineSuggestions] = useState(true);
   const [showContextualPrompts, setShowContextualPrompts] = useState(true);
   const [assistanceLevel, setAssistanceLevel] = useState<'minimal' | 'moderate' | 'comprehensive'>('moderate');
@@ -170,6 +174,33 @@ export function NSWEnhancedWritingStudio({
     }
   };
 
+  // Handle word selection from vocabulary builder
+  const handleWordSelected = (original: string, replacement: string) => {
+    const newContent = currentContent.replace(new RegExp(`\\b${original}\\b`, 'gi'), replacement);
+    handleContentChange(newContent);
+  };
+
+  // Handle sentence improvement from sentence analyzer
+  const handleSentenceImproved = (original: string, improved: string) => {
+    const newContent = currentContent.replace(original, improved);
+    handleContentChange(newContent);
+  };
+
+  // Handle goal setting from analytics dashboard
+  const handleGoalSet = (goal: string, target: number) => {
+    console.log('Goal set:', goal, 'Target:', target);
+    // Here you would typically save the goal to your backend or local storage
+    // For now, we'll just show a success message
+    const goalMessage: ChatMessage = {
+      id: Date.now().toString(),
+      text: `Great! I've set your goal to ${goal} with a target of ${target}. I'll help you track your progress towards this goal! 🎯`,
+      sender: 'ai',
+      timestamp: new Date()
+    };
+    setChatMessages(prev => [...prev, goalMessage]);
+    setActivePanel('chat');
+  };
+
   // Initialize welcome message
   useEffect(() => {
     if (chatMessages.length === 0) {
@@ -232,6 +263,10 @@ export function NSWEnhancedWritingStudio({
     { id: 'suggestions', label: 'Smart Help', icon: <Sparkles className="w-4 h-4" />, disabled: isExamMode },
     { id: 'prompts', label: 'Questions', icon: <Lightbulb className="w-4 h-4" />, disabled: isExamMode },
     { id: 'feedback', label: 'Feedback', icon: <Star className="w-4 h-4" />, disabled: false },
+    { id: 'grammar', label: 'Grammar', icon: <CheckCircle className="w-4 h-4" />, disabled: isExamMode },
+    { id: 'vocabulary', label: 'Vocabulary', icon: <Brain className="w-4 h-4" />, disabled: isExamMode },
+    { id: 'sentences', label: 'Sentences', icon: <BarChart3 className="w-4 h-4" />, disabled: isExamMode },
+    { id: 'analytics', label: 'Progress', icon: <TrendingUp className="w-4 h-4" />, disabled: false },
     { id: 'chat', label: 'AI Buddy', icon: <Bot className="w-4 h-4" />, disabled: false }
   ];
 
@@ -300,14 +335,14 @@ export function NSWEnhancedWritingStudio({
           </div>
         </div>
 
-        {/* Panel tabs */}
-        <div className="flex space-x-1">
+        {/* Panel tabs - Updated with new tabs */}
+        <div className="flex flex-wrap gap-1">
           {panelTabs.map(tab => (
             <button
               key={tab.id}
               onClick={() => !tab.disabled && setActivePanel(tab.id as any)}
               disabled={tab.disabled}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                 activePanel === tab.id
                   ? showFocusMode
                     ? 'bg-gray-700 text-white'
@@ -411,7 +446,7 @@ export function NSWEnhancedWritingStudio({
           </div>
         </div>
 
-        {/* AI assistance panel */}
+        {/* AI assistance panel - Updated with new panels */}
         <div className={`w-96 border-l ${showFocusMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'} flex flex-col`}>
           <div className="flex-1 overflow-hidden">
             {activePanel === 'suggestions' && !isExamMode && (
@@ -484,6 +519,67 @@ export function NSWEnhancedWritingStudio({
                   textType={textType}
                   onFeedbackGenerated={(feedback) => console.log('Feedback generated:', feedback)}
                   assistanceLevel={assistanceLevel}
+                />
+              </div>
+            )}
+
+            {/* NEW: Grammar Panel */}
+            {activePanel === 'grammar' && !isExamMode && (
+              <div className="h-full overflow-y-auto">
+                <EnhancedGrammarChecker
+                  content={currentContent}
+                  onContentChange={handleContentChange}
+                  isEnabled={true}
+                  textType={textType}
+                />
+              </div>
+            )}
+
+            {/* NEW: Vocabulary Panel */}
+            {activePanel === 'vocabulary' && !isExamMode && (
+              <div className="h-full overflow-y-auto">
+                <EnhancedVocabularyBuilder
+                  content={currentContent}
+                  textType={textType}
+                  onWordSelected={handleWordSelected}
+                  assistanceLevel={assistanceLevel}
+                  isVisible={true}
+                />
+              </div>
+            )}
+
+            {/* NEW: Sentences Panel */}
+            {activePanel === 'sentences' && !isExamMode && (
+              <div className="h-full overflow-y-auto">
+                <EnhancedSentenceAnalyzer
+                  content={currentContent}
+                  textType={textType}
+                  onSentenceImproved={handleSentenceImproved}
+                  isVisible={true}
+                  assistanceLevel={assistanceLevel}
+                />
+              </div>
+            )}
+
+            {/* NEW: Analytics Panel */}
+            {activePanel === 'analytics' && (
+              <div className="h-full overflow-y-auto">
+                <AdvancedAnalyticsDashboard
+                  isVisible={true}
+                  onGoalSet={handleGoalSet}
+                  currentSession={{
+                    textType,
+                    wordCount,
+                    timeSpent: Math.round(totalWritingTime / 60),
+                    scores: {
+                      ideas: 0,
+                      structure: 0,
+                      vocabulary: 0,
+                      grammar: 0,
+                      nswCriteria: 0,
+                      overall: 0
+                    }
+                  }}
                 />
               </div>
             )}
