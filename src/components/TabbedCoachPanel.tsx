@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { User, RefreshCw, Sparkles, Wand, Star, Bot, MessageSquare, BarChart3, BookOpen, TrendingUp, Wifi, WifiOff, Send, Loader, ChevronDown, ChevronUp, ThumbsUp, Lightbulb, HelpCircle, Target, AlertCircle, Zap, Gift, Heart, X } from 'lucide-react';
+import { User, RefreshCw, Sparkles, Wand, Star, Bot, MessageSquare, BarChart3, BookOpen, TrendingUp, Wifi, WifiOff, Send, Loader, ChevronDown, ChevronUp, ThumbsUp, Lightbulb, HelpCircle, Target, AlertCircle, Zap, Gift, Heart, X, Search } from 'lucide-react';
 import { generateChatResponse, checkOpenAIConnectionStatus } from '../lib/openai';
 
 interface TabbedCoachPanelProps {
@@ -46,6 +46,12 @@ export function TabbedCoachPanel({
   const [inputMessage, setInputMessage] = useState('');
   const [isAITyping, setIsAITyping] = useState(false);
   const [showQuickQuestions, setShowQuickQuestions] = useState(true);
+
+  // Vocabulary state
+  const [vocabularySearchTerm, setVocabularySearchTerm] = useState("");
+  const [synonyms, setSynonyms] = useState<string[]>([]);
+  const [vocabularyLoading, setVocabularyLoading] = useState(false);
+  const [vocabularyError, setVocabularyError] = useState<string | null>(null);
 
   // Refs
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -99,6 +105,43 @@ export function TabbedCoachPanel({
         loading: false,
         lastChecked: new Date()
       });
+    }
+  };
+
+  const searchVocabulary = async () => {
+    if (!vocabularySearchTerm.trim()) return;
+
+    setVocabularyLoading(true);
+    setVocabularyError(null);
+    setSynonyms([]);
+
+    try {
+      // In a real application, this would be an API call to a vocabulary service.
+      // For this example, we'll simulate an API call.
+      const response = await new Promise<string[]>((resolve) => {
+        setTimeout(() => {
+          const mockSynonyms: { [key: string]: string[] } = {
+            "good": ["excellent", "fine", "satisfactory", "pleasant", "virtuous"],
+            "bad": ["poor", "inferior", "unpleasant", "evil", "harmful"],
+            "happy": ["joyful", "cheerful", "merry", "delighted", "pleased"],
+            "sad": ["unhappy", "sorrowful", "depressed", "gloomy", "miserable"],
+            "big": ["large", "enormous", "huge", "gigantic", "massive"],
+            "small": ["little", "tiny", "miniature", "petite", "minuscule"],
+          };
+          const lowerCaseTerm = vocabularySearchTerm.toLowerCase();
+          if (mockSynonyms[lowerCaseTerm]) {
+            resolve(mockSynonyms[lowerCaseTerm]);
+          } else {
+            resolve([`No synonyms found for "${vocabularySearchTerm}".`]);
+          }
+        }, 1000);
+      });
+      setSynonyms(response);
+    } catch (error) {
+      console.error("Vocabulary search error:", error);
+      setVocabularyError("Failed to fetch synonyms. Please try again.");
+    } finally {
+      setVocabularyLoading(false);
     }
   };
 
@@ -424,17 +467,37 @@ export function TabbedCoachPanel({
                 <input
                   type="text"
                   placeholder="Enter a word..."
+                  value={vocabularySearchTerm}
+                  onChange={(e) => setVocabularySearchTerm(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      searchVocabulary();
+                    }
+                  }}
                   className="w-full bg-white/20 text-white placeholder-white/60 px-3 py-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-white/30"
                 />
                 <button
-                  className="w-full bg-white/20 hover:bg-white/30 text-white px-3 py-2 rounded-lg text-sm transition-colors"
+                  onClick={searchVocabulary}
+                  disabled={vocabularyLoading}
+                  className="w-full bg-white/20 hover:bg-white/30 text-white px-3 py-2 rounded-lg text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Search className="w-4 h-4 mr-2 inline-block" />
-                  Find Synonyms
+                  {vocabularyLoading ? (
+                    <Loader className="w-4 h-4 mr-2 inline-block animate-spin" />
+                  ) : (
+                    <Search className="w-4 h-4 mr-2 inline-block" />
+                  )}
+                  {vocabularyLoading ? 'Searching...' : 'Find Synonyms'}
                 </button>
                 <div className="bg-white/10 rounded-lg p-3">
                   <h4 className="text-white font-semibold mb-2">Synonyms:</h4>
-                  <p className="text-white/80 text-sm">No synonyms found yet. Try searching for a word!</p>
+                  {vocabularyError && (
+                    <p className="text-red-300 text-sm">{vocabularyError}</p>
+                  )}
+                  {synonyms.length > 0 ? (
+                    <p className="text-white/80 text-sm">{synonyms.join(', ')}</p>
+                  ) : (
+                    <p className="text-white/80 text-sm">No synonyms found yet. Try searching for a word!</p>
+                  )}
                 </div>
               </div>
             </div>
