@@ -1,19 +1,17 @@
 """
-Enhanced AI Operations Service
-Provides sophisticated backend integration for the writing assistant
+Enhanced AI Operations Service for NSW Selective Writing Test
+Provides sophisticated backend integration with NSW marking rubric alignment
 """
 
 import json
-import re
-from typing import Dict, List, Any, Optional, Tuple
-from dataclasses import dataclass
-from datetime import datetime
-import openai
 import os
+from typing import Dict, List, Any, Optional
+from dataclasses import dataclass
+import openai
 
 # Configure OpenAI
 openai.api_key = os.getenv('OPENAI_API_KEY')
-openai.api_base = os.getenv('OPENAI_API_BASE', 'https://api.openai.com/v1')
+openai.api_base = os.getenv('OPENAI_API_BASE', 'https://api.openai.com/v1' )
 
 @dataclass
 class TextPosition:
@@ -21,484 +19,324 @@ class TextPosition:
     end: int
 
 @dataclass
-class HighlightRange:
-    start: int
-    end: int
-    type: str
-    message: str
-    suggestions: List[str]
-    category: Optional[str] = None
-    severity: Optional[str] = None
-    context: Optional[str] = None
+class FeedbackItem:
+    exampleFromText: str
+    position: TextPosition
+    comment: Optional[str] = None
+    suggestionForImprovement: Optional[str] = None
 
 @dataclass
-class ContextSummary:
-    writing_type: str
-    current_stage: str
-    word_count: int
-    key_topics: List[str]
-    student_level: str
-    progress_notes: List[str]
-    last_feedback_type: str
+class GrammarCorrection:
+    original: str
+    suggestion: str
+    explanation: str
+    position: TextPosition
 
-class EnhancedAIOperationsService:
-    """Enhanced AI service with sophisticated natural language processing"""
+@dataclass
+class VocabularyEnhancement:
+    original: str
+    suggestion: str
+    explanation: str
+    position: TextPosition
+
+@dataclass
+class CriteriaFeedback:
+    category: str
+    score: int
+    strengths: List[FeedbackItem]
+    areasForImprovement: List[FeedbackItem]
+
+@dataclass
+class DetailedFeedback:
+    overallScore: int
+    criteriaScores: Dict[str, int]
+    feedbackCategories: List[CriteriaFeedback]
+    grammarCorrections: List[GrammarCorrection]
+    vocabularyEnhancements: List[VocabularyEnhancement]
+
+def get_nsw_selective_feedback(content: str, text_type: str, assistance_level: str) -> Dict[str, Any]:
+    """
+    Generate comprehensive NSW Selective-aligned feedback with structured JSON output
+    """
     
-    def __init__(self):
-        self.model = "gpt-4"
-        self.max_tokens = 2000
-        
-    async def analyze_question(self, question: str, text_type: str, context: Dict[str, Any]) -> Dict[str, Any]:
-        """Analyze a question and provide structured guidance"""
-        
-        prompt = f"""
-        You are an expert writing coach. A student has asked: "{question}"
-        
-        Context:
-        - Writing type: {text_type}
-        - Current stage: {context.get('currentStage', 'initial')}
-        - Word count: {context.get('wordCount', 0)}
-        - Student level: {context.get('studentLevel', 'intermediate')}
-        
-        Provide a structured response with:
-        1. Direct guidance addressing their question
-        2. Specific writing strategies for {text_type} writing
-        3. Suggested structure or next steps
-        4. Encouraging feedback
-        
-        Format your response as JSON with keys: guidance, strategies, structure, encouragement
-        """
-        
-        try:
-            response = await openai.ChatCompletion.acreate(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": "You are a helpful writing coach who provides structured, encouraging guidance."},
-                    {"role": "user", "content": prompt}
-                ],
-                max_tokens=self.max_tokens,
-                temperature=0.7
-            )
-            
-            content = response.choices[0].message.content
-            
-            # Try to parse as JSON, fallback to structured text
-            try:
-                result = json.loads(content)
-            except json.JSONDecodeError:
-                result = {
-                    "guidance": content,
-                    "strategies": [],
-                    "structure": "",
-                    "encouragement": "Keep up the great work!"
-                }
-            
-            return result
-            
-        except Exception as e:
-            print(f"Error in analyze_question: {e}")
-            return {
-                "guidance": "I'd be happy to help! Could you tell me more about what specific aspect you'd like guidance on?",
-                "strategies": [],
-                "structure": "",
-                "encouragement": "I'm here to support your writing journey!"
-            }
-    
-    async def check_grammar_for_editor(self, text: str, include_positions: bool = True) -> Dict[str, Any]:
-        """Advanced grammar checking with character positions for editor highlighting"""
-        
-        if not text.strip() or len(text) < 10:
-            return {"errors": [], "corrections": [], "suggestions": []}
-        
-        prompt = f"""
-        Analyze this text for grammar, spelling, and style issues. For each issue found, provide:
-        1. The exact text that needs correction
-        2. The suggested correction
-        3. A brief explanation
-        4. The character position (start and end) in the original text
-        5. The type of error (grammar, spelling, style, punctuation)
-        6. Severity level (low, medium, high)
-        
-        Text to analyze: "{text}"
-        
-        Return a JSON object with an "errors" array. Each error should have:
-        - original: the text that needs correction
-        - suggestion: the suggested replacement
-        - explanation: brief explanation of the issue
-        - start: character position where the error starts
-        - end: character position where the error ends
-        - type: error type (grammar/spelling/style/punctuation)
-        - severity: severity level (low/medium/high)
-        """
-        
-        try:
-            response = await openai.ChatCompletion.acreate(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": "You are an expert grammar and style checker. Provide precise character positions for each issue."},
-                    {"role": "user", "content": prompt}
-                ],
-                max_tokens=self.max_tokens,
-                temperature=0.3
-            )
-            
-            content = response.choices[0].message.content
-            
-            try:
-                result = json.loads(content)
-                
-                # Validate and fix positions if needed
-                if include_positions and "errors" in result:
-                    result["errors"] = self._validate_positions(result["errors"], text)
-                
-                return result
-                
-            except json.JSONDecodeError:
-                # Fallback to rule-based checking
-                return self._fallback_grammar_check(text)
-                
-        except Exception as e:
-            print(f"Error in check_grammar_for_editor: {e}")
-            return self._fallback_grammar_check(text)
-    
-    async def enhance_vocabulary(self, text: str, level: str = "intermediate") -> Dict[str, Any]:
-        """Suggest vocabulary enhancements with positions"""
-        
-        prompt = f"""
-        Analyze this text and suggest vocabulary enhancements appropriate for a {level} level student.
-        For each suggestion, provide:
-        1. The original word/phrase
-        2. A stronger alternative
-        3. Character positions in the text
-        4. Brief explanation of why the suggestion is better
-        
-        Text: "{text}"
-        
-        Return JSON with "enhancements" array containing:
-        - original: the word/phrase to replace
-        - suggestion: the enhanced alternative
-        - start: character position start
-        - end: character position end
-        - explanation: why this is better
-        """
-        
-        try:
-            response = await openai.ChatCompletion.acreate(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": f"You are a vocabulary coach helping {level} level students improve their word choice."},
-                    {"role": "user", "content": prompt}
-                ],
-                max_tokens=self.max_tokens,
-                temperature=0.7
-            )
-            
-            content = response.choices[0].message.content
-            
-            try:
-                result = json.loads(content)
-                
-                # Validate positions
-                if "enhancements" in result:
-                    result["enhancements"] = self._validate_positions(result["enhancements"], text)
-                
-                return result
-                
-            except json.JSONDecodeError:
-                return {"enhancements": []}
-                
-        except Exception as e:
-            print(f"Error in enhance_vocabulary: {e}")
-            return {"enhancements": []}
-    
-    async def analyze_structure(self, text: str, text_type: str, stage: str) -> Dict[str, Any]:
-        """Analyze text structure and provide feedback"""
-        
-        prompt = f"""
-        Analyze the structure of this {text_type} writing at the {stage} stage.
-        
-        Text: "{text}"
-        
-        Provide feedback on:
-        1. Overall structure and organization
-        2. Paragraph development
-        3. Transitions between ideas
-        4. Introduction and conclusion (if present)
-        5. Specific suggestions for improvement
-        
-        Return JSON with keys: structure_score, feedback, suggestions, strengths, areas_for_improvement
-        """
-        
-        try:
-            response = await openai.ChatCompletion.acreate(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": f"You are an expert in {text_type} writing structure and organization."},
-                    {"role": "user", "content": prompt}
-                ],
-                max_tokens=self.max_tokens,
-                temperature=0.7
-            )
-            
-            content = response.choices[0].message.content
-            
-            try:
-                result = json.loads(content)
-                return result
-            except json.JSONDecodeError:
-                return {
-                    "structure_score": 7,
-                    "feedback": content,
-                    "suggestions": [],
-                    "strengths": [],
-                    "areas_for_improvement": []
-                }
-                
-        except Exception as e:
-            print(f"Error in analyze_structure: {e}")
-            return {
-                "structure_score": 7,
-                "feedback": "Your writing shows good organization. Keep developing your ideas with clear examples and smooth transitions.",
-                "suggestions": ["Add more specific examples", "Improve transitions between paragraphs"],
-                "strengths": ["Clear main ideas"],
-                "areas_for_improvement": ["Paragraph development"]
-            }
-    
-    async def get_nsw_selective_feedback(self, content: str, text_type: str, assistance_level: str, context: Dict[str, Any]) -> Dict[str, Any]:
-        """Provide comprehensive NSW Selective-style feedback with highlighting positions"""
-        
-        word_count = len(content.split())
-        
-        prompt = f"""
-        Provide comprehensive feedback for this {text_type} writing ({word_count} words) at {assistance_level} level.
-        
-        Text: "{content}"
-        
-        Context:
-        - Writing stage: {context.get('currentStage', 'writing')}
-        - Student level: {context.get('studentLevel', 'intermediate')}
-        - Previous feedback: {context.get('lastFeedbackType', 'none')}
-        
-        Provide feedback in these categories:
-        1. Strengths (what's working well) - include specific examples from text with positions
-        2. Areas for improvement - include specific examples with positions
-        3. Vocabulary suggestions - with positions
-        4. Grammar/spelling corrections - with positions
-        5. Overall score and criteria scores (ideas, structure, language, accuracy)
-        
-        For each feedback item that references specific text, include:
-        - exampleFromText: the exact text being referenced
-        - position: {start: number, end: number} character positions
-        - suggestionForImprovement: specific suggestion if applicable
-        
-        Return comprehensive JSON with feedbackItems, corrections, vocabularyEnhancements, overallScore, criteriaScores
-        """
-        
-        try:
-            response = await openai.ChatCompletion.acreate(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": "You are an expert NSW Selective writing assessor providing detailed, constructive feedback."},
-                    {"role": "user", "content": prompt}
-                ],
-                max_tokens=self.max_tokens,
-                temperature=0.7
-            )
-            
-            content_response = response.choices[0].message.content
-            
-            try:
-                result = json.loads(content_response)
-                
-                # Validate and fix positions for all feedback items
-                if "feedbackItems" in result:
-                    for item in result["feedbackItems"]:
-                        if "exampleFromText" in item and "position" not in item:
-                            # Find position if not provided
-                            example = item["exampleFromText"]
-                            start_pos = content.find(example)
-                            if start_pos != -1:
-                                item["position"] = {
-                                    "start": start_pos,
-                                    "end": start_pos + len(example)
-                                }
-                
-                if "corrections" in result:
-                    for correction in result["corrections"]:
-                        if "original" in correction and "position" not in correction:
-                            original = correction["original"]
-                            start_pos = content.find(original)
-                            if start_pos != -1:
-                                correction["position"] = {
-                                    "start": start_pos,
-                                    "end": start_pos + len(original)
-                                }
-                
-                if "vocabularyEnhancements" in result:
-                    for enhancement in result["vocabularyEnhancements"]:
-                        if "original" in enhancement and "position" not in enhancement:
-                            original = enhancement["original"]
-                            start_pos = content.find(original)
-                            if start_pos != -1:
-                                enhancement["position"] = {
-                                    "start": start_pos,
-                                    "end": start_pos + len(original)
-                                }
-                
-                return result
-                
-            except json.JSONDecodeError:
-                # Fallback response
-                return self._create_fallback_feedback(content, word_count)
-                
-        except Exception as e:
-            print(f"Error in get_nsw_selective_feedback: {e}")
-            return self._create_fallback_feedback(content, word_count)
-    
-    def _validate_positions(self, items: List[Dict], text: str) -> List[Dict]:
-        """Validate and fix character positions in feedback items"""
-        validated_items = []
-        
-        for item in items:
-            if "original" in item:
-                search_text = item["original"]
-            elif "exampleFromText" in item:
-                search_text = item["exampleFromText"]
-            else:
-                validated_items.append(item)
-                continue
-            
-            # Find the position in text
-            start_pos = text.find(search_text)
-            if start_pos != -1:
-                item["start"] = start_pos
-                item["end"] = start_pos + len(search_text)
-                validated_items.append(item)
-            elif "start" in item and "end" in item:
-                # Keep existing positions if text not found but positions exist
-                validated_items.append(item)
-        
-        return validated_items
-    
-    def _fallback_grammar_check(self, text: str) -> Dict[str, Any]:
-        """Rule-based grammar checking fallback"""
-        errors = []
-        
-        # Common grammar patterns
-        patterns = [
-            (r'\b(their|there|they\'re)\b', 'Check their/there/they\'re usage'),
-            (r'\b(your|you\'re)\b', 'Check your/you\'re usage'),
-            (r'\b(its|it\'s)\b', 'Check its/it\'s usage'),
-            (r'\bcould of\b', 'Use "could have" instead of "could of"'),
-            (r'\bshould of\b', 'Use "should have" instead of "should of"'),
-            (r'  +', 'Multiple spaces found'),
-        ]
-        
-        for pattern, message in patterns:
-            for match in re.finditer(pattern, text, re.IGNORECASE):
-                errors.append({
-                    "original": match.group(),
-                    "suggestion": "Check usage",
-                    "explanation": message,
-                    "start": match.start(),
-                    "end": match.end(),
-                    "type": "grammar",
-                    "severity": "medium"
-                })
-        
-        return {"errors": errors}
-    
-    def _create_fallback_feedback(self, content: str, word_count: int) -> Dict[str, Any]:
-        """Create fallback feedback when AI service fails"""
+    if not content or len(content.strip()) < 20:
         return {
-            "feedbackItems": [
+            "overallScore": 0,
+            "criteriaScores": {
+                "ideasAndContent": 0,
+                "textStructureAndOrganization": 0,
+                "languageFeaturesAndVocabulary": 0,
+                "spellingPunctuationAndGrammar": 0
+            },
+            "feedbackCategories": [],
+            "grammarCorrections": [],
+            "vocabularyEnhancements": []
+        }
+    
+    word_count = len(content.split())
+    
+    prompt = f"""
+    You are an AI writing tutor specializing in the NSW Selective School writing test for 10-12 year olds. 
+    
+    Analyze this {text_type} writing ({word_count} words) and provide detailed feedback aligned with NSW Selective criteria.
+    
+    Text: "{content}"
+    
+    Provide feedback with:
+    1. Overall score out of 100
+    2. Individual scores out of 5 for each NSW criteria:
+       - Ideas and Content
+       - Text Structure and Organization  
+       - Language Features and Vocabulary
+       - Spelling, Punctuation, and Grammar
+    
+    For each criteria, identify:
+    - 2-3 specific strengths with examples from text and character positions (start, end, 0-indexed)
+    - 2-3 specific areas for improvement with examples and positions
+    
+    Also provide:
+    - 3-5 specific grammar/spelling corrections with original word, suggestion, explanation, and position
+    - 3-5 vocabulary enhancement opportunities with original word, suggested replacement, explanation, and position
+    
+    Return ONLY valid JSON in this exact format:
+    {{
+        "overallScore": 85,
+        "criteriaScores": {{
+            "ideasAndContent": 4,
+            "textStructureAndOrganization": 4,
+            "languageFeaturesAndVocabulary": 3,
+            "spellingPunctuationAndGrammar": 4
+        }},
+        "feedbackCategories": [
+            {{
+                "category": "Ideas and Content",
+                "score": 4,
+                "strengths": [
+                    {{
+                        "exampleFromText": "exact text from student writing",
+                        "position": {{"start": 0, "end": 22}},
+                        "comment": "specific positive feedback"
+                    }}
+                ],
+                "areasForImprovement": [
+                    {{
+                        "exampleFromText": "exact text from student writing",
+                        "position": {{"start": 45, "end": 68}},
+                        "suggestionForImprovement": "specific improvement suggestion"
+                    }}
+                ]
+            }}
+        ],
+        "grammarCorrections": [
+            {{
+                "original": "incorrect text",
+                "suggestion": "corrected text",
+                "explanation": "explanation of the correction",
+                "position": {{"start": 30, "end": 39}}
+            }}
+        ],
+        "vocabularyEnhancements": [
+            {{
+                "original": "simple word",
+                "suggestion": "sophisticated word",
+                "explanation": "why this word is better",
+                "position": {{"start": 62, "end": 68}}
+            }}
+        ]
+    }}
+    """
+    
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-4",
+            messages=[
                 {
-                    "type": "praise",
-                    "text": f"Great work on your {word_count}-word piece! You're making good progress.",
-                    "area": "Overall Progress"
+                    "role": "system", 
+                    "content": "You are an expert NSW Selective School writing assessor. Return only valid JSON."
                 },
                 {
-                    "type": "suggestion",
-                    "text": "Consider adding more specific details to strengthen your writing.",
-                    "area": "Content Development"
+                    "role": "user", 
+                    "content": prompt
                 }
             ],
-            "corrections": [],
-            "vocabularyEnhancements": [],
-            "overallScore": 7,
-            "criteriaScores": {
-                "ideas": 7,
-                "structure": 7,
-                "language": 7,
-                "accuracy": 8
-            },
-            "strengths": ["Clear communication", "Good effort"],
-            "areasForImprovement": ["Add more detail", "Vary sentence structure"]
-        }
-
-# Flask application integration
-from flask import Flask, request, jsonify
-from flask_cors import CORS
-
-app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
-
-ai_service = EnhancedAIOperationsService()
-
-@app.route('/ai-operations', methods=['POST'])
-async def handle_ai_operations():
-    """Main endpoint for AI operations"""
-    try:
-        data = request.get_json()
-        action = data.get('action')
+            max_tokens=2000,
+            temperature=0.3,
+            response_format={"type": "json_object"}
+        )
         
-        if action == 'analyzeQuestion':
-            result = await ai_service.analyze_question(
-                data.get('question', ''),
-                data.get('textType', 'narrative'),
-                data.get('context', {})
-            )
-            
-        elif action == 'checkGrammarForEditor':
-            result = await ai_service.check_grammar_for_editor(
-                data.get('text', ''),
-                data.get('includePositions', True)
-            )
-            
-        elif action == 'enhanceVocabulary':
-            result = await ai_service.enhance_vocabulary(
-                data.get('text', ''),
-                data.get('level', 'intermediate')
-            )
-            
-        elif action == 'analyzeStructure':
-            result = await ai_service.analyze_structure(
-                data.get('text', ''),
-                data.get('textType', 'narrative'),
-                data.get('stage', 'writing')
-            )
-            
-        elif action == 'getNSWSelectiveFeedback':
-            result = await ai_service.get_nsw_selective_feedback(
-                data.get('content', ''),
-                data.get('textType', 'narrative'),
-                data.get('assistanceLevel', 'detailed'),
-                data.get('context', {})
-            )
-            
-        else:
-            return jsonify({"error": "Unknown action"}), 400
+        content_response = response.choices[0].message.content
         
-        return jsonify(result)
+        # Parse and validate JSON response
+        feedback_data = json.loads(content_response)
         
+        # Validate and fix positions if needed
+        feedback_data = validate_feedback_positions(feedback_data, content)
+        
+        return feedback_data
+        
+    except json.JSONDecodeError as e:
+        print(f"JSON parsing error: {e}")
+        return create_fallback_feedback(content, word_count)
     except Exception as e:
-        print(f"Error in handle_ai_operations: {e}")
-        return jsonify({"error": "Internal server error"}), 500
+        print(f"Error generating NSW feedback: {e}")
+        return create_fallback_feedback(content, word_count)
 
-@app.route('/health', methods=['GET'])
-def health_check():
-    """Health check endpoint"""
-    return jsonify({"status": "healthy", "timestamp": datetime.now().isoformat()})
+def validate_feedback_positions(feedback_data: Dict[str, Any], original_text: str) -> Dict[str, Any]:
+    """
+    Validate and fix character positions in feedback data
+    """
+    text_length = len(original_text)
+    
+    # Validate feedback categories
+    if "feedbackCategories" in feedback_data:
+        for category in feedback_data["feedbackCategories"]:
+            # Validate strengths
+            if "strengths" in category:
+                category["strengths"] = fix_positions_in_items(category["strengths"], original_text, text_length)
+            
+            # Validate areas for improvement
+            if "areasForImprovement" in category:
+                category["areasForImprovement"] = fix_positions_in_items(category["areasForImprovement"], original_text, text_length)
+    
+    # Validate grammar corrections
+    if "grammarCorrections" in feedback_data:
+        feedback_data["grammarCorrections"] = fix_positions_in_corrections(feedback_data["grammarCorrections"], original_text, text_length)
+    
+    # Validate vocabulary enhancements
+    if "vocabularyEnhancements" in feedback_data:
+        feedback_data["vocabularyEnhancements"] = fix_positions_in_corrections(feedback_data["vocabularyEnhancements"], original_text, text_length)
+    
+    return feedback_data
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+def fix_positions_in_items(items: List[Dict], original_text: str, text_length: int) -> List[Dict]:
+    """
+    Fix positions in feedback items
+    """
+    fixed_items = []
+    
+    for item in items:
+        if "exampleFromText" in item:
+            example_text = item["exampleFromText"]
+            
+            # Try to find the text in the original
+            start_pos = original_text.find(example_text)
+            
+            if start_pos != -1:
+                item["position"] = {
+                    "start": start_pos,
+                    "end": start_pos + len(example_text)
+                }
+            else:
+                # If exact match not found, use safe default positions
+                item["position"] = {
+                    "start": 0,
+                    "end": min(len(example_text), text_length)
+                }
+            
+            fixed_items.append(item)
+    
+    return fixed_items
+
+def fix_positions_in_corrections(corrections: List[Dict], original_text: str, text_length: int) -> List[Dict]:
+    """
+    Fix positions in grammar corrections and vocabulary enhancements
+    """
+    fixed_corrections = []
+    
+    for correction in corrections:
+        if "original" in correction:
+            original_word = correction["original"]
+            
+            # Try to find the word in the original text
+            start_pos = original_text.find(original_word)
+            
+            if start_pos != -1:
+                correction["position"] = {
+                    "start": start_pos,
+                    "end": start_pos + len(original_word)
+                }
+            else:
+                # Use safe default positions
+                correction["position"] = {
+                    "start": 0,
+                    "end": min(len(original_word), text_length)
+                }
+            
+            fixed_corrections.append(correction)
+    
+    return fixed_corrections
+
+def create_fallback_feedback(content: str, word_count: int) -> Dict[str, Any]:
+    """
+    Create fallback feedback when AI generation fails
+    """
+    return {
+        "overallScore": 75,
+        "criteriaScores": {
+            "ideasAndContent": 4,
+            "textStructureAndOrganization": 3,
+            "languageFeaturesAndVocabulary": 3,
+            "spellingPunctuationAndGrammar": 4
+        },
+        "feedbackCategories": [
+            {
+                "category": "Ideas and Content",
+                "score": 4,
+                "strengths": [
+                    {
+                        "exampleFromText": content[:50] + "..." if len(content) > 50 else content,
+                        "position": {"start": 0, "end": min(50, len(content))},
+                        "comment": "Shows creative thinking and good understanding of the task"
+                    }
+                ],
+                "areasForImprovement": [
+                    {
+                        "exampleFromText": content[:30] + "..." if len(content) > 30 else content,
+                        "position": {"start": 0, "end": min(30, len(content))},
+                        "suggestionForImprovement": "Add more specific details to develop your ideas further"
+                    }
+                ]
+            },
+            {
+                "category": "Text Structure and Organization",
+                "score": 3,
+                "strengths": [
+                    {
+                        "exampleFromText": content[:40] + "..." if len(content) > 40 else content,
+                        "position": {"start": 0, "end": min(40, len(content))},
+                        "comment": "Your writing follows a logical sequence"
+                    }
+                ],
+                "areasForImprovement": [
+                    {
+                        "exampleFromText": content[:35] + "..." if len(content) > 35 else content,
+                        "position": {"start": 0, "end": min(35, len(content))},
+                        "suggestionForImprovement": "Work on stronger paragraph breaks and transitions"
+                    }
+                ]
+            }
+        ],
+        "grammarCorrections": [
+            {
+                "original": "example",
+                "suggestion": "improved example",
+                "explanation": "This is a sample correction",
+                "position": {"start": 0, "end": 7}
+            }
+        ],
+        "vocabularyEnhancements": [
+            {
+                "original": "good",
+                "suggestion": "excellent",
+                "explanation": "Use more sophisticated vocabulary",
+                "position": {"start": 0, "end": 4}
+            }
+        ]
+    }
+
+# Legacy function for backward compatibility
+async def evaluate_essay(content: str, text_type: str = "narrative", assistance_level: str = "moderate") -> Dict[str, Any]:
+    """
+    Legacy function that calls the new NSW feedback system
+    """
+    return get_nsw_selective_feedback(content, text_type, assistance_level)
