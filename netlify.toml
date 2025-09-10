@@ -3,9 +3,12 @@
   publish = "dist"
   functions = "netlify/functions"
 
-# SPA fallback - this should be the only redirect rule
+[functions]
+  python_version = "3.9"
+  node_bundler = "esbuild"
+
 [[redirects]]
-  from = "/*"
-  to = "/index.html"
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
   status = 200
 
