@@ -5,9 +5,15 @@ from dataclasses import dataclass
 from openai import OpenAI
 
 # Configure OpenAI client
+openai_api_key = os.getenv("OPENAI_API_KEY")
+openai_api_base = os.getenv("OPENAI_API_BASE", "https://api.openai.com/v1" )
+
+print(f"DEBUG: OPENAI_API_KEY loaded: {openai_api_key is not None}")
+print(f"DEBUG: OPENAI_API_BASE loaded: {openai_api_base}")
+
 client = OpenAI(
-    api_key=os.getenv('OPENAI_API_KEY'),
-    base_url=os.getenv('OPENAI_API_BASE', 'https://api.openai.com/v1')
+    api_key=openai_api_key,
+    base_url=openai_api_base
 )
 
 @dataclass
@@ -306,4 +312,6 @@ def create_fallback_feedback(content: str, word_count: int) -> Dict[str, Any]:
 
 async def evaluate_essay(content: str, text_type: str = "narrative", assistance_level: str = "moderate") -> Dict[str, Any]:
     return get_nsw_selective_feedback(content, text_type, assistance_level)
+
+
 
