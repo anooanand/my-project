@@ -1,201 +1,77 @@
-const { OpenAI } = require('openai');
+/**
+ * Netlify function: strict JSON NSW rubric feedback.
+ * Requires env: OPENAI_API_KEY
+ * Copy to: netlify/functions/ai-feedback.js
+ */
+import OpenAI from "openai";
 
-// Initialize OpenAI with error handling
-let openai = null;
-try {
-  const apiKey = process.env.OPENAI_API_KEY || process.env.VITE_OPENAI_API_KEY;
-  if (apiKey && apiKey.startsWith("sk-")) {
-    openai = new OpenAI({
-      apiKey: apiKey,
-    });
-  }
-} catch (error) {
-  console.error('Failed to initialize OpenAI:', error);
+const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+const SYSTEM_PROMPT = `You are an AI writing tutor for 10–12 year olds preparing for the NSW Selective test.
+Return STRICT JSON matching the given schema. Include 0-indexed 'start' and 'end' character offsets for all evidence and fixes.
+Weights: ideas=30, structure=25, language=25, spag=20. Criterion scores are 0–5. OverallScore 0–100.
+Tone: positive, specific, concise.`;
+
+function buildUserPrompt(body) {
+  const { essayText = "", textType = "narrative" } = body || {};
+  return [
+    "Essay text (triple backticks):",
+    "```",
+    essayText,
+    "```",
+    "",
+    "Return JSON fields: overallScore, criteria (ideasContent, structureOrganization, languageVocab, spellingPunctuationGrammar),",
+    "grammarCorrections[], vocabularyEnhancements[], narrativeStructure (if narrative), timings.modelLatencyMs, modelVersion, id.",
+  ].join("\n");
 }
 
-// Helper function to create fallback response
-function createFallbackResponse(content, textType) {
-  const wordCount = content ? content.split(' ').length : 0;
-  return {
-    overallScore: Math.min(25, Math.max(10, wordCount / 10)),
-    criteriaScores: {
-      ideasAndContent: Math.min(9, Math.max(3, Math.floor(wordCount / 20))),
-      textStructureAndOrganization: Math.min(9, Math.max(3, Math.floor(wordCount / 25))),
-      languageFeaturesAndVocabulary: Math.min(9, Math.max(3, Math.floor(wordCount / 30))),
-      spellingPunctuationAndGrammar: Math.min(9, Math.max(3, Math.floor(wordCount / 15)))
-    },
-    feedbackCategories: [
-      {
-        category: "Ideas and Content",
-        score: Math.min(9, Math.max(3, Math.floor(wordCount / 20))),
-        strengths: [
-          {
-            exampleFromText: content.substring(0, 50) + "...",
-            position: { start: 0, end: 50 },
-            comment: "Good start to your story"
-          }
-        ],
-        areasForImprovement: [
-          {
-            exampleFromText: "Consider adding more details",
-            position: { start: 0, end: 0 },
-            suggestionForImprovement: "Add more descriptive details to engage the reader"
-          }
-        ]
-      }
-    ],
-    grammarCorrections: [],
-    vocabularyEnhancements: []
-  };
+// Minimal runtime guard (avoid external libs in the function)
+function isObj(o) { return o && typeof o === "object"; }
+function isNum(n) { return typeof n === "number" && !Number.isNaN(n); }
+function isStr(s) { return typeof s === "string"; }
+function isArr(a) { return Array.isArray(a); }
+
+function validatePayload(x) {
+  if (!isObj(x) || !isNum(x.overallScore) || !isStr(x.id)) return false;
+  const cs = x.criteria;
+  if (!isObj(cs)) return false;
+  const req = ["ideasContent","structureOrganization","languageVocab","spellingPunctuationGrammar"];
+  for (const k of req) {
+    const c = cs[k];
+    if (!isObj(c) || !isNum(c.score) || !isNum(c.weight)) return false;
+    if (!isArr(c.strengths) || !isArr(c.improvements)) return false;
+  }
+  if (!isArr(x.grammarCorrections) || !isArr(x.vocabularyEnhancements)) return false;
+  return true;
 }
 
-exports.handler = async (event, context) => {
-  // Handle CORS
-  const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Content-Type': 'application/json'
-  };
-
-  if (event.httpMethod === 'OPTIONS') {
-    return {
-      statusCode: 200,
-      headers,
-      body: ''
-    };
-  }
-
-  if (event.httpMethod !== 'POST') {
-    return {
-      statusCode: 405,
-      headers,
-      body: JSON.stringify({ error: 'Method not allowed' })
-    };
-  }
-
+export async function handler(event) {
   try {
-    const { content, textType, assistanceLevel } = JSON.parse(event.body);
-
-    if (!content || content.trim().length === 0) {
-      return {
-        statusCode: 400,
-        headers,
-        body: JSON.stringify({ error: 'Content is required' })
-      };
+    if (event.httpMethod !== "POST") {
+      return { statusCode: 405, body: "Method Not Allowed" };
     }
-
-    // If OpenAI is not available, return fallback response
-    if (!openai) {
-      console.log('OpenAI not available, returning fallback response');
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify(createFallbackResponse(content, textType))
-      };
-    }
-
-    // Create NSW-specific feedback using OpenAI
-    const systemPrompt = `You are an expert NSW Selective School writing assessor. Analyze the following ${textType} writing sample and provide detailed feedback according to NSW Selective writing criteria.
-
-ASSESSMENT CRITERIA:
-1. Ideas and Content (0-9 points)
-2. Text Structure and Organization (0-9 points) 
-3. Language Features and Vocabulary (0-9 points)
-4. Spelling, Punctuation and Grammar (0-9 points)
-
-For each criterion, provide:
-- A score out of 9
-- Specific examples from the text with character positions
-- Strengths with examples
-- Areas for improvement with specific suggestions
-
-Return your response as a JSON object with this exact structure:
-{
-  "overallScore": number,
-  "criteriaScores": {
-    "ideasAndContent": number,
-    "textStructureAndOrganization": number,
-    "languageFeaturesAndVocabulary": number,
-    "spellingPunctuationAndGrammar": number
-  },
-  "feedbackCategories": [
-    {
-      "category": "Ideas and Content",
-      "score": number,
-      "strengths": [
-        {
-          "exampleFromText": "exact text excerpt",
-          "position": {"start": number, "end": number},
-          "comment": "positive feedback"
-        }
-      ],
-      "areasForImprovement": [
-        {
-          "exampleFromText": "exact text excerpt",
-          "position": {"start": number, "end": number},
-          "suggestionForImprovement": "specific suggestion"
-        }
-      ]
-    }
-  ],
-  "grammarCorrections": [
-    {
-      "original": "incorrect text",
-      "suggestion": "corrected text",
-      "explanation": "why this is better",
-      "position": {"start": number, "end": number}
-    }
-  ],
-  "vocabularyEnhancements": [
-    {
-      "original": "simple word",
-      "suggestion": "sophisticated word",
-      "explanation": "why this is better",
-      "position": {"start": number, "end": number}
-    }
-  ]
-}`;
-
-    const userPrompt = `Please analyze this ${textType} writing sample:\n\n${content}`;
-
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+    const body = JSON.parse(event.body || "{}");
+    const started = Date.now();
+    const completion = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      response_format: { type: "json_object" },
+      temperature: 0.2,
+      max_tokens: 1800,
       messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt }
-      ],
-      max_tokens: 2000,
-      temperature: 0.3
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: buildUserPrompt(body) }
+      ]
     });
-
-    let feedbackData;
-    try {
-      feedbackData = JSON.parse(response.choices[0].message.content);
-    } catch (parseError) {
-      console.error('Failed to parse OpenAI response as JSON:', parseError);
-      feedbackData = createFallbackResponse(content, textType);
+    const content = completion.choices?.[0]?.message?.content || "{}";
+    const parsed = JSON.parse(content);
+    parsed.timings = parsed.timings || {};
+    parsed.timings.modelLatencyMs = Date.now() - started;
+    parsed.modelVersion = completion.model;
+    if (!validatePayload(parsed)) {
+      return { statusCode: 502, body: "Invalid model payload" };
     }
-
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify(feedbackData)
-    };
-
-  } catch (error) {
-    console.error('Error in ai-feedback function:', error);
-    
-    // Return fallback response on error
-    const fallbackData = createFallbackResponse(
-      event.body ? JSON.parse(event.body).content || '' : '',
-      event.body ? JSON.parse(event.body).textType || 'narrative' : 'narrative'
-    );
-
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify(fallbackData)
-    };
+    return { statusCode: 200, body: JSON.stringify(parsed) };
+  } catch (e) {
+    return { statusCode: 500, body: (e && e.message) || "Internal Error" };
   }
-};
+}
