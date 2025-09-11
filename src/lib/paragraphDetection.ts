@@ -25,22 +25,16 @@ export function detectNewParagraphs(
   const b = splitParas(next);
   const out: { paragraph: string; index: number }[] = [];
 
-  // find the first index where arrays differ (added/edited paragraph)
   const max = Math.max(a.length, b.length);
   let pivot = -1;
   for (let i = 0; i < max; i++) {
-    if (a[i] !== b[i]) {
-      pivot = i;
-      break;
-    }
+    if (a[i] !== b[i]) { pivot = i; break; }
   }
-  if (pivot === -1) return out; // nothing new
+  if (pivot === -1) return out;
 
-  // The paragraph BEFORE pivot is now stable/completed.
   const completedIndex = pivot - 1;
   if (completedIndex >= 0 && completedIndex < b.length && b[completedIndex]) {
     out.push({ paragraph: b[completedIndex], index: completedIndex });
   }
-
   return out;
 }
