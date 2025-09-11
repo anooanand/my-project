@@ -12,16 +12,31 @@ import { RubricPanel } from "./RubricPanel";
 import type { DetailedFeedback, LintFix } from "../types/feedback";
 import { validateDetailedFeedback } from "../types/feedback.validate";
 
-// Tabs panel (Coach/Analysis/Vocab/Progress)
+// Tabs panel (Coach / Analysis / Vocab / Progress)
 import { TabbedCoachPanel } from "./TabbedCoachPanel";
 
 type TextType = "narrative" | "persuasive" | "informative";
 
-export default function WritingArea() {
+interface Props {
+  content?: string;
+  onChange?: (content: string) => void;
+  textType?: string;
+  onTimerStart?: (shouldStart: boolean) => void;
+  onSubmit?: () => void;
+  onTextTypeChange?: (textType: string) => void;
+  onPopupCompleted?: () => void;
+  onPromptGenerated?: (prompt: string) => void;
+  prompt?: string;
+}
+
+function WritingAreaImpl(props: Props) {
   // --- editor state ---
-  const [textType, setTextType] = useState<TextType>("narrative");
-  const [content, setContent] = useState<string>("");
-  const prevTextRef = useRef<string>("");
+  const [textType, setTextType] = useState<TextType>((props.textType as TextType) || "narrative");
+  const [content, setContent] = useState<string>(props.content ?? "");
+  const prevTextRef = useRef<string>(props.content ?? "");
+
+  useEffect(() => { if (typeof props.content === "string") setContent(props.content); }, [props.content]);
+  useEffect(() => { if (typeof props.textType === "string") setTextType(props.textType as TextType); }, [props.textType]);
 
   // --- analysis state ---
   const [analysis, setAnalysis] = useState<DetailedFeedback | null>(null);
@@ -43,6 +58,7 @@ export default function WritingArea() {
     if (events.length) eventBus.emit("paragraph.ready", events[events.length - 1]);
     prevTextRef.current = next;
     setContent(next);
+    props.onChange?.(next);
   };
 
   // Submit → strict JSON rubric (server)
@@ -57,6 +73,8 @@ export default function WritingArea() {
       if (!validateDetailedFeedback(res)) throw new Error("Invalid feedback payload");
       setAnalysis(res);
       setStatus("success");
+      // optional: still call parent callback for analytics
+      props.onSubmit?.();
     } catch (e: any) {
       setStatus("error");
       setErr(e?.message || "Failed to analyze");
@@ -65,7 +83,9 @@ export default function WritingArea() {
 
   // Apply a server-proposed fix
   const onApplyFix = (fix: LintFix) => {
-    setContent(prev => prev.slice(0, fix.start) + fix.replacement + prev.slice(fix.end));
+    const next = content.slice(0, fix.start) + fix.replacement + content.slice(fix.end);
+    setContent(next);
+    props.onChange?.(next);
   };
 
   // Light autosave (localStorage + drafts function)
@@ -89,7 +109,11 @@ export default function WritingArea() {
           <select
             className="rounded-lg border px-2 py-1"
             value={textType}
-            onChange={(e) => setTextType(e.target.value as TextType)}
+            onChange={(e) => {
+              const v = e.target.value as TextType;
+              setTextType(v);
+              props.onTextTypeChange?.(v);
+            }}
           >
             <option value="narrative">Narrative</option>
             <option value="persuasive">Persuasive</option>
@@ -99,7 +123,6 @@ export default function WritingArea() {
 
         <div className="rounded-xl border bg-white">
           <div className="p-3">
-            {/* Replace with your custom editor if needed */}
             <textarea
               className="w-full h-[28rem] p-3 rounded-lg border"
               placeholder="Start your draft here…"
@@ -124,13 +147,12 @@ export default function WritingArea() {
 
       {/* RIGHT: Tabs (Coach / Analysis / Vocab / Progress) */}
       <div className="col-span-4">
-        <TabbedCoachPanel
-          analysis={analysis}
-          onApplyFix={onApplyFix}
-        />
-        {/* If you want the rubric visible under the tabs as well, keep this: */}
-        {/* {analysis && <div className="mt-4"><RubricPanel data={analysis} onApplyFix={onApplyFix} /></div>} */}
+        <TabbedCoachPanel analysis={analysis} onApplyFix={onApplyFix} />
       </div>
     </div>
   );
 }
+
+// export both (default + named) so imports in your app keep working
+export default WritingAreaImpl;
+export const WritingArea = WritingAreaImpl;
