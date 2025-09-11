@@ -6,4 +6,3 @@ export function analyzeSentenceStructure(text: string): string {
   return inspect(tree);
 }
 
-
