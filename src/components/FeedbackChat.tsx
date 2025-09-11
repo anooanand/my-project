@@ -1,12 +1,6 @@
-// src/components/FeedbackChat.tsx
 import React from "react";
 
-export interface FeedbackMsg {
-  id: string;
-  paragraph: string;
-  feedback: string;
-  ts: number;
-}
+export interface FeedbackMsg { id: string; paragraph: string; feedback: string; ts: number; }
 
 export function FeedbackChat({ messages }: { messages: FeedbackMsg[] }) {
   return (
