@@ -15,7 +15,14 @@ export default function WritingWorkspace() {
   const [analysis, setAnalysis] = React.useState<DetailedFeedback | null>(null);
   const [status, setStatus] = React.useState<"idle"|"loading"|"success"|"error">("idle");
   const [err, setErr] = React.useState<string|undefined>(undefined);
-  const draftId = React.useRef<string>(() => `draft-${crypto.randomUUID()}` as any);
+// Replace your draftId line with this:
+const draftId = React.useRef<string>(
+  `draft-${
+    (globalThis.crypto && typeof globalThis.crypto.randomUUID === "function")
+      ? globalThis.crypto.randomUUID()
+      : (Date.now().toString(36) + Math.random().toString(36).slice(2))
+  }`
+);
   const [version, setVersion] = React.useState(0);
 
   async function onSubmit() {
