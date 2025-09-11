@@ -406,3 +406,88 @@ export const createDebouncedChecker = (
     }, delay);
   };
 };
+
+
+  // More granular punctuation rules
+  morePunctuation: [
+    {
+      pattern: /([a-zA-Z0-9])([.,!?;:])(?![\s.,!?;:])/g,
+      message: "Missing space after punctuation mark.",
+      suggestions: (match: string) => [match.replace(/([.,!?;:])/, ", ")]
+    },
+    {
+      pattern: /\s{2,}[.,!?;:]/g,
+      message: "Excessive space before punctuation mark.",
+      suggestions: (match: string) => [match.trimLeft()]
+    },
+    {
+      pattern: /([a-zA-Z])([,.;:])([a-zA-Z])/g,
+      message: "Missing space after punctuation mark.",
+      suggestions: (match: string) => [match.replace(/([,.;:])/, ", ")]
+    },
+    {
+      pattern: /\b(i)\b/g,
+      message: "The pronoun 'I' should always be capitalized.",
+      suggestions: (match: string) => [match.toUpperCase()]
+    }
+  ],
+
+  // Common grammar errors
+  commonGrammar: [
+    {
+      pattern: /\b(affect|effect)\b/gi,
+      message: "Check if you're using 'affect' (verb) or 'effect' (noun).",
+      suggestions: ["affect", "effect"]
+    },
+    {
+      pattern: /\b(then|than)\b/gi,
+      message: "Check if you're using 'then' (time) or 'than' (comparison).",
+      suggestions: ["then", "than"]
+    },
+    {
+      pattern: /\b(their|there|they're)\b/gi,
+      message: "Check if you're using 'their' (possession), 'there' (place), or 'they're' (they are).",
+      suggestions: ["their", "there", "they're"]
+    },
+    {
+      pattern: /\b(to|too|two)\b/gi,
+      message: "Check if you're using 'to' (preposition), 'too' (also/excessively), or 'two' (number).",
+      suggestions: ["to", "too", "two"]
+    },
+    {
+      pattern: /\b(lose|loose)\b/gi,
+      message: "Check if you're using 'lose' (verb) or 'loose' (adjective).",
+      suggestions: ["lose", "loose"]
+    }
+  ]
+};
+
+
+
+import { ShowDontTellMeter } from './showDontTellMeter';
+import { LiteraryDevicesDetector } from './literaryDevicesDetector';
+import { SentenceVarietyAnalyzer } from './sentenceVarietyAnalyzer';
+
+
+
+export class EnhancedWritingAnalyzer {
+  private grammarSpellingChecker = new GrammarSpellingChecker();
+  private showDontTellMeter = new ShowDontTellMeter();
+  private literaryDevicesDetector = new LiteraryDevicesDetector();
+  private sentenceVarietyAnalyzer = new SentenceVarietyAnalyzer();
+
+  analyze(text: string) {
+    const grammarErrors = this.grammarSpellingChecker.checkText(text);
+    const showDontTell = this.showDontTellMeter.analyze(text);
+    const literaryDevices = this.literaryDevicesDetector.detect(text);
+    const sentenceVariety = this.sentenceVarietyAnalyzer.analyze(text);
+
+    return {
+      grammarErrors,
+      showDontTell,
+      literaryDevices,
+      sentenceVariety,
+    };
+  }
+}
+
