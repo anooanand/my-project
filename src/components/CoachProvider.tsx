@@ -1,7 +1,4 @@
-/**
- * Listens to 'paragraph.ready' and queries server for a single concise tip.
- * Copy to: src/components/CoachProvider.tsx
- */
+// src/components/CoachProvider.tsx
 import React from "react";
 import { eventBus } from "../lib/eventBus";
 import { coachTip } from "../lib/api";
@@ -17,7 +14,7 @@ export function CoachProvider() {
         setMessages(prev => [
           ...prev,
           {
-            id: crypto.randomUUID(),
+            id: (globalThis.crypto?.randomUUID?.() ?? String(Date.now())),
             paragraph: p.paragraph,
             feedback: res.exampleRewrite
               ? `${res.tip}\n\nExample: ${res.exampleRewrite}`
