@@ -1,4 +1,3 @@
-// src/components/CoachProvider.tsx
 import React from "react";
 import { eventBus } from "../lib/eventBus";
 import { coachTip } from "../lib/api";
@@ -16,9 +15,7 @@ export function CoachProvider() {
           {
             id: (globalThis.crypto?.randomUUID?.() ?? String(Date.now())),
             paragraph: p.paragraph,
-            feedback: res.exampleRewrite
-              ? `${res.tip}\n\nExample: ${res.exampleRewrite}`
-              : res.tip,
+            feedback: res.exampleRewrite ? `${res.tip}\n\nExample: ${res.exampleRewrite}` : res.tip,
             ts: Date.now()
           }
         ]);
