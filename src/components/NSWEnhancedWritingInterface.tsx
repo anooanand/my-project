@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, FileText, Save, Settings, BarChart3, Award, Zap, BookOpen, Target } from 'lucide-react';
 import { NSWMarkingRubric } from './NSWMarkingRubric';
-import { EnhancedFeedbackAnalyzer } from './EnhancedFeedbackAnalyzer';
 import { WritingTechniqueModules } from './WritingTechniqueModules';
 import { GamificationSystem } from './GamificationSystem';
+import { NSWStandaloneSubmitSystem } from './NSWStandaloneSubmitSystem';
 
 interface NSWEnhancedWritingInterfaceProps {
   examDurationMinutes?: number;
@@ -28,7 +28,7 @@ export function NSWEnhancedWritingInterface({
   const [activeTab, setActiveTab] = useState('write');
   const [examStarted, setExamStarted] = useState(false);
   const [timeLeft, setTimeLeft] = useState(examDurationMinutes * 60);
-  const [analysisData, setAnalysisData] = useState<any>(null);
+  const [evaluationReport, setEvaluationReport] = useState<any>(null);
   const [showAnalysis, setShowAnalysis] = useState(false);
   const [wordCount, setWordCount] = useState(0);
   const [userProgress, setUserProgress] = useState({
@@ -70,20 +70,21 @@ export function NSWEnhancedWritingInterface({
 
   const handleAutoSubmit = () => {
     if (content.trim()) {
-      handleSubmit();
+      // Auto-submit will be handled by the standalone system
+      setActiveTab('evaluation');
     }
   };
 
-  const handleSubmit = () => {
-    if (analysisData) {
-      onSubmit?.(content, analysisData);
-      setShowAnalysis(true);
-      setActiveTab('feedback');
+  // Handle evaluation completion from the standalone system
+  const handleEvaluationComplete = (report: any) => {
+    setEvaluationReport(report);
+    setShowAnalysis(true);
+    setActiveTab('feedback');
+    
+    // Call the original onSubmit callback if provided
+    if (onSubmit) {
+      onSubmit(content, report);
     }
-  };
-
-  const handleAnalysisComplete = (analysis: any) => {
-    setAnalysisData(analysis);
   };
 
   const formatTime = (seconds: number) => {
@@ -159,12 +160,13 @@ export function NSWEnhancedWritingInterface({
             </button>
           )}
           
+          {/* Quick Submit Button - switches to evaluation tab */}
           <button
-            onClick={handleSubmit}
-            disabled={!analysisData || wordCount < targetWordCountMin}
+            onClick={() => setActiveTab('evaluation')}
+            disabled={wordCount < targetWordCountMin}
             className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-medium transition-colors"
           >
-            Submit Essay
+            Submit for Evaluation
           </button>
         </div>
       </div>
@@ -189,34 +191,51 @@ export function NSWEnhancedWritingInterface({
           </div>
         )}
       </div>
-
-      {/* Real-time Analysis */}
-      {content.length > 50 && (
-        <EnhancedFeedbackAnalyzer 
-          essay={content} 
-          onAnalysisComplete={handleAnalysisComplete}
-        />
-      )}
     </div>
+  );
+
+  // Standalone Evaluation Area - NEW!
+  const EvaluationArea = () => (
+    <NSWStandaloneSubmitSystem
+      content={content}
+      wordCount={wordCount}
+      targetWordCountMin={targetWordCountMin}
+      targetWordCountMax={targetWordCountMax}
+      textType={textType}
+      prompt={prompt}
+      onSubmissionComplete={handleEvaluationComplete}
+    />
   );
 
   const tabs = [
     { id: 'write', label: 'Write', icon: FileText, component: WritingArea },
     { 
+      id: 'evaluation', 
+      label: 'Submit & Evaluate', 
+      icon: Award, 
+      component: EvaluationArea 
+    },
+    { 
       id: 'feedback', 
       label: 'NSW Feedback', 
       icon: BarChart3, 
-      component: () => analysisData ? (
-        <NSWMarkingRubric essay={content} feedbackData={analysisData} />
+      component: () => evaluationReport ? (
+        <NSWMarkingRubric essay={content} feedbackData={evaluationReport} />
       ) : (
         <div className="text-center py-12">
           <Target className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-            No Analysis Yet
+            No Evaluation Yet
           </h3>
           <p className="text-gray-600 dark:text-gray-400">
-            Write and submit your essay to see detailed NSW criteria feedback
+            Submit your essay for evaluation to see detailed NSW criteria feedback
           </p>
+          <button
+            onClick={() => setActiveTab('evaluation')}
+            className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors"
+          >
+            Go to Evaluation
+          </button>
         </div>
       )
     },
@@ -278,6 +297,9 @@ export function NSWEnhancedWritingInterface({
             >
               <Icon className="w-4 h-4" />
               <span>{tab.label}</span>
+              {tab.id === 'evaluation' && (
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+              )}
             </button>
           );
         })}
