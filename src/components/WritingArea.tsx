@@ -29,12 +29,12 @@ interface Props {
 }
 
 function WritingAreaImpl(props: Props) {
-  // --- editor state - USE PROPS DIRECTLY ---
+  // --- CRITICAL FIX: Use props.content directly as single source of truth ---
+  const content = props.content || "";
   const [textType, setTextType] = useState<TextType>((props.textType as TextType) || "narrative");
   
-  // CRITICAL FIX: Use props.content directly, don't maintain separate state
-  const content = props.content || "";
-  const prevTextRef = useRef<string>(props.content || "");
+  // Track previous content for paragraph detection
+  const prevTextRef = useRef<string>(content);
 
   // Sync textType with props
   useEffect(() => { 
@@ -42,6 +42,11 @@ function WritingAreaImpl(props: Props) {
       setTextType(props.textType as TextType);
     }
   }, [props.textType]);
+
+  // Update prevTextRef when content changes from props
+  useEffect(() => {
+    prevTextRef.current = content;
+  }, [content]);
 
   // --- analysis state ---
   const [analysis, setAnalysis] = useState<DetailedFeedback | null>(null);
@@ -60,12 +65,18 @@ function WritingAreaImpl(props: Props) {
   // Handle typing + paragraph detection (triggers coach tips)
   const onEditorChange = (next: string) => {
     console.log("📝 WritingArea: Content changed to:", next);
+    console.log("📝 WritingArea: Content length:", next.length);
+    
+    // Detect new paragraphs for coach tips
     const events = detectNewParagraphs(prevTextRef.current, next);
     if (events.length) eventBus.emit("paragraph.ready", events[events.length - 1]);
+    
+    // Update previous text reference
     prevTextRef.current = next;
     
     // CRITICAL FIX: Always call onChange to sync with parent
     if (props.onChange) {
+      console.log("📝 WritingArea: Calling onChange with:", next);
       props.onChange(next);
     }
   };
@@ -76,6 +87,7 @@ function WritingAreaImpl(props: Props) {
     console.log("📝 Content being submitted:", content);
     console.log("📋 Text Type:", textType);
     console.log("📊 Content Length:", content.length);
+    console.log("📊 Content trimmed length:", content.trim().length);
     
     // CRITICAL FIX: Validate content before submission
     if (!content || content.trim().length === 0) {
@@ -118,6 +130,8 @@ function WritingAreaImpl(props: Props) {
   // Apply a server-proposed fix
   const onApplyFix = (fix: LintFix) => {
     const next = content.slice(0, fix.start) + fix.replacement + content.slice(fix.end);
+    console.log("🔧 Applying fix:", fix);
+    console.log("🔧 New content:", next);
     if (props.onChange) {
       props.onChange(next);
     }
@@ -144,6 +158,8 @@ function WritingAreaImpl(props: Props) {
     
     console.log("🖱️ Submit button clicked");
     console.log("📝 Current content:", content);
+    console.log("📊 Content length:", content.length);
+    console.log("📊 Content trimmed length:", content.trim().length);
     
     // CRITICAL FIX: Always use internal function, ignore props
     onSubmitForEvaluation();
@@ -192,6 +208,7 @@ function WritingAreaImpl(props: Props) {
             {status === "loading" ? "Analyzing…" : "Submit for Evaluation Report"}
           </button>
           {status === "error" && <span className="text-red-600 text-sm">{err}</span>}
+          {status === "success" && <span className="text-green-600 text-sm">Analysis complete!</span>}
         </div>
 
         {/* Show analysis results */}
