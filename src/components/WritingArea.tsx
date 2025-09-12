@@ -22,7 +22,6 @@ interface Props {
   onChange?: (content: string) => void;
   textType?: string;
   onTextTypeChange?: (textType: string) => void;
-  // NOTE: intentionally not using any parent onSubmit (legacy flow)
   onPopupCompleted?: () => void;
   onPromptGenerated?: (prompt: string) => void;
   prompt?: string;
@@ -30,13 +29,19 @@ interface Props {
 }
 
 function WritingAreaImpl(props: Props) {
-  // --- editor state ---
+  // --- editor state - USE PROPS DIRECTLY ---
   const [textType, setTextType] = useState<TextType>((props.textType as TextType) || "narrative");
-  const [content, setContent] = useState<string>(props.content ?? "");
-  const prevTextRef = useRef<string>(props.content ?? "");
+  
+  // CRITICAL FIX: Use props.content directly, don't maintain separate state
+  const content = props.content || "";
+  const prevTextRef = useRef<string>(props.content || "");
 
-  useEffect(() => { if (typeof props.content === "string") setContent(props.content); }, [props.content]);
-  useEffect(() => { if (typeof props.textType === "string") setTextType(props.textType as TextType); }, [props.textType]);
+  // Sync textType with props
+  useEffect(() => { 
+    if (typeof props.textType === "string") {
+      setTextType(props.textType as TextType);
+    }
+  }, [props.textType]);
 
   // --- analysis state ---
   const [analysis, setAnalysis] = useState<DetailedFeedback | null>(null);
@@ -54,19 +59,31 @@ function WritingAreaImpl(props: Props) {
 
   // Handle typing + paragraph detection (triggers coach tips)
   const onEditorChange = (next: string) => {
+    console.log("📝 WritingArea: Content changed to:", next);
     const events = detectNewParagraphs(prevTextRef.current, next);
     if (events.length) eventBus.emit("paragraph.ready", events[events.length - 1]);
     prevTextRef.current = next;
-    setContent(next);
-    props.onChange?.(next);
+    
+    // CRITICAL FIX: Always call onChange to sync with parent
+    if (props.onChange) {
+      props.onChange(next);
+    }
   };
 
   // Submit → strict JSON rubric (server)
   const onSubmitForEvaluation = async () => {
     console.log("🚀 WritingArea: onSubmitForEvaluation called");
-    console.log("📝 Content:", content);
+    console.log("📝 Content being submitted:", content);
     console.log("📋 Text Type:", textType);
     console.log("📊 Content Length:", content.length);
+    
+    // CRITICAL FIX: Validate content before submission
+    if (!content || content.trim().length === 0) {
+      console.error("❌ No content to submit");
+      setStatus("error");
+      setErr("Please write some content before submitting for evaluation");
+      return;
+    }
     
     try {
       setStatus("loading"); 
@@ -75,7 +92,7 @@ function WritingAreaImpl(props: Props) {
       console.log("🔄 Making API call to evaluateEssay...");
       
       const res = await evaluateEssay({
-        essayText: content,
+        essayText: content.trim(), // Use the actual content from props
         textType,
         examMode: false,
       });
@@ -101,17 +118,20 @@ function WritingAreaImpl(props: Props) {
   // Apply a server-proposed fix
   const onApplyFix = (fix: LintFix) => {
     const next = content.slice(0, fix.start) + fix.replacement + content.slice(fix.end);
-    setContent(next);
-    props.onChange?.(next);
+    if (props.onChange) {
+      props.onChange(next);
+    }
   };
 
   // Light autosave (localStorage + drafts function)
   useEffect(() => {
     const t = setInterval(async () => {
       try {
-        localStorage.setItem(draftId.current, JSON.stringify({ text: content, version }));
-        await saveDraft(draftId.current, content, version);
-        setVersion(v => v + 1);
+        if (content && content.trim().length > 0) {
+          localStorage.setItem(draftId.current, JSON.stringify({ text: content, version }));
+          await saveDraft(draftId.current, content, version);
+          setVersion(v => v + 1);
+        }
       } catch {/* no-op */}
     }, 1500);
     return () => clearInterval(t);
@@ -119,15 +139,14 @@ function WritingAreaImpl(props: Props) {
 
   // Handle button click with proper event handling
   const handleSubmitClick = (e: React.MouseEvent) => {
-    console.log("🖱️ Submit button clicked");
-
+    e.preventDefault();
+    e.stopPropagation();
     
-    // Call the evaluation function
-    if (props.onSubmitForEvaluation) {
-      props.onSubmitForEvaluation();
-    } else {
-      onSubmitForEvaluation();
-    }
+    console.log("🖱️ Submit button clicked");
+    console.log("📝 Current content:", content);
+    
+    // CRITICAL FIX: Always use internal function, ignore props
+    onSubmitForEvaluation();
   };
 
   return (
