@@ -8,7 +8,6 @@ import { eventBus } from "../lib/eventBus";
 import { detectNewParagraphs } from "../lib/paragraphDetection";
 
 // NSW rubric UI + types + guards
-import { RubricPanel } from "./RubricPanel";
 import type { DetailedFeedback, LintFix } from "../types/feedback";
 import { validateDetailedFeedback } from "../types/feedback.validate";
 
@@ -24,45 +23,68 @@ interface Props {
   onTextTypeChange?: (textType: string) => void;
   onPopupCompleted?: () => void;
   onPromptGenerated?: (prompt: string) => void;
+  /** Prompt passed by EnhancedWritingLayout */
   prompt?: string;
-  onSubmitForEvaluation?: () => void;
+}
+
+function fallbackPrompt(textType?: string) {
+  const defaultPrompt =
+    "Write an engaging story about a character who discovers something unexpected that changes their life forever. Include vivid descriptions, realistic dialogue, and show the character's emotional journey.";
+  try {
+    const stored = localStorage.getItem("generatedPrompt");
+    if (stored) return stored;
+    const type = (textType || localStorage.getItem("selectedWritingType") || "narrative").toLowerCase();
+    const byType = localStorage.getItem(`${type}_prompt`);
+    if (byType) return byType;
+  } catch { /* ignore */ }
+  return defaultPrompt;
 }
 
 function WritingAreaImpl(props: Props) {
-  // --- CRITICAL FIX: Use props.content directly as single source of truth ---
-  const content = props.content || "";
+  // -------- Prompt header (visible) --------
+  const [displayPrompt, setDisplayPrompt] = useState<string>("");
+
+  useEffect(() => {
+    const next =
+      (typeof props.prompt === "string" && props.prompt.trim()) ||
+      fallbackPrompt(props.textType);
+    setDisplayPrompt(next);
+  }, [props.prompt, props.textType]);
+
+  // Allow other tabs to update localStorage → refresh card
+  useEffect(() => {
+    const onStorage = () => setDisplayPrompt(fallbackPrompt(props.textType));
+    window.addEventListener("storage", onStorage);
+    return () => window.removeEventListener("storage", onStorage);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // -------- Editor state --------
+  const [content, setContent] = useState<string>(props.content ?? "");
   const [textType, setTextType] = useState<TextType>((props.textType as TextType) || "narrative");
-  
-  // Track previous content for paragraph detection
   const prevTextRef = useRef<string>(content);
 
-  // Sync textType with props
-  useEffect(() => { 
-    if (typeof props.textType === "string") {
-      setTextType(props.textType as TextType);
-    }
-  }, [props.textType]);
+  // Sync with parent if controlled
+  useEffect(() => { if (typeof props.content === "string") setContent(props.content); }, [props.content]);
+  useEffect(() => { if (typeof props.textType === "string") setTextType(props.textType as TextType); }, [props.textType]);
+  useEffect(() => { prevTextRef.current = content; }, [content]);
 
-  // Update prevTextRef when content changes from props
+  // If editor is empty and we have a prompt, show it in the prompt card (not in the text area),
+  // but also allow a one-click insert if you want later. If you DO want it inserted automatically,
+  // uncomment the next block.
   useEffect(() => {
-    prevTextRef.current = content;
-  }, [content]);
+    // If you prefer the prompt to be inserted into the editor when empty, uncomment:
+    // if (!content?.trim() && displayPrompt?.trim() && props.onChange) {
+    //   props.onChange(displayPrompt);
+    // }
+  }, [displayPrompt]); // eslint-disable-line
 
-  // Set content to prompt when component mounts and content is empty
-  useEffect(() => {
-    if (!content && props.prompt) {
-      if (props.onChange) {
-        props.onChange(props.prompt);
-      }
-    }
-  }, [props.prompt]);
-
-  // --- analysis state ---
+  // -------- Analysis state --------
   const [analysis, setAnalysis] = useState<DetailedFeedback | null>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [err, setErr] = useState<string>();
 
-  // --- autosave (simple versioning) ---
+  // -------- Autosave --------
   const [version, setVersion] = useState(0);
   const draftId = useRef(
     `draft-${
@@ -71,66 +93,33 @@ function WritingAreaImpl(props: Props) {
     }`
   );
 
-  // Handle typing + paragraph detection (triggers coach tips)
+  // Typing + paragraph detection
   const onEditorChange = (next: string) => {
-    console.log("📝 WritingArea: Content changed to:", next);
-    console.log("📝 WritingArea: Content length:", next.length);
-    
-    // Detect new paragraphs for coach tips
     const events = detectNewParagraphs(prevTextRef.current, next);
     if (events.length) eventBus.emit("paragraph.ready", events[events.length - 1]);
-    
-    // Update previous text reference
     prevTextRef.current = next;
-    
-    // CRITICAL FIX: Always call onChange to sync with parent
-    if (props.onChange) {
-      console.log("📝 WritingArea: Calling onChange with:", next);
-      props.onChange(next);
-    }
+    setContent(next);
+    props.onChange?.(next);
   };
 
   // Submit → strict JSON rubric (server)
   const onSubmitForEvaluation = async () => {
-    console.log("🚀 WritingArea: onSubmitForEvaluation called");
-    console.log("📝 Content being submitted:", content);
-    console.log("📋 Text Type:", textType);
-    console.log("📊 Content Length:", content.length);
-    console.log("📊 Content trimmed length:", content.trim().length);
-    
-    // CRITICAL FIX: Validate content before submission
-    if (!content || content.trim().length === 0) {
-      console.error("❌ No content to submit");
+    if (!content || !content.trim()) {
       setStatus("error");
       setErr("Please write some content before submitting for evaluation");
       return;
     }
-    
     try {
-      setStatus("loading"); 
-      setErr(undefined);
-      
-      console.log("🔄 Making API call to evaluateEssay...");
-      
+      setStatus("loading"); setErr(undefined);
       const res = await evaluateEssay({
-        essayText: content.trim(), // Use the actual content from props
+        essayText: content.trim(),
         textType,
         examMode: false,
       });
-      
-      console.log("✅ API Response received:", res);
-      
-      if (!validateDetailedFeedback(res)) {
-        console.error("❌ Invalid feedback payload");
-        throw new Error("Invalid feedback payload");
-      }
-      
+      if (!validateDetailedFeedback(res)) throw new Error("Invalid feedback payload");
       setAnalysis(res);
       setStatus("success");
-      console.log("🎉 Analysis completed successfully");
-      
     } catch (e: any) {
-      console.error("💥 Error in onSubmitForEvaluation:", e);
       setStatus("error");
       setErr(e?.message || "Failed to analyze");
     }
@@ -139,67 +128,62 @@ function WritingAreaImpl(props: Props) {
   // Apply a server-proposed fix
   const onApplyFix = (fix: LintFix) => {
     const next = content.slice(0, fix.start) + fix.replacement + content.slice(fix.end);
-    console.log("🔧 Applying fix:", fix);
-    console.log("🔧 New content:", next);
-    if (props.onChange) {
-      props.onChange(next);
-    }
+    setContent(next);
+    props.onChange?.(next);
   };
 
-  // Light autosave (localStorage + drafts function)
+  // Autosave
   useEffect(() => {
     const t = setInterval(async () => {
       try {
-        if (content && content.trim().length > 0) {
+        if (content?.trim()) {
           localStorage.setItem(draftId.current, JSON.stringify({ text: content, version }));
           await saveDraft(draftId.current, content, version);
           setVersion(v => v + 1);
         }
-      } catch {/* no-op */}
+      } catch {}
     }, 1500);
     return () => clearInterval(t);
   }, [content, version]);
 
-  // Handle button click with proper event handling
-  const handleSubmitClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    console.log("🖱️ Submit button clicked");
-    console.log("📝 Current content:", content);
-    console.log("📊 Content length:", content.length);
-    console.log("📊 Content trimmed length:", content.trim().length);
-    
-    // CRITICAL FIX: Always use internal function, ignore props
-    onSubmitForEvaluation();
-  };
-
   return (
     <div className="grid grid-cols-12 gap-4">
-      {/* LEFT: header-ish + editor */}
+      {/* LEFT: header + editor */}
       <div className="col-span-8">
-        <div className="mb-3 flex items-center gap-2">
-          <label className="text-sm opacity-70">Text Type:</label>
-          <select
-            className="rounded-lg border px-2 py-1"
-            value={textType}
-            onChange={(e) => {
-              const v = e.target.value as TextType;
-              setTextType(v);
-              props.onTextTypeChange?.(v);
-            }}
-          >
-            <option value="narrative">Narrative</option>
-            <option value="persuasive">Persuasive</option>
-            <option value="informative">Informative</option>
-          </select>
+        {/* --- YOUR WRITING PROMPT (visible, matches generated) --- */}
+        <div className="mb-3">
+          <div className="rounded-xl border bg-white">
+            <div className="px-4 py-3 border-b flex items-center justify-between">
+              <div className="font-semibold">Your Writing Prompt</div>
+              <div className="text-xs opacity-70">Text Type:&nbsp;
+                <select
+                  className="rounded-md border px-2 py-1"
+                  value={textType}
+                  onChange={(e) => {
+                    const v = e.target.value as TextType;
+                    setTextType(v);
+                    props.onTextTypeChange?.(v);
+                    setDisplayPrompt(fallbackPrompt(v));
+                  }}
+                >
+                  <option value="narrative">Narrative</option>
+                  <option value="persuasive">Persuasive</option>
+                  <option value="informative">Informative</option>
+                </select>
+              </div>
+            </div>
+            <div className="p-4 text-sm leading-relaxed whitespace-pre-wrap">
+              {displayPrompt || "Loading prompt…"}
+            </div>
+          </div>
         </div>
 
+        {/* --- Editor --- */}
         <div className="rounded-xl border bg-white">
           <div className="p-3">
             <textarea
               className="w-full h-[28rem] p-3 rounded-lg border"
-              placeholder={content ? undefined : (props.prompt || 'Start your draft here…')}
+              placeholder="Start writing your amazing story here! Let your creativity flow and bring your ideas to life…"
               value={content}
               onChange={(e) => onEditorChange(e.target.value)}
             />
@@ -210,8 +194,9 @@ function WritingAreaImpl(props: Props) {
           <button
             type="button"
             className="px-4 py-2 rounded-xl bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            onClick={handleSubmitClick}
-            disabled={status === "loading" || content.trim().length === 0}
+            onClickCapture={(e) => { e.stopPropagation(); onSubmitForEvaluation(); }}
+            onClick={(e) => e.stopPropagation()}
+            disabled={status === "loading" || !content?.trim()}
             aria-label="Submit for Evaluation Report"
           >
             {status === "loading" ? "Analyzing…" : "Submit for Evaluation Report"}
@@ -220,11 +205,13 @@ function WritingAreaImpl(props: Props) {
           {status === "success" && <span className="text-green-600 text-sm">Analysis complete!</span>}
         </div>
 
-        {/* Show analysis results */}
+        {/* Optional helper text */}
         {analysis && status === "success" && (
           <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-            <h3 className="text-lg font-semibold text-blue-900 mb-2">Analysis Complete!</h3>
-            <p className="text-blue-800">Your essay has been analyzed. Check the Coach panel on the right for detailed feedback.</p>
+            <h3 className="text-lg font-semibold text-blue-900 mb-2">Analysis complete</h3>
+            <p className="text-sm text-blue-800">
+              Open the <strong>Analysis</strong> tab on the right to see rubric scores and apply suggested fixes.
+            </p>
           </div>
         )}
       </div>
@@ -237,6 +224,5 @@ function WritingAreaImpl(props: Props) {
   );
 }
 
-// Export both names so existing imports keep working
 export default WritingAreaImpl;
 export const WritingArea = WritingAreaImpl;
