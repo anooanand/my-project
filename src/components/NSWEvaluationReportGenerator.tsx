@@ -59,14 +59,14 @@ interface DetailedFeedback {
 
 export class NSWEvaluationReportGenerator {
   
-  static generateReport(essay: string, textType: string = 'narrative'): EvaluationReport {
-    const analysis = this.analyzeEssay(essay);
+  static generateReport(params: { essayContent: string; textType: string; prompt: string; wordCount: number; targetWordCountMin: number; targetWordCountMax: number; }): EvaluationReport {
+    const analysis = this.analyzeEssay(params.essayContent);
     
     // Score each domain according to NSW criteria
-    const contentAndIdeas = this.scoreContentAndIdeas(essay, analysis);
-    const textStructure = this.scoreTextStructure(essay, analysis);
-    const languageFeatures = this.scoreLanguageFeatures(essay, analysis);
-    const spellingAndGrammar = this.scoreSpellingAndGrammar(essay, analysis);
+    const contentAndIdeas = this.scoreContentAndIdeas(params.essayContent, analysis);
+    const textStructure = this.scoreTextStructure(params.essayContent, analysis);
+    const languageFeatures = this.scoreLanguageFeatures(params.essayContent, analysis);
+    const spellingAndGrammar = this.scoreSpellingAndGrammar(params.essayContent, analysis);
     
     // Calculate overall score
     const overallScore = Math.round(
@@ -437,67 +437,42 @@ export class NSWEvaluationReportGenerator {
     
     // Check for original plot elements or unique character development
     if (essay.includes('twist') || essay.includes('revelation')) score += 1;
-    if (essay.length > 300 && essay.includes('character')) score += 0.5;
+    if (essay.length > 300 && (essay.includes('character arc') || essay.includes('growth'))) score += 1;
     
-    return Math.min(10, Math.max(1, Math.round(score)));
+    return Math.min(10, score);
   }
   
   private static assessIdeaDevelopment(essay: string): number {
-    const paragraphs = essay.split(/\n\s*\n/).filter(p => p.trim().length > 0);
-    const sentences = essay.split(/[.!?]+/).filter(s => s.trim().length > 0);
-    
-    let score = 5;
-    
-    // More paragraphs suggest better idea development
-    if (paragraphs.length >= 4) score += 1;
-    if (paragraphs.length >= 6) score += 1;
-    
-    // Longer sentences suggest more detailed elaboration
-    const avgSentenceLength = essay.length / sentences.length;
-    if (avgSentenceLength > 80) score += 1;
-    if (avgSentenceLength > 120) score += 1;
-    
-    // Look for elaboration indicators
-    const elaborationWords = ['because', 'since', 'therefore', 'however', 'furthermore', 'moreover', 'additionally'];
-    elaborationWords.forEach(word => {
-      if (essay.toLowerCase().includes(word)) score += 0.3;
-    });
-    
-    return Math.min(10, Math.max(1, Math.round(score)));
+    const wordCount = essay.split(/\s+/).length;
+    if (wordCount > 400) return 9;
+    if (wordCount > 300) return 7;
+    if (wordCount > 200) return 5;
+    if (wordCount > 100) return 3;
+    return 1;
   }
   
   private static assessEngagement(essay: string): number {
-    let score = 5;
-    
-    // Look for engaging elements
-    const engagingElements = [
-      /dialogue|".*"/,
-      /action|running|jumping|fighting/i,
-      /emotion|felt|heart|tears|joy|fear/i,
-      /sensory|saw|heard|smelled|tasted|touched/i,
-      /suspense|tension|mystery/i
+    const engagementIndicators = [
+      /dialogue/i,
+      /action scene/i,
+      /vivid description/i,
+      /suspense/i,
+      /emotional moment/i
     ];
     
-    engagingElements.forEach(element => {
-      if (element.test(essay)) score += 0.7;
+    let score = 5;
+    engagementIndicators.forEach(indicator => {
+      if (indicator.test(essay)) score += 1;
     });
     
-    // Strong opening and closing
-    const firstSentence = essay.split(/[.!?]/)[0];
-    const lastSentence = essay.split(/[.!?]/).slice(-2)[0];
-    
-    if (firstSentence && firstSentence.length > 30) score += 0.5;
-    if (lastSentence && lastSentence.length > 20) score += 0.5;
-    
-    return Math.min(10, Math.max(1, Math.round(score)));
+    return Math.min(10, score);
   }
   
   private static identifySophisticatedVocabulary(essay: string): string[] {
     const sophisticatedWords = [
-      'magnificent', 'extraordinary', 'exceptional', 'remarkable', 'phenomenal',
-      'intricate', 'elaborate', 'sophisticated', 'compelling', 'captivating',
-      'mesmerizing', 'enchanting', 'breathtaking', 'awe-inspiring', 'profound',
-      'eloquent', 'articulate', 'perceptive', 'insightful', 'astute'
+      'ephemeral', 'ubiquitous', 'mellifluous', 'serendipity', 'juxtaposition',
+      'cacophony', 'epiphany', 'quintessential', 'labyrinthine', 'onomatopoeia',
+      'petrichor', 'sonder', 'eloquence', 'ineffable', 'nefarious'
     ];
     
     const words = essay.toLowerCase().split(/\s+/);
@@ -546,7 +521,7 @@ export class NSWEvaluationReportGenerator {
     }
     
     // Dialogue detection
-    if (/".*"/.test(essay)) {
+    if (/"/.test(essay)) {
       devices.push("Dialogue");
     }
     
