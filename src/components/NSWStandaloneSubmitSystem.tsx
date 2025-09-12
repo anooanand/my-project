@@ -42,6 +42,13 @@ export function NSWStandaloneSubmitSystem({
       return;
     }
 
+    console.log("handleSubmit called");
+    console.log("Content:", content);
+    console.log("Text Type:", textType);
+    console.log("Prompt:", prompt);
+    console.log("Word Count:", wordCount);
+    console.log("Target Word Count Min:", targetWordCountMin);
+    console.log("Target Word Count Max:", targetWordCountMax);
     setIsSubmitting(true);
     setError(null);
     setAnalysisReport(null);
@@ -56,6 +63,7 @@ export function NSWStandaloneSubmitSystem({
         targetWordCountMin: targetWordCountMin,
         targetWordCountMax: targetWordCountMax,
       });
+      console.log("Report generated successfully:", report);
       setAnalysisReport(report);
       onSubmissionComplete?.(report);
     } catch (err) {
@@ -63,6 +71,7 @@ export function NSWStandaloneSubmitSystem({
       setError('Failed to generate analysis report. Please try again.');
     } finally {
       setIsSubmitting(false);
+      console.log("Submission process finished.");
     }
   };
 
