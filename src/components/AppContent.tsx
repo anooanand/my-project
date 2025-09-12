@@ -19,7 +19,6 @@ import { AuthModal } from './AuthModal';
 import { FAQPage } from './FAQPage';
 import { AboutPage } from './AboutPage';
 import { SettingsPage } from './SettingsPage';
-import { DemoPage } from './DemoPage';
 import { ErrorBoundary } from './ErrorBoundary';
 
 // Writing components
@@ -40,10 +39,8 @@ import { WritingToolbar } from './WritingToolbar';
 import { PlanningToolModal } from './PlanningToolModal';
 import { EmailVerificationHandler } from './EmailVerificationHandler';
 import { FloatingChatWindow } from './FloatingChatWindow';
-import { WritingDemo } from './WritingDemo';
 import { checkOpenAIConnectionStatus } from '../lib/openai';
 import { AdminButton } from './AdminButton';
-import { NSWDemoPage } from './NSWDemoPage';
 
 function AppContent() {
   const { user, isLoading, paymentCompleted, emailVerified, authSignOut } = useAuth();
