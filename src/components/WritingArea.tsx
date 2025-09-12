@@ -62,17 +62,36 @@ function WritingAreaImpl(props: Props) {
 
   // Submit → strict JSON rubric (server)
   const onSubmitForEvaluation = async () => {
+    console.log("🚀 WritingArea: onSubmitForEvaluation called");
+    console.log("📝 Content:", content);
+    console.log("📋 Text Type:", textType);
+    console.log("📊 Content Length:", content.length);
+    
     try {
-      setStatus("loading"); setErr(undefined);
+      setStatus("loading"); 
+      setErr(undefined);
+      
+      console.log("🔄 Making API call to evaluateEssay...");
+      
       const res = await evaluateEssay({
         essayText: content,
         textType,
         examMode: false,
       });
-      if (!validateDetailedFeedback(res)) throw new Error("Invalid feedback payload");
+      
+      console.log("✅ API Response received:", res);
+      
+      if (!validateDetailedFeedback(res)) {
+        console.error("❌ Invalid feedback payload");
+        throw new Error("Invalid feedback payload");
+      }
+      
       setAnalysis(res);
       setStatus("success");
+      console.log("🎉 Analysis completed successfully");
+      
     } catch (e: any) {
+      console.error("💥 Error in onSubmitForEvaluation:", e);
       setStatus("error");
       setErr(e?.message || "Failed to analyze");
     }
@@ -96,6 +115,17 @@ function WritingAreaImpl(props: Props) {
     }, 1500);
     return () => clearInterval(t);
   }, [content, version]);
+
+  // Handle button click with proper event handling
+  const handleSubmitClick = (e: React.MouseEvent) => {
+    console.log("🖱️ Submit button clicked");
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    
+    // Call the evaluation function
+    onSubmitForEvaluation();
+  };
 
   return (
     <div className="grid grid-cols-12 gap-4">
@@ -132,19 +162,23 @@ function WritingAreaImpl(props: Props) {
         <div className="mt-3 flex items-center gap-2">
           <button
             type="button"
-            className="px-4 py-2 rounded-xl bg-green-600 text-white"
-            onClickCapture={(e) => {  // capture phase to beat legacy handlers
-              e.stopPropagation();
-              onSubmitForEvaluation();
-            }}
-            onClick={(e) => e.stopPropagation()} // extra guard
-            disabled={status === "loading"}
+            className="px-4 py-2 rounded-xl bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={handleSubmitClick}
+            disabled={status === "loading" || content.trim().length === 0}
             aria-label="Submit for Evaluation Report"
           >
             {status === "loading" ? "Analyzing…" : "Submit for Evaluation Report"}
           </button>
           {status === "error" && <span className="text-red-600 text-sm">{err}</span>}
         </div>
+
+        {/* Show analysis results */}
+        {analysis && status === "success" && (
+          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+            <h3 className="text-lg font-semibold text-blue-900 mb-2">Analysis Complete!</h3>
+            <p className="text-blue-800">Your essay has been analyzed. Check the Coach panel on the right for detailed feedback.</p>
+          </div>
+        )}
       </div>
 
       {/* RIGHT: Tabs (Coach / Analysis / Vocab / Progress) */}
