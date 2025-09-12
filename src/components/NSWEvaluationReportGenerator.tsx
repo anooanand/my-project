@@ -60,13 +60,15 @@ interface DetailedFeedback {
 export class NSWEvaluationReportGenerator {
   
   static generateReport(params: { essayContent: string; textType: string; prompt: string; wordCount: number; targetWordCountMin: number; targetWordCountMax: number; }): EvaluationReport {
-    const analysis = this.analyzeEssay(params.essayContent);
+    console.log("NSWEvaluationReportGenerator.generateReport called with params:", params);
+    const { essayContent, textType, prompt, wordCount, targetWordCountMin, targetWordCountMax } = params;
+    const analysis = this.analyzeEssay(essayContent);
     
     // Score each domain according to NSW criteria
-    const contentAndIdeas = this.scoreContentAndIdeas(params.essayContent, analysis);
-    const textStructure = this.scoreTextStructure(params.essayContent, analysis);
-    const languageFeatures = this.scoreLanguageFeatures(params.essayContent, analysis);
-    const spellingAndGrammar = this.scoreSpellingAndGrammar(params.essayContent, analysis);
+    const contentAndIdeas = this.scoreContentAndIdeas(essayContent, analysis);
+    const textStructure = this.scoreTextStructure(essayContent, analysis);
+    const languageFeatures = this.scoreLanguageFeatures(essayContent, analysis);
+    const spellingAndGrammar = this.scoreSpellingAndGrammar(essayContent, analysis);
     
     // Calculate overall score
     const overallScore = Math.round(
@@ -569,7 +571,7 @@ export class NSWEvaluationReportGenerator {
     
     if (/its'/g.test(essay)) {
       issues.push("Possessive: 'its' doesn't need an apostrophe");
-    }
+    };
     
     if (/your\s+(going|coming|doing)/i.test(essay)) {
       issues.push("Contraction: Should be 'you're' not 'your'");
