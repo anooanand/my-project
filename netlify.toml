@@ -1,14 +1,22 @@
+# Netlify configuration (valid TOML)
+
 [build]
-  command = "npm run build"
-  publish = "dist"
-  functions = "netlify/functions"
+  # Your code is in ./project
+  base     = "project"
+  command  = "npm run build"
+  publish  = "dist"                # resolved from base => project/dist
+  functions = "netlify/functions"  # resolved from base => project/netlify/functions
 
 [functions]
-  python_version = "3.9"
   node_bundler = "esbuild"
+  # If your functions import 'openai', keep it bundled (default). No need to externalize.
+  # external_node_modules = ["openai"]  # <— usually NOT needed; comment out unless you know you need it.
 
+[build.environment]
+  NODE_VERSION = "18"
+
+# Optional: nice API path for any future client calls
 [[redirects]]
   from = "/api/*"
-  to = "/.netlify/functions/:splat"
+  to   = "/.netlify/functions/:splat"
   status = 200
-
