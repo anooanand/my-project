@@ -140,6 +140,10 @@ function WritingAreaImpl(props: Props) {
   const onSubmitForEvaluation = async () => {
     try {
       setStatus("loading"); setErr(undefined);
+      
+      // Call parent onSubmit first to ensure it executes
+      props.onSubmit?.();
+      
       const res = await evaluateEssay({
         essayText: content,
         textType,
@@ -148,8 +152,6 @@ function WritingAreaImpl(props: Props) {
       if (!validateDetailedFeedback(res)) throw new Error("Invalid feedback payload");
       setAnalysis(res);
       setStatus("success");
-      props.onSubmit?.(); // Call parent onSubmit first
-      // optional: still call parent callback for analytics
     } catch (e: any) {
       setStatus("error");
       setErr(e?.message || "Failed to analyze");
