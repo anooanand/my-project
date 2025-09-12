@@ -3,12 +3,6 @@ import { CoachProvider } from "./CoachProvider";
 import { RubricPanel } from "./RubricPanel";
 import type { DetailedFeedback, LintFix } from "../types/feedback";
 
-/**
- * Tabs that actually do something:
- * - Coach: live paragraph tips
- * - Analysis: shows rubric (after Submit)
- * - Vocab/Progress: placeholders (replace with your versions if you like)
- */
 type Props = { analysis: DetailedFeedback | null; onApplyFix: (fix: LintFix) => void; };
 
 export function TabbedCoachPanel({ analysis, onApplyFix }: Props) {
