@@ -11,7 +11,6 @@ interface EnhancedWritingLayoutProps {
   onChange: (content: string) => void;
   textType: string;
   onTimerStart: (shouldStart: boolean) => void;
-  onSubmit: () => void;
   onTextTypeChange?: (textType: string) => void;
   onNavigate?: (page: string) => void;
   onStartNewEssay?: () => void;
@@ -26,7 +25,6 @@ export function EnhancedWritingLayout({
   onChange,
   textType,
   onTimerStart,
-  onSubmit,
   onTextTypeChange,
   onNavigate,
   onStartNewEssay,
@@ -56,7 +54,6 @@ export function EnhancedWritingLayout({
           onChange={onChange}
           textType={textType}
           onTimerStart={onTimerStart}
-          onSubmit={onSubmit}
           onTextTypeChange={onTextTypeChange}
           onPopupCompleted={onPopupCompleted}
           onPromptGenerated={handlePromptGenerated}
