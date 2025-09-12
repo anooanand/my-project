@@ -26,6 +26,7 @@ interface Props {
   onPopupCompleted?: () => void;
   onPromptGenerated?: (prompt: string) => void;
   prompt?: string;
+  onSubmitForEvaluation?: () => void;
 }
 
 function WritingAreaImpl(props: Props) {
@@ -119,12 +120,14 @@ function WritingAreaImpl(props: Props) {
   // Handle button click with proper event handling
   const handleSubmitClick = (e: React.MouseEvent) => {
     console.log("🖱️ Submit button clicked");
-    e.preventDefault();
-    e.stopPropagation();
-    e.stopImmediatePropagation();
+
     
     // Call the evaluation function
-    onSubmitForEvaluation();
+    if (props.onSubmitForEvaluation) {
+      props.onSubmitForEvaluation();
+    } else {
+      onSubmitForEvaluation();
+    }
   };
 
   return (
