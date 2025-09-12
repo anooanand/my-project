@@ -148,8 +148,8 @@ function WritingAreaImpl(props: Props) {
       if (!validateDetailedFeedback(res)) throw new Error("Invalid feedback payload");
       setAnalysis(res);
       setStatus("success");
+      props.onSubmit?.(); // Call parent onSubmit first
       // optional: still call parent callback for analytics
-      props.onSubmit?.();
     } catch (e: any) {
       setStatus("error");
       setErr(e?.message || "Failed to analyze");
