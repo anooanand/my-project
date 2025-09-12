@@ -18,7 +18,6 @@ import { AuthModal } from './AuthModal';
 import { FAQPage } from './FAQPage';
 import { AboutPage } from './AboutPage';
 import { SettingsPage } from './SettingsPage';
-import { DemoPage } from './DemoPage';
 
 // Writing components
 import { SplitScreen } from './SplitScreen';
