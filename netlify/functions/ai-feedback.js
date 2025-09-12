@@ -63,6 +63,7 @@ exports.handler = async (event) => {
     parsed.timings = parsed.timings || {};
     parsed.timings.modelLatencyMs = Date.now() - started;
     parsed.modelVersion = completion.model;
+    parsed.id = parsed.id || `feedback-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
     if (!validatePayload(parsed)) {
       return { statusCode: 502, body: "Invalid model payload" };
