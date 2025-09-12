@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import { EnhancedWritingAnalyzer } from "../utils/grammarSpellingChecker";
 
 // Server-backed API (Netlify functions)
 import { evaluateEssay, saveDraft } from "../lib/api";
@@ -40,6 +41,8 @@ function WritingAreaImpl(props: Props) {
 
   // --- analysis state ---
   const [analysis, setAnalysis] = useState<DetailedFeedback | null>(null);
+  const enhancedAnalyzer = useRef(new EnhancedWritingAnalyzer());
+  const [enhancedAnalysisResults, setEnhancedAnalysisResults] = useState<any>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [err, setErr] = useState<string>();
 
@@ -72,6 +75,10 @@ function WritingAreaImpl(props: Props) {
       });
       if (!validateDetailedFeedback(res)) throw new Error("Invalid feedback payload");
       setAnalysis(res);
+
+      // Perform enhanced analysis
+      const newEnhancedAnalysisResults = enhancedAnalyzer.current.analyze(content);
+      setEnhancedAnalysisResults(newEnhancedAnalysisResults);
       setStatus("success");
       // optional: still call parent callback for analytics
       props.onSubmit?.();
@@ -83,7 +90,7 @@ function WritingAreaImpl(props: Props) {
 
   // Apply a server-proposed fix
   const onApplyFix = (fix: LintFix) => {
-    const next = content.slice(0, fix.start) + fix.replacement + content.slice(fix.end);
+    const next = content.slice(0, fix.replacement) + fix.replacement + content.slice(fix.end);
     setContent(next);
     props.onChange?.(next);
   };
