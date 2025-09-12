@@ -22,8 +22,7 @@ interface Props {
   onChange?: (content: string) => void;
   textType?: string;
   onTextTypeChange?: (textType: string) => void;
-  // NOTE: we intentionally do NOT use props.onSubmit here anymore
-  // to avoid the legacy client-OpenAI flow.
+  // NOTE: intentionally not using any parent onSubmit (legacy flow)
   onPopupCompleted?: () => void;
   onPromptGenerated?: (prompt: string) => void;
   prompt?: string;
@@ -132,8 +131,13 @@ function WritingAreaImpl(props: Props) {
 
         <div className="mt-3 flex items-center gap-2">
           <button
+            type="button"
             className="px-4 py-2 rounded-xl bg-green-600 text-white"
-            onClick={onSubmitForEvaluation}
+            onClickCapture={(e) => {  // capture phase to beat legacy handlers
+              e.stopPropagation();
+              onSubmitForEvaluation();
+            }}
+            onClick={(e) => e.stopPropagation()} // extra guard
             disabled={status === "loading"}
             aria-label="Submit for Evaluation Report"
           >
