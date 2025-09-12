@@ -35,6 +35,33 @@ export function EnhancedWritingLayout({
   const [plan, setPlan] = useState('');
   const [generatedPrompt, setGeneratedPrompt] = useState('');
 
+  // FIXED: Retrieve prompt from localStorage on component mount
+  useEffect(() => {
+    const retrievePromptFromStorage = () => {
+      console.log("🔍 EnhancedWritingLayout: Retrieving prompt from localStorage");
+      
+      // Try to get the prompt from localStorage
+      const storedPrompt = localStorage.getItem('generatedPrompt');
+      const selectedWritingType = localStorage.getItem('selectedWritingType');
+      
+      if (storedPrompt) {
+        console.log("✅ Found stored prompt:", storedPrompt);
+        setGeneratedPrompt(storedPrompt);
+      } else if (selectedWritingType) {
+        // Try to get prompt by writing type
+        const typeSpecificPrompt = localStorage.getItem(`${selectedWritingType}_prompt`);
+        if (typeSpecificPrompt) {
+          console.log("✅ Found type-specific prompt:", typeSpecificPrompt);
+          setGeneratedPrompt(typeSpecificPrompt);
+        } else {
+          console.log("⚠️ No prompt found in localStorage");
+        }
+      }
+    };
+
+    retrievePromptFromStorage();
+  }, []);
+
   const handleTogglePlanning = () => {
     setShowPlanningTool(!showPlanningTool);
   };
