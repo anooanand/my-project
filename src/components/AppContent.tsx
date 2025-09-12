@@ -399,10 +399,10 @@ function AppContent() {
           <Route path="/brainstorming-tools" element={<BrainstormingTools />} />
           <Route path="/email-verification" element={<EmailVerificationHandler />} />
        
-          <Route path="/text-type-analysis" element={<TextTypeAnalysisComponent />} />
-          <Route path="/vocabulary-sophistication" element={<VocabularySophisticationComponent />} />
-          <Route path="/progress-tracking" element={<ProgressTrackingComponent />} />
-          <Route path="/coaching-tips" element={<CoachingTipsComponent />} />
+          {/* <Route path="/text-type-analysis" element={<TextTypeAnalysisComponent />} /> */}
+          {/* <Route path="/vocabulary-sophistication" element={<VocabularySophisticationComponent />} /> */}
+          {/* <Route path="/progress-tracking" element={<ProgressTrackingComponent />} /> */}
+          {/* <Route path="/coaching-tips" element={<CoachingTipsComponent />} /> */}
 
           <Route path="/payment-success" element={
             <PaymentSuccessPage 
@@ -419,51 +419,27 @@ function AppContent() {
       {shouldShowFooter() && <Footer />}
 
       {/* Auth Modal */}
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        mode={authModalMode}
-        onSuccess={handleAuthSuccess}
-      />
-
-      {/* Planning Tool Modal */}
-      <PlanningToolModal
-        isOpen={showPlanningTool}
-        onClose={() => setShowPlanningTool(false)}
-        onSavePlan={(plan) => {
-          console.log('Plan saved:', plan);
-          setShowPlanningTool(false);
-        }}
-        textType={textType}
-        content={content}
-      />
-
-      {/* Help Center Modal */}
-      {showHelpCenter && (
-        <HelpCenter onClose={() => setShowHelpCenter(false)} />
+      {showAuthModal && (
+        <AuthModal
+          mode={authModalMode}
+          onClose={() => setShowAuthModal(false)}
+          onSuccess={handleAuthSuccess}
+          onSwitchMode={(newMode) => setAuthModalMode(newMode)}
+        />
       )}
-
-      {/* Admin Button - Only show for admin users */}
+      
+      {/* Floating Chat Window */}
+      {user && (
+        <FloatingChatWindow 
+          isVisible={panelVisible}
+          onToggleVisibility={() => setPanelVisible(!panelVisible)}
+        />
+      )}
+      
+      {/* Admin Button */}
       <AdminButton />
     </div>
   );
-}
-
-// Placeholder components for missing routes
-function TextTypeAnalysisComponent() {
-  return <div>Text Type Analysis Component</div>;
-}
-
-function VocabularySophisticationComponent() {
-  return <div>Vocabulary Sophistication Component</div>;
-}
-
-function ProgressTrackingComponent() {
-  return <div>Progress Tracking Component</div>;
-}
-
-function CoachingTipsComponent() {
-  return <div>Coaching Tips Component</div>;
 }
 
 export default AppContent;
