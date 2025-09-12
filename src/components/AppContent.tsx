@@ -377,8 +377,7 @@ function AppContent() {
                           textType={textType}
                           assistanceLevel={assistanceLevel}
                           selectedText={selectedText}
-                          onTimerStart={setTimerStarted}
-                          onSubmit={handleSubmit}
+                          onTimerStart={setTimerStarted}                      
                           onTextTypeChange={handleTextTypeChange}
                           onPopupCompleted={handlePopupCompleted}
                           onNavigate={handleNavigation}
