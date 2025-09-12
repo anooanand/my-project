@@ -338,8 +338,6 @@ function AppContent() {
           <Route path="/pricing" element={<PricingPage onNavigate={handleNavigation} />} />
           <Route path="/faq" element={<FAQPage onNavigate={handleNavigation} />} />
           <Route path="/about" element={<AboutPage onNavigate={handleNavigation} />} />
-          <Route path="/demo" element={<DemoPage onNavigate={handleNavigation} />} />
-          <Route path="/nsw-demo" element={<NSWDemoPage />} />
           <Route path="/dashboard" element={
             user ? (
               <Dashboard 
@@ -401,8 +399,7 @@ function AppContent() {
           <Route path="/specialized-coaching" element={<SpecializedCoaching />} />
           <Route path="/brainstorming-tools" element={<BrainstormingTools />} />
           <Route path="/email-verification" element={<EmailVerificationHandler />} />
-          <Route path="/demo-writing" element={<WritingDemo />} />
-
+       
           <Route path="/text-type-analysis" element={<TextTypeAnalysisComponent />} />
           <Route path="/vocabulary-sophistication" element={<VocabularySophisticationComponent />} />
           <Route path="/progress-tracking" element={<ProgressTrackingComponent />} />
