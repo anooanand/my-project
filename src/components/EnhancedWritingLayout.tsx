@@ -8,30 +8,28 @@ import {
 
 interface EnhancedWritingLayoutProps {
   content: string;
-  onChange: (content: string) => void;
+  setContent: (content: string) => void;
   textType: string;
-  onTimerStart: (shouldStart: boolean) => void;
-  onTextTypeChange?: (textType: string) => void;
-  onNavigate?: (page: string) => void;
-  onStartNewEssay?: () => void;
-  onShowHelpCenter?: () => void;
-  onPopupCompleted?: () => void;
-  assistanceLevel?: 'beginner' | 'intermediate' | 'advanced';
-  selectedText?: string;
+  setTextType: (textType: string) => void;
+  popupFlowCompleted: boolean;
+  setPopupFlowCompleted: (completed: boolean) => void;
+  selectedText: string;
+  setSelectedText: (text: string) => void;
+  openAIConnected: boolean;
+  openAILoading: boolean;
 }
 
 export function EnhancedWritingLayout({
   content,
-  onChange,
+  setContent,
   textType,
-  onTimerStart,
-  onTextTypeChange,
-  onNavigate,
-  onStartNewEssay,
-  onShowHelpCenter,
-  onPopupCompleted,
-  assistanceLevel = 'intermediate',
-  selectedText = ''
+  setTextType,
+  popupFlowCompleted,
+  setPopupFlowCompleted,
+  selectedText,
+  setSelectedText,
+  openAIConnected,
+  openAILoading
 }: EnhancedWritingLayoutProps) {
   const [showPlanningTool, setShowPlanningTool] = useState(false);
   const [plan, setPlan] = useState('');
@@ -42,8 +40,35 @@ export function EnhancedWritingLayout({
   };
 
   const handlePromptGenerated = (prompt: string) => {
+    console.log("📝 EnhancedWritingLayout: Prompt generated:", prompt);
     setGeneratedPrompt(prompt);
   };
+
+  const handleContentChange = (newContent: string) => {
+    console.log("📝 EnhancedWritingLayout: Content changed to:", newContent);
+    console.log("📝 EnhancedWritingLayout: Content length:", newContent.length);
+    setContent(newContent);
+  };
+
+  const handleTextTypeChange = (newTextType: string) => {
+    console.log("📋 EnhancedWritingLayout: Text type changed to:", newTextType);
+    setTextType(newTextType);
+  };
+
+  const handlePopupCompleted = () => {
+    console.log("✅ EnhancedWritingLayout: Popup flow completed");
+    setPopupFlowCompleted(true);
+  };
+
+  // Debug logging for prop values
+  useEffect(() => {
+    console.log("🔍 EnhancedWritingLayout: Props debug:");
+    console.log("  - content:", content);
+    console.log("  - content length:", content?.length || 0);
+    console.log("  - textType:", textType);
+    console.log("  - openAIConnected:", openAIConnected);
+    console.log("  - openAILoading:", openAILoading);
+  }, [content, textType, openAIConnected, openAILoading]);
 
   return (
     <div className="enhanced-writing-layout h-full bg-gray-50 overflow-hidden">
@@ -51,11 +76,10 @@ export function EnhancedWritingLayout({
       <div className="h-full">
         <WritingArea
           content={content}
-          onChange={onChange}
+          onChange={handleContentChange}
           textType={textType}
-          onTimerStart={onTimerStart}
-          onTextTypeChange={onTextTypeChange}
-          onPopupCompleted={onPopupCompleted}
+          onTextTypeChange={handleTextTypeChange}
+          onPopupCompleted={handlePopupCompleted}
           onPromptGenerated={handlePromptGenerated}
           prompt={generatedPrompt}
         />
