@@ -48,8 +48,7 @@ export function NSWStandaloneSubmitSystem({
 
     try {
       // Simulate API call or complex analysis
-      const generator = new NSWEvaluationReportGenerator();
-      const report = await generator.generateReport({
+      const report = await NSWEvaluationReportGenerator.generateReport({
         essayContent: content,
         textType: textType,
         prompt: prompt,
@@ -157,4 +156,3 @@ export function NSWStandaloneSubmitSystem({
     </div>
   );
 }
-
