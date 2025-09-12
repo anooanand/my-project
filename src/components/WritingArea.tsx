@@ -48,6 +48,15 @@ function WritingAreaImpl(props: Props) {
     prevTextRef.current = content;
   }, [content]);
 
+  // Set content to prompt when component mounts and content is empty
+  useEffect(() => {
+    if (!content && props.prompt) {
+      if (props.onChange) {
+        props.onChange(props.prompt);
+      }
+    }
+  }, [props.prompt]);
+
   // --- analysis state ---
   const [analysis, setAnalysis] = useState<DetailedFeedback | null>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -190,7 +199,7 @@ function WritingAreaImpl(props: Props) {
           <div className="p-3">
             <textarea
               className="w-full h-[28rem] p-3 rounded-lg border"
-              placeholder="Start your draft here…"
+              placeholder={content ? undefined : (props.prompt || 'Start your draft here…')}
               value={content}
               onChange={(e) => onEditorChange(e.target.value)}
             />
