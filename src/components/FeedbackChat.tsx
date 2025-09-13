@@ -10,23 +10,53 @@ interface FeedbackMessage {
   paragraphNumber: number;
 }
 
+// Alternative interface for compatibility with CoachProvider
+interface FeedbackMsg {
+  id: string;
+  paragraph: string;
+  feedback: string;
+  ts: number;
+}
+
 interface FeedbackChatProps {
-  feedbackMessages: FeedbackMessage[];
+  feedbackMessages?: FeedbackMessage[];
+  messages?: FeedbackMsg[];
   isLoading?: boolean;
   className?: string;
 }
 
 export function FeedbackChat({ 
   feedbackMessages, 
+  messages,
   isLoading = false, 
   className = "" 
 }: FeedbackChatProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Normalize messages from either prop
+  const normalizedMessages: FeedbackMessage[] = React.useMemo(() => {
+    if (feedbackMessages) {
+      return feedbackMessages;
+    }
+    
+    if (messages) {
+      return messages.map((msg, index) => ({
+        id: msg.id,
+        paragraph: msg.paragraph || '',
+        feedback: msg.feedback || '',
+        timestamp: new Date(msg.ts),
+        type: 'suggestion' as const,
+        paragraphNumber: index + 1
+      }));
+    }
+    
+    return [];
+  }, [feedbackMessages, messages]);
+
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [feedbackMessages]);
+  }, [normalizedMessages]);
 
   const getMessageIcon = (type: string) => {
     switch (type) {
@@ -71,7 +101,7 @@ export function FeedbackChat({
 
       {/* Messages Container */}
       <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-gray-50">
-        {feedbackMessages.length === 0 && !isLoading ? (
+        {normalizedMessages.length === 0 && !isLoading ? (
           <div className="text-center py-8">
             <Bot className="h-12 w-12 text-gray-300 mx-auto mb-3" />
             <p className="text-sm text-gray-500">
@@ -79,7 +109,7 @@ export function FeedbackChat({
             </p>
           </div>
         ) : (
-          feedbackMessages.map((message) => (
+          normalizedMessages.map((message) => (
             <div key={message.id} className="space-y-2">
               {/* User's paragraph context */}
               <div className="flex items-start space-x-2">
@@ -98,9 +128,9 @@ export function FeedbackChat({
                     </span>
                   </div>
                   <p className="text-sm text-gray-700 italic">
-                    "{message.paragraph.length > 100 
+                    "{(message.paragraph && message.paragraph.length > 100) 
                       ? message.paragraph.substring(0, 100) + '...' 
-                      : message.paragraph}"
+                      : (message.paragraph || 'No content')}"
                   </p>
                 </div>
               </div>
@@ -117,7 +147,7 @@ export function FeedbackChat({
                     </span>
                   </div>
                   <p className="text-sm text-gray-800 leading-relaxed">
-                    {message.feedback}
+                    {message.feedback || 'No feedback available'}
                   </p>
                 </div>
               </div>
@@ -154,3 +184,6 @@ export function FeedbackChat({
     </div>
   );
 }
+
+// Export both interfaces for compatibility
+export type { FeedbackMessage, FeedbackMsg };
