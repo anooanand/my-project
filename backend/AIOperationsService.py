@@ -166,6 +166,9 @@ def get_nsw_selective_feedback(content: str, text_type: str, assistance_level: s
         content_response = response.choices[0].message.content
         
         feedback_data = json.loads(content_response)
+        feedback_data["timings"] = {"modelLatencyMs": 0} # Placeholder, ideally from API response metadata
+        feedback_data["modelVersion"] = "gpt-4" # Placeholder, ideally from API response metadata
+        feedback_data["id"] = "generated-id" # Placeholder, ideally a unique ID
         
         feedback_data = validate_feedback_positions(feedback_data, content)
         
@@ -307,11 +310,12 @@ def create_fallback_feedback(content: str, word_count: int) -> Dict[str, Any]:
                 "explanation": "Use more sophisticated vocabulary",
                 "position": {"start": 0, "end": 4}
             }
-        ]
+        ],
+        "timings": {"modelLatencyMs": 0},
+        "modelVersion": "fallback-model",
+        "id": "fallback-id"
     }
 
 async def evaluate_essay(content: str, text_type: str = "narrative", assistance_level: str = "moderate") -> Dict[str, Any]:
     return get_nsw_selective_feedback(content, text_type, assistance_level)
-
-
 
