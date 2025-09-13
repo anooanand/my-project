@@ -5,10 +5,7 @@
 const { OpenAI } = require("openai");
 const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-const SYSTEM_PROMPT = `You are an AI writing tutor for 10–12 year olds preparing for the NSW Selective test.
-Return STRICT JSON matching the given schema. Include 0-indexed 'start' and 'end' offsets for all evidence and fixes.
-Weights: ideas=30, structure=25, language=25, spag=20. Criterion scores are 0–5. OverallScore 0–100.
-Tone: positive, specific, concise.`;
+const SYSTEM_PROMPT = `You are an AI writing tutor for 10–12 year olds preparing for the NSW Selective test.\nReturn STRICT JSON matching the given schema. Include 0-indexed 'start' and 'end' offsets for all evidence and fixes.\nWeights: ideas=30, structure=25, language=25, spag=20. Criterion scores are 0–5. OverallScore 0–100.\nTone: positive, specific, concise.`;
 
 function buildUserPrompt(body) {
   const essayText = (body && body.essayText) || "";
@@ -43,7 +40,7 @@ function validatePayload(x){
 
 exports.handler = async (event) => {
   try {
-    if (event.httpMethod !== "POST") {
+    if (event.httpMethod !== "POST" ) {
       return { statusCode: 405, body: "Method Not Allowed" };
     }
     const body = JSON.parse(event.body || "{}");
@@ -59,14 +56,33 @@ exports.handler = async (event) => {
       ]
     });
     const content = completion.choices?.[0]?.message?.content || "{}";
-    const parsed = JSON.parse(content);
+    let parsed = {};
+    try {
+      parsed = JSON.parse(content);
+    } catch (parseError) {
+      console.error("Failed to parse AI response as JSON:", content, parseError);
+      return { statusCode: 500, body: "AI response was not valid JSON" };
+    }
+
+    // Ensure all required fields are present, even if empty, to pass validation
+    parsed.overallScore = parsed.overallScore || 0;
+    parsed.criteria = parsed.criteria || {};
+    parsed.criteria.ideasContent = parsed.criteria.ideasContent || { score: 0, weight: 0, strengths: [], improvements: [] };
+    parsed.criteria.structureOrganization = parsed.criteria.structureOrganization || { score: 0, weight: 0, strengths: [], improvements: [] };
+    parsed.criteria.languageVocab = parsed.criteria.languageVocab || { score: 0, weight: 0, strengths: [], improvements: [] };
+    parsed.criteria.spellingPunctuationGrammar = parsed.criteria.spellingPunctuationGrammar || { score: 0, weight: 0, strengths: [], improvements: [] };
+    parsed.grammarCorrections = parsed.grammarCorrections || [];
+    parsed.vocabularyEnhancements = parsed.vocabularyEnhancements || [];
+    parsed.id = parsed.id || `feedback-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
     parsed.timings = parsed.timings || {};
     parsed.timings.modelLatencyMs = Date.now() - started;
     parsed.modelVersion = completion.model;
-    parsed.id = parsed.id || `feedback-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    
 
     if (!validatePayload(parsed)) {
-      return { statusCode: 502, body: "Invalid model payload" };
+      console.error("Validated payload failed:", parsed);
+      return { statusCode: 502, body: "Invalid model payload after ensuring structure" };
     }
     return {
       statusCode: 200,
@@ -74,6 +90,7 @@ exports.handler = async (event) => {
       body: JSON.stringify(parsed)
     };
   } catch (e) {
+    console.error("Error in ai-feedback function:", e);
     return { statusCode: 500, body: e?.message || "Internal Error" };
   }
 };
