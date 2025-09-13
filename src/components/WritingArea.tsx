@@ -14,9 +14,17 @@ import { validateDetailedFeedback } from "../types/feedback.validate";
 // Tabs (Coach / Analysis / Vocab / Progress)
 import { TabbedCoachPanel } from "./TabbedCoachPanel";
 
-// New components for buttons and status bar
-import { WritingModeButtons } from "./WritingModeButtons";
+// Import the status bar component (this should exist)
 import { WritingStatusBar } from "./WritingStatusBar";
+
+// Import icons for inline buttons
+import { 
+  PenTool, 
+  Play, 
+  BookOpen, 
+  Lightbulb, 
+  Target
+} from 'lucide-react';
 
 type TextType = "narrative" | "persuasive" | "informative";
 
@@ -135,7 +143,6 @@ function WritingAreaImpl(props: Props) {
 
   // -------- Button handlers --------
   const handlePlanningPhase = () => {
-    // Open planning tool or modal
     console.log("Planning Phase clicked");
     // You can integrate with existing PlanningToolModal here
   };
@@ -146,12 +153,10 @@ function WritingAreaImpl(props: Props) {
   };
 
   const handleStructureGuide = () => {
-    // Open structure guide modal or panel
     console.log("Structure Guide clicked");
   };
 
   const handleTips = () => {
-    // Show tips panel or modal
     console.log("Tips clicked");
   };
 
@@ -204,15 +209,63 @@ function WritingAreaImpl(props: Props) {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Writing Mode Buttons */}
-      <WritingModeButtons
-        onPlanningPhase={handlePlanningPhase}
-        onStartExamMode={handleStartExamMode}
-        onStructureGuide={handleStructureGuide}
-        onTips={handleTips}
-        onFocus={handleFocus}
-        disabled={status === "loading"}
-      />
+      {/* Inline Writing Mode Buttons */}
+      <div className="flex flex-wrap gap-3 p-4 bg-white border-b border-gray-200">
+        {/* Planning Phase Button */}
+        <button
+          onClick={handlePlanningPhase}
+          disabled={status === "loading"}
+          className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
+          title="Planning Phase - Organize your ideas before writing"
+        >
+          <PenTool className="h-4 w-4 mr-2" />
+          Planning Phase
+        </button>
+
+        {/* Start Exam Mode Button */}
+        <button
+          onClick={handleStartExamMode}
+          disabled={status === "loading"}
+          className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg bg-green-500 text-white hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
+          title="Start Exam Mode - Practice under timed conditions"
+        >
+          <Play className="h-4 w-4 mr-2" />
+          Start Exam Mode
+        </button>
+
+        {/* Structure Guide Button */}
+        <button
+          onClick={handleStructureGuide}
+          disabled={status === "loading"}
+          className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg bg-purple-500 text-white hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
+          title="Structure Guide - Learn how to organize your writing"
+        >
+          <BookOpen className="h-4 w-4 mr-2" />
+          Structure Guide
+        </button>
+
+        {/* Tips Button */}
+        <button
+          onClick={handleTips}
+          disabled={status === "loading"}
+          className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg bg-yellow-500 text-white hover:bg-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
+          title="Tips - Get helpful writing advice"
+        >
+          <Lightbulb className="h-4 w-4 mr-2" />
+          Tips
+        </button>
+
+        {/* Focus Button */}
+        <button
+          onClick={handleFocus}
+          disabled={status === "loading"}
+          className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg bg-gray-600 text-white hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
+          title="Focus Mode - Minimize distractions while writing"
+        >
+          <Target className="h-4 w-4 mr-2" />
+          Focus
+        </button>
+      </div>
 
       {/* Main Content Area */}
       <div className="flex-1 grid grid-cols-12 gap-4 p-4 overflow-hidden">
