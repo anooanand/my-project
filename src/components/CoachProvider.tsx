@@ -1,7 +1,7 @@
 import React from "react";
 import { eventBus } from "../lib/eventBus";
 import { coachTip } from "../lib/api";
-import { FeedbackChat, FeedbackMsg } from "./FeedbackChat";
+import { FeedbackChat, FeedbackMsg } from "./FeedbackChat.tsx";
 
 export function CoachProvider() {
   const [messages, setMessages] = React.useState<FeedbackMsg[]>([]);
