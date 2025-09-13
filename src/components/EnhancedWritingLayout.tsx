@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import WritingArea from './WritingArea';
 import { PlanningToolModal } from './PlanningToolModal';
+import { StructureGuideModal } from './StructureGuideModal'; // Import StructureGuideModal
+import { TipsModal } from './TipsModal'; // Import TipsModal
 import {
   PenTool,
   ToggleRight
@@ -32,6 +34,8 @@ export function EnhancedWritingLayout({
   openAILoading
 }: EnhancedWritingLayoutProps) {
   const [showPlanningTool, setShowPlanningTool] = useState(false);
+  const [showStructureGuide, setShowStructureGuide] = useState(false); // State for Structure Guide
+  const [showTips, setShowTips] = useState(false); // State for Tips
   const [plan, setPlan] = useState('');
   const [generatedPrompt, setGeneratedPrompt] = useState('');
 
@@ -64,6 +68,14 @@ export function EnhancedWritingLayout({
 
   const handleTogglePlanning = () => {
     setShowPlanningTool(!showPlanningTool);
+  };
+
+  const handleShowStructureGuide = () => {
+    setShowStructureGuide(true);
+  };
+
+  const handleShowTips = () => {
+    setShowTips(true);
   };
 
   const handlePromptGenerated = (prompt: string) => {
@@ -111,8 +123,8 @@ export function EnhancedWritingLayout({
           prompt={generatedPrompt}
           onPlanningPhase={handleTogglePlanning} // Pass handler for Planning Phase
           onStartExamMode={() => console.log("Exam Mode from Layout")} // Placeholder for now
-          onStructureGuide={() => console.log("Structure Guide from Layout")} // Placeholder for now
-          onTips={() => console.log("Tips from Layout")} // Placeholder for now
+          onStructureGuide={handleShowStructureGuide} // Pass handler for Structure Guide
+          onTips={handleShowTips} // Pass handler for Tips
           onFocus={() => console.log("Focus from Layout")} // Placeholder for now
         />
       </div>
@@ -147,6 +159,19 @@ export function EnhancedWritingLayout({
         }}
         existingPlan={plan}
       />
+
+      {/* Structure Guide Modal */}
+      <StructureGuideModal
+        isOpen={showStructureGuide}
+        onClose={() => setShowStructureGuide(false)}
+      />
+
+      {/* Tips Modal */}
+      <TipsModal
+        isOpen={showTips}
+        onClose={() => setShowTips(false)}
+      />
     </div>
   );
 }
+
