@@ -37,6 +37,11 @@ interface Props {
   onPromptGenerated?: (prompt: string) => void;
   /** Prompt passed by EnhancedWritingLayout */
   prompt?: string;
+  onPlanningPhase?: () => void;
+  onStartExamMode?: () => void;
+  onStructureGuide?: () => void;
+  onTips?: () => void;
+  onFocus?: () => void;
 }
 
 function fallbackPrompt(textType?: string) {
@@ -140,29 +145,29 @@ function WritingAreaImpl(props: Props) {
   // -------- Button handlers --------
   const handlePlanningPhase = () => {
     console.log("Planning Phase clicked");
-    // Add your planning phase logic here
+    props.onPlanningPhase?.();
   };
 
   const handleStartExamMode = () => {
     console.log("Start Exam Mode clicked");
     setExamMode(!examMode);
-    // Add your exam mode logic here
+    props.onStartExamMode?.();
   };
 
   const handleStructureGuide = () => {
     console.log("Structure Guide clicked");
-    // Add your structure guide logic here
+    props.onStructureGuide?.();
   };
 
   const handleTips = () => {
     console.log("Tips clicked");
-    // Add your tips logic here
+    props.onTips?.();
   };
 
   const handleFocus = () => {
     console.log("Focus clicked");
     setFocusMode(!focusMode);
-    // Add your focus mode logic here
+    props.onFocus?.();
   };
 
   const handleToggleHighlights = () => {
