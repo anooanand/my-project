@@ -3,6 +3,7 @@ import { Clock, FileText, Save, Settings, BarChart3, Award, Zap, BookOpen, Targe
 import { NSWMarkingRubric } from './NSWMarkingRubric';
 import { WritingTechniqueModules } from './WritingTechniqueModules';
 import { GamificationSystem } from './GamificationSystem';
+import { WritingStatusBar } from './WritingStatusBar';
 import { NSWStandaloneSubmitSystem } from './NSWStandaloneSubmitSystem';
 
 interface NSWEnhancedWritingInterfaceProps {
@@ -191,6 +192,13 @@ export function NSWEnhancedWritingInterface({
           </div>
         )}
       </div>
+      <WritingStatusBar
+        wordCount={wordCount}
+        content={content}
+        examMode={examStarted}
+        targetWordCountMin={targetWordCountMin}
+        targetWordCountMax={targetWordCountMax}
+      />
     </div>
   );
 
