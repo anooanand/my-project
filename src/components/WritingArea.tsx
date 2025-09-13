@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 
 // Server-backed API (Netlify functions only)
 import { evaluateEssay, saveDraft } from "../lib/api";
@@ -102,70 +102,69 @@ function WritingAreaImpl(props: Props) {
     }`
   );
 
-  // Typing + paragraph detection
-  const onEditorChange = (next: string) => {
-    const events = detectNewParagraphs(prevTextRef.current, next);
-    if (events.length) eventBus.emit("paragraph.ready", events[events.length - 1]);
-    prevTextRef.current = next;
-    setContent(next);
-    props.onChange?.(next);
-  };
+  // -------- Event handlers --------
+  const onEditorChange = useCallback((newText: string) => {
+    setContent(newText);
+    props.onChange?.(newText);
 
-  // Submit → strict JSON rubric (server)
-  const onSubmitForEvaluation = async () => {
-    if (!content || !content.trim()) {
-      setStatus("error");
-      setErr("Please write some content before submitting for evaluation");
-      return;
+    // Real-time paragraph detection
+    const newParagraphs = detectNewParagraphs(prevTextRef.current, newText);
+    if (newParagraphs.length > 0) {
+      eventBus.emit("newParagraph", { paragraphs: newParagraphs });
     }
+  }, [props]);
+
+  const onSubmitForEvaluation = useCallback(async () => {
+    setStatus("loading");
+    setErr(undefined);
     try {
-      setStatus("loading"); setErr(undefined);
-      const res = await evaluateEssay({
-        essayText: content.trim(),
-        textType,
-        examMode: false,
-      });
-      if (!validateDetailedFeedback(res)) throw new Error("Invalid feedback payload");
+      const res = await evaluateEssay({ essayText: content, textType });
+      if (!validateDetailedFeedback(res)) {
+        throw new Error("Invalid feedback payload");
+      }
       setAnalysis(res);
       setStatus("success");
     } catch (e: any) {
       setStatus("error");
-      setErr(e?.message || "Failed to analyze");
+      setErr(e?.message || "Failed to analyze essay");
     }
-  };
+  }, [content, textType]);
 
-  // Apply a server-proposed fix
-  const onApplyFix = (fix: LintFix) => {
-    const next = content.slice(0, fix.start) + fix.replacement + content.slice(fix.end);
-    setContent(next);
-    props.onChange?.(next);
-  };
+  const onApplyFix = useCallback((fix: LintFix) => {
+    const before = content.slice(0, fix.start);
+    const after = content.slice(fix.end);
+    const newContent = before + fix.replacement + after;
+    onEditorChange(newContent);
+  }, [content, onEditorChange]);
 
   // -------- Button handlers --------
   const handlePlanningPhase = () => {
     console.log("Planning Phase clicked");
-    // You can integrate with existing PlanningToolModal here
+    // Add your planning phase logic here
   };
 
   const handleStartExamMode = () => {
+    console.log("Start Exam Mode clicked");
     setExamMode(!examMode);
-    console.log("Exam Mode toggled:", !examMode);
+    // Add your exam mode logic here
   };
 
   const handleStructureGuide = () => {
     console.log("Structure Guide clicked");
+    // Add your structure guide logic here
   };
 
   const handleTips = () => {
     console.log("Tips clicked");
+    // Add your tips logic here
   };
 
   const handleFocus = () => {
+    console.log("Focus clicked");
     setFocusMode(!focusMode);
-    console.log("Focus Mode toggled:", !focusMode);
+    // Add your focus mode logic here
   };
 
-  // -------- Status bar handlers --------
   const handleToggleHighlights = () => {
     setShowHighlights(!showHighlights);
   };
@@ -178,26 +177,28 @@ function WritingAreaImpl(props: Props) {
     handlePlanningPhase();
   };
 
-  const handleRestore = (restoredContent: string, restoredTextType: string) => {
-    setContent(restoredContent);
-    setTextType(restoredTextType as TextType);
-    props.onChange?.(restoredContent);
-    props.onTextTypeChange?.(restoredTextType);
+  const handleRestore = () => {
+    // Add restore logic here
+    console.log("Restore clicked");
   };
 
-  // Calculate word count
-  const wordCount = content.trim() ? content.trim().split(/\s+/).filter(Boolean).length : 0;
+  // -------- Word count --------
+  const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
 
-  // Autosave
+  // -------- Autosave effect --------
   useEffect(() => {
     const t = setInterval(async () => {
+      if (!content.trim()) return;
       try {
-        if (content?.trim()) {
-          setIsSaving(true);
-          localStorage.setItem(draftId.current, JSON.stringify({ text: content, version }));
+        setIsSaving(true);
+        localStorage.setItem(draftId.current, JSON.stringify({ text: content, version }));
+        try {
           await saveDraft(draftId.current, content, version);
           setVersion(v => v + 1);
           setLastSaved(new Date());
+        } catch {
+          // Server save failed, but localStorage succeeded
+        } finally {
           setIsSaving(false);
         }
       } catch {
@@ -209,64 +210,6 @@ function WritingAreaImpl(props: Props) {
 
   return (
     <div className="flex flex-col h-full">
-      {/* Inline Writing Mode Buttons */}
-      <div className="flex flex-wrap gap-3 p-4 bg-white border-b border-gray-200">
-        {/* Planning Phase Button */}
-        <button
-          onClick={handlePlanningPhase}
-          disabled={status === "loading"}
-          className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
-          title="Planning Phase - Organize your ideas before writing"
-        >
-          <PenTool className="h-4 w-4 mr-2" />
-          Planning Phase
-        </button>
-
-        {/* Start Exam Mode Button */}
-        <button
-          onClick={handleStartExamMode}
-          disabled={status === "loading"}
-          className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg bg-green-500 text-white hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
-          title="Start Exam Mode - Practice under timed conditions"
-        >
-          <Play className="h-4 w-4 mr-2" />
-          Start Exam Mode
-        </button>
-
-        {/* Structure Guide Button */}
-        <button
-          onClick={handleStructureGuide}
-          disabled={status === "loading"}
-          className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg bg-purple-500 text-white hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
-          title="Structure Guide - Learn how to organize your writing"
-        >
-          <BookOpen className="h-4 w-4 mr-2" />
-          Structure Guide
-        </button>
-
-        {/* Tips Button */}
-        <button
-          onClick={handleTips}
-          disabled={status === "loading"}
-          className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg bg-yellow-500 text-white hover:bg-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
-          title="Tips - Get helpful writing advice"
-        >
-          <Lightbulb className="h-4 w-4 mr-2" />
-          Tips
-        </button>
-
-        {/* Focus Button */}
-        <button
-          onClick={handleFocus}
-          disabled={status === "loading"}
-          className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg bg-gray-600 text-white hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
-          title="Focus Mode - Minimize distractions while writing"
-        >
-          <Target className="h-4 w-4 mr-2" />
-          Focus
-        </button>
-      </div>
-
       {/* Main Content Area */}
       <div className="flex-1 grid grid-cols-12 gap-4 p-4 overflow-hidden">
         {/* LEFT: header + editor */}
@@ -297,6 +240,64 @@ function WritingAreaImpl(props: Props) {
                 {displayPrompt || "Loading prompt…"}
               </div>
             </div>
+          </div>
+
+          {/* Writing Mode Buttons - MOVED HERE between prompt and editor */}
+          <div className="flex flex-wrap gap-3 p-4 bg-white border border-gray-200 rounded-lg mb-3">
+            {/* Planning Phase Button */}
+            <button
+              onClick={handlePlanningPhase}
+              disabled={status === "loading"}
+              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
+              title="Planning Phase - Organize your ideas before writing"
+            >
+              <PenTool className="h-4 w-4 mr-2" />
+              Planning Phase
+            </button>
+
+            {/* Start Exam Mode Button */}
+            <button
+              onClick={handleStartExamMode}
+              disabled={status === "loading"}
+              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg bg-green-500 text-white hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
+              title="Start Exam Mode - Practice under timed conditions"
+            >
+              <Play className="h-4 w-4 mr-2" />
+              Start Exam Mode
+            </button>
+
+            {/* Structure Guide Button */}
+            <button
+              onClick={handleStructureGuide}
+              disabled={status === "loading"}
+              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg bg-purple-500 text-white hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
+              title="Structure Guide - Learn how to organize your writing"
+            >
+              <BookOpen className="h-4 w-4 mr-2" />
+              Structure Guide
+            </button>
+
+            {/* Tips Button */}
+            <button
+              onClick={handleTips}
+              disabled={status === "loading"}
+              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg bg-yellow-500 text-white hover:bg-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
+              title="Tips - Get helpful writing advice"
+            >
+              <Lightbulb className="h-4 w-4 mr-2" />
+              Tips
+            </button>
+
+            {/* Focus Button */}
+            <button
+              onClick={handleFocus}
+              disabled={status === "loading"}
+              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg bg-gray-600 text-white hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
+              title="Focus Mode - Minimize distractions while writing"
+            >
+              <Target className="h-4 w-4 mr-2" />
+              Focus
+            </button>
           </div>
 
           {/* --- Editor --- */}
