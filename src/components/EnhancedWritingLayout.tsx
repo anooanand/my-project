@@ -109,6 +109,11 @@ export function EnhancedWritingLayout({
           onPopupCompleted={handlePopupCompleted}
           onPromptGenerated={handlePromptGenerated}
           prompt={generatedPrompt}
+          onPlanningPhase={handleTogglePlanning} // Pass handler for Planning Phase
+          onStartExamMode={() => console.log("Exam Mode from Layout")} // Placeholder for now
+          onStructureGuide={() => console.log("Structure Guide from Layout")} // Placeholder for now
+          onTips={() => console.log("Tips from Layout")} // Placeholder for now
+          onFocus={() => console.log("Focus from Layout")} // Placeholder for now
         />
       </div>
 
