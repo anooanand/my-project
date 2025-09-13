@@ -1,3 +1,4 @@
+import React, { useState, useEffect, useCallback } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import './layout-fix.css';
@@ -40,7 +41,6 @@ import { EmailVerificationHandler } from './EmailVerificationHandler';
 import { FloatingChatWindow } from './FloatingChatWindow';
 import { checkOpenAIConnectionStatus } from '../lib/openai';
 import { AdminButton } from './AdminButton';
-import { useState, useEffect, useCallback } from 'react';
 
 function AppContent() {
   const { user, isLoading, paymentCompleted, emailVerified, authSignOut } = useAuth();
@@ -49,17 +49,51 @@ function AppContent() {
   const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin');
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
   const [pendingPaymentPlan, setPendingPaymentPlan] = useState<string | null>(null);
-  const [openAIConnected, setOpenAIConnected] = useState(false);
-  const [openAILoading, setOpenAILoading] = useState(true);
+  const location = useLocation();
+
+  // Writing state
   const [content, setContent] = useState('');
   const [textType, setTextType] = useState('');
-  const [popupFlowCompleted, setPopupFlowCompleted] = useState(false);
+  const [assistanceLevel, setAssistanceLevel] = useState('detailed');
+  const [timerStarted, setTimerStarted] = useState(false);
   const [selectedText, setSelectedText] = useState('');
+  const [showExamMode, setShowExamMode] = useState(false);
+  const [showHelpCenter, setShowHelpCenter] = useState(false);
+  const [showPlanningTool, setShowPlanningTool] = useState(false);
+  
+  // New state for popup flow completion
+  const [popupFlowCompleted, setPopupFlowCompleted] = useState(false); 
+  const [hasSignedIn, setHasSignedIn] = useState(false);
+  
+  // Panel state for attached chat
+  const [panelVisible, setPanelVisible] = useState(true);
+  const [openAIConnected, setOpenAIConnected] = useState<boolean | null>(null);
+  const [openAILoading, setOpenAILoading] = useState<boolean>(true);
 
-  const location = useLocation();
+  // Handle sign-in behavior - clear content and show modal when user signs in
+  useEffect(() => {
+    if (user && !hasSignedIn) {
+      // User just signed in
+      setHasSignedIn(true);
+      
+      // Clear content and reset state
+      setContent('');
+      setTextType('');
+      setPopupFlowCompleted(false);
+      
+      // If we're on the writing page, this will trigger the writing type modal
+      if (activePage === 'writing') {
+        // The WritingArea component will handle showing the modal
+      }
+    } else if (!user && hasSignedIn) {
+      // User signed out
+      setHasSignedIn(false);
+    }
+  }, [user, hasSignedIn, activePage]);
 
   useEffect(() => {
     const fetchOpenAIStatus = async () => {
+      setOpenAILoading(true);
       const status = await checkOpenAIConnectionStatus();
       setOpenAIConnected(status.is_connected);
       setOpenAILoading(false);
@@ -164,23 +198,61 @@ function AppContent() {
       setShowAuthModal(false);
       setShowPaymentSuccess(false);
       setPendingPaymentPlan(null);
-      setContent('');
-      setTextType('');
-      setPopupFlowCompleted(false);
+      
+      // Clear localStorage as fallback
+      localStorage.clear();
+      
+      console.log('⚠️ AppContent: Forced local state reset due to sign out error');
     }
   };
 
-  const handleGetStartedClick = useCallback(async () => {
+  // NAVIGATION FIX: Improved navigation handler with proper state management
+  const handleNavigation = useCallback(async (page: string) => {
     try {
-      if (!user) {
+      // Prevent navigation during loading states
+      if (isLoading) return;
+      
+      // Special handling for dashboard - redirect based on verification and payment status
+      if (page === 'dashboard' && user) {
+        if (!emailVerified) {
+          setActivePage('dashboard'); // Show email verification reminder
+        } else if (paymentCompleted) {
+          setActivePage('writing'); // Full access
+        } else {
+          setActivePage('pricing'); // Need to complete payment
+        }
+      } else {
+        // Smooth navigation with state cleanup
+        setActivePage(page);
+      }
+      
+      // Always close auth modal on navigation
+      setShowAuthModal(false);
+      
+      // Clear any temporary states that might interfere
+      setSelectedText('');
+      
+    } catch (error) {
+      console.error('Navigation error:', error);
+      // Fallback to home page on navigation errors
+      setActivePage('home');
+    }
+  }, [user, emailVerified, paymentCompleted, isLoading]);
+
+  // NAVIGATION FIX: Improved get started handler with consistent flow
+  const handleGetStarted = useCallback(async () => {
+    try {
+      if (user) {
+        if (!emailVerified) {
+          setActivePage('dashboard'); // Show email verification reminder
+        } else if (paymentCompleted) {
+          setActivePage('writing'); // Full access
+        } else {
+          setActivePage('pricing'); // Need to complete payment
+        }
+      } else {
         setAuthModalMode('signup');
         setShowAuthModal(true);
-      } else if (!emailVerified) {
-        setActivePage('email-verification');
-      } else if (!paymentCompleted) {
-        setActivePage('pricing');
-      } else {
-        setActivePage('writing');
       }
     } catch (error) {
       console.error('Get started error:', error);
@@ -189,6 +261,10 @@ function AppContent() {
       setShowAuthModal(true);
     }
   }, [user, emailVerified, paymentCompleted]);
+
+  const handleSubmit = () => {
+    console.log('Writing submitted:', { content, textType });
+  };
 
   // NAVIGATION FIX: Improved text type change handler
   const handleTextTypeChange = useCallback((newTextType: string) => {
@@ -200,85 +276,171 @@ function AppContent() {
     }
   }, []);
 
-  return (
-    <div className="App">
-      <EnhancedHeader
-        activePage={activePage}
-        setActivePage={setActivePage}
-        onSignInClick={() => { setAuthModalMode('signin'); setShowAuthModal(true); }}
-        onSignUpClick={() => { setAuthModalMode('signup'); setShowAuthModal(true); }}
-        onSignOut={handleForceSignOut}
-        user={user}
-        isLoading={isLoading}
-        emailVerified={emailVerified}
-        paymentCompleted={paymentCompleted}
-      />
+  // NAVIGATION FIX: Improved popup completion handler
+  const handlePopupCompleted = useCallback(() => {
+    try {
+      setPopupFlowCompleted(true);
+    } catch (error) {
+      console.error('Popup completion error:', error);
+    }
+  }, []);
 
-      <AuthModal
-        show={showAuthModal}
-        mode={authModalMode}
-        onClose={() => setShowAuthModal(false)}
-        onAuthSuccess={handleAuthSuccess}
-        onSwitchMode={(mode) => setAuthModalMode(mode)}
-      />
+  // NAVIGATION FIX: Improved footer visibility logic
+  const shouldShowFooter = useCallback(() => {
+    // Don't show footer on writing page or other specific pages
+    const noFooterPages = ['writing', 'exam', 'dashboard', 'settings'];
+    return !noFooterPages.includes(activePage);
+  }, [activePage]);
 
-      {showPaymentSuccess && (
-        <div className="payment-success-banner">
-          Payment successful! Your plan is now active.
-          <button onClick={() => setShowPaymentSuccess(false)}>Dismiss</button>
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-300">Loading...</p>
         </div>
-      )}
+      </div>
+    );
+  }
 
-      <Routes>
-        <Route path="/" element={
-          <>
-            <HeroSection onGetStartedClick={handleGetStartedClick} />
-            <FeaturesSection />
-            <ToolsSection />
-            <WritingTypesSection />
-            <StudentSuccessSection />
-            <HowItWorksSection />
-            <EnhancedSuccessSection />
-          </>
-        } />
-        <Route path="/pricing" element={<PricingPage />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/faq" element={<FAQPage />} />
-        <Route path="/about" element={<AboutPage />} />
-        <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/payment-success" element={<PaymentSuccessPage />} />
-        <Route path="/learning" element={<LearningPage />} />
-        <Route path="/exam-simulation" element={<ExamSimulationMode />} />
-        <Route path="/supportive-features" element={<SupportiveFeatures />} />
-        <Route path="/help-center" element={<HelpCenter />} />
-        <Route path="/essay-feedback" element={<EssayFeedbackPage />} />
-        <Route path="/specialized-coaching" element={<SpecializedCoaching />} />
-        <Route path="/brainstorming-tools" element={<BrainstormingTools />} />
-        <Route path="/email-verification" element={<EmailVerificationHandler />} />
+  return (
+    <div className="app-content-wrapper bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="route-with-footer">
+        <Routes>
+          <Route path="/" element={
+            <>
+              <NavBar 
+                activePage={activePage}
+                onNavigate={handleNavigation}
+                user={user}
+                onSignInClick={() => {
+                  setAuthModalMode('signin');
+                  setShowAuthModal(true);
+                }}
+                onSignUpClick={() => {
+                  setAuthModalMode('signup');
+                  setShowAuthModal(true);
+                }}
+                onForceSignOut={handleForceSignOut}
+                openAIConnected={openAIConnected}
+                openAILoading={openAILoading}
+              />
+              <div className="main-route-content">
+                <HeroSection onGetStarted={handleGetStarted} />
+                <FeaturesSection />
+                <ToolsSection />
+                <WritingTypesSection />
+                <StudentSuccessSection />
+                <HowItWorksSection />
+                <EnhancedSuccessSection />
+              </div>
+              {shouldShowFooter() && <Footer />}
+            </>
+          } />
+          <Route path="/pricing" element={<PricingPage onNavigate={handleNavigation} />} />
+          <Route path="/faq" element={<FAQPage onNavigate={handleNavigation} />} />
+          <Route path="/about" element={<AboutPage onNavigate={handleNavigation} />} />
+          <Route path="/dashboard" element={
+            user ? (
+              <Dashboard 
+                onNavigate={handleNavigation}
+                onSignOut={handleForceSignOut}
+              />
+            ) : (
+              <Navigate to="/" />
+            )
+          } />
+          <Route path="/settings" element={
+            user ? <SettingsPage onBack={() => setActivePage('dashboard')} /> : <Navigate to="/" />
+          } />
+          <Route path="/writing" element={
+            <WritingAccessCheck onNavigate={handleNavigation}>
+              <ErrorBoundary>
+                <div className="writing-route h-screen flex flex-col">
+                  <EnhancedHeader 
+                    textType={textType}
+                    assistanceLevel={assistanceLevel}
+                    onTextTypeChange={setTextType}
+                    onAssistanceLevelChange={setAssistanceLevel}
+                    onTimerStart={() => setTimerStarted(true)}
+                    hideTextTypeSelector={popupFlowCompleted}
+                    onHomeClick={() => handleNavigation('home')}
+                  />
+                  
+                  {showExamMode ? (
+                    <ExamSimulationMode 
+                      onExit={() => setShowExamMode(false)}
+                    />
+                  ) : (
+                    <div className="writing-layout-content flex-1 min-h-0">
+                      <ErrorBoundary>
+                        <EnhancedWritingLayout
+                          content={content}
+                          onChange={setContent}
+                          textType={textType}
+                          assistanceLevel={assistanceLevel}
+                          selectedText={selectedText}
+                          onTimerStart={setTimerStarted}
+                          onSubmit={handleSubmit}
+                          onTextTypeChange={handleTextTypeChange}
+                          onPopupCompleted={handlePopupCompleted}
+                          onNavigate={handleNavigation}
+                        />
+                      </ErrorBoundary>
+                    </div>
+                  )}
+                </div>
+              </ErrorBoundary>
+            </WritingAccessCheck>
+          } />
 
-        <Route path="/writing" element={
-          <WritingAccessCheck>
-            <EnhancedWritingLayout
-              content={content}
-              setContent={setContent}
-              textType={textType}
-              setTextType={setTextType}
-              popupFlowCompleted={popupFlowCompleted}
-              setPopupFlowCompleted={setPopupFlowCompleted}
-              selectedText={selectedText}
-              setSelectedText={setSelectedText}
-              openAIConnected={openAIConnected}
-              openAILoading={openAILoading}
+          <Route path="/learning" element={<LearningPage />} />
+          <Route path="/exam" element={<ExamSimulationMode onExit={() => setActivePage('writing')} />} />
+          <Route path="/supportive-features" element={<SupportiveFeatures />} />
+          <Route path="/help-center" element={<HelpCenter />} />
+          <Route path="/essay-feedback" element={<EssayFeedbackPage />} />
+          <Route path="/specialized-coaching" element={<SpecializedCoaching />} />
+          <Route path="/brainstorming-tools" element={<BrainstormingTools />} />
+          <Route path="/email-verification" element={<EmailVerificationHandler />} />
+
+          <Route path="/payment-success" element={
+            <PaymentSuccessPage 
+              onNavigate={handleNavigation}
+              planType={pendingPaymentPlan}
             />
-          </WritingAccessCheck>
-        } />
+          } />
 
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
 
-      <Footer />
-      <FloatingChatWindow />
-      <AdminButton />
+        {/* Auth Modal */}
+        <AuthModal
+          show={showAuthModal}
+          mode={authModalMode}
+          onClose={() => setShowAuthModal(false)}
+          onAuthSuccess={handleAuthSuccess}
+          onSwitchMode={(mode) => setAuthModalMode(mode)}
+        />
+
+        {/* Payment Success Banner */}
+        {showPaymentSuccess && (
+          <div className="fixed top-0 left-0 right-0 bg-green-500 text-white p-4 text-center z-50">
+            <div className="flex items-center justify-center space-x-4">
+              <span>🎉 Payment successful! Your plan is now active.</span>
+              <button
+                onClick={() => setShowPaymentSuccess(false)}
+                className="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-sm"
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Floating Components */}
+        <FloatingChatWindow />
+        <AdminButton />
+      </div>
     </div>
   );
 }
