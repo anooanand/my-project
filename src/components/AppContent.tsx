@@ -38,7 +38,7 @@ import { WritingAccessCheck } from './WritingAccessCheck';
 import { WritingToolbar } from './WritingToolbar';
 import { PlanningToolModal } from './PlanningToolModal';
 import { EmailVerificationHandler } from './EmailVerificationHandler';
-import { FloatingChatWindow } from './FloatingChatWindow';
+// REMOVED: import { FloatingChatWindow } from './FloatingChatWindow';
 import { checkOpenAIConnectionStatus } from '../lib/openai';
 import { AdminButton } from './AdminButton';
 
@@ -437,8 +437,8 @@ function AppContent() {
           </div>
         )}
 
-        {/* Floating Components */}
-        <FloatingChatWindow />
+        {/* REMOVED: Floating Components that cause duplication */}
+        {/* <FloatingChatWindow /> */}
         <AdminButton />
       </div>
     </div>
