@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Settings, Eye, EyeOff, CheckCircle, Lightbulb } from 'lucide-react';
 import { InteractiveTextEditor } from './InteractiveTextEditor';
-import { FeedbackChat } from './FeedbackChat';
+import { FeedbackChat } from './FeedbackChat.tsx';
 import { detectNewParagraphs, isContentSuitableForFeedback, DetectedParagraph } from '../utils/paragraphDetection';
 
 interface FeedbackMessage {
