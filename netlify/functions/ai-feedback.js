@@ -26,8 +26,10 @@ function buildUserPrompt(body) {
 function isObj(o){return o && typeof o === "object";}
 function isNum(n){return typeof n === "number" && !Number.isNaN(n);}
 function isArr(a){return Array.isArray(a);}
+function isString(s){return typeof s === "string";}
+
 function validatePayload(x){
-  if (!isObj(x) || !isNum(x.overallScore) || !x.id) return false;
+  if (!isObj(x) || !isNum(x.overallScore) || !isString(x.id)) return false;
   const cs = x.criteria;
   if (!isObj(cs)) return false;
   for (const k of ["ideasContent","structureOrganization","languageVocab","spellingPunctuationGrammar"]) {
@@ -35,12 +37,14 @@ function validatePayload(x){
     if (!isObj(c) || !isNum(c.score) || !isNum(c.weight) || !isArr(c.strengths) || !isArr(c.improvements)) return false;
   }
   if (!isArr(x.grammarCorrections) || !isArr(x.vocabularyEnhancements)) return false;
+  if (!isObj(x.timings) || !isNum(x.timings.modelLatencyMs)) return false;
+  if (!isString(x.modelVersion)) return false;
   return true;
 }
 
 exports.handler = async (event) => {
   try {
-    if (event.httpMethod !== "POST" ) {
+    if (event.httpMethod !== "POST"  ) {
       return { statusCode: 405, body: "Method Not Allowed" };
     }
     const body = JSON.parse(event.body || "{}");
@@ -61,7 +65,7 @@ exports.handler = async (event) => {
       parsed = JSON.parse(content);
     } catch (parseError) {
       console.error("Failed to parse AI response as JSON:", content, parseError);
-      return { statusCode: 500, body: "AI response was not valid JSON" };
+      return { statusCode: 500, body: JSON.stringify({ error: "AI response was not valid JSON" }) };
     }
 
     // Ensure all required fields are present, even if empty, to pass validation
@@ -76,13 +80,13 @@ exports.handler = async (event) => {
     parsed.id = parsed.id || `feedback-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
     parsed.timings = parsed.timings || {};
-    parsed.timings.modelLatencyMs = Date.now() - started;
-    parsed.modelVersion = completion.model;
+    parsed.timings.modelLatencyMs = parsed.timings.modelLatencyMs || (Date.now() - started);
+    parsed.modelVersion = parsed.modelVersion || completion.model;
     
 
     if (!validatePayload(parsed)) {
       console.error("Validated payload failed:", parsed);
-      return { statusCode: 502, body: "Invalid model payload after ensuring structure" };
+      return { statusCode: 502, body: JSON.stringify({ error: "Invalid model payload after ensuring structure" }) };
     }
     return {
       statusCode: 200,
@@ -91,6 +95,6 @@ exports.handler = async (event) => {
     };
   } catch (e) {
     console.error("Error in ai-feedback function:", e);
-    return { statusCode: 500, body: e?.message || "Internal Error" };
+    return { statusCode: 500, body: JSON.stringify({ error: e?.message || "Internal Error" }) };
   }
 };
