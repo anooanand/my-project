@@ -135,39 +135,42 @@ export default function WritingWorkspace() {
       {/* Main Content Grid */}
       <div className="grid grid-cols-12 gap-6">
         {/* Writing Area */}
-        <div className="col-span-12 lg:col-span-8">
+        <div className="col-span-12 lg:col-span-6">
           <div className="bg-white rounded-lg shadow-sm p-4">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">Your Writing</h2>
             <InteractiveTextEditor ref={editorRef} />
           </div>
         </div>
 
-        {/* Right Side Panel - Writing Buddy and Other Tools */}
-        <div className="col-span-12 lg:col-span-4">
-          <div className="sticky top-4 space-y-6">
-            {/* Writing Buddy Chat */}
-            <div className="bg-white rounded-lg shadow-sm">
-              <CoachProvider />
-            </div>
-            
-            {/* Progress Coach */}
-            <div className="bg-white rounded-lg shadow-sm p-4">
-              <h2 className="text-lg font-semibold text-gray-800 mb-4">Progress Coach</h2>
-              <ProgressCoach 
-                text={currentText}
-                textType={textType}
-                targetWordCount={targetWordCount}
-                onProgressUpdate={onProgressUpdate}
-              />
-            </div>
+        {/* Progress Coach */}
+        <div className="col-span-12 lg:col-span-3">
+          <div className="sticky top-4">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">Progress Coach</h2>
+            <ProgressCoach 
+              text={currentText}
+              textType={textType}
+              targetWordCount={targetWordCount}
+              onProgressUpdate={onProgressUpdate}
+            />
+          </div>
+        </div>
 
+        {/* Analysis and Coach Panel */}
+        <div className="col-span-12 lg:col-span-3">
+          <div className="space-y-6">
             {/* Analysis Results */}
             {analysis && (
-              <div className="bg-white rounded-lg shadow-sm p-4">
+              <div>
                 <h2 className="text-lg font-semibold text-gray-800 mb-4">Analysis Results</h2>
                 <RubricPanel data={analysis} onApplyFix={onApplyFix} />
               </div>
             )}
+            
+            {/* Coach Provider */}
+            <div>
+              <h2 className="text-lg font-semibold text-gray-800 mb-4">Writing Coach</h2>
+              <CoachProvider />
+            </div>
           </div>
         </div>
       </div>
@@ -179,8 +182,8 @@ export default function WritingWorkspace() {
             display: block;
           }
           .col-span-12,
-          .col-span-8,
-          .col-span-4 {
+          .col-span-6,
+          .col-span-3 {
             width: 100%;
             margin-bottom: 1.5rem;
           }
