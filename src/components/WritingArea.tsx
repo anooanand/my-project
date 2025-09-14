@@ -1,388 +1,420 @@
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Settings, Eye, EyeOff, CheckCircle, Lightbulb, ChevronLeft, ChevronRight, Maximize2, Minimize2 } from 'lucide-react';
+import { InteractiveTextEditor } from './InteractiveTextEditor';
+import { FeedbackChat } from './FeedbackChat.tsx';
+import { detectNewParagraphs, isContentSuitableForFeedback, DetectedParagraph } from '../utils/paragraphDetection';
 
-// Server-backed API (Netlify functions only)
-import { evaluateEssay, saveDraft } from "../lib/api";
+interface FeedbackMessage {
+  id: string;
+  paragraph: string;
+  feedback: string;
+  timestamp: Date;
+  type: 'praise' | 'suggestion' | 'improvement';
+  paragraphNumber: number;
+}
 
-// Real-time coach triggers
-import { eventBus } from "../lib/eventBus";
-import { detectNewParagraphs } from "../lib/paragraphDetection";
-
-// NSW rubric UI + types + guards
-import type { DetailedFeedback, LintFix } from "../types/feedback";
-
-// Tabs (Coach / Analysis / Vocab / Progress)
-import { TabbedCoachPanel } from "./TabbedCoachPanel";
-
-// Import the status bar component (this should exist)
-import { WritingStatusBar } from "./WritingStatusBar";
-
-// Import icons for inline buttons
-import {
-  PenTool,
-  Play,
-  BookOpen,
-  Lightbulb,
-  Target
-} from 'lucide-react';
-
-type TextType = "narrative" | "persuasive" | "informative";
-
-interface Props {
-  content?: string;
-  onChange?: (content: string) => void;
+interface EnhancedWritingAreaWithFeedbackProps {
+  content: string;
+  onChange: (content: string) => void;
+  placeholder?: string;
+  className?: string;
+  style?: React.CSSProperties;
   textType?: string;
-  onTextTypeChange?: (textType: string) => void;
-  onPopupCompleted?: () => void;
-  onPromptGenerated?: (prompt: string) => void;
-  /** Prompt passed by EnhancedWritingLayout */
-  prompt?: string;
-  onPlanningPhase?: () => void;
-  onStartExamMode?: () => void;
-  onStructureGuide?: () => void;
-  onTips?: () => void;
-  onFocus?: () => void;
+  onGetFeedback?: (content: string, textType?: string) => Promise<any>;
+  onNewParagraphForFeedback?: (paragraph: DetectedParagraph) => void;
 }
 
-function fallbackPrompt(textType?: string) {
-  const defaultPrompt =
-    "Write an engaging story about a character who discovers something unexpected that changes their life forever. Include vivid descriptions, realistic dialogue, and show the character's emotional journey.";
-  try {
-    const stored = localStorage.getItem("generatedPrompt");
-    if (stored) return stored;
-    const type = (textType || localStorage.getItem("selectedWritingType") || "narrative").toLowerCase();
-    const byType = localStorage.getItem(`${type}_prompt`);
-    if (byType) return byType;
-  } catch { /* ignore */ }
-  return defaultPrompt;
-}
+export function EnhancedWritingAreaWithFeedback({
+  content,
+  onChange,
+  placeholder = "Start writing your amazing story here! Let your creativity flow and bring your ideas to life... ✨",
+  className = "",
+  style = {},
+  textType = "narrative",
+  onGetFeedback,
+  onNewParagraphForFeedback
+}: EnhancedWritingAreaWithFeedbackProps) {
+  // State for controlling writing assistance features
+  const [showSettings, setShowSettings] = useState(false);
+  const [enableRealTimeHighlighting, setEnableRealTimeHighlighting] = useState(true);
+  const [enableGrammarCheck, setEnableGrammarCheck] = useState(true);
+  const [enableVocabularyEnhancement, setEnableVocabularyEnhancement] = useState(true);
+  const [enableRealTimeFeedback, setEnableRealTimeFeedback] = useState(true);
+  
+  // New state for sidebar control
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarWidth, setSidebarWidth] = useState(320);
+  const [isResizing, setIsResizing] = useState(false);
+  const [focusMode, setFocusMode] = useState(false);
+  
+  // State for feedback system
+  const [feedbackMessages, setFeedbackMessages] = useState<FeedbackMessage[]>([]);
+  const [isGeneratingFeedback, setIsGeneratingFeedback] = useState(false);
+  const [previousContent, setPreviousContent] = useState(content);
 
-function WritingAreaImpl(props: Props) {
-  // -------- Prompt header (visible) --------
-  const [displayPrompt, setDisplayPrompt] = useState<string>("");
+  // Refs for tracking
+  const debounceTimeoutRef = useRef<NodeJS.Timeout>();
+  const paragraphCounterRef = useRef(0);
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  const resizeRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const next =
-      (typeof props.prompt === "string" && props.prompt.trim()) ||
-      fallbackPrompt(props.textType);
-    setDisplayPrompt(next);
-  }, [props.prompt, props.textType]);
-
-  // Allow other tabs to update localStorage → refresh card
-  useEffect(() => {
-    const onStorage = () => setDisplayPrompt(fallbackPrompt(props.textType));
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // Handle sidebar resizing
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    setIsResizing(true);
+    e.preventDefault();
   }, []);
 
-  // -------- Editor state --------
-  const [content, setContent] = useState<string>(props.content ?? "");
-  const [textType, setTextType] = useState<TextType>((props.textType as TextType) || "narrative");
-  const prevTextRef = useRef<string>(content);
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isResizing) return;
+    
+    const containerWidth = window.innerWidth;
+    const newWidth = containerWidth - e.clientX;
+    
+    // Constrain sidebar width between 250px and 500px
+    const constrainedWidth = Math.max(250, Math.min(500, newWidth));
+    setSidebarWidth(constrainedWidth);
+  }, [isResizing]);
 
-  // -------- New state for buttons and status bar --------
-  const [examMode, setExamMode] = useState(false);
-  const [focusMode, setFocusMode] = useState(false);
-  const [showHighlights, setShowHighlights] = useState(true);
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
+  const handleMouseUp = useCallback(() => {
+    setIsResizing(false);
+  }, []);
 
-  // Sync with parent if controlled
-  useEffect(() => { if (typeof props.content === "string") setContent(props.content); }, [props.content]);
-  useEffect(() => { if (typeof props.textType === "string") setTextType(props.textType as TextType); }, [props.textType]);
-  useEffect(() => { prevTextRef.current = content; }, [content]);
-
-  // -------- Analysis state --------
-  const [analysis, setAnalysis] = useState<DetailedFeedback | null>(null);
-  const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
-  const [err, setErr] = useState<string>();
-
-  // -------- Autosave --------
-  const [version, setVersion] = useState(0);
-  const draftId = useRef(
-    `draft-${(
-      globalThis.crypto?.randomUUID?.() ??
-      Date.now().toString(36) + Math.random().toString(36).slice(2))
-    }`
-  );
-
-  // -------- Event handlers --------
-  const onEditorChange = useCallback((newText: string) => {
-    setContent(newText);
-    props.onChange?.(newText);
-
-    // Real-time paragraph detection
-    const newParagraphs = detectNewParagraphs(prevTextRef.current, newText);
-    if (newParagraphs.length > 0) {
-      eventBus.emit("newParagraph", { paragraphs: newParagraphs });
+  useEffect(() => {
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
     }
-  }, [setContent, props.onChange]); // Explicitly list dependencies
+  }, [isResizing, handleMouseMove, handleMouseUp]);
 
-  // SIMPLIFIED: Remove strict validation that was causing issues
-  const onSubmitForEvaluation = useCallback(async () => {
-    if (!content.trim()) {
-      setErr("Please write some text before submitting for evaluation");
-      setStatus("error");
+  // Generate AI feedback for a paragraph
+  const generateParagraphFeedback = useCallback(async (paragraph: DetectedParagraph) => {
+    if (!onGetFeedback || !enableRealTimeFeedback) return;
+
+    setIsGeneratingFeedback(true);
+    
+    try {
+      // Create age-appropriate prompt for paragraph feedback
+      const prompt = `You are a friendly writing coach for children aged 8-11 preparing for NSW selective writing tests. 
+
+Please provide encouraging, constructive feedback for this paragraph from a ${textType} text:
+
+"${paragraph.content}"
+
+Guidelines:
+- Be positive and encouraging
+- Use simple, child-friendly language
+- Focus on one main point per feedback
+- Suggest specific improvements
+- Keep feedback to 1-2 sentences
+- Choose ONE of these feedback types: praise (for something done well), suggestion (for improvement), or improvement (for specific techniques)
+
+Respond with a JSON object containing:
+{
+  "feedback": "Your encouraging feedback message",
+  "type": "praise" | "suggestion" | "improvement"
+}`;
+
+      const response = await onGetFeedback(prompt, textType);
+      
+      // Parse AI response
+      let feedbackData;
+      try {
+        // Try to extract JSON from response
+        const jsonMatch = response.match(/\{[^}]*\}/);
+        if (jsonMatch) {
+          feedbackData = JSON.parse(jsonMatch[0]);
+        } else {
+          // Fallback to simple text response
+          feedbackData = {
+            feedback: typeof response === 'string' ? response : "Great work on this paragraph! Keep writing!",
+            type: 'praise'
+          };
+        }
+      } catch (parseError) {
+        feedbackData = {
+          feedback: "Nice paragraph! You're doing great with your writing. Keep it up!",
+          type: 'praise'
+        };
+      }
+
+      // Create feedback message
+      const feedbackMessage: FeedbackMessage = {
+        id: `feedback-${Date.now()}-${Math.random()}`,
+        paragraph: paragraph.content,
+        feedback: feedbackData.feedback,
+        timestamp: new Date(),
+        type: feedbackData.type || 'praise',
+        paragraphNumber: paragraph.paragraphNumber
+      };
+
+      setFeedbackMessages(prev => [...prev, feedbackMessage]);
+      
+    } catch (error) {
+      console.error('Error generating paragraph feedback:', error);
+      
+      // Provide fallback encouraging message
+      const fallbackMessage: FeedbackMessage = {
+        id: `feedback-${Date.now()}-${Math.random()}`,
+        paragraph: paragraph.content,
+        feedback: "Great job writing this paragraph! You're making excellent progress. Keep up the wonderful work!",
+        timestamp: new Date(),
+        type: 'praise',
+        paragraphNumber: paragraph.paragraphNumber
+      };
+      
+      setFeedbackMessages(prev => [...prev, fallbackMessage]);
+    } finally {
+      setIsGeneratingFeedback(false);
+    }
+  }, [onGetFeedback, textType, enableRealTimeFeedback]);
+
+  // Handle content changes and detect new paragraphs
+  const handleContentChange = useCallback((newContent: string) => {
+    onChange(newContent);
+
+    // Only process if real-time feedback is enabled
+    if (!enableRealTimeFeedback) {
+      setPreviousContent(newContent);
       return;
     }
 
-    setStatus("loading");
-    setErr(undefined);
-    
-    try {
-      console.log("Starting evaluation...");
-      const res = await evaluateEssay({ essayText: content, textType });
-      console.log("Evaluation response:", res);
-      
-      // Accept any response that has the basic structure
-      if (res && typeof res === 'object' && res.overallScore !== undefined) {
-        setAnalysis(res);
-        setStatus("success");
-        console.log("Analysis successful!");
-      } else {
-        throw new Error("Invalid response format");
-      }
-    } catch (e: any) {
-      console.error("Evaluation failed:", e);
-      setStatus("error");
-      setErr(e?.message || "Failed to analyze essay. Please try again.");
+    // Clear existing debounce timeout
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
     }
-  }, [content, textType]);
 
-  const onApplyFix = useCallback((fix: LintFix) => {
-    const before = content.slice(0, fix.start);
-    const after = content.slice(fix.end);
-    const newContent = before + fix.replacement + after;
-    onEditorChange(newContent);
-  }, [content, onEditorChange]);
-
-  // -------- Button handlers --------
-  const handlePlanningPhase = () => {
-    console.log("Planning Phase clicked");
-    props.onPlanningPhase?.();
-  };
-
-  const handleStartExamMode = () => {
-    console.log("Start Exam Mode clicked");
-    setExamMode(!examMode);
-    props.onStartExamMode?.();
-  };
-
-  const handleStructureGuide = () => {
-    console.log("Structure Guide clicked");
-    props.onStructureGuide?.();
-  };
-
-  const handleTips = () => {
-    console.log("Tips clicked");
-    props.onTips?.();
-  };
-
-  const handleFocus = () => {
-    console.log("Focus clicked");
-    setFocusMode(!focusMode);
-    props.onFocus?.();
-  };
-
-  const handleToggleHighlights = () => {
-    setShowHighlights(!showHighlights);
-  };
-
-  const handleEvaluate = () => {
-    onSubmitForEvaluation();
-  };
-
-  const handleShowPlanning = () => {
-    handlePlanningPhase();
-  };
-
-  const handleRestore = () => {
-    // Add restore logic here
-    console.log("Restore clicked");
-  };
-
-  // -------- Word count --------
-  const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
-
-  // -------- Autosave effect --------
-  useEffect(() => {
-    const t = setInterval(async () => {
-      if (!content.trim()) return;
-      try {
-        setIsSaving(true);
-        localStorage.setItem(draftId.current, JSON.stringify({ text: content, version }));
-        try {
-          await saveDraft(draftId.current, content, version);
-          setVersion(v => v + 1);
-          setLastSaved(new Date());
-        } catch {
-          // Server save failed, but localStorage succeeded
-        } finally {
-          setIsSaving(false);
-        }
-      } catch {
-        setIsSaving(false);
+    // Debounce paragraph detection to avoid excessive API calls
+    debounceTimeoutRef.current = setTimeout(() => {
+      if (isContentSuitableForFeedback(newContent)) {
+        const newParagraphs = detectNewParagraphs(previousContent, newContent);
+        
+        newParagraphs.forEach(paragraph => {
+          // Trigger callback if provided
+          if (onNewParagraphForFeedback) {
+            onNewParagraphForFeedback(paragraph);
+          }
+          
+          // Generate feedback for the paragraph
+          generateParagraphFeedback(paragraph);
+        });
       }
-    }, 1500);
-    return () => clearInterval(t);
-  }, [content, version]);
+      
+      setPreviousContent(newContent);
+    }, 2000); // 2 second debounce to allow user to finish typing
+
+  }, [onChange, previousContent, enableRealTimeFeedback, onNewParagraphForFeedback, generateParagraphFeedback]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Calculate writing area width based on sidebar state
+  const writingAreaStyle = {
+    width: focusMode ? '100%' : sidebarCollapsed ? 'calc(100% - 60px)' : `calc(100% - ${sidebarWidth}px)`,
+    transition: 'width 0.3s ease-in-out'
+  };
+
+  const sidebarStyle = {
+    width: focusMode ? '0px' : sidebarCollapsed ? '60px' : `${sidebarWidth}px`,
+    transition: 'width 0.3s ease-in-out'
+  };
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Main Content Area */}
-      <div className="flex-1 grid grid-cols-12 gap-4 p-4 overflow-hidden">
-        {/* LEFT: header + editor */}
-        <div className="col-span-8 flex flex-col">
-          {/* --- YOUR WRITING PROMPT (visible, matches generated) --- */}
-          <div className="mb-3">
-            <div className="rounded-xl border bg-white">
-              <div className="px-4 py-3 border-b flex items-center justify-between">
-                <div className="font-semibold">Your Writing Prompt</div>
-                <div className="text-xs opacity-70">Text Type:&nbsp;
-                  <select
-                    className="rounded-md border px-2 py-1"
-                    value={textType}
-                    onChange={(e) => {
-                      const v = e.target.value as TextType;
-                      setTextType(v);
-                      props.onTextTypeChange?.(v);
-                      setDisplayPrompt(fallbackPrompt(v));
-                    }}
-                  >
-                    <option value="narrative">Narrative</option>
-                    <option value="persuasive">Persuasive</option>
-                    <option value="informative">Informative</option>
-                  </select>
-                </div>
-              </div>
-              <div className="p-4 text-sm leading-relaxed whitespace-pre-wrap">
-                {displayPrompt || "Loading prompt…"}
-              </div>
+    <div className="flex h-full relative">
+      {/* Main Writing Area */}
+      <div className="flex flex-col" style={writingAreaStyle}>
+        {/* Writing Controls Bar */}
+        <div className="flex items-center justify-between p-3 bg-gray-50 border-b border-gray-200 rounded-tl-lg">
+          <div className="flex items-center space-x-4">
+            <h3 className="text-sm font-medium text-gray-700">Writing Assistant</h3>
+            <div className="flex items-center space-x-3">
+              {/* Grammar Check Toggle */}
+              <label className="flex items-center space-x-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={enableGrammarCheck}
+                  onChange={(e) => setEnableGrammarCheck(e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <span className="text-gray-600">Grammar Check</span>
+              </label>
+
+              {/* Vocabulary Enhancement Toggle */}
+              <label className="flex items-center space-x-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={enableVocabularyEnhancement}
+                  onChange={(e) => setEnableVocabularyEnhancement(e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <Lightbulb className="h-4 w-4 text-blue-600" />
+                <span className="text-gray-600">Vocabulary Help</span>
+              </label>
+
+              {/* Real-time Highlighting Toggle */}
+              <label className="flex items-center space-x-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={enableRealTimeHighlighting}
+                  onChange={(e) => setEnableRealTimeHighlighting(e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                {enableRealTimeHighlighting ? (
+                  <Eye className="h-4 w-4 text-blue-600" />
+                ) : (
+                  <EyeOff className="h-4 w-4 text-gray-400" />
+                )}
+                <span className="text-gray-600">Live Feedback</span>
+              </label>
+
+              {/* Real-time Chat Feedback Toggle */}
+              <label className="flex items-center space-x-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={enableRealTimeFeedback}
+                  onChange={(e) => setEnableRealTimeFeedback(e.target.checked)}
+                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-gray-600">Chat Feedback</span>
+              </label>
             </div>
           </div>
 
-          {/* Writing Mode Buttons - MOVED HERE between prompt and editor */}
-          <div className="flex flex-wrap gap-3 p-4 bg-white border border-gray-200 rounded-lg mb-3">
-            {/* Planning Phase Button */}
+          {/* Control Buttons */}
+          <div className="flex items-center space-x-2">
+            {/* Focus Mode Toggle */}
             <button
-              onClick={handlePlanningPhase}
-              disabled={status === "loading"}
-              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
-              title="Planning Phase - Organize your ideas before writing"
+              onClick={() => setFocusMode(!focusMode)}
+              className="p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-lg hover:bg-gray-100"
+              title={focusMode ? "Exit Focus Mode" : "Enter Focus Mode"}
             >
-              <PenTool className="h-4 w-4 mr-2" />
-              Planning Phase
+              {focusMode ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
             </button>
 
-            {/* Start Exam Mode Button */}
+            {/* Settings Button */}
             <button
-              onClick={handleStartExamMode}
-              disabled={status === "loading"}
-              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg bg-green-500 text-white hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
-              title="Start Exam Mode - Practice under timed conditions"
+              onClick={() => setShowSettings(!showSettings)}
+              className="p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-lg hover:bg-gray-100"
+              title="Writing Settings"
             >
-              <Play className="h-4 w-4 mr-2" />
-              Start Exam Mode
-            </button>
-
-            {/* Structure Guide Button */}
-            <button
-              onClick={handleStructureGuide}
-              disabled={status === "loading"}
-              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg bg-purple-500 text-white hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
-              title="Structure Guide - Learn how to organize your writing"
-            >
-              <BookOpen className="h-4 w-4 mr-2" />
-              Structure Guide
-            </button>
-
-            {/* Tips Button */}
-            <button
-              onClick={handleTips}
-              disabled={status === "loading"}
-              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg bg-yellow-500 text-white hover:bg-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
-              title="Tips - Get helpful writing advice"
-            >
-              <Lightbulb className="h-4 w-4 mr-2" />
-              Tips
-            </button>
-
-            {/* Focus Button */}
-            <button
-              onClick={handleFocus}
-              disabled={status === "loading"}
-              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg bg-gray-600 text-white hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
-              title="Focus Mode - Minimize distractions while writing"
-            >
-              <Target className="h-4 w-4 mr-2" />
-              Focus
+              <Settings className="h-4 w-4" />
             </button>
           </div>
-
-          {/* --- Editor --- */}
-          <div className="flex-1 rounded-xl border bg-white">
-            <div className="p-3 h-full">
-              <textarea
-                className="w-full h-full p-3 rounded-lg border resize-none"
-                placeholder="Start writing your amazing story here! Let your creativity flow and bring your ideas to life…"
-                value={content}
-                onChange={(e) => onEditorChange(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* SIMPLIFIED: Submit for Evaluation Button */}
-          <div className="mt-3 flex items-center gap-2">
-            <button
-              type="button"
-              className="px-4 py-2 rounded-xl bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              onClick={onSubmitForEvaluation}
-              disabled={status === "loading"}
-              aria-label="Submit for Evaluation Report"
-            >
-              {status === "loading" ? "Analyzing…" : "Submit for Evaluation Report"}
-            </button>
-            {status === "error" && <span className="text-red-600 text-sm">{err}</span>}
-            {status === "success" && <span className="text-green-600 text-sm">Analysis complete!</span>}
-          </div>
-
-          {/* Optional helper text */}
-          {analysis && status === "success" && (
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-              <h3 className="text-lg font-semibold text-blue-900 mb-2">Analysis complete</h3>
-              <p className="text-sm text-blue-800">
-                Open the <strong>Analysis</strong> tab on the right to see rubric scores and apply suggested fixes.
-              </p>
-            </div>
-          )}
         </div>
 
-        {/* RIGHT: Tabs (Coach / Analysis / Vocab / Progress) */}
-        <div className="col-span-4">
-          <TabbedCoachPanel analysis={analysis} onApplyFix={onApplyFix} />
+        {/* Advanced Settings Panel (collapsible) */}
+        {showSettings && (
+          <div className="p-4 bg-blue-50 border-b border-blue-200">
+            <h4 className="text-sm font-medium text-blue-800 mb-3">Advanced Writing Settings</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div>
+                <label className="block text-blue-700 font-medium mb-1">Text Type</label>
+                <p className="text-blue-600 capitalize">{textType || 'narrative'}</p>
+              </div>
+              <div>
+                <label className="block text-blue-700 font-medium mb-1">Features Active</label>
+                <div className="space-y-1">
+                  {enableGrammarCheck && <div className="text-green-600">✓ Grammar Check</div>}
+                  {enableVocabularyEnhancement && <div className="text-blue-600">✓ Vocabulary Help</div>}
+                  {enableRealTimeHighlighting && <div className="text-purple-600">✓ Live Feedback</div>}
+                  {enableRealTimeFeedback && <div className="text-orange-600">✓ Chat Feedback</div>}
+                </div>
+              </div>
+              <div>
+                <label className="block text-blue-700 font-medium mb-1">Tips</label>
+                <p className="text-blue-600 text-xs">
+                  Use Focus Mode for distraction-free writing. Drag the sidebar edge to resize.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Interactive Text Editor */}
+        <div className="flex-1">
+          <InteractiveTextEditor
+            content={content}
+            onChange={handleContentChange}
+            placeholder={placeholder}
+            className={className}
+            textType={textType}
+            onGetFeedback={onGetFeedback}
+            enableRealTimeHighlighting={enableRealTimeHighlighting}
+            enableGrammarCheck={enableGrammarCheck}
+            enableVocabularyEnhancement={enableVocabularyEnhancement}
+          />
         </div>
       </div>
 
-      {/* Writing Status Bar */}
-      <WritingStatusBar
-        wordCount={wordCount}
-        lastSaved={lastSaved}
-        isSaving={isSaving}
-        showHighlights={showHighlights}
-        onToggleHighlights={handleToggleHighlights}
-        onEvaluate={handleEvaluate}
-        onShowPlanning={handleShowPlanning}
-        content={content}
-        textType={textType}
-        onRestore={handleRestore}
-        examMode={examMode}
-        examDurationMinutes={30}
-        targetWordCountMin={100}
-        targetWordCountMax={500}
-      />
+      {/* Resizable Feedback Chat Sidebar */}
+      {!focusMode && (
+        <>
+          {/* Resize Handle */}
+          {!sidebarCollapsed && (
+            <div
+              ref={resizeRef}
+              className="w-1 bg-gray-200 hover:bg-blue-400 cursor-col-resize transition-colors relative group"
+              onMouseDown={handleMouseDown}
+            >
+              <div className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-blue-400 group-hover:opacity-20"></div>
+            </div>
+          )}
+
+          {/* Sidebar */}
+          <div 
+            ref={sidebarRef}
+            className="border-l border-gray-200 bg-white flex flex-col overflow-hidden"
+            style={sidebarStyle}
+          >
+            {/* Sidebar Header with Collapse Button */}
+            <div className="flex items-center justify-between p-3 bg-purple-50 border-b border-gray-200">
+              {!sidebarCollapsed && (
+                <h3 className="text-sm font-medium text-purple-700">Writing Buddy</h3>
+              )}
+              <button
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                className="p-1 text-purple-400 hover:text-purple-600 transition-colors rounded"
+                title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+              >
+                {sidebarCollapsed ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+              </button>
+            </div>
+
+            {/* Feedback Chat Content */}
+            {!sidebarCollapsed && enableRealTimeFeedback && (
+              <div className="flex-1 overflow-hidden">
+                <FeedbackChat 
+                  feedbackMessages={feedbackMessages}
+                  isLoading={isGeneratingFeedback}
+                  className="h-full"
+                />
+              </div>
+            )}
+
+            {/* Collapsed State Indicator */}
+            {sidebarCollapsed && (
+              <div className="flex-1 flex flex-col items-center justify-center p-2 space-y-2">
+                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                  <span className="text-purple-600 text-xs font-bold">{feedbackMessages.length}</span>
+                </div>
+                <div className="text-xs text-purple-600 text-center leading-tight">
+                  Feedback
+                </div>
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }
-
-export default WritingAreaImpl;
-export const WritingArea = WritingAreaImpl;
