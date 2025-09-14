@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Settings, Eye, EyeOff, CheckCircle, Lightbulb } from 'lucide-react';
+import { Settings, Eye, EyeOff, CheckCircle, Lightbulb, ChevronLeft, ChevronRight, Maximize2, Minimize2 } from 'lucide-react';
 import { InteractiveTextEditor } from './InteractiveTextEditor';
 import { FeedbackChat } from './FeedbackChat.tsx';
 import { detectNewParagraphs, isContentSuitableForFeedback, DetectedParagraph } from '../utils/paragraphDetection';
@@ -41,6 +41,12 @@ export function EnhancedWritingAreaWithFeedback({
   const [enableVocabularyEnhancement, setEnableVocabularyEnhancement] = useState(true);
   const [enableRealTimeFeedback, setEnableRealTimeFeedback] = useState(true);
   
+  // New state for sidebar control
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarWidth, setSidebarWidth] = useState(320);
+  const [isResizing, setIsResizing] = useState(false);
+  const [focusMode, setFocusMode] = useState(false);
+  
   // State for feedback system
   const [feedbackMessages, setFeedbackMessages] = useState<FeedbackMessage[]>([]);
   const [isGeneratingFeedback, setIsGeneratingFeedback] = useState(false);
@@ -49,6 +55,40 @@ export function EnhancedWritingAreaWithFeedback({
   // Refs for tracking
   const debounceTimeoutRef = useRef<NodeJS.Timeout>();
   const paragraphCounterRef = useRef(0);
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  const resizeRef = useRef<HTMLDivElement>(null);
+
+  // Handle sidebar resizing
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    setIsResizing(true);
+    e.preventDefault();
+  }, []);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isResizing) return;
+    
+    const containerWidth = window.innerWidth;
+    const newWidth = containerWidth - e.clientX;
+    
+    // Constrain sidebar width between 250px and 500px
+    const constrainedWidth = Math.max(250, Math.min(500, newWidth));
+    setSidebarWidth(constrainedWidth);
+  }, [isResizing]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsResizing(false);
+  }, []);
+
+  useEffect(() => {
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isResizing, handleMouseMove, handleMouseUp]);
 
   // Generate AI feedback for a paragraph
   const generateParagraphFeedback = useCallback(async (paragraph: DetectedParagraph) => {
@@ -84,7 +124,7 @@ Respond with a JSON object containing:
       let feedbackData;
       try {
         // Try to extract JSON from response
-        const jsonMatch = response.match(/\\{[^}]*\\}/);
+        const jsonMatch = response.match(/\{[^}]*\}/);
         if (jsonMatch) {
           feedbackData = JSON.parse(jsonMatch[0]);
         } else {
@@ -177,10 +217,21 @@ Respond with a JSON object containing:
     };
   }, []);
 
+  // Calculate writing area width based on sidebar state
+  const writingAreaStyle = {
+    width: focusMode ? '100%' : sidebarCollapsed ? 'calc(100% - 60px)' : `calc(100% - ${sidebarWidth}px)`,
+    transition: 'width 0.3s ease-in-out'
+  };
+
+  const sidebarStyle = {
+    width: focusMode ? '0px' : sidebarCollapsed ? '60px' : `${sidebarWidth}px`,
+    transition: 'width 0.3s ease-in-out'
+  };
+
   return (
-    <div className="flex h-full">
+    <div className="flex h-full relative">
       {/* Main Writing Area */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex flex-col" style={writingAreaStyle}>
         {/* Writing Controls Bar */}
         <div className="flex items-center justify-between p-3 bg-gray-50 border-b border-gray-200 rounded-tl-lg">
           <div className="flex items-center space-x-4">
@@ -239,14 +290,26 @@ Respond with a JSON object containing:
             </div>
           </div>
 
-          {/* Settings Button */}
-          <button
-            onClick={() => setShowSettings(!showSettings)}
-            className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-            title="Writing Settings"
-          >
-            <Settings className="h-4 w-4" />
-          </button>
+          {/* Control Buttons */}
+          <div className="flex items-center space-x-2">
+            {/* Focus Mode Toggle */}
+            <button
+              onClick={() => setFocusMode(!focusMode)}
+              className="p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-lg hover:bg-gray-100"
+              title={focusMode ? "Exit Focus Mode" : "Enter Focus Mode"}
+            >
+              {focusMode ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+            </button>
+
+            {/* Settings Button */}
+            <button
+              onClick={() => setShowSettings(!showSettings)}
+              className="p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-lg hover:bg-gray-100"
+              title="Writing Settings"
+            >
+              <Settings className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
         {/* Advanced Settings Panel (collapsible) */}
@@ -270,7 +333,7 @@ Respond with a JSON object containing:
               <div>
                 <label className="block text-blue-700 font-medium mb-1">Tips</label>
                 <p className="text-blue-600 text-xs">
-                  Write complete paragraphs to get helpful feedback from your Writing Buddy!
+                  Use Focus Mode for distraction-free writing. Drag the sidebar edge to resize.
                 </p>
               </div>
             </div>
@@ -293,17 +356,65 @@ Respond with a JSON object containing:
         </div>
       </div>
 
-      {/* Feedback Chat Sidebar */}
-      {enableRealTimeFeedback && (
-        <div className="w-80 border-l border-gray-200 bg-white">
-          <FeedbackChat 
-            feedbackMessages={feedbackMessages}
-            isLoading={isGeneratingFeedback}
-            className="h-full"
-          />
-        </div>
+      {/* Resizable Feedback Chat Sidebar */}
+      {!focusMode && (
+        <>
+          {/* Resize Handle */}
+          {!sidebarCollapsed && (
+            <div
+              ref={resizeRef}
+              className="w-1 bg-gray-200 hover:bg-blue-400 cursor-col-resize transition-colors relative group"
+              onMouseDown={handleMouseDown}
+            >
+              <div className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-blue-400 group-hover:opacity-20"></div>
+            </div>
+          )}
+
+          {/* Sidebar */}
+          <div 
+            ref={sidebarRef}
+            className="border-l border-gray-200 bg-white flex flex-col overflow-hidden"
+            style={sidebarStyle}
+          >
+            {/* Sidebar Header with Collapse Button */}
+            <div className="flex items-center justify-between p-3 bg-purple-50 border-b border-gray-200">
+              {!sidebarCollapsed && (
+                <h3 className="text-sm font-medium text-purple-700">Writing Buddy</h3>
+              )}
+              <button
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                className="p-1 text-purple-400 hover:text-purple-600 transition-colors rounded"
+                title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+              >
+                {sidebarCollapsed ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+              </button>
+            </div>
+
+            {/* Feedback Chat Content */}
+            {!sidebarCollapsed && enableRealTimeFeedback && (
+              <div className="flex-1 overflow-hidden">
+                <FeedbackChat 
+                  feedbackMessages={feedbackMessages}
+                  isLoading={isGeneratingFeedback}
+                  className="h-full"
+                />
+              </div>
+            )}
+
+            {/* Collapsed State Indicator */}
+            {sidebarCollapsed && (
+              <div className="flex-1 flex flex-col items-center justify-center p-2 space-y-2">
+                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                  <span className="text-purple-600 text-xs font-bold">{feedbackMessages.length}</span>
+                </div>
+                <div className="text-xs text-purple-600 text-center leading-tight">
+                  Feedback
+                </div>
+              </div>
+            )}
+          </div>
+        </>
       )}
     </div>
   );
 }
-
