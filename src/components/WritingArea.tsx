@@ -331,20 +331,13 @@ function WritingAreaImpl(props: Props) {
             </div>
           </div>
 
-          {/* SIMPLIFIED: Submit for Evaluation Button */}
-          <div className="mt-3 flex items-center gap-2">
-            <button
-              type="button"
-              className="px-4 py-2 rounded-xl bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              onClick={onSubmitForEvaluation}
-              disabled={status === "loading"}
-              aria-label="Submit for Evaluation Report"
-            >
-              {status === "loading" ? "Analyzing…" : "Submit for Evaluation Report"}
-            </button>
-            {status === "error" && <span className="text-red-600 text-sm">{err}</span>}
-            {status === "success" && <span className="text-green-600 text-sm">Analysis complete!</span>}
-          </div>
+          {/* Error/Success messages - moved Submit button to status bar */}
+          {status === "error" && (
+            <div className="mt-3 text-red-600 text-sm">{err}</div>
+          )}
+          {status === "success" && (
+            <div className="mt-3 text-green-600 text-sm">Analysis complete!</div>
+          )}
 
           {/* Optional helper text */}
           {analysis && status === "success" && (
@@ -363,7 +356,7 @@ function WritingAreaImpl(props: Props) {
         </div>
       </div>
 
-      {/* Writing Status Bar */}
+      {/* Writing Status Bar - now includes Submit for Evaluation button */}
       <WritingStatusBar
         wordCount={wordCount}
         lastSaved={lastSaved}
@@ -379,6 +372,8 @@ function WritingAreaImpl(props: Props) {
         examDurationMinutes={30}
         targetWordCountMin={100}
         targetWordCountMax={500}
+        onSubmitForEvaluation={onSubmitForEvaluation}
+        evaluationStatus={status}
       />
     </div>
   );
