@@ -90,19 +90,7 @@ export default function WritingWorkspace() {
         <div className="flex flex-wrap items-center gap-4 mb-4">
           <h1 className="text-2xl font-bold text-gray-800">NSW Writing Buddy</h1>
           
-          {/* Text Type Selector */}
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700">Text Type:</label>
-            <select 
-              value={textType} 
-              onChange={(e) => setTextType(e.target.value as any)}
-              className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-            >
-              <option value="narrative">Narrative</option>
-              <option value="persuasive">Persuasive</option>
-              <option value="informative">Informative</option>
-            </select>
-          </div>
+
 
           {/* Target Word Count */}
           <div className="flex items-center gap-2">
