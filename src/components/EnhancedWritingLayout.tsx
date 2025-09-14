@@ -1,42 +1,45 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { WritingArea } from './WritingArea';
+import WritingArea from './WritingArea';
 import { PlanningToolModal } from './PlanningToolModal';
-import { StructureGuideModal } from './StructureGuideModal';
-import { TipsModal } from './TipsModal';
-import './enhanced-writing-layout.css';
+import { StructureGuideModal } from './StructureGuideModal'; // Import StructureGuideModal
+import { TipsModal } from './TipsModal'; // Import TipsModal
+import {
+  PenTool,
+  ToggleRight
+} from 'lucide-react';
 
 interface EnhancedWritingLayoutProps {
   content: string;
-  onChange: (content: string) => void;
+  setContent: (content: string) => void;
   textType: string;
-  assistanceLevel: string;
+  setTextType: (textType: string) => void;
+  popupFlowCompleted: boolean;
+  setPopupFlowCompleted: (completed: boolean) => void;
   selectedText: string;
-  onTimerStart: () => void;
-  onSubmit: () => void;
-  onTextTypeChange: (textType: string) => void;
-  onPopupCompleted: () => void;
-  onNavigate: (page: string) => void;
+  setSelectedText: (text: string) => void;
+  openAIConnected: boolean;
+  openAILoading: boolean;
 }
 
 export function EnhancedWritingLayout({
   content,
-  onChange,
+  setContent,
   textType,
-  assistanceLevel,
+  setTextType,
+  popupFlowCompleted,
+  setPopupFlowCompleted,
   selectedText,
-  onTimerStart,
-  onSubmit,
-  onTextTypeChange,
-  onPopupCompleted,
-  onNavigate
+  setSelectedText,
+  openAIConnected,
+  openAILoading
 }: EnhancedWritingLayoutProps) {
   const [showPlanningTool, setShowPlanningTool] = useState(false);
-  const [showStructureGuide, setShowStructureGuide] = useState(false);
-  const [showTips, setShowTips] = useState(false);
+  const [showStructureGuide, setShowStructureGuide] = useState(false); // State for Structure Guide
+  const [showTips, setShowTips] = useState(false); // State for Tips
   const [plan, setPlan] = useState('');
   const [generatedPrompt, setGeneratedPrompt] = useState('');
 
-  // Retrieve prompt from localStorage on component mount
+  // FIXED: Retrieve prompt from localStorage on component mount
   useEffect(() => {
     const retrievePromptFromStorage = () => {
       console.log("🔍 EnhancedWritingLayout: Retrieving prompt from localStorage");
@@ -63,59 +66,52 @@ export function EnhancedWritingLayout({
     retrievePromptFromStorage();
   }, []);
 
-  const handleTogglePlanning = useCallback(() => {
+  const handleTogglePlanning = () => {
     setShowPlanningTool(!showPlanningTool);
-  }, [showPlanningTool]);
+  };
 
-  const handleShowStructureGuide = useCallback(() => {
+  const handleShowStructureGuide = () => {
     setShowStructureGuide(true);
-  }, []);
+  };
 
-  const handleShowTips = useCallback(() => {
+  const handleShowTips = () => {
     setShowTips(true);
-  }, []);
+  };
 
-  const handleStartExamMode = useCallback(() => {
-    console.log("Starting exam mode...");
-    onNavigate('exam');
-  }, [onNavigate]);
-
-  const handleFocus = useCallback(() => {
-    console.log("Focus mode toggled");
-    // Focus mode is handled internally by WritingArea
-  }, []);
-
-  const handlePromptGenerated = useCallback((prompt: string) => {
+  const handlePromptGenerated = (prompt: string) => {
     console.log("📝 EnhancedWritingLayout: Prompt generated:", prompt);
     setGeneratedPrompt(prompt);
-  }, []);
+  };
 
-  const handleContentChange = useCallback((newContent: string) => {
-    console.log("📝 EnhancedWritingLayout: Content changed, length:", newContent.length);
-    onChange(newContent);
-  }, [onChange]);
+  const handleContentChange = (newContent: string) => {
+    console.log("📝 EnhancedWritingLayout: Content changed to:", newContent);
+    console.log("📝 EnhancedWritingLayout: Content length:", newContent.length);
+    setContent(newContent);
+  };
 
-  const handleTextTypeChange = useCallback((newTextType: string) => {
+  const handleTextTypeChange = (newTextType: string) => {
     console.log("📋 EnhancedWritingLayout: Text type changed to:", newTextType);
-    onTextTypeChange(newTextType);
-  }, [onTextTypeChange]);
+    setTextType(newTextType);
+  };
 
-  const handlePopupCompleted = useCallback(() => {
+  const handlePopupCompleted = () => {
     console.log("✅ EnhancedWritingLayout: Popup flow completed");
-    onPopupCompleted();
-  }, [onPopupCompleted]);
+    setPopupFlowCompleted(true);
+  };
 
   // Debug logging for prop values
   useEffect(() => {
     console.log("🔍 EnhancedWritingLayout: Props debug:");
+    console.log("  - content:", content);
     console.log("  - content length:", content?.length || 0);
     console.log("  - textType:", textType);
-    console.log("  - assistanceLevel:", assistanceLevel);
-  }, [content, textType, assistanceLevel]);
+    console.log("  - openAIConnected:", openAIConnected);
+    console.log("  - openAILoading:", openAILoading);
+  }, [content, textType, openAIConnected, openAILoading]);
 
   return (
-    <div className="enhanced-writing-layout h-full overflow-hidden">
-      {/* Main Writing Area - Full height with enhanced features */}
+    <div className="enhanced-writing-layout h-full bg-gray-50 overflow-hidden">
+      {/* Main Writing Area - Full height */}
       <div className="h-full">
         <WritingArea
           content={content}
@@ -125,13 +121,32 @@ export function EnhancedWritingLayout({
           onPopupCompleted={handlePopupCompleted}
           onPromptGenerated={handlePromptGenerated}
           prompt={generatedPrompt}
-          onPlanningPhase={handleTogglePlanning}
-          onStartExamMode={handleStartExamMode}
-          onStructureGuide={handleShowStructureGuide}
-          onTips={handleShowTips}
-          onFocus={handleFocus}
+          onPlanningPhase={handleTogglePlanning} // Pass handler for Planning Phase
+          onStartExamMode={() => console.log("Exam Mode from Layout")} // Placeholder for now
+          onStructureGuide={handleShowStructureGuide} // Pass handler for Structure Guide
+          onTips={handleShowTips} // Pass handler for Tips
+          onFocus={() => console.log("Focus from Layout")} // Placeholder for now
         />
       </div>
+
+      {/* Plan Summary (if saved) */}
+      {plan && (
+        <div className="plan-summary bg-gradient-to-r from-indigo-50 to-purple-50 border-t border-indigo-200 p-3 flex-shrink-0">
+          <div className="flex items-start space-x-2">
+            <PenTool className="w-4 h-4 text-indigo-600 mt-0.5 flex-shrink-0" />
+            <div className="flex-1 min-w-0">
+              <h4 className="text-sm font-medium text-indigo-800 mb-1">Your Writing Plan</h4>
+              <p className="text-xs text-indigo-700 line-clamp-2">{plan}</p>
+            </div>
+            <button
+              onClick={handleTogglePlanning}
+              className="text-indigo-600 hover:text-indigo-800 transition-colors"
+            >
+              <ToggleRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Planning Tool Modal */}
       <PlanningToolModal
@@ -159,3 +174,4 @@ export function EnhancedWritingLayout({
     </div>
   );
 }
+
