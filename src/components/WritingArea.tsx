@@ -318,14 +318,15 @@ function WritingAreaImpl(props: Props) {
           </div>
 
           <div className="mt-3 flex items-center gap-2">
-            <button
-              type="button"
-              className="px-4 py-2 rounded-xl bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              onClickCapture={(e) => { e.stopPropagation(); onSubmitForEvaluation(); }}
-              onClick={(e) => e.stopPropagation()}
-              disabled={status === "loading" || !content?.trim()}
-              aria-label="Submit for Evaluation Report"
-            >
+<button
+  type="button"
+  className="px-4 py-2 rounded-xl bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+  onClick={onSubmitForEvaluation}
+  disabled={status === "loading" || !content?.trim()}
+  aria-label="Submit for Evaluation Report"
+>
+  {status === "loading" ? "Analyzing…" : "Submit for Evaluation Report"}
+</button>
               {status === "loading" ? "Analyzing…" : "Submit for Evaluation Report"}
             </button>
             {status === "error" && <span className="text-red-600 text-sm">{err}</span>}
