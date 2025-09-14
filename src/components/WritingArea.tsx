@@ -16,13 +16,18 @@ import { TabbedCoachPanel } from "./TabbedCoachPanel";
 // Import the status bar component (this should exist)
 import { WritingStatusBar } from "./WritingStatusBar";
 
+// Import theme context
+import { useTheme } from "../contexts/ThemeContext";
+
 // Import icons for inline buttons
 import {
   PenTool,
   Play,
   BookOpen,
   Lightbulb,
-  Target
+  Target,
+  Moon,
+  Sun
 } from 'lucide-react';
 
 type TextType = "narrative" | "persuasive" | "informative";
@@ -57,6 +62,9 @@ function fallbackPrompt(textType?: string) {
 }
 
 function WritingAreaImpl(props: Props) {
+  // -------- Theme context --------
+  const { theme, toggleTheme } = useTheme();
+
   // -------- Prompt header (visible) --------
   const [displayPrompt, setDisplayPrompt] = useState<string>("");
 
@@ -179,8 +187,9 @@ function WritingAreaImpl(props: Props) {
   };
 
   const handleFocus = () => {
-    console.log("Focus clicked");
+    console.log("Focus clicked - toggling dark mode");
     setFocusMode(!focusMode);
+    toggleTheme(); // Toggle the theme when Focus is clicked
     props.onFocus?.();
   };
 
@@ -235,12 +244,12 @@ function WritingAreaImpl(props: Props) {
         <div className="col-span-8 flex flex-col">
           {/* --- YOUR WRITING PROMPT (visible, matches generated) --- */}
           <div className="mb-3">
-            <div className="rounded-xl border bg-white">
+            <div className="rounded-xl border bg-white dark:bg-gray-800">
               <div className="px-4 py-3 border-b flex items-center justify-between">
-                <div className="font-semibold">Your Writing Prompt</div>
-                <div className="text-xs opacity-70">Text Type:&nbsp;
+                <div className="font-semibold dark:text-white">Your Writing Prompt</div>
+                <div className="text-xs opacity-70 dark:text-gray-300">Text Type:&nbsp;
                   <select
-                    className="rounded-md border px-2 py-1"
+                    className="rounded-md border px-2 py-1 dark:bg-gray-700 dark:text-white dark:border-gray-600"
                     value={textType}
                     onChange={(e) => {
                       const v = e.target.value as TextType;
@@ -255,22 +264,22 @@ function WritingAreaImpl(props: Props) {
                   </select>
                 </div>
               </div>
-              <div className="p-4 text-sm leading-relaxed whitespace-pre-wrap">
+              <div className="p-4 text-sm leading-relaxed whitespace-pre-wrap dark:text-gray-200">
                 {displayPrompt || "Loading prompt…"}
               </div>
             </div>
           </div>
 
-          {/* Writing Mode Buttons - MOVED HERE between prompt and editor */}
-          <div className="flex flex-wrap gap-3 p-4 bg-white border border-gray-200 rounded-lg mb-3">
+          {/* Writing Mode Buttons - SMALLER SIZE */}
+          <div className="flex flex-wrap gap-2 p-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg mb-3">
             {/* Planning Phase Button */}
             <button
               onClick={handlePlanningPhase}
               disabled={status === "loading"}
-              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
+              className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
               title="Planning Phase - Organize your ideas before writing"
             >
-              <PenTool className="h-4 w-4 mr-2" />
+              <PenTool className="h-3 w-3 mr-1.5" />
               Planning Phase
             </button>
 
@@ -278,10 +287,10 @@ function WritingAreaImpl(props: Props) {
             <button
               onClick={handleStartExamMode}
               disabled={status === "loading"}
-              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg bg-green-500 text-white hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
+              className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md bg-green-500 text-white hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
               title="Start Exam Mode - Practice under timed conditions"
             >
-              <Play className="h-4 w-4 mr-2" />
+              <Play className="h-3 w-3 mr-1.5" />
               Start Exam Mode
             </button>
 
@@ -289,10 +298,10 @@ function WritingAreaImpl(props: Props) {
             <button
               onClick={handleStructureGuide}
               disabled={status === "loading"}
-              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg bg-purple-500 text-white hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
+              className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md bg-purple-500 text-white hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
               title="Structure Guide - Learn how to organize your writing"
             >
-              <BookOpen className="h-4 w-4 mr-2" />
+              <BookOpen className="h-3 w-3 mr-1.5" />
               Structure Guide
             </button>
 
@@ -300,30 +309,38 @@ function WritingAreaImpl(props: Props) {
             <button
               onClick={handleTips}
               disabled={status === "loading"}
-              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg bg-yellow-500 text-white hover:bg-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
+              className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md bg-yellow-500 text-white hover:bg-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
               title="Tips - Get helpful writing advice"
             >
-              <Lightbulb className="h-4 w-4 mr-2" />
+              <Lightbulb className="h-3 w-3 mr-1.5" />
               Tips
             </button>
 
-            {/* Focus Button */}
+            {/* Focus Button - Dark Mode Toggle */}
             <button
               onClick={handleFocus}
               disabled={status === "loading"}
-              className="inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg bg-gray-600 text-white hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm"
-              title="Focus Mode - Minimize distractions while writing"
+              className={`inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm ${
+                theme === 'dark' 
+                  ? 'bg-yellow-500 text-white hover:bg-yellow-600' 
+                  : 'bg-gray-600 text-white hover:bg-gray-700'
+              }`}
+              title={`${theme === 'dark' ? 'Light Mode' : 'Dark Mode'} - Toggle theme`}
             >
-              <Target className="h-4 w-4 mr-2" />
+              {theme === 'dark' ? (
+                <Sun className="h-3 w-3 mr-1.5" />
+              ) : (
+                <Moon className="h-3 w-3 mr-1.5" />
+              )}
               Focus
             </button>
           </div>
 
           {/* --- Editor --- */}
-          <div className="flex-1 rounded-xl border bg-white">
+          <div className="flex-1 rounded-xl border bg-white dark:bg-gray-800 dark:border-gray-700">
             <div className="p-3 h-full">
               <textarea
-                className="w-full h-full p-3 rounded-lg border resize-none"
+                className="w-full h-full p-3 rounded-lg border resize-none dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:placeholder-gray-400"
                 placeholder="Start writing your amazing story here! Let your creativity flow and bring your ideas to life…"
                 value={content}
                 onChange={(e) => onEditorChange(e.target.value)}
@@ -341,9 +358,9 @@ function WritingAreaImpl(props: Props) {
 
           {/* Optional helper text */}
           {analysis && status === "success" && (
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-              <h3 className="text-lg font-semibold text-blue-900 mb-2">Analysis complete</h3>
-              <p className="text-sm text-blue-800">
+            <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-2">Analysis complete</h3>
+              <p className="text-sm text-blue-800 dark:text-blue-200">
                 Open the <strong>Analysis</strong> tab on the right to see rubric scores and apply suggested fixes.
               </p>
             </div>
