@@ -43,8 +43,10 @@ function fallbackPrompt(textType?: string) {
     const stored = localStorage.getItem("generatedPrompt");
     if (stored) return stored;
     const type = (textType || localStorage.getItem("selectedWritingType") || "narrative").toLowerCase();
-    const byType = localStorage.getItem(`${type}_prompt`);
-    if (byType) return byType;
+    if (type === "narrative") {
+      const byType = localStorage.getItem(`${type}_prompt`);
+      if (byType) return byType;
+    }
   } catch { /* ignore */ }
   return defaultPrompt;
 }
@@ -437,26 +439,20 @@ function WritingAreaImpl(props: Props) {
         </>
       )}
 
-      {/* Writing Status Bar */}
+      {/* Writing StatusBar - Always visible at the bottom */}
       <WritingStatusBar
         wordCount={wordCount}
-        lastSaved={lastSaved}
         isSaving={isSaving}
-        showHighlights={showHighlights}
+        lastSaved={lastSaved}
         onToggleHighlights={handleToggleHighlights}
+        showHighlights={showHighlights}
         onEvaluate={handleEvaluate}
         onShowPlanning={handleShowPlanning}
-        content={content}
-        textType={textType}
         onRestore={handleRestore}
-        examMode={examMode}
-        examDurationMinutes={30}
-        targetWordCountMin={100}
-        targetWordCountMax={500}
       />
     </div>
   );
 }
 
-export default WritingAreaImpl;
-export const WritingArea = WritingAreaImpl;
+export const WritingArea = React.memo(WritingAreaImpl);
+
