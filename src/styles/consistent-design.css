@@ -1,158 +1,341 @@
-/* CSS Code to Optimize Writing Space */
+/* CSS Styles for NSW API Enhancement Components */
+/* Add this code to your main CSS file (e.g., project/src/styles/consistent-design.css) */
 
-/* 1. Hide the "Your Writing Prompt" section completely */
-.writing-prompt-section,
-div:has(> div:contains("Your Writing Prompt")),
-div[class*="mb-3"]:has(div[class*="rounded-xl border bg-white"] div:contains("Your Writing Prompt")) {
-  display: none !important;
+.text-type-analysis, .vocabulary-analysis, .progress-tracking, .coaching-tips {
+  margin: 20px 0;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
 }
 
-/* Alternative selector for the prompt section */
-div:has(div:contains("Your Writing Prompt")) {
-  display: none !important;
+.error-message {
+  background-color: #fee;
+  border: 1px solid #fcc;
+  padding: 10px;
+  border-radius: 4px;
+  color: #c00;
+  margin: 10px 0;
 }
 
-/* More specific targeting for the prompt container */
-div.mb-3:has(div.rounded-xl.border.bg-white div.px-4.py-3.border-b:contains("Your Writing Prompt")) {
-  display: none !important;
+.progress-bar {
+  width: 100%;
+  height: 20px;
+  background-color: #e0e0e0;
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 5px 0;
 }
 
-/* 2. Optimize the Writing Status Bar - Move everything to one row */
-.writing-status-bar,
-div[class*="flex flex-wrap justify-between items-center p-4 bg-gradient-to-r"] {
-  display: flex !important;
-  flex-wrap: wrap !important;
-  justify-content: flex-start !important;
-  align-items: center !important;
-  gap: 8px !important;
-  padding: 8px 12px !important;
-  min-height: auto !important;
+.progress-fill {
+  height: 100%;
+  background-color: #4caf50;
+  transition: width 0.3s ease;
 }
 
-/* Ensure all status bar items are in a single row */
-.writing-status-bar > div,
-.writing-status-bar > button,
-div[class*="flex flex-wrap justify-between items-center p-4 bg-gradient-to-r"] > div,
-div[class*="flex flex-wrap justify-between items-center p-4 bg-gradient-to-r"] > button {
-  margin: 0 !important;
-  flex-shrink: 0 !important;
+.action-item, .tip-item, .exercise-item, .strategy-item {
+  margin: 15px 0;
+  padding: 15px;
+  background-color: #fff;
+  border-left: 4px solid #2196f3;
+  border-radius: 4px;
 }
 
-/* Compact the status bar items */
-.writing-status-bar .flex.items-center,
-div[class*="bg-white bg-opacity-70 px-3 py-1.5 rounded-full shadow-sm"] {
-  padding: 4px 8px !important;
-  font-size: 12px !important;
-  white-space: nowrap !important;
-}
-
-/* Make icons smaller in status bar */
-.writing-status-bar svg,
-div[class*="flex flex-wrap justify-between items-center p-4 bg-gradient-to-r"] svg {
-  width: 14px !important;
-  height: 14px !important;
-}
-
-/* 3. Move Submit for Evaluation button to the status bar */
-div:has(button:contains("Submit for Evaluation")) {
-  display: none !important;
-}
-
-/* Add the Submit button to status bar via pseudo-element or ensure it's inline */
-.writing-status-bar::after {
-  content: "Submit for Evaluation";
-  background-color: #16a34a;
-  color: white;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 12px;
+.motivation {
+  font-size: 18px;
   font-weight: bold;
+  color: #2196f3;
+  text-align: center;
+  padding: 15px;
+  background-color: #e3f2fd;
+  border-radius: 8px;
+  margin: 15px 0;
+}
+
+.text-type-analysis button, 
+.vocabulary-analysis button, 
+.progress-tracking button, 
+.coaching-tips button {
+  background-color: #2196f3;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
   cursor: pointer;
-  margin-left: auto;
-  white-space: nowrap;
+  font-size: 16px;
+  margin-bottom: 15px;
 }
 
-/* 4. Optimize the main writing area to use more space */
-.writing-area-container,
-div[class*="col-span-8 flex flex-col"] {
-  height: calc(100vh - 120px) !important;
+.text-type-analysis button:disabled, 
+.vocabulary-analysis button:disabled, 
+.progress-tracking button:disabled, 
+.coaching-tips button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
 }
 
-/* Expand the textarea to use available space */
-textarea[placeholder*="Start writing"] {
-  min-height: calc(100vh - 200px) !important;
-  resize: none !important;
+.text-type-analysis button:hover:not(:disabled), 
+.vocabulary-analysis button:hover:not(:disabled), 
+.progress-tracking button:hover:not(:disabled), 
+.coaching-tips button:hover:not(:disabled) {
+  background-color: #1976d2;
 }
 
-/* 5. Responsive adjustments for mobile */
+.analysis-results, .vocabulary-results, .progress-results, .coaching-results {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #fff;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.adherence-score, .vocabulary-score {
+  font-size: 18px;
+  font-weight: bold;
+  color: #2196f3;
+  margin-bottom: 15px;
+}
+
+.text-type-features, .vocabulary-metrics, .vocabulary-strengths, .vocabulary-improvements {
+  margin: 15px 0;
+}
+
+.present-features, .missing-features {
+  margin: 10px 0;
+}
+
+.present-features h5 {
+  color: #4caf50;
+  margin-bottom: 5px;
+}
+
+.missing-features h5 {
+  color: #f44336;
+  margin-bottom: 5px;
+}
+
+.suggestions ul, .present-features ul, .missing-features ul {
+  list-style-type: disc;
+  margin-left: 20px;
+}
+
+.suggestions li, .present-features li, .missing-features li {
+  margin: 5px 0;
+}
+
+.replacement-suggestion {
+  background-color: #f5f5f5;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 4px;
+  border-left: 3px solid #ff9800;
+}
+
+.readiness-indicator {
+  background-color: #e8f5e8;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.readiness-indicator h4 {
+  color: #2e7d32;
+  margin-bottom: 10px;
+}
+
+.progress-item {
+  margin: 10px 0;
+}
+
+.progress-item label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+.recommendations {
+  margin-top: 20px;
+}
+
+.focus-areas, .practice-activities {
+  margin: 15px 0;
+}
+
+.focus-areas h5, .practice-activities h5 {
+  color: #1976d2;
+  margin-bottom: 10px;
+}
+
+.immediate-actions, .strategic-tips, .practice-exercises, .exam-strategies {
+  margin: 20px 0;
+}
+
+.immediate-actions h4, .strategic-tips h4, .practice-exercises h4, .exam-strategies h4 {
+  color: #1976d2;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 5px;
+  margin-bottom: 15px;
+}
+
+.next-session {
+  background-color: #fff3e0;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 20px;
+  border-left: 4px solid #ff9800;
+}
+
+.next-session h4 {
+  color: #e65100;
+  margin-bottom: 10px;
+}
+
+/* NSW Analysis Tools Section */
+.nsw-analysis-tools {
+  margin-top: 20px;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+.nsw-analysis-tools h3 {
+  margin-bottom: 20px;
+  color: #1976d2;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+/* Tab Interface Styles */
+.nsw-analysis-tabs {
+  margin-top: 20px;
+}
+
+.tab-buttons {
+  display: flex;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tab-buttons button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.tab-buttons button.active {
+  background-color: #2196f3;
+  color: white;
+}
+
+.tab-buttons button:not(.active) {
+  background-color: #f0f0f0;
+  color: black;
+}
+
+.tab-buttons button:hover:not(.active) {
+  background-color: #e0e0e0;
+}
+
+.tab-content {
+  padding: 20px;
+  background-color: white;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+/* Responsive design for mobile devices */
 @media (max-width: 768px) {
-  .writing-status-bar {
-    flex-direction: row !important;
-    overflow-x: auto !important;
-    scrollbar-width: none !important;
-    -ms-overflow-style: none !important;
+  .text-type-analysis, .vocabulary-analysis, .progress-tracking, .coaching-tips {
+    margin: 10px 0;
+    padding: 15px;
   }
   
-  .writing-status-bar::-webkit-scrollbar {
-    display: none !important;
+  .analysis-results, .vocabulary-results, .progress-results, .coaching-results {
+    padding: 10px;
   }
   
-  .writing-status-bar > div,
-  .writing-status-bar > button {
-    flex-shrink: 0 !important;
-    min-width: auto !important;
+  .action-item, .tip-item, .exercise-item, .strategy-item {
+    padding: 10px;
+    margin: 10px 0;
+  }
+  
+  .text-type-analysis button, 
+  .vocabulary-analysis button, 
+  .progress-tracking button, 
+  .coaching-tips button {
+    width: 100%;
+    padding: 12px;
+    font-size: 14px;
+  }
+
+  .nsw-analysis-tools {
+    margin: 10px 0;
+    padding: 15px;
+  }
+
+  .tab-buttons {
+    flex-direction: column;
+  }
+
+  .tab-buttons button {
+    width: 100%;
+    margin-bottom: 5px;
   }
 }
 
-/* 6. Additional space optimization */
-.main-content-area {
-  padding: 8px !important;
+/* Animation for loading states */
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
 }
 
-/* Reduce margins and padding throughout */
-div[class*="mb-3"] {
-  margin-bottom: 8px !important;
+.text-type-analysis button:disabled, 
+.vocabulary-analysis button:disabled, 
+.progress-tracking button:disabled, 
+.coaching-tips button:disabled {
+  animation: pulse 1.5s infinite;
 }
 
-div[class*="p-4"] {
-  padding: 8px !important;
+/* Additional styling for better visual hierarchy */
+.vocabulary-metrics p, .progress-item p {
+  margin: 5px 0;
+  font-size: 14px;
 }
 
-/* 7. Hide any other space-consuming elements that might exist */
-.writing-mode-buttons,
-div:has(button:contains("Planning Phase")) {
-  display: none !important;
+.vocabulary-strengths ul, .vocabulary-improvements ul {
+  max-height: 150px;
+  overflow-y: auto;
 }
 
-/* Alternative approach - if the above selectors don't work, use these more generic ones */
-
-/* Hide prompt section by text content */
-div:contains("Your Writing Prompt"):not(:has(div)):not(:has(button)):not(:has(input)) {
-  display: none !important;
+.coaching-results h3, .analysis-results h3, .vocabulary-results h3, .progress-results h3 {
+  color: #1976d2;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
 }
 
-/* Hide the button container above the writing area */
-div:has(button:contains("Planning Phase")):has(button:contains("Start Exam Mode")) {
-  display: none !important;
+/* Success and error states */
+.success-message {
+  background-color: #e8f5e8;
+  border: 1px solid #4caf50;
+  padding: 10px;
+  border-radius: 4px;
+  color: #2e7d32;
+  margin: 10px 0;
 }
 
-/* Compact status bar alternative */
-footer,
-div[class*="border-t-4 border-blue-200"] {
-  padding: 6px 12px !important;
-  min-height: 40px !important;
-}
-
-footer > div,
-div[class*="border-t-4 border-blue-200"] > div {
-  gap: 6px !important;
-}
-
-/* Final fallback - target by structure */
-.flex.flex-col.h-full > div:first-child > div:first-child > div:first-child {
-  display: none !important;
-}
-
-.flex.flex-col.h-full > div:first-child > div:nth-child(2) {
-  display: none !important;
+.warning-message {
+  background-color: #fff3e0;
+  border: 1px solid #ff9800;
+  padding: 10px;
+  border-radius: 4px;
+  color: #e65100;
+  margin: 10px 0;
 }
