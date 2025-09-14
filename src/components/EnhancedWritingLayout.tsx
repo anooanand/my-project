@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import WritingArea from './WritingArea';
+import { WritingArea } from './WritingArea';
 import { PlanningToolModal } from './PlanningToolModal';
 import { StructureGuideModal } from './StructureGuideModal'; // Import StructureGuideModal
 import { TipsModal } from './TipsModal'; // Import TipsModal
@@ -110,7 +110,7 @@ export function EnhancedWritingLayout({
   }, [content, textType, openAIConnected, openAILoading]);
 
   return (
-    <div className="enhanced-writing-layout h-full bg-gray-50 overflow-hidden">
+    <div className="enhanced-writing-layout h-full overflow-hidden">
       {/* Main Writing Area - Full height */}
       <div className="h-full">
         <WritingArea
@@ -174,4 +174,3 @@ export function EnhancedWritingLayout({
     </div>
   );
 }
-
