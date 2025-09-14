@@ -16,7 +16,11 @@ import {
   ChevronRight,
   Maximize2,
   Minimize2,
-  Settings
+  Settings,
+  MessageSquare,
+  BarChart3,
+  BookMarked,
+  TrendingUp
 } from 'lucide-react';
 
 type TextType = "narrative" | "persuasive" | "informative";
@@ -76,10 +80,11 @@ function WritingAreaImpl(props: Props) {
   );
   const [version, setVersion] = useState(0);
 
-  // New state for sidebar control
+  // Enhanced sidebar state management
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [sidebarWidth, setSidebarWidth] = useState(320);
+  const [sidebarWidth, setSidebarWidth] = useState(350); // Increased default width
   const [isResizing, setIsResizing] = useState(false);
+  const [sidebarVisible, setSidebarVisible] = useState(true);
   const sidebarRef = useRef<HTMLDivElement>(null);
   const resizeRef = useRef<HTMLDivElement>(null);
 
@@ -101,10 +106,12 @@ function WritingAreaImpl(props: Props) {
     return () => window.removeEventListener("storage", onStorage);
   }, [props.textType]);
 
-  // Handle sidebar resizing
+  // Enhanced sidebar resizing with constraints
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     setIsResizing(true);
     e.preventDefault();
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
   }, []);
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
@@ -113,13 +120,15 @@ function WritingAreaImpl(props: Props) {
     const containerWidth = window.innerWidth;
     const newWidth = containerWidth - e.clientX;
     
-    // Constrain sidebar width between 250px and 500px
+    // Constrain sidebar width between 250px and 500px as requested
     const constrainedWidth = Math.max(250, Math.min(500, newWidth));
     setSidebarWidth(constrainedWidth);
   }, [isResizing]);
 
   const handleMouseUp = useCallback(() => {
     setIsResizing(false);
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
   }, []);
 
   useEffect(() => {
@@ -162,6 +171,13 @@ function WritingAreaImpl(props: Props) {
         setAnalysis(res);
         setStatus("success");
         console.log("Analysis successful!");
+        
+        // Auto-show sidebar when analysis is complete
+        if (focusMode) {
+          setFocusMode(false);
+        }
+        setSidebarVisible(true);
+        setSidebarCollapsed(false);
       } else {
         throw new Error("Invalid response format");
       }
@@ -170,7 +186,7 @@ function WritingAreaImpl(props: Props) {
       setStatus("error");
       setErr(e?.message || "Failed to analyze essay. Please try again.");
     }
-  }, [content, textType]);
+  }, [content, textType, focusMode]);
 
   const onApplyFix = useCallback((fix: LintFix) => {
     editorRef.current?.applyFix(fix.start, fix.end, fix.replacement);
@@ -199,8 +215,29 @@ function WritingAreaImpl(props: Props) {
 
   const handleFocus = () => {
     console.log("Focus clicked");
-    setFocusMode(!focusMode);
+    const newFocusMode = !focusMode;
+    setFocusMode(newFocusMode);
+    
+    // In focus mode, hide sidebar completely
+    if (newFocusMode) {
+      setSidebarVisible(false);
+    } else {
+      setSidebarVisible(true);
+    }
+    
     props.onFocus?.();
+  };
+
+  const handleToggleSidebar = () => {
+    if (focusMode) {
+      // Exit focus mode and show sidebar
+      setFocusMode(false);
+      setSidebarVisible(true);
+      setSidebarCollapsed(false);
+    } else {
+      // Toggle collapse state
+      setSidebarCollapsed(!sidebarCollapsed);
+    }
   };
 
   const handleToggleHighlights = () => {
@@ -242,30 +279,49 @@ function WritingAreaImpl(props: Props) {
     return () => clearInterval(t);
   }, [content, version]);
 
-  // Calculate writing area width based on sidebar state
-  const writingAreaStyle = {
-    width: focusMode ? '100%' : sidebarCollapsed ? 'calc(100% - 60px)' : `calc(100% - ${sidebarWidth}px)`,
-    transition: 'width 0.3s ease-in-out'
+  // Calculate dynamic layout dimensions
+  const getLayoutDimensions = () => {
+    if (focusMode || !sidebarVisible) {
+      return {
+        writingAreaWidth: '100%',
+        sidebarWidth: '0px',
+        sidebarDisplay: 'none'
+      };
+    }
+    
+    if (sidebarCollapsed) {
+      return {
+        writingAreaWidth: 'calc(100% - 60px)',
+        sidebarWidth: '60px',
+        sidebarDisplay: 'flex'
+      };
+    }
+    
+    return {
+      writingAreaWidth: `calc(100% - ${sidebarWidth}px)`,
+      sidebarWidth: `${sidebarWidth}px`,
+      sidebarDisplay: 'flex'
+    };
   };
 
-  const sidebarStyle = {
-    width: focusMode ? '0px' : sidebarCollapsed ? '60px' : `${sidebarWidth}px`,
-    transition: 'width 0.3s ease-in-out'
-  };
+  const layoutDimensions = getLayoutDimensions();
 
   return (
-    <div className="flex h-full writing-area-optimized">
-      {/* LEFT: header + editor */}
-      <div className="flex flex-col" style={writingAreaStyle}>
-        {/* --- YOUR WRITING PROMPT (visible, matches generated) --- */}
-        <div className="mb-3 writing-prompt-container">
-          <div className="rounded-xl border bg-white">
-            <div className="px-4 py-3 border-b flex items-center justify-between">
-              <div className="font-semibold">Your Writing Prompt</div>
-              <div className="text-xs opacity-70">
-                Text Type:&nbsp;
+    <div className="flex h-full writing-area-optimized bg-gray-50">
+      {/* LEFT: Main Writing Area */}
+      <div 
+        className="flex flex-col transition-all duration-300 ease-in-out"
+        style={{ width: layoutDimensions.writingAreaWidth }}
+      >
+        {/* Writing Prompt Section */}
+        <div className="mb-4 px-4 pt-4">
+          <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+              <div className="font-semibold text-gray-800 text-lg">Your Writing Prompt</div>
+              <div className="text-sm text-gray-600 flex items-center space-x-2">
+                <span>Text Type:</span>
                 <select
-                  className="rounded-md border px-2 py-1"
+                  className="rounded-md border border-gray-300 px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   value={textType}
                   onChange={(e) => {
                     const v = e.target.value as TextType;
@@ -280,158 +336,232 @@ function WritingAreaImpl(props: Props) {
                 </select>
               </div>
             </div>
-            <div className="p-4 text-sm leading-relaxed whitespace-pre-wrap">
+            <div className="p-6 text-base leading-relaxed text-gray-700 whitespace-pre-wrap">
               {displayPrompt || "Loading prompt…"}
             </div>
           </div>
         </div>
 
-        {/* Writing Mode Buttons - MOVED HERE between prompt and editor */}
-        <div className="flex flex-wrap gap-3 p-4 bg-white border border-gray-200 rounded-lg mb-3 toolbar-container">
-          {/* Planning Phase Button */}
-          <button
-            onClick={handlePlanningPhase}
-            disabled={status === "loading"}
-            className="toolbar-button bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-            title="Planning Phase - Organize your ideas before writing"
-          >
-            <PenTool className="h-4 w-4" />
-            Planning Phase
-          </button>
+        {/* Enhanced Writing Mode Buttons */}
+        <div className="flex flex-wrap gap-3 px-4 mb-4">
+          <div className="flex flex-wrap gap-3 p-4 bg-white border border-gray-200 rounded-xl shadow-sm w-full">
+            {/* Planning Phase Button */}
+            <button
+              onClick={handlePlanningPhase}
+              disabled={status === "loading"}
+              className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 text-sm font-medium"
+              title="Planning Phase - Organize your ideas before writing"
+            >
+              <PenTool className="h-4 w-4" />
+              <span>Planning Phase</span>
+            </button>
 
-          {/* Start Exam Mode Button */}
-          <button
-            onClick={handleStartExamMode}
-            disabled={status === "loading"}
-            className="toolbar-button bg-green-500 text-white hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
-            title="Start Exam Mode - Practice under timed conditions"
-          >
-            <Play className="h-4 w-4" />
-            Start Exam Mode
-          </button>
+            {/* Start Exam Mode Button */}
+            <button
+              onClick={handleStartExamMode}
+              disabled={status === "loading"}
+              className="flex items-center space-x-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 text-sm font-medium"
+              title="Start Exam Mode - Practice under timed conditions"
+            >
+              <Play className="h-4 w-4" />
+              <span>Start Exam Mode</span>
+            </button>
 
-          {/* Structure Guide Button */}
-          <button
-            onClick={handleStructureGuide}
-            disabled={status === "loading"}
-            className="toolbar-button bg-purple-500 text-white hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed"
-            title="Structure Guide - Learn how to organize your writing"
-          >
-            <BookOpen className="h-4 w-4" />
-            Structure Guide
-          </button>
+            {/* Structure Guide Button */}
+            <button
+              onClick={handleStructureGuide}
+              disabled={status === "loading"}
+              className="flex items-center space-x-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 text-sm font-medium"
+              title="Structure Guide - Learn how to organize your writing"
+            >
+              <BookOpen className="h-4 w-4" />
+              <span>Structure Guide</span>
+            </button>
 
-          {/* Tips Button */}
-          <button
-            onClick={handleTips}
-            disabled={status === "loading"}
-            className="toolbar-button bg-yellow-500 text-white hover:bg-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed"
-            title="Tips - Get helpful writing advice"
-          >
-            <Lightbulb className="h-4 w-4" />
-            Tips
-          </button>
+            {/* Tips Button */}
+            <button
+              onClick={handleTips}
+              disabled={status === "loading"}
+              className="flex items-center space-x-2 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 text-sm font-medium"
+              title="Tips - Get helpful writing advice"
+            >
+              <Lightbulb className="h-4 w-4" />
+              <span>Tips</span>
+            </button>
 
-          {/* Focus Button */}
-          <button
-            onClick={handleFocus}
-            disabled={status === "loading"}
-            className="toolbar-button bg-gray-600 text-white hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            title="Focus Mode - Minimize distractions while writing"
-          >
-            {focusMode ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
-            Focus
-          </button>
-        </div>
+            {/* Focus Mode Button */}
+            <button
+              onClick={handleFocus}
+              disabled={status === "loading"}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 text-sm font-medium ${
+                focusMode 
+                  ? 'bg-orange-500 text-white hover:bg-orange-600' 
+                  : 'bg-gray-600 text-white hover:bg-gray-700'
+              }`}
+              title="Focus Mode - Hide sidebar for distraction-free writing"
+            >
+              {focusMode ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+              <span>{focusMode ? 'Exit Focus' : 'Focus Mode'}</span>
+            </button>
 
-        {/* --- Editor --- */}
-        <div className={`flex-1 rounded-xl border bg-white writing-container ${focusMode ? 'focus-mode' : ''}`}>
-          <div className="p-3 h-full writing-input-container">
-            <InteractiveTextEditor
-              ref={editorRef}
-              content={content}
-              onChange={onEditorChange}
-              placeholder="Start writing your amazing story here! Let your creativity flow and bring your ideas to life…"
-              className="writing-textarea"
-            />
+            {/* Sidebar Toggle Button (only show when not in focus mode) */}
+            {!focusMode && (
+              <button
+                onClick={handleToggleSidebar}
+                className="flex items-center space-x-2 px-4 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition-colors duration-200 text-sm font-medium"
+                title={sidebarCollapsed ? "Expand Writing Buddy" : "Collapse Writing Buddy"}
+              >
+                <MessageSquare className="h-4 w-4" />
+                <span>{sidebarCollapsed ? 'Show Buddy' : 'Hide Buddy'}</span>
+              </button>
+            )}
           </div>
         </div>
 
-        {/* SIMPLIFIED: Submit for Evaluation Button */}
-        <div className="mt-3 flex items-center gap-2 writing-actions">
-          <button
-            type="button"
-            className="submit-button bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            onClick={onSubmitForEvaluation}
-            disabled={status === "loading"}
-            aria-label="Submit for Evaluation Report"
-          >
-            {status === "loading" ? "Analyzing…" : "Submit for Evaluation Report"}
-          </button>
-          {status === "error" && <span className="text-red-600 text-sm">{err}</span>}
-          {status === "success" && <span className="text-green-600 text-sm">Analysis complete!</span>}
+        {/* Enhanced Editor Container */}
+        <div className="flex-1 px-4 pb-4">
+          <div className="h-full rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+            <div className="p-6 h-full">
+              <InteractiveTextEditor
+                ref={editorRef}
+                content={content}
+                onChange={onEditorChange}
+                placeholder="Start writing your amazing story here! Let your creativity flow and bring your ideas to life…"
+                className="w-full h-full resize-none border-0 outline-none text-lg leading-relaxed text-gray-800 placeholder-gray-400"
+                style={{
+                  fontSize: '18px',
+                  lineHeight: '1.7',
+                  fontFamily: 'system-ui, -apple-system, sans-serif'
+                }}
+              />
+            </div>
+          </div>
         </div>
 
-        {/* Optional helper text */}
-        {analysis && status === "success" && (
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-            <h3 className="text-lg font-semibold text-blue-900 mb-2">Analysis complete</h3>
-            <p className="text-sm text-blue-800">
-              Open the <strong>Analysis</strong> tab on the right to see rubric scores and apply suggested fixes.
-            </p>
+        {/* Enhanced Submit Button */}
+        <div className="px-4 pb-4">
+          <div className="flex items-center justify-between bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
+            <div className="flex items-center space-x-4 text-sm text-gray-600">
+              <span>{wordCount} words</span>
+              {lastSaved && (
+                <span>Last saved: {lastSaved.toLocaleTimeString()}</span>
+              )}
+              {isSaving && (
+                <span className="text-blue-600">Saving...</span>
+              )}
+            </div>
+            
+            <button
+              type="button"
+              className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 font-medium"
+              onClick={onSubmitForEvaluation}
+              disabled={status === "loading"}
+              aria-label="Submit for Evaluation Report"
+            >
+              {status === "loading" ? (
+                <div className="flex items-center space-x-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span>Analyzing…</span>
+                </div>
+              ) : (
+                "Submit for Evaluation Report"
+              )}
+            </button>
           </div>
-        )}
+          
+          {/* Status Messages */}
+          {status === "error" && (
+            <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <span className="text-red-600 text-sm">{err}</span>
+            </div>
+          )}
+          {status === "success" && (
+            <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <span className="text-green-600 text-sm">Analysis complete! Check the Writing Buddy panel for detailed feedback.</span>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Resizable Feedback Chat Sidebar */}
-      {!focusMode && (
+      {/* Enhanced Resizable Writing Buddy Sidebar */}
+      {sidebarVisible && !focusMode && (
         <>
           {/* Resize Handle */}
           {!sidebarCollapsed && (
             <div
               ref={resizeRef}
-              className="resize-handle w-1 bg-gray-200 hover:bg-blue-400 cursor-col-resize transition-colors relative group"
+              className="w-1 bg-gray-300 hover:bg-blue-400 cursor-col-resize transition-colors duration-200 relative group flex-shrink-0"
               onMouseDown={handleMouseDown}
             >
-              <div className="absolute inset-y-0 -left-1 -right-1 group-hover:bg-blue-400 group-hover:opacity-20"></div>
+              <div className="absolute inset-y-0 -left-2 -right-2 group-hover:bg-blue-400 group-hover:opacity-20 transition-all duration-200"></div>
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-1 h-8 bg-gray-400 rounded-full group-hover:bg-blue-500 transition-colors duration-200"></div>
             </div>
           )}
 
-          {/* Sidebar */}
+          {/* Sidebar Container */}
           <div 
             ref={sidebarRef}
-            className="sidebar-resizable border-l border-gray-200 bg-white flex flex-col overflow-hidden"
-            style={sidebarStyle}
+            className="border-l border-gray-200 bg-white flex flex-col overflow-hidden transition-all duration-300 ease-in-out shadow-lg"
+            style={{ 
+              width: layoutDimensions.sidebarWidth,
+              display: layoutDimensions.sidebarDisplay
+            }}
           >
-            {/* Sidebar Header with Collapse Button */}
-            <div className="sidebar-header flex items-center justify-between p-3 bg-purple-50 border-b border-gray-200">
+            {/* Enhanced Sidebar Header */}
+            <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-indigo-50 border-b border-gray-200">
               {!sidebarCollapsed && (
-                <h3 className="text-sm font-medium text-purple-700">Writing Buddy</h3>
+                <div className="flex items-center space-x-2">
+                  <MessageSquare className="h-5 w-5 text-purple-600" />
+                  <h3 className="text-lg font-semibold text-purple-700">Writing Buddy</h3>
+                </div>
               )}
               <button
                 onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                className="collapse-button p-1 text-purple-400 hover:text-purple-600 transition-colors rounded"
-                title={sidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+                className="p-2 text-purple-400 hover:text-purple-600 hover:bg-purple-100 transition-all duration-200 rounded-lg"
+                title={sidebarCollapsed ? "Expand Writing Buddy" : "Collapse Writing Buddy"}
               >
-                {sidebarCollapsed ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                {sidebarCollapsed ? <ChevronLeft className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
               </button>
             </div>
 
-            {/* Feedback Chat Content */}
+            {/* Sidebar Content */}
             {!sidebarCollapsed && (
-              <div className="flex-1 overflow-hidden feedback-content">
-                <TabbedCoachPanel analysis={analysis} onApplyFix={onApplyFix} />
+              <div className="flex-1 overflow-hidden">
+                <TabbedCoachPanel 
+                  analysis={analysis} 
+                  onApplyFix={onApplyFix}
+                  content={content}
+                  textType={textType}
+                />
               </div>
             )}
 
-            {/* Collapsed State Indicator */}
+            {/* Enhanced Collapsed State */}
             {sidebarCollapsed && (
-              <div className="collapsed-indicator flex-1 flex flex-col items-center justify-center p-2 space-y-2">
-                <div className="feedback-count-badge w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                  <span className="feedback-count-text text-purple-600 text-xs font-bold">{analysis ? analysis.overallScore : 0}</span>
+              <div className="flex-1 flex flex-col items-center justify-center p-3 space-y-4">
+                {/* Score Badge */}
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-indigo-100 rounded-full flex items-center justify-center border-2 border-purple-200">
+                  <span className="text-purple-700 text-sm font-bold">
+                    {analysis ? Math.round(analysis.overallScore) : '?'}
+                  </span>
                 </div>
-                <div className="collapsed-label text-xs text-purple-600 text-center leading-tight">
-                  Feedback
+                
+                {/* Status Indicators */}
+                <div className="flex flex-col items-center space-y-2">
+                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <BarChart3 className="h-4 w-4 text-blue-600" />
+                  </div>
+                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                    <BookMarked className="h-4 w-4 text-green-600" />
+                  </div>
+                  <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center">
+                    <TrendingUp className="h-4 w-4 text-orange-600" />
+                  </div>
+                </div>
+                
+                {/* Collapsed Label */}
+                <div className="text-xs text-purple-600 text-center leading-tight font-medium">
+                  Writing<br />Buddy
                 </div>
               </div>
             )}
@@ -439,20 +569,23 @@ function WritingAreaImpl(props: Props) {
         </>
       )}
 
-      {/* Writing StatusBar - Always visible at the bottom */}
-      <WritingStatusBar
-        wordCount={wordCount}
-        isSaving={isSaving}
-        lastSaved={lastSaved}
-        onToggleHighlights={handleToggleHighlights}
-        showHighlights={showHighlights}
-        onEvaluate={handleEvaluate}
-        onShowPlanning={handleShowPlanning}
-        onRestore={handleRestore}
-      />
+      {/* Focus Mode Indicator */}
+      {focusMode && (
+        <div className="fixed top-4 right-4 z-50">
+          <div className="bg-orange-500 text-white px-4 py-2 rounded-lg shadow-lg flex items-center space-x-2">
+            <Maximize2 className="h-4 w-4" />
+            <span className="text-sm font-medium">Focus Mode Active</span>
+            <button
+              onClick={handleFocus}
+              className="ml-2 text-orange-200 hover:text-white transition-colors"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-export const WritingArea = React.memo(WritingAreaImpl);
-
+export const WritingArea = WritingAreaImpl;
