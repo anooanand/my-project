@@ -132,9 +132,7 @@ export function DynamicPromptDisplay({ prompt, textType, promptImage }: DynamicP
           <div className="flex-1">
             <div className="flex items-center mb-2">
               <FileText className="w-5 h-5 text-blue-500 mr-2" />
-              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-                Writing Prompt ({textType})
-              </h3>
+
             </div>
             
             {promptImage && (
