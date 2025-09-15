@@ -1,5 +1,10 @@
 /* Enhanced Space Optimization CSS - Minimal Spacing for Maximum Writing Area */
 
+/* Override for the root element to remove top padding */
+#root {
+  padding-top: 2px !important; /* Override the default pt-16 */
+}
+
 /* MAIN OPTIMIZATION: Minimal header padding and margins */
 .enhanced-header {
   margin-bottom: 2px !important; /* Reduced from 8px to 2px */
