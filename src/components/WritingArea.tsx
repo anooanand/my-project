@@ -226,7 +226,7 @@ function WritingAreaImpl(props: Props) {
 
   // -------- Autosave effect --------
   useEffect(() => {
-    const t = setInterval(async () => {
+    const autoSaveInterval = setInterval(async () => {
       if (!content.trim()) return;
       try {
         setIsSaving(true);
@@ -244,7 +244,7 @@ function WritingAreaImpl(props: Props) {
         setIsSaving(false);
       }
     }, 1500);
-    return () => clearInterval(t);
+    return () => clearInterval(autoSaveInterval);
   }, [content, version]);
 
   return (
