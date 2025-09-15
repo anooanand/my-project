@@ -2,7 +2,7 @@ import React, { useState, useCallback, useRef, useEffect } from "react";
 import { InteractiveTextEditor } from "./InteractiveTextEditor";
 import { TabbedCoachPanel } from "./TabbedCoachPanel";
 import { evaluateEssay, saveDraft } from "../lib/api";
-import { detectNewParagraphs, detectWordThreshold, detectWritingPause } from "../lib/paragraphDetection";
+import { detectNewParagraphs, detectWordThreshold } from "../lib/paragraphDetection";
 import { eventBus } from "../lib/eventBus";
 import type { DetailedFeedback, LintFix } from "../types/feedback";
 
@@ -33,7 +33,6 @@ function WritingArea(props: WritingAreaProps) {
   
   // Reference to track previous content for paragraph detection
   const prevTextRef = useRef(content);
-  const lastChangeTimeRef = useRef(Date.now());
   const feedbackCooldownRef = useRef<Set<string>>(new Set()); // Prevent duplicate feedback
 
   // -------- Theme toggle --------
@@ -60,11 +59,10 @@ function WritingArea(props: WritingAreaProps) {
     }`
   );
 
-  // Enhanced editor change handler with better feedback triggers
+  // Enhanced editor change handler with automatic feedback (ONLY CHANGE)
   const onEditorChange = useCallback((newText: string) => {
     setContent(newText);
     props.onChange?.(newText);
-    lastChangeTimeRef.current = Date.now();
 
     // Real-time paragraph detection
     const newParagraphs = detectNewParagraphs(prevTextRef.current, newText);
@@ -73,10 +71,10 @@ function WritingArea(props: WritingAreaProps) {
     }
 
     // Enhanced word threshold detection for coaching
-    const wordThresholdResult = detectWordThreshold(prevTextRef.current, newText, 20);
+    const wordThresholdResult = detectWordThreshold(prevTextRef.current, newText, 10);
     if (wordThresholdResult) {
       // Create a unique key for this feedback to prevent duplicates
-      const feedbackKey = `${wordThresholdResult.trigger}-${wordThresholdResult.wordCount}`;
+      const feedbackKey = `${wordThresholdResult.trigger || 'default'}-${Math.floor(wordThresholdResult.wordCount / 20) * 20}`;
       
       if (!feedbackCooldownRef.current.has(feedbackKey)) {
         feedbackCooldownRef.current.add(feedbackKey);
@@ -85,9 +83,7 @@ function WritingArea(props: WritingAreaProps) {
         eventBus.emit("paragraph.ready", {
           paragraph: wordThresholdResult.text,
           index: 0,
-          wordCount: wordThresholdResult.wordCount,
-          trigger: wordThresholdResult.trigger,
-          textType: textType
+          wordCount: wordThresholdResult.wordCount
         });
 
         // Clear old feedback keys to prevent memory buildup
@@ -97,39 +93,7 @@ function WritingArea(props: WritingAreaProps) {
         }
       }
     }
-  }, [setContent, props.onChange, textType]);
-
-  // Add pause detection for delayed feedback
-  useEffect(() => {
-    const pauseCheckInterval = setInterval(() => {
-      if (content.trim() && detectWritingPause(lastChangeTimeRef.current, 5000)) {
-        const wordCount = content.trim().split(/\s+/).length;
-        
-        // Provide feedback on pause if user has written substantial content
-        if (wordCount >= 30) {
-          const pauseKey = `pause-${Math.floor(wordCount / 50) * 50}`;
-          
-          if (!feedbackCooldownRef.current.has(pauseKey)) {
-            feedbackCooldownRef.current.add(pauseKey);
-            
-            // Get the last paragraph or recent content
-            const paragraphs = content.split(/\n\s*\n/).filter(p => p.trim());
-            const lastParagraph = paragraphs[paragraphs.length - 1] || content.slice(-200);
-            
-            eventBus.emit("paragraph.ready", {
-              paragraph: lastParagraph,
-              index: paragraphs.length - 1,
-              wordCount: wordCount,
-              trigger: 'writing_pause',
-              textType: textType
-            });
-          }
-        }
-      }
-    }, 2000); // Check every 2 seconds
-
-    return () => clearInterval(pauseCheckInterval);
-  }, [content, textType]);
+  }, [setContent, props.onChange]);
 
   // SIMPLIFIED: Remove strict validation that was causing issues
   const onSubmitForEvaluation = useCallback(async () => {
@@ -242,114 +206,135 @@ function WritingArea(props: WritingAreaProps) {
   }, [content, version]);
 
   return (
-    <div className="flex h-full bg-gray-50">
-      {/* Left side - Writing area */}
-      <div className="flex-1 flex flex-col">
-        {/* Action buttons */}
-        <div className="p-4 bg-white border-b border-gray-200">
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={handleShowPlanning}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
-            >
-              📋 Planning Phase
-            </button>
-            <button
-              onClick={handleStartExamMode}
-              className={`px-4 py-2 rounded-lg transition-colors text-sm ${
-                examMode 
-                  ? 'bg-green-500 text-white hover:bg-green-600' 
-                  : 'bg-green-500 text-white hover:bg-green-600'
-              }`}
-            >
-              ▶️ Start Exam Mode
-            </button>
-            <button
-              onClick={handleStructureGuide}
-              className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors text-sm"
-            >
-              📖 Structure Guide
-            </button>
-            <button
-              onClick={handleTips}
-              className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm"
-            >
-              💡 Tips
-            </button>
-            <button
-              onClick={handleFocus}
-              className={`px-4 py-2 rounded-lg transition-colors text-sm ${
-                focusMode 
-                  ? 'bg-gray-700 text-white hover:bg-gray-800' 
-                  : 'bg-gray-500 text-white hover:bg-gray-600'
-              }`}
-            >
-              🎯 Focus
-            </button>
-          </div>
-        </div>
-
-        {/* Text editor */}
-        <div className="flex-1 p-4">
-          <InteractiveTextEditor
-            content={content}
-            onChange={onEditorChange}
-            placeholder="Start writing your story here..."
-            className="w-full h-full border border-gray-300 rounded-lg p-4 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        {/* Bottom status bar */}
-        <div className="p-4 bg-white border-t border-gray-200">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4 text-sm text-gray-600">
-              <span>📝 {wordCount} words</span>
-              {isSaving && <span className="text-blue-600">💾 Saving...</span>}
-              {lastSaved && (
-                <span>✅ Saved at: {lastSaved.toLocaleTimeString()}</span>
-              )}
-            </div>
-            
-            <button
-              onClick={handleEvaluate}
-              disabled={status === "loading" || !content.trim()}
-              className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-                status === "loading"
-                  ? 'bg-gray-400 text-white cursor-not-allowed'
-                  : 'bg-green-600 text-white hover:bg-green-700'
-              }`}
-            >
-              {status === "loading" ? "Analyzing..." : "Submit for Evaluation Report"}
-            </button>
-          </div>
-          
-          {status === "success" && (
-            <div className="mt-2 text-green-600 text-sm">
-              ✅ Analysis complete
-            </div>
-          )}
-          
-          {status === "error" && err && (
-            <div className="mt-2 text-red-600 text-sm">
-              ❌ {err}
-            </div>
-          )}
+    <div className="writing-area-container">
+      {/* Your Writing Prompt Section */}
+      <div className="prompt-section bg-white p-6 mb-4 rounded-lg shadow-sm">
+        <h2 className="text-lg font-semibold text-gray-800 mb-2">Your Writing Prompt</h2>
+        <div className="prompt-content">
+          <p className="text-gray-600 leading-relaxed mb-4">
+            <strong>**Prompt: The Secret Door**</strong>
+          </p>
+          <p className="text-gray-600 leading-relaxed mb-4">
+            One rainy afternoon, while exploring your attic, you stumble upon a dusty, old trunk. Inside, you find a collection of peculiar items: a key, a faded map, and a small, intricately carved wooden box. As you examine the key, you notice it has no lock in sight. However, the map shows a hidden doorway in your town that you've never seen before.
+          </p>
+          <p className="text-gray-600 leading-relaxed mb-4">
+            Write a story about your adventure as you follow the map to discover the secret doorway. What do you find on the other side? Who or what might be waiting for you? How does this experience change you or your perspective on the world?
+          </p>
+          <p className="text-gray-600 leading-relaxed">
+            Write a story about your adventure in the magical library.
+          </p>
         </div>
       </div>
 
-      {/* Right side - Coach panel */}
-      <div className="w-96 border-l border-gray-200">
-        <TabbedCoachPanel
-          analysis={analysis}
-          onApplyFix={onApplyFix}
-          content={content}
-          textType={textType}
-          onWordSelect={props.onWordSelect}
-        />
+      {/* Action Buttons */}
+      <div className="action-buttons bg-white p-4 mb-4 rounded-lg shadow-sm">
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={handleShowPlanning}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
+          >
+            📋 Planning Phase
+          </button>
+          <button
+            onClick={handleStartExamMode}
+            className={`px-4 py-2 rounded-lg transition-colors text-sm ${
+              examMode 
+                ? 'bg-green-500 text-white hover:bg-green-600' 
+                : 'bg-green-500 text-white hover:bg-green-600'
+            }`}
+          >
+            ▶️ Start Exam Mode
+          </button>
+          <button
+            onClick={handleStructureGuide}
+            className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors text-sm"
+          >
+            📖 Structure Guide
+          </button>
+          <button
+            onClick={handleTips}
+            className="px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm"
+          >
+            💡 Tips
+          </button>
+          <button
+            onClick={handleFocus}
+            className={`px-4 py-2 rounded-lg transition-colors text-sm ${
+              focusMode 
+                ? 'bg-gray-700 text-white hover:bg-gray-800' 
+                : 'bg-gray-500 text-white hover:bg-gray-600'
+            }`}
+          >
+            🎯 Focus
+          </button>
+        </div>
+      </div>
+
+      {/* Main Content Area */}
+      <div className="flex gap-4">
+        {/* Left side - Text Editor */}
+        <div className="flex-1">
+          <div className="bg-white rounded-lg shadow-sm p-6 mb-4" style={{ minHeight: '400px' }}>
+            <InteractiveTextEditor
+              content={content}
+              onChange={onEditorChange}
+              placeholder="Start writing your story here..."
+              className="w-full h-full border-none outline-none resize-none"
+            />
+          </div>
+
+          {/* Bottom Status Bar */}
+          <div className="bg-white rounded-lg shadow-sm p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4 text-sm text-gray-600">
+                <span>📝 {wordCount} words</span>
+                {isSaving && <span className="text-blue-600">💾 Saving...</span>}
+                {lastSaved && (
+                  <span>✅ Saved at: {lastSaved.toLocaleTimeString()}</span>
+                )}
+              </div>
+              
+              <button
+                onClick={handleEvaluate}
+                disabled={status === "loading" || !content.trim()}
+                className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                  status === "loading"
+                    ? 'bg-gray-400 text-white cursor-not-allowed'
+                    : 'bg-green-600 text-white hover:bg-green-700'
+                }`}
+              >
+                {status === "loading" ? "Analyzing..." : "Submit for Evaluation Report"}
+              </button>
+            </div>
+            
+            {status === "success" && (
+              <div className="mt-2 text-green-600 text-sm">
+                ✅ Analysis complete
+              </div>
+            )}
+            
+            {status === "error" && err && (
+              <div className="mt-2 text-red-600 text-sm">
+                ❌ {err}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right side - Coach Panel */}
+        <div className="w-96">
+          <TabbedCoachPanel
+            analysis={analysis}
+            onApplyFix={onApplyFix}
+            content={content}
+            textType={textType}
+            onWordSelect={props.onWordSelect}
+          />
+        </div>
       </div>
     </div>
   );
 }
 
-// Export as default to fix the compilation error
+// Export as default to maintain compatibility
 export default WritingArea;
