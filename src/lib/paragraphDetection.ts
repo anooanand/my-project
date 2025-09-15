@@ -27,3 +27,23 @@ export function detectNewParagraphs(
   }
   return out;
 }
+
+// New function to detect when 10 words have been typed
+export function detectWordThreshold(
+  prev: string,
+  next: string,
+  wordThreshold: number = 10
+): { text: string; wordCount: number } | null {
+  const prevWords = prev.trim() ? prev.trim().split(/\s+/).length : 0;
+  const nextWords = next.trim() ? next.trim().split(/\s+/).length : 0;
+  
+  // Check if we've crossed the word threshold
+  if (prevWords < wordThreshold && nextWords >= wordThreshold) {
+    return {
+      text: next,
+      wordCount: nextWords
+    };
+  }
+  
+  return null;
+}
