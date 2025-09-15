@@ -402,8 +402,6 @@ function WritingArea({
             onApplyFix={onApplyFix}
             content={currentContent}
             textType={textType}
-            assistanceLevel={assistanceLevel}
-            selectedText={selectedText}
             onWordSelect={onWordSelect}
           />
         </div>
