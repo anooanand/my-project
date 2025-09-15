@@ -115,7 +115,7 @@ export function EnhancedWritingLayout({
       <div className="h-full">
         <WritingArea
           content={content}
-          onChange={handleContentChange}
+                    onChange={(newContent) => handleContentChange(newContent)}
           textType={textType}
           onTextTypeChange={handleTextTypeChange}
           onPopupCompleted={handlePopupCompleted}
