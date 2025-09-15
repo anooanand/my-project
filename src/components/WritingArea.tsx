@@ -21,7 +21,7 @@ interface WritingAreaProps {
   onWordSelect?: (word: string) => void;
 }
 
-export function WritingArea(props: WritingAreaProps) {
+function WritingArea(props: WritingAreaProps) {
   // -------- Content state --------
   const [content, setContent] = useState(props.content || "");
   const [textType, setTextType] = useState<TextType>("narrative");
@@ -350,3 +350,6 @@ export function WritingArea(props: WritingAreaProps) {
     </div>
   );
 }
+
+// Export as default to fix the compilation error
+export default WritingArea;
