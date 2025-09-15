@@ -122,7 +122,8 @@ function WritingAreaImpl(props: Props) {
     // Real-time paragraph detection
     const newParagraphs = detectNewParagraphs(prevTextRef.current, newText);
     if (newParagraphs.length > 0) {
-      eventBus.emit("newParagraph", { paragraphs: newParagraphs });
+            eventBus.emit("paragraph.ready", { paragraphs: newParagraphs });
+
     }
   }, [setContent, props.onChange]); // Explicitly list dependencies
 
