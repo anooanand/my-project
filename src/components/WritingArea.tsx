@@ -5,7 +5,8 @@ import { evaluateEssay, saveDraft } from "../lib/api";
 
 // Real-time coach triggers
 import { eventBus } from "../lib/eventBus";
-import { detectNewParagraphs } from "../lib/paragraphDetection";
+import { detectNewParagraphs, detectWordThreshold } from "../lib/paragraphDetection";
+
 
 // NSW rubric UI + types + guards
 import type { DetailedFeedback, LintFix } from "../types/feedback";
@@ -114,18 +115,27 @@ function WritingAreaImpl(props: Props) {
     }`
   );
 
-  // -------- Event handlers --------
-  const onEditorChange = useCallback((newText: string) => {
+    const onEditorChange = useCallback((newText: string) => {
     setContent(newText);
     props.onChange?.(newText);
 
     // Real-time paragraph detection
     const newParagraphs = detectNewParagraphs(prevTextRef.current, newText);
     if (newParagraphs.length > 0) {
-            eventBus.emit("paragraph.ready", { paragraphs: newParagraphs });
-
+      eventBus.emit("newParagraph", { paragraphs: newParagraphs });
     }
-  }, [setContent, props.onChange]); // Explicitly list dependencies
+
+    // Word threshold detection for coaching (trigger after 10 words)
+    const wordThresholdResult = detectWordThreshold(prevTextRef.current, newText, 10);
+    if (wordThresholdResult) {
+      // Emit coaching event with the current text
+      eventBus.emit("paragraph.ready", {
+        paragraph: wordThresholdResult.text,
+        index: 0,
+        wordCount: wordThresholdResult.wordCount
+      });
+    }
+  }, [setContent, props.onChange]);
 
   // SIMPLIFIED: Remove strict validation that was causing issues
   const onSubmitForEvaluation = useCallback(async () => {
