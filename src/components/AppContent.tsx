@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import './layout-fix.css';
 
@@ -50,6 +50,7 @@ function AppContent() {
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
   const [pendingPaymentPlan, setPendingPaymentPlan] = useState<string | null>(null);
   const location = useLocation();
+  const navigate = useNavigate();
 
   // Writing state
   const [content, setContent] = useState('');
@@ -155,11 +156,15 @@ function AppContent() {
       setShowAuthModal(false);
       
       if (pendingPaymentPlan) {
-        setActivePage('payment-success');
+        setActivePage("payment-success");
         setShowPaymentSuccess(true);
       } else {
-        // Navigate to dashboard after successful authentication
-        setActivePage('dashboard');
+        // Navigate to appropriate page based on user state
+        if (user && emailVerified && paymentCompleted) {
+          setActivePage("writing");
+        } else {
+          setActivePage("dashboard");
+        }
       }
     } catch (error) {
       console.error('Auth success navigation error:', error);
@@ -210,7 +215,10 @@ function AppContent() {
       // Prevent navigation during loading states
       if (isLoading) return;
       
-      // Always navigate to the requested page
+      // Use React Router's navigate function for proper routing
+      navigate(`/${page === 'home' ? '' : page}`);
+      
+      // Update local state for UI consistency
       setActivePage(page);
       
       // Always close auth modal on navigation
@@ -222,9 +230,10 @@ function AppContent() {
     } catch (error) {
       console.error('Navigation error:', error);
       // Fallback to home page on navigation errors
+      navigate('/');
       setActivePage('home');
     }
-  }, [isLoading]);
+  }, [navigate, isLoading]);
 
   // NAVIGATION FIX: Improved get started handler with consistent flow
   const handleGetStarted = useCallback(async () => {
@@ -314,6 +323,50 @@ function AppContent() {
                 <HeroSection onGetStarted={handleGetStarted} />
                 <FeaturesSection />
                 <EnhancedSuccessSection />
+              </div>
+            </>
+          } />
+          <Route path="/home" element={
+            <>
+              <NavBar 
+                activePage={activePage}
+                onNavigate={handleNavigation}
+                user={user}
+                onSignInClick={() => {
+                  setAuthModalMode('signin');
+                  setShowAuthModal(true);
+                }}
+                onSignUpClick={() => {
+                  setAuthModalMode('signup');
+                  setShowAuthModal(true);
+                }}
+                onForceSignOut={handleForceSignOut}
+              />
+              <div className="main-route-content">
+                <HeroSection onGetStarted={handleGetStarted} />
+                <FeaturesSection />
+                <EnhancedSuccessSection />
+              </div>
+            </>
+          } />
+          <Route path="/features" element={
+            <>
+              <NavBar 
+                activePage={activePage}
+                onNavigate={handleNavigation}
+                user={user}
+                onSignInClick={() => {
+                  setAuthModalMode('signin');
+                  setShowAuthModal(true);
+                }}
+                onSignUpClick={() => {
+                  setAuthModalMode('signup');
+                  setShowAuthModal(true);
+                }}
+                onForceSignOut={handleForceSignOut}
+              />
+              <div className="main-route-content">
+                <FeaturesSection />
               </div>
             </>
           } />
