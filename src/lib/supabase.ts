@@ -12,104 +12,53 @@ if (!supabaseUrl || !supabaseAnonKey) {
 // Create and export the Supabase client
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Authentication functions that use Netlify proxy
+// Direct authentication functions (fallback if proxy fails)
 export const signIn = async (email: string, password: string) => {
   try {
-    console.log('Attempting sign in via Netlify proxy...');
+    console.log('Attempting direct Supabase sign in...');
     
-    const response = await fetch('/.netlify/functions/auth-proxy', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        action: 'signin',
-        email,
-        password
-      })
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
     });
-
-    const data = await response.json();
     
-    if (!response.ok) {
-      console.error('Sign in failed:', data);
-      return { 
-        error: { 
-          message: data.error || data.message || 'Sign in failed' 
-        }, 
-        user: null 
-      };
+    if (error) {
+      console.error('Direct sign in failed:', error);
+      return { error, user: null };
     }
-
-    // If we have an access token, the sign in was successful
-    if (data.access_token && data.user) {
-      console.log('Sign in successful');
-      
-      // Set the session in the Supabase client
-      await supabase.auth.setSession({
-        access_token: data.access_token,
-        refresh_token: data.refresh_token
-      });
-      
-      return { error: null, user: data.user };
-    } else {
-      return { 
-        error: { 
-          message: 'Invalid credentials' 
-        }, 
-        user: null 
-      };
-    }
+    
+    console.log('Direct sign in successful');
+    return { error: null, user: data.user };
   } catch (error) {
     console.error('Sign in error:', error);
-    return { 
-      error: { 
-        message: error.message || 'Network error' 
-      }, 
-      user: null 
-    };
+    return { error: { message: error.message || 'Network error' }, user: null };
   }
 };
 
 export const signUp = async (email: string, password: string) => {
   try {
-    console.log('Attempting sign up via Netlify proxy...');
+    console.log('Attempting direct Supabase sign up...');
     
-    const response = await fetch('/.netlify/functions/auth-proxy', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        action: 'signup',
-        email,
-        password
-      })
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
     });
-
-    const data = await response.json();
     
-    if (!response.ok) {
-      console.error('Sign up failed:', data);
+    if (error) {
+      console.error('Direct sign up failed:', error);
       
-      // Check if email already exists
-      const isEmailExists = data.error?.includes('already registered') || 
-                           data.message?.includes('already registered') ||
-                           data.error?.includes('already exists') ||
-                           data.message?.includes('already exists');
+      const isEmailExists = error.message?.includes('already registered') || 
+                           error.message?.includes('already exists');
       
       return { 
         success: false, 
         emailExists: isEmailExists,
-        error: { 
-          message: data.error || data.message || 'Sign up failed' 
-        }, 
+        error, 
         user: null 
       };
     }
-
-    // Sign up successful
-    console.log('Sign up successful');
+    
+    console.log('Direct sign up successful');
     return { 
       success: true, 
       emailExists: false, 
@@ -121,9 +70,7 @@ export const signUp = async (email: string, password: string) => {
     return { 
       success: false, 
       emailExists: false, 
-      error: { 
-        message: error.message || 'Network error' 
-      }, 
+      error: { message: error.message || 'Network error' }, 
       user: null 
     };
   }
@@ -131,40 +78,22 @@ export const signUp = async (email: string, password: string) => {
 
 export const requestPasswordReset = async (email: string) => {
   try {
-    console.log('Requesting password reset via Netlify proxy...');
+    console.log('Requesting password reset...');
     
-    const response = await fetch('/.netlify/functions/auth-proxy', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        action: 'reset-password',
-        email
-      })
-    });
-
-    const data = await response.json();
+    const { error } = await supabase.auth.resetPasswordForEmail(email);
     
-    if (!response.ok) {
-      console.error('Password reset failed:', data);
-      return { 
-        success: false, 
-        error: { 
-          message: data.error || data.message || 'Password reset failed' 
-        } 
-      };
+    if (error) {
+      console.error('Password reset failed:', error);
+      return { success: false, error };
     }
-
+    
     console.log('Password reset email sent');
     return { success: true, error: null };
   } catch (error) {
     console.error('Password reset error:', error);
     return { 
       success: false, 
-      error: { 
-        message: error.message || 'Network error' 
-      } 
+      error: { message: error.message || 'Network error' } 
     };
   }
 };
