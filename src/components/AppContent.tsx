@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import './layout-fix.css';
@@ -43,7 +43,7 @@ import { checkOpenAIConnectionStatus } from '../lib/openai';
 import { AdminButton } from './AdminButton';
 
 function AppContent() {
-  const { user, isLoading, paymentCompleted, emailVerified, authSignOut } = useAuth();
+  const { user, loading: isLoading, paymentCompleted, emailVerified, authSignOut } = useAuth();
   const [activePage, setActivePage] = useState('home');
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin');
@@ -98,9 +98,11 @@ function AppContent() {
       setOpenAIConnected(status.is_connected);
       setOpenAILoading(false);
     };
+
     fetchOpenAIStatus();
   }, []);
 
+  // Check for payment success in URL on mount
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const paymentSuccess = urlParams.get('paymentSuccess') === 'true' || urlParams.get('payment_success') === 'true';
@@ -322,19 +324,12 @@ function AppContent() {
                   setShowAuthModal(true);
                 }}
                 onForceSignOut={handleForceSignOut}
-                openAIConnected={openAIConnected}
-                openAILoading={openAILoading}
               />
               <div className="main-route-content">
                 <HeroSection onGetStarted={handleGetStarted} />
                 <FeaturesSection />
-                <ToolsSection />
-                <WritingTypesSection />
-                <StudentSuccessSection />
-                <HowItWorksSection />
                 <EnhancedSuccessSection />
               </div>
-              {shouldShowFooter() && <Footer />}
             </>
           } />
           <Route path="/pricing" element={<PricingPage onNavigate={handleNavigation} />} />
@@ -355,42 +350,37 @@ function AppContent() {
           } />
           <Route path="/writing" element={
             <WritingAccessCheck onNavigate={handleNavigation}>
-              <ErrorBoundary>
-                <div className="writing-route h-screen flex flex-col">
-                  <EnhancedHeader 
-                    textType={textType}
-                    assistanceLevel={assistanceLevel}
-                    onTextTypeChange={setTextType}
-                    onAssistanceLevelChange={setAssistanceLevel}
-                    onTimerStart={() => setTimerStarted(true)}
-                    hideTextTypeSelector={popupFlowCompleted}
-                    onHomeClick={() => handleNavigation('home')}
+              <div className="writing-route h-screen flex flex-col">
+                <EnhancedHeader 
+                  textType={textType}
+                  assistanceLevel={assistanceLevel}
+                  onTextTypeChange={setTextType}
+                  onAssistanceLevelChange={setAssistanceLevel}
+                  onTimerStart={() => setTimerStarted(true)}
+                  hideTextTypeSelector={popupFlowCompleted}
+                />
+                
+                {showExamMode ? (
+                  <ExamSimulationMode 
+                    onExit={() => setShowExamMode(false)}
                   />
-                  
-                  {showExamMode ? (
-                    <ExamSimulationMode 
-                      onExit={() => setShowExamMode(false)}
+                ) : (
+                  <div className="writing-layout-content flex-1 min-h-0">
+                    <EnhancedWritingLayout
+                      content={content}
+                      onChange={setContent}
+                      textType={textType}
+                      assistanceLevel={assistanceLevel}
+                      selectedText={selectedText}
+                      onTimerStart={setTimerStarted}
+                      onSubmit={handleSubmit}
+                      onTextTypeChange={handleTextTypeChange}
+                      onPopupCompleted={handlePopupCompleted}
+                      onNavigate={handleNavigation}
                     />
-                  ) : (
-                    <div className="writing-layout-content flex-1 min-h-0">
-                      <ErrorBoundary>
-                        <EnhancedWritingLayout
-                          content={content}
-                          onChange={setContent}
-                          textType={textType}
-                          assistanceLevel={assistanceLevel}
-                          selectedText={selectedText}
-                          onTimerStart={setTimerStarted}
-                          onSubmit={handleSubmit}
-                          onTextTypeChange={handleTextTypeChange}
-                          onPopupCompleted={handlePopupCompleted}
-                          onNavigate={handleNavigation}
-                        />
-                      </ErrorBoundary>
-                    </div>
-                  )}
-                </div>
-              </ErrorBoundary>
+                  </div>
+                )}
+              </div>
             </WritingAccessCheck>
           } />
 
@@ -403,44 +393,27 @@ function AppContent() {
           <Route path="/brainstorming-tools" element={<BrainstormingTools />} />
           <Route path="/email-verification" element={<EmailVerificationHandler />} />
 
-          <Route path="/payment-success" element={
-            <PaymentSuccessPage 
-              onNavigate={handleNavigation}
-              planType={pendingPaymentPlan}
-            />
-          } />
-
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
 
-        {/* Auth Modal */}
+        {/* Only show footer on specific pages */}
+        {shouldShowFooter() && <Footer />}
+
         <AuthModal
-          show={showAuthModal}
-          mode={authModalMode}
+          isOpen={showAuthModal}
           onClose={() => setShowAuthModal(false)}
+          mode={authModalMode}
           onAuthSuccess={handleAuthSuccess}
-          onSwitchMode={(mode) => setAuthModalMode(mode)}
         />
 
-        {/* Payment Success Banner */}
         {showPaymentSuccess && (
-          <div className="fixed top-0 left-0 right-0 bg-green-500 text-white p-4 text-center z-50">
-            <div className="flex items-center justify-center space-x-4">
-              <span>🎉 Payment successful! Your plan is now active.</span>
-              <button
-                onClick={() => setShowPaymentSuccess(false)}
-                className="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-sm"
-              >
-                Dismiss
-              </button>
-            </div>
-          </div>
+          <PaymentSuccessPage
+            onClose={() => setShowPaymentSuccess(false)}
+            planType={pendingPaymentPlan || 'unknown'}
+          />
         )}
-
-        {/* REMOVED: Floating Components that cause duplication */}
-        {/* <FloatingChatWindow /> */}
-        <AdminButton />
       </div>
+      <AdminButton />
     </div>
   );
 }
