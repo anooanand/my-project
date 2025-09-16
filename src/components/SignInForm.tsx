@@ -11,234 +11,234 @@ interface SignInFormProps {
 export function SignInForm({ onSuccess, onSignUpClick }: SignInFormProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [resetSent, setResetSent] = useState(false);
-  const [showResetForm, setShowResetForm] = useState(false);
-  const [resetEmail, setResetEmail] = useState('');
+  const [error, setError] = useState('');
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmailSent, setResetEmailSent] = useState(false);
 
-  const handleSignIn = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    
-    if (!email || !password) {
-      setError('Please enter both email and password');
-      return;
-    }
-    
     setIsLoading(true);
-    
+    setError('');
+
     try {
-      const result = await signIn(email, password);
+      const { error: signInError, user } = await signIn(email, password);
       
-      if (result.error) {
-        setError(result.error.message);
-        setIsLoading(false);
-        return;
+      if (signInError) {
+        setError(signInError.message);
+      } else if (user) {
+        onSuccess(user);
       }
-      
-      if (!result.user) {
-        setError('Sign in failed: No user data returned');
-        setIsLoading(false);
-        return;
-      }
-      
-      // Store user email in localStorage
-      localStorage.setItem('userEmail', email);
-      
-      console.log('Sign in successful, calling onSuccess with user:', result.user);
-      
-      // Call success callback with the user object
-      onSuccess(result.user);
-      
-    } catch (err: any) {
-      console.error('Unexpected error during sign in:', err);
-      setError(`An unexpected error occurred: ${err.message || 'Unknown error'}`);
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.');
+    } finally {
       setIsLoading(false);
     }
   };
 
-  const handleResetPassword = async (e: React.FormEvent) => {
+  const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    
-    if (!resetEmail) {
-      setError('Please enter your email address');
+    if (!email) {
+      setError('Please enter your email address first');
       return;
     }
-    
+
     setIsLoading(true);
-    
+    setError('');
+
     try {
-      const result = await requestPasswordReset(resetEmail);
+      const { success, error: resetError } = await requestPasswordReset(email);
       
-      if (!result.success) {
-        setError(result.error?.message || 'Failed to send reset email');
-        setIsLoading(false);
-        return;
+      if (success) {
+        setResetEmailSent(true);
+        setShowForgotPassword(false);
+      } else {
+        setError(resetError?.message || 'Failed to send reset email');
       }
-      
-      setResetSent(true);
-      setIsLoading(false);
-      
-    } catch (err: any) {
-      console.error('Unexpected error during password reset:', err);
-      setError(`An unexpected error occurred: ${err.message || 'Unknown error'}`);
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.');
+    } finally {
       setIsLoading(false);
     }
   };
 
-  if (showResetForm) {
+  if (showForgotPassword) {
     return (
-      <div className="w-full max-w-md mx-auto">
-        <form onSubmit={handleResetPassword} className="space-y-6">
-          <h2 className="text-2xl font-bold text-center text-gray-900 dark:text-white">Reset Password</h2>
-          
-          {error && (
-            <div className="p-3 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-md text-sm flex items-start">
-              <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
-              <span>{error}</span>
-            </div>
-          )}
-          
-          {resetSent && (
-            <div className="p-3 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-md text-sm">
-              Password reset email sent. Please check your inbox.
-            </div>
-          )}
-          
+      <div className="space-y-6">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900">Reset Password</h2>
+          <p className="mt-2 text-sm text-gray-600">
+            Enter your email address and we'll send you a reset link
+          </p>
+        </div>
+
+        <form onSubmit={handleForgotPassword} className="space-y-4">
           <div>
-            <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="resetEmail">
-              Email
+            <label htmlFor="reset-email" className="block text-sm font-medium text-gray-700 mb-2">
+              📧 Your Email Address
             </label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
-                id="resetEmail"
+                id="reset-email"
                 type="email"
-                value={resetEmail}
-                onChange={(e) => setResetEmail(e.target.value)}
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
-                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                placeholder="your.email@example.com"
                 required
               />
             </div>
           </div>
-          
-          <div>
-            <button
-              type="submit"
-              disabled={isLoading || resetSent}
-              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-            >
-              {isLoading ? (
-                <>
-                  <Loader className="animate-spin -ml-1 mr-2 h-5 w-5" />
-                  Sending...
-                </>
-              ) : resetSent ? (
-                'Email Sent'
-              ) : (
-                'Send Reset Link'
-              )}
-            </button>
-            
-            <button
-              type="button"
-              onClick={() => setShowResetForm(false)}
-              className="mt-4 text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 text-center w-full"
-            >
-              Back to Sign In
-            </button>
-          </div>
+
+          {error && (
+            <div className="flex items-center space-x-2 text-red-600 bg-red-50 p-3 rounded-lg">
+              <AlertCircle className="w-5 h-5" />
+              <span className="text-sm">{error}</span>
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={isLoading}
+            className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 px-4 rounded-lg font-medium hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center space-x-2"
+          >
+            {isLoading ? (
+              <>
+                <Loader className="w-5 h-5 animate-spin" />
+                <span>Sending...</span>
+              </>
+            ) : (
+              <span>Send Reset Link</span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowForgotPassword(false)}
+            className="w-full text-indigo-600 hover:text-indigo-500 font-medium"
+          >
+            Back to Sign In
+          </button>
         </form>
       </div>
     );
   }
 
+  if (resetEmailSent) {
+    return (
+      <div className="text-center space-y-4">
+        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+          <Mail className="w-8 h-8 text-green-600" />
+        </div>
+        <h2 className="text-2xl font-bold text-gray-900">Check Your Email</h2>
+        <p className="text-gray-600">
+          We've sent a password reset link to <strong>{email}</strong>
+        </p>
+        <button
+          onClick={() => {
+            setResetEmailSent(false);
+            setShowForgotPassword(false);
+          }}
+          className="text-indigo-600 hover:text-indigo-500 font-medium"
+        >
+          Back to Sign In
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="w-full max-w-md mx-auto">
-      <form onSubmit={handleSignIn} className="space-y-6">
-        <h2 className="text-2xl font-bold text-center text-gray-900 dark:text-white">Sign In</h2>
-        
-        {error && (
-          <div className="p-3 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-md text-sm flex items-start">
-            <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
-            <span>{error}</span>
-          </div>
-        )}
-        
+    <div className="space-y-6">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-gray-900">Welcome Back!</h2>
+        <p className="mt-2 text-sm text-gray-600">
+          Sign in to continue your writing journey
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="email">
-            Email
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+            📧 Your Email Address
           </label>
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
-              placeholder="you@example.com"
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              placeholder="your.email@example.com"
               required
             />
           </div>
         </div>
-        
+
         <div>
-          <div className="flex items-center justify-between">
-            <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="password">
-              Password
-            </label>
-            <button
-              type="button"
-              onClick={() => setShowResetForm(true)}
-              className="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300"
-            >
-              Forgot password?
-            </button>
-          </div>
+          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+            🔐 Your Secret Password
+          </label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
               id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
-              placeholder="••••••••"
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              placeholder="Make it super secret!"
               required
             />
           </div>
         </div>
-        
-        <div>
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-          >
-            {isLoading ? (
-              <>
-                <Loader className="animate-spin -ml-1 mr-2 h-5 w-5" />
-                Signing in...
-              </>
-            ) : (
-              'Sign In'
-            )}
-          </button>
-          
+
+        {error && (
+          <div className="flex items-center space-x-2 text-red-600 bg-red-50 p-3 rounded-lg">
+            <AlertCircle className="w-5 h-5" />
+            <span className="text-sm">{error}</span>
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 px-4 rounded-lg font-medium hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center space-x-2"
+        >
+          {isLoading ? (
+            <>
+              <Loader className="w-5 h-5 animate-spin" />
+              <span>Signing in...</span>
+            </>
+          ) : (
+            <>
+              <span>😊 Let's Go!</span>
+            </>
+          )}
+        </button>
+
+        <div className="text-center space-y-2">
           <button
             type="button"
-            onClick={onSignUpClick}
-            className="mt-4 text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 text-center w-full"
+            onClick={() => setShowForgotPassword(true)}
+            className="text-sm text-indigo-600 hover:text-indigo-500"
           >
-            Don't have an account? Sign up
+            Forgot your password?
           </button>
+          
+          <p className="text-sm text-gray-600">
+            New here?{' '}
+            <button
+              type="button"
+              onClick={onSignUpClick}
+              className="text-indigo-600 hover:text-indigo-500 font-medium"
+            >
+              🌟 Join the fun!
+            </button>
+          </p>
         </div>
       </form>
     </div>
   );
 }
-
