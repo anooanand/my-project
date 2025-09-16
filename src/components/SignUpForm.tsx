@@ -8,222 +8,226 @@ interface SimpleSignUpProps {
 }
 
 // Changed from "export default function" to "export function" to match import style
-export function SimpleSignUp({ onSignInClick, onSignUpSuccess }: SimpleSignUpProps) {
+export function SignUpForm({ onSignInClick, onSignUpSuccess }: SimpleSignUpProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [connectionStatus, setConnectionStatus] = useState<{connected: boolean, message: string} | null>(null);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
 
-  // Test connection to Netlify Function on component mount
+  // Password validation
+  const [passwordValidation, setPasswordValidation] = useState({
+    length: false,
+    uppercase: false,
+    lowercase: false,
+    number: false,
+    special: false
+  });
+
   useEffect(() => {
-    const testConnection = async () => {
-      try {
-        const response = await fetch('/.netlify/functions/auth-proxy', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            action: 'ping'
-          })
-        });
-        
-        if (response.ok) {
-          setConnectionStatus({
-            connected: true,
-            message: "Connected to authentication service"
-          });
-        } else {
-          setConnectionStatus({
-            connected: false,
-            message: "Connected to server but authentication service returned an error"
-          });
-        }
-      } catch (err) {
-        console.error("Connection test failed:", err);
-        setConnectionStatus({
-          connected: false,
-          message: "Could not connect to authentication service. Please try again later."
-        });
-      }
-    };
-    
-    testConnection();
-  }, []);
+    setPasswordValidation({
+      length: password.length >= 8,
+      uppercase: /[A-Z]/.test(password),
+      lowercase: /[a-z]/.test(password),
+      number: /\d/.test(password),
+      special: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+    });
+  }, [password]);
+
+  const isPasswordValid = Object.values(passwordValidation).every(Boolean);
+  const passwordsMatch = password === confirmPassword && confirmPassword.length > 0;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
     
-    // Validate passwords match
-    if (password !== confirmPassword) {
+    if (!isPasswordValid) {
+      setError('Please ensure your password meets all requirements');
+      return;
+    }
+
+    if (!passwordsMatch) {
       setError('Passwords do not match');
       return;
     }
-    
-    // Validate password strength
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters');
-      return;
-    }
-    
+
     setIsLoading(true);
-    
+    setError('');
+
     try {
-      console.log("Starting signup process...");
       const result = await signUp(email, password);
       
       if (result.success) {
-        console.log("Signup successful!");
-        // Clear the form
-        setEmail('');
-        setPassword('');
-        setConfirmPassword('');
-        // Show success message
-        setConnectionStatus({
-          connected: true,
-          message: "Account created successfully! Redirecting..."
-        });
-        // Call the success handler
-        if (onSignUpSuccess) {
+        setSuccess(true);
+        if (onSignUpSuccess && result.user) {
           onSignUpSuccess(result.user);
         }
-        // Close the modal or redirect after a short delay
-        setTimeout(() => {
-          // This will trigger the parent component to close the modal or redirect
-          if (onSignUpSuccess) {
-            onSignUpSuccess(result.user);
-          }
-        }, 2000);
       } else if (result.emailExists) {
-        setError('This email is already registered. Please sign in instead.');
-      } else if (result.error) {
-        throw result.error;
-      }
-    } catch (err: any) {
-      console.error("Signup failed:", err);
-      
-      if (err && typeof err === 'object') {
-        if (err.message?.includes('already registered') || err.message?.includes('already exists')) {
-          setError('This email is already registered. Please sign in instead.');
-        } else if (err.message?.includes('network') || err.message?.includes('connect')) {
-          setError('Network error: Please check your internet connection and try again.');
-        } else {
-          setError(err.message || 'An unexpected error occurred');
-        }
-        
-        // Log detailed error for debugging
-        console.error('Signup error details:', err);
+        setError('An account with this email already exists. Please sign in instead.');
       } else {
-        setError('An unexpected error occurred');
-        console.error('Unknown signup error:', err);
+        setError(result.error?.message || 'Sign up failed. Please try again.');
       }
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
-  
+
+  if (success) {
+    return (
+      <div className="text-center space-y-4">
+        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+          <Mail className="w-8 h-8 text-green-600" />
+        </div>
+        <h2 className="text-2xl font-bold text-gray-900">Check Your Email!</h2>
+        <p className="text-gray-600">
+          We've sent a confirmation link to <strong>{email}</strong>
+        </p>
+        <p className="text-sm text-gray-500">
+          Please check your email and click the confirmation link to activate your account.
+        </p>
+        <button
+          onClick={onSignInClick}
+          className="text-indigo-600 hover:text-indigo-500 font-medium"
+        >
+          Back to Sign In
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="w-full max-w-md">
-      <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 shadow-md rounded-lg px-8 pt-6 pb-8 mb-4">
-        <h2 className="text-2xl font-bold text-center mb-6 text-gray-900 dark:text-white">Create Account</h2>
-        
-        {error && (
-          <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-md text-sm">
-            {error}
-          </div>
-        )}
-        
-        {connectionStatus && (
-          <div className={`mb-4 p-3 rounded-md text-sm ${
-            connectionStatus.connected 
-              ? 'bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300' 
-              : 'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300'
-          }`}>
-            {connectionStatus.message}
-          </div>
-        )}
-        
-        <div className="mb-4">
-          <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="email">
-            Email
+    <div className="space-y-6">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-gray-900">Join the Adventure!</h2>
+        <p className="mt-2 text-sm text-gray-600">
+          Create your account and start writing amazing stories
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label htmlFor="signup-email" className="block text-sm font-medium text-gray-700 mb-2">
+            📧 Your Email Address
           </label>
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
-              id="email"
+              id="signup-email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
-              placeholder="you@example.com"
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              placeholder="your.email@example.com"
               required
             />
           </div>
         </div>
-        
-        <div className="mb-4">
-          <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="password">
-            Password
+
+        <div>
+          <label htmlFor="signup-password" className="block text-sm font-medium text-gray-700 mb-2">
+            🔐 Create a Strong Password
           </label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
-              id="password"
+              id="signup-password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
-              placeholder="••••••••"
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+              placeholder="Make it super secure!"
               required
             />
           </div>
+          
+          {password && (
+            <div className="mt-2 space-y-1">
+              <div className="text-xs text-gray-600">Password requirements:</div>
+              <div className="grid grid-cols-2 gap-1 text-xs">
+                <div className={`flex items-center space-x-1 ${passwordValidation.length ? 'text-green-600' : 'text-gray-400'}`}>
+                  <span>{passwordValidation.length ? '✓' : '○'}</span>
+                  <span>8+ characters</span>
+                </div>
+                <div className={`flex items-center space-x-1 ${passwordValidation.uppercase ? 'text-green-600' : 'text-gray-400'}`}>
+                  <span>{passwordValidation.uppercase ? '✓' : '○'}</span>
+                  <span>Uppercase letter</span>
+                </div>
+                <div className={`flex items-center space-x-1 ${passwordValidation.lowercase ? 'text-green-600' : 'text-gray-400'}`}>
+                  <span>{passwordValidation.lowercase ? '✓' : '○'}</span>
+                  <span>Lowercase letter</span>
+                </div>
+                <div className={`flex items-center space-x-1 ${passwordValidation.number ? 'text-green-600' : 'text-gray-400'}`}>
+                  <span>{passwordValidation.number ? '✓' : '○'}</span>
+                  <span>Number</span>
+                </div>
+                <div className={`flex items-center space-x-1 ${passwordValidation.special ? 'text-green-600' : 'text-gray-400'} col-span-2`}>
+                  <span>{passwordValidation.special ? '✓' : '○'}</span>
+                  <span>Special character (!@#$%^&*)</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-        
-        <div className="mb-6">
-          <label className="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" htmlFor="confirmPassword">
-            Confirm Password
+
+        <div>
+          <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-2">
+            🔐 Confirm Your Password
           </label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
-              id="confirmPassword"
+              id="confirm-password"
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
-              placeholder="••••••••"
+              className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${
+                confirmPassword && !passwordsMatch ? 'border-red-300' : 'border-gray-300'
+              }`}
+              placeholder="Type it again to be sure!"
               required
             />
           </div>
+          {confirmPassword && !passwordsMatch && (
+            <p className="mt-1 text-xs text-red-600">Passwords do not match</p>
+          )}
+          {confirmPassword && passwordsMatch && (
+            <p className="mt-1 text-xs text-green-600">✓ Passwords match</p>
+          )}
         </div>
-        
-        <div className="flex flex-col gap-4">
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-          >
-            {isLoading ? (
-              <>
-                <Loader className="animate-spin -ml-1 mr-2 h-5 w-5" />
-                Creating account...
-              </>
-            ) : (
-              'Sign Up'
-            )}
-          </button>
-          
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+            <p className="text-sm text-red-600">{error}</p>
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={isLoading || !isPasswordValid || !passwordsMatch}
+          className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 px-4 rounded-lg font-medium hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center space-x-2"
+        >
+          {isLoading ? (
+            <>
+              <Loader className="w-5 h-5 animate-spin" />
+              <span>Creating account...</span>
+            </>
+          ) : (
+            <span>🚀 Start My Journey!</span>
+          )}
+        </button>
+
+        <p className="text-center text-sm text-gray-600">
+          Already have an account?{' '}
           <button
             type="button"
             onClick={onSignInClick}
-            className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 text-center"
+            className="text-indigo-600 hover:text-indigo-500 font-medium"
           >
-            Already have an account? Sign in
+            Sign in here
           </button>
-        </div>
+        </p>
       </form>
     </div>
   );
