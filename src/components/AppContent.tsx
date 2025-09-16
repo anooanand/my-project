@@ -158,12 +158,8 @@ function AppContent() {
         setActivePage('payment-success');
         setShowPaymentSuccess(true);
       } else {
-        // Navigate to appropriate page based on user state
-        if (user && emailVerified && paymentCompleted) {
-          setActivePage('writing');
-        } else {
-          setActivePage('dashboard');
-        }
+        // Navigate to dashboard after successful authentication
+        setActivePage('dashboard');
       }
     } catch (error) {
       console.error('Auth success navigation error:', error);
@@ -171,7 +167,7 @@ function AppContent() {
       setActivePage('dashboard');
       setShowAuthModal(false);
     }
-  }, [pendingPaymentPlan, user, emailVerified, paymentCompleted]);
+  }, [pendingPaymentPlan]);
 
   const handleForceSignOut = async () => {
     try {
@@ -214,19 +210,8 @@ function AppContent() {
       // Prevent navigation during loading states
       if (isLoading) return;
       
-      // Special handling for dashboard - redirect based on verification and payment status
-      if (page === 'dashboard' && user) {
-        if (!emailVerified) {
-          setActivePage('dashboard'); // Show email verification reminder
-        } else if (paymentCompleted) {
-          setActivePage('writing'); // Full access
-        } else {
-          setActivePage('pricing'); // Need to complete payment
-        }
-      } else {
-        // Smooth navigation with state cleanup
-        setActivePage(page);
-      }
+      // Always navigate to the requested page
+      setActivePage(page);
       
       // Always close auth modal on navigation
       setShowAuthModal(false);
@@ -239,7 +224,7 @@ function AppContent() {
       // Fallback to home page on navigation errors
       setActivePage('home');
     }
-  }, [user, emailVerified, paymentCompleted, isLoading]);
+  }, [isLoading]);
 
   // NAVIGATION FIX: Improved get started handler with consistent flow
   const handleGetStarted = useCallback(async () => {
