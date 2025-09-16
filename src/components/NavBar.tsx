@@ -98,64 +98,68 @@ export function NavBar({
   };
 
   // Helper function for user avatar
-  const getUserInitial = () => {
-    if (!user?.email) return 'U';
-    return user.email.charAt(0).toUpperCase();
+  const getUserAvatar = () => {
+    if (!user?.email) return null;
+    
+    const initial = user.email.charAt(0).toUpperCase();
+    return (
+      <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium text-sm">
+        {initial}
+      </div>
+    );
   };
 
   return (
-    <nav className="bg-white/95 backdrop-blur-sm border-b border-gray-200/50 sticky top-0 z-50">
+    <nav className="bg-white/90 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex items-center">
-            <Link
-              to="/"
+            <button
               onClick={() => onNavigate('home')}
-              className="flex items-center space-x-2 text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent hover:from-indigo-700 hover:to-purple-700 transition-all duration-300"
+              className="flex items-center space-x-2 text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent hover:scale-105 transition-transform duration-300"
             >
               <div className="w-8 h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
                 AI
               </div>
               <span>InstaChat AI</span>
-            </Link>
+            </button>
           </div>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-1">
             {navigationItems.map((item) => {
-              const IconComponent = item.icon;
+              const Icon = item.icon;
               const isActive = activePage === item.id;
               
               return (
-                <Link
+                <button
                   key={item.id}
-                  to={item.href}
-                  className={getNavItemClasses(item.id, isActive)}
                   onClick={() => onNavigate(item.id)}
+                  className={getNavItemClasses(item.id, isActive)}
                 >
-                  <IconComponent className="w-4 h-4" />
+                  <Icon className="w-4 h-4" />
                   <span>{item.name}</span>
-                </Link>
+                </button>
               );
             })}
 
-            {/* Learning Menu for authenticated users */}
+            {/* Learning Dropdown */}
             {user && (
               <div className="relative">
                 <button
                   onClick={() => setIsLearningMenuOpen(!isLearningMenuOpen)}
-                  className={getNavItemClasses('learning', ['learning', 'progress-dashboard', 'quiz-demo'].includes(activePage))}
+                  className={getNavItemClasses('learning', activePage.includes('learning') || activePage.includes('progress') || activePage.includes('quiz'))}
                 >
                   <BookOpen className="w-4 h-4" />
                   <span>Learning</span>
-                  <ChevronDown className="w-4 h-4" />
+                  <ChevronDown className="w-3 h-3" />
                 </button>
 
                 {isLearningMenuOpen && (
-                  <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-200/50 py-2 z-50">
+                  <div className="absolute top-full left-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-200 py-2 z-50">
                     {learningItems.map((item) => {
-                      const IconComponent = item.icon;
+                      const Icon = item.icon;
                       return (
                         <button
                           key={item.id}
@@ -163,9 +167,9 @@ export function NavBar({
                             onNavigate(item.id);
                             setIsLearningMenuOpen(false);
                           }}
-                          className="w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors duration-200 flex items-start space-x-3"
+                          className="w-full px-4 py-3 text-left hover:bg-indigo-50 flex items-start space-x-3 transition-colors duration-200"
                         >
-                          <IconComponent className="w-5 h-5 text-indigo-600 mt-0.5" />
+                          <Icon className="w-5 h-5 text-indigo-600 mt-0.5" />
                           <div>
                             <div className="font-medium text-gray-900">{item.name}</div>
                             <div className="text-sm text-gray-500">{item.description}</div>
@@ -179,40 +183,47 @@ export function NavBar({
             )}
           </div>
 
-          {/* User Menu / Auth Buttons */}
+          {/* Auth Buttons */}
           <div className="hidden md:flex items-center space-x-3">
             {user ? (
               <div className="relative">
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl"
+                  className="flex items-center space-x-2 px-3 py-2 rounded-lg hover:bg-indigo-50 transition-colors duration-200"
                 >
-                  <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-sm font-medium">
-                    {getUserInitial()}
-                  </div>
-                  <ChevronDown className="w-4 h-4" />
+                  {getUserAvatar()}
+                  <span className="text-sm font-medium text-gray-700 max-w-32 truncate">
+                    {user.email}
+                  </span>
+                  <ChevronDown className="w-4 h-4 text-gray-500" />
                 </button>
-              
+
                 {isUserMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200/50 py-2 z-50">
-                    <div className="px-4 py-2 border-b border-gray-100">
-                      <div className="text-sm font-medium text-gray-900">Signed in as</div>
-                      <div className="text-sm text-gray-500 truncate">{user.email}</div>
-                    </div>
-                    <Link
-                      to="/dashboard"
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200 flex items-center space-x-2"
+                  <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-200 py-2 z-50">
+                    <button
                       onClick={() => {
                         onNavigate('dashboard');
                         setIsUserMenuOpen(false);
                       }}
+                      className="w-full px-4 py-2 text-left hover:bg-indigo-50 flex items-center space-x-2 transition-colors duration-200"
                     >
-                      <Home className="w-4 h-4" />
-                      <span>Dashboard</span>
-                    </Link>
+                      <Target className="w-4 h-4 text-indigo-600" />
+                      <span className="text-gray-700">Dashboard</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        onNavigate('settings');
+                        setIsUserMenuOpen(false);
+                      }}
+                      className="w-full px-4 py-2 text-left hover:bg-indigo-50 flex items-center space-x-2 transition-colors duration-200"
+                    >
+                      <Target className="w-4 h-4 text-indigo-600" />
+                      <span className="text-gray-700">Settings</span>
+                    </button>
+                    <hr className="my-2 border-gray-200" />
                     <button
                       onClick={handleSignOut}
-                      className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 transition-colors duration-200 flex items-center space-x-2"
+                      className="w-full px-4 py-2 text-left hover:bg-red-50 flex items-center space-x-2 transition-colors duration-200 text-red-600"
                     >
                       <LogOut className="w-4 h-4" />
                       <span>Sign Out</span>
@@ -221,7 +232,7 @@ export function NavBar({
                 )}
               </div>
             ) : (
-              <div className="flex items-center space-x-3">
+              <>
                 <button
                   onClick={onSignInClick}
                   className={getButtonClasses('secondary')}
@@ -234,50 +245,52 @@ export function NavBar({
                 >
                   Get Started
                 </button>
-              </div>
+              </>
             )}
+          </div>
 
-            {/* Mobile Menu Button */}
-            <div className="md:hidden">
-              <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors duration-200"
-              >
-                {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-              </button>
-            </div>
+          {/* Mobile menu button */}
+          <div className="md:hidden">
+            <button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="p-2 rounded-lg text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 transition-colors duration-200"
+            >
+              {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
           </div>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="md:hidden border-t border-gray-200 py-4">
+          <div className="md:hidden py-4 border-t border-gray-200 bg-white/95 backdrop-blur-md">
             <div className="space-y-2">
               {navigationItems.map((item) => {
-                const IconComponent = item.icon;
+                const Icon = item.icon;
+                const isActive = activePage === item.id;
+                
                 return (
-                  <Link
+                  <button
                     key={item.id}
-                    to={item.href}
-                    className={`block px-4 py-2 rounded-lg text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 transition-colors duration-200 flex items-center space-x-2 ${
-                      activePage === item.id ? 'bg-indigo-100 text-indigo-600' : ''
-                    }`}
                     onClick={() => {
                       onNavigate(item.id);
                       setIsMenuOpen(false);
                     }}
+                    className={`w-full ${getNavItemClasses(item.id, isActive)} justify-start`}
                   >
-                    <IconComponent className="w-4 h-4" />
+                    <Icon className="w-4 h-4" />
                     <span>{item.name}</span>
-                  </Link>
+                  </button>
                 );
               })}
-              
+
               {user && (
                 <>
-                  <div className="border-t border-gray-200 pt-2 mt-2">
+                  <div className="pt-2 border-t border-gray-200">
+                    <div className="text-xs font-medium text-gray-500 uppercase tracking-wider px-4 py-2">
+                      Learning
+                    </div>
                     {learningItems.map((item) => {
-                      const IconComponent = item.icon;
+                      const Icon = item.icon;
                       return (
                         <button
                           key={item.id}
@@ -285,33 +298,42 @@ export function NavBar({
                             onNavigate(item.id);
                             setIsMenuOpen(false);
                           }}
-                          className="w-full text-left px-4 py-2 text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 transition-colors duration-200 flex items-center space-x-2"
+                          className="w-full px-4 py-3 text-left hover:bg-indigo-50 flex items-start space-x-3 transition-colors duration-200"
                         >
-                          <IconComponent className="w-4 h-4" />
-                          <span>{item.name}</span>
+                          <Icon className="w-5 h-5 text-indigo-600 mt-0.5" />
+                          <div>
+                            <div className="font-medium text-gray-900">{item.name}</div>
+                            <div className="text-sm text-gray-500">{item.description}</div>
+                          </div>
                         </button>
                       );
                     })}
                   </div>
-                  
-                  <div className="border-t border-gray-200 pt-2 mt-2">
-                    <div className="px-4 py-2 text-sm text-gray-500">
-                      Signed in as {user.email}
-                    </div>
-                    <Link
-                      to="/dashboard"
-                      className="block px-4 py-2 text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 transition-colors duration-200 flex items-center space-x-2"
+
+                  <div className="pt-2 border-t border-gray-200">
+                    <button
                       onClick={() => {
                         onNavigate('dashboard');
                         setIsMenuOpen(false);
                       }}
+                      className="w-full px-4 py-2 text-left hover:bg-indigo-50 flex items-center space-x-2 transition-colors duration-200"
                     >
-                      <Home className="w-4 h-4" />
-                      <span>Dashboard</span>
-                    </Link>
+                      <Target className="w-4 h-4 text-indigo-600" />
+                      <span className="text-gray-700">Dashboard</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        onNavigate('settings');
+                        setIsMenuOpen(false);
+                      }}
+                      className="w-full px-4 py-2 text-left hover:bg-indigo-50 flex items-center space-x-2 transition-colors duration-200"
+                    >
+                      <Target className="w-4 h-4 text-indigo-600" />
+                      <span className="text-gray-700">Settings</span>
+                    </button>
                     <button
                       onClick={handleSignOut}
-                      className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 transition-colors duration-200 flex items-center space-x-2"
+                      className="w-full px-4 py-2 text-left hover:bg-red-50 flex items-center space-x-2 transition-colors duration-200 text-red-600"
                     >
                       <LogOut className="w-4 h-4" />
                       <span>Sign Out</span>
@@ -319,15 +341,15 @@ export function NavBar({
                   </div>
                 </>
               )}
-              
+
               {!user && (
-                <div className="border-t border-gray-200 pt-2 mt-2 space-y-2">
+                <div className="pt-2 border-t border-gray-200 space-y-2">
                   <button
                     onClick={() => {
                       onSignInClick();
                       setIsMenuOpen(false);
                     }}
-                    className="w-full text-left px-4 py-2 text-indigo-600 hover:bg-indigo-50 transition-colors duration-200"
+                    className={`w-full ${getButtonClasses('secondary')} justify-center`}
                   >
                     Sign In
                   </button>
@@ -336,7 +358,7 @@ export function NavBar({
                       onSignUpClick();
                       setIsMenuOpen(false);
                     }}
-                    className="w-full text-left px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-200"
+                    className={`w-full ${getButtonClasses('primary')} justify-center`}
                   >
                     Get Started
                   </button>
