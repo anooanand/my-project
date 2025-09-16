@@ -75,8 +75,7 @@ function WritingArea({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const prevTextRef = useRef(currentContent);
-  const feedbackCooldownRef = useRef<Set<string>>(new Set());
-  const lastFeedbackTimeRef = useRef<number>(0);
+  const lastFeedbackWordCountRef = useRef<number>(0);
 
   // -------- Analysis state --------
   const [analysis, setAnalysis] = useState<DetailedFeedback | null>(null);
@@ -95,7 +94,7 @@ function WritingArea({
     return Math.round(wordCount / minutes);
   }, [wordCount, totalWritingTime]);
 
-  // Enhanced content change handler with better automatic feedback
+  // SIMPLIFIED automatic feedback that actually works
   const handleContentChange = (newContent: string) => {
     setCurrentContent(newContent);
     onChange?.(newContent);
@@ -127,67 +126,40 @@ function WritingArea({
       }
     }, 2000); // 2 seconds of inactivity
 
-    // ENHANCED AUTOMATIC FEEDBACK LOGIC
-    console.log("Content changed, checking for feedback triggers...");
+    // SIMPLE AUTOMATIC FEEDBACK LOGIC
+    const currentWordCount = newContent.trim() ? newContent.trim().split(/\s+/).length : 0;
+    const lastFeedbackWordCount = lastFeedbackWordCountRef.current;
     
-    // Real-time paragraph detection
+    console.log("Content changed:", {
+      currentWordCount,
+      lastFeedbackWordCount,
+      difference: currentWordCount - lastFeedbackWordCount
+    });
+
+    // Trigger feedback every 20 words
+    if (currentWordCount >= 20 && currentWordCount - lastFeedbackWordCount >= 20) {
+      console.log("Triggering automatic feedback at", currentWordCount, "words");
+      
+      // Get the last paragraph or recent text
+      const paragraphs = newContent.split('\n\n').filter(p => p.trim());
+      const recentText = paragraphs[paragraphs.length - 1] || newContent.slice(-200);
+      
+      // Emit the event
+      eventBus.emit("paragraph.ready", {
+        paragraph: recentText,
+        index: 0,
+        wordCount: currentWordCount
+      });
+      
+      // Update the last feedback word count
+      lastFeedbackWordCountRef.current = currentWordCount;
+    }
+
+    // Also emit new paragraph events
     const newParagraphs = detectNewParagraphs(prevTextRef.current, newContent);
     if (newParagraphs.length > 0) {
       console.log("New paragraphs detected:", newParagraphs);
       eventBus.emit("newParagraph", { paragraphs: newParagraphs });
-    }
-
-    // Enhanced word threshold detection for coaching
-    const wordThresholdResult = detectWordThreshold(prevTextRef.current, newContent, 10);
-    if (wordThresholdResult) {
-      console.log("Word threshold result:", wordThresholdResult);
-      
-      // Prevent spam by limiting feedback frequency
-      const currentTime = Date.now();
-      const timeSinceLastFeedback = currentTime - lastFeedbackTimeRef.current;
-      
-      // Create a unique key for this feedback to prevent duplicates
-      const feedbackKey = `${wordThresholdResult.trigger || 'default'}-${Math.floor(wordThresholdResult.wordCount / 15) * 15}`;
-      
-      // Only provide feedback if:
-      // 1. We haven't given this exact feedback before
-      // 2. At least 5 seconds have passed since last feedback
-      // 3. The content is substantial enough (20+ words)
-      if (!feedbackCooldownRef.current.has(feedbackKey) && 
-          timeSinceLastFeedback > 5000 && 
-          wordThresholdResult.wordCount >= 20) {
-        
-        console.log("Emitting paragraph.ready event:", {
-          paragraph: wordThresholdResult.text,
-          index: 0,
-          wordCount: wordThresholdResult.wordCount,
-          trigger: wordThresholdResult.trigger
-        });
-        
-        feedbackCooldownRef.current.add(feedbackKey);
-        lastFeedbackTimeRef.current = currentTime;
-        
-        // Emit coaching event with enhanced context
-        eventBus.emit("paragraph.ready", {
-          paragraph: wordThresholdResult.text,
-          index: 0,
-          wordCount: wordThresholdResult.wordCount,
-          trigger: wordThresholdResult.trigger
-        });
-
-        // Clear old feedback keys to prevent memory buildup (keep last 5)
-        if (feedbackCooldownRef.current.size > 5) {
-          const keys = Array.from(feedbackCooldownRef.current);
-          keys.slice(0, 2).forEach(key => feedbackCooldownRef.current.delete(key));
-        }
-      } else {
-        console.log("Feedback skipped:", {
-          hasFeedbackKey: feedbackCooldownRef.current.has(feedbackKey),
-          timeSinceLastFeedback,
-          wordCount: wordThresholdResult.wordCount,
-          feedbackKey
-        });
-      }
     }
 
     // Update previous text reference
@@ -304,7 +276,7 @@ function WritingArea({
   return (
     <div className={`flex h-screen bg-gray-50 transition-all duration-300 ${showFocusMode ? 'bg-gray-900' : ''}`}>
       {/* Left side - Writing Area */}
-      <div className={`flex-1 flex flex-col transition-all duration-300 ${showFocusMode ? 'mr-0' : 'mr-4'} max-w-[calc(100%-21rem)]`}>
+      <div className={`flex-1 flex flex-col transition-all duration-300 ${showFocusMode ? 'mr-0' : 'mr-4'} max-w-[calc(100%-25rem)]`}>
         {/* Writing Prompt Section */}
         <div className={`bg-white rounded-lg shadow-sm p-6 mb-4 focus-hide ${showFocusMode ? 'opacity-30' : ''}`}>
           <div className="flex items-start space-x-3">
@@ -427,9 +399,9 @@ function WritingArea({
         </div>
       </div>
 
-      {/* Right side - Writing Buddy Panel */}
+      {/* Right side - Writing Buddy Panel - RESTORED PROPER WIDTH */}
       {!showFocusMode && (
-        <div className="w-80 min-w-80 flex-shrink-0">
+        <div className="w-96 min-w-96 flex-shrink-0">
           <TabbedCoachPanel
             analysis={analysis}
             onApplyFix={onApplyFix}
