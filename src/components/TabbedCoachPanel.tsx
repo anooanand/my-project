@@ -173,9 +173,9 @@ export function TabbedCoachPanel({
                       </p>
                     </div>
                   </div>
-                )
-              )}
-            </div>
+                )}
+              </div>
+            )}
             
             {tab === "vocab" && (
               <div className="h-full overflow-auto p-4">
