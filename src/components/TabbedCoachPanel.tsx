@@ -4,7 +4,7 @@ import { RubricPanel } from "./RubricPanel";
 import { VocabCoach } from "./VocabCoach";
 import { ReportModal } from "./ReportModal";
 import type { DetailedFeedback, LintFix } from "../types/feedback";
-import { ExternalLink, FileText } from 'lucide-react';
+import { ExternalLink, FileText, MessageSquare, BarChart3, BookOpen, TrendingUp } from 'lucide-react';
 
 type Props = { 
   analysis: DetailedFeedback | null; 
@@ -24,125 +24,190 @@ export function TabbedCoachPanel({
   const [tab, setTab] = useState<"coach" | "analysis" | "vocab" | "progress">("coach");
   const [showFullReport, setShowFullReport] = useState(false);
   
-  const Tab = ({ id, label }:{ id: "coach"|"analysis"|"vocab"|"progress"; label: string }) => (
+  const Tab = ({ id, label, icon: Icon }:{ 
+    id: "coach"|"analysis"|"vocab"|"progress"; 
+    label: string;
+    icon: React.ComponentType<any>;
+  }) => (
     <button
-      className={`px-3 py-1 rounded-lg text-sm ${tab === id ? "bg-white text-black" : "bg-black/20 text-white/80"}`}
+      className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+        tab === id 
+          ? "bg-white text-purple-600 shadow-sm" 
+          : "bg-purple-500/20 text-white/90 hover:bg-purple-500/30"
+      }`}
       onClick={() => setTab(id)}
     >
-      {label}
+      <Icon className="w-4 h-4" />
+      <span>{label}</span>
     </button>
   );
 
   return (
     <>
-      <div className="rounded-2xl p-3 bg-gradient-to-b from-purple-600 to-fuchsia-600 text-white">
-        <div className="flex gap-2 mb-3">
-          <Tab id="coach" label="Coach" />
-          <Tab id="analysis" label="Analysis" />
-          <Tab id="vocab" label="Vocab" />
-          <Tab id="progress" label="Progress" />
+      <div className="h-full flex flex-col rounded-2xl bg-gradient-to-br from-purple-600 via-purple-700 to-fuchsia-600 text-white shadow-xl">
+        {/* Tab Navigation */}
+        <div className="p-4 border-b border-white/20">
+          <div className="grid grid-cols-2 gap-2 mb-3">
+            <Tab id="coach" label="Coach" icon={MessageSquare} />
+            <Tab id="analysis" label="Analysis" icon={BarChart3} />
+            <Tab id="vocab" label="Vocab" icon={BookOpen} />
+            <Tab id="progress" label="Progress" icon={TrendingUp} />
+          </div>
         </div>
 
-        <div className="rounded-xl bg-white p-3 text-black">
-          {tab === "coach" && (
-            <div className="max-h-[60vh] overflow-auto">
-              <CoachProvider />
-            </div>
-          )}
-          {tab === "analysis" && (
-            analysis ? (
-              <div className="space-y-4">
-                {/* Quick Summary */}
-                <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border">
-                  <div className="flex justify-between items-center mb-3">
-                    <h3 className="font-semibold text-lg">NSW Assessment Summary</h3>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-blue-600">{analysis.overallScore}/100</div>
-                      <div className="text-sm text-gray-600">Overall Score</div>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-2 text-sm mb-4">
-                    <div className="flex justify-between">
-                      <span>Ideas:</span>
-                      <span className="font-medium">{analysis.criteria.ideasContent.score}/5</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Structure:</span>
-                      <span className="font-medium">{analysis.criteria.structureOrganization.score}/5</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Language:</span>
-                      <span className="font-medium">{analysis.criteria.languageVocab.score}/5</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>SPaG:</span>
-                      <span className="font-medium">{analysis.criteria.spellingPunctuationGrammar.score}/5</span>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={() => setShowFullReport(true)}
-                    className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
-                  >
-                    <FileText className="w-4 h-4" />
-                    <span>View Full Report</span>
-                    <ExternalLink className="w-4 h-4" />
-                  </button>
-                </div>
-
-                {/* Quick Fixes */}
-                {(analysis.grammarCorrections.length > 0 || analysis.vocabularyEnhancements.length > 0) && (
-                  <div className="border rounded-lg p-3">
-                    <h4 className="font-medium mb-2">Quick Fixes Available</h4>
-                    <div className="space-y-2 max-h-32 overflow-y-auto">
-                      {[...analysis.grammarCorrections, ...analysis.vocabularyEnhancements].slice(0, 3).map((fix, index) => (
-                        <div key={index} className="bg-blue-50 p-2 rounded text-sm">
-                          <div className="font-medium">"{fix.original}" → "{fix.replacement}"</div>
-                          <button
-                            className="mt-1 px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
-                            onClick={() => onApplyFix(fix)}
-                          >
-                            Apply
-                          </button>
+        {/* Tab Content */}
+        <div className="flex-1 p-4 overflow-hidden">
+          <div className="h-full rounded-xl bg-white text-gray-900 shadow-inner">
+            {tab === "coach" && (
+              <div className="h-full">
+                <CoachProvider />
+              </div>
+            )}
+            
+            {tab === "analysis" && (
+              <div className="h-full overflow-auto p-4">
+                {analysis ? (
+                  <div className="space-y-4">
+                    {/* NSW Assessment Header */}
+                    <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border border-blue-200">
+                      <div className="flex justify-between items-center mb-3">
+                        <h3 className="font-bold text-lg text-purple-700">NSW Selective Writing Assessment</h3>
+                        <div className="text-right">
+                          <div className="text-3xl font-bold text-blue-600">{analysis.overallScore}/100</div>
+                          <div className="text-sm text-gray-600 font-medium">Overall Score</div>
                         </div>
-                      ))}
+                      </div>
+                      
+                      {/* Assessment ID */}
+                      <div className="text-xs text-gray-500 mb-3">
+                        Assessment ID: {analysis.assessmentId || 'NSW-' + Date.now().toString().slice(-6)}
+                      </div>
+                      
+                      {/* Criteria Grid */}
+                      <div className="grid grid-cols-2 gap-3 text-sm mb-4">
+                        <div className="bg-white p-3 rounded-lg border">
+                          <div className="flex justify-between items-center">
+                            <span className="font-medium">Ideas & Content</span>
+                            <span className="font-bold text-blue-600">{analysis.criteria.ideasContent.score}/5</span>
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">30%</div>
+                        </div>
+                        <div className="bg-white p-3 rounded-lg border">
+                          <div className="flex justify-between items-center">
+                            <span className="font-medium">Structure & Organization</span>
+                            <span className="font-bold text-blue-600">{analysis.criteria.structureOrganization.score}/5</span>
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">25%</div>
+                        </div>
+                        <div className="bg-white p-3 rounded-lg border">
+                          <div className="flex justify-between items-center">
+                            <span className="font-medium">Language & Vocabulary</span>
+                            <span className="font-bold text-blue-600">{analysis.criteria.languageVocab.score}/5</span>
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">25%</div>
+                        </div>
+                        <div className="bg-white p-3 rounded-lg border">
+                          <div className="flex justify-between items-center">
+                            <span className="font-medium">Spelling, Punctuation & Grammar</span>
+                            <span className="font-bold text-blue-600">{analysis.criteria.spellingPunctuationGrammar.score}/5</span>
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">20%</div>
+                        </div>
+                      </div>
+
+                      {/* View Full Report Button */}
+                      <button
+                        onClick={() => setShowFullReport(true)}
+                        className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2 font-medium"
+                      >
+                        <FileText className="w-4 h-4" />
+                        <span>View Full Report</span>
+                        <ExternalLink className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    {/* Quick Fixes Section */}
+                    {(analysis.grammarCorrections.length > 0 || analysis.vocabularyEnhancements.length > 0) && (
+                      <div className="border rounded-lg p-4 bg-yellow-50 border-yellow-200">
+                        <h4 className="font-semibold mb-3 text-yellow-800">Quick Fixes Available</h4>
+                        <div className="space-y-2 max-h-40 overflow-y-auto">
+                          {[...analysis.grammarCorrections, ...analysis.vocabularyEnhancements].slice(0, 5).map((fix, index) => (
+                            <div key={index} className="bg-white p-3 rounded border border-yellow-200">
+                              <div className="text-sm mb-2">
+                                <span className="font-medium text-red-600">"{fix.original}"</span>
+                                <span className="mx-2">→</span>
+                                <span className="font-medium text-green-600">"{fix.replacement}"</span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-xs text-gray-600">{fix.explanation}</span>
+                                <button
+                                  className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors"
+                                  onClick={() => onApplyFix(fix)}
+                                >
+                                  Apply Fix
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Compact Rubric Panel */}
+                    <div className="border rounded-lg overflow-hidden">
+                      <div className="bg-gray-50 p-3 border-b">
+                        <h4 className="font-semibold text-gray-800">Assessment Criteria</h4>
+                      </div>
+                      <div className="max-h-60 overflow-auto">
+                        <RubricPanel data={analysis} onApplyFix={onApplyFix} />
+                      </div>
                     </div>
                   </div>
-                )}
-
-                {/* Compact Rubric Panel for sidebar */}
-                <div className="max-h-[40vh] overflow-auto">
-                  <RubricPanel data={analysis} onApplyFix={onApplyFix} />
+                ) : (
+                  <div className="h-full flex items-center justify-center text-center">
+                    <div>
+                      <FileText className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                      <h4 className="font-semibold text-gray-600 mb-2">No Analysis Yet</h4>
+                      <p className="text-sm text-gray-500 max-w-xs">
+                        Submit your writing for evaluation to see your NSW Selective Writing Assessment report here.
+                      </p>
+                    </div>
+                  </div>
+                )
+              )}
+            </div>
+            
+            {tab === "vocab" && (
+              <div className="h-full overflow-auto p-4">
+                <VocabCoach 
+                  content={content}
+                  textType={textType}
+                  onWordSelect={onWordSelect}
+                  className="border-0 shadow-none bg-transparent h-full"
+                />
+              </div>
+            )}
+            
+            {tab === "progress" && (
+              <div className="h-full overflow-auto p-4">
+                <div className="text-center py-8">
+                  <TrendingUp className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                  <h4 className="font-semibold text-gray-600 mb-2">Progress Tracking</h4>
+                  <div className="text-sm text-gray-500 space-y-2 max-w-xs mx-auto">
+                    <p>• Track your writing improvement over time</p>
+                    <p>• View score trends across assessments</p>
+                    <p>• Monitor weekly writing goals</p>
+                    <p>• See total words written</p>
+                  </div>
+                  <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <p className="text-sm text-blue-700">
+                      Progress tracking will be available after your first assessment.
+                    </p>
+                  </div>
                 </div>
               </div>
-            ) : (
-              <div className="text-sm opacity-70 text-center py-8">
-                <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>Submit your writing to see your NSW Selective Writing Assessment report here.</p>
-              </div>
-            )
-          )}
-          {tab === "vocab" && (
-            <div className="max-h-[60vh] overflow-auto">
-              <VocabCoach 
-                content={content}
-                textType={textType}
-                onWordSelect={onWordSelect}
-                className="border-0 shadow-none bg-transparent"
-              />
-            </div>
-          )}
-          {tab === "progress" && (
-            <div className="text-sm opacity-80">
-              <p className="mb-2">Progress (placeholder)</p>
-              <ul className="list-disc pl-5">
-                <li>Trend of per-criterion scores</li>
-                <li>Weekly streaks and goals</li>
-                <li>Words written total</li>
-              </ul>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
@@ -153,7 +218,7 @@ export function TabbedCoachPanel({
           onClose={() => setShowFullReport(false)}
           data={analysis}
           onApplyFix={onApplyFix}
-          studentName="Student" // You can make this dynamic
+          studentName="Student"
           essayText={content}
         />
       )}
