@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect } from 'react';
 
 // Server-backed API (Netlify functions only)
 import { evaluateEssay, saveDraft } from "../lib/api";
@@ -102,51 +102,48 @@ function WritingAreaImpl(props: Props) {
   // -------- Analysis state --------
   const [analysis, setAnalysis] = useState<DetailedFeedback | null>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
-  const [err, setErr] = useState<string>();
+  const [err, setErr] = useState("");
 
-  // ORIGINAL WORKING LOGIC: Typing + paragraph detection
-  const onEditorChange = (next: string) => {
-    const events = detectNewParagraphs(prevTextRef.current, next);
-    if (events.length) {
-      console.log("Emitting paragraph.ready event:", events[events.length - 1]);
-      eventBus.emit("paragraph.ready", events[events.length - 1]);
-    }
-    prevTextRef.current = next;
-    setContent(next);
-    props.onChange?.(next);
-  };
-
-  // Submit → strict JSON rubric (server)
-  const onSubmitForEvaluation = async () => {
-    if (!content || !content.trim()) {
-      setStatus("error");
-      setErr("Please write some content before submitting for evaluation");
-      return;
-    }
-    try {
-      setStatus("loading"); setErr(undefined);
-      const res = await evaluateEssay({
-        essayText: content.trim(),
-        textType,
-        examMode: false,
-      });
-      if (!validateDetailedFeedback(res)) throw new Error("Invalid feedback payload");
-      setAnalysis(res);
-      setStatus("success");
-    } catch (e: any) {
-      setStatus("error");
-      setErr(e?.message || "Failed to analyze");
+  // -------- Event handlers --------
+  const onEditorChange = (newContent: string) => {
+    setContent(newContent);
+    props.onChange?.(newContent);
+    
+    // Trigger real-time coaching
+    const newParagraphs = detectNewParagraphs(prevTextRef.current, newContent);
+    if (newParagraphs.length > 0) {
+      eventBus.emit('newParagraph', { paragraphs: newParagraphs, textType });
     }
   };
 
-  // Apply a server-proposed fix
   const onApplyFix = (fix: LintFix) => {
-    const next = content.slice(0, fix.start) + fix.replacement + content.slice(fix.end);
-    setContent(next);
-    props.onChange?.(next);
+    const newContent = content.replace(fix.original, fix.suggestion);
+    onEditorChange(newContent);
   };
 
-  // -------- Button handlers --------
+  const onSubmitForEvaluation = async () => {
+    if (!content?.trim()) return;
+    
+    setStatus("loading");
+    setErr("");
+    
+    try {
+      const result = await evaluateEssay(content, textType);
+      
+      if (validateDetailedFeedback(result)) {
+        setAnalysis(result);
+        setStatus("success");
+      } else {
+        throw new Error("Invalid feedback format received");
+      }
+    } catch (error) {
+      console.error("Evaluation error:", error);
+      setErr(error instanceof Error ? error.message : "Analysis failed");
+      setStatus("error");
+    }
+  };
+
+  // Button handlers
   const handlePlanningPhase = () => {
     setShowPlanningModal(true);
     props.onPlanningPhase?.();
@@ -172,11 +169,11 @@ function WritingAreaImpl(props: Props) {
     props.onFocus?.();
   };
 
-  // Calculate word count
-  const wordCount = content.trim() ? content.trim().split(/\s+/).filter(Boolean).length : 0;
-  const readingTime = Math.ceil(wordCount / 200);
+  // -------- Computed values --------
+  const wordCount = content.trim().split(/\s+/).filter(Boolean).length;
+  const readingTime = Math.max(1, Math.ceil(wordCount / 200));
 
-  // Autosave
+  // -------- Auto-save --------
   useEffect(() => {
     const t = setInterval(async () => {
       try {
@@ -230,7 +227,7 @@ function WritingAreaImpl(props: Props) {
   ];
 
   return (
-    <div className={`flex h-screen bg-gray-50 transition-all duration-300 ${focusMode ? 'bg-gray-900' : ''}`}>
+    <div className={`flex h-[calc(100vh-3rem)] bg-gray-50 transition-all duration-300 ${focusMode ? 'bg-gray-900' : ''}`}>
       {/* Left side - Writing Area - ADJUSTED FOR WIDER RIGHT PANEL */}
       <div className={`flex-1 flex flex-col transition-all duration-300 ${focusMode ? 'mr-0' : 'mr-4'} max-w-[calc(100%-32rem)]`}>
         
