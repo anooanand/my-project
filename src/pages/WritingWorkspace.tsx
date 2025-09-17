@@ -1,11 +1,63 @@
 /**
- * Updated WritingWorkspace with integrated ProgressCoach component
+ * Enhanced WritingWorkspace with improved Coach integration
+ * 
+ * INSTRUCTIONS:
+ * 1. Open your existing src/pages/WritingWorkspace.tsx
+ * 2. Add the CoachDebugger import at the top
+ * 3. Replace the coach section in the grid with the enhanced version below
+ * 4. Add the CoachDebugger component before the closing </div>
+ */
+
+// ===== ADD THIS IMPORT AT THE TOP =====
+import { CoachDebugger } from "../components/CoachDebugger";
+
+// ===== REPLACE THE EXISTING COACH SECTION WITH THIS ENHANCED VERSION =====
+{/* Analysis and Coach Panel */}
+<div className="col-span-12 lg:col-span-3">
+  <div className="space-y-6">
+    {/* Writing Coach - Make it more prominent */}
+    <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg p-4 border border-purple-200 shadow-sm">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold text-purple-800 flex items-center">
+          <span className="mr-2">🤖</span>
+          Writing Buddy
+        </h2>
+        <div className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded-full">
+          Auto-feedback ON
+        </div>
+      </div>
+      <div className="bg-white rounded-lg p-2 border border-purple-100">
+        <CoachProvider />
+      </div>
+      <div className="mt-3 text-xs text-purple-600 text-center">
+        💡 I'll automatically give you tips as you write!
+      </div>
+    </div>
+    
+    {/* Analysis Results */}
+    {analysis && (
+      <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+        <h2 className="text-lg font-semibold text-gray-800 mb-4">Analysis Results</h2>
+        <RubricPanel data={analysis} onApplyFix={onApplyFix} />
+      </div>
+    )}
+  </div>
+</div>
+
+// ===== ADD THIS BEFORE THE CLOSING </div> OF THE MAIN CONTAINER =====
+{/* Debug Component - Remove this in production */}
+<CoachDebugger />
+
+// ===== COMPLETE ENHANCED WRITING WORKSPACE COMPONENT =====
+/**
+ * Complete enhanced WritingWorkspace component
  * Copy to: src/pages/WritingWorkspace.tsx
  */
 import React from "react";
 import { InteractiveTextEditor, EditorHandle } from "../components/InteractiveTextEditor";
 import { RubricPanel } from "../components/RubricPanel";
 import { CoachProvider } from "../components/CoachProvider";
+import { CoachDebugger } from "../components/CoachDebugger";
 import ProgressCoach from "../components/ProgressCoach";
 import type { DetailedFeedback, LintFix } from "../types/feedback";
 import { evaluateEssay, saveDraft } from "../lib/api";
@@ -90,7 +142,19 @@ export default function WritingWorkspace() {
         <div className="flex flex-wrap items-center gap-4 mb-4">
           <h1 className="text-2xl font-bold text-gray-800">NSW Writing Buddy</h1>
           
-
+          {/* Text Type Selector */}
+          <div className="flex items-center gap-2">
+            <label className="text-sm font-medium text-gray-700">Text Type:</label>
+            <select 
+              value={textType}
+              onChange={(e) => setTextType(e.target.value as 'narrative' | 'persuasive' | 'informative')}
+              className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+            >
+              <option value="narrative">Narrative</option>
+              <option value="persuasive">Persuasive</option>
+              <option value="informative">Informative</option>
+            </select>
+          </div>
 
           {/* Target Word Count */}
           <div className="flex items-center gap-2">
@@ -126,7 +190,11 @@ export default function WritingWorkspace() {
         <div className="col-span-12 lg:col-span-6">
           <div className="bg-white rounded-lg shadow-sm p-4">
             <h2 className="text-lg font-semibold text-gray-800 mb-4">Your Writing</h2>
-            <InteractiveTextEditor ref={editorRef} />
+            <InteractiveTextEditor 
+              ref={editorRef} 
+              placeholder="Start writing your story here... Your Writing Buddy will automatically provide tips as you write! ✨"
+              className="w-full h-96 p-4 border border-gray-300 rounded-xl resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            />
           </div>
         </div>
 
@@ -146,22 +214,38 @@ export default function WritingWorkspace() {
         {/* Analysis and Coach Panel */}
         <div className="col-span-12 lg:col-span-3">
           <div className="space-y-6">
+            {/* Writing Coach - Make it more prominent */}
+            <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg p-4 border border-purple-200 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-purple-800 flex items-center">
+                  <span className="mr-2">🤖</span>
+                  Writing Buddy
+                </h2>
+                <div className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded-full">
+                  Auto-feedback ON
+                </div>
+              </div>
+              <div className="bg-white rounded-lg p-2 border border-purple-100">
+                <CoachProvider />
+              </div>
+              <div className="mt-3 text-xs text-purple-600 text-center">
+                💡 I'll automatically give you tips as you write!
+              </div>
+            </div>
+            
             {/* Analysis Results */}
             {analysis && (
-              <div>
+              <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
                 <h2 className="text-lg font-semibold text-gray-800 mb-4">Analysis Results</h2>
                 <RubricPanel data={analysis} onApplyFix={onApplyFix} />
               </div>
             )}
-            
-            {/* Coach Provider */}
-            <div>
-              <h2 className="text-lg font-semibold text-gray-800 mb-4">Writing Coach</h2>
-              <CoachProvider />
-            </div>
           </div>
         </div>
       </div>
+
+      {/* Debug Component - Remove this in production */}
+      <CoachDebugger />
 
       {/* Mobile-friendly stacked layout for smaller screens */}
       <style jsx>{`
