@@ -30,14 +30,14 @@ export function TabbedCoachPanel({
     icon: React.ComponentType<any>;
   }) => (
     <button
-      className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+      className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 ${
         tab === id 
           ? "bg-white text-purple-600 shadow-sm" 
           : "bg-purple-500/20 text-white/90 hover:bg-purple-500/30"
       }`}
       onClick={() => setTab(id)}
     >
-      <Icon className="w-4 h-4" />
+      <Icon className="w-3 h-3" />
       <span>{label}</span>
     </button>
   );
@@ -45,9 +45,9 @@ export function TabbedCoachPanel({
   return (
     <>
       <div className="h-full flex flex-col rounded-2xl bg-gradient-to-br from-purple-600 via-purple-700 to-fuchsia-600 text-white shadow-xl">
-        {/* Tab Navigation */}
-        <div className="p-4 border-b border-white/20">
-          <div className="grid grid-cols-2 gap-2 mb-3">
+        {/* Tab Navigation - Horizontal Layout */}
+        <div className="p-3 border-b border-white/20">
+          <div className="flex gap-1 justify-between">
             <Tab id="coach" label="Coach" icon={MessageSquare} />
             <Tab id="analysis" label="Analysis" icon={BarChart3} />
             <Tab id="vocab" label="Vocab" icon={BookOpen} />
