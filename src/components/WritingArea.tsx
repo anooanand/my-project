@@ -104,14 +104,6 @@ function WritingAreaImpl(props: Props) {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [err, setErr] = useState<string>();
 
-  // -------- Autosave --------
-  const draftIdRef = useRef(
-    `draft-${(
-      globalThis.crypto?.randomUUID?.() ??
-      Date.now().toString(36) + Math.random().toString(36).slice(2))
-    }`
-  );
-
   // ORIGINAL WORKING LOGIC: Typing + paragraph detection
   const onEditorChange = (next: string) => {
     const events = detectNewParagraphs(prevTextRef.current, next);
@@ -190,8 +182,8 @@ function WritingAreaImpl(props: Props) {
       try {
         if (content?.trim()) {
           setIsSaving(true);
-          localStorage.setItem(draftIdRef.current, JSON.stringify({ text: content, version }));
-          await saveDraft(draftIdRef.current, content, version);
+          localStorage.setItem(draftId.current, JSON.stringify({ text: content, version }));
+          await saveDraft(draftId.current, content, version);
           setVersion(v => v + 1);
           setLastSaved(new Date());
           setIsSaving(false);
@@ -239,9 +231,42 @@ function WritingAreaImpl(props: Props) {
 
   return (
     <div className={`flex h-screen bg-gray-50 transition-all duration-300 ${focusMode ? 'bg-gray-900' : ''}`}>
-      {/* Left side - Writing Area */}
-      <div className={`flex-1 flex flex-col transition-all duration-300 ${focusMode ? 'mr-0' : 'mr-4'} max-w-[calc(100%-25rem)]`}>
+      {/* Left side - Writing Area - ADJUSTED FOR WIDER RIGHT PANEL */}
+      <div className={`flex-1 flex flex-col transition-all duration-300 ${focusMode ? 'mr-0' : 'mr-4'} max-w-[calc(100%-32rem)]`}>
         
+        {/* Writing Prompt Section */}
+        <div className={`bg-white rounded-lg shadow-sm p-6 mb-4 focus-hide ${focusMode ? 'opacity-30' : ''}`}>
+          <div className="flex items-start space-x-3">
+            <div className="bg-yellow-100 p-2 rounded-lg">
+              <Lightbulb className="w-5 h-5 text-yellow-600" />
+            </div>
+            <div className="flex-1">
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="text-lg font-semibold text-gray-800">Your Writing Prompt</h2>
+                <div className="text-xs opacity-70">Text Type:&nbsp;
+                  <select
+                    className="rounded-md border px-2 py-1"
+                    value={textType}
+                    onChange={(e) => {
+                      const v = e.target.value as TextType;
+                      setTextType(v);
+                      props.onTextTypeChange?.(v);
+                      setDisplayPrompt(fallbackPrompt(v));
+                    }}
+                  >
+                    <option value="narrative">Narrative</option>
+                    <option value="persuasive">Persuasive</option>
+                    <option value="informative">Informative</option>
+                  </select>
+                </div>
+              </div>
+              <div className="text-gray-600 leading-relaxed whitespace-pre-wrap">
+                {displayPrompt || "Loading prompt…"}
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Inline Writing Mode Buttons */}
         <div className={`bg-white rounded-lg shadow-sm p-4 mb-4 focus-hide ${focusMode ? 'opacity-30' : ''}`}>
           <div className="flex flex-wrap gap-3">
@@ -302,35 +327,10 @@ function WritingAreaImpl(props: Props) {
           </div>
         </div>
 
-        {/* Writing Prompt Section */}
-        <div className={`bg-white rounded-lg shadow-sm mb-4 focus-hide ${focusMode ? 'opacity-30' : ''}`}>
-          <div className="px-4 py-3 border-b flex items-center justify-between">
-            <div className="font-semibold">Your Writing Prompt</div>
-            <div className="text-xs opacity-70">Text Type:&nbsp;
-              <select
-                className="rounded-md border px-2 py-1"
-                value={textType}
-                onChange={(e) => {
-                  const v = e.target.value as TextType;
-                  setTextType(v);
-                  props.onTextTypeChange?.(v);
-                  setDisplayPrompt(fallbackPrompt(v));
-                }}
-              >
-                <option value="narrative">Narrative</option>
-                <option value="persuasive">Persuasive</option>
-                <option value="informative">Informative</option>
-              </select>
-            </div>
-          </div>
-          <div className="p-4 text-sm leading-relaxed whitespace-pre-wrap">
-            {displayPrompt || "Loading prompt…"}
-          </div>
-        </div>
-
         {/* Writing Area */}
         <div className="flex-1 bg-white rounded-lg shadow-sm mb-4">
-          <div className="p-3 h-full">
+          <div className="p-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Your Writing</h3>
             <textarea
               className={`w-full h-full p-3 rounded-lg border resize-none outline-none transition-all duration-300 ${
                 focusMode ? 'bg-gray-800 text-white text-lg border-gray-600' : 'bg-white text-gray-700'
@@ -338,6 +338,7 @@ function WritingAreaImpl(props: Props) {
               placeholder="Start writing your amazing story here! Let your creativity flow and bring your ideas to life…"
               value={content}
               onChange={(e) => onEditorChange(e.target.value)}
+              style={{ minHeight: '400px' }}
             />
           </div>
         </div>
@@ -389,9 +390,9 @@ function WritingAreaImpl(props: Props) {
         </div>
       </div>
 
-      {/* Right side - Writing Buddy Panel */}
+      {/* Right side - Writing Buddy Panel - MADE MUCH WIDER */}
       {!focusMode && (
-        <div className="w-96 min-w-96 flex-shrink-0">
+        <div className="w-[30rem] min-w-[30rem] flex-shrink-0">
           <TabbedCoachPanel 
             analysis={analysis} 
             onApplyFix={onApplyFix}
