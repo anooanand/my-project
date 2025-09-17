@@ -61,7 +61,7 @@ export function FloatingChatWindow({
   return (
     <div
       ref={chatRef}
-      className={`attached-chat-container fixed right-0 bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 shadow-xl transition-all duration-300 z-40 ${
+      className={`attached-chat-container fixed top-12 right-0 h-[calc(100vh-3rem)] bg-white dark:bg-gray-800 border-l border-gray-200 dark:border-gray-700 shadow-xl transition-all duration-300 z-40 ${
         isMinimized ? 'w-12' : isCollapsed ? 'w-16' : 'w-96'
       }`}
     >
