@@ -181,6 +181,17 @@ export function NavBar({
                 )}
               </div>
             )}
+
+            {/* Dashboard Button - Moved to top navigation */}
+            {user && (
+              <button
+                onClick={() => onNavigate('dashboard')}
+                className={getNavItemClasses('dashboard', activePage === 'dashboard')}
+              >
+                <Target className="w-4 h-4" />
+                <span>Dashboard</span>
+              </button>
+            )}
           </div>
 
           {/* Auth Buttons */}
@@ -200,16 +211,6 @@ export function NavBar({
 
                 {isUserMenuOpen && (
                   <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-200 py-2 z-50">
-                    <button
-                      onClick={() => {
-                        onNavigate('dashboard');
-                        setIsUserMenuOpen(false);
-                      }}
-                      className="w-full px-4 py-2 text-left hover:bg-indigo-50 flex items-center space-x-2 transition-colors duration-200"
-                    >
-                      <Target className="w-4 h-4 text-indigo-600" />
-                      <span className="text-gray-700">Dashboard</span>
-                    </button>
                     <button
                       onClick={() => {
                         onNavigate('settings');
@@ -285,6 +286,18 @@ export function NavBar({
 
               {user && (
                 <>
+                  {/* Dashboard Button - Also moved to mobile navigation */}
+                  <button
+                    onClick={() => {
+                      onNavigate('dashboard');
+                      setIsMenuOpen(false);
+                    }}
+                    className={`w-full ${getNavItemClasses('dashboard', activePage === 'dashboard')} justify-start`}
+                  >
+                    <Target className="w-4 h-4" />
+                    <span>Dashboard</span>
+                  </button>
+
                   <div className="pt-2 border-t border-gray-200">
                     <div className="text-xs font-medium text-gray-500 uppercase tracking-wider px-4 py-2">
                       Learning
@@ -311,16 +324,6 @@ export function NavBar({
                   </div>
 
                   <div className="pt-2 border-t border-gray-200">
-                    <button
-                      onClick={() => {
-                        onNavigate('dashboard');
-                        setIsMenuOpen(false);
-                      }}
-                      className="w-full px-4 py-2 text-left hover:bg-indigo-50 flex items-center space-x-2 transition-colors duration-200"
-                    >
-                      <Target className="w-4 h-4 text-indigo-600" />
-                      <span className="text-gray-700">Dashboard</span>
-                    </button>
                     <button
                       onClick={() => {
                         onNavigate('settings');
