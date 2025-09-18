@@ -180,32 +180,28 @@ export function EnhancedWritingLayout({
     <div className="flex h-full bg-gray-50">
       {/* Left side - Writing Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Writing Area */}
-        <div className="flex-1 p-4">
-          <WritingArea
-            content={content}
-            onChange={onChange}
-            onSubmit={handleSubmitForEvaluation}
-            textType={textType}
-            assistanceLevel={assistanceLevel}
-            selectedText={selectedText}
-            onTimerStart={onTimerStart}
-            onTextTypeChange={onTextTypeChange}
-            onPopupCompleted={onPopupCompleted}
-            onNavigate={onNavigate}
-            evaluationStatus={evaluationStatus}
-            examMode={examMode}
-          />
-        </div>
+        {/* Prompt Display */}
+        {generatedPrompt && (
+          <div className="bg-blue-50 border-l-4 border-blue-400 text-blue-800 p-4 mb-4 rounded-md" role="alert">
+            <div className="flex items-center">
+              <Lightbulb className="w-5 h-5 mr-2" />
+              <p className="font-semibold">Your Writing Prompt:</p>
+            </div>
+            <p className="ml-7 text-sm">{generatedPrompt}</p>
+          </div>
+        )}
 
-        {/* Buttons and Stats Row - positioned between "Your Writing" and the editor */}
-        <div className="px-4 pb-4">
-          <div className="flex items-center justify-between bg-white rounded-lg border border-gray-200 p-3 shadow-sm">
-            {/* Left side - Action Buttons */}
+        {/* Your Writing Header with Tools and Stats */}
+        <div className="flex justify-between items-center mb-4 px-4">
+          <h2 className="text-xl font-bold text-gray-900">Your Writing</h2>
+          
+          {/* Right side tools and stats */}
+          <div className="flex items-center space-x-4">
+            {/* Writing Tools Buttons */}
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setShowPlanningTool(true)}
-                className="flex items-center space-x-2 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
+                className="flex items-center space-x-2 px-3 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
               >
                 <PenTool className="w-4 h-4" />
                 <span>Planning Phase</span>
@@ -213,15 +209,15 @@ export function EnhancedWritingLayout({
               
               <button
                 onClick={() => setExamMode(!examMode)}
-                className="flex items-center space-x-2 px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-medium"
+                className="flex items-center space-x-2 px-3 py-1 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-medium"
               >
                 <Play className="w-4 h-4" />
-                <span>Start Exam Mode</span>
+                <span>Exam Tips</span>
               </button>
               
               <button
                 onClick={() => setShowStructureGuide(true)}
-                className="flex items-center space-x-2 px-3 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors text-sm font-medium"
+                className="flex items-center space-x-2 px-3 py-1 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors text-sm font-medium"
               >
                 <BookOpen className="w-4 h-4" />
                 <span>Structure Guide</span>
@@ -229,7 +225,7 @@ export function EnhancedWritingLayout({
               
               <button
                 onClick={() => setShowTips(true)}
-                className="flex items-center space-x-2 px-3 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm font-medium"
+                className="flex items-center space-x-2 px-3 py-1 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm font-medium"
               >
                 <Lightbulb className="w-4 h-4" />
                 <span>Tips</span>
@@ -237,14 +233,14 @@ export function EnhancedWritingLayout({
               
               <button
                 onClick={() => setFocusMode(!focusMode)}
-                className="flex items-center space-x-2 px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium"
+                className="flex items-center space-x-2 px-3 py-1 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium"
               >
                 {focusMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 <span>Focus</span>
               </button>
             </div>
-            
-            {/* Right side - Stats */}
+
+            {/* Writing Statistics */}
             <div className="flex items-center space-x-4 text-sm">
               <div className="flex items-center space-x-2">
                 <FileText className="w-4 h-4 text-blue-500" />
@@ -263,6 +259,24 @@ export function EnhancedWritingLayout({
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Writing Area */}
+        <div className="flex-1 p-4 pt-0">
+          <WritingArea
+            content={content}
+            onChange={onChange}
+            onSubmit={handleSubmitForEvaluation}
+            textType={textType}
+            assistanceLevel={assistanceLevel}
+            selectedText={selectedText}
+            onTimerStart={onTimerStart}
+            onTextTypeChange={onTextTypeChange}
+            onPopupCompleted={onPopupCompleted}
+            onNavigate={onNavigate}
+            evaluationStatus={evaluationStatus}
+            examMode={examMode}
+          />
         </div>
       </div>
 
