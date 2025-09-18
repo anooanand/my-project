@@ -140,15 +140,22 @@ export function NSWStandaloneSubmitSystem({
       <button
         onClick={handleSubmit}
         disabled={isSubmitting || content.trim().length === 0 || !getWordCountStatus().isValid}
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+        className={`w-full font-bold py-4 px-6 rounded-lg transition-all duration-200 flex items-center justify-center shadow-lg hover:shadow-xl transform hover:scale-105 ${
+          isSubmitting || content.trim().length === 0 || !getWordCountStatus().isValid
+            ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+            : 'bg-gradient-to-r from-green-600 to-blue-600 text-white hover:from-green-700 hover:to-blue-700'
+        }`}
       >
         {isSubmitting ? (
           <>
-            <Loader2 className="animate-spin mr-2" size={20} />
-            Analyzing...
+            <Loader2 className="animate-spin mr-3" size={24} />
+            Analyzing Your Essay...
           </>
         ) : (
-          'Submit Essay for Evaluation'
+          <>
+            <CheckCircle className="mr-3" size={24} />
+            Submit Essay for Evaluation
+          </>
         )}
       </button>
 
