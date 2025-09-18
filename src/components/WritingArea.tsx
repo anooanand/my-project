@@ -50,6 +50,7 @@ interface Props {
   onWordSelect?: (word: string) => void;
   /** Prompt passed by EnhancedWritingLayout */
   prompt?: string;
+  focusMode?: boolean;
 }
 
 function fallbackPrompt(textType?: string) {
@@ -344,51 +345,7 @@ function WritingAreaImpl(props: Props) {
           </div>
         </div>
 
-        {/* Status Bar */}
-        <div className={`bg-white rounded-lg shadow-sm p-4 focus-hide ${focusMode ? 'opacity-30' : ''}`}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-6 text-sm text-gray-600">
-              <div className="flex items-center space-x-2">
-                <FileText className="w-4 h-4" />
-                <span>{wordCount} words</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Timer className="w-4 h-4" />
-                <span>0 WPM</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Clock className="w-4 h-4" />
-                <span>{readingTime} min read</span>
-              </div>
-              {status === "success" && (
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span className="text-green-600">Analysis complete</span>
-                </div>
-              )}
-              {status === "error" && (
-                <div className="flex items-center space-x-2">
-                  <AlertCircle className="w-4 h-4 text-red-500" />
-                  <span className="text-red-600">Analysis failed</span>
-                </div>
-              )}
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
-                onClick={onSubmitForEvaluation}
-                disabled={status === "loading" || !content?.trim()}
-                aria-label="Submit for Evaluation Report"
-              >
-                <Send className="w-4 h-4" />
-                <span>{status === "loading" ? "Analyzing…" : "Submit for Evaluation Report"}</span>
-              </button>
-              {status === "error" && <span className="text-red-600 text-sm">{err}</span>}
-            </div>
-          </div>
-        </div>
+
       </div>
 
       {/* Right side - Writing Buddy Panel - MADE MUCH WIDER */}
