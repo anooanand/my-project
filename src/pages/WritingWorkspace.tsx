@@ -156,18 +156,16 @@ export default function WritingWorkspaceFixed() {
               />
             </div>
             
-            {/* Bottom Status Bar with Words, WPM, Submit buttons */}
+            {/* Bottom Status Bar with Words, WPM */}
             <WritingStatusBar
               wordCount={wordCount}
               content={currentText}
               textType={textType}
               targetWordCountMin={Math.floor(targetWordCount * 0.8)}
               targetWordCountMax={Math.ceil(targetWordCount * 1.2)}
-              onSubmitForEvaluation={onSubmit}
-              evaluationStatus={status}
             />
             
-            {/* Additional Submit Button if WritingStatusBar doesn't have one */}
+            {/* Main Submit Button for Evaluation Report */}
             <div className="p-4 border-t border-gray-200 bg-gray-50">
               <button
                 onClick={onSubmit}
