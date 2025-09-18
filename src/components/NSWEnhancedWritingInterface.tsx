@@ -161,13 +161,22 @@ export function NSWEnhancedWritingInterface({
             </button>
           )}
           
-          {/* Quick Submit Button - switches to evaluation tab */}
+          {/* Enhanced Submit Button - directly connects to evaluation system */}
           <button
             onClick={() => setActiveTab('evaluation')}
             disabled={wordCount < targetWordCountMin}
-            className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg font-medium transition-colors"
+            className={`inline-flex items-center px-6 py-3 text-base font-semibold rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 ${
+              wordCount < targetWordCountMin
+                ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700'
+            }`}
+            title={wordCount < targetWordCountMin ? `Need ${targetWordCountMin - wordCount} more words` : 'Submit your essay for detailed NSW evaluation'}
           >
+            <Award className="h-5 w-5 mr-2" />
             Submit for Evaluation
+            {wordCount >= targetWordCountMin && (
+              <div className="ml-2 w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+            )}
           </button>
         </div>
       </div>
