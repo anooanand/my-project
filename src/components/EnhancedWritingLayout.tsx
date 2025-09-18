@@ -18,7 +18,7 @@ import {
 
 interface EnhancedWritingLayoutProps {
   content: string;
-  onChange: (content: string) => void;
+  setContent: (content: string) => void;
   textType: string;
   assistanceLevel: string;
   selectedText: string;
@@ -31,7 +31,7 @@ interface EnhancedWritingLayoutProps {
 
 export function EnhancedWritingLayout({
   content,
-  onChange,
+  setContent,
   textType,
   assistanceLevel,
   selectedText,
@@ -105,7 +105,7 @@ export function EnhancedWritingLayout({
   const handleContentChange = (newContent: string) => {
     console.log("📝 EnhancedWritingLayout: Content changed to:", newContent);
     console.log("📝 EnhancedWritingLayout: Content length:", newContent.length);
-    onChange(newContent);
+    setContent(newContent);
   };
 
   // Debug logging for prop values
