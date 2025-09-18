@@ -17,8 +17,7 @@ interface WritingStatusBarProps {
   examDurationMinutes?: number;
   targetWordCountMin?: number;
   targetWordCountMax?: number;
-  onSubmitForEvaluation?: () => void;
-  evaluationStatus?: "idle" | "loading" | "success" | "error";
+
 }
 
 export function WritingStatusBar({
@@ -36,8 +35,7 @@ export function WritingStatusBar({
   examDurationMinutes = 30,
   targetWordCountMin = 100,
   targetWordCountMax = 500,
-  onSubmitForEvaluation,
-  evaluationStatus = "idle",
+
 }: WritingStatusBarProps) {
   const [typingStartTime, setTypingStartTime] = useState<number | null>(null);
   const [wordsPerMinute, setWordsPerMinute] = useState(0);
@@ -128,18 +126,7 @@ export function WritingStatusBar({
           <span className="font-bold">{wordsPerMinute} WPM</span>
         </div>
 
-        {/* Submit for Evaluation Report Button - moved here and updated color */}
-        {onSubmitForEvaluation && (
-          <button
-            type="button"
-            className="px-4 py-2 rounded-xl bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 shadow-sm font-bold"
-            onClick={onSubmitForEvaluation}
-            disabled={evaluationStatus === "loading"}
-            aria-label="Submit for Evaluation Report"
-          >
-            {evaluationStatus === "loading" ? "Analyzing…" : "Submit for Evaluation"}
-          </button>
-        )}
+
       </div>
       
       <div className="flex items-center">
