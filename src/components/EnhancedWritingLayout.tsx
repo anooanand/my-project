@@ -4,7 +4,6 @@ import { PlanningToolModal } from './PlanningToolModal';
 import { StructureGuideModal } from './StructureGuideModal';
 import { TipsModal } from './TipsModal';
 import { TabbedCoachPanel } from './TabbedCoachPanel';
-import { WritingStatusBar } from './WritingStatusBar';
 import { NSWStandaloneSubmitSystem } from './NSWStandaloneSubmitSystem';
 import type { DetailedFeedback, LintFix } from '../types/feedback';
 import { eventBus } from '../lib/eventBus';
@@ -17,9 +16,10 @@ import {
   Target,
   Eye,
   EyeOff,
-  Pause,
-  ToggleRight,
-  ArrowLeft
+  ArrowLeft,
+  FileText,
+  Clock,
+  AlertCircle
 } from 'lucide-react';
 
 interface EnhancedWritingLayoutProps {
@@ -171,13 +171,8 @@ export function EnhancedWritingLayout({
     console.log('Applying fix:', fix);
   };
 
-  // Debug logging for prop values
-  useEffect(() => {
-    console.log("🔍 EnhancedWritingLayout: Props debug:");
-    console.log("  - content:", content);
-    console.log("  - content length:", content?.length || 0);
-    console.log("  - textType:", textType);
-  }, [content, textType]);
+  // Check if word count exceeds target
+  const showWordCountWarning = wordCount > 300; // Adjust target as needed
 
   const prompt = "The Secret Door in the Library: During a rainy afternoon, you decide to explore the dusty old library in your town that you've never visited before. As you wander through the aisles, you discover a hidden door behind a bookshelf. It's slightly ajar, and a faint, warm light spills out from the crack. What happens when you push the door open? Describe the world you enter and the adventures that await you inside. Who do you meet, and what challenges do you face? How does this experience change you by the time you return to the library? Let your imagination run wild as you take your reader on a journey through this mysterious door!";
 
@@ -185,61 +180,6 @@ export function EnhancedWritingLayout({
     <div className="flex h-full bg-gray-50">
       {/* Left side - Writing Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Toolbar */}
-        <div className="bg-white border-b border-gray-200 px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setShowPlanningTool(true)}
-                className="flex items-center space-x-2 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
-              >
-                <PenTool className="w-4 h-4" />
-                <span>Planning Phase</span>
-              </button>
-              
-              <button
-                onClick={() => setExamMode(!examMode)}
-                className="flex items-center space-x-2 px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm"
-              >
-                <Play className="w-4 h-4" />
-                <span>Start Exam Mode</span>
-              </button>
-              
-              <button
-                onClick={() => setShowStructureGuide(true)}
-                className="flex items-center space-x-2 px-3 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors text-sm"
-              >
-                <BookOpen className="w-4 h-4" />
-                <span>Structure Guide</span>
-              </button>
-              
-              <button
-                onClick={() => setShowTips(true)}
-                className="flex items-center space-x-2 px-3 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm"
-              >
-                <Lightbulb className="w-4 h-4" />
-                <span>Tips</span>
-              </button>
-              
-              <button
-                onClick={() => setFocusMode(!focusMode)}
-                className="flex items-center space-x-2 px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
-              >
-                {focusMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                <span>Focus</span>
-              </button>
-            </div>
-            
-            <div className="flex items-center space-x-4">
-              <WritingStatusBar 
-                wordCount={wordCount}
-                targetWordCount={300}
-                status={evaluationStatus}
-              />
-            </div>
-          </div>
-        </div>
-
         {/* Writing Area */}
         <div className="flex-1 p-4">
           <WritingArea
@@ -256,6 +196,73 @@ export function EnhancedWritingLayout({
             evaluationStatus={evaluationStatus}
             examMode={examMode}
           />
+        </div>
+
+        {/* Buttons and Stats Row - positioned between "Your Writing" and the editor */}
+        <div className="px-4 pb-4">
+          <div className="flex items-center justify-between bg-white rounded-lg border border-gray-200 p-3 shadow-sm">
+            {/* Left side - Action Buttons */}
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setShowPlanningTool(true)}
+                className="flex items-center space-x-2 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
+              >
+                <PenTool className="w-4 h-4" />
+                <span>Planning Phase</span>
+              </button>
+              
+              <button
+                onClick={() => setExamMode(!examMode)}
+                className="flex items-center space-x-2 px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-medium"
+              >
+                <Play className="w-4 h-4" />
+                <span>Start Exam Mode</span>
+              </button>
+              
+              <button
+                onClick={() => setShowStructureGuide(true)}
+                className="flex items-center space-x-2 px-3 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors text-sm font-medium"
+              >
+                <BookOpen className="w-4 h-4" />
+                <span>Structure Guide</span>
+              </button>
+              
+              <button
+                onClick={() => setShowTips(true)}
+                className="flex items-center space-x-2 px-3 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm font-medium"
+              >
+                <Lightbulb className="w-4 h-4" />
+                <span>Tips</span>
+              </button>
+              
+              <button
+                onClick={() => setFocusMode(!focusMode)}
+                className="flex items-center space-x-2 px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium"
+              >
+                {focusMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                <span>Focus</span>
+              </button>
+            </div>
+            
+            {/* Right side - Stats */}
+            <div className="flex items-center space-x-4 text-sm">
+              <div className="flex items-center space-x-2">
+                <FileText className="w-4 h-4 text-blue-500" />
+                <span className="font-medium">{wordCount} words</span>
+                {showWordCountWarning && (
+                  <div className="flex items-center space-x-1 text-orange-600">
+                    <AlertCircle className="w-4 h-4" />
+                    <span className="font-medium">Word count exceeded!</span>
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Clock className="w-4 h-4 text-orange-500" />
+                <span className="font-medium">0 WPM</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
