@@ -60,7 +60,7 @@ export function TabbedCoachPanel({
           <div className="h-full rounded-xl bg-white text-gray-900 shadow-inner">
             {tab === "coach" && (
               <div className="h-full">
-                <CoachProvider />
+                <CoachProvider content={content} />
               </div>
             )}
             
