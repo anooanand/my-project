@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+'''import React, { useState, useEffect, useRef } from 'react';
 import { MessageSquare, Sparkles, ChevronDown, ChevronUp, ThumbsUp, Lightbulb, HelpCircle, Target, AlertCircle, Star, Zap, Gift, Heart, X, Send, User, RefreshCw, Bot, Loader } from 'lucide-react';
 import { generateChatResponse, checkOpenAIConnectionStatus } from '../lib/openai';
 import AIErrorHandler from '../utils/errorHandling';
@@ -40,7 +40,6 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
   // UI state
   const [showQuickQuestions, setShowQuickQuestions] = useState(true);
 
-  // Enhanced feedback tracking to prevent repetition
   const [lastFeedbackTime, setLastFeedbackTime] = useState<number>(0);
   const [feedbackCount, setFeedbackCount] = useState<number>(0);
 
@@ -174,9 +173,6 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
         return;
       }
 
-      // Generate a unique key for this content to prevent repetition
-      // Removed feedbackHistory.has(contentKey) check to allow continuous feedback
-
       setIsAITyping(true);
       setLastFeedbackTime(Date.now());
 
@@ -205,8 +201,6 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
           }];
         });
 
-        // Track this feedback to prevent repetition
-        setFeedbackHistory(prev => new Set([...prev, contentKey]));
         setFeedbackCount(prev => prev + 1);
 
         // Hide quick questions after first interaction
@@ -227,7 +221,6 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
           }];
         });
 
-        setFeedbackHistory(prev => new Set([...prev, contentKey]));
         setFeedbackCount(prev => prev + 1);
       }
 
@@ -266,7 +259,7 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
     
     eventBus.on("paragraph.ready", handler);
     return () => eventBus.off("paragraph.ready", handler);
-  }, [lastFeedbackTime]);
+  }, [lastFeedbackTime, feedbackCount]);
 
   // Varied fallback tips that change based on content and feedback count
   const getVariedFallbackTip = (paragraph: string, feedbackCount: number): string => {
@@ -274,7 +267,7 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
     const wordCount = paragraph.trim().split(/\s+/).length;
     
     // Analyze content for specific feedback
-    const hasDialogue = text.includes('"') || text.includes("'");
+    const hasDialogue = text.includes('\"') || text.includes("\'");
     const hasAction = /\b(ran|jumped|walked|moved|grabbed|pushed|pulled|went|came|looked|saw)\b/.test(text);
     const hasEmotion = /\b(happy|sad|angry|excited|scared|worried|surprised|felt|feeling)\b/.test(text);
     const hasDescription = /\b(beautiful|dark|bright|cold|warm|loud|quiet|big|small|old|new)\b/.test(text);
@@ -446,51 +439,44 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
               <button
                 key={index}
                 onClick={() => handleQuickQuestion(question)}
-                className="w-full text-left p-2 text-xs bg-white border border-gray-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                className="w-full text-left p-1.5 text-xs text-gray-600 hover:bg-gray-200 rounded-md transition-colors duration-150"
               >
-                💬 {question}
+                {question}
               </button>
             ))}
           </div>
-          <p className="text-xs text-gray-500 mt-2">
-            💡 I'll also give you automatic feedback as you write!
-          </p>
+          <p className="text-xs text-gray-500 mt-2">✨ I'll also give you automatic feedback as you write!</p>
         </div>
       )}
 
-      {/* Debug Footer */}
-      <div className="p-2 border-t border-gray-100 bg-gray-50 text-xs text-gray-500">
-        <div className="flex justify-between">
-          <span>Feedback given: {feedbackCount}</span>
-          <span>Last: {lastFeedbackTime ? new Date(lastFeedbackTime).toLocaleTimeString() : 'None'}</span>
-        </div>
-        <div className="text-center mt-1">
-          Words: {content.trim() ? content.trim().split(/\s+/).filter(w => w.length > 0).length : 0}
-        </div>
-      </div>
-
       {/* Input */}
       <div className="p-3 border-t border-gray-200 bg-white">
-        <div className="flex gap-2">
+        <div className="relative">
           <input
             ref={inputRef}
             type="text"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+            onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
             placeholder="Ask me about writing..."
-            className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full p-2 pr-10 text-sm text-gray-800 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow duration-200"
             disabled={isAITyping}
           />
           <button
             onClick={() => handleSendMessage()}
-            disabled={!inputMessage.trim() || isAITyping}
-            className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            disabled={isAITyping || !inputMessage.trim()}
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-500 hover:text-blue-600 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors duration-200"
           >
-            <Send className="w-3 h-3" />
+            <Send className="w-4 h-4" />
           </button>
+        </div>
+        <div className="flex justify-between items-center mt-2 text-xs text-gray-500">
+          <span>Feedback given: {feedbackCount}</span>
+          <span>Words: {content.trim().split(/\s+/).filter(Boolean).length}</span>
+          <span>Last: {messages[messages.length - 1]?.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
         </div>
       </div>
     </div>
   );
 }
+'''
