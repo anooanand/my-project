@@ -14,19 +14,19 @@ interface NavBarProps {
   onForceSignOut: () => void;
 }
 
-export function NavBar({ 
-  activePage, 
-  onNavigate, 
-  user, 
-  onSignInClick, 
-  onSignUpClick, 
-  onForceSignOut 
+export function NavBar({
+  activePage,
+  onNavigate,
+  user,
+  onSignInClick,
+  onSignUpClick,
+  onForceSignOut
 }: NavBarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLearningMenuOpen, setIsLearningMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const { progress } = useLearning();
-  
+
   // Use ref to prevent multiple simultaneous sign out attempts
   const isSigningOut = useRef(false);
 
@@ -46,25 +46,25 @@ export function NavBar({
   const handleSignOut = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     // Prevent multiple simultaneous sign out attempts
     if (isSigningOut.current) {
       console.log('Sign out already in progress, ignoring click...');
       return;
     }
-    
+
     try {
       isSigningOut.current = true;
       console.log('NavBar: Sign out clicked');
-      
+
       // Close all menus immediately
       setIsUserMenuOpen(false);
       setIsMenuOpen(false);
       setIsLearningMenuOpen(false);
-      
+
       // Call the sign out function
       await onForceSignOut();
-      
+
     } catch (error) {
       console.error('Error during sign out:', error);
     } finally {
@@ -78,29 +78,29 @@ export function NavBar({
   // Helper function to get navigation item classes with consistent styling
   const getNavItemClasses = (itemId: string, isActive: boolean) => {
     const baseClasses = "px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center space-x-2 text-sm";
-    
+
     if (isActive) {
       return `${baseClasses} bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg transform scale-105`;
     }
-    
+
     return `${baseClasses} text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 hover:shadow-md hover:transform hover:scale-102 border border-transparent hover:border-indigo-200`;
   };
 
   // Helper function to get button classes with consistent styling
   const getButtonClasses = (variant: 'primary' | 'secondary' = 'primary') => {
     const baseClasses = "px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center space-x-2 text-sm";
-    
+
     if (variant === 'primary') {
       return `${baseClasses} bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg hover:shadow-xl hover:transform hover:scale-105`;
     }
-    
+
     return `${baseClasses} bg-white text-indigo-600 border border-indigo-200 hover:bg-indigo-50 hover:shadow-md hover:transform hover:scale-102`;
   };
 
   // Helper function for user avatar
   const getUserAvatar = () => {
     if (!user?.email) return null;
-    
+
     const initial = user.email.charAt(0).toUpperCase();
     return (
       <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium text-sm">
@@ -131,7 +131,7 @@ export function NavBar({
             {navigationItems.map((item) => {
               const Icon = item.icon;
               const isActive = activePage === item.id;
-              
+
               return (
                 <button
                   key={item.id}
@@ -268,7 +268,7 @@ export function NavBar({
               {navigationItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = activePage === item.id;
-                
+
                 return (
                   <button
                     key={item.id}
@@ -309,7 +309,7 @@ export function NavBar({
                           key={item.id}
                           onClick={() => {
                             onNavigate(item.id);
-                            setIsMenuOpen(false);
+                            setIsLearningMenuOpen(false);
                           }}
                           className="w-full px-4 py-3 text-left hover:bg-indigo-50 flex items-start space-x-3 transition-colors duration-200"
                         >
@@ -374,3 +374,4 @@ export function NavBar({
     </nav>
   );
 }
+
