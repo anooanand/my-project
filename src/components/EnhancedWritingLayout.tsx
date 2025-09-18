@@ -191,7 +191,7 @@ export function EnhancedWritingLayout({
           </div>
         )}
 
-        {/* Your Writing Header with Tools and Stats */}
+        {/* Section between Prompt and Writing Area */}
         <div className="flex justify-between items-center mb-4 px-4">
           <h2 className="text-xl font-bold text-gray-900">Your Writing</h2>
           
