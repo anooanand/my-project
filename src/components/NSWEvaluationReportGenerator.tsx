@@ -59,9 +59,22 @@ interface DetailedFeedback {
 
 export class NSWEvaluationReportGenerator {
   
-  static generateReport(params: { essayContent: string; textType: string; prompt: string; wordCount: number; targetWordCountMin: number; targetWordCountMax: number; }): EvaluationReport {
+  static generateReport(params: { 
+    essayContent: string; 
+    textType: string; 
+    prompt: string; 
+    wordCount: number; 
+    targetWordCountMin: number; 
+    targetWordCountMax: number; 
+  }): EvaluationReport {
     console.log("NSWEvaluationReportGenerator.generateReport called with params:", params);
     const { essayContent, textType, prompt, wordCount, targetWordCountMin, targetWordCountMax } = params;
+    
+    // Basic validation
+    if (!essayContent || essayContent.trim().length === 0) {
+      throw new Error("Essay content cannot be empty");
+    }
+    
     const analysis = this.analyzeEssay(essayContent);
     
     // Score each domain according to NSW criteria
@@ -423,66 +436,71 @@ export class NSWEvaluationReportGenerator {
   }
   
   private static assessCreativity(essay: string): number {
-    // Look for creative elements, original ideas, unique perspectives
-    const creativityIndicators = [
-      /metaphor|simile|personification/i,
-      /imagine|picture|envision/i,
-      /suddenly|unexpectedly|surprisingly/i,
-      /magical|mysterious|enchanted/i,
-      /unique|unusual|extraordinary/i
-    ];
-    
     let score = 5;
-    creativityIndicators.forEach(indicator => {
-      if (indicator.test(essay)) score += 0.5;
-    });
     
-    // Check for original plot elements or unique character development
-    if (essay.includes('twist') || essay.includes('revelation')) score += 1;
-    if (essay.length > 300 && (essay.includes('character arc') || essay.includes('growth'))) score += 1;
+    // Look for creative elements
+    if (/imagine|picture|envision|suddenly|unexpectedly|magical|mysterious/i.test(essay)) score += 1;
+    if (/metaphor|simile|personification/i.test(essay)) score += 1;
+    if (/"/.test(essay)) score += 0.5; // dialogue
+    if (/vivid|brilliant|shimmering|gleaming/i.test(essay)) score += 0.5; // descriptive language
     
-    return Math.min(10, score);
+    return Math.min(10, Math.max(1, score));
   }
   
   private static assessIdeaDevelopment(essay: string): number {
-    const wordCount = essay.split(/\s+/).length;
-    if (wordCount > 400) return 9;
-    if (wordCount > 300) return 7;
-    if (wordCount > 200) return 5;
-    if (wordCount > 100) return 3;
-    return 1;
+    const paragraphs = essay.split(/\n\s*\n/).filter(p => p.trim().length > 0);
+    const sentences = essay.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    
+    let score = 3;
+    
+    // More paragraphs suggest better development
+    if (paragraphs.length >= 4) score += 2;
+    else if (paragraphs.length >= 3) score += 1;
+    
+    // Longer sentences suggest more detailed development
+    const avgSentenceLength = essay.length / sentences.length;
+    if (avgSentenceLength > 80) score += 2;
+    else if (avgSentenceLength > 60) score += 1;
+    
+    return Math.min(10, Math.max(1, score));
   }
   
   private static assessEngagement(essay: string): number {
-    const engagementIndicators = [
-      /dialogue/i,
-      /action scene/i,
-      /vivid description/i,
-      /suspense/i,
-      /emotional moment/i
-    ];
-    
     let score = 5;
-    engagementIndicators.forEach(indicator => {
-      if (indicator.test(essay)) score += 1;
-    });
     
-    return Math.min(10, score);
+    // Look for engaging elements
+    if (/"/.test(essay)) score += 1; // dialogue
+    if (/\?/.test(essay)) score += 0.5; // questions
+    if (/!/.test(essay)) score += 0.5; // exclamations
+    if (/first person|I|me|my/i.test(essay)) score += 0.5; // personal connection
+    
+    return Math.min(10, Math.max(1, score));
   }
   
   private static identifySophisticatedVocabulary(essay: string): string[] {
     const sophisticatedWords = [
-      'ephemeral', 'ubiquitous', 'mellifluous', 'serendipity', 'juxtaposition',
-      'cacophony', 'epiphany', 'quintessential', 'labyrinthine', 'onomatopoeia',
-      'petrichor', 'sonder', 'eloquence', 'ineffable', 'nefarious'
+      'magnificent', 'extraordinary', 'remarkable', 'exceptional', 'tremendous',
+      'fascinating', 'intriguing', 'captivating', 'mesmerizing', 'enchanting',
+      'elaborate', 'intricate', 'complex', 'sophisticated', 'profound',
+      'consequently', 'furthermore', 'nevertheless', 'moreover', 'however'
     ];
     
+    const found: string[] = [];
     const words = essay.toLowerCase().split(/\s+/);
-    return sophisticatedWords.filter(word => words.includes(word));
+    
+    sophisticatedWords.forEach(word => {
+      if (words.includes(word)) {
+        found.push(word);
+      }
+    });
+    
+    return [...new Set(found)];
   }
   
   private static identifyRepetitiveWords(words: string[]): string[] {
     const wordCount: { [key: string]: number } = {};
+    const repetitive: string[] = [];
+    
     words.forEach(word => {
       const cleanWord = word.toLowerCase().replace(/[^\w]/g, '');
       if (cleanWord.length > 3) {
@@ -490,9 +508,13 @@ export class NSWEvaluationReportGenerator {
       }
     });
     
-    return Object.entries(wordCount)
-      .filter(([word, count]) => count > 3)
-      .map(([word]) => word);
+    Object.entries(wordCount).forEach(([word, count]) => {
+      if (count > 3 && !['that', 'with', 'they', 'were', 'have', 'this', 'from'].includes(word)) {
+        repetitive.push(word);
+      }
+    });
+    
+    return repetitive;
   }
   
   private static identifyLiteraryDevices(essay: string): string[] {
@@ -542,8 +564,6 @@ export class NSWEvaluationReportGenerator {
   }
   
   private static countSpellingErrors(essay: string): number {
-    // This is a simplified spelling check - in a real implementation,
-    // you would use a proper spell-checking library
     const commonMisspellings = [
       'recieve', 'seperate', 'definately', 'occured', 'begining',
       'untill', 'wich', 'thier', 'freind', 'beleive'
@@ -564,14 +584,13 @@ export class NSWEvaluationReportGenerator {
   private static identifyGrammarIssues(essay: string): string[] {
     const issues: string[] = [];
     
-    // Check for common grammar issues
     if (/\bi\s/g.test(essay)) {
       issues.push("Capitalization: 'I' should always be capitalized");
     }
     
     if (/its'/g.test(essay)) {
       issues.push("Possessive: 'its' doesn't need an apostrophe");
-    };
+    }
     
     if (/your\s+(going|coming|doing)/i.test(essay)) {
       issues.push("Contraction: Should be 'you're' not 'your'");
@@ -583,7 +602,6 @@ export class NSWEvaluationReportGenerator {
   private static identifyPunctuationIssues(essay: string): string[] {
     const issues: string[] = [];
     
-    // Check for missing periods
     const sentences = essay.split(/\n/).filter(line => line.trim().length > 0);
     sentences.forEach(sentence => {
       if (sentence.trim().length > 10 && !/[.!?]$/.test(sentence.trim())) {
@@ -591,16 +609,12 @@ export class NSWEvaluationReportGenerator {
       }
     });
     
-    // Check for comma splices
     if (/,\s*[a-z]/g.test(essay)) {
       issues.push("Possible comma splice");
     }
     
     return [...new Set(issues)];
   }
-  
-  // Additional helper methods would continue here...
-  // (Truncated for brevity - the full implementation would include all helper methods)
   
   private static generateRecommendations(content: DomainScore, structure: DomainScore, language: DomainScore, grammar: DomainScore): string[] {
     const recommendations: string[] = [];
@@ -650,7 +664,6 @@ export class NSWEvaluationReportGenerator {
     return improvements;
   }
   
-  // Placeholder methods for additional analysis functions
   private static analyzeSentenceVariety(simple: number, compound: number, complex: number): string {
     const total = simple + compound + complex;
     if (total === 0) return "No sentences detected";
@@ -750,12 +763,10 @@ export class NSWEvaluationReportGenerator {
   }
   
   private static assessVoice(essay: string): number {
-    // Look for consistent voice indicators
     const firstPerson = (essay.match(/\bI\b/g) || []).length;
     const thirdPerson = (essay.match(/\b(he|she|they)\b/gi) || []).length;
     const totalWords = essay.split(/\s+/).length;
     
-    // Consistent voice usage
     if (firstPerson > totalWords * 0.02 || thirdPerson > totalWords * 0.05) {
       return 7;
     }
