@@ -12,7 +12,18 @@ import { detectNewParagraphs } from "../lib/paragraphDetection";
 
 export default function WritingWorkspaceFixed() {
   const editorRef = React.useRef<EditorHandle>(null);
-  const [analysis, setAnalysis] = React.useState<DetailedFeedback | null>(null);
+  const [analysis, setAnalysis] = React.useState<DetailedFeedback | null>({
+    overallScore: 0,
+    criteria: {
+      ideasContent: { score: 0, weight: 30, strengths: [], improvements: [] },
+      structureOrganization: { score: 0, weight: 25, strengths: [], improvements: [] },
+      languageVocab: { score: 0, weight: 25, strengths: [], improvements: [] },
+      spellingPunctuationGrammar: { score: 0, weight: 20, strengths: [], improvements: [] },
+    },
+    grammarCorrections: [],
+    vocabularyEnhancements: [],
+    id: "initial-feedback",
+  });
   const [status, setStatus] = React.useState<"idle"|"loading"|"success"|"error">("idle");
   const [err, setErr] = React.useState<string|undefined>(undefined);
   const [currentText, setCurrentText] = React.useState<string>("");
@@ -234,12 +245,10 @@ export default function WritingWorkspaceFixed() {
             </div>
             
             {/* Analysis Results */}
-            {analysis && (
-              <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
+                          <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
                 <h2 className="text-lg font-semibold text-gray-800 mb-4">Analysis Results</h2>
                 <RubricPanel data={analysis} onApplyFix={onApplyFix} />
               </div>
-            )}
           </div>
         </div>
       </div>
