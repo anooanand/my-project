@@ -178,54 +178,52 @@ export function EnhancedWritingLayout({
 
   return (
     <div className="flex h-full bg-gray-50">
-      {/* Left side - Writing Area */}
+      {/* Left side - Writing Area Content */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Prompt Display */}
-        {generatedPrompt && (
-          <div className="bg-blue-50 border-l-4 border-blue-400 text-blue-800 p-4 mb-4 rounded-md" role="alert">
-            <div className="flex items-center">
-              <Lightbulb className="w-5 h-5 mr-2" />
-              <p className="font-semibold">Your Writing Prompt:</p>
-            </div>
-            <p className="ml-7 text-sm">{generatedPrompt}</p>
+        
+        {/* Your Writing Prompt Section */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 mx-4 mt-4">
+          <div className="flex items-center mb-2">
+            <Lightbulb className="w-5 h-5 mr-2 text-blue-600" />
+            <h3 className="font-semibold text-blue-800">Your Writing Prompt</h3>
           </div>
-        )}
+          <p className="text-blue-700 text-sm leading-relaxed">
+            {generatedPrompt || prompt}
+          </p>
+        </div>
 
-        {/* Section between Prompt and Writing Area */}
-        <div className="flex justify-between items-center mb-4 px-4">
-          <h2 className="text-xl font-bold text-gray-900">Your Writing</h2>
-          
-          {/* Right side - Action Buttons and Stats */}
-          <div className="flex items-center space-x-4">
-            {/* Action Buttons */}
+        {/* Action Buttons and Stats Section */}
+        <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4 mx-4">
+          <div className="flex justify-between items-center">
+            {/* Left side - Action Buttons */}
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setShowPlanningTool(true)}
-                className="flex items-center space-x-2 px-3 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
+                className="flex items-center space-x-2 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
               >
                 <PenTool className="w-4 h-4" />
-                <span>Planning Phase</span>
+                <span>Planning</span>
               </button>
               
               <button
                 onClick={() => setExamMode(!examMode)}
-                className="flex items-center space-x-2 px-3 py-1 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-medium"
+                className="flex items-center space-x-2 px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-medium"
               >
                 <Play className="w-4 h-4" />
-                <span>Exam Tips</span>
+                <span>Exam</span>
               </button>
               
               <button
                 onClick={() => setShowStructureGuide(true)}
-                className="flex items-center space-x-2 px-3 py-1 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors text-sm font-medium"
+                className="flex items-center space-x-2 px-3 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors text-sm font-medium"
               >
                 <BookOpen className="w-4 h-4" />
-                <span>Structure Guide</span>
+                <span>Structure</span>
               </button>
               
               <button
                 onClick={() => setShowTips(true)}
-                className="flex items-center space-x-2 px-3 py-1 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm font-medium"
+                className="flex items-center space-x-2 px-3 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm font-medium"
               >
                 <Lightbulb className="w-4 h-4" />
                 <span>Tips</span>
@@ -233,14 +231,14 @@ export function EnhancedWritingLayout({
               
               <button
                 onClick={() => setFocusMode(!focusMode)}
-                className="flex items-center space-x-2 px-3 py-1 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium"
+                className="flex items-center space-x-2 px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium"
               >
                 {focusMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 <span>Focus</span>
               </button>
             </div>
 
-            {/* Writing Statistics */}
+            {/* Right side - Writing Statistics */}
             <div className="flex items-center space-x-4 text-sm">
               <div className="flex items-center space-x-2">
                 <FileText className="w-4 h-4 text-blue-500" />
@@ -248,7 +246,7 @@ export function EnhancedWritingLayout({
                 {showWordCountWarning && (
                   <div className="flex items-center space-x-1 text-orange-600">
                     <AlertCircle className="w-4 h-4" />
-                    <span className="font-medium">Word count exceeded!</span>
+                    <span className="font-medium">Exceeded!</span>
                   </div>
                 )}
               </div>
@@ -261,26 +259,49 @@ export function EnhancedWritingLayout({
           </div>
         </div>
 
-        {/* Writing Area */}
-        <div className="flex-1 p-4 pt-0">
-          <WritingArea
-            content={content}
-            onChange={onChange}
-            onSubmit={handleSubmitForEvaluation}
-            textType={textType}
-            assistanceLevel={assistanceLevel}
-            selectedText={selectedText}
-            onTimerStart={onTimerStart}
-            onTextTypeChange={onTextTypeChange}
-            onPopupCompleted={onPopupCompleted}
-            onNavigate={onNavigate}
-            evaluationStatus={evaluationStatus}
-            examMode={examMode}
-          />
+        {/* Text Editor Section */}
+        <div className="flex-1 mx-4 mb-4">
+          <div className="bg-white border border-gray-200 rounded-lg h-full">
+            <WritingArea
+              content={content}
+              onChange={onChange}
+              onSubmit={handleSubmitForEvaluation}
+              textType={textType}
+              assistanceLevel={assistanceLevel}
+              selectedText={selectedText}
+              onTimerStart={onTimerStart}
+              onTextTypeChange={onTextTypeChange}
+              onPopupCompleted={onPopupCompleted}
+              onNavigate={onNavigate}
+              evaluationStatus={evaluationStatus}
+              examMode={examMode}
+            />
+          </div>
+        </div>
+
+        {/* Submit for Evaluation Button */}
+        <div className="px-4 pb-4">
+          <button
+            onClick={handleSubmitForEvaluation}
+            disabled={evaluationStatus === "loading" || !content.trim()}
+            className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center space-x-2"
+          >
+            {evaluationStatus === "loading" ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <span>Evaluating...</span>
+              </>
+            ) : (
+              <>
+                <Target className="w-5 h-5" />
+                <span>Submit for Evaluation</span>
+              </>
+            )}
+          </button>
         </div>
       </div>
 
-      {/* Right side - Coach Panel or NSW Evaluation */}
+      {/* Right side - Coach Panel */}
       {!focusMode && (
         <div className="w-[30rem] min-w-[30rem] flex-shrink-0 border-l border-gray-200 bg-white">
           {showNSWEvaluation ? (
