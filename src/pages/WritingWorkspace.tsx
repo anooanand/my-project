@@ -1,8 +1,9 @@
 import React from "react";
 import { InteractiveTextEditor, EditorHandle } from "../components/InteractiveTextEditor";
-import { RubricPanel } from "../components/RubricPanel";
+import { TabbedCoachPanel } from "../components/TabbedCoachPanel";
 import { CoachProvider } from "../components/CoachProvider";
 import { WritingStatusBar } from "../components/WritingStatusBar";
+import { NSWStandaloneSubmitSystem } from "../components/NSWStandaloneSubmitSystem";
 import ProgressCoach from "../components/ProgressCoach";
 import type { DetailedFeedback, LintFix } from "../types/feedback";
 import { evaluateEssay, saveDraft } from "../lib/api";
@@ -12,24 +13,15 @@ import { detectNewParagraphs } from "../lib/paragraphDetection";
 
 export default function WritingWorkspaceFixed() {
   const editorRef = React.useRef<EditorHandle>(null);
-  const [analysis, setAnalysis] = React.useState<DetailedFeedback | null>({
-    overallScore: 0,
-    criteria: {
-      ideasContent: { score: 0, weight: 30, strengths: [], improvements: [] },
-      structureOrganization: { score: 0, weight: 25, strengths: [], improvements: [] },
-      languageVocab: { score: 0, weight: 25, strengths: [], improvements: [] },
-      spellingPunctuationGrammar: { score: 0, weight: 20, strengths: [], improvements: [] },
-    },
-    grammarCorrections: [],
-    vocabularyEnhancements: [],
-    id: "initial-feedback",
-  });
+  const [analysis, setAnalysis] = React.useState<DetailedFeedback | null>(null);
+  const [nswReport, setNswReport] = React.useState<any>(null);
   const [status, setStatus] = React.useState<"idle"|"loading"|"success"|"error">("idle");
   const [err, setErr] = React.useState<string|undefined>(undefined);
   const [currentText, setCurrentText] = React.useState<string>("");
   const [textType, setTextType] = React.useState<'narrative' | 'persuasive' | 'informative'>('narrative');
   const [targetWordCount, setTargetWordCount] = React.useState<number>(300);
   const [wordCount, setWordCount] = React.useState<number>(0);
+  const [showNSWEvaluation, setShowNSWEvaluation] = React.useState<boolean>(false);
   const prevTextRef = React.useRef<string>("");
 
   // Replace your draftId line with this:
@@ -66,21 +58,70 @@ export default function WritingWorkspaceFixed() {
     return () => clearInterval(interval);
   }, [currentText]);
 
-  async function onSubmit() {
+  // NSW Evaluation Submit Handler
+  async function onNSWSubmit() {
     setStatus("loading");
     setErr(undefined);
+    setShowNSWEvaluation(true);
+    
     try {
       const text = editorRef.current?.getText() || "";
-      const res = await evaluateEssay({ essayText: text, textType });
-      if (!validateDetailedFeedback(res)) {
-        throw new Error("Invalid feedback payload");
+      if (!text.trim()) {
+        throw new Error("Please write some content before submitting for evaluation");
       }
-      setAnalysis(res);
-      setStatus("success");
+      
+      // The NSWStandaloneSubmitSystem will handle the evaluation
+      console.log("NSW Evaluation initiated for:", { text, textType, wordCount });
+      
     } catch (e: any) {
       setStatus("error");
-      setErr(e?.message || "Failed to analyze essay");
+      setErr(e?.message || "Failed to initiate NSW evaluation");
+      setShowNSWEvaluation(false);
     }
+  }
+
+  // Handle NSW evaluation completion
+  function onNSWEvaluationComplete(report: any) {
+    console.log("NSW Evaluation completed:", report);
+    setNswReport(report);
+    setStatus("success");
+    
+    // Convert NSW report to DetailedFeedback format for compatibility
+    const convertedAnalysis: DetailedFeedback = {
+      overallScore: report.overallScore || 0,
+      criteria: {
+        ideasContent: {
+          score: Math.round((report.domains?.contentAndIdeas?.score || 0) / 5), // Convert 25-point to 5-point scale
+          weight: 30,
+          strengths: [report.domains?.contentAndIdeas?.feedback || "Good content development"],
+          improvements: report.domains?.contentAndIdeas?.improvements || []
+        },
+        structureOrganization: {
+          score: Math.round((report.domains?.textStructure?.score || 0) / 5),
+          weight: 25,
+          strengths: [report.domains?.textStructure?.feedback || "Clear structure"],
+          improvements: report.domains?.textStructure?.improvements || []
+        },
+        languageVocab: {
+          score: Math.round((report.domains?.languageFeatures?.score || 0) / 5),
+          weight: 25,
+          strengths: [report.domains?.languageFeatures?.feedback || "Good language use"],
+          improvements: report.domains?.languageFeatures?.improvements || []
+        },
+        spellingPunctuationGrammar: {
+          score: Math.round((report.domains?.conventions?.score || 0) / 5),
+          weight: 20,
+          strengths: [report.domains?.conventions?.feedback || "Accurate conventions"],
+          improvements: report.domains?.conventions?.improvements || []
+        }
+      },
+      grammarCorrections: report.grammarCorrections || [],
+      vocabularyEnhancements: report.vocabularyEnhancements || [],
+      id: report.id || `nsw-${Date.now()}`,
+      assessmentId: report.assessmentId
+    };
+    
+    setAnalysis(convertedAnalysis);
   }
 
   async function onApplyFix(fix: LintFix) {
@@ -99,177 +140,152 @@ export default function WritingWorkspaceFixed() {
       localStorage.setItem(draftId.current, JSON.stringify({ text, version }));
       try {
         await saveDraft(draftId.current, text, version);
-        setVersion(v => v + 1);
-      } catch {
-        // swallow for now
+      } catch (e) {
+        console.warn("Autosave failed:", e);
       }
-    }, 1500);
+    }, 10000); // Every 10 seconds
     return () => clearInterval(int);
   }, [version]);
 
-  return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      {/* Header with controls */}
-      <div className="mb-6 bg-white rounded-lg shadow-sm p-4">
-        <div className="flex flex-wrap items-center gap-4 mb-4">
-          <h1 className="text-2xl font-bold text-gray-800">NSW Writing Buddy</h1>
-          
-          {/* Text Type Selector */}
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700">Text Type:</label>
-            <select 
-              value={textType}
-              onChange={(e) => setTextType(e.target.value as 'narrative' | 'persuasive' | 'informative')}
-              className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-            >
-              <option value="narrative">Narrative</option>
-              <option value="persuasive">Persuasive</option>
-              <option value="informative">Informative</option>
-            </select>
-          </div>
+  // Load saved draft on mount
+  React.useEffect(() => {
+    const saved = localStorage.getItem(draftId.current);
+    if (saved) {
+      try {
+        const { text } = JSON.parse(saved);
+        editorRef.current?.setText(text);
+        setCurrentText(text);
+      } catch (e) {
+        console.warn("Failed to load draft:", e);
+      }
+    }
+  }, []);
 
-          {/* Target Word Count */}
-          <div className="flex items-center gap-2">
-            <label className="text-sm font-medium text-gray-700">Target Words:</label>
-            <input 
-              type="number" 
-              value={targetWordCount}
-              onChange={(e) => setTargetWordCount(Number(e.target.value))}
-              className="w-20 px-2 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-              min="50"
-              max="1000"
+  const prompt = "The Secret Door in the Library: During a rainy afternoon, you decide to explore the dusty old library in your town that you've never visited before. As you wander through the aisles, you discover a hidden door behind a bookshelf. It's slightly ajar, and a faint, warm light spills out from the crack. What happens when you push the door open? Describe the world you enter and the adventures that await you inside. Who do you meet, and what challenges do you face? How does this experience change you by the time you return to the library? Let your imagination run wild as you take your reader on a journey through this mysterious door!";
+
+  return (
+    <div className="h-screen flex flex-col bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b border-gray-200 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <h1 className="text-2xl font-bold text-gray-900">NSW Selective Writing</h1>
+            <div className="flex items-center space-x-2">
+              <span className="text-sm text-gray-600">Text Type:</span>
+              <select 
+                value={textType} 
+                onChange={(e) => setTextType(e.target.value as any)}
+                className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="narrative">Narrative</option>
+                <option value="persuasive">Persuasive</option>
+                <option value="informative">Informative</option>
+              </select>
+            </div>
+          </div>
+          <div className="flex items-center space-x-4">
+            <WritingStatusBar 
+              wordCount={wordCount}
+              targetWordCount={targetWordCount}
+              status={status}
             />
           </div>
         </div>
-
-        {/* Status Messages */}
-        <div className="flex gap-2">
-          {status === "error" && <div className="text-red-600 flex items-center">{err}</div>}
-          {status === "success" && <div className="text-green-600 flex items-center">Analysis complete!</div>}
-        </div>
       </div>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-12 gap-6">
-        {/* Writing Area */}
-        <div className="col-span-12 lg:col-span-6">
-          <div className="bg-white rounded-lg shadow-sm">
-            <div className="p-4 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-800">Your Writing</h2>
+      {/* Main Content */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left Panel - Writing Area */}
+        <div className="flex-1 flex flex-col">
+          {/* Prompt */}
+          <div className="bg-blue-50 border-b border-blue-200 p-4">
+            <h2 className="font-semibold text-blue-900 mb-2">Your Writing Prompt</h2>
+            <p className="text-sm text-blue-800 leading-relaxed">{prompt}</p>
+          </div>
+
+          {/* Writing Area */}
+          <div className="flex-1 p-6">
+            <div className="h-full bg-white rounded-lg border border-gray-200 shadow-sm relative">
+              <InteractiveTextEditor
+                ref={editorRef}
+                onTextChange={setCurrentText}
+                onProgressUpdate={onProgressUpdate}
+                className="h-full"
+              />
+              
+              {/* Submit Button - Fixed positioning */}
+              <div className="absolute bottom-4 left-4 right-4">
+                <button
+                  onClick={onNSWSubmit}
+                  disabled={status === "loading" || wordCount < 50}
+                  className={`w-full py-3 px-6 rounded-lg font-semibold text-white transition-all duration-200 ${
+                    status === "loading" 
+                      ? 'bg-gray-400 cursor-not-allowed' 
+                      : wordCount < 50
+                      ? 'bg-gray-300 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-lg hover:shadow-xl'
+                  }`}
+                >
+                  {status === "loading" ? (
+                    <div className="flex items-center justify-center">
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3"></div>
+                      Generating NSW Assessment Report...
+                    </div>
+                  ) : (
+                    `Submit for NSW Evaluation (${wordCount} words)`
+                  )}
+                </button>
+              </div>
             </div>
-            
-            {/* Text Editor */}
-            <div className="p-4">
-              <InteractiveTextEditor 
-                ref={editorRef} 
-                placeholder="Start writing your story here... Your Writing Buddy will automatically provide tips as you write! ✨"
-                className="w-full h-96 p-4 border border-gray-300 rounded-xl resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+          </div>
+        </div>
+
+        {/* Right Panel - Coach & Analysis */}
+        <div className="w-96 border-l border-gray-200 bg-white flex flex-col">
+          {showNSWEvaluation ? (
+            /* NSW Evaluation System */
+            <div className="h-full p-4">
+              <div className="h-full bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg border border-purple-200">
+                <NSWStandaloneSubmitSystem
+                  content={currentText}
+                  wordCount={wordCount}
+                  targetWordCountMin={100}
+                  targetWordCountMax={400}
+                  textType={textType}
+                  prompt={prompt}
+                  onSubmissionComplete={onNSWEvaluationComplete}
+                />
+              </div>
+            </div>
+          ) : (
+            /* Coach Panel */
+            <div className="h-full">
+              <TabbedCoachPanel 
+                analysis={analysis}
+                onApplyFix={onApplyFix}
+                content={currentText}
+                textType={textType}
               />
             </div>
-            
-            {/* Bottom Status Bar with Words, WPM */}
-            <WritingStatusBar
-              wordCount={wordCount}
-              content={currentText}
-              textType={textType}
-              targetWordCountMin={Math.floor(targetWordCount * 0.8)}
-              targetWordCountMax={Math.ceil(targetWordCount * 1.2)}
-            />
-            
-            {/* Main Submit Button for Evaluation Report */}
-            <div className="p-4 border-t border-gray-200 bg-gray-50">
-              <button
-                onClick={onSubmit}
-                disabled={status === "loading" || wordCount < 10}
-                className={`w-full py-3 px-6 rounded-lg font-medium transition-all duration-200 ${
-                  status === "loading" 
-                    ? "bg-gray-400 text-white cursor-not-allowed" 
-                    : wordCount < 10
-                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    : "bg-green-600 text-white hover:bg-green-700 shadow-md hover:shadow-lg"
-                }`}
-              >
-                {status === "loading" ? (
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Analyzing...
-                  </div>
-                ) : (
-                  `Submit for Evaluation Report (${wordCount} words)`
-                )}
-              </button>
-              {wordCount < 10 && (
-                <p className="text-sm text-gray-500 text-center mt-2">
-                  Write at least 10 words to submit for evaluation
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Progress Coach */}
-        <div className="col-span-12 lg:col-span-3">
-          <div className="sticky top-4">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">Progress Coach</h2>
-            <ProgressCoach 
-              text={currentText}
-              textType={textType}
-              targetWordCount={targetWordCount}
-              onProgressUpdate={onProgressUpdate}
-            />
-          </div>
-        </div>
-
-        {/* Analysis and Coach Panel */}
-        <div className="col-span-12 lg:col-span-3">
-          <div className="space-y-6">
-            {/* Writing Coach - Make it more prominent */}
-            <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg p-4 border border-purple-200 shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-purple-800 flex items-center">
-                  <span className="mr-2">🤖</span>
-                  Writing Buddy
-                </h2>
-                <div className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded-full">
-                  Auto-feedback ON
-                </div>
-              </div>
-              <div className="bg-white rounded-lg p-2 border border-purple-100">
-                // FIXED: Pass content prop to CoachProvider for automatic feedback
-               <CoachProvider content={currentText} />
-
-              </div>
-              <div className="mt-3 text-xs text-purple-600 text-center">
-                💡 I'll automatically give you tips as you write!
-              </div>
-            </div>
-            
-            {/* Analysis Results */}
-                          <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
-                <h2 className="text-lg font-semibold text-gray-800 mb-4">Analysis Results</h2>
-                <RubricPanel data={analysis} onApplyFix={onApplyFix} />
-              </div>
-          </div>
+          )}
         </div>
       </div>
 
-      {/* Mobile-friendly stacked layout for smaller screens */}
-      <style jsx>{`
-        @media (max-width: 1024px) {
-          .grid-cols-12 {
-            display: block;
-          }
-          .col-span-12,
-          .col-span-6,
-          .col-span-3 {
-            width: 100%;
-            margin-bottom: 1.5rem;
-          }
-          .sticky {
-            position: static;
-          }
-        }
-      `}</style>
+      {/* Error Display */}
+      {err && (
+        <div className="bg-red-50 border-t border-red-200 px-6 py-3">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-red-800">{err}</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
