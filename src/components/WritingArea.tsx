@@ -122,7 +122,11 @@ function WritingAreaImpl(props: Props) {
   };
 
   const onSubmitForEvaluation = async () => {
-    if (!content?.trim()) return;
+    if (!content?.trim()) {
+      setErr("Please write some text before submitting for evaluation");
+      setStatus("error");
+      return;
+    }
     
     setStatus("loading");
     setErr("");
@@ -405,132 +409,53 @@ function WritingAreaImpl(props: Props) {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">📝 Story Planning Workshop</h2>
-              <button
-                onClick={() => setShowPlanningModal(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
+              <h2 className="text-2xl font-bold text-gray-800">Planning Your Story</h2>
+              <button onClick={() => setShowPlanningModal(false)} className="text-gray-500 hover:text-gray-700">
                 <X className="w-6 h-6" />
               </button>
             </div>
             
-            <div className="mb-6">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-sm font-medium text-gray-600">Step {planningStep} of {planningSteps.length}</span>
-                <div className="flex space-x-1">
-                  {planningSteps.map((_, index) => (
-                    <span
-                      key={index}
-                      className={`h-2 w-2 rounded-full ${index + 1 === planningStep ? 'bg-blue-500' : 'bg-gray-300'}`}
-                    ></span>
-                  ))}
-                </div>
-              </div>
-              <h3 className="text-xl font-semibold text-gray-700 mb-3">{planningSteps[planningStep - 1].title}</h3>
+            {/* Progress Bar */}
+            <div className="w-full bg-gray-200 rounded-full h-2.5 mb-6">
+              <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${(planningStep / planningSteps.length) * 100}%` }}></div>
+            </div>
+
+            {/* Step Content */}
+            <div>
+              <h3 className="text-xl font-semibold mb-2">{planningSteps[planningStep - 1].title}</h3>
               <p className="text-gray-600 mb-4">{planningSteps[planningStep - 1].description}</p>
               <textarea
-                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y min-h-[100px]"
-                placeholder={planningSteps[planningStep - 1].placeholder}
+                className="w-full p-3 rounded-lg border resize-y"
+                rows={5}
+                placeholder={planningSteps[planning-1].placeholder}
               ></textarea>
             </div>
 
-            <div className="flex justify-between">
-              <button
+            {/* Navigation */}
+            <div className="flex justify-between mt-6">
+              <button 
                 onClick={() => setPlanningStep(prev => Math.max(1, prev - 1))}
                 disabled={planningStep === 1}
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 disabled:opacity-50"
+                className="px-4 py-2 rounded-lg bg-gray-300 hover:bg-gray-400 disabled:opacity-50"
               >
-                Previous
+                Back
               </button>
-              {planningStep < planningSteps.length ? (
-                <button
-                  onClick={() => setPlanningStep(prev => prev + 1)}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                >
-                  Next
-                </button>
-              ) : (
-                <button
-                  onClick={() => {
-                    setShowPlanningModal(false);
-                    props.onPopupCompleted?.();
-                  }}
-                  className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
-                >
-                  Finish Planning
-                </button>
-              )}
+              <button 
+                onClick={() => setPlanningStep(prev => Math.min(planningSteps.length, prev + 1))}
+                disabled={planningStep === planningSteps.length}
+                className="px-4 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50"
+              >
+                Next
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Structure Guide Modal */}
-      {showStructureModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">📚 Structure Guide</h2>
-              <button
-                onClick={() => setShowStructureModal(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            <div className="prose max-w-none text-gray-700">
-              <h3 className="text-xl font-semibold mb-2">Narrative Writing Structure</h3>
-              <p>A typical narrative follows a story arc:</p>
-              <ol className="list-decimal list-inside space-y-2">
-                <li><strong>Exposition:</strong> Introduce characters, setting, and initial situation.</li>
-                <li><strong>Rising Action:</strong> Develop the conflict, build suspense, and introduce complications.</li>
-                <li><strong>Climax:</strong> The turning point, the most intense moment of the story.</li>
-                <li><strong>Falling Action:</strong> Events that happen after the climax, leading to the resolution.</li>
-                <li><strong>Resolution:</strong> The conclusion of the story, where conflicts are resolved.</li>
-              </ol>
-              <h3 className="text-xl font-semibold mt-6 mb-2">Tips for Each Section:</h3>
-              <ul className="list-disc list-inside space-y-2">
-                <li><strong>Exposition:</strong> "Hook" your reader with an interesting opening.</li>
-                <li><strong>Rising Action:</strong> Use vivid descriptions and strong verbs.</li>
-                <li><strong>Climax:</strong> Make it dramatic and impactful.</li>
-                <li><strong>Falling Action:</strong> Tie up loose ends.</li>
-                <li><strong>Resolution:</strong> Leave the reader with a sense of closure.</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Tips Modal */}
-      {showTipsModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-800">💡 Writing Tips</h2>
-              <button
-                onClick={() => setShowTipsModal(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            <div className="prose max-w-none text-gray-700">
-              <ul className="list-disc list-inside space-y-2">
-                <li><strong>Show, Don't Tell:</strong> Instead of saying a character is sad, describe their slumped shoulders and tear-filled eyes.</li>
-                <li><strong>Vary Sentence Structure:</strong> Mix short, punchy sentences with longer, more descriptive ones to keep your writing engaging.</li>
-                <li><strong>Use Sensory Details:</strong> Engage all five senses (sight, sound, smell, touch, taste) to make your descriptions come alive.</li>
-                <li><strong>Strong Verbs and Adjectives:</strong> Choose powerful words that convey meaning precisely and vividly.</li>
-                <li><strong>Realistic Dialogue:</strong> Make your characters' conversations sound natural and authentic.</li>
-                <li><strong>Pacing:</strong> Control the speed at which your story unfolds. Speed up for action, slow down for reflection.</li>
-                <li><strong>Revise and Edit:</strong> Always review your work for clarity, coherence, grammar, and spelling.</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
 
-export default WritingAreaImpl;
-export const WritingArea = WritingAreaImpl;
+export default function WritingArea(props: Props) {
+  return <WritingAreaImpl {...props} />;
+}
