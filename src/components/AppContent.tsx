@@ -38,6 +38,7 @@ import { WritingAccessCheck } from './WritingAccessCheck';
 import { WritingToolbar } from './WritingToolbar';
 import { PlanningToolModal } from './PlanningToolModal';
 import { EmailVerificationHandler } from './EmailVerificationHandler';
+import { EvaluationPage } from './EvaluationPage';
 // REMOVED: import { FloatingChatWindow } from './FloatingChatWindow';
 import { checkOpenAIConnectionStatus } from '../lib/openai';
 import { AdminButton } from './AdminButton';
@@ -260,6 +261,14 @@ function AppContent() {
 
   const handleSubmit = () => {
     console.log('Writing submitted:', { content, textType });
+    
+    // Store the essay content and metadata for evaluation
+    localStorage.setItem('submittedEssay', content);
+    localStorage.setItem('submittedTextType', textType);
+    localStorage.setItem('submissionTimestamp', new Date().toISOString());
+    
+    // Navigate to evaluation page or trigger evaluation modal
+    navigate('/evaluation');
   };
 
   // NAVIGATION FIX: Improved text type change handler
@@ -423,6 +432,11 @@ function AppContent() {
           } />
 
           <Route path="/learning" element={<LearningPage />} />
+          <Route path="/evaluation" element={
+            <WritingAccessCheck onNavigate={handleNavigation}>
+              <EvaluationPage />
+            </WritingAccessCheck>
+          } />
           <Route path="/exam" element={<ExamSimulationMode onExit={() => setActivePage('writing')} />} />
           <Route path="/supportive-features" element={<SupportiveFeatures />} />
           <Route path="/help-center" element={<HelpCenter />} />
