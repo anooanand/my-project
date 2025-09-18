@@ -137,7 +137,7 @@ export function WritingStatusBar({
             disabled={evaluationStatus === "loading"}
             aria-label="Submit for Evaluation Report"
           >
-            {evaluationStatus === "loading" ? "Analyzing…" : "Submit for Evaluation Report"}
+            {evaluationStatus === "loading" ? "Analyzing…" : "Submit for Evaluation"}
           </button>
         )}
       </div>
