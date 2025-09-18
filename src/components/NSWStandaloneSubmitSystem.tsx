@@ -54,24 +54,33 @@ export function NSWStandaloneSubmitSystem({
     setAnalysisReport(null);
 
     try {
-      // Simulate API call or complex analysis
-      const report = await NSWEvaluationReportGenerator.generateReport({
-        essayContent: content,
-        textType: textType,
-        prompt: prompt,
-        wordCount: wordCount,
-        targetWordCountMin: targetWordCountMin,
-        targetWordCountMax: targetWordCountMax,
-      });
-      console.log("Report generated successfully:", report);
-      setAnalysisReport(report);
-      onSubmissionComplete?.(report);
+      // FIXED: Remove await since generateReport is synchronous
+      // Wrap in setTimeout to simulate async behavior and allow UI to update
+      setTimeout(() => {
+        try {
+          const report = NSWEvaluationReportGenerator.generateReport({
+            essayContent: content,
+            textType: textType,
+            prompt: prompt,
+            wordCount: wordCount,
+            targetWordCountMin: targetWordCountMin,
+            targetWordCountMax: targetWordCountMax,
+          });
+          console.log("Report generated successfully:", report);
+          setAnalysisReport(report);
+          onSubmissionComplete?.(report);
+          setIsSubmitting(false);
+          console.log("Submission process finished.");
+        } catch (err) {
+          console.error('Submission error:', err);
+          setError('Failed to generate analysis report. Please try again.');
+          setIsSubmitting(false);
+        }
+      }, 100); // Small delay to allow UI to show loading state
     } catch (err) {
       console.error('Submission error:', err);
       setError('Failed to generate analysis report. Please try again.');
-    } finally {
       setIsSubmitting(false);
-      console.log("Submission process finished.");
     }
   };
 
