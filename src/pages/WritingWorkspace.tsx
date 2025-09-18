@@ -24,7 +24,6 @@ export default function WritingWorkspaceFixed() {
   const [showNSWEvaluation, setShowNSWEvaluation] = React.useState<boolean>(false);
   const prevTextRef = React.useRef<string>("");
 
-  // Replace your draftId line with this:
   const draftId = React.useRef<string>(
     `draft-${
       (globalThis.crypto && typeof globalThis.crypto.randomUUID === "function")
@@ -33,6 +32,20 @@ export default function WritingWorkspaceFixed() {
     }`
   );
   const [version, setVersion] = React.useState(0);
+
+  // Listen for submit events from AppContent
+  React.useEffect(() => {
+    const handleSubmitEvent = (event: CustomEvent) => {
+      console.log('📨 WritingWorkspace: Received submit event:', event.detail);
+      onNSWSubmit();
+    };
+
+    window.addEventListener('submitForEvaluation', handleSubmitEvent as EventListener);
+    
+    return () => {
+      window.removeEventListener('submitForEvaluation', handleSubmitEvent as EventListener);
+    };
+  }, []);
 
   // Track text changes for progress monitoring AND coach feedback
   React.useEffect(() => {
@@ -53,27 +66,32 @@ export default function WritingWorkspaceFixed() {
         }
         prevTextRef.current = text;
       }
-    }, 500); // Update every 500ms for responsive progress tracking
+    }, 500);
 
     return () => clearInterval(interval);
   }, [currentText]);
 
   // NSW Evaluation Submit Handler
   async function onNSWSubmit() {
+    console.log('🎯 NSW Submit triggered');
     setStatus("loading");
     setErr(undefined);
     setShowNSWEvaluation(true);
     
     try {
-      const text = editorRef.current?.getText() || "";
+      const text = editorRef.current?.getText() || currentText || "";
       if (!text.trim()) {
         throw new Error("Please write some content before submitting for evaluation");
       }
       
-      // The NSWStandaloneSubmitSystem will handle the evaluation
-      console.log("NSW Evaluation initiated for:", { text, textType, wordCount });
+      console.log("NSW Evaluation initiated for:", { 
+        text: text.substring(0, 100) + "...", 
+        textType, 
+        wordCount: text.trim().split(/\s+/).filter(w => w.length > 0).length 
+      });
       
     } catch (e: any) {
+      console.error('NSW Submit error:', e);
       setStatus("error");
       setErr(e?.message || "Failed to initiate NSW evaluation");
       setShowNSWEvaluation(false);
@@ -91,7 +109,7 @@ export default function WritingWorkspaceFixed() {
       overallScore: report.overallScore || 0,
       criteria: {
         ideasContent: {
-          score: Math.round((report.domains?.contentAndIdeas?.score || 0) / 5), // Convert 25-point to 5-point scale
+          score: Math.round((report.domains?.contentAndIdeas?.score || 0) / 5),
           weight: 30,
           strengths: [report.domains?.contentAndIdeas?.feedback || "Good content development"],
           improvements: report.domains?.contentAndIdeas?.improvements || []
@@ -129,11 +147,10 @@ export default function WritingWorkspaceFixed() {
   }
 
   function onProgressUpdate(metrics: any) {
-    // Optional: Handle progress updates for additional features
     console.log('Progress updated:', metrics);
   }
 
-  // Simple autosave: localStorage + server PUT (stub function)
+  // Simple autosave
   React.useEffect(() => {
     const int = setInterval(async () => {
       const text = editorRef.current?.getText() || "";
@@ -143,7 +160,7 @@ export default function WritingWorkspaceFixed() {
       } catch (e) {
         console.warn("Autosave failed:", e);
       }
-    }, 10000); // Every 10 seconds
+    }, 10000);
     return () => clearInterval(int);
   }, [version]);
 
@@ -213,7 +230,7 @@ export default function WritingWorkspaceFixed() {
                 className="h-full"
               />
               
-              {/* Submit Button - Fixed positioning */}
+              {/* Manual Submit Button - For direct testing */}
               <div className="absolute bottom-4 left-4 right-4">
                 <button
                   onClick={onNSWSubmit}
@@ -246,15 +263,28 @@ export default function WritingWorkspaceFixed() {
             /* NSW Evaluation System */
             <div className="h-full p-4">
               <div className="h-full bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg border border-purple-200">
-                <NSWStandaloneSubmitSystem
-                  content={currentText}
-                  wordCount={wordCount}
-                  targetWordCountMin={100}
-                  targetWordCountMax={400}
-                  textType={textType}
-                  prompt={prompt}
-                  onSubmissionComplete={onNSWEvaluationComplete}
-                />
+                <div className="p-4 border-b border-purple-200">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-purple-800">NSW Assessment</h3>
+                    <button
+                      onClick={() => setShowNSWEvaluation(false)}
+                      className="text-purple-600 hover:text-purple-800 text-sm"
+                    >
+                      ← Back to Coach
+                    </button>
+                  </div>
+                </div>
+                <div className="h-full overflow-auto">
+                  <NSWStandaloneSubmitSystem
+                    content={currentText}
+                    wordCount={wordCount}
+                    targetWordCountMin={100}
+                    targetWordCountMax={400}
+                    textType={textType}
+                    prompt={prompt}
+                    onSubmissionComplete={onNSWEvaluationComplete}
+                  />
+                </div>
               </div>
             </div>
           ) : (
