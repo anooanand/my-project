@@ -227,31 +227,7 @@ export function EnhancedWritingLayout({
                   {focusMode ? 'Exit Focus' : 'Focus'}
                 </button>
 
-                {/* Submit for Evaluation Button */}
-                <button
-                  onClick={handleSubmitForEvaluation}
-                  disabled={evaluationStatus === "loading" || wordCount < 10}
-                  className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 shadow-sm ${
-                    evaluationStatus === "loading" 
-                      ? 'bg-gray-400 text-white cursor-not-allowed' 
-                      : wordCount < 10
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      : 'bg-green-600 text-white hover:bg-green-700'
-                  }`}
-                  title="Submit your writing for evaluation and feedback"
-                >
-                  {evaluationStatus === "loading" ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                      Analyzing...
-                    </>
-                  ) : (
-                    <>
-                      <Target className="h-4 w-4 mr-2" />
-                      Submit for Evaluation
-                    </>
-                  )}
-                </button>
+
               </div>
             </div>
             <WritingArea
@@ -259,6 +235,9 @@ export function EnhancedWritingLayout({
               onChange={handleContentChange}
               placeholder="Start writing your amazing story here! Let your creativity flow and bring your ideas to life…"
               focusMode={focusMode}
+              onSubmit={handleSubmitForEvaluation}
+              evaluationStatus={evaluationStatus}
+              wordCount={wordCount}
             />
           </div>
         </div>
@@ -332,3 +311,4 @@ export function EnhancedWritingLayout({
     </div>
   );
 }
+
