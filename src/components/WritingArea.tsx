@@ -26,4 +26,3 @@ function WritingArea({ content = '', onChange, placeholder = 'Start writing...',
 }
 
 export default WritingArea;
-}
