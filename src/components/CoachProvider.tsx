@@ -1,4 +1,4 @@
-'''import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { MessageSquare, Sparkles, ChevronDown, ChevronUp, ThumbsUp, Lightbulb, HelpCircle, Target, AlertCircle, Star, Zap, Gift, Heart, X, Send, User, RefreshCw, Bot, Loader } from 'lucide-react';
 import { generateChatResponse, checkOpenAIConnectionStatus } from '../lib/openai';
 import AIErrorHandler from '../utils/errorHandling';
@@ -479,4 +479,3 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
     </div>
   );
 }
-'''
