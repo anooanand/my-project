@@ -41,7 +41,6 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
   const [showQuickQuestions, setShowQuickQuestions] = useState(true);
 
   // Enhanced feedback tracking to prevent repetition
-  const [feedbackHistory, setFeedbackHistory] = useState<Set<string>>(new Set());
   const [lastFeedbackTime, setLastFeedbackTime] = useState<number>(0);
   const [feedbackCount, setFeedbackCount] = useState<number>(0);
 
@@ -176,11 +175,7 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
       }
 
       // Generate a unique key for this content to prevent repetition
-      const contentKey = text.trim().toLowerCase().slice(0, 50);
-      if (feedbackHistory.has(contentKey)) {
-        console.log("Skipping duplicate feedback for similar content");
-        return;
-      }
+      // Removed feedbackHistory.has(contentKey) check to allow continuous feedback
 
       setIsAITyping(true);
       setLastFeedbackTime(Date.now());
@@ -271,7 +266,7 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
     
     eventBus.on("paragraph.ready", handler);
     return () => eventBus.off("paragraph.ready", handler);
-  }, [feedbackHistory, lastFeedbackTime]);
+  }, [lastFeedbackTime]);
 
   // Varied fallback tips that change based on content and feedback count
   const getVariedFallbackTip = (paragraph: string, feedbackCount: number): string => {
