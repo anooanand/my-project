@@ -3,6 +3,8 @@ import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-
 import { useAuth } from '../contexts/AuthContext';
 import './layout-fix.css';
 
+// Add this import at the top with other imports
+import WritingWorkspaceFixed from '../pages/WritingWorkspace';
 import { NavBar } from './NavBar';
 import { HeroSection } from './HeroSection';
 import { FeaturesSection } from './FeaturesSection';
@@ -402,41 +404,18 @@ const handleSubmit = () => {
           <Route path="/settings" element={
             user ? <SettingsPage onBack={() => setActivePage('dashboard')} /> : <Navigate to="/" />
           } />
-          <Route path="/writing" element={
-            <WritingAccessCheck onNavigate={handleNavigation}>
-              <div className="writing-route h-screen flex flex-col">
-                <EnhancedHeader 
-                  textType={textType}
-                  assistanceLevel={assistanceLevel}
-                  onTextTypeChange={setTextType}
-                  onAssistanceLevelChange={setAssistanceLevel}
-                  onTimerStart={() => setTimerStarted(true)}
-                  hideTextTypeSelector={popupFlowCompleted}
-                />
-                
-                {showExamMode ? (
-                  <ExamSimulationMode 
-                    onExit={() => setShowExamMode(false)}
-                  />
-                ) : (
-                  <div className="writing-layout-content flex-1 min-h-0">
-                    <EnhancedWritingLayout
-                      content={content}
-                      onChange={setContent}
-                      textType={textType}
-                      assistanceLevel={assistanceLevel}
-                      selectedText={selectedText}
-                      onTimerStart={setTimerStarted}
-                      onSubmit={handleSubmit}
-                      onTextTypeChange={handleTextTypeChange}
-                      onPopupCompleted={handlePopupCompleted}
-                      onNavigate={handleNavigation}
-                    />
-                  </div>
-                )}
-              </div>
-            </WritingAccessCheck>
-          } />
+   <Route path="/writing" element={
+  <WritingAccessCheck onNavigate={handleNavigation}>
+    {showExamMode ? (
+      <ExamSimulationMode 
+        onExit={() => setShowExamMode(false)}
+      />
+    ) : (
+      <WritingWorkspaceFixed />
+    )}
+  </WritingAccessCheck>
+} />
+
 
           <Route path="/learning" element={<LearningPage />} />
           <Route path="/evaluation" element={
