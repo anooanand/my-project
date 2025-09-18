@@ -226,7 +226,9 @@ export default function WritingWorkspaceFixed() {
                 </div>
               </div>
               <div className="bg-white rounded-lg p-2 border border-purple-100">
-                <CoachProvider />
+                // FIXED: Pass content prop to CoachProvider for automatic feedback
+               <CoachProvider content={currentText} />
+
               </div>
               <div className="mt-3 text-xs text-purple-600 text-center">
                 💡 I'll automatically give you tips as you write!
