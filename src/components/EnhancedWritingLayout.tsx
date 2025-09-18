@@ -4,6 +4,7 @@ import { PlanningToolModal } from './PlanningToolModal';
 import { StructureGuideModal } from './StructureGuideModal'; // Import StructureGuideModal
 import { TipsModal } from './TipsModal'; // Import TipsModal
 import { TabbedCoachPanel } from './TabbedCoachPanel'; // Import TabbedCoachPanel
+import { WritingStatusBar } from './WritingStatusBar'; // Import WritingStatusBar
 import {
   PenTool,
   Play,
@@ -18,7 +19,7 @@ import {
 
 interface EnhancedWritingLayoutProps {
   content: string;
-  setContent: (content: string) => void;
+  onChange: (content: string) => void;
   textType: string;
   assistanceLevel: string;
   selectedText: string;
@@ -31,7 +32,7 @@ interface EnhancedWritingLayoutProps {
 
 export function EnhancedWritingLayout({
   content,
-  setContent,
+  onChange,
   textType,
   assistanceLevel,
   selectedText,
@@ -48,6 +49,8 @@ export function EnhancedWritingLayout({
   const [generatedPrompt, setGeneratedPrompt] = useState('');
   const [examMode, setExamMode] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
+  const [wordCount, setWordCount] = useState(0);
+  const [evaluationStatus, setEvaluationStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 
   // FIXED: Retrieve prompt from localStorage on component mount
   useEffect(() => {
@@ -105,7 +108,22 @@ export function EnhancedWritingLayout({
   const handleContentChange = (newContent: string) => {
     console.log("📝 EnhancedWritingLayout: Content changed to:", newContent);
     console.log("📝 EnhancedWritingLayout: Content length:", newContent.length);
-    setContent(newContent);
+    
+    // Update word count
+    const words = newContent.trim().split(/\s+/).filter(word => word.length > 0);
+    setWordCount(words.length);
+    
+    onChange(newContent);
+  };
+
+  const handleSubmitForEvaluation = async () => {
+    setEvaluationStatus("loading");
+    try {
+      await onSubmit();
+      setEvaluationStatus("success");
+    } catch (error) {
+      setEvaluationStatus("error");
+    }
   };
 
   // Debug logging for prop values
@@ -210,14 +228,11 @@ export function EnhancedWritingLayout({
                 </button>
               </div>
             </div>
-            <textarea
-              className={`w-full h-full p-3 rounded-lg border resize-none outline-none transition-all duration-300 ${
-                focusMode ? 'bg-gray-800 text-white text-lg border-gray-600' : 'bg-white text-gray-700'
-              }`}
+            <WritingArea
+              content={content}
+              onChange={handleContentChange}
               placeholder="Start writing your amazing story here! Let your creativity flow and bring your ideas to life…"
-              value={content}
-              onChange={(e) => handleContentChange(e.target.value)}
-              style={{ minHeight: '400px' }}
+              focusMode={focusMode}
             />
           </div>
         </div>
@@ -241,10 +256,17 @@ export function EnhancedWritingLayout({
           </div>
         )}
 
-        {/* Status Bar */}
-        <div className={`bg-white rounded-lg shadow-sm p-4 focus-hide ${focusMode ? 'opacity-30' : ''}`}>
-          {/* ... (Status bar content remains unchanged) ... */}
-        </div>
+        {/* Writing Status Bar with Words, WPM, Submit buttons */}
+        <WritingStatusBar
+          wordCount={wordCount}
+          content={content}
+          textType={textType}
+          targetWordCountMin={100}
+          targetWordCountMax={500}
+          onSubmitForEvaluation={handleSubmitForEvaluation}
+          evaluationStatus={evaluationStatus}
+          examMode={examMode}
+        />
       </div>
 
       {/* Right side - Writing Buddy Panel - MADE MUCH WIDER */}
