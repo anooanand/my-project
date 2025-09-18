@@ -259,17 +259,24 @@ function AppContent() {
     }
   }, [user, emailVerified, paymentCompleted]);
 
-  const handleSubmit = () => {
-    console.log('Writing submitted:', { content, textType });
-    
-    // Store the essay content and metadata for evaluation
-    localStorage.setItem('submittedEssay', content);
-    localStorage.setItem('submittedTextType', textType);
-    localStorage.setItem('submissionTimestamp', new Date().toISOString());
-    
-    // Navigate to evaluation page or trigger evaluation modal
-    navigate('/evaluation');
-  };
+  // FIXED CODE:
+const handleSubmit = () => {
+  console.log('Writing submitted:', { content, textType });
+  
+  // Store the essay content and metadata for evaluation
+  localStorage.setItem('submittedEssay', content);
+  localStorage.setItem('submittedTextType', textType);
+  localStorage.setItem('submissionTimestamp', new Date().toISOString());
+  
+  // FIXED: Don't navigate - let the WritingWorkspace handle evaluation internally
+  console.log('✅ Essay data stored for NSW evaluation system');
+  
+  // Trigger a custom event that WritingWorkspace can listen to
+  window.dispatchEvent(new CustomEvent('submitForEvaluation', {
+    detail: { content, textType }
+  }));
+};
+
 
   // NAVIGATION FIX: Improved text type change handler
   const handleTextTypeChange = useCallback((newTextType: string) => {
