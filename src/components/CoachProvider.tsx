@@ -11,6 +11,7 @@ interface ChatMessage {
   isUser: boolean;
   timestamp: Date;
   isTyping?: boolean;
+  isFeedback?: boolean;
 }
 
 interface AIStatus {
@@ -122,7 +123,8 @@ export function CoachProvider() {
 
         // Prevent too frequent feedback
         const now = Date.now();
-        if (now - lastFeedbackTime < 10000) { // 10 second cooldown
+        if (now - lastFeedbackTime < 8000) { // 8 second cooldown
+          console.log("Skipping feedback due to cooldown");
           return;
         }
 
@@ -140,10 +142,11 @@ export function CoachProvider() {
 
         const typingMessage: ChatMessage = {
           id: 'typing-' + Date.now(),
-          text: 'Writing Buddy is reading your work...',
+          text: '🤖 Reading your writing...',
           isUser: false,
           timestamp: new Date(),
-          isTyping: true
+          isTyping: true,
+          isFeedback: true
         };
         setMessages(prev => [...prev, typingMessage]);
 
@@ -155,9 +158,10 @@ export function CoachProvider() {
             const withoutTyping = prev.filter(msg => !msg.isTyping);
             return [...withoutTyping, {
               id: 'coach-' + Date.now(),
-              text: res.tip || getVariedFallbackTip(p.paragraph, feedbackHistory.size),
+              text: `✨ ${res.tip || getVariedFallbackTip(p.paragraph, feedbackHistory.size)}`,
               isUser: false,
-              timestamp: new Date()
+              timestamp: new Date(),
+              isFeedback: true
             }];
           });
 
@@ -175,9 +179,10 @@ export function CoachProvider() {
             const withoutTyping = prev.filter(msg => !msg.isTyping);
             return [...withoutTyping, {
               id: 'coach-' + Date.now(),
-              text: getVariedFallbackTip(p.paragraph, feedbackHistory.size),
+              text: `✨ ${getVariedFallbackTip(p.paragraph, feedbackHistory.size)}`,
               isUser: false,
-              timestamp: new Date()
+              timestamp: new Date(),
+              isFeedback: true
             }];
           });
 
@@ -202,9 +207,9 @@ export function CoachProvider() {
     
     // Analyze content for specific feedback
     const hasDialogue = text.includes('"') || text.includes("'");
-    const hasAction = /\b(ran|jumped|walked|moved|grabbed|pushed|pulled)\b/.test(text);
-    const hasEmotion = /\b(happy|sad|angry|excited|scared|worried|surprised)\b/.test(text);
-    const hasDescription = /\b(beautiful|dark|bright|cold|warm|loud|quiet)\b/.test(text);
+    const hasAction = /\b(ran|jumped|walked|moved|grabbed|pushed|pulled|went|came|looked|saw)\b/.test(text);
+    const hasEmotion = /\b(happy|sad|angry|excited|scared|worried|surprised|felt|feeling)\b/.test(text);
+    const hasDescription = /\b(beautiful|dark|bright|cold|warm|loud|quiet|big|small|old|new)\b/.test(text);
     
     // Rotate through different types of feedback
     const feedbackTypes = [
@@ -266,7 +271,7 @@ export function CoachProvider() {
     // Add typing indicator
     const typingMessage: ChatMessage = {
       id: 'typing-' + Date.now(),
-      text: 'Writing Buddy is thinking...',
+      text: '🤖 Thinking...',
       isUser: false,
       timestamp: new Date(),
       isTyping: true
@@ -313,44 +318,49 @@ export function CoachProvider() {
   return (
     <div className="h-full flex flex-col bg-white">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <MessageSquare className="w-5 h-5 text-blue-600" />
+      <div className="p-3 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
+        <div className="flex items-center gap-2">
+          <div className="p-1 bg-blue-100 rounded-lg">
+            <MessageSquare className="w-4 h-4 text-blue-600" />
           </div>
           <div className="flex-1">
-            <h3 className="font-semibold text-gray-900">Writing Buddy Chat</h3>
-            <p className="text-sm text-gray-600">Ask me anything about writing!</p>
+            <h3 className="font-semibold text-sm text-gray-900">Writing Buddy Chat</h3>
+            <p className="text-xs text-gray-600">Ask me anything about writing!</p>
           </div>
-          <div className={`w-3 h-3 rounded-full ${aiStatus.connected ? 'bg-green-500' : 'bg-red-500'}`} 
+          <div className={`w-2 h-2 rounded-full ${aiStatus.connected ? 'bg-green-500' : 'bg-red-500'}`} 
                title={aiStatus.connected ? 'Connected' : 'Disconnected'} />
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-3 space-y-3">
         {messages.map((message) => (
           <div
             key={message.id}
             className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-[85%] p-3 rounded-lg ${
+              className={`max-w-[85%] p-2 rounded-lg text-sm ${
                 message.isUser
                   ? 'bg-blue-600 text-white rounded-br-sm'
+                  : message.isFeedback
+                  ? 'bg-green-50 text-green-800 border border-green-200 rounded-bl-sm'
                   : 'bg-gray-100 text-gray-900 rounded-bl-sm'
               }`}
             >
               {message.isTyping && (
                 <div className="flex items-center gap-2">
-                  <Loader className="w-4 h-4 animate-spin" />
-                  <span className="text-sm">{message.text}</span>
+                  <Loader className="w-3 h-3 animate-spin" />
+                  <span>{message.text}</span>
                 </div>
               )}
               {!message.isTyping && (
-                <p className="text-sm leading-relaxed">{message.text}</p>
+                <p className="leading-relaxed">{message.text}</p>
               )}
-              <div className={`text-xs mt-1 ${message.isUser ? 'text-blue-100' : 'text-gray-500'}`}>
+              <div className={`text-xs mt-1 ${
+                message.isUser ? 'text-blue-100' : 
+                message.isFeedback ? 'text-green-600' : 'text-gray-500'
+              }`}>
                 {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </div>
             </div>
@@ -361,27 +371,27 @@ export function CoachProvider() {
 
       {/* Quick Questions */}
       {showQuickQuestions && (
-        <div className="p-4 border-t border-gray-100 bg-gray-50">
-          <p className="text-sm text-gray-600 mb-3">💡 Quick questions to get started:</p>
-          <div className="space-y-2">
+        <div className="p-3 border-t border-gray-100 bg-gray-50">
+          <p className="text-xs text-gray-600 mb-2">💡 Quick questions to get started:</p>
+          <div className="space-y-1">
             {quickQuestions.map((question, index) => (
               <button
                 key={index}
                 onClick={() => handleQuickQuestion(question)}
-                className="w-full text-left p-2 text-sm bg-white border border-gray-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                className="w-full text-left p-2 text-xs bg-white border border-gray-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors"
               >
                 💬 {question}
               </button>
             ))}
           </div>
-          <p className="text-xs text-gray-500 mt-3">
+          <p className="text-xs text-gray-500 mt-2">
             💡 I'll also give you automatic feedback as you write!
           </p>
         </div>
       )}
 
       {/* Input */}
-      <div className="p-4 border-t border-gray-200 bg-white">
+      <div className="p-3 border-t border-gray-200 bg-white">
         <div className="flex gap-2">
           <input
             ref={inputRef}
@@ -390,15 +400,15 @@ export function CoachProvider() {
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
             placeholder="Ask me about writing..."
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             disabled={isAITyping}
           />
           <button
             onClick={() => handleSendMessage()}
             disabled={!inputMessage.trim() || isAITyping}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            <Send className="w-4 h-4" />
+            <Send className="w-3 h-3" />
           </button>
         </div>
       </div>
