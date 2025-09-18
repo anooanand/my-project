@@ -195,9 +195,9 @@ export function EnhancedWritingLayout({
         <div className="flex justify-between items-center mb-4 px-4">
           <h2 className="text-xl font-bold text-gray-900">Your Writing</h2>
           
-          {/* Right side tools and stats */}
+          {/* Right side - Action Buttons and Stats */}
           <div className="flex items-center space-x-4">
-            {/* Writing Tools Buttons */}
+            {/* Action Buttons */}
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setShowPlanningTool(true)}
