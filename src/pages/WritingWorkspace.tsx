@@ -1,69 +1,14 @@
-/**
- * Enhanced WritingWorkspace with improved Coach integration
- * 
- * INSTRUCTIONS:
- * 1. Open your existing src/pages/WritingWorkspace.tsx
- * 2. Add the CoachDebugger import at the top
- * 3. Replace the coach section in the grid with the enhanced version below
- * 4. Add the CoachDebugger component before the closing </div>
- */
-
-// ===== ADD THIS IMPORT AT THE TOP =====
-import { CoachDebugger } from "../components/CoachDebugger";
-
-// ===== REPLACE THE EXISTING COACH SECTION WITH THIS ENHANCED VERSION =====
-{/* Analysis and Coach Panel */}
-<div className="col-span-12 lg:col-span-3">
-  <div className="space-y-6">
-    {/* Writing Coach - Make it more prominent */}
-    <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg p-4 border border-purple-200 shadow-sm">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-purple-800 flex items-center">
-          <span className="mr-2">🤖</span>
-          Writing Buddy
-        </h2>
-        <div className="text-xs text-purple-600 bg-purple-100 px-2 py-1 rounded-full">
-          Auto-feedback ON
-        </div>
-      </div>
-      <div className="bg-white rounded-lg p-2 border border-purple-100">
-        <CoachProvider />
-      </div>
-      <div className="mt-3 text-xs text-purple-600 text-center">
-        💡 I'll automatically give you tips as you write!
-      </div>
-    </div>
-    
-    {/* Analysis Results */}
-    {analysis && (
-      <div className="bg-white rounded-lg p-4 border border-gray-200 shadow-sm">
-        <h2 className="text-lg font-semibold text-gray-800 mb-4">Analysis Results</h2>
-        <RubricPanel data={analysis} onApplyFix={onApplyFix} />
-      </div>
-    )}
-  </div>
-</div>
-
-// ===== ADD THIS BEFORE THE CLOSING </div> OF THE MAIN CONTAINER =====
-{/* Debug Component - Remove this in production */}
-<CoachDebugger />
-
-// ===== COMPLETE ENHANCED WRITING WORKSPACE COMPONENT =====
-/**
- * Complete enhanced WritingWorkspace component
- * Copy to: src/pages/WritingWorkspace.tsx
- */
 import React from "react";
 import { InteractiveTextEditor, EditorHandle } from "../components/InteractiveTextEditor";
 import { RubricPanel } from "../components/RubricPanel";
 import { CoachProvider } from "../components/CoachProvider";
-import { CoachDebugger } from "../components/CoachDebugger";
+import { WritingStatusBar } from "../components/WritingStatusBar";
 import ProgressCoach from "../components/ProgressCoach";
 import type { DetailedFeedback, LintFix } from "../types/feedback";
 import { evaluateEssay, saveDraft } from "../lib/api";
 import { validateDetailedFeedback } from "../types/feedback.validate";
 
-export default function WritingWorkspace() {
+export default function WritingWorkspaceFixed() {
   const editorRef = React.useRef<EditorHandle>(null);
   const [analysis, setAnalysis] = React.useState<DetailedFeedback | null>(null);
   const [status, setStatus] = React.useState<"idle"|"loading"|"success"|"error">("idle");
@@ -71,6 +16,7 @@ export default function WritingWorkspace() {
   const [currentText, setCurrentText] = React.useState<string>("");
   const [textType, setTextType] = React.useState<'narrative' | 'persuasive' | 'informative'>('narrative');
   const [targetWordCount, setTargetWordCount] = React.useState<number>(300);
+  const [wordCount, setWordCount] = React.useState<number>(0);
 
   // Replace your draftId line with this:
   const draftId = React.useRef<string>(
@@ -88,6 +34,9 @@ export default function WritingWorkspace() {
       const text = editorRef.current?.getText() || "";
       if (text !== currentText) {
         setCurrentText(text);
+        // Update word count
+        const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+        setWordCount(words.length);
       }
     }, 500); // Update every 500ms for responsive progress tracking
 
@@ -170,15 +119,8 @@ export default function WritingWorkspace() {
           </div>
         </div>
 
-        {/* Action Buttons */}
+        {/* Status Messages */}
         <div className="flex gap-2">
-          <button
-            className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors disabled:opacity-50"
-            onClick={onSubmit}
-            disabled={status === "loading"}
-          >
-            {status === "loading" ? "Analyzing…" : "Submit for Evaluation"}
-          </button>
           {status === "error" && <div className="text-red-600 flex items-center">{err}</div>}
           {status === "success" && <div className="text-green-600 flex items-center">Analysis complete!</div>}
         </div>
@@ -188,12 +130,29 @@ export default function WritingWorkspace() {
       <div className="grid grid-cols-12 gap-6">
         {/* Writing Area */}
         <div className="col-span-12 lg:col-span-6">
-          <div className="bg-white rounded-lg shadow-sm p-4">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">Your Writing</h2>
-            <InteractiveTextEditor 
-              ref={editorRef} 
-              placeholder="Start writing your story here... Your Writing Buddy will automatically provide tips as you write! ✨"
-              className="w-full h-96 p-4 border border-gray-300 rounded-xl resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+          <div className="bg-white rounded-lg shadow-sm">
+            <div className="p-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-800">Your Writing</h2>
+            </div>
+            
+            {/* Text Editor */}
+            <div className="p-4">
+              <InteractiveTextEditor 
+                ref={editorRef} 
+                placeholder="Start writing your story here... Your Writing Buddy will automatically provide tips as you write! ✨"
+                className="w-full h-96 p-4 border border-gray-300 rounded-xl resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              />
+            </div>
+            
+            {/* Bottom Status Bar with Words, WPM, Submit buttons */}
+            <WritingStatusBar
+              wordCount={wordCount}
+              content={currentText}
+              textType={textType}
+              targetWordCountMin={Math.floor(targetWordCount * 0.8)}
+              targetWordCountMax={Math.ceil(targetWordCount * 1.2)}
+              onSubmitForEvaluation={onSubmit}
+              evaluationStatus={status}
             />
           </div>
         </div>
@@ -243,9 +202,6 @@ export default function WritingWorkspace() {
           </div>
         </div>
       </div>
-
-      {/* Debug Component - Remove this in production */}
-      <CoachDebugger />
 
       {/* Mobile-friendly stacked layout for smaller screens */}
       <style jsx>{`
