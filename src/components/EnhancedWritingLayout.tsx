@@ -3,6 +3,7 @@ import WritingArea from './WritingArea';
 import { PlanningToolModal } from './PlanningToolModal';
 import { StructureGuideModal } from './StructureGuideModal'; // Import StructureGuideModal
 import { TipsModal } from './TipsModal'; // Import TipsModal
+import { TabbedCoachPanel } from './TabbedCoachPanel'; // Import TabbedCoachPanel
 import {
   PenTool,
   Play,
@@ -249,7 +250,13 @@ export function EnhancedWritingLayout({
       {/* Right side - Writing Buddy Panel - MADE MUCH WIDER */}
       {!focusMode && (
         <div className="w-[30rem] min-w-[30rem] flex-shrink-0">
-          {/* ... (TabbedCoachPanel remains unchanged) ... */}
+          <TabbedCoachPanel 
+            analysis={null} 
+            onApplyFix={() => {}}
+            content={content}
+            textType={textType}
+            onWordSelect={() => {}}
+          />
         </div>
       )}
 
