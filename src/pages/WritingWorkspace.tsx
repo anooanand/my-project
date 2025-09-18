@@ -7,6 +7,8 @@ import ProgressCoach from "../components/ProgressCoach";
 import type { DetailedFeedback, LintFix } from "../types/feedback";
 import { evaluateEssay, saveDraft } from "../lib/api";
 import { validateDetailedFeedback } from "../types/feedback.validate";
+import { eventBus } from "../lib/eventBus";
+import { detectNewParagraphs } from "../lib/paragraphDetection";
 
 export default function WritingWorkspaceFixed() {
   const editorRef = React.useRef<EditorHandle>(null);
@@ -17,6 +19,7 @@ export default function WritingWorkspaceFixed() {
   const [textType, setTextType] = React.useState<'narrative' | 'persuasive' | 'informative'>('narrative');
   const [targetWordCount, setTargetWordCount] = React.useState<number>(300);
   const [wordCount, setWordCount] = React.useState<number>(0);
+  const prevTextRef = React.useRef<string>("");
 
   // Replace your draftId line with this:
   const draftId = React.useRef<string>(
@@ -28,15 +31,24 @@ export default function WritingWorkspaceFixed() {
   );
   const [version, setVersion] = React.useState(0);
 
-  // Track text changes for progress monitoring
+  // Track text changes for progress monitoring AND coach feedback
   React.useEffect(() => {
     const interval = setInterval(() => {
       const text = editorRef.current?.getText() || "";
       if (text !== currentText) {
         setCurrentText(text);
+        
         // Update word count
         const words = text.trim().split(/\s+/).filter(word => word.length > 0);
         setWordCount(words.length);
+
+        // Trigger coach feedback for new paragraphs
+        const events = detectNewParagraphs(prevTextRef.current, text);
+        if (events.length) {
+          console.log("Emitting paragraph.ready event:", events[events.length - 1]);
+          eventBus.emit("paragraph.ready", events[events.length - 1]);
+        }
+        prevTextRef.current = text;
       }
     }, 500); // Update every 500ms for responsive progress tracking
 
@@ -154,6 +166,35 @@ export default function WritingWorkspaceFixed() {
               onSubmitForEvaluation={onSubmit}
               evaluationStatus={status}
             />
+            
+            {/* Additional Submit Button if WritingStatusBar doesn't have one */}
+            <div className="p-4 border-t border-gray-200 bg-gray-50">
+              <button
+                onClick={onSubmit}
+                disabled={status === "loading" || wordCount < 10}
+                className={`w-full py-3 px-6 rounded-lg font-medium transition-all duration-200 ${
+                  status === "loading" 
+                    ? "bg-gray-400 text-white cursor-not-allowed" 
+                    : wordCount < 10
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-green-600 text-white hover:bg-green-700 shadow-md hover:shadow-lg"
+                }`}
+              >
+                {status === "loading" ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Analyzing...
+                  </div>
+                ) : (
+                  `Submit for Evaluation Report (${wordCount} words)`
+                )}
+              </button>
+              {wordCount < 10 && (
+                <p className="text-sm text-gray-500 text-center mt-2">
+                  Write at least 10 words to submit for evaluation
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
