@@ -37,6 +37,7 @@ export function CoachProvider() {
   // Feedback tracking to prevent repetition
   const [feedbackHistory, setFeedbackHistory] = useState<Set<string>>(new Set());
   const [lastFeedbackTime, setLastFeedbackTime] = useState<number>(0);
+  const [feedbackCount, setFeedbackCount] = useState<number>(0);
 
   // Refs
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -77,19 +78,6 @@ export function CoachProvider() {
     }
   };
 
-  const coachTip = async (paragraph: string) => {
-    try {
-      const response = await generateChatResponse(
-        `Please provide a brief, encouraging writing tip for this paragraph: "${paragraph}". Keep it under 50 words and focus on one specific improvement.`,
-        'coach'
-      );
-      return { tip: response };
-    } catch (error) {
-      console.error('Coach tip error:', error);
-      throw error;
-    }
-  };
-
   // Quick question templates
   const quickQuestions = [
     "How can I improve my introduction?",
@@ -104,101 +92,6 @@ export function CoachProvider() {
     handleSendMessage(question);
     setShowQuickQuestions(false);
   };
-
-  // Enhanced paragraph feedback with variety and context awareness
-  useEffect(() => {
-    const handler = async (p: { 
-      paragraph: string; 
-      index: number; 
-      wordCount?: number; 
-      trigger?: string;
-    }) => {
-      try {
-        if (!p.paragraph || typeof p.paragraph !== 'string' || p.paragraph.trim().length === 0) {
-          return;
-        }
-
-        const wordCount = p.paragraph.trim().split(/\s+/).length;
-        if (wordCount < 15) return; // Increased threshold for more substantial content
-
-        // Prevent too frequent feedback
-        const now = Date.now();
-        if (now - lastFeedbackTime < 8000) { // 8 second cooldown
-          console.log("Skipping feedback due to cooldown");
-          return;
-        }
-
-        console.log("Coach received paragraph event:", p);
-
-        // Generate a unique key for this content to prevent repetition
-        const contentKey = p.paragraph.trim().toLowerCase().slice(0, 50);
-        if (feedbackHistory.has(contentKey)) {
-          console.log("Skipping duplicate feedback for similar content");
-          return;
-        }
-
-        setIsAITyping(true);
-        setLastFeedbackTime(now);
-
-        const typingMessage: ChatMessage = {
-          id: 'typing-' + Date.now(),
-          text: '🤖 Reading your writing...',
-          isUser: false,
-          timestamp: new Date(),
-          isTyping: true,
-          isFeedback: true
-        };
-        setMessages(prev => [...prev, typingMessage]);
-
-        try {
-          const res = await coachTip(p.paragraph);
-          
-          // Remove typing indicator and add real response
-          setMessages(prev => {
-            const withoutTyping = prev.filter(msg => !msg.isTyping);
-            return [...withoutTyping, {
-              id: 'coach-' + Date.now(),
-              text: `✨ ${res.tip || getVariedFallbackTip(p.paragraph, feedbackHistory.size)}`,
-              isUser: false,
-              timestamp: new Date(),
-              isFeedback: true
-            }];
-          });
-
-          // Track this feedback to prevent repetition
-          setFeedbackHistory(prev => new Set([...prev, contentKey]));
-
-          // Hide quick questions after first interaction
-          setShowQuickQuestions(false);
-
-        } catch (error) {
-          console.error("Coach tip failed:", error);
-          
-          // Remove typing indicator and add fallback response
-          setMessages(prev => {
-            const withoutTyping = prev.filter(msg => !msg.isTyping);
-            return [...withoutTyping, {
-              id: 'coach-' + Date.now(),
-              text: `✨ ${getVariedFallbackTip(p.paragraph, feedbackHistory.size)}`,
-              isUser: false,
-              timestamp: new Date(),
-              isFeedback: true
-            }];
-          });
-
-          setFeedbackHistory(prev => new Set([...prev, contentKey]));
-        }
-
-      } catch (error) {
-        console.error("Paragraph handler error:", error);
-      } finally {
-        setIsAITyping(false);
-      }
-    };
-    
-    eventBus.on("paragraph.ready", handler);
-    return () => eventBus.off("paragraph.ready", handler);
-  }, [feedbackHistory, lastFeedbackTime]);
 
   // Varied fallback tips that change based on content and feedback count
   const getVariedFallbackTip = (paragraph: string, feedbackCount: number): string => {
@@ -252,6 +145,99 @@ export function CoachProvider() {
     const selectedFeedback = feedbackTypes[feedbackCount % feedbackTypes.length];
     return selectedFeedback();
   };
+
+  // Enhanced paragraph feedback with variety and context awareness
+  useEffect(() => {
+    const handler = async (p: { 
+      paragraph: string; 
+      index: number; 
+      wordCount?: number; 
+      trigger?: string;
+    }) => {
+      try {
+        console.log("🤖 Coach received paragraph event:", p);
+
+        if (!p.paragraph || typeof p.paragraph !== 'string' || p.paragraph.trim().length === 0) {
+          console.log("❌ Skipping: Empty paragraph");
+          return;
+        }
+
+        const wordCount = p.paragraph.trim().split(/\s+/).length;
+        if (wordCount < 10) {
+          console.log("❌ Skipping: Too few words:", wordCount);
+          return;
+        }
+
+        // Prevent too frequent feedback
+        const now = Date.now();
+        if (now - lastFeedbackTime < 5000) { // Reduced to 5 second cooldown
+          console.log("❌ Skipping: Cooldown active");
+          return;
+        }
+
+        // Generate a unique key for this content to prevent repetition
+        const contentKey = p.paragraph.trim().toLowerCase().slice(0, 30);
+        if (feedbackHistory.has(contentKey)) {
+          console.log("❌ Skipping: Duplicate content");
+          return;
+        }
+
+        console.log("✅ Providing feedback for:", wordCount, "words");
+
+        setIsAITyping(true);
+        setLastFeedbackTime(now);
+
+        const typingMessage: ChatMessage = {
+          id: 'typing-' + Date.now(),
+          text: '🤖 Reading your writing...',
+          isUser: false,
+          timestamp: new Date(),
+          isTyping: true,
+          isFeedback: true
+        };
+        setMessages(prev => [...prev, typingMessage]);
+
+        // Always use fallback for now to ensure it works
+        const feedbackText = getVariedFallbackTip(p.paragraph, feedbackCount);
+        
+        // Simulate a brief delay for realism
+        setTimeout(() => {
+          // Remove typing indicator and add real response
+          setMessages(prev => {
+            const withoutTyping = prev.filter(msg => !msg.isTyping);
+            return [...withoutTyping, {
+              id: 'coach-' + Date.now(),
+              text: `✨ ${feedbackText}`,
+              isUser: false,
+              timestamp: new Date(),
+              isFeedback: true
+            }];
+          });
+
+          // Track this feedback to prevent repetition
+          setFeedbackHistory(prev => new Set([...prev, contentKey]));
+          setFeedbackCount(prev => prev + 1);
+          setIsAITyping(false);
+
+          // Hide quick questions after first feedback
+          setShowQuickQuestions(false);
+
+          console.log("✅ Feedback provided successfully");
+        }, 1000);
+
+      } catch (error) {
+        console.error("❌ Paragraph handler error:", error);
+        setIsAITyping(false);
+      }
+    };
+    
+    console.log("🎯 Setting up paragraph.ready event listener");
+    eventBus.on("paragraph.ready", handler);
+    return () => {
+      console.log("🔄 Cleaning up paragraph.ready event listener");
+      eventBus.off("paragraph.ready", handler);
+    };
+  }, [feedbackHistory, lastFeedbackTime, feedbackCount]);
 
   const handleSendMessage = async (messageText?: string) => {
     const textToSend = messageText || inputMessage;
@@ -389,6 +375,11 @@ export function CoachProvider() {
           </p>
         </div>
       )}
+
+      {/* Debug Info */}
+      <div className="p-2 border-t border-gray-100 bg-gray-50 text-xs text-gray-500">
+        Feedback given: {feedbackCount} | Last: {lastFeedbackTime ? new Date(lastFeedbackTime).toLocaleTimeString() : 'None'}
+      </div>
 
       {/* Input */}
       <div className="p-3 border-t border-gray-200 bg-white">
