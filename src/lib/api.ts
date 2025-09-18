@@ -204,7 +204,8 @@ export async function evaluateEssay(payload: {
     });
     
     if (!res.ok) {
-      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      const errorText = await res.text();
+      throw new Error(`HTTP ${res.status}: ${errorText}`);
     }
     
     const result = await res.json();
