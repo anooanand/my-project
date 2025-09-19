@@ -38,10 +38,16 @@ function fallbackPrompt(textType?: string) {
     "Write an engaging story about a character who discovers something unexpected that changes their life forever. Include vivid descriptions, realistic dialogue, and show the character's emotional journey.";
   try {
     const stored = localStorage.getItem("generatedPrompt");
-    if (stored) return stored;
+    if (stored) {
+      console.log("📝 fallbackPrompt: Using stored 'generatedPrompt':", stored.substring(0, 50) + "...");
+      return stored;
+    }
     const type = (textType || localStorage.getItem("selectedWritingType") || "narrative").toLowerCase();
     const byType = localStorage.getItem(`${type}_prompt`);
-    if (byType) return byType;
+    if (byType) {
+      console.log("📝 fallbackPrompt: Using text-type specific prompt:", byType.substring(0, 50) + "...");
+      return byType;
+    }
   } catch { /* ignore */ }
   return defaultPrompt;
 }
@@ -57,7 +63,7 @@ function WritingAreaImpl(props: Props) {
     setDisplayPrompt(next);
     console.log('📝 WritingArea: Prompt updated:', { 
       hasPromptProp: !!(props.prompt && props.prompt.trim()),
-      promptPreview: next.substring(0, 50) + '...',
+      promptPreview: next.substring(0, 50) + '...', 
       source: props.prompt && props.prompt.trim() ? 'prop' : 'fallback'
     });
   }, [props.prompt, props.textType]);
@@ -75,7 +81,7 @@ function WritingAreaImpl(props: Props) {
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.prompt]);
+  }, [props.prompt, props.textType]);
   
 
   // -------- Editor state --------
@@ -96,8 +102,8 @@ function WritingAreaImpl(props: Props) {
   // -------- Autosave --------
   const [version, setVersion] = useState(0);
   const draftId = useRef(
-    `draft-${
-      (globalThis.crypto?.randomUUID?.() ??
+    `draft-${(
+        globalThis.crypto?.randomUUID?.() ??
         Date.now().toString(36) + Math.random().toString(36).slice(2))
     }`
   );
