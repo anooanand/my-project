@@ -130,15 +130,23 @@ export function EnhancedWritingLayout({
     };
   }, [textType, evaluationStatus]); // Added evaluationStatus to dependency array
 
-  // Sync local content with prop content
+  // Sync local content with prop content - FIXED: Ensure proper syncing
   useEffect(() => {
+    console.log('🔄 Syncing content from props:', { 
+      propContent: content?.substring(0, 50) + '...', 
+      propContentLength: content?.length || 0 
+    });
     setLocalContent(content);
   }, [content]);
 
-  // Handle content changes from WritingArea
+  // Handle content changes from WritingArea - FIXED: Ensure both states are updated
   const handleContentChange = (newContent: string) => {
+    console.log('📝 Content changed in WritingArea:', { 
+      newContentLength: newContent?.length || 0,
+      newContentPreview: newContent?.substring(0, 50) + '...'
+    });
     setLocalContent(newContent);
-    onChange(newContent);
+    onChange(newContent); // This updates the parent component's content state
   };
 
   // Listen for submit events from AppContent
@@ -157,7 +165,8 @@ export function EnhancedWritingLayout({
 
   // Track content changes for word count and coach feedback
   useEffect(() => {
-    const currentContent = localContent || content;
+    // FIXED: Use the most current content available
+    const currentContent = localContent || content || '';
     const words = currentContent.trim().split(/\s+/).filter(word => word.length > 0);
     setWordCount(words.length);
 
@@ -170,13 +179,16 @@ export function EnhancedWritingLayout({
     prevTextRef.current = currentContent;
   }, [localContent, content]);
 
-  // NSW Evaluation Submit Handler
+  // NSW Evaluation Submit Handler - FIXED: Better content validation
   const handleNSWSubmit = async () => {
-    const currentContent = localContent || content;
+    // FIXED: Get the most current content from both sources
+    const currentContent = localContent || content || '';
+    
     console.log('🎯 NSW Submit triggered from EnhancedWritingLayout');
     console.log('Content check:', { 
       localContent: localContent?.substring(0, 50) + '...', 
       propContent: content?.substring(0, 50) + '...', 
+      currentContent: currentContent?.substring(0, 50) + '...',
       hasContent: !!currentContent?.trim(),
       contentLength: currentContent?.length || 0
     });
@@ -185,7 +197,9 @@ export function EnhancedWritingLayout({
     setShowNSWEvaluation(true);
     
     try {
+      // FIXED: Better validation with more detailed error message
       if (!currentContent || currentContent.trim().length === 0) {
+        console.error('❌ No content found for submission');
         throw new Error("Please write some content before submitting for evaluation");
       }
       
@@ -195,6 +209,25 @@ export function EnhancedWritingLayout({
         wordCount 
       });
       
+      // Store the essay data for NSW evaluation system
+      const essayData = {
+        content: currentContent,
+        textType: textType,
+        wordCount: wordCount,
+        timestamp: new Date().toISOString()
+      };
+      
+      // Save to localStorage for NSW evaluation system
+      localStorage.setItem('currentEssayData', JSON.stringify(essayData));
+      console.log('✅ Essay data stored for NSW evaluation system');
+      
+      // Emit custom event to notify other components
+      const submitEvent = new CustomEvent('writingSubmitted', {
+        detail: { content: currentContent, textType }
+      });
+      window.dispatchEvent(submitEvent);
+      console.log('Writing submitted:', { content: currentContent.substring(0, 50) + '...', textType });
+      
       // Call the original onSubmit for any additional handling
       await onSubmit();
       
@@ -202,6 +235,8 @@ export function EnhancedWritingLayout({
       console.error('NSW Submit error:', e);
       setEvaluationStatus("error");
       setShowNSWEvaluation(false);
+      // Show error to user
+      alert(e.message || 'An error occurred while submitting for evaluation. Please try again.');
     }
   };
 
@@ -261,8 +296,8 @@ export function EnhancedWritingLayout({
   // Check if word count exceeds target
   const showWordCountWarning = wordCount > 300; // Adjust target as needed
 
-  // Check if we have content for submit button
-  const currentContent = localContent || content;
+  // FIXED: Better content validation for submit button
+  const currentContent = localContent || content || '';
   const hasContent = currentContent && currentContent.trim().length > 0;
 
   return (
@@ -376,7 +411,7 @@ export function EnhancedWritingLayout({
           <button
             onClick={handleSubmitForEvaluation}
             disabled={evaluationStatus === "loading" || !hasContent}
-            className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center"
+            className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center space-x-2"
           >
             {evaluationStatus === "loading" ? (
               <>
@@ -390,36 +425,40 @@ export function EnhancedWritingLayout({
               </>
             )}
           </button>
-          {/* Debug info - remove this in production */}
-          {!hasContent && (
+          
+          {/* Debug info for development */}
+          {process.env.NODE_ENV === 'development' && (
             <div className="mt-2 text-xs text-gray-500 text-center">
-              Debug: Content length: {currentContent?.length || 0}, Has content: {hasContent ? 'Yes' : 'No'}
+              Content Length: {currentContent?.length || 0} | Has Content: {hasContent ? 'Yes' : 'No'}
             </div>
           )}
         </div>
       </div>
-      {/* Right side - Coach Panel */}
-      <div className="flex-[2] flex flex-col min-w-0">
-        <TabbedCoachPanel
-          analysis={analysis}
-          onApplyFix={handleApplyFix}
-          evaluationStatus={evaluationStatus}
-          textType={textType}
-          assistanceLevel={assistanceLevel}
-          selectedText={selectedText}
-          wordCount={wordCount}
-          examMode={examMode}
-        />
-      </div>
+
+      {/* Right side - Coach Panel (conditionally rendered) */}
+      {!focusMode && (
+        <div className="flex-[2] border-l border-gray-200 bg-white">
+          <TabbedCoachPanel
+            content={currentContent}
+            textType={textType}
+            analysis={analysis}
+            onApplyFix={handleApplyFix}
+            selectedText={selectedText}
+          />
+        </div>
+      )}
+
+      {/* Modals */}
       {showPlanningTool && (
         <PlanningToolModal
           isOpen={showPlanningTool}
           onClose={() => setShowPlanningTool(false)}
-          onSavePlan={setPlan}
-          initialPlan={plan}
-          currentPrompt={currentPrompt}
+          textType={textType}
+          plan={plan}
+          onPlanChange={setPlan}
         />
       )}
+
       {showStructureGuide && (
         <StructureGuideModal
           isOpen={showStructureGuide}
@@ -427,6 +466,7 @@ export function EnhancedWritingLayout({
           textType={textType}
         />
       )}
+
       {showTips && (
         <TipsModal
           isOpen={showTips}
@@ -434,14 +474,15 @@ export function EnhancedWritingLayout({
           textType={textType}
         />
       )}
+
+      {/* NSW Evaluation System */}
       {showNSWEvaluation && (
         <NSWStandaloneSubmitSystem
           isOpen={showNSWEvaluation}
           onClose={() => setShowNSWEvaluation(false)}
+          onEvaluationComplete={handleNSWEvaluationComplete}
           content={currentContent}
           textType={textType}
-          onEvaluationComplete={handleNSWEvaluationComplete}
-          evaluationStatus={evaluationStatus}
         />
       )}
     </div>
