@@ -29,6 +29,8 @@ interface Props {
   examMode?: boolean;
   /** Prompt passed by EnhancedWritingLayout */
   prompt?: string;
+  /** Hide prompt and submit button when used within EnhancedWritingLayout */
+  hidePromptAndSubmit?: boolean;
 }
 
 function fallbackPrompt(textType?: string) {
@@ -103,80 +105,85 @@ function WritingAreaImpl(props: Props) {
       return;
     }
 
-    if (!content || !content.trim()) {
+    if (!content?.trim()) {
+      setErr("Please write some content before submitting.");
       setStatus("error");
-      setErr("Please write some content before submitting for evaluation");
       return;
     }
+
+    setStatus("loading");
+    setErr(undefined);
+    setAnalysis(null);
+
     try {
-      setStatus("loading"); setErr(undefined);
-      const res = await evaluateEssay({
-        essayText: content.trim(),
-        textType,
-        examMode: false,
-      });
-      if (!validateDetailedFeedback(res)) throw new Error("Invalid feedback payload");
-      setAnalysis(res);
+      const data = await evaluateEssay(content, textType);
+      if (!validateDetailedFeedback(data)) {
+        throw new Error("Server returned invalid feedback format");
+      }
+      setAnalysis(data);
       setStatus("success");
     } catch (e: any) {
+      console.error("Evaluation failed:", e);
+      setErr(e.message || "Evaluation failed. Please try again.");
       setStatus("error");
-      setErr(e?.message || "Failed to analyze");
     }
   };
 
-  // Calculate word count
-  const wordCount = content.trim() ? content.trim().split(/\s+/).filter(Boolean).length : 0;
-
-  // Autosave
+  // Autosave every few seconds
   useEffect(() => {
-    const t = setInterval(async () => {
+    if (!content?.trim()) return;
+    const timer = setTimeout(async () => {
       try {
-        if (content?.trim()) {
-          localStorage.setItem(draftId.current, JSON.stringify({ text: content, version }));
-          await saveDraft(draftId.current, content, version);
-          setVersion(v => v + 1);
-        }
-      } catch {}
-    }, 1500);
-    return () => clearInterval(t);
-  }, [content, version]);
+        await saveDraft(draftId.current, { content, textType, version });
+        setVersion((v) => v + 1);
+      } catch (e) {
+        console.warn("Draft save failed:", e);
+      }
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [content, textType, version]);
 
+  // Use evaluationStatus from props if available, otherwise use local status
   const currentStatus = props.evaluationStatus || status;
 
   return (
-    <div className="h-full flex flex-col">
-      {/* --- YOUR WRITING PROMPT --- */}
-      <div className="mb-4">
-        <div className="rounded-xl border bg-white shadow-sm">
-          <div className="px-4 py-3 border-b flex items-center justify-between">
-            <div className="font-semibold text-gray-800">Your Writing Prompt</div>
-            <div className="text-xs text-gray-500">Text Type:&nbsp;
-              <select
-                className="rounded-md border border-gray-300 px-2 py-1 text-sm"
-                value={textType}
-                onChange={(e) => {
-                  const v = e.target.value as TextType;
-                  setTextType(v);
-                  props.onTextTypeChange?.(v);
-                  setDisplayPrompt(fallbackPrompt(v));
-                }}
-              >
-                <option value="narrative">Narrative</option>
-                <option value="persuasive">Persuasive</option>
-                <option value="informative">Informative</option>
-              </select>
+    <div className="flex flex-col h-full">
+      {/* --- PROMPT SECTION (conditionally rendered) --- */}
+      {!props.hidePromptAndSubmit && (
+        <div className="mb-4">
+          <div className="rounded-xl border bg-white shadow-sm">
+            <div className="px-4 py-3 border-b flex items-center justify-between">
+              <div className="font-semibold text-gray-800">Your Writing Prompt</div>
+              <div className="text-xs text-gray-500">Text Type:&nbsp;
+                <select
+                  className="rounded-md border border-gray-300 px-2 py-1 text-sm"
+                  value={textType}
+                  onChange={(e) => {
+                    const v = e.target.value as TextType;
+                    setTextType(v);
+                    props.onTextTypeChange?.(v);
+                    setDisplayPrompt(fallbackPrompt(v));
+                  }}
+                >
+                  <option value="narrative">Narrative</option>
+                  <option value="persuasive">Persuasive</option>
+                  <option value="informative">Informative</option>
+                </select>
+              </div>
+            </div>
+            <div className="p-4 text-sm leading-relaxed text-gray-700 whitespace-pre-wrap">
+              {displayPrompt || "Loading prompt…"}
             </div>
           </div>
-          <div className="p-4 text-sm leading-relaxed text-gray-700 whitespace-pre-wrap">
-            {displayPrompt || "Loading prompt…"}
-          </div>
         </div>
-      </div>
+      )}
 
-      {/* --- YOUR WRITING SECTION --- */}
-      <div className="mb-4">
-        <h3 className="text-lg font-semibold text-gray-800 mb-3">Your Writing</h3>
-      </div>
+      {/* --- YOUR WRITING SECTION (conditionally rendered) --- */}
+      {!props.hidePromptAndSubmit && (
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold text-gray-800 mb-3">Your Writing</h3>
+        </div>
+      )}
 
       {/* --- WRITING EDITOR --- */}
       <div className="flex-1 rounded-xl border bg-white shadow-sm">
@@ -190,21 +197,23 @@ function WritingAreaImpl(props: Props) {
         </div>
       </div>
 
-      {/* --- SUBMIT BUTTON --- */}
-      <div className="mt-4">
-        <button
-          type="button"
-          className="w-full px-4 py-3 rounded-xl bg-gray-400 text-white hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center justify-center"
-          onClick={onSubmitForEvaluation}
-          disabled={currentStatus === "loading" || !content?.trim()}
-          aria-label="Submit for Evaluation"
-        >
-          <span className="mr-2">⚪</span>
-          {currentStatus === "loading" ? "Analyzing…" : "Submit for Evaluation"}
-        </button>
-        {currentStatus === "error" && <div className="mt-2 text-red-600 text-sm text-center">{err}</div>}
-        {currentStatus === "success" && <div className="mt-2 text-green-600 text-sm text-center">Analysis complete!</div>}
-      </div>
+      {/* --- SUBMIT BUTTON (conditionally rendered) --- */}
+      {!props.hidePromptAndSubmit && (
+        <div className="mt-4">
+          <button
+            type="button"
+            className="w-full px-4 py-3 rounded-xl bg-gray-400 text-white hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center justify-center"
+            onClick={onSubmitForEvaluation}
+            disabled={currentStatus === "loading" || !content?.trim()}
+            aria-label="Submit for Evaluation"
+          >
+            <span className="mr-2">⚪</span>
+            {currentStatus === "loading" ? "Analyzing…" : "Submit for Evaluation"}
+          </button>
+          {currentStatus === "error" && <div className="mt-2 text-red-600 text-sm text-center">{err}</div>}
+          {currentStatus === "success" && <div className="mt-2 text-green-600 text-sm text-center">Analysis complete!</div>}
+        </div>
+      )}
     </div>
   );
 }
