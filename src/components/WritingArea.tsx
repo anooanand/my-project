@@ -50,20 +50,33 @@ function WritingAreaImpl(props: Props) {
   // -------- Prompt header (visible) --------
   const [displayPrompt, setDisplayPrompt] = useState<string>("");
 
-  useEffect(() => {
+   useEffect(() => {
     const next =
       (typeof props.prompt === "string" && props.prompt.trim()) ||
       fallbackPrompt(props.textType);
     setDisplayPrompt(next);
+    console.log('📝 WritingArea: Prompt updated:', { 
+      hasPromptProp: !!(props.prompt && props.prompt.trim()),
+      promptPreview: next.substring(0, 50) + '...',
+      source: props.prompt && props.prompt.trim() ? 'prop' : 'fallback'
+    });
   }, [props.prompt, props.textType]);
 
   // Allow other tabs to update localStorage → refresh card
   useEffect(() => {
-    const onStorage = () => setDisplayPrompt(fallbackPrompt(props.textType));
+    const onStorage = () => {
+      // Only update from localStorage if no prompt prop is provided
+      if (!props.prompt || !props.prompt.trim()) {
+        const newPrompt = fallbackPrompt(props.textType);
+        setDisplayPrompt(newPrompt);
+        console.log('📡 WritingArea: Storage change detected, updated prompt from localStorage');
+      }
+    };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [props.prompt]);
+  
 
   // -------- Editor state --------
   const [content, setContent] = useState<string>(props.content ?? "");
