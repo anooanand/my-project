@@ -408,7 +408,7 @@ const handleSubmit = () => {
   <WritingAccessCheck onNavigate={handleNavigation}>
     <div className="writing-route h-screen flex flex-col">
       <EnhancedHeader 
-        textType={textType}
+        textType={textType || 'narrative'}
         assistanceLevel={assistanceLevel}
         onTextTypeChange={setTextType}
         onAssistanceLevelChange={setAssistanceLevel}
@@ -425,7 +425,7 @@ const handleSubmit = () => {
           <EnhancedWritingLayout
             content={content}
             onChange={setContent}
-            textType={textType}
+            textType={textType || 'narrative'}
             assistanceLevel={assistanceLevel}
             selectedText={selectedText}
             onTimerStart={setTimerStarted}
