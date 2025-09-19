@@ -405,23 +405,20 @@ export function EnhancedWritingLayout({
             /* NSW Evaluation System */
             <div className="h-full flex flex-col">
               <div className="p-4 border-b border-purple-200 bg-gradient-to-r from-purple-50 to-blue-50">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold text-purple-800">NSW Assessment</h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-bold text-purple-800">NSW Evaluation</h2>
                   <button
                     onClick={() => setShowNSWEvaluation(false)}
-                    className="flex items-center space-x-2 text-purple-600 hover:text-purple-800 text-sm transition-colors"
+                    className="text-gray-500 hover:text-gray-700"
                   >
-                    <ArrowLeft className="w-4 h-4" />
-                    <span>Back to Coach</span>
+                    <ArrowLeft className="w-5 h-5" />
                   </button>
                 </div>
-              </div>
-              <div className="flex-1 overflow-auto bg-gradient-to-br from-purple-50 to-blue-50">
                 <NSWStandaloneSubmitSystem
-                  content={currentContent}
+                  content={localContent || content}
                   wordCount={wordCount}
-                  targetWordCountMin={100}
-                  targetWordCountMax={400}
+                  targetWordCountMin={100} // Example target
+                  targetWordCountMax={300} // Example target
                   textType={textType}
                   prompt={currentPrompt}
                   onSubmissionComplete={handleNSWEvaluationComplete}
@@ -429,40 +426,33 @@ export function EnhancedWritingLayout({
               </div>
             </div>
           ) : (
-            /* Regular Coach Panel */
-            <TabbedCoachPanel 
-              analysis={analysis} 
-              onApplyFix={handleApplyFix}
-              content={currentContent}
+            <TabbedCoachPanel
+              content={localContent || content}
               textType={textType}
-              onWordSelect={() => {}}
+              assistanceLevel={assistanceLevel}
+              selectedText={selectedText}
+              analysis={analysis}
+              onApplyFix={handleApplyFix}
             />
           )}
         </div>
       )}
 
-      {/* Planning Tool Modal */}
       <PlanningToolModal
         isOpen={showPlanningTool}
         onClose={() => setShowPlanningTool(false)}
-        textType={textType}
-        onPlanSaved={(savedPlan) => {
-          setPlan(savedPlan);
-          setShowPlanningTool(false);
-        }}
-        existingPlan={plan}
+        onSave={setPlan}
+        initialPlan={plan}
       />
-
-      {/* Structure Guide Modal */}
       <StructureGuideModal
         isOpen={showStructureGuide}
         onClose={() => setShowStructureGuide(false)}
+        textType={textType}
       />
-
-      {/* Tips Modal */}
       <TipsModal
         isOpen={showTips}
         onClose={() => setShowTips(false)}
+        textType={textType}
       />
     </div>
   );
