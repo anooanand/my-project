@@ -275,6 +275,7 @@ export function EnhancedWritingLayout({
               onNavigate={onNavigate}
               evaluationStatus={evaluationStatus}
               examMode={examMode}
+              hidePromptAndSubmit={true}
             />
           </div>
         </div>
