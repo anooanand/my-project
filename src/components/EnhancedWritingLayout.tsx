@@ -63,6 +63,20 @@ export function EnhancedWritingLayout({
   const [wordCount, setWordCount] = useState<number>(0);
   const prevTextRef = useRef<string>("");
 
+  // Local content state to ensure we have the latest content
+  const [localContent, setLocalContent] = useState<string>(content);
+
+  // Sync local content with prop content
+  useEffect(() => {
+    setLocalContent(content);
+  }, [content]);
+
+  // Handle content changes from WritingArea
+  const handleContentChange = (newContent: string) => {
+    setLocalContent(newContent);
+    onChange(newContent);
+  };
+
   // Listen for submit events from AppContent
   useEffect(() => {
     const handleSubmitEvent = (event: CustomEvent) => {
@@ -79,31 +93,40 @@ export function EnhancedWritingLayout({
 
   // Track content changes for word count and coach feedback
   useEffect(() => {
-    const words = content.trim().split(/\s+/).filter(word => word.length > 0);
+    const currentContent = localContent || content;
+    const words = currentContent.trim().split(/\s+/).filter(word => word.length > 0);
     setWordCount(words.length);
 
     // Trigger coach feedback for new paragraphs
-    const events = detectNewParagraphs(prevTextRef.current, content);
+    const events = detectNewParagraphs(prevTextRef.current, currentContent);
     if (events.length) {
       console.log("Emitting paragraph.ready event:", events[events.length - 1]);
       eventBus.emit("paragraph.ready", events[events.length - 1]);
     }
-    prevTextRef.current = content;
-  }, [content]);
+    prevTextRef.current = currentContent;
+  }, [localContent, content]);
 
   // NSW Evaluation Submit Handler
   const handleNSWSubmit = async () => {
+    const currentContent = localContent || content;
     console.log('🎯 NSW Submit triggered from EnhancedWritingLayout');
+    console.log('Content check:', { 
+      localContent: localContent?.substring(0, 50) + '...', 
+      propContent: content?.substring(0, 50) + '...', 
+      hasContent: !!currentContent?.trim(),
+      contentLength: currentContent?.length || 0
+    });
+    
     setEvaluationStatus("loading");
     setShowNSWEvaluation(true);
     
     try {
-      if (!content.trim()) {
+      if (!currentContent?.trim()) {
         throw new Error("Please write some content before submitting for evaluation");
       }
       
       console.log("NSW Evaluation initiated for:", { 
-        text: content.substring(0, 100) + "...", 
+        text: currentContent.substring(0, 100) + "...", 
         textType, 
         wordCount 
       });
@@ -173,6 +196,10 @@ export function EnhancedWritingLayout({
 
   // Check if word count exceeds target
   const showWordCountWarning = wordCount > 300; // Adjust target as needed
+
+  // Check if we have content for submit button
+  const currentContent = localContent || content;
+  const hasContent = currentContent && currentContent.trim().length > 0;
 
   const prompt = "The Secret Door in the Library: During a rainy afternoon, you decide to explore the dusty old library in your town that you've never visited before. As you wander through the aisles, you discover a hidden door behind a bookshelf. It's slightly ajar, and a faint, warm light spills out from the crack. What happens when you push the door open? Describe the world you enter and the adventures that await you inside. Who do you meet, and what challenges do you face? How does this experience change you by the time you return to the library? Let your imagination run wild as you take your reader on a journey through this mysterious door!";
 
@@ -263,8 +290,8 @@ export function EnhancedWritingLayout({
         <div className="flex-1 mx-4 mb-4">
           <div className="bg-white border border-gray-200 rounded-lg h-full">
             <WritingArea
-              content={content}
-              onChange={onChange}
+              content={currentContent}
+              onChange={handleContentChange}
               onSubmit={handleSubmitForEvaluation}
               textType={textType}
               assistanceLevel={assistanceLevel}
@@ -284,7 +311,7 @@ export function EnhancedWritingLayout({
         <div className="px-4 pb-4">
           <button
             onClick={handleSubmitForEvaluation}
-            disabled={evaluationStatus === "loading" || !content.trim()}
+            disabled={evaluationStatus === "loading" || !hasContent}
             className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center space-x-2"
           >
             {evaluationStatus === "loading" ? (
@@ -299,6 +326,12 @@ export function EnhancedWritingLayout({
               </>
             )}
           </button>
+          {/* Debug info - remove this in production */}
+          {!hasContent && (
+            <div className="mt-2 text-xs text-gray-500 text-center">
+              Debug: Content length: {currentContent?.length || 0}, Has content: {hasContent ? 'Yes' : 'No'}
+            </div>
+          )}
         </div>
       </div>
 
@@ -322,7 +355,7 @@ export function EnhancedWritingLayout({
               </div>
               <div className="flex-1 overflow-auto bg-gradient-to-br from-purple-50 to-blue-50">
                 <NSWStandaloneSubmitSystem
-                  content={content}
+                  content={currentContent}
                   wordCount={wordCount}
                   targetWordCountMin={100}
                   targetWordCountMax={400}
@@ -337,7 +370,7 @@ export function EnhancedWritingLayout({
             <TabbedCoachPanel 
               analysis={analysis} 
               onApplyFix={handleApplyFix}
-              content={content}
+              content={currentContent}
               textType={textType}
               onWordSelect={() => {}}
             />
