@@ -124,7 +124,7 @@ function WritingAreaImpl(props: Props) {
       return;
     }
 
-    if (!content?.trim()) {
+       if (!content || content.trim().length === 0) {
       setErr("Please write some content before submitting.");
       setStatus("error");
       return;
