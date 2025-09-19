@@ -57,7 +57,7 @@ function AppContent() {
 
   // Writing state
   const [content, setContent] = useState('');
-  const [textType, setTextType] = useState('');
+  const [textType, setTextType] = useState('narrative'); // FIXED: Default to 'narrative' instead of empty string
   const [assistanceLevel, setAssistanceLevel] = useState('detailed');
   const [timerStarted, setTimerStarted] = useState(false);
   const [selectedText, setSelectedText] = useState('');
@@ -82,7 +82,7 @@ function AppContent() {
       
       // Clear content and reset state
       setContent('');
-      setTextType('');
+      setTextType('narrative'); // FIXED: Set to 'narrative' instead of empty string
       setPopupFlowCompleted(false);
       
       // If we're on the writing page, this will trigger the writing type modal
@@ -187,7 +187,7 @@ function AppContent() {
       setShowPaymentSuccess(false);
       setPendingPaymentPlan(null);
       setContent('');
-      setTextType('');
+      setTextType('narrative'); // FIXED: Set to 'narrative' instead of empty string
       setPopupFlowCompleted(false);
       
       console.log('✅ AppContent: Local state reset completed');
@@ -262,29 +262,29 @@ function AppContent() {
   }, [user, emailVerified, paymentCompleted]);
 
   // FIXED CODE:
-const handleSubmit = () => {
-  console.log('Writing submitted:', { content, textType });
-  
-  // Store the essay content and metadata for evaluation
-  localStorage.setItem('submittedEssay', content);
-  localStorage.setItem('submittedTextType', textType);
-  localStorage.setItem('submissionTimestamp', new Date().toISOString());
-  
-  // FIXED: Don't navigate - let the WritingWorkspace handle evaluation internally
-  console.log('✅ Essay data stored for NSW evaluation system');
-  
-  // Trigger a custom event that WritingWorkspace can listen to
-  window.dispatchEvent(new CustomEvent('submitForEvaluation', {
-    detail: { content, textType }
-  }));
-};
-
+  const handleSubmit = () => {
+    const submissionTextType = textType || 'narrative'; // FIXED: Ensure textType is never empty
+    console.log('Writing submitted:', { content, textType: submissionTextType });
+    
+    // Store the essay content and metadata for evaluation
+    localStorage.setItem('submittedEssay', content);
+    localStorage.setItem('submittedTextType', submissionTextType); // FIXED: Use submissionTextType
+    localStorage.setItem('submissionTimestamp', new Date().toISOString());
+    
+    // FIXED: Don't navigate - let the WritingWorkspace handle evaluation internally
+    console.log('✅ Essay data stored for NSW evaluation system');
+    
+    // Trigger a custom event that WritingWorkspace can listen to
+    window.dispatchEvent(new CustomEvent('submitForEvaluation', {
+      detail: { content, textType: submissionTextType } // FIXED: Use submissionTextType
+    }));
+  };
 
   // NAVIGATION FIX: Improved text type change handler
   const handleTextTypeChange = useCallback((newTextType: string) => {
     try {
-      setTextType(newTextType);
-      console.log('Text type changed to:', newTextType);
+      setTextType(newTextType || 'narrative'); // FIXED: Ensure textType is never empty
+      console.log('Text type changed to:', newTextType || 'narrative');
     } catch (error) {
       console.error('Text type change error:', error);
     }
@@ -405,40 +405,40 @@ const handleSubmit = () => {
             user ? <SettingsPage onBack={() => setActivePage('dashboard')} /> : <Navigate to="/" />
           } />
           <Route path="/writing" element={
-  <WritingAccessCheck onNavigate={handleNavigation}>
-    <div className="writing-route h-screen flex flex-col">
-      <EnhancedHeader 
-        textType={textType || 'narrative'}
-        assistanceLevel={assistanceLevel}
-        onTextTypeChange={setTextType}
-        onAssistanceLevelChange={setAssistanceLevel}
-        onTimerStart={() => setTimerStarted(true)}
-        hideTextTypeSelector={popupFlowCompleted}
-      />
-      
-      {showExamMode ? (
-        <ExamSimulationMode 
-          onExit={() => setShowExamMode(false)}
+    <WritingAccessCheck onNavigate={handleNavigation}>
+      <div className="writing-route h-screen flex flex-col">
+        <EnhancedHeader 
+          textType={textType || 'narrative'}
+          assistanceLevel={assistanceLevel}
+          onTextTypeChange={setTextType}
+          onAssistanceLevelChange={setAssistanceLevel}
+          onTimerStart={() => setTimerStarted(true)}
+          hideTextTypeSelector={popupFlowCompleted}
         />
-      ) : (
-        <div className="writing-layout-content flex-1 min-h-0">
-          <EnhancedWritingLayout
-            content={content}
-            onChange={setContent}
-            textType={textType || 'narrative'}
-            assistanceLevel={assistanceLevel}
-            selectedText={selectedText}
-            onTimerStart={setTimerStarted}
-            onSubmit={handleSubmit}
-            onTextTypeChange={handleTextTypeChange}
-            onPopupCompleted={handlePopupCompleted}
-            onNavigate={handleNavigation}
+        
+        {showExamMode ? (
+          <ExamSimulationMode 
+            onExit={() => setShowExamMode(false)}
           />
-        </div>
-      )}
-    </div>
-  </WritingAccessCheck>
-} />
+        ) : (
+          <div className="writing-layout-content flex-1 min-h-0">
+            <EnhancedWritingLayout
+              content={content}
+              onChange={setContent}
+              textType={textType || 'narrative'}
+              assistanceLevel={assistanceLevel}
+              selectedText={selectedText}
+              onTimerStart={setTimerStarted}
+              onSubmit={handleSubmit}
+              onTextTypeChange={handleTextTypeChange}
+              onPopupCompleted={handlePopupCompleted}
+              onNavigate={handleNavigation}
+            />
+          </div>
+        )}
+      </div>
+    </WritingAccessCheck>
+  } />
 
           <Route path="/learning" element={<LearningPage />} />
           <Route path="/evaluation" element={
@@ -446,35 +446,49 @@ const handleSubmit = () => {
               <EvaluationPage />
             </WritingAccessCheck>
           } />
-          <Route path="/exam" element={<ExamSimulationMode onExit={() => setActivePage('writing')} />} />
-          <Route path="/supportive-features" element={<SupportiveFeatures />} />
-          <Route path="/help-center" element={<HelpCenter />} />
-          <Route path="/essay-feedback" element={<EssayFeedbackPage />} />
-          <Route path="/specialized-coaching" element={<SpecializedCoaching />} />
-          <Route path="/brainstorming-tools" element={<BrainstormingTools />} />
-          <Route path="/email-verification" element={<EmailVerificationHandler />} />
-
-          <Route path="*" element={<Navigate to="/" />} />
+          <Route path="/exam" element={
+            <WritingAccessCheck onNavigate={handleNavigation}>
+              <ExamSimulationMode onExit={() => setActivePage('writing')} />
+            </WritingAccessCheck>
+          } />
+          <Route path="/help" element={<HelpCenter />} />
+          <Route path="/payment-success" element={
+            <PaymentSuccessPage 
+              planType={pendingPaymentPlan || 'basic'}
+              onContinue={() => {
+                setShowPaymentSuccess(false);
+                setPendingPaymentPlan(null);
+                setActivePage('dashboard');
+              }}
+            />
+          } />
+          <Route path="/auth/callback" element={<EmailVerificationHandler />} />
         </Routes>
 
-        {/* Only show footer on specific pages */}
-        {shouldShowFooter() && <Footer />}
-
-        <AuthModal
-          isOpen={showAuthModal}
-          onClose={() => setShowAuthModal(false)}
-          mode={authModalMode}
-          onAuthSuccess={handleAuthSuccess}
-        />
-
-        {showPaymentSuccess && (
-          <PaymentSuccessPage
-            onClose={() => setShowPaymentSuccess(false)}
-            planType={pendingPaymentPlan || 'unknown'}
+        {/* Auth Modal */}
+        {showAuthModal && (
+          <AuthModal
+            mode={authModalMode}
+            onClose={() => setShowAuthModal(false)}
+            onSuccess={handleAuthSuccess}
+            onSwitchMode={(mode) => setAuthModalMode(mode)}
           />
         )}
+
+        {/* Planning Tool Modal */}
+        {showPlanningTool && (
+          <PlanningToolModal
+            onClose={() => setShowPlanningTool(false)}
+            onSave={(plan) => {
+              console.log('Plan saved:', plan);
+              setShowPlanningTool(false);
+            }}
+          />
+        )}
+
+        {/* Footer */}
+        {shouldShowFooter() && <Footer />}
       </div>
-      <AdminButton />
     </div>
   );
 }
