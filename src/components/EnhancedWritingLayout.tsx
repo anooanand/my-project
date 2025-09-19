@@ -185,7 +185,7 @@ export function EnhancedWritingLayout({
     setShowNSWEvaluation(true);
     
     try {
-      if (!currentContent?.trim()) {
+      if (!currentContent || currentContent.trim().length === 0) {
         throw new Error("Please write some content before submitting for evaluation");
       }
       
