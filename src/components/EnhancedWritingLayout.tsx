@@ -123,7 +123,7 @@ export function EnhancedWritingLayout({
             <WritingArea
               content={content}
               onChange={onChange}
-              onSubmit={handleSubmitForEvaluation}
+              onSubmit={onSubmit}
               textType={textType}
               assistanceLevel={assistanceLevel}
               selectedText={selectedText}
