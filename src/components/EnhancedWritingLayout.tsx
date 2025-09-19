@@ -266,9 +266,9 @@ export function EnhancedWritingLayout({
   const hasContent = currentContent && currentContent.trim().length > 0;
 
   return (
-    <div className="flex h-full bg-gray-50">
+    <div className="flex h-screen bg-gray-50">
       {/* Left side - Writing Area Content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-[4] flex flex-col min-w-0">
         
         {/* Your Writing Prompt Section */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 mx-4 mt-4">
@@ -398,16 +398,19 @@ export function EnhancedWritingLayout({
           )}
         </div>
       </div>
-      <TabbedCoachPanel
-        analysis={analysis}
-        onApplyFix={handleApplyFix}
-        evaluationStatus={evaluationStatus}
-        textType={textType}
-        assistanceLevel={assistanceLevel}
-        selectedText={selectedText}
-        wordCount={wordCount}
-        examMode={examMode}
-      />
+      {/* Right side - Coach Panel */}
+      <div className="flex-[1] flex flex-col min-w-0">
+        <TabbedCoachPanel
+          analysis={analysis}
+          onApplyFix={handleApplyFix}
+          evaluationStatus={evaluationStatus}
+          textType={textType}
+          assistanceLevel={assistanceLevel}
+          selectedText={selectedText}
+          wordCount={wordCount}
+          examMode={examMode}
+        />
+      </div>
       {showPlanningTool && (
         <PlanningToolModal
           isOpen={showPlanningTool}
