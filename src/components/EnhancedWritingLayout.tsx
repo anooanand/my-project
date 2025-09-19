@@ -72,14 +72,14 @@ export function EnhancedWritingLayout({
       // First check for a generated prompt from Magical Prompt
       const magicalPrompt = localStorage.getItem("generatedPrompt");
       if (magicalPrompt && magicalPrompt.trim()) {
-        console.log('📝 Using Magical Prompt from localStorage:', magicalPrompt.substring(0, 50) + '...');
+        console.log("📝 getCurrentPrompt: Using Magical Prompt from localStorage:", magicalPrompt.substring(0, 50) + "...");
         return magicalPrompt;
       }
 
       // Check for text-type specific prompt
       const textTypePrompt = localStorage.getItem(`${textType.toLowerCase()}_prompt`);
       if (textTypePrompt && textTypePrompt.trim()) {
-        console.log('📝 Using text-type specific prompt:', textTypePrompt.substring(0, 50) + '...');
+        console.log("📝 getCurrentPrompt: Using text-type specific prompt:", textTypePrompt.substring(0, 50) + "...");
         return textTypePrompt;
       }
 
@@ -96,29 +96,29 @@ export function EnhancedWritingLayout({
   // Initialize and sync prompt on component mount and when textType changes
   useEffect(() => {
     const prompt = getCurrentPrompt();
+    console.log("🔄 useEffect[textType]: Initializing/Syncing prompt.");
     setCurrentPrompt(prompt);
-    console.log('🔄 Prompt synchronized:', { 
-      textType, 
-      promptLength: prompt.length,
-      promptPreview: prompt.substring(0, 50) + '...'
-    });
+    console.log("✅ useEffect[textType]: currentPrompt set to:", prompt.substring(0, 50) + "...");
   }, [textType]);
 
   // Listen for localStorage changes (from other tabs/components)
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
+      console.log('📡 handleStorageChange: Storage event detected. Key:', e.key, 'New Value:', e.newValue?.substring(0, 50) + '...');
       if (e.key === 'generatedPrompt' || e.key === `${textType.toLowerCase()}_prompt`) {
-        console.log('📡 Storage change detected for prompt:', e.key);
+        console.log('📡 handleStorageChange: Relevant storage key changed. Updating prompt.');
         const newPrompt = getCurrentPrompt();
         setCurrentPrompt(newPrompt);
+        console.log('✅ handleStorageChange: currentPrompt set to:', newPrompt.substring(0, 50) + '...');
       }
     };
 
     // Listen for custom events from Magical Prompt generation
     const handlePromptGenerated = (event: CustomEvent) => {
-      console.log('🎯 Prompt generated event received:', event.detail);
+      console.log("🎯 handlePromptGenerated: Custom event received. Detail:", event.detail);
       const newPrompt = getCurrentPrompt();
       setCurrentPrompt(newPrompt);
+      console.log("✅ handlePromptGenerated: currentPrompt set to:", newPrompt.substring(0, 50) + "...");
     };
 
     window.addEventListener('storage', handleStorageChange);
