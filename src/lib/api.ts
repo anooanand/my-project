@@ -1,9 +1,71 @@
 // src/lib/api.ts - NSW SELECTIVE RUBRIC EVALUATION
 import type { DetailedFeedback } from "../types/feedback";
 
+// Add this interface for chat requests
+interface ChatRequest {
+  userMessage: string;
+  textType: string;
+  currentContent: string;
+  wordCount: number;
+  context?: string;
+}
+
 async function json(res: Response) {
   if (!res.ok) throw new Error(await res.text() || res.statusText);
   return res.json();
+}
+
+// Add this function to handle chat responses
+export async function generateChatResponse(request: ChatRequest): Promise<string> {
+  try {
+    console.log("Sending chat request to backend:", {
+      messageLength: request.userMessage.length,
+      textType: request.textType,
+      contentLength: request.currentContent?.length || 0,
+      wordCount: request.wordCount
+    });
+
+    const res = await fetch("/.netlify/functions/chat-response", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(request)
+    });
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error("Chat response API error:", res.status, errorText);
+      throw new Error(`HTTP ${res.status}: ${errorText}`);
+    }
+
+    const result = await res.json();
+    console.log("Chat response received successfully");
+    
+    if (!result.response) {
+      throw new Error("No response field in API result");
+    }
+
+    return result.response;
+
+  } catch (error) {
+    console.error("Chat response failed:", error);
+    
+    // Provide a helpful fallback response based on the user's message
+    const message = request.userMessage.toLowerCase();
+    
+    if (message.includes("introduction") || message.includes("opening") || message.includes("start")) {
+      return "Great question about introductions! Try starting with an interesting question, a surprising fact, or jump right into the action. What's your story about? 😊";
+    } else if (message.includes("vocabulary") || message.includes("word") || message.includes("synonym")) {
+      return "For better vocabulary, try replacing simple words with more descriptive ones. Instead of 'big', try 'enormous' or 'massive'. What word are you looking to improve?";
+    } else if (message.includes("conclusion") || message.includes("ending") || message.includes("finish")) {
+      return "For a strong conclusion, try to tie back to your opening or show how your character has changed. What's the main message of your story?";
+    } else if (message.includes("character") || message.includes("people")) {
+      return "To make characters interesting, give them unique traits, fears, or goals. Show their personality through their actions and dialogue. Tell me about your character! 😊";
+    } else if (message.includes("hook") || message.includes("beginning")) {
+      return "A good story hook grabs attention immediately! Try starting with dialogue, action, or an intriguing situation. What's the most exciting part of your story?";
+    } else {
+      return "That's a great question! I'm here to help with your writing. Can you tell me more about what you're working on? 😊";
+    }
+  }
 }
 
 // NSW Selective School Writing Assessment Rubric
