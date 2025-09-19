@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { WritingArea } from './WritingArea';
 import { PlanningToolModal } from './PlanningToolModal';
-import { StructureGuideModal } => './StructureGuideModal';
+import { StructureGuideModal } from './StructureGuideModal';
 import { TipsModal } from './TipsModal';
 import { TabbedCoachPanel } from './TabbedCoachPanel';
 import { NSWStandaloneSubmitSystem } from './NSWStandaloneSubmitSystem';
