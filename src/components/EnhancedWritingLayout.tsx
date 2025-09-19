@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { Lightbulb } from 'lucide-react';
 import { WritingArea } from './WritingArea'; // Changed from import WritingArea from './WritingArea';
 // ... other imports
 
