@@ -268,8 +268,8 @@ export function EnhancedWritingLayout({
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Left side - Writing Area Content */}
-      <div className="flex-[3] flex flex-col min-w-0">
-        
+              <div className="flex-[7] flex flex-col min-w-0">
+
         {/* Your Writing Prompt Section */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 mx-4 mt-4">
           <div className="flex items-center mb-2">
@@ -399,7 +399,8 @@ export function EnhancedWritingLayout({
         </div>
       </div>
       {/* Right side - Coach Panel */}
-      <div className="flex-[2] flex flex-col min-w-0">
+              <div className="flex-[3] flex flex-col min-w-0">
+
         <TabbedCoachPanel
           analysis={analysis}
           onApplyFix={handleApplyFix}
