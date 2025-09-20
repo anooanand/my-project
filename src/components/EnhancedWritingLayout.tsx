@@ -1,7 +1,3 @@
-/**
- * FIXED EnhancedWritingLayout Component - Resolves tool button functionality and layout issues
- * Key fixes: Planning button functionality, loading states, proper error handling, better UX
- */
 import React, { useState, useEffect, useRef } from 'react';
 import { WritingArea } from './WritingArea';
 import { PlanningToolModal } from './PlanningToolModal';
@@ -16,19 +12,14 @@ import {
   PenTool,
   Play,
   BookOpen,
-  Lightbulb as LightbulbIcon,
+  Lightbulb as LightbulbIcon, // Changed Lightbulb to LightbulbIcon
   Target,
   Eye,
   EyeOff,
   ArrowLeft,
   FileText,
   Clock,
-  AlertCircle,
-  Loader2,
-  CheckCircle,
-  Settings,
-  Maximize2,
-  Minimize2
+  AlertCircle
 } from 'lucide-react';
 
 interface EnhancedWritingLayoutProps {
@@ -42,12 +33,6 @@ interface EnhancedWritingLayoutProps {
   onTextTypeChange: (newTextType: string) => void;
   onPopupCompleted: () => void;
   onNavigate: (page: string) => void;
-}
-
-interface ToolState {
-  loading: boolean;
-  error: string | null;
-  success: boolean;
 }
 
 export function EnhancedWritingLayout({
@@ -70,17 +55,6 @@ export function EnhancedWritingLayout({
   const [examMode, setExamMode] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
   const [evaluationStatus, setEvaluationStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
-  const [showSidebar, setShowSidebar] = useState(true);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  
-  // Tool states for better UX
-  const [toolStates, setToolStates] = useState<Record<string, ToolState>>({
-    planning: { loading: false, error: null, success: false },
-    exam: { loading: false, error: null, success: false },
-    structure: { loading: false, error: null, success: false },
-    tips: { loading: false, error: null, success: false },
-    focus: { loading: false, error: null, success: false }
-  });
   
   // NSW Evaluation States
   const [showNSWEvaluation, setShowNSWEvaluation] = useState<boolean>(false);
@@ -91,7 +65,6 @@ export function EnhancedWritingLayout({
 
   // Local content state to ensure we have the latest content
   const [localContent, setLocalContent] = useState<string>(content);
-  const [currentContent, setCurrentContent] = useState<string>(content);
 
   // Function to get the current prompt from localStorage or fallback
   const getCurrentPrompt = () => {
@@ -125,153 +98,120 @@ export function EnhancedWritingLayout({
     const prompt = getCurrentPrompt();
     console.log("🔄 useEffect[textType]: Initializing/Syncing prompt.");
     setCurrentPrompt(prompt);
+    console.log("✅ useEffect[textType]: currentPrompt set to:", prompt.substring(0, 50) + "...");
   }, [textType]);
 
-  // Sync content changes
+  // Listen for localStorage changes (from other tabs/components)
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      console.log('📡 handleStorageChange: Storage event detected. Key:', e.key, 'New Value:', e.newValue?.substring(0, 50) + '...');
+      if (e.key === 'generatedPrompt' || e.key === `${textType.toLowerCase()}_prompt`) {
+        console.log('📡 handleStorageChange: Relevant storage key changed. Updating prompt.');
+        const newPrompt = getCurrentPrompt();
+        setCurrentPrompt(newPrompt);
+        console.log('✅ handleStorageChange: currentPrompt set to:', newPrompt.substring(0, 50) + '...');
+      }
+    };
+
+    // Listen for custom events from Magical Prompt generation
+    const handlePromptGenerated = (event: CustomEvent) => {
+      console.log("🎯 handlePromptGenerated: Custom event received. Detail:", event.detail);
+      const newPrompt = getCurrentPrompt();
+      setCurrentPrompt(newPrompt);
+      console.log("✅ handlePromptGenerated: currentPrompt set to:", newPrompt.substring(0, 50) + "...");
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('promptGenerated', handlePromptGenerated as EventListener);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('promptGenerated', handlePromptGenerated as EventListener);
+    };
+  }, [textType, evaluationStatus]); // Added evaluationStatus to dependency array
+
+  // Sync local content with prop content
   useEffect(() => {
     setLocalContent(content);
-    setCurrentContent(content);
-    
-    // Update word count
-    const words = content.trim() ? content.trim().split(/\s+/).filter(w => w.length > 0).length : 0;
-    setWordCount(words);
   }, [content]);
 
-  // Generic tool handler with loading states and error handling
-  const handleToolClick = async (
-    toolName: string, 
-    handler: () => void | Promise<void>
-  ) => {
-    if (toolStates[toolName].loading) return;
-
-    // Set loading state
-    setToolStates(prev => ({
-      ...prev,
-      [toolName]: { loading: true, error: null, success: false }
-    }));
-
-    try {
-      // Add a small delay to show loading state
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      // Execute the handler
-      await handler();
-
-      // Set success state
-      setToolStates(prev => ({
-        ...prev,
-        [toolName]: { loading: false, error: null, success: true }
-      }));
-
-      // Clear success state after 2 seconds
-      setTimeout(() => {
-        setToolStates(prev => ({
-          ...prev,
-          [toolName]: { loading: false, error: null, success: false }
-        }));
-      }, 2000);
-
-    } catch (error) {
-      console.error(`Error in ${toolName} tool:`, error);
-      
-      // Set error state
-      setToolStates(prev => ({
-        ...prev,
-        [toolName]: { 
-          loading: false, 
-          error: error instanceof Error ? error.message : 'An error occurred',
-          success: false 
-        }
-      }));
-
-      // Clear error state after 5 seconds
-      setTimeout(() => {
-        setToolStates(prev => ({
-          ...prev,
-          [toolName]: { loading: false, error: null, success: false }
-        }));
-      }, 5000);
-    }
-  };
-
-  // Enhanced tool handlers
-  const handlePlanningClick = () => {
-    handleToolClick('planning', () => {
-      console.log('Planning tool clicked - opening modal');
-      setShowPlanningTool(true);
-    });
-  };
-
-  const handleExamModeClick = () => {
-    handleToolClick('exam', () => {
-      console.log('Exam mode clicked');
-      setExamMode(!examMode);
-      if (!examMode) {
-        onTimerStart(true);
-      }
-    });
-  };
-
-  const handleStructureClick = () => {
-    handleToolClick('structure', () => {
-      console.log('Structure tool clicked - opening modal');
-      setShowStructureGuide(true);
-    });
-  };
-
-  const handleTipsClick = () => {
-    handleToolClick('tips', () => {
-      console.log('Tips tool clicked - opening modal');
-      setShowTips(true);
-    });
-  };
-
-  const handleFocusClick = () => {
-    handleToolClick('focus', () => {
-      console.log('Focus mode clicked');
-      setFocusMode(!focusMode);
-      if (!focusMode) {
-        setShowSidebar(false);
-      } else {
-        setShowSidebar(true);
-      }
-    });
-  };
-
-  // Content change handler
+  // Handle content changes from WritingArea
   const handleContentChange = (newContent: string) => {
-    setCurrentContent(newContent);
     setLocalContent(newContent);
     onChange(newContent);
+  };
 
-    // Update word count
-    const words = newContent.trim() ? newContent.trim().split(/\s+/).filter(w => w.length > 0).length : 0;
-    setWordCount(words);
+  // Listen for submit events from AppContent
+  useEffect(() => {
+    const handleSubmitEvent = (event: CustomEvent) => {
+      console.log('📨 EnhancedWritingLayout: Received submit event:', event.detail);
+      handleNSWSubmit();
+    };
+
+    window.addEventListener('submitForEvaluation', handleSubmitEvent as EventListener);
+    
+    return () => {
+      window.removeEventListener('submitForEvaluation', handleSubmitEvent as EventListener);
+    };
+  }, []);
+
+  // Track content changes for word count and coach feedback
+  useEffect(() => {
+    const currentContent = localContent || content;
+    const words = currentContent.trim().split(/\s+/).filter(word => word.length > 0);
+    setWordCount(words.length);
 
     // Trigger coach feedback for new paragraphs
-    const events = detectNewParagraphs(prevTextRef.current, newContent);
+    const events = detectNewParagraphs(prevTextRef.current, currentContent);
     if (events.length) {
       console.log("Emitting paragraph.ready event:", events[events.length - 1]);
       eventBus.emit("paragraph.ready", events[events.length - 1]);
     }
-    prevTextRef.current = newContent;
-  };
+    prevTextRef.current = currentContent;
+  }, [localContent, content]);
 
-  // Submit for evaluation handler
-  const handleSubmitForEvaluation = () => {
-    console.log('🎯 Submit for evaluation clicked');
+  // NSW Evaluation Submit Handler
+  const handleNSWSubmit = async () => {
+    const currentContent = localContent || content;
+    console.log('🎯 NSW Submit triggered from EnhancedWritingLayout');
+    console.log('Content check:', { 
+      localContent: localContent?.substring(0, 50) + '...', 
+      propContent: content?.substring(0, 50) + '...', 
+      hasContent: !!currentContent?.trim(),
+      contentLength: currentContent?.length || 0
+    });
+    
     setEvaluationStatus("loading");
     setShowNSWEvaluation(true);
-    onSubmit();
+    
+    try {
+      if (!currentContent || currentContent.trim().length === 0) {
+        throw new Error("Please write some content before submitting for evaluation");
+      }
+      
+      console.log("NSW Evaluation initiated for:", { 
+        text: currentContent.substring(0, 100) + "...", 
+        textType, 
+        wordCount 
+      });
+      
+      // Call the original onSubmit for any additional handling
+      await onSubmit();
+      
+    } catch (e: any) {
+      console.error('NSW Submit error:', e);
+      setEvaluationStatus("error");
+      setShowNSWEvaluation(false);
+    }
   };
 
-  // NSW evaluation completion handler
+  // Handle NSW evaluation completion
   const handleNSWEvaluationComplete = (report: any) => {
     console.log("NSW Evaluation completed:", report);
     setNswReport(report);
     setEvaluationStatus("success");
     
-    // Convert to DetailedFeedback format
+    // Convert NSW report to DetailedFeedback format for compatibility
     const convertedAnalysis: DetailedFeedback = {
       overallScore: report.overallScore || 0,
       criteria: {
@@ -309,225 +249,168 @@ export function EnhancedWritingLayout({
     setAnalysis(convertedAnalysis);
   };
 
-  // Apply fix handler
+  const handleSubmitForEvaluation = async () => {
+    await handleNSWSubmit();
+  };
+
   const handleApplyFix = (fix: LintFix) => {
-    const newContent = 
-      currentContent.substring(0, fix.start) + 
-      fix.replacement + 
-      currentContent.substring(fix.end);
-    handleContentChange(newContent);
+    // Apply text fixes to content
+    console.log('Applying fix:', fix);
   };
 
-  // Check if content exists
+  // Check if word count exceeds target
+  const showWordCountWarning = wordCount > 300; // Adjust target as needed
+
+  // Check if we have content for submit button
+  const currentContent = localContent || content;
   const hasContent = currentContent && currentContent.trim().length > 0;
-  const showWordCountWarning = wordCount > 400; // NSW word limit warning
-
-  // Render tool button with state
-  const renderToolButton = (
-    key: string,
-    icon: React.ReactNode,
-    label: string,
-    onClick: () => void,
-    className: string = ""
-  ) => {
-    const state = toolStates[key];
-    const isDisabled = state.loading;
-
-    return (
-      <button
-        key={key}
-        onClick={onClick}
-        disabled={isDisabled}
-        className={`enhanced-tool-button ${className} ${state.success ? 'success' : ''} ${state.error ? 'error' : ''} ${isDisabled ? 'loading' : ''}`}
-        title={state.error || label}
-      >
-        <div className="tool-button-content">
-          {state.loading ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : state.success ? (
-            <CheckCircle className="w-4 h-4" />
-          ) : state.error ? (
-            <AlertCircle className="w-4 h-4" />
-          ) : (
-            icon
-          )}
-          <span>{label}</span>
-        </div>
-        
-        {state.error && (
-          <div className="tool-error-tooltip">
-            {state.error}
-          </div>
-        )}
-      </button>
-    );
-  };
 
   return (
-    <div className={`enhanced-writing-layout ${focusMode ? 'focus-mode' : ''} ${isFullscreen ? 'fullscreen' : ''}`}>
-      {/* Header with Navigation */}
-      <div className="writing-header bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={() => onNavigate('dashboard')}
-              className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              <span>Back to Dashboard</span>
-            </button>
-            <div className="h-6 w-px bg-gray-300"></div>
-            <h1 className="text-xl font-semibold text-gray-900">Writing Studio</h1>
+    <div className="flex h-screen bg-gray-50">
+      {/* Left side - Writing Area Content */}
+      <div className="flex-[3] flex flex-col min-w-0">
+        
+        {/* Your Writing Prompt Section */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 mx-4 mt-4">
+          <div className="flex items-center mb-2">
+            <LightbulbIcon className="w-5 h-5 mr-2 text-blue-600" /> {/* Changed Lightbulb to LightbulbIcon */}
+            <h3 className="font-semibold text-blue-800">Your Writing Prompt</h3>
           </div>
-
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={() => setShowSidebar(!showSidebar)}
-              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
-              title="Toggle sidebar"
-            >
-              {showSidebar ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
-            </button>
-          </div>
+          <p className="text-blue-700 text-sm leading-relaxed">
+            {currentPrompt}
+          </p>
         </div>
-      </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Left side - Writing Area */}
-        <div className="flex-[3] flex flex-col min-w-0">
-          {/* Toolbar */}
-          {!focusMode && (
-            <div className="writing-toolbar bg-gray-50 border-b border-gray-200 px-6 py-3">
-              <div className="flex items-center justify-between">
-                {/* Left side - Tool buttons */}
-                <div className="flex items-center space-x-2">
-                  {renderToolButton(
-                    'planning',
-                    <BookOpen className="w-4 h-4" />,
-                    'Planning',
-                    handlePlanningClick,
-                    'bg-blue-500 hover:bg-blue-600'
-                  )}
-                  
-                  {renderToolButton(
-                    'exam',
-                    <Play className="w-4 h-4" />,
-                    'Exam',
-                    handleExamModeClick,
-                    'bg-green-500 hover:bg-green-600'
-                  )}
-                  
-                  {renderToolButton(
-                    'structure',
-                    <BookOpen className="w-4 h-4" />,
-                    'Structure',
-                    handleStructureClick,
-                    'bg-purple-500 hover:bg-purple-600'
-                  )}
-                  
-                  {renderToolButton(
-                    'tips',
-                    <LightbulbIcon className="w-4 h-4" />,
-                    'Tips',
-                    handleTipsClick,
-                    'bg-yellow-500 hover:bg-yellow-600'
-                  )}
-                  
-                  {renderToolButton(
-                    'focus',
-                    focusMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />,
-                    'Focus',
-                    handleFocusClick,
-                    'bg-gray-600 hover:bg-gray-700'
-                  )}
-                </div>
+        {/* Action Buttons and Stats Section */}
+        <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4 mx-4">
+          <div className="flex justify-between items-center">
+            {/* Left side - Action Buttons */}
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setShowPlanningTool(true)}
+                className="flex items-center space-x-2 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
+              >
+                <PenTool className="w-4 h-4" />
+                <span>Planning</span>
+              </button>
+              
+              <button
+                onClick={() => setExamMode(!examMode)}
+                className="flex items-center space-x-2 px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-medium"
+              >
+                <Play className="w-4 h-4" />
+                <span>Exam</span>
+              </button>
+              
+              <button
+                onClick={() => setShowStructureGuide(true)}
+                className="flex items-center space-x-2 px-3 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors text-sm font-medium"
+              >
+                <BookOpen className="w-4 h-4" />
+                <span>Structure</span>
+              </button>
+              
+              <button
+                onClick={() => setShowTips(true)}
+                className="flex items-center space-x-2 px-3 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm font-medium"
+              >
+                <LightbulbIcon className="w-4 h-4" /> {/* Changed Lightbulb to LightbulbIcon */}
+                <span>Tips</span>
+              </button>
+              
+              <button
+                onClick={() => setFocusMode(!focusMode)}
+                className="flex items-center space-x-2 px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium"
+              >
+                {focusMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                <span>Focus</span>
+              </button>
+            </div>
 
-                {/* Right side - Writing Statistics */}
-                <div className="flex items-center space-x-4 text-sm">
-                  <div className="flex items-center space-x-2">
-                    <FileText className="w-4 h-4 text-blue-500" />
-                    <span className="font-medium">{wordCount} words</span>
-                    {showWordCountWarning && (
-                      <div className="flex items-center space-x-1 text-orange-600">
-                        <AlertCircle className="w-4 h-4" />
-                        <span className="font-medium">Exceeded!</span>
-                      </div>
-                    )}
+            {/* Right side - Writing Statistics */}
+            <div className="flex items-center space-x-4 text-sm">
+              <div className="flex items-center space-x-2">
+                <FileText className="w-4 h-4 text-blue-500" />
+                <span className="font-medium">{wordCount} words</span>
+                {showWordCountWarning && (
+                  <div className="flex items-center space-x-1 text-orange-600">
+                    <AlertCircle className="w-4 h-4" />
+                    <span className="font-medium">Exceeded!</span>
                   </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <Clock className="w-4 h-4 text-orange-500" />
-                    <span className="font-medium">0 WPM</span>
-                  </div>
-                </div>
+                )}
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Clock className="w-4 h-4 text-orange-500" />
+                <span className="font-medium">0 WPM</span>
               </div>
             </div>
-          )}
-
-          {/* Text Editor Section */}
-          <div className="flex-1 mx-4 mb-4 mt-4">
-            <div className="bg-white border border-gray-200 rounded-lg h-full">
-              <WritingArea
-                content={currentContent}
-                onChange={handleContentChange}
-                onSubmit={handleSubmitForEvaluation}
-                textType={textType}
-                assistanceLevel={assistanceLevel}
-                selectedText={selectedText}
-                onTimerStart={onTimerStart}
-                onTextTypeChange={onTextTypeChange}
-                onPopupCompleted={onPopupCompleted}
-                onNavigate={onNavigate}
-                evaluationStatus={evaluationStatus}
-                examMode={examMode}
-                hidePromptAndSubmit={true}
-                prompt={currentPrompt}
-                onPromptGenerated={setCurrentPrompt}
-              />
-            </div>
-          </div>
-
-          {/* Submit for Evaluation Button */}
-          <div className="px-4 pb-4">
-            <button
-              onClick={handleSubmitForEvaluation}
-              disabled={evaluationStatus === "loading" || !hasContent}
-              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 flex items-center justify-center shadow-lg hover:shadow-xl"
-            >
-              {evaluationStatus === "loading" ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
-                  <span>Evaluating...</span>
-                </>
-              ) : (
-                <>
-                  <Target className="w-5 h-5 mr-2" />
-                  <span>Submit for Evaluation ({wordCount} words)</span>
-                </>
-              )}
-            </button>
           </div>
         </div>
 
-        {/* Right side - Coach Panel */}
-        {showSidebar && !focusMode && (
-          <div className="flex-[2] flex flex-col min-w-0 border-l border-gray-200">
-            <TabbedCoachPanel
-              analysis={analysis}
-              onApplyFix={handleApplyFix}
-              evaluationStatus={evaluationStatus}
+        {/* Text Editor Section */}
+        <div className="flex-1 mx-4 mb-4">
+          <div className="bg-white border border-gray-200 rounded-lg h-full">
+            <WritingArea
+              content={currentContent}
+              onChange={handleContentChange}
+              onSubmit={handleSubmitForEvaluation}
               textType={textType}
               assistanceLevel={assistanceLevel}
               selectedText={selectedText}
-              wordCount={wordCount}
+              onTimerStart={onTimerStart}
+              onTextTypeChange={onTextTypeChange}
+              onPopupCompleted={onPopupCompleted}
+              onNavigate={onNavigate}
+              evaluationStatus={evaluationStatus}
               examMode={examMode}
+              hidePromptAndSubmit={true}
+              prompt={currentPrompt}
+              onPromptGenerated={setCurrentPrompt}
             />
           </div>
-        )}
-      </div>
+        </div>
 
-      {/* Modals */}
+        {/* Submit for Evaluation Button */}
+        <div className="px-4 pb-4">
+          <button
+            onClick={handleSubmitForEvaluation}
+            disabled={evaluationStatus === "loading" || !hasContent}
+            className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center"
+          >
+            {evaluationStatus === "loading" ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <span>Evaluating...</span>
+              </>
+            ) : (
+              <>
+                <Target className="w-5 h-5" />
+                <span>Submit for Evaluation</span>
+              </>
+            )}
+          </button>
+          {/* Debug info - remove this in production */}
+          {!hasContent && (
+            <div className="mt-2 text-xs text-gray-500 text-center">
+              Debug: Content length: {currentContent?.length || 0}, Has content: {hasContent ? 'Yes' : 'No'}
+            </div>
+          )}
+        </div>
+      </div>
+      {/* Right side - Coach Panel */}
+      <div className="flex-[2] flex flex-col min-w-0">
+        <TabbedCoachPanel
+          analysis={analysis}
+          onApplyFix={handleApplyFix}
+          evaluationStatus={evaluationStatus}
+          textType={textType}
+          assistanceLevel={assistanceLevel}
+          selectedText={selectedText}
+          wordCount={wordCount}
+          examMode={examMode}
+        />
+      </div>
       {showPlanningTool && (
         <PlanningToolModal
           isOpen={showPlanningTool}
@@ -537,7 +420,6 @@ export function EnhancedWritingLayout({
           currentPrompt={currentPrompt}
         />
       )}
-      
       {showStructureGuide && (
         <StructureGuideModal
           isOpen={showStructureGuide}
@@ -545,7 +427,6 @@ export function EnhancedWritingLayout({
           textType={textType}
         />
       )}
-      
       {showTips && (
         <TipsModal
           isOpen={showTips}
@@ -553,7 +434,6 @@ export function EnhancedWritingLayout({
           textType={textType}
         />
       )}
-      
       {showNSWEvaluation && (
         <NSWStandaloneSubmitSystem
           isOpen={showNSWEvaluation}
@@ -564,150 +444,6 @@ export function EnhancedWritingLayout({
           evaluationStatus={evaluationStatus}
         />
       )}
-
-      <style jsx>{`
-        .enhanced-writing-layout {
-          height: 100vh;
-          display: flex;
-          flex-direction: column;
-          overflow: hidden;
-        }
-
-        .enhanced-writing-layout.focus-mode {
-          background: #f8fafc;
-        }
-
-        .enhanced-writing-layout.focus-mode .flex-[3] {
-          max-width: 800px;
-          margin: 0 auto;
-          padding: 2rem;
-        }
-
-        .writing-header {
-          flex-shrink: 0;
-        }
-
-        .writing-toolbar {
-          flex-shrink: 0;
-        }
-
-        .enhanced-tool-button {
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          padding: 8px 16px;
-          border-radius: 6px;
-          border: none;
-          color: white;
-          font-size: 14px;
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          position: relative;
-          min-width: 80px;
-          justify-content: center;
-        }
-
-        .enhanced-tool-button:hover:not(.loading) {
-          transform: translateY(-1px);
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .enhanced-tool-button:active:not(.loading) {
-          transform: translateY(0);
-        }
-
-        .enhanced-tool-button.success {
-          background: #10b981 !important;
-        }
-
-        .enhanced-tool-button.error {
-          background: #ef4444 !important;
-        }
-
-        .enhanced-tool-button.loading {
-          opacity: 0.8;
-          cursor: not-allowed;
-          transform: none;
-        }
-
-        .tool-button-content {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-        }
-
-        .tool-error-tooltip {
-          position: absolute;
-          top: 100%;
-          left: 50%;
-          transform: translateX(-50%);
-          margin-top: 4px;
-          padding: 4px 8px;
-          background: #1f2937;
-          color: white;
-          font-size: 12px;
-          border-radius: 4px;
-          white-space: nowrap;
-          z-index: 10;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-        }
-
-        .tool-error-tooltip::before {
-          content: '';
-          position: absolute;
-          top: -4px;
-          left: 50%;
-          transform: translateX(-50%);
-          border-left: 4px solid transparent;
-          border-right: 4px solid transparent;
-          border-bottom: 4px solid #1f2937;
-        }
-
-        /* Mobile responsiveness */
-        @media (max-width: 768px) {
-          .enhanced-writing-layout {
-            height: 100vh;
-            height: 100dvh;
-          }
-
-          .writing-toolbar {
-            padding: 0.5rem 1rem;
-          }
-
-          .enhanced-tool-button {
-            padding: 6px 12px;
-            font-size: 12px;
-            min-width: 70px;
-          }
-
-          .flex-[2] {
-            display: none;
-          }
-
-          .flex-[3] {
-            flex: 1;
-          }
-        }
-
-        /* High contrast mode */
-        @media (prefers-contrast: high) {
-          .enhanced-tool-button {
-            border: 2px solid currentColor;
-          }
-        }
-
-        /* Reduced motion */
-        @media (prefers-reduced-motion: reduce) {
-          .enhanced-tool-button {
-            transition: none;
-          }
-          
-          .enhanced-tool-button:hover:not(.loading) {
-            transform: none;
-          }
-        }
-      `}</style>
     </div>
   );
 }
