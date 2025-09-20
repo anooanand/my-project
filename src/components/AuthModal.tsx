@@ -111,7 +111,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         } else if (data.user) {
           localStorage.setItem('userEmail', email);
           
-          const emailVerified = await isEmailVerified(data.user);
+          const emailVerified = isEmailVerified(data.user);
           
           if (emailVerified) {
             setSuccess(true);
@@ -163,12 +163,17 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setError('');
     
     try {
-      const emailVerified = await isEmailVerified();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setError("We couldn't find your user session. Please try signing in again. 🤔");
+        setVerificationChecking(false);
+        return;
+      }
+      const emailVerified = isEmailVerified(user);
       
       if (emailVerified) {
         setSuccess(true);
         
-        const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           setTimeout(() => {
             onAuthSuccess(user);
@@ -424,26 +429,29 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-14 pr-16 py-4 text-lg border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
-                placeholder="Make it super secret!"
+                className="w-full pl-14 pr-14 py-4 text-lg border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
+                placeholder="••••••••"
                 required
-                minLength={6}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-all duration-200"
+                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? <EyeOff className="w-6 h-6" /> : <Eye className="w-6 h-6" />}
               </button>
             </div>
           </div>
 
-          {/* Confirm Password Field (Sign Up Only) */}
+          {/* Confirm Password Field (Sign Up only) */}
           {mode === 'signup' && (
-            <div className="mb-6">
-              <label htmlFor="confirmPassword" className="block text-lg font-bold text-gray-700 dark:text-gray-300 mb-3">
-                🔐 Type Your Password Again
+            <div className="mb-8">
+              <label
+                htmlFor="confirmPassword"
+                className="block text-lg font-bold text-gray-700 dark:text-gray-300 mb-3"
+              >
+                🗝️ Confirm Your Password
               </label>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-6 h-6" />
@@ -452,50 +460,42 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   id="confirmPassword"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full pl-14 pr-4 py-4 text-lg border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
-                  placeholder="Same as above!"
+                  className="w-full pl-14 pr-14 py-4 text-lg border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
+                  placeholder="••••••••"
                   required
-                  minLength={6}
                 />
               </div>
             </div>
           )}
 
           {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white py-4 px-6 rounded-xl text-xl font-bold transition-all duration-200 flex items-center justify-center transform hover:scale-105 shadow-lg disabled:transform-none disabled:shadow-none"
-          >
-            {loading ? (
-              <>
-                <Loader className="animate-spin mr-3 h-6 w-6" />
-                {mode === 'signin' ? 'Signing You In...' : 'Creating Your Account...'}
-              </>
-            ) : (
-              <>
-                {mode === 'signin' ? (
-                  <>
-                    <Smile className="mr-2 h-6 w-6" />
-                    Let's Go!
-                  </>
-                ) : (
-                  <>
-                    <Star className="mr-2 h-6 w-6" />
-                    Start Writing!
-                  </>
-                )}
-              </>
-            )}
-          </button>
+          <div className="mb-6">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-4 px-6 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white text-xl font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-all duration-200 transform hover:scale-105 shadow-lg"
+            >
+              {loading ? (
+                <>
+                  <Loader className="animate-spin -ml-1 mr-3 h-6 w-6" />
+                  {mode === 'signin' ? 'Signing In...' : 'Creating Account...'}
+                </>
+              ) : (
+                <>
+                  {mode === 'signin' ? '🚀 Let\'s Go!' : '✨ Create My Account'}
+                </>
+              )}
+            </button>
+          </div>
 
-          <div className="mt-8 text-center">
-            <p className="text-base text-gray-600 dark:text-gray-400">
-              {mode === 'signin' ? "New here? " : "Already have an account? "}
+          {/* Toggle Mode */}
+          <div className="text-center">
+            <p className="text-lg text-gray-600 dark:text-gray-300">
+              {mode === 'signin' ? "Don't have an account yet? " : 'Already have an account? '}
               <button
+                type="button"
                 onClick={() => {
-                  const newMode = mode === 'signin' ? 'signup' : 'signin';
-                  setMode(newMode);
+                  setMode(mode === 'signin' ? 'signup' : 'signin');
                   setError('');
                   setSuccess(false);
                   setCurrentStep(1);
@@ -511,4 +511,3 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     </div>
   );
 };
-
