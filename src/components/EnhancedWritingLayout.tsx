@@ -141,20 +141,6 @@ export function EnhancedWritingLayout({
     onChange(newContent);
   };
 
-  // Listen for submit events from AppContent
-  useEffect(() => {
-    const handleSubmitEvent = (event: CustomEvent) => {
-      console.log('📨 EnhancedWritingLayout: Received submit event:', event.detail);
-      handleNSWSubmit();
-    };
-
-    window.addEventListener('submitForEvaluation', handleSubmitEvent as EventListener);
-    
-    return () => {
-      window.removeEventListener('submitForEvaluation', handleSubmitEvent as EventListener);
-    };
-  }, []);
-
   // Track content changes for word count and coach feedback
   useEffect(() => {
     const currentContent = localContent || content;
@@ -171,42 +157,39 @@ export function EnhancedWritingLayout({
   }, [localContent, content]);
 
   // NSW Evaluation Submit Handler
-  // NSW Evaluation Submit Handler
   const handleNSWSubmit = async () => {
-    // Ensure localContent is up-to-date before evaluation
     const currentContent = localContent;
-    console.log("🎯 NSW Submit triggered from EnhancedWritingLayout");
-    console.log("Content check:", {
-      localContent: localContent?.substring(0, 50) + "...",
-      propContent: content?.substring(0, 50) + "...",
+    console.log('🎯 NSW Submit triggered from EnhancedWritingLayout');
+    console.log('Content check:', { 
+      localContent: localContent?.substring(0, 50) + '...', 
+      propContent: content?.substring(0, 50) + '...', 
       hasContent: !!currentContent?.trim(),
       contentLength: currentContent?.length || 0
     });
-
+    
     setEvaluationStatus("loading");
     setShowNSWEvaluation(true);
-
+    
     try {
       if (!currentContent || currentContent.trim().length === 0) {
         throw new Error("Please write some content before submitting for evaluation");
       }
-
-      console.log("NSW Evaluation initiated for:", {
-        text: currentContent.substring(0, 100) + "...",
-        textType,
-        wordCount
+      
+      console.log("NSW Evaluation initiated for:", { 
+        text: currentContent.substring(0, 100) + "...", 
+        textType, 
+        wordCount 
       });
-
+      
       // Call the original onSubmit for any additional handling
       await onSubmit();
-
+      
     } catch (e: any) {
-      console.error("NSW Submit error:", e);
+      console.error('NSW Submit error:', e);
       setEvaluationStatus("error");
       setShowNSWEvaluation(false);
     }
   };
-
 
   // Handle NSW evaluation completion
   const handleNSWEvaluationComplete = (report: any) => {
@@ -393,56 +376,47 @@ export function EnhancedWritingLayout({
             )}
           </button>
         </div>
-      </div>
 
-      {/* Right side - Coach Panel - FIXED: Pass content prop properly */}
-              <div className="flex-[3] flex flex-col min-w-0">
+        {/* NSW Standalone Submit System */}
+        {showNSWEvaluation && (
+          <NSWStandaloneSubmitSystem
+            content={localContent} // Use localContent for submission
+            textType={textType}
+            onEvaluationComplete={handleNSWEvaluationComplete}
+            onClose={() => setShowNSWEvaluation(false)}
+          />
+        )}
 
-        <TabbedCoachPanel
-          analysis={analysis}
-          onApplyFix={handleApplyFix}
-          content={currentContent} // FIXED: Pass the current content
-          textType={textType}
-          onWordSelect={(word: string) => {
-            // Handle word selection for vocabulary enhancement
-            console.log('Word selected:', word);
-          }}
-        />
-      </div>
-      
-      {showPlanningTool && (
+        {/* Modals */}
         <PlanningToolModal
           isOpen={showPlanningTool}
           onClose={() => setShowPlanningTool(false)}
+          plan={plan}
           onSavePlan={setPlan}
-          initialPlan={plan}
-          currentPrompt={currentPrompt}
         />
-      )}
-      {showStructureGuide && (
         <StructureGuideModal
           isOpen={showStructureGuide}
           onClose={() => setShowStructureGuide(false)}
           textType={textType}
         />
-      )}
-      {showTips && (
         <TipsModal
           isOpen={showTips}
           onClose={() => setShowTips(false)}
           textType={textType}
         />
-      )}
-      {showNSWEvaluation && (
-        <NSWStandaloneSubmitSystem
-          isOpen={showNSWEvaluation}
-          onClose={() => setShowNSWEvaluation(false)}
-          content={currentContent}
+      </div>
+
+      {/* Right side - Coach Panel */}
+      <div className="flex-[3] border-l border-gray-200 bg-white min-w-[300px]">
+        <TabbedCoachPanel
+          content={localContent} // Use localContent for coach panel
           textType={textType}
-          onEvaluationComplete={handleNSWEvaluationComplete}
-          evaluationStatus={evaluationStatus}
+          assistanceLevel={assistanceLevel}
+          selectedText={selectedText}
+          analysis={analysis}
+          onApplyFix={handleApplyFix}
         />
-      )}
+      </div>
     </div>
   );
 }
