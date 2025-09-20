@@ -57,7 +57,7 @@ function AppContent() {
 
   // Writing state
   const [content, setContent] = useState('');
-  const [textType, setTextType] = useState('narrative'); // FIXED: Default to 'narrative' instead of empty string
+  const [textType, setTextType] = useState('');
   const [assistanceLevel, setAssistanceLevel] = useState('detailed');
   const [timerStarted, setTimerStarted] = useState(false);
   const [selectedText, setSelectedText] = useState('');
@@ -82,7 +82,7 @@ function AppContent() {
       
       // Clear content and reset state
       setContent('');
-      setTextType('narrative'); // FIXED: Set to 'narrative' instead of empty string
+      setTextType('');
       setPopupFlowCompleted(false);
       
       // If we're on the writing page, this will trigger the writing type modal
@@ -187,7 +187,7 @@ function AppContent() {
       setShowPaymentSuccess(false);
       setPendingPaymentPlan(null);
       setContent('');
-      setTextType('narrative'); // FIXED: Set to 'narrative' instead of empty string
+      setTextType('');
       setPopupFlowCompleted(false);
       
       console.log('✅ AppContent: Local state reset completed');
@@ -261,30 +261,36 @@ function AppContent() {
     }
   }, [user, emailVerified, paymentCompleted]);
 
-  // FIXED CODE:
+  // FIXED: Dynamic textType handling with proper fallback
   const handleSubmit = () => {
-    const submissionTextType = textType || 'narrative'; // FIXED: Ensure textType is never empty
-    console.log('Writing submitted:', { content, textType: submissionTextType });
+    // Use the actual textType from state, with fallback only if truly empty
+    const submissionTextType = textType || 'narrative';
+    
+    console.log("Writing submitted:", { 
+      content, 
+      textType: submissionTextType,
+      originalTextType: textType,
+      contentLength: content.length 
+    });
     
     // Store the essay content and metadata for evaluation
-    localStorage.setItem('submittedEssay', content);
-    localStorage.setItem('submittedTextType', submissionTextType); // FIXED: Use submissionTextType
-    localStorage.setItem('submissionTimestamp', new Date().toISOString());
+    localStorage.setItem("submittedEssay", content);
+    localStorage.setItem("submittedTextType", submissionTextType);
+    localStorage.setItem("submissionTimestamp", new Date().toISOString());
     
-    // FIXED: Don't navigate - let the WritingWorkspace handle evaluation internally
     console.log('✅ Essay data stored for NSW evaluation system');
     
     // Trigger a custom event that WritingWorkspace can listen to
     window.dispatchEvent(new CustomEvent('submitForEvaluation', {
-      detail: { content, textType: submissionTextType } // FIXED: Use submissionTextType
+      detail: { content, textType: submissionTextType }
     }));
   };
 
   // NAVIGATION FIX: Improved text type change handler
   const handleTextTypeChange = useCallback((newTextType: string) => {
     try {
-      setTextType(newTextType || 'narrative'); // FIXED: Ensure textType is never empty
-      console.log('Text type changed to:', newTextType || 'narrative');
+      setTextType(newTextType || ''); // Ensure we don't set undefined
+      console.log('Text type changed to:', newTextType);
     } catch (error) {
       console.error('Text type change error:', error);
     }
@@ -446,26 +452,15 @@ function AppContent() {
               <EvaluationPage />
             </WritingAccessCheck>
           } />
-          <Route path="/exam" element={
-            <WritingAccessCheck onNavigate={handleNavigation}>
-              <ExamSimulationMode onExit={() => setActivePage('writing')} />
-            </WritingAccessCheck>
-          } />
-          <Route path="/help" element={<HelpCenter />} />
           <Route path="/payment-success" element={
             <PaymentSuccessPage 
-              planType={pendingPaymentPlan || 'basic'}
-              onContinue={() => {
-                setShowPaymentSuccess(false);
-                setPendingPaymentPlan(null);
-                setActivePage('dashboard');
-              }}
+              onNavigate={handleNavigation}
+              planType={pendingPaymentPlan}
             />
           } />
           <Route path="/auth/callback" element={<EmailVerificationHandler />} />
         </Routes>
 
-        {/* Auth Modal */}
         {showAuthModal && (
           <AuthModal
             mode={authModalMode}
@@ -475,19 +470,9 @@ function AppContent() {
           />
         )}
 
-        {/* Planning Tool Modal */}
-        {showPlanningTool && (
-          <PlanningToolModal
-            onClose={() => setShowPlanningTool(false)}
-            onSave={(plan) => {
-              console.log('Plan saved:', plan);
-              setShowPlanningTool(false);
-            }}
-          />
-        )}
-
-        {/* Footer */}
         {shouldShowFooter() && <Footer />}
+        
+        <AdminButton />
       </div>
     </div>
   );
