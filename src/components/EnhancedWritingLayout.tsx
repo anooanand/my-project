@@ -268,8 +268,8 @@ export function EnhancedWritingLayout({
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Left side - Writing Area Content */}
-              <div className="flex-[7] flex flex-col min-w-0">
-
+      <div className="flex-[3] flex flex-col min-w-0">
+        
         {/* Your Writing Prompt Section */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 mx-4 mt-4">
           <div className="flex items-center mb-2">
@@ -390,28 +390,23 @@ export function EnhancedWritingLayout({
               </>
             )}
           </button>
-          {/* Debug info - remove this in production */}
-          {!hasContent && (
-            <div className="mt-2 text-xs text-gray-500 text-center">
-              Debug: Content length: {currentContent?.length || 0}, Has content: {hasContent ? 'Yes' : 'No'}
-            </div>
-          )}
         </div>
       </div>
-      {/* Right side - Coach Panel */}
-              <div className="flex-[3] flex flex-col min-w-0">
 
+      {/* Right side - Coach Panel - FIXED: Pass content prop properly */}
+      <div className="flex-[2] flex flex-col min-w-0">
         <TabbedCoachPanel
           analysis={analysis}
           onApplyFix={handleApplyFix}
-          evaluationStatus={evaluationStatus}
+          content={currentContent} // FIXED: Pass the current content
           textType={textType}
-          assistanceLevel={assistanceLevel}
-          selectedText={selectedText}
-          wordCount={wordCount}
-          examMode={examMode}
+          onWordSelect={(word: string) => {
+            // Handle word selection for vocabulary enhancement
+            console.log('Word selected:', word);
+          }}
         />
       </div>
+      
       {showPlanningTool && (
         <PlanningToolModal
           isOpen={showPlanningTool}
