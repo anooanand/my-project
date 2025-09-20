@@ -27,7 +27,7 @@ export async function makeOpenAICall(systemPrompt: string, userPrompt: string, m
   const apiBase = import.meta.env.VITE_OPENAI_API_BASE || 'https://api.openai.com/v1';
   
   // Remove excessive logging that might cause issues
-  console.log('Making OpenAI API call...' );
+  console.log('Making OpenAI API call...'  );
   
   if (!apiKey) {
     throw new Error('OpenAI API key not configured');
@@ -112,7 +112,7 @@ export async function checkOpenAIConnectionStatus(): Promise<boolean> {
   }
 }
 
-//export async function generateChatResponse(request: ChatRequest): Promise<string> {
+export async function generateChatResponse(request: ChatRequest): Promise<string> {
   const { userMessage, textType, currentContent, wordCount, context } = request;
   
   console.log("Generating chat response...");
@@ -126,9 +126,9 @@ export async function checkOpenAIConnectionStatus(): Promise<boolean> {
   }
 
   const systemPrompt = `You are an AI Writing Buddy for NSW Selective School exam preparation. You're helping a student with their ${textType} writing.\n\nCONTEXT:\n- Student is writing a ${textType} story\n- Current word count: ${wordCount}\n- Current writing stage: ${parsedContext.writingStage || "unknown"}\n- Previous conversation history: ${parsedContext.conversationHistory ? JSON.stringify(parsedContext.conversationHistory.slice(-2)) : "none"} (last 2 messages)\n\nPERSONALITY:\n- Friendly, encouraging, and supportive\n- Use emojis occasionally to be engaging\n- Speak like a helpful friend, not a formal teacher\n- Keep responses concise but helpful (2-3 sentences max)\n- Directly address the user's question and refer to their writing when relevant.\n
-FOCUS AREAS:\n- NSW Selective writing criteria\n- Story structure and plot development\n- Character development and emotions\n- Descriptive language and vocabulary\n- Grammar and sentence structure\n- Creative ideas and inspiration\n\nCURRENT WRITING CONTENT (for reference, do not directly edit or rewrite):\n"""\n${currentContent || "No content written yet."}\n"""\n\nBased on the user's question and their current writing, provide a helpful and encouraging response.`;
+FOCUS AREAS:\n- NSW Selective writing criteria\n- Story structure and plot development\n- Character development and emotions\n- Descriptive language and vocabulary\n- Grammar and sentence structure\n- Creative ideas and inspiration\n\nCURRENT WRITING CONTENT (for reference, do not directly edit or rewrite):\n\"\"\"\n${currentContent || "No content written yet."}\n\"\"\"\n\nBased on the user's question and their current writing, provide a helpful and encouraging response.`;
 
-  const userPrompt = `Student question: "${userMessage}"\n\nPlease provide a helpful, encouraging response.`;
+  const userPrompt = `Student question: \"${userMessage}\"\n\nPlease provide a helpful, encouraging response.`;
 
   try {
     const response = await makeOpenAICall(systemPrompt, userPrompt, 250); // Increased max_tokens for potentially longer, more detailed responses
@@ -180,14 +180,14 @@ function getFallbackSynonyms(word: string): string[] {
 // Rephrase sentences for better vocabulary
 export async function rephraseSentence(sentence: string): Promise<string> {
   const systemPrompt = `You are a vocabulary enhancement assistant. Rephrase the given sentence to make it more sophisticated and engaging while maintaining the original meaning.`;
-  const userPrompt = `Please rephrase this sentence: "${sentence}"`;
+  const userPrompt = `Please rephrase this sentence: \"${sentence}\"`;
 
   try {
     const response = await makeOpenAICall(systemPrompt, userPrompt, 100);
     return response;
   } catch (error) {
     console.error('Error rephrasing sentence:', error);
-    return `Try using more specific verbs and descriptive adjectives in: "${sentence}"`;
+    return `Try using more specific verbs and descriptive adjectives in: \"${sentence}\"`;
   }
 }
 
@@ -332,7 +332,7 @@ export async function getWritingStructure(textType: string): Promise<string> {
     const response = await makeOpenAICall(systemPrompt, userPrompt, 200);
     return response;
   } catch (error) {
-    console.error("Error getting structure guidance:", error);
+    console.error('Error getting structure guidance:', error);
     return getFallbackStructure(textType);
   }
 }
@@ -352,13 +352,13 @@ function getFallbackStructure(textType: string): string {
 // Identify common mistakes
 export async function identifyCommonMistakes(content: string): Promise<string[]> {
   const systemPrompt = `You are a grammar and spelling checker. Identify common mistakes in the provided text.`;
-  const userPrompt = `Identify common mistakes in: "${content}"`;
+  const userPrompt = `Identify common mistakes in: \"${content}\"`;
 
   try {
     const response = await makeOpenAICall(systemPrompt, userPrompt, 200);
     return response.split(/\n/).map(s => s.trim()).filter(s => s.length > 0);
   } catch (error) {
-    console.error("Error identifying common mistakes:", error);
+    console.error('Error identifying common mistakes:', error);
     return ["Check for subject-verb agreement issues.", "Ensure consistent tense usage.", "Review punctuation, especially commas and apostrophes."];
   }
 }
@@ -377,7 +377,7 @@ export async function getTextTypeVocabulary(textType: string): Promise<string[]>
     
     return words.length > 0 ? words : getFallbackVocabulary(textType);
   } catch (error) {
-    console.error("Error getting text type vocabulary:", error);
+    console.error('Error getting text type vocabulary:', error);
     return getFallbackVocabulary(textType);
   }
 }
@@ -386,10 +386,10 @@ export async function getTextTypeVocabulary(textType: string): Promise<string[]>
 function getFallbackVocabulary(textType: string): string[] {
   const vocabularyMap = {
     narrative: ["captivating", "mesmerizing", "extraordinary", "bewildering", "exhilarating", "profound", "eloquent", "vivid", "compelling", "intricate"],
-    persuasive: ["compelling", "unequivocal", "substantiate", "advocate", "imperative", "irrefutable", "pertinent", "cogent", "dispel", "bolster"],
-    expository: ["elucidate", "delineate", "comprehend", "subsequently", "consequently", "furthermore", "moreover", "hence", "thus", "illustrate"],
-    descriptive: ["ethereal", "serene", "luminous", "ephemeral", "mellifluous", "cacophony", "ubiquitous", "resplendent", "verdant", "halcyon"],
-    creative: ["whimsical", "surreal", "enigmatic", "transcendent", "kaleidoscopic", "phantasmagorical", "ephemeral", "luminous", "serendipitous", "nebulous"]
+    persuasive: ["compelling", "unequivocal", "substantiate", "advocate", "imperative", "irrefutable", "galvanize", "articulate", "resonate", "underscore"],
+    expository: ["elucidate", "comprehend", "delineate", "corroborate", "disseminate", "paradigm", "ubiquitous", "pertinent", "conjecture", "nuance"],
+    descriptive: ["ethereal", "serene", "luminous", "ephemeral", "cacophony", "mellifluous", "panoramic", "verdant", "opulent", "resplendent"],
+    creative: ["whimsical", "surreal", "enigmatic", "transcendent", "kaleidoscopic", "juxtaposition", "benevolent", "malevolent", "epiphany", "soliloquy"]
   };
   return vocabularyMap[textType.toLowerCase()] || vocabularyMap.narrative;
 }
