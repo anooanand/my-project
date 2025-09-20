@@ -1,4 +1,5 @@
-// Fixed OpenAI service with proper connectivity
+// src/lib/openai.ts - FIXED VERSION that calls backend functions
+// This file handles all OpenAI-related functionality by calling Netlify functions
 
 interface ChatRequest {
   userMessage: string;
@@ -21,186 +22,168 @@ interface DetailedFeedback {
   vocabularyEnhancements: any[];
 }
 
-// Main function to make OpenAI API calls - FIXED VERSION
-export async function makeOpenAICall(systemPrompt: string, userPrompt: string, maxTokens: number = 200): Promise<string> {
-  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-  const apiBase = import.meta.env.VITE_OPENAI_API_BASE || 'https://api.openai.com/v1';
-  
-  // Remove excessive logging that might cause issues
-  console.log('Making OpenAI API call...'  );
-  
-  if (!apiKey) {
-    throw new Error('OpenAI API key not configured');
-  }
-
-  // Validate API key format
-  if (!apiKey.startsWith('sk-')) {
-    throw new Error('Invalid OpenAI API key format');
-  }
-
+// FIXED: Main function to generate chat responses via backend
+export async function generateChatResponse(request: ChatRequest): Promise<string> {
   try {
-    const requestBody = {
-      model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt }
-      ],
-      max_tokens: maxTokens,
-      temperature: 0.7
-    };
-
-    console.log('Request body prepared');
-
-    const response = await fetch(`${apiBase}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify(requestBody)
+    console.log("Sending chat request to backend:", {
+      messageLength: request.userMessage.length,
+      textType: request.textType,
+      contentLength: request.currentContent?.length || 0,
+      wordCount: request.wordCount
     });
 
-    console.log('Response received:', response.status);
+    const res = await fetch("/.netlify/functions/chat-response", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userMessage: request.userMessage,
+        textType: request.textType,
+        currentContent: request.currentContent || '',
+        wordCount: request.wordCount || 0,
+        context: request.context
+      })
+    });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('API Error:', response.status, errorText);
-      
-      // Handle specific error cases
-      if (response.status === 401) {
-        throw new Error('Invalid API key - please check your OpenAI API key');
-      } else if (response.status === 429) {
-        throw new Error('Rate limit exceeded - please try again later');
-      } else if (response.status === 500) {
-        throw new Error('OpenAI server error - please try again');
-      } else {
-        throw new Error(`OpenAI API error: ${response.status}`);
-      }
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error("Chat response API error:", res.status, errorText);
+      throw new Error(`HTTP ${res.status}: ${errorText}`);
     }
 
-    const data = await response.json();
+    const result = await res.json();
+    console.log("Chat response received successfully");
     
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      throw new Error('Invalid response format from OpenAI');
+    if (!result.response) {
+      throw new Error("No response field in API result");
     }
 
-    console.log('API call successful');
-    return data.choices[0].message.content.trim();
+    return result.response;
+
   } catch (error) {
-    console.error('OpenAI API call failed:', error);
-    throw error;
+    console.error("Chat response failed:", error);
+    
+    // Enhanced fallback responses with context awareness
+    return getEnhancedFallbackResponse(request);
   }
 }
 
-// Simplified connection test - FIXED VERSION
+// Enhanced fallback response function with context awareness
+function getEnhancedFallbackResponse(request: ChatRequest): string {
+  const { userMessage, currentContent, wordCount, textType } = request;
+  const message = userMessage.toLowerCase();
+  const hasContent = currentContent && currentContent.trim().length > 0;
+  
+  if (message.includes("introduction") || message.includes("opening") || message.includes("start")) {
+    if (hasContent) {
+      return `I can see you've started with "${currentContent.slice(0, 30)}..." That's a good beginning! Try adding more specific details to hook your reader. What happens next in your story? 😊`;
+    } else {
+      return "Great question about openings! Try starting with dialogue, action, or an interesting detail. For example: 'The door creaked open, revealing...' What's your story going to be about?";
+    }
+  } else if (message.includes("vocabulary") || message.includes("word") || message.includes("synonym")) {
+    if (hasContent) {
+      // Try to find a simple word in their content to improve
+      const simpleWords = ['said', 'big', 'small', 'good', 'bad', 'nice', 'went', 'got'];
+      const foundWord = simpleWords.find(word => currentContent.toLowerCase().includes(word));
+      if (foundWord) {
+        const suggestions = {
+          'said': 'whispered, exclaimed, muttered',
+          'big': 'enormous, massive, gigantic',
+          'small': 'tiny, miniature, petite',
+          'good': 'excellent, wonderful, fantastic',
+          'bad': 'terrible, awful, dreadful',
+          'nice': 'delightful, pleasant, charming',
+          'went': 'rushed, strolled, wandered',
+          'got': 'received, obtained, discovered'
+        };
+        return `I noticed you used "${foundWord}" in your writing. Try replacing it with: ${suggestions[foundWord]}. Which one fits your story best?`;
+      }
+    }
+    return "For better vocabulary, try replacing simple words with more descriptive ones. Instead of 'big', try 'enormous' or 'massive'. What specific word would you like help with?";
+  } else if (message.includes("character") || message.includes("people")) {
+    if (hasContent && /\b(he|she|they|character|person|boy|girl|man|woman|i)\b/i.test(currentContent)) {
+      return "I can see you have characters in your story! To make them more interesting, show their personality through their actions and words. What does your main character want or fear?";
+    } else {
+      return "To create interesting characters, give them unique traits, goals, and problems. What kind of character is in your story? Tell me about them! 😊";
+    }
+  } else if (message.includes("dialogue") || message.includes("talking") || message.includes("conversation")) {
+    if (hasContent && /["']/.test(currentContent)) {
+      return "I see you're already using dialogue - that's great! Remember to start a new line each time someone different speaks, and use action to show how they're feeling. What are your characters discussing?";
+    } else if (hasContent) {
+      return "Adding dialogue can make your story come alive! Try having your characters speak to each other. For example: 'Where are we going?' asked Sarah nervously. What might your characters say?";
+    } else {
+      return "Dialogue makes stories exciting! When characters talk, it shows their personality and moves the story forward. What conversation could happen in your story?";
+    }
+  } else if (message.includes("description") || message.includes("describe") || message.includes("details")) {
+    if (hasContent) {
+      return "Great question! Look at this part of your story and add more details. Instead of just saying what happened, describe how it looked, sounded, or felt. What details would help readers picture the scene?";
+    } else {
+      return "Description helps readers picture your story! Use your five senses - what does your character see, hear, smell, taste, or touch? Start with one scene and describe it in detail.";
+    }
+  } else if (message.includes("conclusion") || message.includes("ending") || message.includes("finish")) {
+    if (hasContent && wordCount > 100) {
+      return "For your ending, think about how your character has changed from the beginning. Look back at how you started - can you connect your ending to that opening? What's the main message of your story?";
+    } else if (hasContent) {
+      return "You're building a good story! For the ending, think about what your character learns or how they solve their problem. How do you want your reader to feel when they finish?";
+    } else {
+      return "For a strong conclusion, show how your character has changed or learned something. What's the most important thing that happens in your story?";
+    }
+  } else {
+    if (hasContent) {
+      const stage = wordCount < 50 ? "getting started" : wordCount < 150 ? "developing your ideas" : "expanding your story";
+      return `I can see you're ${stage} with ${wordCount} words. That's great progress! What specific part would you like help with? 😊`;
+    } else {
+      return "I'm here to help with your writing! Start by telling me what you want to write about, or ask me about any part of writing you'd like help with. 😊";
+    }
+  }
+}
+
+// FIXED: Connection test that calls backend
 export async function checkOpenAIConnectionStatus(): Promise<boolean> {
   try {
     console.log('Testing OpenAI connection...');
     
-    // Simple test with minimal token usage
-    const response = await makeOpenAICall(
-      "You are a test assistant.",
-      "Say 'OK' if you can read this.",
-      10
-    );
+    const res = await fetch("/.netlify/functions/chat-response", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userMessage: "test",
+        textType: "narrative",
+        currentContent: "",
+        wordCount: 0
+      })
+    });
+
+    console.log('Response received:', res.status);
     
-    console.log('Connection test successful:', response);
-    return true;
+    if (res.ok) {
+      const result = await res.json();
+      console.log('Connection test successful:', result.response ? 'OK' : 'No response');
+      return true;
+    } else {
+      console.log('Connection test failed:', res.status);
+      return false;
+    }
   } catch (error) {
     console.error('Connection test failed:', error);
     return false;
   }
 }
 
-export async function generateChatResponse(request: ChatRequest): Promise<string> {
-  const { userMessage, textType, currentContent, wordCount, context } = request;
-  
-  console.log("Generating chat response...");
-  
-  // Parse context if it's a stringified JSON
-  let parsedContext = {};
-  try {
-    parsedContext = context ? JSON.parse(context) : {};
-  } catch (e) {
-    console.error("Error parsing context JSON:", e);
-  }
-
-  const systemPrompt = `You are an AI Writing Buddy for NSW Selective School exam preparation. You're helping a student with their ${textType} writing.\n\nCONTEXT:\n- Student is writing a ${textType} story\n- Current word count: ${wordCount}\n- Current writing stage: ${parsedContext.writingStage || "unknown"}\n- Previous conversation history: ${parsedContext.conversationHistory ? JSON.stringify(parsedContext.conversationHistory.slice(-2)) : "none"} (last 2 messages)\n\nPERSONALITY:\n- Friendly, encouraging, and supportive\n- Use emojis occasionally to be engaging\n- Speak like a helpful friend, not a formal teacher\n- Keep responses concise but helpful (2-3 sentences max)\n- Directly address the user's question and refer to their writing when relevant.\n
-FOCUS AREAS:\n- NSW Selective writing criteria\n- Story structure and plot development\n- Character development and emotions\n- Descriptive language and vocabulary\n- Grammar and sentence structure\n- Creative ideas and inspiration\n\nCURRENT WRITING CONTENT (for reference, do not directly edit or rewrite):\n\"\"\"\n${currentContent || "No content written yet."}\n\"\"\"\n\nBased on the user's question and their current writing, provide a helpful and encouraging response.`;
-
-  const userPrompt = `Student question: \"${userMessage}\"\n\nPlease provide a helpful, encouraging response.`;
-
-  try {
-    const response = await makeOpenAICall(systemPrompt, userPrompt, 250); // Increased max_tokens for potentially longer, more detailed responses
-    return response;
-  } catch (error) {
-    console.error("Chat response error:", error);
-    // Fallback to a more informative message if AI fails
-    return "Oops! I'm having a little trouble understanding that right now. Could you please rephrase your question or ask about something specific in your writing? I'm here to help! 😊";
-  }
-}
-
-
-// Get synonyms for words
-export async function getSynonyms(word: string): Promise<string[]> {
-  const systemPrompt = `You are a vocabulary assistant. Provide 5 sophisticated synonyms for the given word that would be appropriate for NSW Selective level writing.`;
-  const userPrompt = `Provide synonyms for: ${word}`;
-
-  try {
-    const response = await makeOpenAICall(systemPrompt, userPrompt, 100);
-    const synonyms = response.split(/[,\n]/)
-      .map(s => s.trim().replace(/^\d+\.?\s*/, ''))
-      .filter(s => s.length > 0 && s !== word)
-      .slice(0, 5);
-    
-    return synonyms.length > 0 ? synonyms : getFallbackSynonyms(word);
-  } catch (error) {
-    console.error('Error getting synonyms:', error);
-    return getFallbackSynonyms(word);
-  }
-}
-
-// Fallback synonyms for common words
-function getFallbackSynonyms(word: string): string[] {
-  const synonymMap = {
-    'said': ['whispered', 'exclaimed', 'muttered', 'declared', 'announced'],
-    'big': ['enormous', 'massive', 'gigantic', 'colossal', 'immense'],
-    'small': ['tiny', 'miniature', 'petite', 'minuscule', 'compact'],
-    'good': ['excellent', 'outstanding', 'remarkable', 'exceptional', 'superb'],
-    'bad': ['terrible', 'awful', 'dreadful', 'horrible', 'atrocious'],
-    'happy': ['delighted', 'ecstatic', 'joyful', 'elated', 'cheerful'],
-    'sad': ['melancholy', 'sorrowful', 'dejected', 'despondent', 'mournful'],
-    'fast': ['swift', 'rapid', 'speedy', 'quick', 'hasty'],
-    'slow': ['sluggish', 'leisurely', 'gradual', 'unhurried', 'deliberate'],
-    'beautiful': ['gorgeous', 'stunning', 'magnificent', 'breathtaking', 'exquisite']
-  };
-  return synonymMap[word.toLowerCase()] || ['sophisticated', 'enhanced', 'improved', 'refined', 'elevated'];
-}
-
-// Rephrase sentences for better vocabulary
-export async function rephraseSentence(sentence: string): Promise<string> {
-  const systemPrompt = `You are a vocabulary enhancement assistant. Rephrase the given sentence to make it more sophisticated and engaging while maintaining the original meaning.`;
-  const userPrompt = `Please rephrase this sentence: \"${sentence}\"`;
-
-  try {
-    const response = await makeOpenAICall(systemPrompt, userPrompt, 100);
-    return response;
-  } catch (error) {
-    console.error('Error rephrasing sentence:', error);
-    return `Try using more specific verbs and descriptive adjectives in: \"${sentence}\"`;
-  }
-}
-
-// Generate writing prompts for different text types
+// Generate writing prompts via backend
 export async function generatePrompt(textType: string, topic?: string): Promise<string> {
-  const systemPrompt = `You are a creative writing prompt generator for NSW Selective School exam preparation. Generate engaging, age-appropriate prompts for ${textType} writing.`;
-  const userPrompt = topic 
-    ? `Generate a creative ${textType} writing prompt related to: ${topic}`
-    : `Generate a creative ${textType} writing prompt`;
-
   try {
-    const response = await makeOpenAICall(systemPrompt, userPrompt, 150);
-    return response;
+    const res = await fetch("/.netlify/functions/generate-prompt", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ textType, topic })
+    });
+
+    if (res.ok) {
+      const result = await res.json();
+      return result.prompt;
+    } else {
+      throw new Error(`HTTP ${res.status}`);
+    }
   } catch (error) {
     console.error('Error generating prompt:', error);
     return getFallbackPrompt(textType, topic);
@@ -242,18 +225,25 @@ function getFallbackPrompt(textType: string, topic?: string): string {
   return topic ? `${randomPrompt} (Focus on: ${topic})` : randomPrompt;
 }
 
-// Evaluate essay content and provide feedback
+// Evaluate essay content via backend
 export async function evaluateEssay(content: string, textType: string): Promise<string> {
   if (!content.trim()) {
     return "Please write some content first, then I can provide you with detailed feedback!";
   }
 
-  const systemPrompt = `You are an expert writing teacher specializing in NSW Selective School exam preparation. Evaluate this ${textType} writing sample and provide constructive feedback.`;
-  const userPrompt = `Please evaluate this ${textType} writing sample:\n\n${content}\n\nProvide detailed feedback with specific suggestions for improvement.`;
-
   try {
-    const response = await makeOpenAICall(systemPrompt, userPrompt, 300);
-    return response;
+    const res = await fetch("/.netlify/functions/ai-feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content, textType })
+    });
+
+    if (res.ok) {
+      const result = await res.json();
+      return result.feedback || "Feedback generated successfully!";
+    } else {
+      throw new Error(`HTTP ${res.status}`);
+    }
   } catch (error) {
     console.error('Error evaluating essay:', error);
     return getFallbackEvaluation(content, textType);
@@ -282,7 +272,7 @@ function getFallbackEvaluation(content: string, textType: string): string {
   return feedback;
 }
 
-// Get NSW Selective specific feedback - NOW CALLS BACKEND
+// Get NSW Selective specific feedback via backend
 export async function getNSWSelectiveFeedback(content: string, textType: string, assistanceLevel: string): Promise<DetailedFeedback> {
   try {
     const response = await fetch("/.netlify/functions/ai-feedback", {
@@ -325,12 +315,19 @@ export async function getNSWSelectiveFeedback(content: string, textType: string,
 
 // Get writing structure guidance
 export async function getWritingStructure(textType: string): Promise<string> {
-  const systemPrompt = `You are a writing teacher specializing in ${textType} writing structure. Provide clear, practical guidance.`;
-  const userPrompt = `Explain the ideal structure for ${textType} writing.`;
-
   try {
-    const response = await makeOpenAICall(systemPrompt, userPrompt, 200);
-    return response;
+    const res = await fetch("/.netlify/functions/writing-structure", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ textType })
+    });
+
+    if (res.ok) {
+      const result = await res.json();
+      return result.structure;
+    } else {
+      throw new Error(`HTTP ${res.status}`);
+    }
   } catch (error) {
     console.error('Error getting structure guidance:', error);
     return getFallbackStructure(textType);
@@ -349,14 +346,80 @@ function getFallbackStructure(textType: string): string {
   return structures[textType.toLowerCase()] || structures.narrative;
 }
 
+// Get synonyms for words
+export async function getSynonyms(word: string): Promise<string[]> {
+  try {
+    const res = await fetch("/.netlify/functions/get-synonyms", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ word })
+    });
+
+    if (res.ok) {
+      const result = await res.json();
+      return result.synonyms || getFallbackSynonyms(word);
+    } else {
+      throw new Error(`HTTP ${res.status}`);
+    }
+  } catch (error) {
+    console.error('Error getting synonyms:', error);
+    return getFallbackSynonyms(word);
+  }
+}
+
+// Fallback synonyms for common words
+function getFallbackSynonyms(word: string): string[] {
+  const synonymMap = {
+    'said': ['whispered', 'exclaimed', 'muttered', 'declared', 'announced'],
+    'big': ['enormous', 'massive', 'gigantic', 'colossal', 'immense'],
+    'small': ['tiny', 'miniature', 'petite', 'minuscule', 'compact'],
+    'good': ['excellent', 'outstanding', 'remarkable', 'exceptional', 'superb'],
+    'bad': ['terrible', 'awful', 'dreadful', 'horrible', 'atrocious'],
+    'happy': ['delighted', 'ecstatic', 'joyful', 'elated', 'cheerful'],
+    'sad': ['melancholy', 'sorrowful', 'dejected', 'despondent', 'mournful'],
+    'fast': ['swift', 'rapid', 'speedy', 'quick', 'hasty'],
+    'slow': ['sluggish', 'leisurely', 'gradual', 'unhurried', 'deliberate'],
+    'beautiful': ['gorgeous', 'stunning', 'magnificent', 'breathtaking', 'exquisite']
+  };
+  return synonymMap[word.toLowerCase()] || ['sophisticated', 'enhanced', 'improved', 'refined', 'elevated'];
+}
+
+// Rephrase sentences for better vocabulary
+export async function rephraseSentence(sentence: string): Promise<string> {
+  try {
+    const res = await fetch("/.netlify/functions/rephrase-sentence", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sentence })
+    });
+
+    if (res.ok) {
+      const result = await res.json();
+      return result.rephrased;
+    } else {
+      throw new Error(`HTTP ${res.status}`);
+    }
+  } catch (error) {
+    console.error('Error rephrasing sentence:', error);
+    return `Try using more specific verbs and descriptive adjectives in: "${sentence}"`;
+  }
+}
+
 // Identify common mistakes
 export async function identifyCommonMistakes(content: string): Promise<string[]> {
-  const systemPrompt = `You are a grammar and spelling checker. Identify common mistakes in the provided text.`;
-  const userPrompt = `Identify common mistakes in: \"${content}\"`;
-
   try {
-    const response = await makeOpenAICall(systemPrompt, userPrompt, 200);
-    return response.split(/\n/).map(s => s.trim()).filter(s => s.length > 0);
+    const res = await fetch("/.netlify/functions/identify-mistakes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content })
+    });
+
+    if (res.ok) {
+      const result = await res.json();
+      return result.mistakes || ["Check for subject-verb agreement issues.", "Ensure consistent tense usage.", "Review punctuation, especially commas and apostrophes."];
+    } else {
+      throw new Error(`HTTP ${res.status}`);
+    }
   } catch (error) {
     console.error('Error identifying common mistakes:', error);
     return ["Check for subject-verb agreement issues.", "Ensure consistent tense usage.", "Review punctuation, especially commas and apostrophes."];
@@ -365,17 +428,19 @@ export async function identifyCommonMistakes(content: string): Promise<string[]>
 
 // Get vocabulary suggestions for specific text types
 export async function getTextTypeVocabulary(textType: string): Promise<string[]> {
-  const systemPrompt = `You are a vocabulary assistant. Provide 10 sophisticated vocabulary words for ${textType} writing.`;
-  const userPrompt = `Provide 10 advanced vocabulary words for ${textType} writing.`;
-  
   try {
-    const response = await makeOpenAICall(systemPrompt, userPrompt, 200);
-    const words = response.split(/[,\n]/)
-      .map(word => word.trim().replace(/^\d+\.?\s*/, ""))
-      .filter(word => word.length > 0)
-      .slice(0, 10);
-    
-    return words.length > 0 ? words : getFallbackVocabulary(textType);
+    const res = await fetch("/.netlify/functions/text-type-vocabulary", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ textType })
+    });
+
+    if (res.ok) {
+      const result = await res.json();
+      return result.vocabulary || getFallbackVocabulary(textType);
+    } else {
+      throw new Error(`HTTP ${res.status}`);
+    }
   } catch (error) {
     console.error('Error getting text type vocabulary:', error);
     return getFallbackVocabulary(textType);
