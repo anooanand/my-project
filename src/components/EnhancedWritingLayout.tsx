@@ -171,39 +171,42 @@ export function EnhancedWritingLayout({
   }, [localContent, content]);
 
   // NSW Evaluation Submit Handler
+  // NSW Evaluation Submit Handler
   const handleNSWSubmit = async () => {
-    const currentContent = localContent || content;
-    console.log('🎯 NSW Submit triggered from EnhancedWritingLayout');
-    console.log('Content check:', { 
-      localContent: localContent?.substring(0, 50) + '...', 
-      propContent: content?.substring(0, 50) + '...', 
+    // Ensure localContent is up-to-date before evaluation
+    const currentContent = localContent;
+    console.log("🎯 NSW Submit triggered from EnhancedWritingLayout");
+    console.log("Content check:", {
+      localContent: localContent?.substring(0, 50) + "...",
+      propContent: content?.substring(0, 50) + "...",
       hasContent: !!currentContent?.trim(),
       contentLength: currentContent?.length || 0
     });
-    
+
     setEvaluationStatus("loading");
     setShowNSWEvaluation(true);
-    
+
     try {
       if (!currentContent || currentContent.trim().length === 0) {
         throw new Error("Please write some content before submitting for evaluation");
       }
-      
-      console.log("NSW Evaluation initiated for:", { 
-        text: currentContent.substring(0, 100) + "...", 
-        textType, 
-        wordCount 
+
+      console.log("NSW Evaluation initiated for:", {
+        text: currentContent.substring(0, 100) + "...",
+        textType,
+        wordCount
       });
-      
+
       // Call the original onSubmit for any additional handling
       await onSubmit();
-      
+
     } catch (e: any) {
-      console.error('NSW Submit error:', e);
+      console.error("NSW Submit error:", e);
       setEvaluationStatus("error");
       setShowNSWEvaluation(false);
     }
   };
+
 
   // Handle NSW evaluation completion
   const handleNSWEvaluationComplete = (report: any) => {
