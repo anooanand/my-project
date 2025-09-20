@@ -175,7 +175,7 @@ function AppContent() {
       setActivePage('dashboard');
       setShowAuthModal(false);
     }
-  }, [pendingPaymentPlan]);
+  }, [pendingPaymentPlan, user, emailVerified, paymentCompleted]);
 
   const handleForceSignOut = async () => {
     try {
@@ -411,69 +411,57 @@ function AppContent() {
             user ? <SettingsPage onBack={() => setActivePage('dashboard')} /> : <Navigate to="/" />
           } />
           <Route path="/writing" element={
-    <WritingAccessCheck onNavigate={handleNavigation}>
-      <div className="writing-route h-screen flex flex-col">
-        <EnhancedHeader 
-          textType={textType || 'narrative'}
-          assistanceLevel={assistanceLevel}
-          onTextTypeChange={setTextType}
-          onAssistanceLevelChange={setAssistanceLevel}
-          onTimerStart={() => setTimerStarted(true)}
-          hideTextTypeSelector={popupFlowCompleted}
-        />
-        
-        {showExamMode ? (
-          <ExamSimulationMode 
-            onExit={() => setShowExamMode(false)}
-          />
-        ) : (
-          <div className="writing-layout-content flex-1 min-h-0">
-            <EnhancedWritingLayout
-              content={content}
-              onChange={setContent}
-              textType={textType || 'narrative'}
-              assistanceLevel={assistanceLevel}
-              selectedText={selectedText}
-              onTimerStart={setTimerStarted}
-              onSubmit={handleSubmit}
-              onTextTypeChange={handleTextTypeChange}
-              onPopupCompleted={handlePopupCompleted}
-              onNavigate={handleNavigation}
-            />
-          </div>
-        )}
-      </div>
-    </WritingAccessCheck>
-  } />
-
-          <Route path="/learning" element={<LearningPage />} />
-          <Route path="/evaluation" element={
             <WritingAccessCheck onNavigate={handleNavigation}>
-              <EvaluationPage />
+              <div className="writing-route h-screen flex flex-col">
+                <EnhancedHeader 
+                  textType={textType || 'narrative'}
+                  assistanceLevel={assistanceLevel}
+                  onTextTypeChange={setTextType}
+                  onTimerStart={() => setTimerStarted(true)}
+                  hideTextTypeSelector={popupFlowCompleted}
+                />
+                
+                {showExamMode ? (
+                  <ExamSimulationMode 
+                    onExit={() => setShowExamMode(false)}
+                  />
+                ) : (
+                  <div className="writing-layout-content flex-1 min-h-0">
+                    <EnhancedWritingLayout
+                      content={content}
+                      onChange={setContent}
+                      textType={textType || 'narrative'}
+                      assistanceLevel={assistanceLevel}
+                      selectedText={selectedText}
+                      onTimerStart={setTimerStarted}
+                      onSubmit={handleSubmit}
+                      onTextTypeChange={handleTextTypeChange}
+                      onPopupCompleted={handlePopupCompleted}
+                      onNavigate={handleNavigation}
+                      onShowHelpCenter={() => setShowHelpCenter(true)}
+                      onShowPlanningTool={() => setShowPlanningTool(true)}
+                    />
+                  </div>
+                )}
+              </div>
             </WritingAccessCheck>
           } />
           <Route path="/payment-success" element={
             <PaymentSuccessPage 
+              planType={pendingPaymentPlan || ''}
               onNavigate={handleNavigation}
-              planType={pendingPaymentPlan}
             />
           } />
-          <Route path="/auth/callback" element={<EmailVerificationHandler />} />
         </Routes>
-
-        {showAuthModal && (
-          <AuthModal
-            mode={authModalMode}
-            onClose={() => setShowAuthModal(false)}
-            onSuccess={handleAuthSuccess}
-            onSwitchMode={(mode) => setAuthModalMode(mode)}
-          />
-        )}
-
-        {shouldShowFooter() && <Footer />}
-        
-        <AdminButton />
+        <AuthModal
+          isOpen={showAuthModal}
+          mode={authModalMode}
+          onClose={() => setShowAuthModal(false)}
+          onAuthSuccess={handleAuthSuccess}
+        />
       </div>
+      {shouldShowFooter() && <Footer onNavigate={handleNavigation} />}
+      <AdminButton />
     </div>
   );
 }
