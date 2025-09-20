@@ -1,3 +1,6 @@
+// src/components/CoachProvider.tsx - FIXED VERSION
+// Handles undefined values and provides better error handling
+
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageSquare, Sparkles, ChevronDown, ChevronUp, ThumbsUp, Lightbulb, HelpCircle, Target, AlertCircle, Star, Zap, Gift, Heart, X, Send, User, RefreshCw, Bot, Loader } from 'lucide-react';
 import { generateChatResponse, checkOpenAIConnectionStatus } from '../lib/openai';
@@ -68,16 +71,18 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
     checkAIConnection();
   }, []);
 
-  // Direct content monitoring effect
+  // FIXED: Direct content monitoring effect with proper null checks
   useEffect(() => {
-    if (content !== contentMonitorRef.current) {
-      const prevContent = contentMonitorRef.current;
-      contentMonitorRef.current = content;
-      setPreviousContent(prevContent);
+    const safeContent = content || '';
+    const safePreviousContent = contentMonitorRef.current || '';
+    
+    if (safeContent !== safePreviousContent) {
+      contentMonitorRef.current = safeContent;
+      setPreviousContent(safePreviousContent);
       setLastChangeTime(Date.now());
 
-      // Trigger feedback analysis
-      analyzeFeedbackTrigger(prevContent, content);
+      // Trigger feedback analysis with safe values
+      analyzeFeedbackTrigger(safePreviousContent, safeContent);
     }
   }, [content]);
 
@@ -100,12 +105,22 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
     }
   };
 
+  // FIXED: Coach tip function with proper error handling
   const coachTip = async (paragraph: string) => {
     try {
-      const response = await generateChatResponse(
-        `Please provide a brief, encouraging writing tip for this paragraph: "${paragraph}". Keep it under 50 words and focus on one specific improvement.`,
-        'coach'
-      );
+      // Validate input
+      if (!paragraph || typeof paragraph !== 'string' || paragraph.trim().length === 0) {
+        throw new Error('Invalid paragraph provided');
+      }
+
+      const response = await generateChatResponse({
+        userMessage: `Please provide a brief, encouraging writing tip for this paragraph: "${paragraph}". Keep it under 50 words and focus on one specific improvement.`,
+        textType: 'narrative',
+        currentContent: paragraph,
+        wordCount: paragraph.trim().split(/\s+/).length,
+        context: JSON.stringify({ type: 'coach_tip' })
+      });
+      
       return { tip: response };
     } catch (error) {
       console.error('Coach tip error:', error);
@@ -113,13 +128,23 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
     }
   };
 
-  // Analyze content changes for feedback triggers
+  // FIXED: Analyze content changes for feedback triggers with proper validation
   const analyzeFeedbackTrigger = async (prevContent: string, newContent: string) => {
     try {
-      if (!newContent || newContent.trim().length === 0) return;
+      // Safely handle undefined/null values
+      const safePrevContent = prevContent || '';
+      const safeNewContent = newContent || '';
+      
+      if (!safeNewContent || safeNewContent.trim().length === 0) {
+        console.log("No content to analyze");
+        return;
+      }
 
-      const wordCount = newContent.trim().split(/\s+/).filter(word => word.length > 0).length;
-      if (wordCount < 15) return; // Minimum threshold
+      const wordCount = safeNewContent.trim().split(/\s+/).filter(word => word.length > 0).length;
+      if (wordCount < 15) {
+        console.log("Content too short for feedback");
+        return; // Minimum threshold
+      }
 
       // Prevent too frequent feedback
       const now = Date.now();
@@ -129,7 +154,7 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
       }
 
       // Check for word threshold triggers
-      const thresholdResult = detectWordThreshold(prevContent, newContent, 20);
+      const thresholdResult = detectWordThreshold(safePrevContent, safeNewContent, 20);
       if (thresholdResult) {
         console.log("Word threshold trigger detected:", thresholdResult);
         await provideFeedback(thresholdResult.text, thresholdResult.trigger);
@@ -137,8 +162,8 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
       }
 
       // Check for new paragraphs
-      const prevParas = splitParas(prevContent);
-      const newParas = splitParas(newContent);
+      const prevParas = splitParas(safePrevContent);
+      const newParas = splitParas(safeNewContent);
       
       if (newParas.length > prevParas.length) {
         // New paragraph created, provide feedback on the completed one
@@ -151,13 +176,13 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
       }
 
       // Check for significant content addition (every 30 words)
-      const prevWords = prevContent.trim() ? prevContent.trim().split(/\s+/).length : 0;
-      const newWords = newContent.trim() ? newContent.trim().split(/\s+/).length : 0;
+      const prevWords = safePrevContent.trim() ? safePrevContent.trim().split(/\s+/).length : 0;
+      const newWords = safeNewContent.trim() ? safeNewContent.trim().split(/\s+/).length : 0;
       const wordDifference = newWords - prevWords;
 
       if (wordDifference >= 30 && newWords >= 50) {
         console.log("Significant content addition detected");
-        const currentParagraph = newParas[newParas.length - 1] || newContent.slice(-200);
+        const currentParagraph = newParas[newParas.length - 1] || safeNewContent.slice(-200);
         await provideFeedback(currentParagraph, 'progress_milestone');
       }
 
@@ -166,10 +191,12 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
     }
   };
 
-  // Provide feedback for given content
+  // FIXED: Provide feedback with proper validation
   const provideFeedback = async (text: string, trigger: string) => {
     try {
+      // Validate input
       if (!text || typeof text !== 'string' || text.trim().length === 0) {
+        console.log("Invalid text provided for feedback");
         return;
       }
 
@@ -202,18 +229,14 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
         });
 
         setFeedbackCount(prev => prev + 1);
-
-        // Hide quick questions after first interaction
-        setShowQuickQuestions(false);
-
       } catch (error) {
-        console.error("Coach tip failed:", error);
+        console.log("Coach tip failed:", error);
         
         // Remove typing indicator and add fallback response
         setMessages(prev => {
           const withoutTyping = prev.filter(msg => !msg.isTyping);
           return [...withoutTyping, {
-            id: 'coach-' + Date.now(),
+            id: 'fallback-' + Date.now(),
             text: `✨ ${getVariedFallbackTip(text, feedbackCount)}`,
             isUser: false,
             timestamp: new Date(),
@@ -223,104 +246,39 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
 
         setFeedbackCount(prev => prev + 1);
       }
-
     } catch (error) {
       console.error("Provide feedback error:", error);
     } finally {
       setIsAITyping(false);
     }
   };
-    // Quick question templates
-  const quickQuestions = [
-    "How can I improve my introduction?",
-    "What's a good synonym for 'said'?",
-    "Help me with my conclusion",
-    "How do I make my characters more interesting?",
-    "What makes a good story hook?"
-  ];
 
-  const handleQuickQuestion = (question: string) => {
-    setInputMessage(question);
-    handleSendMessage(question);
-    setShowQuickQuestions(false);
-  };
-
-  // Event bus listener (backup method)
-  useEffect(() => {
-    const handler = async (p: { 
-      paragraph: string; 
-      index: number; 
-      wordCount?: number; 
-      trigger?: string;
-    }) => {
-      console.log("Event bus paragraph received:", p);
-      await provideFeedback(p.paragraph, p.trigger || 'event_bus');
-    };
-    
-    eventBus.on("paragraph.ready", handler);
-    return () => eventBus.off("paragraph.ready", handler);
-  }, [lastFeedbackTime, feedbackCount]);
-
-  // Varied fallback tips that change based on content and feedback count
-  const getVariedFallbackTip = (paragraph: string, feedbackCount: number): string => {
-    const text = paragraph.toLowerCase();
-    const wordCount = paragraph.trim().split(/\s+/).length;
-    
-    // Analyze content for specific feedback
-    const hasDialogue = text.includes('\"') || text.includes("\'");
-    const hasAction = /\b(ran|jumped|walked|moved|grabbed|pushed|pulled|went|came|looked|saw)\b/.test(text);
-    const hasEmotion = /\b(happy|sad|angry|excited|scared|worried|surprised|felt|feeling)\b/.test(text);
-    const hasDescription = /\b(beautiful|dark|bright|cold|warm|loud|quiet|big|small|old|new)\b/.test(text);
-    
-    // Rotate through different types of feedback
-    const feedbackTypes = [
-      // Dialogue feedback
-      () => hasDialogue ? 
-        "Great dialogue! 💬 Try varying your dialogue tags - instead of 'said', use 'whispered', 'exclaimed', or 'muttered' to show how characters speak." :
-        "Consider adding some dialogue to bring your characters to life! 💬 What might they say in this moment?",
-      
-      // Action feedback  
-      () => hasAction ?
-        "I love the action in your writing! 🏃‍♂️ Try adding more specific details about how the character moves - are they stumbling, striding, or tiptoeing?" :
-        "Try adding some action to make your scene more dynamic! What is your character doing with their hands, feet, or body?",
-      
-      // Emotion feedback
-      () => hasEmotion ?
-        "You're doing well showing emotions! 😊 Instead of just naming feelings, try showing them through actions - like 'her hands trembled' instead of 'she was nervous'." :
-        "How is your character feeling right now? Try showing their emotions through their actions, expressions, or thoughts! 🎭",
-      
-      // Description feedback
-      () => hasDescription ?
-        "Nice descriptive language! 🎨 Try engaging more senses - what does your character hear, smell, or feel in this scene?" :
-        "Paint a picture with your words! What does your character see, hear, or smell in this moment? 🌟",
-      
-      // Structure feedback
-      () => wordCount > 30 ?
-        "Good paragraph development! 📝 Try varying your sentence lengths - mix short, punchy sentences with longer, flowing ones." :
-        "You're building your story well! Try expanding this section with more details about the setting or character's thoughts. ✨",
-      
-      // Vocabulary feedback
-      () => "Great work! 📚 Challenge yourself to use more specific, vivid words. Instead of 'big', try 'enormous', 'massive', or 'towering'!",
-      
-      // Encouragement
-      () => "You're doing fantastic! 🌟 Keep writing and let your imagination flow. Every word brings your story to life!",
-      
-      // Pacing feedback
-      () => "Nice pacing! ⏰ Remember to balance action scenes with quieter moments where characters can reflect or develop."
+  // FIXED: Get varied fallback tips with proper validation
+  const getVariedFallbackTip = (text: string, count: number): string => {
+    const safeText = text || '';
+    const tips = [
+      "Great progress! Try adding more descriptive details to paint a picture for your readers. 🎨",
+      "Nice work! Consider adding dialogue to bring your characters to life. What might they say? 💬",
+      "You're doing well! Think about using stronger verbs to make your action more exciting. ⚡",
+      "Good writing! Try to show emotions through actions rather than just telling us how characters feel. 😊",
+      "Keep going! Add some sensory details - what can your character see, hear, or smell? 👃",
+      "Excellent! Consider varying your sentence lengths to create better rhythm in your writing. 🎵",
+      "Well done! Think about adding a surprising detail that will hook your reader's attention. 🎣",
+      "Great job! Try using more specific nouns instead of general ones to be more precise. 🎯"
     ];
     
-    // Select feedback type based on count to ensure variety
-    const selectedFeedback = feedbackTypes[feedbackCount % feedbackTypes.length];
-    return selectedFeedback();
+    return tips[count % tips.length];
   };
 
-  const handleSendMessage = async (messageText?: string) => {
-    const textToSend = messageText || inputMessage;
-    if (!textToSend.trim() || isAITyping) return;
+  // FIXED: Handle sending messages with proper validation
+  const handleSendMessage = async () => {
+    const message = inputMessage.trim();
+    if (!message) return;
 
+    // Add user message
     const userMessage: ChatMessage = {
       id: 'user-' + Date.now(),
-      text: textToSend,
+      text: message,
       isUser: true,
       timestamp: new Date()
     };
@@ -340,13 +298,25 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
     setMessages(prev => [...prev, typingMessage]);
 
     try {
-      const response = await generateChatResponse(textToSend, 'coach');
+      const safeContent = content || '';
+      const wordCount = safeContent.trim() ? safeContent.trim().split(/\s+/).filter(word => word.length > 0).length : 0;
       
-      // Remove typing indicator and add response
+      const response = await generateChatResponse({
+        userMessage: message,
+        textType: 'narrative',
+        currentContent: safeContent,
+        wordCount: wordCount,
+        context: JSON.stringify({ 
+          conversationHistory: messages.slice(-4).map(m => ({ text: m.text, isUser: m.isUser })),
+          writingStage: wordCount < 50 ? 'beginning' : wordCount < 150 ? 'developing' : 'expanding'
+        })
+      });
+
+      // Remove typing indicator and add AI response
       setMessages(prev => {
         const withoutTyping = prev.filter(msg => !msg.isTyping);
         return [...withoutTyping, {
-          id: 'coach-' + Date.now(),
+          id: 'ai-' + Date.now(),
           text: response,
           isUser: false,
           timestamp: new Date()
@@ -354,14 +324,14 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
       });
 
     } catch (error) {
-      console.error('Chat error:', error);
+      console.error('Failed to get AI response:', error);
       
       // Remove typing indicator and add error message
       setMessages(prev => {
         const withoutTyping = prev.filter(msg => !msg.isTyping);
         return [...withoutTyping, {
-          id: 'coach-' + Date.now(),
-          text: "I'm having trouble connecting right now. Please try again in a moment! 🔄",
+          id: 'error-' + Date.now(),
+          text: "I'm having trouble right now, but I'm here to help! Can you try asking your question again? 😊",
           isUser: false,
           timestamp: new Date()
         }];
@@ -371,58 +341,95 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
     }
   };
 
-  // Auto-scroll to bottom when new messages arrive
+  // FIXED: Event bus listener with proper validation
+  useEffect(() => {
+    const handleParagraphReady = (event: any) => {
+      console.log("Event bus paragraph received:", event);
+      
+      // Safely handle the event
+      if (event && event.text && typeof event.text === 'string') {
+        provideFeedback(event.text, event.trigger || 'paragraph_ready');
+      } else {
+        console.log("Invalid paragraph event received:", event);
+      }
+    };
+
+    eventBus.on('paragraph.ready', handleParagraphReady);
+    return () => eventBus.off('paragraph.ready', handleParagraphReady);
+  }, []);
+
+  // Auto-scroll to bottom
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  const quickQuestions = [
+    "How can I improve my introduction?",
+    "What's a good synonym for 'said'?",
+    "Help me with my conclusion",
+    "How do I make my characters more interesting?",
+    "What makes a good story hook?"
+  ];
+
   return (
-    <div className="h-full flex flex-col bg-white">
+    <div className="h-full flex flex-col bg-white rounded-lg">
       {/* Header */}
-      <div className="p-3 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
-        <div className="flex items-center gap-2">
-          <div className="p-1 bg-blue-100 rounded-lg">
-            <MessageSquare className="w-4 h-4 text-blue-600" />
+      <div className="p-4 border-b border-gray-200">
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold text-gray-800 flex items-center">
+            <MessageSquare className="w-4 h-4 mr-2 text-purple-600" />
+            Writing Buddy Chat
+          </h3>
+          <div className="flex items-center space-x-2">
+            <div className={`w-2 h-2 rounded-full ${aiStatus.connected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+            <span className="text-xs text-gray-500">
+              {aiStatus.loading ? 'Checking...' : aiStatus.connected ? 'Online' : 'Offline'}
+            </span>
+            <button
+              onClick={checkAIConnection}
+              className="p-1 hover:bg-gray-100 rounded"
+              disabled={aiStatus.loading}
+            >
+              <RefreshCw className={`w-3 h-3 text-gray-400 ${aiStatus.loading ? 'animate-spin' : ''}`} />
+            </button>
           </div>
-          <div className="flex-1">
-            <h3 className="font-semibold text-sm text-gray-900">Writing Buddy Chat</h3>
-            <p className="text-xs text-gray-600">Ask me anything about writing!</p>
-          </div>
-          <div className={`w-2 h-2 rounded-full ${aiStatus.connected ? 'bg-green-500' : 'bg-red-500'}`} 
-               title={aiStatus.connected ? 'Connected' : 'Disconnected'} />
         </div>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-3">
+      {/* Chat Messages */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {messages.map((message) => (
           <div
             key={message.id}
             className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}
           >
             <div
-              className={`max-w-[85%] p-2 rounded-lg text-sm ${
+              className={`max-w-[80%] p-3 rounded-lg ${
                 message.isUser
-                  ? 'bg-blue-600 text-white rounded-br-sm'
+                  ? 'bg-purple-600 text-white'
                   : message.isFeedback
-                  ? 'bg-green-50 text-green-800 border border-green-200 rounded-bl-sm'
-                  : 'bg-gray-100 text-gray-900 rounded-bl-sm'
+                  ? 'bg-green-50 text-green-800 border border-green-200'
+                  : 'bg-gray-100 text-gray-800'
               }`}
             >
-              {message.isTyping && (
-                <div className="flex items-center gap-2">
-                  <Loader className="w-3 h-3 animate-spin" />
-                  <span>{message.text}</span>
+              <div className="flex items-start space-x-2">
+                {!message.isUser && (
+                  <div className="flex-shrink-0">
+                    {message.isTyping ? (
+                      <Loader className="w-4 h-4 animate-spin" />
+                    ) : message.isFeedback ? (
+                      <Sparkles className="w-4 h-4" />
+                    ) : (
+                      <Bot className="w-4 h-4" />
+                    )}
+                  </div>
+                )}
+                <div className="flex-1">
+                  <p className="text-sm whitespace-pre-wrap">{message.text}</p>
+                  <p className="text-xs opacity-70 mt-1">
+                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </p>
                 </div>
-              )}
-              {!message.isTyping && (
-                <p className="leading-relaxed">{message.text}</p>
-              )}
-              <div className={`text-xs mt-1 ${
-                message.isUser ? 'text-blue-100' : 
-                message.isFeedback ? 'text-green-600' : 'text-gray-500'
-              }`}>
-                {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </div>
             </div>
           </div>
@@ -432,48 +439,53 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
 
       {/* Quick Questions */}
       {showQuickQuestions && (
-        <div className="p-3 border-t border-gray-100 bg-gray-50">
-          <p className="text-xs font-medium text-gray-700 mb-2">💡 Quick questions to get started:</p>
-          <div className="space-y-1">
+        <div className="p-4 border-t border-gray-200 bg-gray-50">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-medium text-gray-600">Quick questions to get started:</span>
+            <button
+              onClick={() => setShowQuickQuestions(false)}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <ChevronUp className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="flex flex-wrap gap-2">
             {quickQuestions.map((question, index) => (
               <button
                 key={index}
-                onClick={() => handleQuickQuestion(question)}
-                className="w-full text-left p-1.5 text-xs text-gray-600 hover:bg-gray-200 rounded-md transition-colors duration-150"
+                onClick={() => setInputMessage(question)}
+                className="text-xs px-3 py-1 bg-white border border-gray-200 rounded-full hover:bg-purple-50 hover:border-purple-200 transition-colors"
               >
                 {question}
               </button>
             ))}
           </div>
-          <p className="text-xs text-gray-500 mt-2">✨ I'll also give you automatic feedback as you write!</p>
         </div>
       )}
 
-      {/* Input */}
-      <div className="p-3 border-t border-gray-200 bg-white">
-        <div className="relative">
+      {/* Input Area */}
+      <div className="p-4 border-t border-gray-200">
+        <div className="flex space-x-2">
           <input
             ref={inputRef}
             type="text"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-            placeholder="Ask me about writing..."
-            className="w-full p-2 pr-10 text-sm text-gray-800 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow duration-200"
+            onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+            placeholder="Ask me anything about writing..."
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
             disabled={isAITyping}
           />
           <button
-            onClick={() => handleSendMessage()}
-            disabled={isAITyping || !inputMessage.trim()}
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-gray-500 hover:text-blue-600 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors duration-200"
+            onClick={handleSendMessage}
+            disabled={!inputMessage.trim() || isAITyping}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <Send className="w-4 h-4" />
           </button>
         </div>
-        <div className="flex justify-between items-center mt-2 text-xs text-gray-500">
-          <span>Feedback given: {feedbackCount}</span>
-          <span>Words: {content.trim().split(/\s+/).filter(Boolean).length}</span>
-          <span>Last: {messages[messages.length - 1]?.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+        <div className="mt-2 text-xs text-gray-500">
+          Feedback given: {feedbackCount} • Words: {content ? content.trim().split(/\s+/).filter(word => word.length > 0).length : 0} • Last: {lastChangeTime ? new Date(lastChangeTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Never'}
         </div>
       </div>
     </div>
