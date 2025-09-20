@@ -272,7 +272,7 @@ export function EnhancedWritingLayout({
       console.error('NSW Submit error:', e);
       setEvaluationStatus("error");
       setNswReport(null); // Ensure no report is shown on error
-      alert(e.message || 'An error occurred while submitting for evaluation. Please try again.');
+
     }
   };
 
