@@ -112,24 +112,34 @@ export async function checkOpenAIConnectionStatus(): Promise<boolean> {
   }
 }
 
-// Enhanced chat response function - FIXED VERSION
-export async function generateChatResponse(request: ChatRequest): Promise<string> {
+//export async function generateChatResponse(request: ChatRequest): Promise<string> {
   const { userMessage, textType, currentContent, wordCount, context } = request;
   
-  console.log('Generating chat response...');
+  console.log("Generating chat response...");
   
-  const systemPrompt = `You are an AI Writing Buddy for NSW Selective School exam preparation. You're helping a student with their ${textType} writing.\n\nCONTEXT:\n- Student is writing a ${textType} story\n- Current word count: ${wordCount}\n- ${context || ''}\n\nPERSONALITY:\n- Friendly, encouraging, and supportive\n- Use emojis occasionally to be engaging\n- Speak like a helpful friend, not a formal teacher\n- Keep responses concise but helpful (2-3 sentences max)\n\nFOCUS AREAS:\n- NSW Selective writing criteria\n- Story structure and plot development\n- Character development and emotions\n- Descriptive language and vocabulary\n- Grammar and sentence structure\n- Creative ideas and inspiration\n\nCURRENT CONTENT PREVIEW:\n${(currentContent || '').slice(0, 200)}${(currentContent || '').length > 200 ? '...' : ''}\n\nRespond to the student's question in a helpful, encouraging way.`;
+  // Parse context if it's a stringified JSON
+  let parsedContext = {};
+  try {
+    parsedContext = context ? JSON.parse(context) : {};
+  } catch (e) {
+    console.error("Error parsing context JSON:", e);
+  }
+
+  const systemPrompt = `You are an AI Writing Buddy for NSW Selective School exam preparation. You're helping a student with their ${textType} writing.\n\nCONTEXT:\n- Student is writing a ${textType} story\n- Current word count: ${wordCount}\n- Current writing stage: ${parsedContext.writingStage || "unknown"}\n- Previous conversation history: ${parsedContext.conversationHistory ? JSON.stringify(parsedContext.conversationHistory.slice(-2)) : "none"} (last 2 messages)\n\nPERSONALITY:\n- Friendly, encouraging, and supportive\n- Use emojis occasionally to be engaging\n- Speak like a helpful friend, not a formal teacher\n- Keep responses concise but helpful (2-3 sentences max)\n- Directly address the user's question and refer to their writing when relevant.\n
+FOCUS AREAS:\n- NSW Selective writing criteria\n- Story structure and plot development\n- Character development and emotions\n- Descriptive language and vocabulary\n- Grammar and sentence structure\n- Creative ideas and inspiration\n\nCURRENT WRITING CONTENT (for reference, do not directly edit or rewrite):\n"""\n${currentContent || "No content written yet."}\n"""\n\nBased on the user's question and their current writing, provide a helpful and encouraging response.`;
 
   const userPrompt = `Student question: "${userMessage}"\n\nPlease provide a helpful, encouraging response.`;
 
   try {
-    const response = await makeOpenAICall(systemPrompt, userPrompt, 150);
+    const response = await makeOpenAICall(systemPrompt, userPrompt, 250); // Increased max_tokens for potentially longer, more detailed responses
     return response;
   } catch (error) {
-    console.error('Chat response error:', error);
-    throw error; // Let the calling function handle the fallback
+    console.error("Chat response error:", error);
+    // Fallback to a more informative message if AI fails
+    return "Oops! I'm having a little trouble understanding that right now. Could you please rephrase your question or ask about something specific in your writing? I'm here to help! 😊";
   }
 }
+
 
 // Get synonyms for words
 export async function getSynonyms(word: string): Promise<string[]> {
