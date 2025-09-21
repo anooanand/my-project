@@ -184,9 +184,6 @@ export function EnhancedWritingLayout({
         wordCount
       });
 
-      // Call the original onSubmit for any additional handling
-      await onSubmit(contentToEvaluate, typeToEvaluate);
-
     } catch (e: any) {
       console.error("NSW Submit error:", e);
       setEvaluationStatus("error");
@@ -381,58 +378,27 @@ export function EnhancedWritingLayout({
         </div>
       </div>
 
+      {showNSWEvaluation && (
+        <NSWStandaloneSubmitSystem
+          content={localContent}
+          textType={textType}
+          onComplete={handleNSWEvaluationComplete}
+          onClose={() => setShowNSWEvaluation(false)}
+        />
+      )}
+
       {/* Right side - Coach Panel */}
       {!focusMode && (
         <div className="flex-[3] border-l border-gray-200 bg-white">
           <TabbedCoachPanel
             content={localContent || content}
-            textType={textType}
-            selectedText={selectedText}
             analysis={analysis}
             onApplyFix={handleApplyFix}
-            onNavigate={onNavigate}
+            assistanceLevel={assistanceLevel}
+            textType={textType}
+            selectedText={selectedText}
           />
         </div>
-      )}
-
-      {/* NSW Evaluation Modal */}
-      {showNSWEvaluation && (
-        <NSWStandaloneSubmitSystem
-          content={localContent || content}
-          textType={textType}
-          onComplete={handleNSWEvaluationComplete}
-          onClose={() => {
-            setShowNSWEvaluation(false);
-            setEvaluationStatus("idle");
-          }}
-        />
-      )}
-
-      {/* Modals */}
-      {showPlanningTool && (
-        <PlanningToolModal
-          isOpen={showPlanningTool}
-          onClose={() => setShowPlanningTool(false)}
-          textType={textType}
-          plan={plan}
-          onPlanChange={setPlan}
-        />
-      )}
-
-      {showStructureGuide && (
-        <StructureGuideModal
-          isOpen={showStructureGuide}
-          onClose={() => setShowStructureGuide(false)}
-          textType={textType}
-        />
-      )}
-
-      {showTips && (
-        <TipsModal
-          isOpen={showTips}
-          onClose={() => setShowTips(false)}
-          textType={textType}
-        />
       )}
     </div>
   );
