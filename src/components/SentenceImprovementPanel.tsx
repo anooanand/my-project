@@ -70,31 +70,17 @@ export const SentenceImprovementPanel: React.FC<SentenceImprovementPanelProps> =
     setError(null);
 
     try {
-      const prompt = `Analyze this ${textType} writing and identify 3 specific sentences that could be improved. For each sentence, provide:
-1. The exact original sentence from the text
-2. An improved version with better vocabulary, structure, or clarity
-3. A brief explanation of the improvement
+      // Simplified prompt that's more likely to work with the current API
+      const prompt = `Please analyze this ${textType} writing and suggest 2-3 sentence improvements. 
 
-Text to analyze:
-"${text}"
+Text: "${text}"
 
-Format your response as JSON:
-{
-  "suggestions": [
-    {
-      "original": "exact sentence from text",
-      "improved": "enhanced version",
-      "explanation": "why this is better",
-      "type": "vocabulary|structure|clarity|conciseness"
-    }
-  ]
-}
+For each suggestion, provide:
+- Original: [exact sentence from the text]
+- Improved: [better version]  
+- Explanation: [why it's better]
 
-Focus on sentences that would benefit from:
-- More sophisticated vocabulary
-- Better sentence structure
-- Clearer expression
-- More engaging language`;
+Focus on making sentences more engaging and sophisticated.`;
 
       const response = await generateChatResponse({
         userMessage: prompt,
@@ -104,37 +90,129 @@ Focus on sentences that would benefit from:
         context: JSON.stringify({ type: 'sentence_analysis' })
       });
 
+      console.log('AI Response for sentence analysis:', response);
+
+      // Try multiple parsing approaches
+      let contextualExamples: SentenceExample[] = [];
+      
+      // First try JSON parsing
       try {
         const parsed = JSON.parse(response);
         if (parsed.suggestions && Array.isArray(parsed.suggestions)) {
-          const contextualExamples: SentenceExample[] = parsed.suggestions.map((suggestion: any, index: number) => ({
+          contextualExamples = parsed.suggestions.map((suggestion: any, index: number) => ({
             original: suggestion.original || `Sentence ${index + 1}`,
             improved: suggestion.improved || 'Improved version',
             explanation: suggestion.explanation || 'Enhancement explanation',
             type: suggestion.type || 'vocabulary',
             isContextual: true
           }));
-
-          setExamples(contextualExamples.length > 0 ? contextualExamples : FALLBACK_EXAMPLES);
-          setLastAnalyzedContent(text);
-        } else {
-          throw new Error('Invalid response format');
         }
-      } catch (parseError) {
-        console.error('Failed to parse AI response:', parseError);
-        // Try to extract suggestions from unstructured response
-        const contextualExamples = extractSuggestionsFromText(response, text);
-        setExamples(contextualExamples.length > 0 ? contextualExamples : FALLBACK_EXAMPLES);
-        setLastAnalyzedContent(text);
+      } catch (jsonError) {
+        console.log('JSON parsing failed, trying text extraction');
+        // Try to extract from structured text response
+        contextualExamples = extractSuggestionsFromText(response, text);
       }
+
+      // If we still don't have good examples, try to generate them from the content
+      if (contextualExamples.length === 0) {
+        contextualExamples = generateContextualExamples(text);
+      }
+
+      setExamples(contextualExamples.length > 0 ? contextualExamples : FALLBACK_EXAMPLES);
+      setLastAnalyzedContent(text);
 
     } catch (error) {
       console.error('Error analyzing content:', error);
-      setError('Unable to analyze your writing right now. Showing general examples.');
-      setExamples(FALLBACK_EXAMPLES);
+      // Generate contextual examples based on the actual content
+      const contextualExamples = generateContextualExamples(text);
+      setExamples(contextualExamples.length > 0 ? contextualExamples : FALLBACK_EXAMPLES);
+      setError('AI analysis unavailable. Showing suggestions based on your content.');
     } finally {
       setIsAnalyzing(false);
     }
+  };
+
+  // Generate contextual examples based on actual content
+  const generateContextualExamples = (text: string): SentenceExample[] => {
+    const examples: SentenceExample[] = [];
+    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 10);
+    
+    // Look for common patterns that can be improved
+    for (const sentence of sentences.slice(0, 3)) {
+      const trimmed = sentence.trim();
+      if (!trimmed) continue;
+      
+      let improved = trimmed;
+      let explanation = '';
+      let type: 'clarity' | 'conciseness' | 'vocabulary' | 'structure' = 'vocabulary';
+      
+      // Check for simple words that can be enhanced
+      if (trimmed.toLowerCase().includes(' said ')) {
+        improved = trimmed.replace(/\bsaid\b/gi, 'whispered');
+        explanation = 'Replaced "said" with "whispered" to show how the character spoke.';
+        type = 'vocabulary';
+      } else if (trimmed.toLowerCase().includes(' big ')) {
+        improved = trimmed.replace(/\bbig\b/gi, 'enormous');
+        explanation = 'Replaced "big" with "enormous" for more impact.';
+        type = 'vocabulary';
+      } else if (trimmed.toLowerCase().includes(' good ')) {
+        improved = trimmed.replace(/\bgood\b/gi, 'excellent');
+        explanation = 'Replaced "good" with "excellent" for stronger description.';
+        type = 'vocabulary';
+      } else if (trimmed.toLowerCase().includes(' went ')) {
+        improved = trimmed.replace(/\bwent\b/gi, 'rushed');
+        explanation = 'Replaced "went" with "rushed" to show how the character moved.';
+        type = 'vocabulary';
+      } else if (trimmed.toLowerCase().includes(' got ')) {
+        improved = trimmed.replace(/\bgot\b/gi, 'discovered');
+        explanation = 'Replaced "got" with "discovered" for more precise meaning.';
+        type = 'vocabulary';
+      } else if (trimmed.toLowerCase().includes(' very ')) {
+        improved = trimmed.replace(/\bvery\s+(\w+)/gi, (match, word) => {
+          const intensifiers: { [key: string]: string } = {
+            'happy': 'ecstatic',
+            'sad': 'devastated',
+            'scared': 'terrified',
+            'excited': 'thrilled',
+            'tired': 'exhausted',
+            'angry': 'furious'
+          };
+          return intensifiers[word.toLowerCase()] || `extremely ${word}`;
+        });
+        explanation = 'Replaced "very + adjective" with a stronger single word.';
+        type = 'vocabulary';
+      } else if (trimmed.length > 20) {
+        // For longer sentences, suggest adding descriptive details
+        const words = trimmed.split(' ');
+        if (words.length > 5) {
+          // Add an adjective before a noun
+          for (let i = 0; i < words.length - 1; i++) {
+            if (/^(door|room|book|tree|house|car|person|man|woman|boy|girl)$/i.test(words[i])) {
+              const adjectives = ['mysterious', 'ancient', 'weathered', 'gleaming', 'shadowy'];
+              const randomAdj = adjectives[Math.floor(Math.random() * adjectives.length)];
+              words[i] = `${randomAdj} ${words[i]}`;
+              improved = words.join(' ');
+              explanation = `Added "${randomAdj}" to create a more vivid image.`;
+              type = 'vocabulary';
+              break;
+            }
+          }
+        }
+      }
+      
+      // Only add if we actually made an improvement
+      if (improved !== trimmed && improved.length > trimmed.length) {
+        examples.push({
+          original: trimmed,
+          improved: improved,
+          explanation: explanation,
+          type: type,
+          isContextual: true
+        });
+      }
+    }
+    
+    return examples;
   };
 
   // Extract suggestions from unstructured AI response
