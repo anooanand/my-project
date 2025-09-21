@@ -141,20 +141,6 @@ export function EnhancedWritingLayout({
     onChange(newContent);
   };
 
-  // Listen for submit events from AppContent
-  useEffect(() => {
-    const handleSubmitEvent = (event: CustomEvent) => {
-      console.log("📨 EnhancedWritingLayout: Received submit event:", event.detail);
-      handleNSWSubmit(event.detail.content, event.detail.textType);
-    };
-
-    window.addEventListener("submitForEvaluation", handleSubmitEvent as EventListener);
-    
-    return () => {
-      window.removeEventListener("submitForEvaluation", handleSubmitEvent as EventListener);
-    };
-  }, [localContent, content, textType]); // Added dependencies to ensure handleNSWSubmit has fresh state
-
   // Track content changes for word count and coach feedback
   useEffect(() => {
     const currentContent = localContent || content;
@@ -252,17 +238,8 @@ export function EnhancedWritingLayout({
     setAnalysis(convertedAnalysis);
   };
 
-  const handleSubmitForEvaluation = async () => {
-    // Create a new CustomEvent with the latest content
-    const submitEvent = new CustomEvent("submitForEvaluation", {
-      detail: {
-        content: localContent,
-        textType: textType,
-      },
-    });
-
-    // Dispatch the event to the window
-    window.dispatchEvent(submitEvent);
+  const handleSubmitForEvaluation = async (contentToSubmit: string, typeToSubmit: string) => {
+    await handleNSWSubmit(contentToSubmit, typeToSubmit);
   };
 
   const handleApplyFix = (fix: LintFix) => {
@@ -365,7 +342,7 @@ export function EnhancedWritingLayout({
             <WritingArea
               content={currentContent}
               onChange={handleContentChange}
-              onSubmit={() => handleSubmitForEvaluation(localContent, textType)}
+              onSubmit={handleSubmitForEvaluation}
               textType={textType}
               assistanceLevel={assistanceLevel}
               selectedText={selectedText}
@@ -385,49 +362,63 @@ export function EnhancedWritingLayout({
         {/* Submit for Evaluation Button */}
         <div className="px-4 pb-4">
           <button
-            onClick={handleSubmitForEvaluation}
+            onClick={() => handleSubmitForEvaluation(localContent, textType)}
             disabled={evaluationStatus === "loading" || !hasContent}
             className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center"
           >
             {evaluationStatus === "loading" ? (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                <span>Evaluating...</span>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                Analyzing your writing...
               </>
             ) : (
               <>
-                <Target className="w-5 h-5" />
-                <span>Submit for Evaluation</span>
+                <Target className="w-5 h-5 mr-2" />
+                Submit for Evaluation
               </>
             )}
           </button>
         </div>
       </div>
 
-      {/* Right side - Coach Panel - FIXED: Pass content prop properly */}
-              <div className="flex-[3] flex flex-col min-w-0">
+      {/* Right side - Coach Panel */}
+      {!focusMode && (
+        <div className="flex-[3] border-l border-gray-200 bg-white">
+          <TabbedCoachPanel
+            content={localContent || content}
+            textType={textType}
+            selectedText={selectedText}
+            analysis={analysis}
+            onApplyFix={handleApplyFix}
+            onNavigate={onNavigate}
+          />
+        </div>
+      )}
 
-        <TabbedCoachPanel
-          analysis={analysis}
-          onApplyFix={handleApplyFix}
-          content={currentContent} // FIXED: Pass the current content
+      {/* NSW Evaluation Modal */}
+      {showNSWEvaluation && (
+        <NSWStandaloneSubmitSystem
+          content={localContent || content}
           textType={textType}
-          onWordSelect={(word: string) => {
-            // Handle word selection for vocabulary enhancement
-            console.log('Word selected:', word);
+          onComplete={handleNSWEvaluationComplete}
+          onClose={() => {
+            setShowNSWEvaluation(false);
+            setEvaluationStatus("idle");
           }}
         />
-      </div>
-      
+      )}
+
+      {/* Modals */}
       {showPlanningTool && (
         <PlanningToolModal
           isOpen={showPlanningTool}
           onClose={() => setShowPlanningTool(false)}
-          onSavePlan={setPlan}
-          initialPlan={plan}
-          currentPrompt={currentPrompt}
+          textType={textType}
+          plan={plan}
+          onPlanChange={setPlan}
         />
       )}
+
       {showStructureGuide && (
         <StructureGuideModal
           isOpen={showStructureGuide}
@@ -435,21 +426,12 @@ export function EnhancedWritingLayout({
           textType={textType}
         />
       )}
+
       {showTips && (
         <TipsModal
           isOpen={showTips}
           onClose={() => setShowTips(false)}
           textType={textType}
-        />
-      )}
-      {showNSWEvaluation && (
-        <NSWStandaloneSubmitSystem
-          isOpen={showNSWEvaluation}
-          onClose={() => setShowNSWEvaluation(false)}
-          content={currentContent}
-          textType={textType}
-          onEvaluationComplete={handleNSWEvaluationComplete}
-          evaluationStatus={evaluationStatus}
         />
       )}
     </div>
