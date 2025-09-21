@@ -17,6 +17,8 @@ interface EvaluationReport {
   essayContent: string; // ENHANCED: Include the student's actual essay in the report
   childFriendlyExplanations: ChildFriendlyExplanations; // NEW: Child-friendly rubric explanations
   promptSimilarityWarning?: string; // NEW: Warning for prompt copying
+  relevancyScore?: number; // NEW: Relevancy score
+  relevancyFeedback?: string[]; // NEW: Relevancy feedback
 }
 
 interface DomainScore {
@@ -133,8 +135,11 @@ export class NSWEvaluationReportGenerator {
     
     const analysis = this.analyzeEssay(essayContent);
     
+    // Calculate relevancy score
+    const relevancy = this.assessRelevancy(essayContent, prompt);
+    
     // Score each domain according to NSW criteria with enhanced feedback
-    const contentAndIdeas = this.scoreContentAndIdeas(essayContent, analysis, "Content & Ideas");
+    const contentAndIdeas = this.scoreContentAndIdeas(essayContent, analysis, "Content & Ideas", relevancy.score);
     const textStructure = this.scoreTextStructure(essayContent, analysis, "Text Structure");
     const languageFeatures = this.scoreLanguageFeatures(essayContent, analysis, "Language Features");
     const spellingAndGrammar = this.scoreSpellingAndGrammar(essayContent, analysis, "Spelling & Grammar");
@@ -181,7 +186,9 @@ export class NSWEvaluationReportGenerator {
       areasForImprovement: specificImprovements,
       essayContent: essayContent,
       childFriendlyExplanations,
-      promptSimilarityWarning
+      promptSimilarityWarning,
+      relevancyScore: relevancy.score,
+      relevancyFeedback: relevancy.feedback
     };
   }
   
@@ -364,6 +371,63 @@ export class NSWEvaluationReportGenerator {
     };
   }
   
+  // NEW: Assess relevancy of essay to prompt
+  private static assessRelevancy(essay: string, prompt: string): {
+    score: number;
+    feedback: string[];
+  } {
+    const cleanEssay = essay.toLowerCase().replace(/[^\w\s]/g, '').trim();
+    const cleanPrompt = prompt.toLowerCase().replace(/[^\w\s]/g, '').trim();
+
+    if (cleanEssay.length === 0) {
+      return { score: 0, feedback: ["Essay is empty, cannot assess relevancy to prompt."] };
+    }
+
+    // Extract keywords from prompt (simple approach)
+    const promptKeywords = cleanPrompt.split(/\s+/)
+      .filter(word => word.length > 3 && !['the', 'a', 'an', 'is', 'was', 'and', 'or', 'but', 'what', 'do', 'you', 'your', 'it', 'its', 'to', 'in', 'of', 'for', 'with', 'behind', 'upon', 'as', 'that', 'this', 'where', 'how', 'does', 'will', 'next', 'describe', 'feelings', 'stand', 'before', 'open', 'turn', 'back', 'discover', 'other', 'side', 'change', 'who', 'when', 'why', 'how', 'which', 'where', 'from', 'then', 'finally', 'meanwhile', 'consequently', 'nevertheless', 'moreover', 'first', 'then', 'finally', 'next'])
+      .filter((value, index, self) => self.indexOf(value) === index); // Unique keywords
+
+    // Count how many prompt keywords appear in the essay
+    let keywordMatches = 0;
+    promptKeywords.forEach(keyword => {
+      if (cleanEssay.includes(keyword)) {
+        keywordMatches++;
+      }
+    });
+
+    // Calculate a basic relevancy score
+    let score = 0;
+    const feedback: string[] = [];
+
+    if (promptKeywords.length > 0) {
+      score = (keywordMatches / promptKeywords.length) * 10; // Score out of 10
+    }
+
+    // Adjust score based on essay length relative to prompt length (to discourage very short, keyword-stuffed essays)
+    const essayWordCount = cleanEssay.split(/\s+/).length;
+    const promptWordCount = cleanPrompt.split(/\s+/).length;
+
+    if (essayWordCount < promptWordCount * 0.5) { // Essay is too short compared to prompt
+      score *= 0.5; // Halve the score
+      feedback.push("Your essay is quite short compared to the prompt. Make sure to develop your ideas fully.");
+    }
+
+    score = Math.max(0, Math.min(10, Math.round(score))); // Ensure score is between 0 and 10
+
+    if (score >= 8) {
+      feedback.push("Your essay is highly relevant to the prompt, addressing all key aspects.");
+    } else if (score >= 5) {
+      feedback.push("Your essay shows good relevancy to the prompt, covering most key elements.");
+    } else if (score >= 2) {
+      feedback.push("Your essay has some relevant points, but could address the prompt more directly.");
+    } else {
+      feedback.push("Your essay shows minimal relevancy to the prompt. Please read the prompt carefully and ensure your writing directly responds to it.");
+    }
+
+    return { score, feedback };
+  }
+
   private static analyzeEssay(essay: string): DetailedFeedback {
     const words = essay.trim().split(/\s+/).filter(word => word.length > 0);
     const sentences = essay.split(/[.!?]+/).filter(s => s.trim().length > 0);
@@ -424,7 +488,7 @@ export class NSWEvaluationReportGenerator {
   }
   
   // ENHANCED: Improved scoring with concrete examples and actionable suggestions
-  private static scoreContentAndIdeas(essay: string, analysis: DetailedFeedback, domainName: string): DomainScore {
+  private static scoreContentAndIdeas(essay: string, analysis: DetailedFeedback, domainName: string, relevancyScore: number): DomainScore {
     let score = 5; // Start with proficient
     const feedback: string[] = [];
     const specificExamples: string[] = [];
@@ -436,8 +500,8 @@ export class NSWEvaluationReportGenerator {
     const ideaDevelopmentScore = this.assessIdeaDevelopment(essay);
     const engagementScore = this.assessEngagement(essay);
     
-    // Calculate score based on multiple factors
-    const avgScore = (creativityScore + ideaDevelopmentScore + engagementScore) / 3;
+    // Calculate score based on multiple factors, including relevancy
+    const avgScore = (creativityScore + ideaDevelopmentScore + engagementScore + relevancyScore) / 4;
     score = Math.round(avgScore);
     
     // Generate specific feedback with concrete examples
