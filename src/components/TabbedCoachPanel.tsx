@@ -4,13 +4,12 @@ import { RubricPanel } from "./RubricPanel";
 import { VocabCoach } from "./VocabCoach";
 import { ReportModal } from "./ReportModal";
 import { VocabSuggestionPanel } from "./VocabSuggestionPanel";
-import { NarrativeStructureGuide } from "./NarrativeStructureGuide";
 import { SentenceImprovementPanel } from "./SentenceImprovementPanel";
 import { FeedbackChat } from "./FeedbackChat";
 import type { DetailedFeedback, LintFix } from "../types/feedback";
 import { generateChatResponse, checkOpenAIConnectionStatus } from '../lib/openai';
 import { detectWordThreshold, splitParas } from '../lib/paragraphDetection';
-import { ExternalLink, FileText, MessageSquare, BarChart3, BookOpen, TrendingUp, Bot, User, Lightbulb, Sparkles, ArrowRight, RefreshCcw, ChevronDown, ChevronUp, Loader } from 'lucide-react';
+import { ExternalLink, FileText, MessageSquare, BarChart3, TrendingUp, Bot, User, Lightbulb, Sparkles, ArrowRight, RefreshCcw, ChevronDown, ChevronUp, Loader } from 'lucide-react';
 
 type Props = { 
   analysis: DetailedFeedback | null; 
@@ -469,38 +468,6 @@ export function TabbedCoachPanel({
             
             {tab === "toolkit" && (
               <div className="h-full overflow-auto p-4 space-y-6">
-                {/* Story Adventure Mission: Narrative Structure */}
-                <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg">
-                  <div className="p-4 border-b border-green-200">
-                    <div className="flex items-center space-x-2">
-                      <BookOpen className="h-5 w-5 text-green-600" />
-                      <h3 className="font-semibold text-green-800">📚 Story Adventure Mission: Narrative Structure</h3>
-                    </div>
-                  </div>
-                  
-                  <div className="p-4">
-                    {/* Use the existing NarrativeStructureGuide component */}
-                    {textType === 'narrative' && (
-                      <NarrativeStructureGuide
-                        content={content}
-                        onContentUpdate={handleContentChange}
-                        className="border-0 shadow-none bg-transparent"
-                      />
-                    )}
-                    
-                    {/* Fallback for non-narrative types */}
-                    {textType !== 'narrative' && (
-                      <div className="text-center py-8">
-                        <BookOpen className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                        <h4 className="font-semibold text-gray-600 mb-2">Structure Guide</h4>
-                        <p className="text-sm text-gray-500">
-                          Structure guidance for {textType} writing will appear here.
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-
                 {/* Sentence Improvement Lab */}
                 <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg">
                   <div className="p-4 border-b border-yellow-200">
