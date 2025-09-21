@@ -70,14 +70,27 @@ export function TabbedCoachPanel({
 
   const handleSentenceImprovement = (original: string, improved: string) => {
     console.log(`Improve sentence: "${original}" -> "${improved}"`);
+    
+    // Switch to Coach tab to show the feedback
+    setTab('coach');
+    
     // Add a chat message about the improvement
     const improvementMessage: FeedbackMessage = {
       id: Date.now().toString(),
-      text: `Great! I've suggested changing "${original}" to "${improved}". This makes your writing more sophisticated and engaging! 🎯`,
+      text: `💡 **Sentence Improvement Applied!**\n\n**Original:** "${original}"\n\n**Improved:** "${improved}"\n\nThis enhancement makes your writing more sophisticated and engaging! Keep up the great work! 🎯✨`,
       timestamp: new Date(),
-      isUser: false
+      isUser: false,
+      isFeedback: true
     };
+    
     setChatMessages(prev => [...prev, improvementMessage]);
+    
+    // Scroll to bottom after a brief delay to ensure the message is rendered
+    setTimeout(() => {
+      if (chatEndRef.current) {
+        chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 100);
   };
 
   const handleContentChange = (newContent: string) => {
