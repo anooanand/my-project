@@ -4,14 +4,14 @@ import { NSWEvaluationReportGenerator } from './NSWEvaluationReportGenerator';
 interface NSWStandaloneSubmitSystemProps {
   content: string;
   textType: string;
-  onEvaluationComplete: (report: any) => void;
+  onComplete: (report: any) => void;
   onClose: () => void;
 }
 
 export function NSWStandaloneSubmitSystem({
   content,
   textType,
-  onEvaluationComplete,
+  onComplete,
   onClose,
 }: NSWStandaloneSubmitSystemProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -46,11 +46,11 @@ export function NSWStandaloneSubmitSystem({
           targetWordCountMax: targetWordCountMax,
         });
         console.log("NSWStandaloneSubmitSystem: Report generated successfully:", report);
-        onEvaluationComplete(report);
+        onComplete(report);
       } catch (err: any) {
         console.error("NSWStandaloneSubmitSystem: Submission error:", err);
         setError(err.message || "Failed to generate analysis report. Please try again.");
-        onEvaluationComplete(null); // Indicate failure
+        onComplete(null); // Indicate failure
       } finally {
         setIsSubmitting(false);
         onClose(); // Close the modal after submission (success or error)
@@ -58,8 +58,7 @@ export function NSWStandaloneSubmitSystem({
     };
 
     submitEvaluation();
-  }, [content, textType, onEvaluationComplete, onClose]);
+  }, [content, textType, onComplete, onClose]);
 
   return null; // This component no longer renders UI directly
 }
-
