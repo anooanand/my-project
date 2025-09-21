@@ -6,8 +6,9 @@ import { ReportModal } from "./ReportModal";
 import { VocabSuggestionPanel } from "./VocabSuggestionPanel";
 import { NarrativeStructureGuide } from "./NarrativeStructureGuide";
 import { SentenceImprovementPanel } from "./SentenceImprovementPanel";
+import { FeedbackChat } from "./FeedbackChat";
 import type { DetailedFeedback, LintFix } from "../types/feedback";
-import { ExternalLink, FileText, MessageSquare, BarChart3, BookOpen, TrendingUp } from 'lucide-react';
+import { ExternalLink, FileText, MessageSquare, BarChart3, BookOpen, TrendingUp, Bot, User, Lightbulb, Sparkles, ArrowRight, RefreshCcw, ChevronDown, ChevronUp } from 'lucide-react';
 
 type Props = { 
   analysis: DetailedFeedback | null; 
@@ -17,6 +18,13 @@ type Props = {
   onWordSelect?: (word: string) => void;
 };
 
+interface FeedbackMessage {
+  id: string;
+  text: string;
+  timestamp: Date;
+  isUser: boolean;
+}
+
 export function TabbedCoachPanel({
   analysis,
   onApplyFix,
@@ -24,8 +32,18 @@ export function TabbedCoachPanel({
   textType = "narrative",
   onWordSelect = () => {}
 }: Props) {
-  const [tab, setTab] = useState<"coach" | "analysis" | "vocab" | "progress">("coach");
+  const [tab, setTab] = useState<"coach" | "toolkit">("coach");
   const [showFullReport, setShowFullReport] = useState(false);
+  const [expandedPhases, setExpandedPhases] = useState<{ [key: string]: boolean }>({});
+  const [chatMessages, setChatMessages] = useState<FeedbackMessage[]>([
+    {
+      id: '1',
+      text: 'Hi I\'m your AI Writing Buddy! 🤖 I\'m here to help you write amazing stories. Ask me anything about writing, or just start typing and I\'ll give you feedback!',
+      timestamp: new Date(),
+      isUser: false
+    }
+  ]);
+  const [newMessage, setNewMessage] = useState('');
 
   const handleWordReplace = (oldWord: string, newWord: string, position: number) => {
     console.log(`Replace "${oldWord}" with "${newWord}" at position ${position}`);
@@ -39,21 +57,72 @@ export function TabbedCoachPanel({
 
   const handleSentenceImprovement = (original: string, improved: string) => {
     console.log(`Improve sentence: "${original}" -> "${improved}"`);
-    // In a real app, this would update the content state in the parent component
+    // Add a chat message about the improvement
+    const improvementMessage: FeedbackMessage = {
+      id: Date.now().toString(),
+      text: `Great! I've suggested changing "${original}" to "${improved}". This makes your writing more sophisticated and engaging! 🎯`,
+      timestamp: new Date(),
+      isUser: false
+    };
+    setChatMessages(prev => [...prev, improvementMessage]);
   };
 
   const handleContentChange = (newContent: string) => {
     console.log(`Content updated: ${newContent.length} characters`);
     // In a real app, this would update the content state in the parent component
   };
+
+  const togglePhase = (phaseId: string) => {
+    setExpandedPhases(prev => ({
+      ...prev,
+      [phaseId]: !prev[phaseId]
+    }));
+  };
+
+  const handleSendMessage = () => {
+    if (newMessage.trim()) {
+      const userMessage: FeedbackMessage = {
+        id: Date.now().toString(),
+        text: newMessage,
+        timestamp: new Date(),
+        isUser: true
+      };
+      
+      setChatMessages(prev => [...prev, userMessage]);
+      
+      // Simulate AI response
+      setTimeout(() => {
+        const aiResponse: FeedbackMessage = {
+          id: (Date.now() + 1).toString(),
+          text: generateAIResponse(newMessage),
+          timestamp: new Date(),
+          isUser: false
+        };
+        setChatMessages(prev => [...prev, aiResponse]);
+      }, 1000);
+      
+      setNewMessage('');
+    }
+  };
+
+  const generateAIResponse = (userMessage: string): string => {
+    const responses = [
+      "That's a great question! 🌟 To make your paragraph even more engaging, try adding a few descriptive words. For example, describe the sounds of the whispering or the colors of the flickering light. This will help readers feel more immersed in your magical forest! Keep it up!",
+      "What a captivating start! 🎭 To make your paragraph even more engaging, try adding a few descriptive words. For example, describe the sounds of the whispering or the colors of the flickering light. This will help readers feel more immersed in your magical forest! Keep it up!",
+      "I love your creativity! ✨ Try to identify sentences in your writing that could be improved using these techniques!",
+      "Great work! 📝 Remember to vary your sentence length to keep readers engaged. Mix short, punchy sentences with longer, more descriptive ones.",
+      "Excellent progress! 🚀 Don't forget to use the 'show, don't tell' technique - instead of saying 'he was scared', describe his trembling hands or racing heart."
+    ];
+    return responses[Math.floor(Math.random() * responses.length)];
+  };
   
   const Tab = ({ id, label, icon: Icon }:{ 
-    id: "coach"|"analysis"|"vocab"|"progress"; 
+    id: "coach" | "toolkit"; 
     label: string;
     icon: React.ComponentType<any>;
   }) => (
     <button
-      className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 ${
+      className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 flex-1 ${
         tab === id 
           ? "bg-white text-purple-600 shadow-sm" 
           : "bg-purple-500/20 text-white/90 hover:bg-purple-500/30"
@@ -61,20 +130,18 @@ export function TabbedCoachPanel({
       onClick={() => setTab(id)}
     >
       <Icon className="w-3 h-3" />
-      <span>{label}</span>
+      <span className="text-center">{label}</span>
     </button>
   );
 
   return (
     <>
       <div className="h-full flex flex-col rounded-2xl bg-gradient-to-br from-purple-600 via-purple-700 to-fuchsia-600 text-white shadow-xl">
-        {/* Tab Navigation - Horizontal Layout */}
+        {/* Tab Navigation - New 2-tab Layout */}
         <div className="p-3 border-b border-white/20">
-          <div className="flex gap-1 justify-between">
-            <Tab id="coach" label="Coach" icon={MessageSquare} />
-            <Tab id="analysis" label="Analysis" icon={BarChart3} />
-            <Tab id="vocab" label="Vocab" icon={BookOpen} />
-            <Tab id="progress" label="Progress" icon={TrendingUp} />
+          <div className="flex gap-1">
+            <Tab id="coach" label="Coach - Interactive AI chat and real-time feedback" icon={MessageSquare} />
+            <Tab id="toolkit" label="Toolkit - Narrative structure guide + sentence improvement lab" icon={BookOpen} />
           </div>
         </div>
 
@@ -83,182 +150,151 @@ export function TabbedCoachPanel({
           <div className="h-full rounded-xl bg-white text-gray-900 shadow-inner">
             {tab === "coach" && (
               <div className="h-full overflow-auto p-4 space-y-4">
-                {/* NSW Narrative Structure Guide */}
-                {textType === 'narrative' && (
-                  <NarrativeStructureGuide
-                    content={content}
-                    onContentUpdate={handleContentChange}
-                    className="border-0 shadow-none bg-transparent"
-                  />
-                )}
-                
-                {/* Sentence Improvement Panel */}
-                <SentenceImprovementPanel
-                  content={content}
-                  textType={textType}
-                  onApplyImprovement={handleSentenceImprovement}
-                  className="border-0 shadow-none bg-transparent"
-                />
-                
-                {/* Original Coach Provider for backward compatibility */}
-                <div className="border-t pt-4">
-                  <CoachProvider content={content} />
-                </div>
-              </div>
-            )}
-            
-            {tab === "analysis" && (
-              <div className="h-full overflow-auto p-4">
-                {analysis ? (
-                  <div className="space-y-4">
-                    {/* NSW Assessment Header */}
-                    <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border border-blue-200">
-                      <div className="flex justify-between items-center mb-3">
-                        <h3 className="font-bold text-lg text-purple-700">NSW Selective Writing Assessment</h3>
-                        <div className="text-right">
-                          <div className="text-3xl font-bold text-blue-600">{analysis.overallScore}/100</div>
-                          <div className="text-sm text-gray-600 font-medium">Overall Score</div>
+                {/* Writing Buddy Chat */}
+                <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg">
+                  <div className="p-4 border-b border-blue-200">
+                    <div className="flex items-center space-x-2">
+                      <Bot className="h-5 w-5 text-blue-600" />
+                      <h3 className="font-semibold text-blue-800">💬 Writing Buddy Chat</h3>
+                    </div>
+                  </div>
+                  
+                  <div className="p-4">
+                    {/* Chat Messages */}
+                    <div className="h-64 overflow-y-auto mb-4 space-y-3">
+                      {chatMessages.map((message) => (
+                        <div key={message.id} className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}>
+                          <div className={`max-w-xs lg:max-w-md px-3 py-2 rounded-lg ${
+                            message.isUser 
+                              ? 'bg-blue-600 text-white' 
+                              : 'bg-white border border-gray-200 text-gray-800'
+                          }`}>
+                            <div className="flex items-start space-x-2">
+                              {!message.isUser && <Bot className="h-4 w-4 mt-0.5 text-blue-600" />}
+                              <div className="flex-1">
+                                <p className="text-sm">{message.text}</p>
+                                <p className={`text-xs mt-1 ${message.isUser ? 'text-blue-100' : 'text-gray-500'}`}>
+                                  {message.timestamp.toLocaleTimeString()}
+                                </p>
+                              </div>
+                              {message.isUser && <User className="h-4 w-4 mt-0.5 text-blue-100" />}
+                            </div>
+                          </div>
                         </div>
+                      ))}
+                    </div>
+                    
+                    {/* Quick Questions */}
+                    <div className="mb-4">
+                      <p className="text-sm text-gray-600 mb-2">Quick questions to get started:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {[
+                          "How can I improve my introduction?",
+                          "What's a good synonym for 'said'?",
+                          "Help me with my conclusion",
+                          "How do I make my characters more interesting?",
+                          "What makes a good story hook?"
+                        ].map((question, index) => (
+                          <button
+                            key={index}
+                            onClick={() => setNewMessage(question)}
+                            className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full hover:bg-blue-200 transition-colors"
+                          >
+                            {question}
+                          </button>
+                        ))}
                       </div>
-                      
-                      {/* Assessment ID */}
-                      <div className="text-xs text-gray-500 mb-3">
-                        Assessment ID: {analysis.assessmentId || 'NSW-' + Date.now().toString().slice(-6)}
-                      </div>
-                      
-                      {/* Criteria Grid */}
-                      <div className="grid grid-cols-2 gap-3 text-sm mb-4">
-                        <div className="bg-white p-3 rounded-lg border">
-                          <div className="flex justify-between items-center">
-                            <span className="font-medium">Ideas & Content</span>
-                            <span className="font-bold text-blue-600">{analysis.criteria.ideasContent.score}/5</span>
-                          </div>
-                          <div className="text-xs text-gray-500 mt-1">30%</div>
-                        </div>
-                        <div className="bg-white p-3 rounded-lg border">
-                          <div className="flex justify-between items-center">
-                            <span className="font-medium">Structure & Organization</span>
-                            <span className="font-bold text-blue-600">{analysis.criteria.structureOrganization.score}/5</span>
-                          </div>
-                          <div className="text-xs text-gray-500 mt-1">25%</div>
-                        </div>
-                        <div className="bg-white p-3 rounded-lg border">
-                          <div className="flex justify-between items-center">
-                            <span className="font-medium">Language & Vocabulary</span>
-                            <span className="font-bold text-blue-600">{analysis.criteria.languageVocab.score}/5</span>
-                          </div>
-                          <div className="text-xs text-gray-500 mt-1">25%</div>
-                        </div>
-                        <div className="bg-white p-3 rounded-lg border">
-                          <div className="flex justify-between items-center">
-                            <span className="font-medium">Spelling, Punctuation & Grammar</span>
-                            <span className="font-bold text-blue-600">{analysis.criteria.spellingPunctuationGrammar.score}/5</span>
-                          </div>
-                          <div className="text-xs text-gray-500 mt-1">20%</div>
-                        </div>
-                      </div>
-
-                      {/* View Full Report Button */}
+                    </div>
+                    
+                    {/* Message Input */}
+                    <div className="flex space-x-2">
+                      <input
+                        type="text"
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                        placeholder="Ask me anything about writing..."
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      />
                       <button
-                        onClick={() => setShowFullReport(true)}
-                        className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2 font-medium"
+                        onClick={handleSendMessage}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
                       >
-                        <FileText className="w-4 h-4" />
-                        <span>View Full Report</span>
-                        <ExternalLink className="w-4 h-4" />
+                        Send
                       </button>
                     </div>
-
-                    {/* Quick Fixes Section */}
-                    {(analysis.grammarCorrections.length > 0 || analysis.vocabularyEnhancements.length > 0) && (
-                      <div className="border rounded-lg p-4 bg-yellow-50 border-yellow-200">
-                        <h4 className="font-semibold mb-3 text-yellow-800">Quick Fixes Available</h4>
-                        <div className="space-y-2 max-h-40 overflow-y-auto">
-                          {[...analysis.grammarCorrections, ...analysis.vocabularyEnhancements].slice(0, 5).map((fix, index) => (
-                            <div key={index} className="bg-white p-3 rounded border border-yellow-200">
-                              <div className="text-sm mb-2">
-                                <span className="font-medium text-red-600">"{fix.original}"</span>
-                                <span className="mx-2">→</span>
-                                <span className="font-medium text-green-600">"{fix.replacement}"</span>
-                              </div>
-                              <div className="flex justify-between items-center">
-                                <span className="text-xs text-gray-600">{fix.explanation}</span>
-                                <button
-                                  className="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors"
-                                  onClick={() => onApplyFix(fix)}
-                                >
-                                  Apply Fix
-                                </button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Compact Rubric Panel */}
-                    <div className="border rounded-lg overflow-hidden">
-                      <div className="bg-gray-50 p-3 border-b">
-                        <h4 className="font-semibold text-gray-800">Assessment Criteria</h4>
-                      </div>
-                      <div className="max-h-60 overflow-auto">
-                        <RubricPanel data={analysis} onApplyFix={onApplyFix} />
-                      </div>
-                    </div>
+                    
+                    <p className="text-xs text-gray-500 mt-2">
+                      💡 Feedback given: 1 • Words: {content.split(' ').filter(w => w.length > 0).length} • Last: {new Date().toLocaleTimeString()}
+                    </p>
                   </div>
-                ) : (
-                  <div className="h-full flex items-center justify-center text-center">
-                    <div>
-                      <FileText className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                      <h4 className="font-semibold text-gray-600 mb-2">No Analysis Yet</h4>
-                      <p className="text-sm text-gray-500 max-w-xs">
-                        Submit your writing for evaluation to see your NSW Selective Writing Assessment report here.
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-            
-            {tab === "vocab" && (
-              <div className="h-full overflow-auto p-4 space-y-4">
-                {/* Enhanced Vocab Suggestion Panel */}
-                <VocabSuggestionPanel
-                  content={content}
-                  textType={textType}
-                  onWordReplace={handleWordReplace}
-                  onAddToPersonalList={handleAddToPersonalList}
-                  className="border-0 shadow-none bg-transparent"
-                />
-                
-                {/* Original Vocab Coach for backward compatibility */}
-                <div className="border-t pt-4">
-                  <VocabCoach 
-                    content={content}
-                    textType={textType}
-                    onWordSelect={onWordSelect}
-                    className="border-0 shadow-none bg-transparent"
-                  />
                 </div>
               </div>
             )}
             
-            {tab === "progress" && (
-              <div className="h-full overflow-auto p-4">
-                <div className="text-center py-8">
-                  <TrendingUp className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                  <h4 className="font-semibold text-gray-600 mb-2">Progress Tracking</h4>
-                  <div className="text-sm text-gray-500 space-y-2 max-w-xs mx-auto">
-                    <p>• Track your writing improvement over time</p>
-                    <p>• View score trends across assessments</p>
-                    <p>• Monitor weekly writing goals</p>
-                    <p>• See total words written</p>
+            {tab === "toolkit" && (
+              <div className="h-full overflow-auto p-4 space-y-6">
+                {/* Story Adventure Mission: Narrative Structure */}
+                <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg">
+                  <div className="p-4 border-b border-green-200">
+                    <div className="flex items-center space-x-2">
+                      <BookOpen className="h-5 w-5 text-green-600" />
+                      <h3 className="font-semibold text-green-800">📚 Story Adventure Mission: Narrative Structure</h3>
+                    </div>
                   </div>
-                  <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <p className="text-sm text-blue-700">
-                      Progress tracking will be available after your first assessment.
-                    </p>
+                  
+                  <div className="p-4">
+                    {/* Use the existing NarrativeStructureGuide component */}
+                    {textType === 'narrative' && (
+                      <NarrativeStructureGuide
+                        content={content}
+                        onContentUpdate={handleContentChange}
+                        className="border-0 shadow-none bg-transparent"
+                      />
+                    )}
+                    
+                    {/* Fallback for non-narrative types */}
+                    {textType !== 'narrative' && (
+                      <div className="text-center py-8">
+                        <BookOpen className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                        <h4 className="font-semibold text-gray-600 mb-2">Structure Guide</h4>
+                        <p className="text-sm text-gray-500">
+                          Structure guidance for {textType} writing will appear here.
+                        </p>
+                      </div>
+                    )}
                   </div>
+                </div>
+
+                {/* Sentence Improvement Lab */}
+                <div className="bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg">
+                  <div className="p-4 border-b border-yellow-200">
+                    <div className="flex items-center space-x-2">
+                      <Sparkles className="h-5 w-5 text-orange-600" />
+                      <h3 className="font-semibold text-orange-800">🔬 Sentence Improvement Lab</h3>
+                    </div>
+                  </div>
+
+                  <div className="p-4">
+                    {/* Use the existing SentenceImprovementPanel component */}
+                    <SentenceImprovementPanel
+                      content={content}
+                      textType={textType}
+                      onApplyImprovement={handleSentenceImprovement}
+                      className="border-0 shadow-none bg-transparent"
+                    />
+                  </div>
+                </div>
+
+                {/* Pro Tip */}
+                <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 mb-2">
+                    <Lightbulb className="h-4 w-4 text-purple-600" />
+                    <span className="font-medium text-purple-800">💡 Pro Tip</span>
+                  </div>
+                  <p className="text-sm text-purple-700">
+                    Try to identify sentences in your writing that could be improved using these techniques!
+                  </p>
                 </div>
               </div>
             )}
