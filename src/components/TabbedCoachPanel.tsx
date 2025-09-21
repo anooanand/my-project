@@ -357,15 +357,15 @@ export function TabbedCoachPanel({
     icon: React.ComponentType<any>;
   }) => (
     <button
-      className={`flex items-center space-x-1 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 flex-1 ${
+      className={`flex items-center space-x-2 px-4 py-3 rounded-lg text-sm font-bold transition-all duration-200 flex-1 ${
         tab === id 
-          ? "bg-white text-purple-600 shadow-sm" 
-          : "bg-purple-500/20 text-white/90 hover:bg-purple-500/30"
+          ? "bg-white text-purple-700 shadow-md border-2 border-purple-200" 
+          : "bg-purple-500/20 text-white/90 hover:bg-purple-500/30 hover:text-white"
       }`}
       onClick={() => setTab(id)}
     >
-      <Icon className="w-3 h-3" />
-      <span className="text-center">{label}</span>
+      <Icon className="w-4 h-4" />
+      <span className="text-center font-extrabold">{label}</span>
     </button>
   );
 
@@ -386,17 +386,17 @@ export function TabbedCoachPanel({
             {tab === "coach" && (
               <div className="h-full overflow-auto p-4 space-y-4">
                 {/* Writing Buddy Chat */}
-                <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg">
-                  <div className="p-4 border-b border-blue-200">
+                <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg h-full flex flex-col">
+                  <div className="px-4 py-2 border-b border-blue-200">
                     <div className="flex items-center space-x-2">
-                      <Bot className="h-5 w-5 text-blue-600" />
-                      <h3 className="font-semibold text-blue-800">💬 Writing Buddy Chat</h3>
+                      <Bot className="h-4 w-4 text-blue-600" />
+                      <h3 className="font-medium text-blue-800 text-sm">💬 Writing Buddy Chat</h3>
                     </div>
                   </div>
                   
-                  <div className="p-4">
-                    {/* Chat Messages */}
-                    <div className="h-64 overflow-y-auto mb-4 space-y-3">
+                  <div className="flex-1 flex flex-col">
+                    {/* Chat Messages - Expanded to fill available space */}
+                    <div className="flex-1 overflow-y-auto space-y-3 mb-3">
                       {chatMessages.map((message) => (
                         <div key={message.id} className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}>
                           <div className={`max-w-xs lg:max-w-md px-3 py-2 rounded-lg ${
@@ -413,7 +413,7 @@ export function TabbedCoachPanel({
                                   <Bot className={`h-4 w-4 mt-0.5 ${message.isFeedback ? 'text-green-600' : 'text-blue-600'}`} />
                               )}
                               <div className="flex-1">
-                                <p className="text-sm">{message.text}</p>
+                                <p className="text-sm whitespace-pre-wrap">{message.text}</p>
                                 <p className={`text-xs mt-1 ${
                                   message.isUser ? 'text-blue-100' : 
                                   message.isFeedback ? 'text-green-600' : 'text-gray-500'
@@ -430,10 +430,10 @@ export function TabbedCoachPanel({
                       <div ref={chatEndRef} />
                     </div>
                     
-                    {/* Quick Questions */}
-                    <div className="mb-4">
-                      <p className="text-sm text-gray-600 mb-2">Quick questions to get started:</p>
-                      <div className="flex flex-wrap gap-2">
+                    {/* Quick Questions - Compact */}
+                    <div className="mb-3">
+                      <p className="text-xs text-gray-600 mb-2">Quick questions to get started:</p>
+                      <div className="flex flex-wrap gap-1">
                         {[
                           "How can I improve my introduction?",
                           "What's a good synonym for 'said'?",
@@ -452,28 +452,30 @@ export function TabbedCoachPanel({
                       </div>
                     </div>
                     
-                    {/* Message Input */}
-                    <div className="flex space-x-2">
-                      <input
-                        type="text"
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                        placeholder="Ask me anything about writing..."
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                      />
-                      <button
-                        onClick={handleSendMessage}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-                      >
-                        Send
-                      </button>
+                    {/* Message Input - Fixed at bottom */}
+                    <div className="border-t border-blue-200 pt-3">
+                      <div className="flex space-x-2 mb-2">
+                        <input
+                          type="text"
+                          value={newMessage}
+                          onChange={(e) => setNewMessage(e.target.value)}
+                          onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                          placeholder="Ask me anything about writing..."
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        />
+                        <button
+                          onClick={handleSendMessage}
+                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                        >
+                          Send
+                        </button>
+                      </div>
+                      
+                      <p className="text-xs text-gray-500">
+                        💡 Feedback given: {feedbackCount} • Words: {content.split(' ').filter(w => w.length > 0).length} • Last: {lastFeedbackTime > 0 ? new Date(lastFeedbackTime).toLocaleTimeString() : 'None'}
+                        {isAITyping && ' • AI is typing...'}
+                      </p>
                     </div>
-                    
-                    <p className="text-xs text-gray-500 mt-2">
-                      💡 Feedback given: {feedbackCount} • Words: {content.split(' ').filter(w => w.length > 0).length} • Last: {lastFeedbackTime > 0 ? new Date(lastFeedbackTime).toLocaleTimeString() : 'None'}
-                      {isAITyping && ' • AI is typing...'}
-                    </p>
                   </div>
                 </div>
               </div>
