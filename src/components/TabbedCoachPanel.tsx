@@ -9,7 +9,7 @@ import { FeedbackChat } from "./FeedbackChat";
 import type { DetailedFeedback, LintFix } from "../types/feedback";
 import { generateChatResponse, checkOpenAIConnectionStatus } from '../lib/openai';
 import { detectWordThreshold, splitParas } from '../lib/paragraphDetection';
-import { ExternalLink, FileText, MessageSquare, BarChart3, TrendingUp, Bot, User, Lightbulb, Sparkles, ArrowRight, RefreshCcw, ChevronDown, ChevronUp, Loader } from 'lucide-react';
+import { ExternalLink, FileText, MessageSquare, BarChart3, BookOpen, TrendingUp, Bot, User, Lightbulb, Sparkles, ArrowRight, RefreshCcw, ChevronDown, ChevronUp, Loader } from 'lucide-react';
 
 type Props = { 
   analysis: DetailedFeedback | null; 
