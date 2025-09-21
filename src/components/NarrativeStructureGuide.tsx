@@ -3,7 +3,6 @@ import { BookOpen, Lightbulb, CheckCircle, XCircle, ChevronDown, ChevronUp } fro
 
 interface NarrativeStructureGuideProps {
   content: string;
-  yearLevel: 'Year3-4' | 'Year5-6';
   onContentUpdate?: (newContent: string) => void;
   className?: string;
 }
@@ -104,22 +103,19 @@ const NARRATIVE_PHASES: StoryPhase[] = [
 
 export const NarrativeStructureGuide: React.FC<NarrativeStructureGuideProps> = ({
   content,
-  yearLevel,
   onContentUpdate,
   className = ""
 }) => {
   const [activePhase, setActivePhase] = useState<string | null>(null);
-
-  const getYearLevelStyles = (base: string, year34: string, year56: string) => {
-    return `${base} ${yearLevel === 'Year3-4' ? year34 : year56}`;
-  };
 
   return (
     <div className={`bg-white rounded-lg border shadow-sm ${className}`}>
       <div className="p-4 border-b bg-gradient-to-r from-blue-50 to-green-50">
         <div className="flex items-center space-x-2">
           <BookOpen className="h-5 w-5 text-green-600" />
-          <h3 className={getYearLevelStyles('font-semibold text-gray-800', 'text-2xl', 'text-xl')}>
+          <h3 className={
+            'font-semibold text-gray-800 text-xl'
+          }>
             Story Adventure Mission: Narrative Structure
           </h3>
         </div>
@@ -129,11 +125,9 @@ export const NarrativeStructureGuide: React.FC<NarrativeStructureGuideProps> = (
         {NARRATIVE_PHASES.map((phase) => (
           <div key={phase.id} className="border rounded-lg overflow-hidden">
             <button
-              className={getYearLevelStyles(
-                'flex justify-between items-center w-full p-3 font-medium text-left',
-                'bg-blue-100 text-blue-800 text-lg',
-                'bg-gray-100 text-gray-800 text-base'
-              )}
+              className={
+                'flex justify-between items-center w-full p-3 font-medium text-left bg-gray-100 text-gray-800 text-base'
+              }
               onClick={() => setActivePhase(activePhase === phase.id ? null : phase.id)}
             >
               <span>{phase.title}</span>
@@ -141,13 +135,13 @@ export const NarrativeStructureGuide: React.FC<NarrativeStructureGuideProps> = (
             </button>
             {activePhase === phase.id && (
               <div className="p-3 space-y-3 bg-white">
-                <p className={getYearLevelStyles('text-gray-700', 'text-base', 'text-sm')}>{phase.description}</p>
+                <p className={'text-gray-700 text-sm'}>{phase.description}</p>
 
                 <div>
-                  <h5 className={getYearLevelStyles('font-semibold mb-1', 'text-base', 'text-sm')}>Sentence Starters:</h5>
+                  <h5 className={'font-semibold mb-1 text-sm'}>Sentence Starters:</h5>
                   <div className="flex flex-wrap gap-2">
                     {phase.sentenceStarters.map((starter, i) => (
-                      <span key={i} className={getYearLevelStyles('px-2 py-1 rounded-full', 'bg-green-100 text-green-800 text-sm', 'bg-green-50 text-green-700 text-xs')}>
+                      <span key={i} className={'px-2 py-1 rounded-full bg-green-50 text-green-700 text-xs'}>
                         {starter}
                       </span>
                     ))}
@@ -155,10 +149,10 @@ export const NarrativeStructureGuide: React.FC<NarrativeStructureGuideProps> = (
                 </div>
 
                 <div>
-                  <h5 className={getYearLevelStyles('font-semibold mb-1', 'text-base', 'text-sm')}>Power Words:</h5>
+                  <h5 className={'font-semibold mb-1 text-sm'}>Power Words:</h5>
                   <div className="flex flex-wrap gap-2">
                     {phase.powerWords.map((word, i) => (
-                      <span key={i} className={getYearLevelStyles('px-2 py-1 rounded-full', 'bg-purple-100 text-purple-800 text-sm', 'bg-purple-50 text-purple-700 text-xs')}>
+                      <span key={i} className={'px-2 py-1 rounded-full bg-purple-50 text-purple-700 text-xs'}>
                         {word}
                       </span>
                     ))}
@@ -166,7 +160,7 @@ export const NarrativeStructureGuide: React.FC<NarrativeStructureGuideProps> = (
                 </div>
 
                 <div>
-                  <h5 className={getYearLevelStyles('font-semibold mb-1', 'text-base', 'text-sm')}>Sensory Details:</h5>
+                  <h5 className={'font-semibold mb-1 text-sm'}>Sensory Details:</h5>
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     {Object.entries(phase.sensoryDetails).map(([type, details], i) => (
                       <div key={i} className="bg-gray-50 p-2 rounded">
