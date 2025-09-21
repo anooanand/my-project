@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Download, FileText, Printer, Share2 } from 'lucide-react';
+import { X, Download, FileText, Printer, Share2, Heart, Lightbulb, Star, Target } from 'lucide-react';
 import type { DetailedFeedback, LintFix } from "../types/feedback";
 
 interface Props {
@@ -35,6 +35,87 @@ export function ReportModal({ isOpen, onClose, data, onApplyFix, studentName = "
     return 'text-red-600';
   };
 
+  // ADDED: Child-friendly explanation generator
+  const generateChildFriendlyExplanation = (domain: string, score: number): string => {
+    switch (domain) {
+      case "Ideas & Content":
+        if (score >= 4) return "Your ideas are super creative and interesting, making your story really stand out!";
+        if (score >= 3) return "You have some great, thoughtful ideas that make your writing engaging.";
+        if (score >= 2) return "Your ideas are good, but you could add more unique thoughts to make them even better.";
+        if (score >= 1) return "Your ideas are a bit simple and could use more imagination to make them exciting.";
+        return "Your ideas are hard to find or don't quite fit the topic. Let's work on making them clearer and more imaginative!";
+      case "Structure & Organization":
+        if (score >= 4) return "Your writing flows perfectly, like a well-told story, with a clear beginning, middle, and end!";
+        if (score >= 3) return "Your writing is well-organized, making it easy for the reader to follow your ideas.";
+        if (score >= 2) return "Your writing has a clear plan, but sometimes the parts don't connect smoothly.";
+        if (score >= 1) return "Your writing is a bit jumbled, and it's hard to see how your ideas fit together.";
+        return "Your writing is hard to follow because it doesn't have a clear order. Let's practice organizing your thoughts!";
+      case "Language & Vocabulary":
+        if (score >= 4) return "You use amazing words and clever writing tricks that make your writing shine!";
+        if (score >= 3) return "You use good words and some literary devices to make your writing interesting.";
+        if (score >= 2) return "You use appropriate words, but trying out new words and phrases could make your writing even better.";
+        if (score >= 1) return "Your words are simple, and you could try using more exciting language to express yourself.";
+        return "Your vocabulary is very basic, and you don't use many literary devices. Let's discover new words and ways to write!";
+      case "Spelling, Punctuation & Grammar":
+        if (score >= 4) return "Your writing is almost perfect with spelling, punctuation, and grammar – fantastic!";
+        if (score >= 3) return "You make very few mistakes in spelling, punctuation, and grammar. Great job!";
+        if (score >= 2) return "You have some mistakes in spelling, punctuation, or grammar, but your writing is still easy to understand.";
+        if (score >= 1) return "You make several mistakes in spelling, punctuation, and grammar, which sometimes makes your writing hard to read.";
+        return "You have many mistakes in spelling, punctuation, and grammar, making your writing difficult to understand. Let's focus on the basics!";
+      default:
+        return "No specific explanation available for this domain.";
+    }
+  };
+
+  // ADDED: Generate personalized recommendations
+  const generatePersonalizedRecommendations = (): string[] => {
+    const recommendations: string[] = [];
+    const domains = [
+      { name: "Ideas & Content", score: data.criteria.ideasContent.score, suggestions: [
+        "Brainstorm more creative and original ideas using mind maps or freewriting.",
+        "Develop your ideas with more details and examples to make them engaging.",
+        "Ensure your writing directly addresses all parts of the prompt."
+      ]},
+      { name: "Structure & Organization", score: data.criteria.structureOrganization.score, suggestions: [
+        "Practice organizing your thoughts with a clear introduction, body, and conclusion.",
+        "Use topic sentences and transition words to improve paragraph flow.",
+        "Plan your essay structure before you start writing."
+      ]},
+      { name: "Language & Vocabulary", score: data.criteria.languageVocab.score, suggestions: [
+        "Expand your vocabulary by learning new words and their synonyms.",
+        "Experiment with different literary devices like metaphors, similes, and personification.",
+        "Vary your sentence structures to make your writing more interesting to read."
+      ]},
+      { name: "Spelling, Punctuation & Grammar", score: data.criteria.spellingPunctuationGrammar.score, suggestions: [
+        "Review basic grammar rules, especially subject-verb agreement and tense consistency.",
+        "Pay close attention to punctuation, particularly commas and apostrophes.",
+        "Proofread your work carefully for spelling errors, perhaps reading it aloud."
+      ]}
+    ];
+
+    // Sort domains by score to prioritize the lowest scoring areas
+    domains.sort((a, b) => a.score - b.score);
+
+    // Add personalized recommendations based on the lowest scoring domains
+    for (const domain of domains) {
+      if (domain.score <= 3) { // Consider scores 3 and below as needing improvement (out of 5)
+        recommendations.push(`For ${domain.name}: ${domain.suggestions[0]}`);
+        if (domain.score <= 2) { // For very low scores, add more specific suggestions
+          recommendations.push(`For ${domain.name}: ${domain.suggestions[1]}`);
+          recommendations.push(`For ${domain.name}: ${domain.suggestions[2]}`);
+        }
+      }
+    }
+
+    // Ensure there are at least a few general recommendations if all scores are high
+    if (recommendations.length === 0) {
+      recommendations.push("Keep up the great work! Continue to read widely and practice writing regularly to further hone your skills.");
+      recommendations.push("Challenge yourself by experimenting with new writing styles or more complex prompts.");
+    }
+
+    return recommendations;
+  };
+
   const exportToPDF = async () => {
     setIsExporting(true);
     try {
@@ -59,6 +140,9 @@ export function ReportModal({ isOpen, onClose, data, onApplyFix, studentName = "
                   .red { background: #ef4444; }
                   .strengths { background: #f0fdf4; padding: 10px; margin: 10px 0; }
                   .improvements { background: #fef3c7; padding: 10px; margin: 10px 0; }
+                  .child-friendly { background: #fce7f3; padding: 10px; margin: 10px 0; border-left: 4px solid #ec4899; }
+                  .essay-content { background: #f8fafc; padding: 15px; margin: 10px 0; border: 1px solid #e2e8f0; }
+                  .recommendations { background: #f3e8ff; padding: 10px; margin: 10px 0; }
                   @media print { body { margin: 0; } }
                 </style>
               </head>
@@ -79,6 +163,8 @@ export function ReportModal({ isOpen, onClose, data, onApplyFix, studentName = "
   };
 
   const downloadAsText = () => {
+    const personalizedRecommendations = generatePersonalizedRecommendations();
+    
     const reportText = `
 NSW SELECTIVE WRITING ASSESSMENT REPORT
 =====================================
@@ -98,6 +184,9 @@ CRITERIA BREAKDOWN:
 DETAILED FEEDBACK:
 
 IDEAS & CONTENT:
+Child-Friendly Explanation:
+${generateChildFriendlyExplanation("Ideas & Content", data.criteria.ideasContent.score)}
+
 Strengths:
 ${data.criteria.ideasContent.strengths.map(s => `- ${s.text}`).join('\n')}
 
@@ -105,6 +194,9 @@ Areas for Improvement:
 ${data.criteria.ideasContent.improvements.map(i => `- ${i.issue}: ${i.suggestion}`).join('\n')}
 
 STRUCTURE & ORGANIZATION:
+Child-Friendly Explanation:
+${generateChildFriendlyExplanation("Structure & Organization", data.criteria.structureOrganization.score)}
+
 Strengths:
 ${data.criteria.structureOrganization.strengths.map(s => `- ${s.text}`).join('\n')}
 
@@ -112,6 +204,9 @@ Areas for Improvement:
 ${data.criteria.structureOrganization.improvements.map(i => `- ${i.issue}: ${i.suggestion}`).join('\n')}
 
 LANGUAGE & VOCABULARY:
+Child-Friendly Explanation:
+${generateChildFriendlyExplanation("Language & Vocabulary", data.criteria.languageVocab.score)}
+
 Strengths:
 ${data.criteria.languageVocab.strengths.map(s => `- ${s.text}`).join('\n')}
 
@@ -119,11 +214,17 @@ Areas for Improvement:
 ${data.criteria.languageVocab.improvements.map(i => `- ${i.issue}: ${i.suggestion}`).join('\n')}
 
 SPELLING, PUNCTUATION & GRAMMAR:
+Child-Friendly Explanation:
+${generateChildFriendlyExplanation("Spelling, Punctuation & Grammar", data.criteria.spellingPunctuationGrammar.score)}
+
 Strengths:
 ${data.criteria.spellingPunctuationGrammar.strengths.map(s => `- ${s.text}`).join('\n')}
 
 Areas for Improvement:
 ${data.criteria.spellingPunctuationGrammar.improvements.map(i => `- ${i.issue}: ${i.suggestion}`).join('\n')}
+
+PERSONALIZED LEARNING RECOMMENDATIONS:
+${personalizedRecommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
 
 ${data.narrativeStructure ? `
 NARRATIVE STRUCTURE:
@@ -261,6 +362,19 @@ Report generated on ${new Date().toLocaleString()}
               />
             </div>
 
+            {/* ADDED: Student's Original Essay Section */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+              <h3 className="text-xl font-bold text-blue-800 mb-4 flex items-center">
+                <FileText className="w-5 h-5 mr-2" />
+                Your Original Essay
+              </h3>
+              <div className="bg-white rounded-lg p-4 border">
+                <pre className="whitespace-pre-wrap text-sm text-gray-700 font-mono leading-relaxed">
+                  {essayText}
+                </pre>
+              </div>
+            </div>
+
             {/* Detailed Feedback */}
             {Object.entries(data.criteria).map(([key, criterion]) => {
               const titles = {
@@ -280,9 +394,25 @@ Report generated on ${new Date().toLocaleString()}
                     </div>
                   </div>
 
+                  {/* ADDED: Child-friendly explanation */}
+                  <div className="bg-pink-50 border border-pink-200 rounded-lg p-4 mb-4">
+                    <div className="flex items-start">
+                      <Heart className="w-5 h-5 mr-2 mt-0.5 text-pink-500 flex-shrink-0" />
+                      <div>
+                        <h5 className="font-medium text-pink-800 mb-1">What this means for you:</h5>
+                        <p className="text-sm text-pink-700">
+                          {generateChildFriendlyExplanation(titles[key as keyof typeof titles], criterion.score)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
                   {criterion.strengths.length > 0 && (
                     <div className="mb-4">
-                      <h5 className="font-medium text-green-700 mb-2">✓ Strengths</h5>
+                      <h5 className="font-medium text-green-700 mb-2 flex items-center">
+                        <Star className="w-4 h-4 mr-1" />
+                        Strengths
+                      </h5>
                       <div className="space-y-2">
                         {criterion.strengths.map((strength: any, index: number) => (
                           <div key={index} className="bg-green-50 p-3 rounded border-l-4 border-green-400">
@@ -295,7 +425,10 @@ Report generated on ${new Date().toLocaleString()}
 
                   {criterion.improvements.length > 0 && (
                     <div>
-                      <h5 className="font-medium text-orange-700 mb-2">→ Areas for Improvement</h5>
+                      <h5 className="font-medium text-orange-700 mb-2 flex items-center">
+                        <Target className="w-4 h-4 mr-1" />
+                        Areas for Growth
+                      </h5>
                       <div className="space-y-3">
                         {criterion.improvements.map((improvement: any, index: number) => (
                           <div key={index} className="bg-orange-50 p-4 rounded border-l-4 border-orange-400">
@@ -309,6 +442,26 @@ Report generated on ${new Date().toLocaleString()}
                 </div>
               );
             })}
+
+            {/* ADDED: Personalized Learning Recommendations */}
+            <div className="bg-purple-50 border border-purple-200 rounded-lg p-6">
+              <h3 className="text-xl font-bold text-purple-800 mb-4 flex items-center">
+                <Lightbulb className="w-5 h-5 mr-2" />
+                Personalized Learning Recommendations
+              </h3>
+              <div className="space-y-4">
+                {generatePersonalizedRecommendations().map((recommendation, index) => (
+                  <div key={index} className="flex items-start bg-white rounded-lg p-4 border border-purple-100">
+                    <div className="bg-purple-100 rounded-full p-2 mr-4 flex-shrink-0">
+                      <span className="text-purple-600 font-bold text-sm">
+                        {index + 1}
+                      </span>
+                    </div>
+                    <span className="text-purple-700 leading-relaxed">{recommendation}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
 
             {/* Narrative Structure */}
             {data.narrativeStructure && (
