@@ -5,7 +5,7 @@ import { StructureGuideModal } from './StructureGuideModal';
 import { TipsModal } from './TipsModal';
 import { TabbedCoachPanel } from './TabbedCoachPanel';
 import { NSWStandaloneSubmitSystem } from './NSWStandaloneSubmitSystem';
-import { ReportModal } from './ReportModal'; // Import ReportModal
+import { ReportModal } from './ReportModal'; // Import enhanced ReportModal
 import type { DetailedFeedback, LintFix } from '../types/feedback';
 import { eventBus } from '../lib/eventBus';
 import { detectNewParagraphs } from '../lib/paragraphDetection';
@@ -13,14 +13,16 @@ import {
   PenTool,
   Play,
   BookOpen,
-  Lightbulb as LightbulbIcon, // Changed Lightbulb to LightbulbIcon
+  Lightbulb as LightbulbIcon,
   Target,
   Eye,
   EyeOff,
   ArrowLeft,
   FileText,
   Clock,
-  AlertCircle
+  AlertCircle,
+  Award,
+  TrendingUp
 } from 'lucide-react';
 
 interface EnhancedWritingLayoutProps {
@@ -57,12 +59,13 @@ export function EnhancedWritingLayout({
   const [focusMode, setFocusMode] = useState(false);
   const [evaluationStatus, setEvaluationStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   
-  // NSW Evaluation States
+  // Enhanced NSW Evaluation States
   const [showNSWEvaluation, setShowNSWEvaluation] = useState<boolean>(false);
   const [nswReport, setNswReport] = useState<any>(null);
-  const [showReportModal, setShowReportModal] = useState<boolean>(false); // New state for report modal
+  const [showReportModal, setShowReportModal] = useState<boolean>(false);
   const [analysis, setAnalysis] = useState<DetailedFeedback | null>(null);
   const [wordCount, setWordCount] = useState<number>(0);
+  const [evaluationProgress, setEvaluationProgress] = useState<string>("");
   const prevTextRef = useRef<string>("");
 
   // Local content state to ensure we have the latest content
@@ -130,7 +133,7 @@ export function EnhancedWritingLayout({
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('promptGenerated', handlePromptGenerated as EventListener);
     };
-  }, [textType, evaluationStatus]); // Added evaluationStatus to dependency array
+  }, [textType, evaluationStatus]);
 
   // Sync local content with prop content
   useEffect(() => {
@@ -158,9 +161,8 @@ export function EnhancedWritingLayout({
     prevTextRef.current = currentContent;
   }, [localContent, content]);
 
-  // NSW Evaluation Submit Handler
+  // Enhanced NSW Evaluation Submit Handler
   const handleNSWSubmit = async (submittedContent?: string, submittedTextType?: string) => {
-    // Ensure localContent is up-to-date before evaluation
     const contentToEvaluate = submittedContent || localContent;
     const typeToEvaluate = submittedTextType || textType;
 
@@ -174,6 +176,7 @@ export function EnhancedWritingLayout({
 
     setEvaluationStatus("loading");
     setShowNSWEvaluation(true);
+    setEvaluationProgress("Analyzing your writing...");
 
     try {
       if (!contentToEvaluate || contentToEvaluate.trim().length === 0) {
@@ -186,48 +189,61 @@ export function EnhancedWritingLayout({
         wordCount
       });
 
+      // Simulate progress updates for better user experience
+      setTimeout(() => setEvaluationProgress("Evaluating ideas and creativity..."), 1000);
+      setTimeout(() => setEvaluationProgress("Checking structure and organization..."), 2000);
+      setTimeout(() => setEvaluationProgress("Analyzing language and vocabulary..."), 3000);
+      setTimeout(() => setEvaluationProgress("Reviewing spelling and grammar..."), 4000);
+      setTimeout(() => setEvaluationProgress("Generating your personalized report..."), 5000);
+
     } catch (e: any) {
       console.error("NSW Submit error:", e);
       setEvaluationStatus("error");
       setShowNSWEvaluation(false);
+      setEvaluationProgress("");
     }
   };
 
-  // Handle NSW evaluation completion
+  // Enhanced NSW evaluation completion handler
   const handleNSWEvaluationComplete = (report: any) => {
     console.log("NSW Evaluation completed:", report);
     setNswReport(report);
     setEvaluationStatus("success");
-    setShowNSWEvaluation(false); // Hide the submission system
-    setShowReportModal(true); // Show the report modal
+    setShowNSWEvaluation(false);
+    setEvaluationProgress("");
+    setShowReportModal(true);
     
-    // Convert NSW report to DetailedFeedback format for compatibility
+    // Convert NSW report to DetailedFeedback format for compatibility with enhanced ReportModal
     const convertedAnalysis: DetailedFeedback = {
       overallScore: report.overallScore || 0,
       criteria: {
         ideasContent: {
-          score: Math.round((report.domains?.contentAndIdeas?.score || 0) / 5),
-          weight: 30,
-          strengths: [{ text: report.domains?.contentAndIdeas?.feedback || "Good content development" }],
-          improvements: report.domains?.contentAndIdeas?.improvements || []
+          score: Math.round((report.domains?.contentAndIdeas?.score || 0) / 2), // Convert from 10-point to 5-point scale
+          weight: report.domains?.contentAndIdeas?.weight || 40,
+          strengths: report.strengths?.filter((s: any) => s.area === "Creative Ideas") || 
+                    [{ text: report.domains?.contentAndIdeas?.feedback?.[0] || "Good content development" }],
+          improvements: report.areasForImprovement?.filter((i: any) => i.area === "Ideas & Content") || []
         },
         structureOrganization: {
-          score: Math.round((report.domains?.textStructure?.score || 0) / 5),
-          weight: 25,
-          strengths: [{ text: report.domains?.textStructure?.feedback || "Clear structure" }],
-          improvements: report.domains?.textStructure?.improvements || []
+          score: Math.round((report.domains?.textStructure?.score || 0) / 2),
+          weight: report.domains?.textStructure?.weight || 20,
+          strengths: report.strengths?.filter((s: any) => s.area === "Story Organization") || 
+                    [{ text: report.domains?.textStructure?.feedback?.[0] || "Clear structure" }],
+          improvements: report.areasForImprovement?.filter((i: any) => i.area === "Structure & Organization") || []
         },
         languageVocab: {
-          score: Math.round((report.domains?.languageFeatures?.score || 0) / 5),
-          weight: 25,
-          strengths: [{ text: report.domains?.languageFeatures?.feedback || "Good language use" }],
-          improvements: report.domains?.languageFeatures?.improvements || []
+          score: Math.round((report.domains?.languageFeatures?.score || 0) / 2),
+          weight: report.domains?.languageFeatures?.weight || 25,
+          strengths: report.strengths?.filter((s: any) => s.area === "Word Choice") || 
+                    [{ text: report.domains?.languageFeatures?.feedback?.[0] || "Good language use" }],
+          improvements: report.areasForImprovement?.filter((i: any) => i.area === "Language & Vocabulary") || []
         },
         spellingPunctuationGrammar: {
-          score: Math.round((report.domains?.conventions?.score || 0) / 5),
-          weight: 20,
-          strengths: [{ text: report.domains?.conventions?.feedback || "Accurate conventions" }],
-          improvements: report.domains?.conventions?.improvements || []
+          score: Math.round((report.domains?.spellingAndGrammar?.score || 0) / 2),
+          weight: report.domains?.spellingAndGrammar?.weight || 15,
+          strengths: report.strengths?.filter((s: any) => s.area === "Writing Mechanics") || 
+                    [{ text: report.domains?.spellingAndGrammar?.feedback?.[0] || "Accurate conventions" }],
+          improvements: report.areasForImprovement?.filter((i: any) => i.area.includes("Grammar") || i.area.includes("Spelling")) || []
         }
       },
       grammarCorrections: report.grammarCorrections || [],
@@ -258,10 +274,11 @@ export function EnhancedWritingLayout({
   const handleCloseNSWEvaluation = () => {
     setShowNSWEvaluation(false);
     setEvaluationStatus("idle");
+    setEvaluationProgress("");
   };
 
   // Check if word count exceeds target
-  const showWordCountWarning = wordCount > 300; // Adjust target as needed
+  const showWordCountWarning = wordCount > 300;
 
   // Check if we have content for submit button
   const currentContent = localContent || content;
@@ -271,25 +288,31 @@ export function EnhancedWritingLayout({
     <div className="flex h-screen bg-gray-50">
       {/* Left side - Writing Area Content */}
       <div className="flex-[7] flex flex-col min-w-0"> 
-        {/* Your Writing Prompt Section */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 mx-4 mt-4">
-          <div className="flex items-center mb-2">
-            <LightbulbIcon className="w-5 h-5 mr-2 text-blue-600" />
-            <h3 className="font-semibold text-blue-800">Your Writing Prompt</h3>
+        {/* Enhanced Writing Prompt Section */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-5 mb-4 mx-4 mt-4 shadow-sm">
+          <div className="flex items-center mb-3">
+            <LightbulbIcon className="w-6 h-6 mr-3 text-blue-600" />
+            <h3 className="font-bold text-blue-800 text-lg">Your Writing Prompt</h3>
+            <div className="ml-auto flex items-center space-x-2">
+              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">
+                {textType}
+              </span>
+            </div>
           </div>
-          <p className="text-blue-700 text-sm leading-relaxed">
+          <p className="text-blue-700 leading-relaxed">
             {currentPrompt}
           </p>
         </div>
 
-        {/* Action Buttons and Stats Section */}
-        <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4 mx-4">
+        {/* Enhanced Action Buttons and Stats Section */}
+        <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4 mx-4 shadow-sm">
           <div className="flex justify-between items-center">
             {/* Left side - Action Buttons */}
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setShowPlanningTool(true)}
-                className="flex items-center space-x-2 px-3 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium shadow-sm"
+                title="Plan your writing structure and ideas"
               >
                 <PenTool className="w-4 h-4" />
                 <span>Planning</span>
@@ -297,15 +320,21 @@ export function EnhancedWritingLayout({
               
               <button
                 onClick={() => setExamMode(!examMode)}
-                className="flex items-center space-x-2 px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-medium"
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium shadow-sm ${
+                  examMode 
+                    ? 'bg-green-600 text-white hover:bg-green-700' 
+                    : 'bg-green-500 text-white hover:bg-green-600'
+                }`}
+                title="Toggle exam simulation mode"
               >
                 <Play className="w-4 h-4" />
-                <span>Exam</span>
+                <span>{examMode ? 'Exit Exam' : 'Exam Mode'}</span>
               </button>
               
               <button
                 onClick={() => setShowStructureGuide(true)}
-                className="flex items-center space-x-2 px-3 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors text-sm font-medium"
+                className="flex items-center space-x-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors text-sm font-medium shadow-sm"
+                title="Learn about story structure and organization"
               >
                 <BookOpen className="w-4 h-4" />
                 <span>Structure</span>
@@ -313,7 +342,8 @@ export function EnhancedWritingLayout({
               
               <button
                 onClick={() => setShowTips(true)}
-                className="flex items-center space-x-2 px-3 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm font-medium"
+                className="flex items-center space-x-2 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm font-medium shadow-sm"
+                title="Get helpful writing tips and techniques"
               >
                 <LightbulbIcon className="w-4 h-4" />
                 <span>Tips</span>
@@ -321,22 +351,27 @@ export function EnhancedWritingLayout({
               
               <button
                 onClick={() => setFocusMode(!focusMode)}
-                className="flex items-center space-x-2 px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium"
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium shadow-sm ${
+                  focusMode 
+                    ? 'bg-gray-700 text-white hover:bg-gray-800' 
+                    : 'bg-gray-600 text-white hover:bg-gray-700'
+                }`}
+                title="Toggle distraction-free writing mode"
               >
                 {focusMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                <span>Focus</span>
+                <span>{focusMode ? 'Exit Focus' : 'Focus Mode'}</span>
               </button>
             </div>
 
-            {/* Right side - Writing Statistics */}
-            <div className="flex items-center space-x-4 text-sm">
+            {/* Right side - Enhanced Writing Statistics */}
+            <div className="flex items-center space-x-6 text-sm">
               <div className="flex items-center space-x-2">
                 <FileText className="w-4 h-4 text-blue-500" />
                 <span className="font-medium">{wordCount} words</span>
                 {showWordCountWarning && (
                   <div className="flex items-center space-x-1 text-orange-600">
                     <AlertCircle className="w-4 h-4" />
-                    <span className="font-medium">Exceeded!</span>
+                    <span className="font-medium text-xs">Over target!</span>
                   </div>
                 )}
               </div>
@@ -345,13 +380,24 @@ export function EnhancedWritingLayout({
                 <Clock className="w-4 h-4 text-orange-500" />
                 <span className="font-medium">0 WPM</span>
               </div>
+
+              {/* Progress indicator */}
+              <div className="flex items-center space-x-2">
+                <Target className="w-4 h-4 text-green-500" />
+                <span className="font-medium text-green-600">
+                  {wordCount < 50 ? 'Getting Started' : 
+                   wordCount < 150 ? 'Building Ideas' : 
+                   wordCount < 250 ? 'Developing Story' : 
+                   'Ready to Review'}
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
         {/* Text Editor Section */}
         <div className="flex-1 mx-4 mb-4">
-          <div className="bg-white border border-gray-200 rounded-lg h-full">
+          <div className="bg-white border border-gray-200 rounded-lg h-full shadow-sm">
             <WritingArea
               content={currentContent}
               onChange={handleContentChange}
@@ -372,49 +418,38 @@ export function EnhancedWritingLayout({
           </div>
         </div>
 
-        {/* Submit for Evaluation Button */}
+        {/* Enhanced Submit for Evaluation Button */}
         <div className="px-4 pb-4">
           <button
             onClick={() => handleSubmitForEvaluation(localContent, textType)}
             disabled={evaluationStatus === "loading" || !hasContent}
-            className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center"
+            className={`w-full font-bold py-4 px-6 rounded-lg transition-all duration-200 flex items-center justify-center shadow-lg ${
+              evaluationStatus === "loading" || !hasContent
+                ? 'bg-gray-400 cursor-not-allowed text-gray-600'
+                : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white transform hover:scale-[1.02]'
+            }`}
           >
             {evaluationStatus === "loading" ? (
               <>
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                Analyzing your writing...
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+                <span>Analyzing Your Writing...</span>
               </>
             ) : (
               <>
-                <Target className="w-5 h-5 mr-2" />
-                Submit for Evaluation
+                <Award className="w-5 h-5 mr-3" />
+                <span>Get My Writing Report</span>
+                <TrendingUp className="w-5 h-5 ml-3" />
               </>
             )}
           </button>
+          
+          {!hasContent && (
+            <p className="text-center text-gray-500 text-sm mt-2">
+              Start writing to unlock your personalized assessment report
+            </p>
+          )}
         </div>
       </div>
-
-      {/* NSW Evaluation System - Renders when evaluation is triggered */}
-      {showNSWEvaluation && (
-        <NSWStandaloneSubmitSystem
-          content={localContent}
-          textType={textType}
-          onComplete={handleNSWEvaluationComplete}
-          onClose={handleCloseNSWEvaluation}
-        />
-      )}
-
-      {/* Report Modal - Shows when report is ready */}
-      {showReportModal && analysis && (
-        <ReportModal
-          isOpen={showReportModal}
-          onClose={handleCloseReportModal}
-          data={analysis}
-          onApplyFix={handleApplyFix}
-          studentName="Student"
-          essayText={localContent}
-        />
-      )}
 
       {/* Right side - Coach Panel (hidden in focus mode) */}
       {!focusMode && (
@@ -424,10 +459,56 @@ export function EnhancedWritingLayout({
             textType={textType}
             assistanceLevel={assistanceLevel}
             selectedText={selectedText}
-            analysis={analysis}
             onApplyFix={handleApplyFix}
+            wordCount={wordCount}
           />
         </div>
+      )}
+
+      {/* Enhanced NSW Evaluation Loading Modal */}
+      {showNSWEvaluation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4 shadow-2xl">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-purple-600 mx-auto mb-6"></div>
+              <h3 className="text-xl font-bold text-gray-800 mb-4">Analyzing Your Writing</h3>
+              <p className="text-gray-600 mb-4">{evaluationProgress}</p>
+              <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+                <div 
+                  className="bg-gradient-to-r from-purple-600 to-indigo-600 h-2 rounded-full transition-all duration-1000"
+                  style={{ 
+                    width: evaluationProgress.includes("Analyzing") ? "20%" :
+                           evaluationProgress.includes("Evaluating") ? "40%" :
+                           evaluationProgress.includes("Checking") ? "60%" :
+                           evaluationProgress.includes("language") ? "80%" :
+                           evaluationProgress.includes("Generating") ? "100%" : "0%"
+                  }}
+                ></div>
+              </div>
+              <p className="text-sm text-gray-500">
+                We're creating a detailed, personalized report just for you!
+              </p>
+              <button
+                onClick={handleCloseNSWEvaluation}
+                className="mt-4 px-4 py-2 text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Enhanced Report Modal */}
+      {showReportModal && analysis && (
+        <ReportModal
+          isOpen={showReportModal}
+          onClose={handleCloseReportModal}
+          data={analysis}
+          onApplyFix={handleApplyFix}
+          studentName="Student"
+          essayText={currentContent}
+        />
       )}
 
       {/* Modals */}
@@ -454,6 +535,16 @@ export function EnhancedWritingLayout({
           isOpen={showTips}
           onClose={() => setShowTips(false)}
           textType={textType}
+        />
+      )}
+
+      {/* NSW Standalone Submit System */}
+      {showNSWEvaluation && (
+        <NSWStandaloneSubmitSystem
+          content={currentContent}
+          textType={textType}
+          onComplete={handleNSWEvaluationComplete}
+          onClose={handleCloseNSWEvaluation}
         />
       )}
     </div>
