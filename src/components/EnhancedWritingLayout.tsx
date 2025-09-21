@@ -4,9 +4,7 @@ import { PlanningToolModal } from './PlanningToolModal';
 import { StructureGuideModal } from './StructureGuideModal';
 import { TipsModal } from './TipsModal';
 import { TabbedCoachPanel } from './TabbedCoachPanel';
-import { NSWEvaluationReportGenerator } from './NSWEvaluationReportGenerator'; // Import the generator directly
-import { NSWEvaluationReportDisplay } from './NSWEvaluationReportDisplay'; // Import the display component
-
+import { NSWStandaloneSubmitSystem } from './NSWStandaloneSubmitSystem';
 import type { DetailedFeedback, LintFix } from '../types/feedback';
 import { eventBus } from '../lib/eventBus';
 import { detectNewParagraphs } from '../lib/paragraphDetection';
@@ -14,16 +12,14 @@ import {
   PenTool,
   Play,
   BookOpen,
-  Lightbulb as LightbulbIcon,
+  Lightbulb as LightbulbIcon, // Changed Lightbulb to LightbulbIcon
   Target,
   Eye,
   EyeOff,
   ArrowLeft,
   FileText,
   Clock,
-  AlertCircle,
-  Loader2, // Import Loader2 for loading animation
-  XCircle // Import XCircle for error icon
+  AlertCircle
 } from 'lucide-react';
 
 interface EnhancedWritingLayoutProps {
@@ -60,28 +56,34 @@ export function EnhancedWritingLayout({
   const [focusMode, setFocusMode] = useState(false);
   const [evaluationStatus, setEvaluationStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   
-  const [showNSWEvaluationModal, setShowNSWEvaluationModal] = useState<boolean>(false); // State to control modal visibility
+  // NSW Evaluation States
+  const [showNSWEvaluation, setShowNSWEvaluation] = useState<boolean>(false);
   const [nswReport, setNswReport] = useState<any>(null);
   const [analysis, setAnalysis] = useState<DetailedFeedback | null>(null);
   const [wordCount, setWordCount] = useState<number>(0);
   const prevTextRef = useRef<string>("");
 
+  // Local content state to ensure we have the latest content
   const [localContent, setLocalContent] = useState<string>(content);
 
+  // Function to get the current prompt from localStorage or fallback
   const getCurrentPrompt = () => {
     try {
+      // First check for a generated prompt from Magical Prompt
       const magicalPrompt = localStorage.getItem("generatedPrompt");
       if (magicalPrompt && magicalPrompt.trim()) {
         console.log("📝 getCurrentPrompt: Using Magical Prompt from localStorage:", magicalPrompt.substring(0, 50) + "...");
         return magicalPrompt;
       }
 
+      // Check for text-type specific prompt
       const textTypePrompt = localStorage.getItem(`${textType.toLowerCase()}_prompt`);
       if (textTypePrompt && textTypePrompt.trim()) {
         console.log("📝 getCurrentPrompt: Using text-type specific prompt:", textTypePrompt.substring(0, 50) + "...");
         return textTypePrompt;
       }
 
+      // Fallback to default prompt
       const fallbackPrompt = "The Secret Door in the Library: During a rainy afternoon, you decide to explore the dusty old library in your town that you've never visited before. As you wander through the aisles, you discover a hidden door behind a bookshelf. It's slightly ajar, and a faint, warm light spills out from the crack. What happens when you push the door open? Describe the world you enter and the adventures that await you inside. Who do you meet, and what challenges do you face? How does this experience change you by the time you return to the library? Let your imagination run wild as you take your reader on a journey through this mysterious door!";
       console.log('📝 Using fallback prompt');
       return fallbackPrompt;
@@ -91,6 +93,7 @@ export function EnhancedWritingLayout({
     }
   };
 
+  // Initialize and sync prompt on component mount and when textType changes
   useEffect(() => {
     const prompt = getCurrentPrompt();
     console.log("🔄 useEffect[textType]: Initializing/Syncing prompt.");
@@ -98,6 +101,7 @@ export function EnhancedWritingLayout({
     console.log("✅ useEffect[textType]: currentPrompt set to:", prompt.substring(0, 50) + "...");
   }, [textType]);
 
+  // Listen for localStorage changes (from other tabs/components)
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       console.log('📡 handleStorageChange: Storage event detected. Key:', e.key, 'New Value:', e.newValue?.substring(0, 50) + '...');
@@ -109,6 +113,7 @@ export function EnhancedWritingLayout({
       }
     };
 
+    // Listen for custom events from Magical Prompt generation
     const handlePromptGenerated = (event: CustomEvent) => {
       console.log("🎯 handlePromptGenerated: Custom event received. Detail:", event.detail);
       const newPrompt = getCurrentPrompt();
@@ -123,43 +128,40 @@ export function EnhancedWritingLayout({
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('promptGenerated', handlePromptGenerated as EventListener);
     };
-  }, [textType, evaluationStatus]);
+  }, [textType, evaluationStatus]); // Added evaluationStatus to dependency array
 
+  // Sync local content with prop content
   useEffect(() => {
-    console.log('🔄 Syncing content from props:', { 
-      propContent: content?.substring(0, 50) + '...', 
-      propContentLength: content?.length || 0 
-    });
     setLocalContent(content);
   }, [content]);
 
+  // Handle content changes from WritingArea
   const handleContentChange = (newContent: string) => {
-    console.log('📝 Content changed in WritingArea:', { 
-      newContentLength: newContent?.length || 0,
-      newContentPreview: newContent?.substring(0, 50) + '...'
-    });
     setLocalContent(newContent);
     onChange(newContent);
   };
 
+  // Listen for submit events from AppContent
   useEffect(() => {
     const handleSubmitEvent = (event: CustomEvent) => {
-      console.log('📨 EnhancedWritingLayout: Received submit event:', event.detail);
-      handleNSWSubmit();
+      console.log("📨 EnhancedWritingLayout: Received submit event:", event.detail);
+      handleNSWSubmit(event.detail.content, event.detail.textType);
     };
 
-    window.addEventListener('submitForEvaluation', handleSubmitEvent as EventListener);
+    window.addEventListener("submitForEvaluation", handleSubmitEvent as EventListener);
     
     return () => {
-      window.removeEventListener('submitForEvaluation', handleSubmitEvent as EventListener);
+      window.removeEventListener("submitForEvaluation", handleSubmitEvent as EventListener);
     };
-  }, []);
+  }, [localContent, content, textType]); // Added dependencies to ensure handleNSWSubmit has fresh state
 
+  // Track content changes for word count and coach feedback
   useEffect(() => {
-    const currentContent = localContent || content || '';
+    const currentContent = localContent || content;
     const words = currentContent.trim().split(/\s+/).filter(word => word.length > 0);
     setWordCount(words.length);
 
+    // Trigger coach feedback for new paragraphs
     const events = detectNewParagraphs(prevTextRef.current, currentContent);
     if (events.length) {
       console.log("Emitting paragraph.ready event:", events[events.length - 1]);
@@ -168,133 +170,121 @@ export function EnhancedWritingLayout({
     prevTextRef.current = currentContent;
   }, [localContent, content]);
 
-  const handleNSWSubmit = async () => {
-    const currentContent = localContent || content || '';
-    
-    console.log('🎯 NSW Submit triggered from EnhancedWritingLayout');
-    console.log('Content check:', { 
-      localContent: localContent?.substring(0, 50) + '...', 
-      propContent: content?.substring(0, 50) + '...', 
-      currentContent: currentContent?.substring(0, 50) + '...',
-      hasContent: !!currentContent?.trim(),
-      contentLength: currentContent?.length || 0
+  // NSW Evaluation Submit Handler
+  const handleNSWSubmit = async (submittedContent?: string, submittedTextType?: string) => {
+    // Ensure localContent is up-to-date before evaluation
+    const contentToEvaluate = submittedContent || localContent;
+    const typeToEvaluate = submittedTextType || textType;
+
+    console.log("🎯 NSW Submit triggered from EnhancedWritingLayout");
+    console.log("Content check:", {
+      localContent: contentToEvaluate?.substring(0, 50) + "...",
+      propContent: content?.substring(0, 50) + "...",
+      hasContent: !!contentToEvaluate?.trim(),
+      contentLength: contentToEvaluate?.length || 0
     });
-    
+
     setEvaluationStatus("loading");
-    setShowNSWEvaluationModal(true); // Show the modal when submission starts
-    setNswReport(null); // Clear previous report
+    setShowNSWEvaluation(true);
 
     try {
-      if (!currentContent || currentContent.trim().length === 0) {
-        console.error('❌ No content found for submission');
+      if (!contentToEvaluate || contentToEvaluate.trim().length === 0) {
         throw new Error("Please write some content before submitting for evaluation");
       }
-      
-      console.log("NSW Evaluation initiated for:", { 
-        text: currentContent.substring(0, 100) + "...", 
-        textType, 
-        wordCount 
-      });
-      
-      const essayData = {
-        content: currentContent,
-        textType: textType,
-        wordCount: wordCount,
-        timestamp: new Date().toISOString()
-      };
-      
-      localStorage.setItem('currentEssayData', JSON.stringify(essayData));
-      console.log('✅ Essay data stored for NSW evaluation system');
-      
-      const submitEvent = new CustomEvent('writingSubmitted', {
-        detail: { content: currentContent, textType }
-      });
-      window.dispatchEvent(submitEvent);
-      console.log('Writing submitted:', { content: currentContent.substring(0, 50) + '...', textType });
-      
-      // Directly call the report generator
-      const prompt = getCurrentPrompt();
-      const targetWordCountMin = 100; // Example value, adjust as needed
-      const targetWordCountMax = 500; // Example value, adjust as needed
 
-      const report = NSWEvaluationReportGenerator.generateReport({
-        essayContent: currentContent,
-        textType: textType,
-        prompt: prompt,
-        wordCount: wordCount,
-        targetWordCountMin: targetWordCountMin,
-        targetWordCountMax: targetWordCountMax,
+      console.log("NSW Evaluation initiated for:", {
+        text: contentToEvaluate.substring(0, 100) + "...",
+        textType: typeToEvaluate,
+        wordCount
       });
-      
-      console.log("NSW Evaluation completed:", report);
-      setNswReport(report);
-      setEvaluationStatus("success");
-      
-      // Convert NSW report to DetailedFeedback format for compatibility
-      const convertedAnalysis: DetailedFeedback = {
-        overallScore: report.overallScore || 0,
-        criteria: {
-          ideasContent: {
-            score: Math.round((report.domains?.contentAndIdeas?.score || 0) / 5),
-            weight: 30,
-            strengths: [report.domains?.contentAndIdeas?.feedback || "Good content development"],
-            improvements: report.domains?.contentAndIdeas?.improvements || []
-          },
-          structureOrganization: {
-            score: Math.round((report.domains?.textStructure?.score || 0) / 5),
-            weight: 25,
-            strengths: [report.domains?.textStructure?.feedback || "Clear structure"],
-            improvements: report.domains?.textStructure?.improvements || []
-          },
-          languageVocab: {
-            score: Math.round((report.domains?.languageFeatures?.score || 0) / 5),
-            weight: 25,
-            strengths: [report.domains?.languageFeatures?.feedback || "Good language use"],
-            improvements: report.domains?.languageFeatures?.improvements || []
-          },
-          spellingPunctuationGrammar: {
-            score: Math.round((report.domains?.conventions?.score || 0) / 5),
-            weight: 20,
-            strengths: [report.domains?.conventions?.feedback || "Accurate conventions"],
-            improvements: report.domains?.conventions?.improvements || []
-          }
-        },
-        grammarCorrections: report.grammarCorrections || [],
-        vocabularyEnhancements: report.vocabularyEnhancements || [],
-        id: report.id || `nsw-${Date.now()}`,
-        assessmentId: report.assessmentId
-      };
-      
-      setAnalysis(convertedAnalysis);
-      await onSubmit(); // Call the original onSubmit for any additional handling
-      
+
+      // Call the original onSubmit for any additional handling
+      await onSubmit();
+
     } catch (e: any) {
-      console.error('NSW Submit error:', e);
+      console.error("NSW Submit error:", e);
       setEvaluationStatus("error");
-      setNswReport(null); // Ensure no report is shown on error
-
+      setShowNSWEvaluation(false);
     }
   };
 
+  // Handle NSW evaluation completion
+  const handleNSWEvaluationComplete = (report: any) => {
+    console.log("NSW Evaluation completed:", report);
+    setNswReport(report);
+    setEvaluationStatus("success");
+    
+    // Convert NSW report to DetailedFeedback format for compatibility
+    const convertedAnalysis: DetailedFeedback = {
+      overallScore: report.overallScore || 0,
+      criteria: {
+        ideasContent: {
+          score: Math.round((report.domains?.contentAndIdeas?.score || 0) / 5),
+          weight: 30,
+          strengths: [report.domains?.contentAndIdeas?.feedback || "Good content development"],
+          improvements: report.domains?.contentAndIdeas?.improvements || []
+        },
+        structureOrganization: {
+          score: Math.round((report.domains?.textStructure?.score || 0) / 5),
+          weight: 25,
+          strengths: [report.domains?.textStructure?.feedback || "Clear structure"],
+          improvements: report.domains?.textStructure?.improvements || []
+        },
+        languageVocab: {
+          score: Math.round((report.domains?.languageFeatures?.score || 0) / 5),
+          weight: 25,
+          strengths: [report.domains?.languageFeatures?.feedback || "Good language use"],
+          improvements: report.domains?.languageFeatures?.improvements || []
+        },
+        spellingPunctuationGrammar: {
+          score: Math.round((report.domains?.conventions?.score || 0) / 5),
+          weight: 20,
+          strengths: [report.domains?.conventions?.feedback || "Accurate conventions"],
+          improvements: report.domains?.conventions?.improvements || []
+        }
+      },
+      grammarCorrections: report.grammarCorrections || [],
+      vocabularyEnhancements: report.vocabularyEnhancements || [],
+      id: report.id || `nsw-${Date.now()}`,
+      assessmentId: report.assessmentId
+    };
+    
+    setAnalysis(convertedAnalysis);
+  };
+
   const handleSubmitForEvaluation = async () => {
-    await handleNSWSubmit();
+    // Create a new CustomEvent with the latest content
+    const submitEvent = new CustomEvent("submitForEvaluation", {
+      detail: {
+        content: localContent,
+        textType: textType,
+      },
+    });
+
+    // Dispatch the event to the window
+    window.dispatchEvent(submitEvent);
   };
 
   const handleApplyFix = (fix: LintFix) => {
+    // Apply text fixes to content
     console.log('Applying fix:', fix);
   };
 
-  const showWordCountWarning = wordCount > 300;
+  // Check if word count exceeds target
+  const showWordCountWarning = wordCount > 300; // Adjust target as needed
 
-  const currentContent = localContent || content || '';
+  // Check if we have content for submit button
+  const currentContent = localContent || content;
   const hasContent = currentContent && currentContent.trim().length > 0;
 
   return (
     <div className="flex h-screen bg-gray-50">
-      <div className="flex-[7] flex flex-col min-w-0"> 
+      {/* Left side - Writing Area Content */}
+             <div className="flex-[7] flex flex-col min-w-0"> 
+        {/* Your Writing Prompt Section */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 mx-4 mt-4">
           <div className="flex items-center mb-2">
-            <LightbulbIcon className="w-5 h-5 mr-2 text-blue-600" />
+            <LightbulbIcon className="w-5 h-5 mr-2 text-blue-600" /> {/* Changed Lightbulb to LightbulbIcon */}
             <h3 className="font-semibold text-blue-800">Your Writing Prompt</h3>
           </div>
           <p className="text-blue-700 text-sm leading-relaxed">
@@ -302,8 +292,10 @@ export function EnhancedWritingLayout({
           </p>
         </div>
 
+        {/* Action Buttons and Stats Section */}
         <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4 mx-4">
           <div className="flex justify-between items-center">
+            {/* Left side - Action Buttons */}
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setShowPlanningTool(true)}
@@ -333,7 +325,7 @@ export function EnhancedWritingLayout({
                 onClick={() => setShowTips(true)}
                 className="flex items-center space-x-2 px-3 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm font-medium"
               >
-                <LightbulbIcon className="w-4 h-4" />
+                <LightbulbIcon className="w-4 h-4" /> {/* Changed Lightbulb to LightbulbIcon */}
                 <span>Tips</span>
               </button>
               
@@ -346,6 +338,7 @@ export function EnhancedWritingLayout({
               </button>
             </div>
 
+            {/* Right side - Writing Statistics */}
             <div className="flex items-center space-x-4 text-sm">
               <div className="flex items-center space-x-2">
                 <FileText className="w-4 h-4 text-blue-500" />
@@ -366,12 +359,13 @@ export function EnhancedWritingLayout({
           </div>
         </div>
 
+        {/* Text Editor Section */}
         <div className="flex-1 mx-4 mb-4">
           <div className="bg-white border border-gray-200 rounded-lg h-full">
             <WritingArea
               content={currentContent}
               onChange={handleContentChange}
-              onSubmit={handleSubmitForEvaluation}
+              onSubmit={() => handleSubmitForEvaluation(localContent, textType)}
               textType={textType}
               assistanceLevel={assistanceLevel}
               selectedText={selectedText}
@@ -388,11 +382,12 @@ export function EnhancedWritingLayout({
           </div>
         </div>
 
+        {/* Submit for Evaluation Button */}
         <div className="px-4 pb-4">
           <button
             onClick={handleSubmitForEvaluation}
             disabled={evaluationStatus === "loading" || !hasContent}
-            className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center space-x-2"
+            className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center"
           >
             {evaluationStatus === "loading" ? (
               <>
@@ -406,37 +401,33 @@ export function EnhancedWritingLayout({
               </>
             )}
           </button>
-          
-          {process.env.NODE_ENV === 'development' && (
-            <div className="mt-2 text-xs text-gray-500 text-center">
-              Content Length: {currentContent?.length || 0} | Has Content: {hasContent ? 'Yes' : 'No'}
-            </div>
-          )}
         </div>
       </div>
 
-      {!focusMode && (
-        <div className="flex-[2] border-l border-gray-200 bg-white">
-          <TabbedCoachPanel
-            content={currentContent}
-            textType={textType}
-            analysis={analysis}
-            onApplyFix={handleApplyFix}
-            selectedText={selectedText}
-          />
-        </div>
-      )}
+      {/* Right side - Coach Panel - FIXED: Pass content prop properly */}
+              <div className="flex-[3] flex flex-col min-w-0">
 
+        <TabbedCoachPanel
+          analysis={analysis}
+          onApplyFix={handleApplyFix}
+          content={currentContent} // FIXED: Pass the current content
+          textType={textType}
+          onWordSelect={(word: string) => {
+            // Handle word selection for vocabulary enhancement
+            console.log('Word selected:', word);
+          }}
+        />
+      </div>
+      
       {showPlanningTool && (
         <PlanningToolModal
           isOpen={showPlanningTool}
           onClose={() => setShowPlanningTool(false)}
-          textType={textType}
-          plan={plan}
-          onPlanChange={setPlan}
+          onSavePlan={setPlan}
+          initialPlan={plan}
+          currentPrompt={currentPrompt}
         />
       )}
-
       {showStructureGuide && (
         <StructureGuideModal
           isOpen={showStructureGuide}
@@ -444,7 +435,6 @@ export function EnhancedWritingLayout({
           textType={textType}
         />
       )}
-
       {showTips && (
         <TipsModal
           isOpen={showTips}
@@ -452,39 +442,15 @@ export function EnhancedWritingLayout({
           textType={textType}
         />
       )}
-
-      {/* NSW Evaluation System Modal */}
-      {showNSWEvaluationModal && evaluationStatus !== "idle" && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex justify-center items-center">
-          <div className="relative p-5 border w-11/12 md:w-3/4 lg:w-2/3 xl:w-1/2 shadow-lg rounded-md bg-white dark:bg-gray-800 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">Evaluation in Progress...</h3>
-            {evaluationStatus === "loading" && (
-              <div className="flex flex-col items-center justify-center p-10">
-                <Loader2 className="animate-spin text-blue-500" size={48} />
-                <p className="mt-4 text-lg text-gray-700 dark:text-gray-300">Analyzing your essay, please wait...</p>
-              </div>
-            )}
-            {evaluationStatus === "success" && nswReport && (
-              <NSWEvaluationReportDisplay
-                report={nswReport}
-                essayText={currentContent}
-                onClose={() => setShowNSWEvaluationModal(false)} // Close modal function
-              />
-            )}
-            {evaluationStatus === "error" && (
-              <div className="flex flex-col items-center justify-center p-10 text-red-600">
-                <XCircle size={48} />
-                <p className="mt-4 text-lg">Failed to generate evaluation report. Please try again.</p>
-                <button
-                  onClick={() => setShowNSWEvaluationModal(false)} // Close modal function
-                  className="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-                >
-                  Close
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
+      {showNSWEvaluation && (
+        <NSWStandaloneSubmitSystem
+          isOpen={showNSWEvaluation}
+          onClose={() => setShowNSWEvaluation(false)}
+          content={currentContent}
+          textType={textType}
+          onEvaluationComplete={handleNSWEvaluationComplete}
+          evaluationStatus={evaluationStatus}
+        />
       )}
     </div>
   );
