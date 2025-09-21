@@ -29,7 +29,7 @@ interface EnhancedWritingLayoutProps {
   assistanceLevel: string;
   selectedText: string;
   onTimerStart: (started: boolean) => void;
-  onSubmit: () => void;
+  onSubmit: (content: string, textType: string) => void;
   onTextTypeChange: (newTextType: string) => void;
   onPopupCompleted: () => void;
   onNavigate: (page: string) => void;
@@ -185,7 +185,7 @@ export function EnhancedWritingLayout({
       });
 
       // Call the original onSubmit for any additional handling
-      await onSubmit();
+      await onSubmit(contentToEvaluate, typeToEvaluate);
 
     } catch (e: any) {
       console.error("NSW Submit error:", e);
