@@ -60,6 +60,7 @@ export function EnhancedWritingLayout({
   // NSW Evaluation States
   const [showNSWEvaluation, setShowNSWEvaluation] = useState<boolean>(false);
   const [nswReport, setNswReport] = useState<any>(null);
+  const [showReportModal, setShowReportModal] = useState<boolean>(false); // New state for report modal
   const [analysis, setAnalysis] = useState<DetailedFeedback | null>(null);
   const [wordCount, setWordCount] = useState<number>(0);
   const prevTextRef = useRef<string>("");
@@ -197,6 +198,8 @@ export function EnhancedWritingLayout({
     console.log("NSW Evaluation completed:", report);
     setNswReport(report);
     setEvaluationStatus("success");
+    setShowNSWEvaluation(false); // Hide the submission system
+    setShowReportModal(true); // Show the report modal
     
     // Convert NSW report to DetailedFeedback format for compatibility
     const convertedAnalysis: DetailedFeedback = {
@@ -205,25 +208,25 @@ export function EnhancedWritingLayout({
         ideasContent: {
           score: Math.round((report.domains?.contentAndIdeas?.score || 0) / 5),
           weight: 30,
-          strengths: [report.domains?.contentAndIdeas?.feedback || "Good content development"],
+          strengths: [{ text: report.domains?.contentAndIdeas?.feedback || "Good content development" }],
           improvements: report.domains?.contentAndIdeas?.improvements || []
         },
         structureOrganization: {
           score: Math.round((report.domains?.textStructure?.score || 0) / 5),
           weight: 25,
-          strengths: [report.domains?.textStructure?.feedback || "Clear structure"],
+          strengths: [{ text: report.domains?.textStructure?.feedback || "Clear structure" }],
           improvements: report.domains?.textStructure?.improvements || []
         },
         languageVocab: {
           score: Math.round((report.domains?.languageFeatures?.score || 0) / 5),
           weight: 25,
-          strengths: [report.domains?.languageFeatures?.feedback || "Good language use"],
+          strengths: [{ text: report.domains?.languageFeatures?.feedback || "Good language use" }],
           improvements: report.domains?.languageFeatures?.improvements || []
         },
         spellingPunctuationGrammar: {
           score: Math.round((report.domains?.conventions?.score || 0) / 5),
           weight: 20,
-          strengths: [report.domains?.conventions?.feedback || "Accurate conventions"],
+          strengths: [{ text: report.domains?.conventions?.feedback || "Accurate conventions" }],
           improvements: report.domains?.conventions?.improvements || []
         }
       },
@@ -245,6 +248,18 @@ export function EnhancedWritingLayout({
     console.log('Applying fix:', fix);
   };
 
+  const handleCloseReportModal = () => {
+    setShowReportModal(false);
+    setNswReport(null);
+    setAnalysis(null);
+    setEvaluationStatus("idle");
+  };
+
+  const handleCloseNSWEvaluation = () => {
+    setShowNSWEvaluation(false);
+    setEvaluationStatus("idle");
+  };
+
   // Check if word count exceeds target
   const showWordCountWarning = wordCount > 300; // Adjust target as needed
 
@@ -255,11 +270,11 @@ export function EnhancedWritingLayout({
   return (
     <div className="flex h-screen bg-gray-50">
       {/* Left side - Writing Area Content */}
-             <div className="flex-[7] flex flex-col min-w-0"> 
+      <div className="flex-[7] flex flex-col min-w-0"> 
         {/* Your Writing Prompt Section */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 mx-4 mt-4">
           <div className="flex items-center mb-2">
-            <LightbulbIcon className="w-5 h-5 mr-2 text-blue-600" /> {/* Changed Lightbulb to LightbulbIcon */}
+            <LightbulbIcon className="w-5 h-5 mr-2 text-blue-600" />
             <h3 className="font-semibold text-blue-800">Your Writing Prompt</h3>
           </div>
           <p className="text-blue-700 text-sm leading-relaxed">
@@ -300,7 +315,7 @@ export function EnhancedWritingLayout({
                 onClick={() => setShowTips(true)}
                 className="flex items-center space-x-2 px-3 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm font-medium"
               >
-                <LightbulbIcon className="w-4 h-4" /> {/* Changed Lightbulb to LightbulbIcon */}
+                <LightbulbIcon className="w-4 h-4" />
                 <span>Tips</span>
               </button>
               
@@ -379,34 +394,67 @@ export function EnhancedWritingLayout({
         </div>
       </div>
 
+      {/* NSW Evaluation System - Renders when evaluation is triggered */}
       {showNSWEvaluation && (
         <NSWStandaloneSubmitSystem
           content={localContent}
           textType={textType}
           onComplete={handleNSWEvaluationComplete}
-          onClose={() => setShowNSWEvaluation(false)}
+          onClose={handleCloseNSWEvaluation}
         />
       )}
 
-      {nswReport && (
+      {/* Report Modal - Shows when report is ready */}
+      {showReportModal && analysis && (
         <ReportModal
-          report={nswReport}
-          onClose={() => setNswReport(null)}
+          isOpen={showReportModal}
+          onClose={handleCloseReportModal}
+          data={analysis}
+          onApplyFix={handleApplyFix}
+          studentName="Student"
+          essayText={localContent}
         />
       )}
 
-      {/* Right side - Coach Panel */}
+      {/* Right side - Coach Panel (hidden in focus mode) */}
       {!focusMode && (
         <div className="flex-[3] border-l border-gray-200 bg-white">
           <TabbedCoachPanel
-            content={localContent || content}
+            content={currentContent}
+            textType={textType}
+            assistanceLevel={assistanceLevel}
+            selectedText={selectedText}
             analysis={analysis}
             onApplyFix={handleApplyFix}
-            assistanceLevel={assistanceLevel}
-            textType={textType}
-            selectedText={selectedText}
           />
         </div>
+      )}
+
+      {/* Modals */}
+      {showPlanningTool && (
+        <PlanningToolModal
+          isOpen={showPlanningTool}
+          onClose={() => setShowPlanningTool(false)}
+          textType={textType}
+          plan={plan}
+          onPlanChange={setPlan}
+        />
+      )}
+
+      {showStructureGuide && (
+        <StructureGuideModal
+          isOpen={showStructureGuide}
+          onClose={() => setShowStructureGuide(false)}
+          textType={textType}
+        />
+      )}
+
+      {showTips && (
+        <TipsModal
+          isOpen={showTips}
+          onClose={() => setShowTips(false)}
+          textType={textType}
+        />
       )}
     </div>
   );
