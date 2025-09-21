@@ -14,6 +14,7 @@ interface EvaluationReport {
   recommendations: string[];
   strengths: string[];
   areasForImprovement: string[];
+  essayContent: string; // ADDED: Include the student's actual essay in the report
 }
 
 interface DomainScore {
@@ -25,6 +26,7 @@ interface DomainScore {
   weightedScore: number;
   feedback: string[];
   specificExamples: string[];
+  childFriendlyExplanation: string; // ADDED: Child-friendly rubric explanations
 }
 
 interface DetailedFeedback {
@@ -77,11 +79,11 @@ export class NSWEvaluationReportGenerator {
     
     const analysis = this.analyzeEssay(essayContent);
     
-    // Score each domain according to NSW criteria
-    const contentAndIdeas = this.scoreContentAndIdeas(essayContent, analysis);
-    const textStructure = this.scoreTextStructure(essayContent, analysis);
-    const languageFeatures = this.scoreLanguageFeatures(essayContent, analysis);
-    const spellingAndGrammar = this.scoreSpellingAndGrammar(essayContent, analysis);
+    // Score each domain according to NSW criteria - UPDATED: Added domainName parameter
+    const contentAndIdeas = this.scoreContentAndIdeas(essayContent, analysis, "Content & Ideas");
+    const textStructure = this.scoreTextStructure(essayContent, analysis, "Text Structure");
+    const languageFeatures = this.scoreLanguageFeatures(essayContent, analysis, "Language Features");
+    const spellingAndGrammar = this.scoreSpellingAndGrammar(essayContent, analysis, "Spelling & Grammar");
     
     // Calculate overall score
     const overallScore = Math.round(
@@ -103,9 +105,10 @@ export class NSWEvaluationReportGenerator {
         spellingAndGrammar
       },
       detailedFeedback: analysis,
-      recommendations: this.generateRecommendations(contentAndIdeas, textStructure, languageFeatures, spellingAndGrammar),
+      recommendations: this.generatePersonalizedRecommendations(contentAndIdeas, textStructure, languageFeatures, spellingAndGrammar), // UPDATED: Use new personalized recommendations method
       strengths: this.identifyStrengths(contentAndIdeas, textStructure, languageFeatures, spellingAndGrammar),
-      areasForImprovement: this.identifyImprovements(contentAndIdeas, textStructure, languageFeatures, spellingAndGrammar)
+      areasForImprovement: this.identifyImprovements(contentAndIdeas, textStructure, languageFeatures, spellingAndGrammar),
+      essayContent: essayContent // ADDED: Include the essay content in the report
     };
   }
   
@@ -166,7 +169,8 @@ export class NSWEvaluationReportGenerator {
     };
   }
   
-  private static scoreContentAndIdeas(essay: string, analysis: DetailedFeedback): DomainScore {
+  // UPDATED: Added domainName parameter to method signature
+  private static scoreContentAndIdeas(essay: string, analysis: DetailedFeedback, domainName: string): DomainScore {
     let score = 5; // Start with proficient
     const feedback: string[] = [];
     const specificExamples: string[] = [];
@@ -218,11 +222,13 @@ export class NSWEvaluationReportGenerator {
       weight,
       weightedScore,
       feedback,
-      specificExamples
+      specificExamples,
+      childFriendlyExplanation: this.generateChildFriendlyExplanation(domainName, score) // ADDED: Child-friendly explanation
     };
   }
   
-  private static scoreTextStructure(essay: string, analysis: DetailedFeedback): DomainScore {
+  // UPDATED: Added domainName parameter to method signature
+  private static scoreTextStructure(essay: string, analysis: DetailedFeedback, domainName: string): DomainScore {
     let score = 5;
     const feedback: string[] = [];
     const specificExamples: string[] = [];
@@ -274,11 +280,13 @@ export class NSWEvaluationReportGenerator {
       weight,
       weightedScore,
       feedback,
-      specificExamples
+      specificExamples,
+      childFriendlyExplanation: this.generateChildFriendlyExplanation(domainName, score) // ADDED: Child-friendly explanation
     };
   }
   
-  private static scoreLanguageFeatures(essay: string, analysis: DetailedFeedback): DomainScore {
+  // UPDATED: Added domainName parameter to method signature
+  private static scoreLanguageFeatures(essay: string, analysis: DetailedFeedback, domainName: string): DomainScore {
     let score = 5;
     const feedback: string[] = [];
     const specificExamples: string[] = [];
@@ -334,11 +342,13 @@ export class NSWEvaluationReportGenerator {
       weight,
       weightedScore,
       feedback,
-      specificExamples
+      specificExamples,
+      childFriendlyExplanation: this.generateChildFriendlyExplanation(domainName, score) // ADDED: Child-friendly explanation
     };
   }
   
-  private static scoreSpellingAndGrammar(essay: string, analysis: DetailedFeedback): DomainScore {
+  // UPDATED: Added domainName parameter to method signature
+  private static scoreSpellingAndGrammar(essay: string, analysis: DetailedFeedback, domainName: string): DomainScore {
     let score = 5;
     const feedback: string[] = [];
     const specificExamples: string[] = [];
@@ -407,8 +417,91 @@ export class NSWEvaluationReportGenerator {
       weight,
       weightedScore,
       feedback,
-      specificExamples
+      specificExamples,
+      childFriendlyExplanation: this.generateChildFriendlyExplanation(domainName, score) // ADDED: Child-friendly explanation
     };
+  }
+  
+  // ADDED: New method for generating child-friendly explanations
+  private static generateChildFriendlyExplanation(domain: string, score: number): string {
+    switch (domain) {
+      case "Content & Ideas":
+        if (score >= 9) return "Your ideas are super creative and interesting, making your story really stand out!";
+        if (score >= 7) return "You have some great, thoughtful ideas that make your writing engaging.";
+        if (score >= 5) return "Your ideas are good, but you could add more unique thoughts to make them even better.";
+        if (score >= 3) return "Your ideas are a bit simple and could use more imagination to make them exciting.";
+        return "Your ideas are hard to find or don't quite fit the topic. Let's work on making them clearer and more imaginative!";
+      case "Text Structure":
+        if (score >= 9) return "Your writing flows perfectly, like a well-told story, with a clear beginning, middle, and end!";
+        if (score >= 7) return "Your writing is well-organized, making it easy for the reader to follow your ideas.";
+        if (score >= 5) return "Your writing has a clear plan, but sometimes the parts don't connect smoothly.";
+        if (score >= 3) return "Your writing is a bit jumbled, and it's hard to see how your ideas fit together.";
+        return "Your writing is hard to follow because it doesn't have a clear order. Let's practice organizing your thoughts!";
+      case "Language Features":
+        if (score >= 9) return "You use amazing words and clever writing tricks that make your writing shine!";
+        if (score >= 7) return "You use good words and some literary devices to make your writing interesting.";
+        if (score >= 5) return "You use appropriate words, but trying out new words and phrases could make your writing even better.";
+        if (score >= 3) return "Your words are simple, and you could try using more exciting language to express yourself.";
+        return "Your vocabulary is very basic, and you don't use many literary devices. Let's discover new words and ways to write!";
+      case "Spelling & Grammar":
+        if (score >= 9) return "Your writing is almost perfect with spelling, punctuation, and grammar – fantastic!";
+        if (score >= 7) return "You make very few mistakes in spelling, punctuation, and grammar. Great job!";
+        if (score >= 5) return "You have some mistakes in spelling, punctuation, or grammar, but your writing is still easy to understand.";
+        if (score >= 3) return "You make several mistakes in spelling, punctuation, and grammar, which sometimes makes your writing hard to read.";
+        return "You have many mistakes in spelling, punctuation, and grammar, making your writing difficult to understand. Let's focus on the basics!";
+      default:
+        return "No specific explanation available for this domain.";
+    }
+  }
+  
+  // ADDED: New method for generating personalized learning recommendations
+  private static generatePersonalizedRecommendations(contentAndIdeas: DomainScore, textStructure: DomainScore, languageFeatures: DomainScore, spellingAndGrammar: DomainScore): string[] {
+    const recommendations: string[] = [];
+
+    const domains = [
+      { name: "Content & Ideas", score: contentAndIdeas.score, suggestions: [
+        "Brainstorm more creative and original ideas using mind maps or freewriting.",
+        "Develop your ideas with more details and examples to make them engaging.",
+        "Ensure your writing directly addresses all parts of the prompt."
+      ]},
+      { name: "Text Structure", score: textStructure.score, suggestions: [
+        "Practice organizing your thoughts with a clear introduction, body, and conclusion.",
+        "Use topic sentences and transition words to improve paragraph flow.",
+        "Plan your essay structure before you start writing."
+      ]},
+      { name: "Language Features", score: languageFeatures.score, suggestions: [
+        "Expand your vocabulary by learning new words and their synonyms.",
+        "Experiment with different literary devices like metaphors, similes, and personification.",
+        "Vary your sentence structures to make your writing more interesting to read."
+      ]},
+      { name: "Spelling & Grammar", score: spellingAndGrammar.score, suggestions: [
+        "Review basic grammar rules, especially subject-verb agreement and tense consistency.",
+        "Pay close attention to punctuation, particularly commas and apostrophes.",
+        "Proofread your work carefully for spelling errors, perhaps reading it aloud."
+      ]}
+    ];
+
+    // Sort domains by score to prioritize the lowest scoring areas
+    domains.sort((a, b) => a.score - b.score);
+
+    // Add personalized recommendations based on the lowest scoring domains
+    for (const domain of domains) {
+      if (domain.score <= 5) { // Consider scores 5 and below as needing improvement
+        recommendations.push(`For ${domain.name}: ${domain.suggestions[0]}`);
+        if (domain.score <= 3) { // For very low scores, add more specific suggestions
+          recommendations.push(`For ${domain.name}: ${domain.suggestions[1]}`);
+          recommendations.push(`For ${domain.name}: ${domain.suggestions[2]}`);
+        }
+      }
+    }
+
+    // Ensure there are at least a few general recommendations if all scores are high
+    if (recommendations.length === 0) {
+      recommendations.push("Keep up the great work! Continue to read widely and practice writing regularly to further hone your skills.");
+      recommendations.push("Challenge yourself by experimenting with new writing styles or more complex prompts.");
+    }
+
+    return recommendations;
   }
   
   // Helper methods for analysis
@@ -439,50 +532,80 @@ export class NSWEvaluationReportGenerator {
     let score = 5;
     
     // Look for creative elements
-    if (/imagine|picture|envision|suddenly|unexpectedly|magical|mysterious/i.test(essay)) score += 1;
-    if (/metaphor|simile|personification/i.test(essay)) score += 1;
-    if (/"/.test(essay)) score += 0.5; // dialogue
-    if (/vivid|brilliant|shimmering|gleaming/i.test(essay)) score += 0.5; // descriptive language
+    if (/imagine|picture|envision|suddenly|unexpected|mysterious|magical|wonder|dream|fantasy/i.test(essay)) {
+      score += 2;
+    }
     
-    return Math.min(10, Math.max(1, score));
+    // Look for unique perspectives or original ideas
+    if (/never thought|realized|discovered|unique|different|special|unusual/i.test(essay)) {
+      score += 1;
+    }
+    
+    // Look for emotional depth
+    if (/felt|emotion|heart|soul|passionate|excited|nervous|anxious|proud/i.test(essay)) {
+      score += 1;
+    }
+    
+    return Math.min(10, score);
   }
   
   private static assessIdeaDevelopment(essay: string): number {
-    const paragraphs = essay.split(/\n\s*\n/).filter(p => p.trim().length > 0);
     const sentences = essay.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    const words = essay.split(/\s+/).length;
     
-    let score = 3;
+    let score = 5;
     
-    // More paragraphs suggest better development
-    if (paragraphs.length >= 4) score += 2;
-    else if (paragraphs.length >= 3) score += 1;
+    // Check for elaboration and detail
+    if (words > 200) score += 1;
+    if (words > 400) score += 1;
     
-    // Longer sentences suggest more detailed development
-    const avgSentenceLength = essay.length / sentences.length;
-    if (avgSentenceLength > 80) score += 2;
-    else if (avgSentenceLength > 60) score += 1;
+    // Look for examples and explanations
+    if (/for example|such as|like|including|because|since|therefore|this shows/i.test(essay)) {
+      score += 2;
+    }
     
-    return Math.min(10, Math.max(1, score));
+    // Check sentence complexity and development
+    if (sentences.length > 10) score += 1;
+    
+    return Math.min(10, score);
   }
   
   private static assessEngagement(essay: string): number {
     let score = 5;
     
-    // Look for engaging elements
-    if (/"/.test(essay)) score += 1; // dialogue
-    if (/\?/.test(essay)) score += 0.5; // questions
-    if (/!/.test(essay)) score += 0.5; // exclamations
-    if (/first person|I|me|my/i.test(essay)) score += 0.5; // personal connection
+    // Look for engaging openings
+    const firstSentence = essay.split(/[.!?]+/)[0];
+    if (firstSentence && (firstSentence.includes('?') || /imagine|picture|have you ever|what if/i.test(firstSentence))) {
+      score += 2;
+    }
     
-    return Math.min(10, Math.max(1, score));
+    // Look for dialogue
+    if (/"/.test(essay)) {
+      score += 1;
+    }
+    
+    // Look for sensory details
+    if (/see|hear|smell|taste|feel|touch|sound|sight|color|bright|dark/i.test(essay)) {
+      score += 1;
+    }
+    
+    // Look for action and movement
+    if (/ran|jumped|rushed|hurried|quickly|suddenly|immediately/i.test(essay)) {
+      score += 1;
+    }
+    
+    return Math.min(10, score);
   }
   
   private static identifySophisticatedVocabulary(essay: string): string[] {
     const sophisticatedWords = [
-      'magnificent', 'extraordinary', 'remarkable', 'exceptional', 'tremendous',
-      'fascinating', 'intriguing', 'captivating', 'mesmerizing', 'enchanting',
-      'elaborate', 'intricate', 'complex', 'sophisticated', 'profound',
-      'consequently', 'furthermore', 'nevertheless', 'moreover', 'however'
+      'magnificent', 'extraordinary', 'tremendous', 'spectacular', 'fascinating',
+      'incredible', 'remarkable', 'outstanding', 'exceptional', 'brilliant',
+      'marvelous', 'wonderful', 'fantastic', 'amazing', 'awesome',
+      'beautiful', 'gorgeous', 'stunning', 'breathtaking', 'captivating',
+      'mysterious', 'intriguing', 'puzzling', 'perplexing', 'bewildering',
+      'enormous', 'gigantic', 'massive', 'colossal', 'immense',
+      'tiny', 'minuscule', 'microscopic', 'diminutive', 'petite'
     ];
     
     const found: string[] = [];
@@ -616,31 +739,7 @@ export class NSWEvaluationReportGenerator {
     return [...new Set(issues)];
   }
   
-  private static generateRecommendations(content: DomainScore, structure: DomainScore, language: DomainScore, grammar: DomainScore): string[] {
-    const recommendations: string[] = [];
-    
-    if (content.score < 7) {
-      recommendations.push("Focus on developing more original and creative ideas");
-      recommendations.push("Elaborate on your ideas with more specific details and examples");
-    }
-    
-    if (structure.score < 7) {
-      recommendations.push("Work on creating stronger paragraph organization with clear topic sentences");
-      recommendations.push("Use more effective transitions between ideas and paragraphs");
-    }
-    
-    if (language.score < 7) {
-      recommendations.push("Expand your vocabulary by reading more sophisticated texts");
-      recommendations.push("Practice using literary devices like metaphors, similes, and personification");
-    }
-    
-    if (grammar.score < 7) {
-      recommendations.push("Proofread your work carefully for spelling and grammar errors");
-      recommendations.push("Practice using complex sentence structures correctly");
-    }
-    
-    return recommendations;
-  }
+  // REMOVED: Old generateRecommendations method (replaced with generatePersonalizedRecommendations)
   
   private static identifyStrengths(content: DomainScore, structure: DomainScore, language: DomainScore, grammar: DomainScore): string[] {
     const strengths: string[] = [];
