@@ -16,6 +16,7 @@ interface EvaluationReport {
   areasForImprovement: SpecificImprovement[];
   essayContent: string; // ENHANCED: Include the student's actual essay in the report
   childFriendlyExplanations: ChildFriendlyExplanations; // NEW: Child-friendly rubric explanations
+  promptSimilarityWarning?: string; // NEW: Warning for prompt copying
 }
 
 interface DomainScore {
@@ -119,6 +120,17 @@ export class NSWEvaluationReportGenerator {
       throw new Error("Essay content cannot be empty");
     }
     
+    // NEW: Check for prompt similarity/copying
+    const promptSimilarity = this.calculatePromptSimilarity(essayContent, prompt);
+    let promptSimilarityWarning: string | undefined;
+    
+    if (promptSimilarity.isHighlySimilar) {
+      // If the essay is essentially the same as the prompt, return minimal scores
+      return this.generateMinimalScoreReport(essayContent, promptSimilarity.explanation);
+    } else if (promptSimilarity.isModeratelySimilar) {
+      promptSimilarityWarning = promptSimilarity.explanation;
+    }
+    
     const analysis = this.analyzeEssay(essayContent);
     
     // Score each domain according to NSW criteria with enhanced feedback
@@ -168,7 +180,187 @@ export class NSWEvaluationReportGenerator {
       strengths: specificStrengths,
       areasForImprovement: specificImprovements,
       essayContent: essayContent,
-      childFriendlyExplanations
+      childFriendlyExplanations,
+      promptSimilarityWarning
+    };
+  }
+  
+  // NEW: Calculate similarity between essay and prompt
+  private static calculatePromptSimilarity(essay: string, prompt: string): {
+    isHighlySimilar: boolean;
+    isModeratelySimilar: boolean;
+    explanation: string;
+    similarityScore: number;
+  } {
+    // Clean and normalize both texts
+    const cleanEssay = essay.toLowerCase().replace(/[^\w\s]/g, '').trim();
+    const cleanPrompt = prompt.toLowerCase().replace(/[^\w\s]/g, '').trim();
+    
+    // If essay is empty or very short, it's not similar
+    if (cleanEssay.length < 10) {
+      return {
+        isHighlySimilar: false,
+        isModeratelySimilar: false,
+        explanation: "",
+        similarityScore: 0
+      };
+    }
+    
+    // Check for exact or near-exact matches
+    if (cleanEssay === cleanPrompt) {
+      return {
+        isHighlySimilar: true,
+        isModeratelySimilar: false,
+        explanation: "The essay content is identical to the prompt. This indicates the student copied the prompt instead of writing an original response.",
+        similarityScore: 1.0
+      };
+    }
+    
+    // Calculate word overlap
+    const essayWords = cleanEssay.split(/\s+/).filter(word => word.length > 2);
+    const promptWords = cleanPrompt.split(/\s+/).filter(word => word.length > 2);
+    
+    if (essayWords.length === 0) {
+      return {
+        isHighlySimilar: false,
+        isModeratelySimilar: false,
+        explanation: "",
+        similarityScore: 0
+      };
+    }
+    
+    // Count matching words
+    const essayWordSet = new Set(essayWords);
+    const promptWordSet = new Set(promptWords);
+    const intersection = new Set([...essayWordSet].filter(word => promptWordSet.has(word)));
+    
+    const overlapRatio = intersection.size / essayWordSet.size;
+    
+    // Check for substring containment (essay contains most of the prompt)
+    const promptInEssay = cleanPrompt.length > 20 && cleanEssay.includes(cleanPrompt.substring(0, Math.min(cleanPrompt.length, 100)));
+    const essayInPrompt = cleanEssay.length > 20 && cleanPrompt.includes(cleanEssay.substring(0, Math.min(cleanEssay.length, 100)));
+    
+    // Calculate similarity score
+    let similarityScore = overlapRatio;
+    if (promptInEssay || essayInPrompt) {
+      similarityScore = Math.max(similarityScore, 0.8);
+    }
+    
+    // Determine similarity level
+    if (similarityScore >= 0.8 || promptInEssay || essayInPrompt) {
+      return {
+        isHighlySimilar: true,
+        isModeratelySimilar: false,
+        explanation: "The essay appears to be largely copied from the prompt with minimal original content. Students should write their own creative response to the prompt.",
+        similarityScore
+      };
+    } else if (similarityScore >= 0.6) {
+      return {
+        isHighlySimilar: false,
+        isModeratelySimilar: true,
+        explanation: "The essay contains a significant amount of text from the prompt. Students should focus on creating original content inspired by the prompt rather than copying it.",
+        similarityScore
+      };
+    }
+    
+    return {
+      isHighlySimilar: false,
+      isModeratelySimilar: false,
+      explanation: "",
+      similarityScore
+    };
+  }
+  
+  // NEW: Generate minimal score report for prompt copying
+  private static generateMinimalScoreReport(essayContent: string, explanation: string): EvaluationReport {
+    const minimalDomainScore: DomainScore = {
+      score: 0,
+      maxScore: 10,
+      percentage: 0,
+      band: "No Response",
+      weight: 0,
+      weightedScore: 0,
+      feedback: ["No original content provided - essay appears to be copied from the prompt"],
+      specificExamples: ["Essay content matches the prompt text"],
+      childFriendlyExplanation: "🚫 This doesn't look like your own writing. You need to write your own creative story based on the prompt, not copy the prompt itself!",
+      concreteExamples: ["The text submitted is the same as the writing prompt"],
+      actionableSuggestions: [
+        "Read the prompt carefully to understand what story you should write",
+        "Create your own characters, setting, and plot based on the prompt",
+        "Write in your own words - don't copy the prompt text"
+      ]
+    };
+    
+    const contentAndIdeas = { ...minimalDomainScore, weight: 40 };
+    const textStructure = { ...minimalDomainScore, weight: 20 };
+    const languageFeatures = { ...minimalDomainScore, weight: 25 };
+    const spellingAndGrammar = { ...minimalDomainScore, weight: 15 };
+    
+    return {
+      overallScore: 0,
+      overallGrade: "No Response",
+      domains: {
+        contentAndIdeas,
+        textStructure,
+        languageFeatures,
+        spellingAndGrammar
+      },
+      detailedFeedback: {
+        wordCount: essayContent.split(/\s+/).length,
+        sentenceVariety: {
+          simple: 0,
+          compound: 0,
+          complex: 0,
+          analysis: "Cannot analyze - no original content provided"
+        },
+        vocabularyAnalysis: {
+          sophisticatedWords: [],
+          repetitiveWords: [],
+          suggestions: ["Write your own original response to the prompt"]
+        },
+        literaryDevices: {
+          identified: [],
+          suggestions: ["Create your own story with interesting descriptions and dialogue"]
+        },
+        structuralElements: {
+          hasIntroduction: false,
+          hasConclusion: false,
+          paragraphCount: 0,
+          coherence: "No structure - prompt copied"
+        },
+        technicalAccuracy: {
+          spellingErrors: 0,
+          grammarIssues: [],
+          punctuationIssues: [],
+          specificErrors: []
+        }
+      },
+      recommendations: [{
+        title: "Write Your Own Story",
+        description: "You need to create an original response to the writing prompt, not copy the prompt itself.",
+        examples: [
+          "Read the prompt carefully and think about what story you want to tell",
+          "Create your own characters with names and personalities",
+          "Describe what happens in your story using your own words",
+          "Add dialogue, descriptions, and emotions to make your story interesting"
+        ],
+        priority: 'high' as const
+      }],
+      strengths: [],
+      areasForImprovement: [{
+        area: "Original Writing",
+        issue: "The submitted text is copied from the prompt rather than being an original response.",
+        suggestion: "Write your own creative story based on the prompt. Use the prompt as inspiration, not as text to copy.",
+        concreteExample: "If the prompt asks about a mysterious door, write YOUR story about what YOU would do and what YOU would find behind the door."
+      }],
+      essayContent: essayContent,
+      childFriendlyExplanations: {
+        ideasContent: "🚫 This doesn't look like your own writing. You need to write your own creative story based on the prompt!",
+        structure: "🚫 No story structure found because you copied the prompt instead of writing your own story.",
+        language: "🚫 No original language use detected. Write your own story with your own words!",
+        grammar: "🚫 Cannot evaluate grammar when no original writing is provided."
+      },
+      promptSimilarityWarning: explanation
     };
   }
   
@@ -411,55 +603,51 @@ export class NSWEvaluationReportGenerator {
     const sentenceVarietyScore = this.assessSentenceVarietyScore(analysis.sentenceVariety);
     const voiceScore = this.assessVoice(essay);
     
-    score = Math.round((vocabScore + literaryDeviceScore + sentenceVarietyScore + voiceScore) / 4);
+    // Calculate weighted average
+    score = Math.round((vocabScore * 0.4 + literaryDeviceScore * 0.3 + sentenceVarietyScore * 0.2 + voiceScore * 0.1));
     score = Math.max(1, Math.min(10, score));
     
-    // Generate specific feedback with examples
+    // Generate specific feedback with concrete examples
     const sophisticatedWords = analysis.vocabularyAnalysis.sophisticatedWords;
     const literaryDevices = analysis.literaryDevices.identified;
-    const repetitiveWords = analysis.vocabularyAnalysis.repetitiveWords;
     
     if (score >= 9) {
-      feedback.push("Sophisticated and precise vocabulary");
-      feedback.push("Masterful use of literary devices");
-      feedback.push("Excellent sentence variety and control");
-      feedback.push("Engaging and authentic voice throughout");
+      feedback.push("Exceptional vocabulary with sophisticated word choices");
+      feedback.push("Masterful use of literary devices and techniques");
+      feedback.push("Varied and engaging sentence structures");
       if (sophisticatedWords.length > 0) {
-        concreteExamples.push(`Excellent vocabulary choices like: ${sophisticatedWords.slice(0, 3).join(', ')}`);
+        concreteExamples.push(`Sophisticated vocabulary used: ${sophisticatedWords.slice(0, 3).join(', ')}`);
       }
     } else if (score >= 7) {
-      feedback.push("Well-chosen and varied vocabulary");
-      feedback.push("Effective use of literary devices");
-      feedback.push("Good sentence variety and control");
-      feedback.push("Clear and consistent voice");
+      feedback.push("Strong vocabulary with good word choices");
+      feedback.push("Effective use of some literary devices");
+      feedback.push("Good sentence variety");
       if (literaryDevices.length > 0) {
-        concreteExamples.push(`Good use of literary devices: ${literaryDevices.join(', ')}`);
+        concreteExamples.push(`Literary devices used: ${literaryDevices.join(', ')}`);
       }
     } else if (score >= 5) {
-      feedback.push("Appropriate vocabulary with some variety");
-      feedback.push("Adequate use of literary devices");
-      feedback.push("Some sentence variety and generally good control");
-      feedback.push("Developing voice");
-      if (repetitiveWords.length > 0) {
-        actionableSuggestions.push(`Try using synonyms for words you repeat often, like: ${repetitiveWords.slice(0, 2).join(', ')}`);
+      feedback.push("Adequate vocabulary for the task");
+      feedback.push("Some attempt at literary devices");
+      feedback.push("Basic sentence structures with some variety");
+      actionableSuggestions.push("Try using more descriptive adjectives and interesting verbs to make your writing more engaging.");
+      if (literaryDevices.length === 0) {
+        actionableSuggestions.push("Add similes (comparisons using 'like' or 'as') to make your descriptions more vivid.");
       }
-      actionableSuggestions.push("Experiment with similes (comparing using 'like' or 'as') to make your descriptions more vivid.");
     } else if (score >= 3) {
-      feedback.push("Simple vocabulary with limited variety");
-      feedback.push("Limited use of literary devices");
-      feedback.push("Limited sentence variety");
-      feedback.push("Inconsistent voice");
+      feedback.push("Simple vocabulary with limited range");
+      feedback.push("Minimal use of literary techniques");
+      feedback.push("Mostly simple sentence structures");
       actionableSuggestions.push("Replace simple words with more interesting ones: instead of 'big,' try 'enormous' or 'gigantic.'");
-      actionableSuggestions.push("Vary your sentence beginnings - not every sentence needs to start the same way.");
+      actionableSuggestions.push("Vary your sentence beginnings - don't start every sentence the same way.");
     } else {
-      feedback.push("Basic, repetitive vocabulary");
-      feedback.push("Few or no literary devices");
-      feedback.push("Little to no sentence variety");
-      feedback.push("Minimal voice development");
-      actionableSuggestions.push("Build your vocabulary by learning one new descriptive word each day and using it in your writing.");
-      actionableSuggestions.push("Try writing some short sentences and some longer sentences to create rhythm in your writing.");
+      feedback.push("Very basic vocabulary");
+      feedback.push("No evidence of literary devices");
+      feedback.push("Repetitive sentence patterns");
+      actionableSuggestions.push("Build your vocabulary by learning one new descriptive word each day.");
+      actionableSuggestions.push("Practice writing sentences that start with different words.");
     }
     
+    // Add specific examples from analysis
     specificExamples.push(...this.extractLanguageExamples(essay, analysis));
     
     const weight = 25;
@@ -481,7 +669,7 @@ export class NSWEvaluationReportGenerator {
     };
   }
   
-  // ENHANCED: Improved grammar scoring with specific error identification
+  // ENHANCED: Improved grammar scoring with specific error feedback
   private static scoreSpellingAndGrammar(essay: string, analysis: DetailedFeedback, domainName: string): DomainScore {
     let score = 5;
     const feedback: string[] = [];
@@ -489,15 +677,18 @@ export class NSWEvaluationReportGenerator {
     const concreteExamples: string[] = [];
     const actionableSuggestions: string[] = [];
     
+    // Calculate error rates
     const wordCount = analysis.wordCount;
-    const spellingErrorRate = analysis.technicalAccuracy.spellingErrors / wordCount;
+    const spellingErrorRate = wordCount > 0 ? analysis.technicalAccuracy.spellingErrors / wordCount : 0;
     const grammarIssueCount = analysis.technicalAccuracy.grammarIssues.length;
     const punctuationIssueCount = analysis.technicalAccuracy.punctuationIssues.length;
-    const specificErrors = analysis.technicalAccuracy.specificErrors;
+    const specificErrors = analysis.technicalAccuracy.specificErrors || [];
     
-    // Calculate score based on error rates
-    if (spellingErrorRate <= 0.01 && grammarIssueCount <= 1 && punctuationIssueCount <= 1) {
-      score = 9; // Outstanding
+    // Score based on error frequency
+    if (spellingErrorRate === 0 && grammarIssueCount === 0 && punctuationIssueCount === 0) {
+      score = 10; // Outstanding
+    } else if (spellingErrorRate <= 0.01 && grammarIssueCount <= 1 && punctuationIssueCount <= 1) {
+      score = 9; // Excellent
     } else if (spellingErrorRate <= 0.03 && grammarIssueCount <= 2 && punctuationIssueCount <= 2) {
       score = 7; // Highly Proficient
     } else if (spellingErrorRate <= 0.05 && grammarIssueCount <= 4 && punctuationIssueCount <= 3) {
@@ -579,322 +770,14 @@ export class NSWEvaluationReportGenerator {
     };
   }
   
-  // NEW: Enhanced child-friendly explanation generator
-  private static generateChildFriendlyExplanation(domain: string, score: number): string {
-    switch (domain) {
-      case "Content & Ideas":
-        if (score >= 9) return "🌟 Wow! Your ideas are absolutely amazing and super creative! You have a wonderful imagination that makes your story really special and exciting to read.";
-        if (score >= 7) return "✨ You have some really great and thoughtful ideas that make your writing interesting and fun to read. Your creativity is definitely shining through!";
-        if (score >= 5) return "💡 Your ideas are good and show some creativity. With a bit more imagination and detail, you can make them even more exciting and engaging.";
-        if (score >= 3) return "🌱 Your ideas are starting to form, but they need more imagination and specific details to truly come alive. Think about adding more descriptions or unexpected twists!";
-        return "🎯 Your ideas need more development and creativity. Let's work together on brainstorming more imaginative and detailed ideas that will captivate your readers!";
-      case "Text Structure":
-        if (score >= 9) return "🏗️ Your writing flows perfectly like a well-told story! You have mastered organizing your ideas with a clear beginning, middle, and end.";
-        if (score >= 7) return "📚 Your writing is well-organized and easy to follow. You've done a great job structuring your story so readers can enjoy it from start to finish.";
-        if (score >= 5) return "🔗 Your writing has a clear plan, but sometimes the parts don't connect as smoothly as they could. Try using more connecting words to link your ideas!";
-        if (score >= 3) return "🧩 Your writing is a bit jumbled, and it's hard to see how your ideas fit together. Let's practice organizing your thoughts step by step.";
-        return "🗺️ Your writing is hard to follow because it doesn't have a clear order. Let's practice organizing your thoughts with a simple plan: beginning, middle, and end!";
-      case "Language Features":
-        if (score >= 9) return "🎨 You use amazing words and clever writing tricks that make your writing shine like a diamond! Your vocabulary and style are truly impressive.";
-        if (score >= 7) return "📖 You use good words and some interesting writing techniques that make your story engaging and fun to read.";
-        if (score >= 5) return "🔤 You use appropriate words, but trying out some new vocabulary and writing techniques could make your writing even more colorful and exciting.";
-        if (score >= 3) return "📝 Your words are quite simple. Let's explore some more exciting vocabulary and fun writing techniques to make your stories more interesting.";
-        return "🌈 Your vocabulary is very basic right now. Let's discover new words and fun ways to write that will make your stories much more exciting and engaging!";
-      case "Spelling & Grammar":
-        if (score >= 9) return "🎯 Your spelling, punctuation, and grammar are almost perfect! You're clearly a careful writer who pays attention to details.";
-        if (score >= 7) return "✅ You make very few mistakes in spelling, punctuation, and grammar. Great job being careful with your writing mechanics!";
-        if (score >= 5) return "⚠️ You have some mistakes in spelling, punctuation, or grammar, but your writing is still easy to understand. A little more proofreading will help!";
-        if (score >= 3) return "🔍 You make several mistakes in spelling, punctuation, and grammar. Let's focus on one area at a time to improve your writing mechanics.";
-        return "📚 You have quite a few mistakes in spelling, punctuation, and grammar. Let's start with the basics and build up your skills step by step!";
-      default:
-        return "Keep working on this area - every great writer started as a beginner!";
-    }
-  }
-  
-  // NEW: Generate personalized recommendations with concrete examples
-  private static generatePersonalizedRecommendations(
-    content: DomainScore, 
-    structure: DomainScore, 
-    language: DomainScore, 
-    grammar: DomainScore,
-    essayText: string
-  ): PersonalizedRecommendation[] {
-    const recommendations: PersonalizedRecommendation[] = [];
-    const domains = [
-      { name: "Ideas & Content", score: content.score, domain: content },
-      { name: "Structure & Organization", score: structure.score, domain: structure },
-      { name: "Language & Vocabulary", score: language.score, domain: language },
-      { name: "Spelling & Grammar", score: grammar.score, domain: grammar }
-    ];
-
-    // Sort by score to prioritize lowest areas
-    domains.sort((a, b) => a.score - b.score);
-
-    // Generate recommendations for the lowest scoring areas
-    for (const domainInfo of domains) {
-      if (domainInfo.score <= 6 && recommendations.length < 3) { // Focus on areas that need improvement
-        switch (domainInfo.name) {
-          case "Ideas & Content":
-            recommendations.push({
-              title: "Develop Your Creative Ideas",
-              description: "Make your ideas more interesting and detailed to captivate your readers.",
-              examples: [
-                "Instead of 'The door was old,' try 'The wooden door creaked and groaned, its rusty hinges protesting with every movement.'",
-                "Add sensory details: What do you see, hear, smell, feel, and taste in your story?",
-                "Create unexpected plot twists or unique character traits to surprise your readers."
-              ],
-              priority: 'high'
-            });
-            break;
-          case "Structure & Organization":
-            recommendations.push({
-              title: "Improve Your Story Organization",
-              description: "Help your readers follow your story by organizing your ideas in a logical, clear order.",
-              examples: [
-                "Plan with a simple outline: Beginning (introduce characters/setting) → Middle (main events/problem) → End (resolution)",
-                "Use connecting words like 'First,' 'Then,' 'Meanwhile,' 'Finally' to link your ideas together",
-                "Make sure each paragraph focuses on one main idea or event"
-              ],
-              priority: 'high'
-            });
-            break;
-          case "Language & Vocabulary":
-            recommendations.push({
-              title: "Enhance Your Word Choice",
-              description: "Use more exciting and varied vocabulary to make your writing more engaging.",
-              examples: [
-                "Replace simple words: instead of 'big,' try 'enormous,' 'gigantic,' or 'massive'",
-                "Vary how you start sentences - not every sentence needs to begin the same way",
-                "Try using similes: 'The cat moved like a shadow in the night'"
-              ],
-              priority: 'medium'
-            });
-            break;
-          case "Spelling & Grammar":
-            recommendations.push({
-              title: "Master Writing Mechanics",
-              description: "Focus on spelling, punctuation, and grammar to make your writing clear and easy to read.",
-              examples: [
-                "Always capitalize the word 'I' and the first word of each sentence",
-                "Use commas after introductory phrases: 'After the storm passed, the sun came out'",
-                "Read your work aloud to catch mistakes your eyes might miss"
-              ],
-              priority: 'high'
-            });
-            break;
-        }
-      }
-    }
-
-    // If all scores are good, provide growth recommendations
-    if (recommendations.length === 0) {
-      recommendations.push({
-        title: "Challenge Yourself Further",
-        description: "Your writing is already strong! Try these advanced techniques to make it even better.",
-        examples: [
-          "Experiment with different narrative perspectives (first person vs. third person)",
-          "Try writing in different genres like mystery, fantasy, or science fiction",
-          "Practice writing dialogue that reveals character personality"
-        ],
-        priority: 'low'
-      });
-    }
-
-    return recommendations;
-  }
-  
-  // NEW: Identify specific strengths with text examples
-  private static identifySpecificStrengths(
-    content: DomainScore, 
-    structure: DomainScore, 
-    language: DomainScore, 
-    grammar: DomainScore,
-    essayText: string
-  ): SpecificStrength[] {
-    const strengths: SpecificStrength[] = [];
-    
-    if (content.score >= 6) {
-      const firstSentence = essayText.split(/[.!?]+/)[0]?.trim();
-      strengths.push({
-        area: "Creative Ideas",
-        description: "You show great imagination and creativity in your writing.",
-        textExample: firstSentence ? `Your opening: "${firstSentence}..."` : undefined,
-        encouragement: "Your creative thinking makes your story unique and interesting to read!"
-      });
-    }
-    
-    if (structure.score >= 6) {
-      const paragraphCount = essayText.split(/\n\s*\n/).filter(p => p.trim().length > 0).length;
-      strengths.push({
-        area: "Story Organization",
-        description: "Your writing has a clear structure that's easy to follow.",
-        textExample: paragraphCount > 1 ? `You organized your ideas into ${paragraphCount} clear paragraphs` : undefined,
-        encouragement: "Good organization helps readers enjoy your story from beginning to end!"
-      });
-    }
-    
-    if (language.score >= 6) {
-      strengths.push({
-        area: "Word Choice",
-        description: "You use interesting and appropriate words to express your ideas.",
-        encouragement: "Your vocabulary choices help create vivid pictures in the reader's mind!"
-      });
-    }
-    
-    if (grammar.score >= 6) {
-      strengths.push({
-        area: "Writing Mechanics",
-        description: "You show good control of spelling, punctuation, and grammar.",
-        encouragement: "Your attention to detail makes your writing clear and easy to understand!"
-      });
-    }
-
-    return strengths;
-  }
-  
-  // NEW: Identify specific improvements with concrete examples
-  private static identifySpecificImprovements(
-    content: DomainScore, 
-    structure: DomainScore, 
-    language: DomainScore, 
-    grammar: DomainScore,
-    essayText: string
-  ): SpecificImprovement[] {
-    const improvements: SpecificImprovement[] = [];
-    
-    if (content.score < 6) {
-      improvements.push({
-        area: "Ideas & Content",
-        issue: "Your ideas need more development and creative details.",
-        suggestion: "Add specific descriptions and examples to bring your ideas to life.",
-        concreteExample: "Instead of saying 'The place was nice,' describe what made it special: the colors, sounds, or feelings it gave you."
-      });
-    }
-    
-    if (structure.score < 6) {
-      improvements.push({
-        area: "Structure & Organization",
-        issue: "Your writing could be better organized to help readers follow your story.",
-        suggestion: "Plan your writing with a clear beginning, middle, and end before you start.",
-        concreteExample: "Try making an outline: Introduction (hook the reader) → Body (main events) → Conclusion (wrap up the story)."
-      });
-    }
-    
-    if (language.score < 6) {
-      improvements.push({
-        area: "Language & Vocabulary",
-        issue: "Your vocabulary could be more varied and interesting.",
-        suggestion: "Try using more descriptive and exciting words instead of simple ones.",
-        concreteExample: "Instead of 'walked,' try 'strolled,' 'marched,' 'tiptoed,' or 'wandered' depending on how the character moved."
-      });
-    }
-    
-    if (grammar.score < 6) {
-      // Check for specific issues in the text
-      const hasCommaIssues = /afternoon you|However you|Finally you/.test(essayText);
-      const hasCapitalizationIssues = /\bi\s/.test(essayText);
-      
-      if (hasCommaIssues) {
-        improvements.push({
-          area: "Punctuation",
-          issue: "Missing commas after introductory phrases.",
-          suggestion: "Remember to use a comma after introductory words or phrases.",
-          concreteExample: "Change 'One rainy afternoon you stumble upon...' to 'One rainy afternoon, you stumble upon...'",
-          textReference: "Found in your essay: missing comma after introductory phrase"
-        });
-      } else if (hasCapitalizationIssues) {
-        improvements.push({
-          area: "Capitalization",
-          issue: "The word 'I' should always be capitalized.",
-          suggestion: "Always write 'I' as a capital letter, even in the middle of sentences.",
-          concreteExample: "Change 'i think' to 'I think' and 'when i saw' to 'when I saw.'",
-          textReference: "Found in your essay: lowercase 'i' instead of 'I'"
-        });
-      } else {
-        improvements.push({
-          area: "Spelling & Grammar",
-          issue: "There are some spelling or grammar mistakes that make your writing harder to read.",
-          suggestion: "Read your work out loud and check each sentence carefully.",
-          concreteExample: "Try reading your work backwards, sentence by sentence, to catch mistakes you might miss when reading normally."
-        });
-      }
-    }
-
-    return improvements;
-  }
-  
-  // NEW: Generate child-friendly explanations for all domains
-  private static generateChildFriendlyExplanations(
-    content: DomainScore, 
-    structure: DomainScore, 
-    language: DomainScore, 
-    grammar: DomainScore
-  ): ChildFriendlyExplanations {
-    return {
-      ideasContent: this.generateChildFriendlyExplanation("Content & Ideas", content.score),
-      structure: this.generateChildFriendlyExplanation("Text Structure", structure.score),
-      language: this.generateChildFriendlyExplanation("Language Features", language.score),
-      grammar: this.generateChildFriendlyExplanation("Spelling & Grammar", grammar.score)
-    };
-  }
-  
-  // NEW: Identify specific errors with corrections and explanations
-  private static identifySpecificErrors(essay: string): SpecificError[] {
-    const errors: SpecificError[] = [];
-    
-    // Check for common comma issues
-    const commaMatches = essay.match(/(\w+\s+afternoon|However|Finally|Meanwhile|Therefore)\s+you/gi);
-    if (commaMatches) {
-      commaMatches.forEach(match => {
-        const parts = match.split(/\s+you/i);
-        if (parts[0]) {
-          errors.push({
-            type: 'punctuation',
-            location: `"${match}"`,
-            error: match,
-            correction: `${parts[0]}, you`,
-            explanation: "Use a comma after introductory phrases to make your sentences clearer."
-          });
-        }
-      });
-    }
-    
-    // Check for capitalization of 'I'
-    const iMatches = essay.match(/\bi\s/g);
-    if (iMatches) {
-      errors.push({
-        type: 'grammar',
-        location: "throughout the text",
-        error: "i",
-        correction: "I",
-        explanation: "The word 'I' should always be capitalized, no matter where it appears in a sentence."
-      });
-    }
-    
-    // Check for missing end punctuation
-    const sentences = essay.split(/\n/).filter(line => line.trim().length > 10);
-    sentences.forEach(sentence => {
-      if (!/[.!?]$/.test(sentence.trim())) {
-        errors.push({
-          type: 'punctuation',
-          location: `"${sentence.trim().substring(0, 30)}..."`,
-          error: "missing end punctuation",
-          correction: "add period, exclamation mark, or question mark",
-          explanation: "Every sentence should end with proper punctuation."
-        });
-      }
-    });
-    
-    return errors;
-  }
-  
-  // Helper methods (keeping existing ones and adding new ones)
+  // Helper methods (keeping existing implementations)
   private static getScoreBand(score: number): string {
     if (score >= 9) return "Outstanding";
     if (score >= 7) return "Highly Proficient";
     if (score >= 5) return "Proficient";
     if (score >= 3) return "Basic";
-    return "Limited";
+    if (score >= 1) return "Limited";
+    return "No Response";
   }
   
   private static getOverallGrade(score: number): string {
@@ -909,94 +792,101 @@ export class NSWEvaluationReportGenerator {
     if (score >= 50) return "C-";
     if (score >= 45) return "D+";
     if (score >= 40) return "D";
+    if (score >= 35) return "D-";
     return "F";
   }
   
   private static assessCreativity(essay: string): number {
     let score = 5;
     
-    // Look for creative elements
-    if (/imagine|picture|envision|suddenly|unexpected|mysterious|magical|wonder|dream|fantasy/i.test(essay)) {
-      score += 2;
-    }
+    // Check for creative elements
+    if (/"/.test(essay)) score += 1; // Dialogue
+    if (/metaphor|simile|like.*as|is.*like/i.test(essay)) score += 1; // Figurative language
+    if (/suddenly|unexpectedly|amazingly|mysteriously/i.test(essay)) score += 0.5; // Surprise elements
+    if (/whispered|shouted|gasped|exclaimed/i.test(essay)) score += 0.5; // Varied dialogue tags
     
-    // Look for unique perspectives or original ideas
-    if (/never thought|realized|discovered|unique|different|special|unusual/i.test(essay)) {
-      score += 1;
-    }
-    
-    // Look for emotional depth
-    if (/felt|emotion|heart|soul|passionate|excited|nervous|anxious|proud/i.test(essay)) {
-      score += 1;
-    }
-    
-    return Math.min(10, score);
+    return Math.min(10, Math.max(1, Math.round(score)));
   }
   
   private static assessIdeaDevelopment(essay: string): number {
     const sentences = essay.split(/[.!?]+/).filter(s => s.trim().length > 0);
-    const words = essay.split(/\s+/).length;
+    const paragraphs = essay.split(/\n\s*\n/).filter(p => p.trim().length > 0);
     
-    let score = 5;
+    let score = 3;
     
-    // Check for elaboration and detail
-    if (words > 200) score += 1;
-    if (words > 400) score += 1;
+    if (sentences.length >= 8) score += 2;
+    else if (sentences.length >= 5) score += 1;
     
-    // Look for examples and explanations
-    if (/for example|such as|like|including|because|since|therefore|this shows/i.test(essay)) {
-      score += 2;
-    }
+    if (paragraphs.length >= 3) score += 2;
+    else if (paragraphs.length >= 2) score += 1;
     
-    // Check sentence complexity and development
-    if (sentences.length > 10) score += 1;
+    // Check for detailed descriptions
+    if (/color|sound|smell|texture|feeling/i.test(essay)) score += 1;
     
-    return Math.min(10, score);
+    return Math.min(10, Math.max(1, Math.round(score)));
   }
   
   private static assessEngagement(essay: string): number {
     let score = 5;
     
-    // Look for engaging openings
-    const firstSentence = essay.split(/[.!?]+/)[0];
-    if (firstSentence && (firstSentence.includes('?') || /imagine|picture|have you ever|what if/i.test(firstSentence))) {
-      score += 2;
+    // Check for engaging elements
+    const firstSentence = essay.split(/[.!?]+/)[0]?.trim();
+    if (firstSentence && (firstSentence.includes('?') || firstSentence.length > 20)) {
+      score += 1; // Engaging opening
     }
     
-    // Look for dialogue
-    if (/"/.test(essay)) {
-      score += 1;
+    if (/!/.test(essay)) score += 0.5; // Exclamation for emphasis
+    if (/\?/.test(essay)) score += 0.5; // Questions for engagement
+    
+    return Math.min(10, Math.max(1, Math.round(score)));
+  }
+  
+  private static identifySpecificErrors(essay: string): SpecificError[] {
+    const errors: SpecificError[] = [];
+    
+    // Check for common capitalization errors
+    const iErrors = essay.match(/\bi\s/g);
+    if (iErrors) {
+      errors.push({
+        type: 'grammar',
+        location: 'Throughout text',
+        error: 'i',
+        correction: 'I',
+        explanation: 'The word "I" should always be capitalized.'
+      });
     }
     
-    // Look for sensory details
-    if (/see|hear|smell|taste|feel|touch|sound|sight|color|bright|dark/i.test(essay)) {
-      score += 1;
-    }
+    // Check for missing punctuation at end of sentences
+    const lines = essay.split('\n').filter(line => line.trim().length > 0);
+    lines.forEach((line, index) => {
+      if (line.trim().length > 10 && !/[.!?]$/.test(line.trim())) {
+        errors.push({
+          type: 'punctuation',
+          location: `Line ${index + 1}`,
+          error: line.trim(),
+          correction: line.trim() + '.',
+          explanation: 'Sentences should end with appropriate punctuation (. ! or ?).'
+        });
+      }
+    });
     
-    // Look for action and movement
-    if (/ran|jumped|rushed|hurried|quickly|suddenly|immediately/i.test(essay)) {
-      score += 1;
-    }
-    
-    return Math.min(10, score);
+    return errors;
   }
   
   private static identifySophisticatedVocabulary(essay: string): string[] {
     const sophisticatedWords = [
-      'magnificent', 'extraordinary', 'tremendous', 'spectacular', 'fascinating',
-      'incredible', 'remarkable', 'outstanding', 'exceptional', 'brilliant',
-      'marvelous', 'wonderful', 'fantastic', 'amazing', 'awesome',
-      'beautiful', 'gorgeous', 'stunning', 'breathtaking', 'captivating',
-      'mysterious', 'intriguing', 'puzzling', 'perplexing', 'bewildering',
-      'enormous', 'gigantic', 'massive', 'colossal', 'immense',
-      'tiny', 'minuscule', 'microscopic', 'diminutive', 'petite'
+      'magnificent', 'extraordinary', 'mysterious', 'fascinating', 'incredible',
+      'enormous', 'gigantic', 'minuscule', 'ancient', 'modern',
+      'whispered', 'exclaimed', 'declared', 'announced', 'murmured',
+      'brilliant', 'dazzling', 'shimmering', 'glistening', 'sparkling',
+      'treacherous', 'perilous', 'adventurous', 'courageous', 'determined'
     ];
     
     const found: string[] = [];
     const words = essay.toLowerCase().split(/\s+/);
     
     sophisticatedWords.forEach(word => {
-      if (words.includes(word)) {
+      if (words.includes(word.toLowerCase())) {
         found.push(word);
       }
     });
@@ -1276,5 +1166,264 @@ export class NSWEvaluationReportGenerator {
     }
     
     return examples;
+  }
+  
+  // NEW: Enhanced child-friendly explanation generator
+  private static generateChildFriendlyExplanation(domain: string, score: number): string {
+    switch (domain) {
+      case "Content & Ideas":
+        if (score >= 9) return "🌟 Wow! Your ideas are absolutely amazing and super creative! You have a wonderful imagination that makes your story really special and exciting to read.";
+        if (score >= 7) return "✨ You have some really great and thoughtful ideas that make your writing interesting and fun to read. Your creativity is definitely shining through!";
+        if (score >= 5) return "💡 Your ideas are good and show some creativity. With a bit more imagination and detail, you can make them even more exciting and engaging.";
+        if (score >= 3) return "🌱 Your ideas are starting to form, but they need more imagination and specific details to truly come alive. Think about adding more descriptions or unexpected twists!";
+        return "🎯 Your ideas need more development and creativity. Let's work together on brainstorming more imaginative and detailed ideas that will captivate your readers!";
+      case "Text Structure":
+        if (score >= 9) return "🏗️ Your writing flows perfectly like a well-told story! You have mastered organizing your ideas with a clear beginning, middle, and end.";
+        if (score >= 7) return "📚 Your writing is well-organized and easy to follow. You've done a great job structuring your story so readers can enjoy it from start to finish.";
+        if (score >= 5) return "🔗 Your writing has a clear plan, but sometimes the parts don't connect as smoothly as they could. Try using more connecting words to link your ideas!";
+        if (score >= 3) return "🧩 Your writing is a bit jumbled, and it's hard to see how your ideas fit together. Let's practice organizing your thoughts step by step.";
+        return "🗺️ Your writing is hard to follow because it doesn't have a clear order. Let's practice organizing your thoughts with a simple plan: beginning, middle, and end!";
+      case "Language Features":
+        if (score >= 9) return "🎨 You use amazing words and clever writing tricks that make your writing shine like a diamond! Your vocabulary and style are truly impressive.";
+        if (score >= 7) return "📖 You use good words and some interesting writing techniques that make your story engaging and fun to read.";
+        if (score >= 5) return "🔤 You use appropriate words, but trying out some new vocabulary and writing techniques could make your writing even more colorful and exciting.";
+        if (score >= 3) return "📝 Your words are quite simple. Let's explore some more exciting vocabulary and fun writing techniques to make your stories more interesting.";
+        return "🌈 Your vocabulary is very basic right now. Let's discover new words and fun ways to write that will make your stories much more exciting and engaging!";
+      case "Spelling & Grammar":
+        if (score >= 9) return "🎯 Your spelling, punctuation, and grammar are almost perfect! You're clearly a careful writer who pays attention to details.";
+        if (score >= 7) return "✅ You make very few mistakes in spelling, punctuation, and grammar. Great job being careful with your writing mechanics!";
+        if (score >= 5) return "⚠️ You have some mistakes in spelling, punctuation, or grammar, but your writing is still easy to understand. A little more proofreading will help!";
+        if (score >= 3) return "🔍 You make several mistakes in spelling, punctuation, and grammar. Let's focus on one area at a time to improve your writing mechanics.";
+        return "📚 You have quite a few mistakes in spelling, punctuation, and grammar. Let's start with the basics and build up your skills step by step!";
+      default:
+        return "Keep working on this area - every great writer started as a beginner!";
+    }
+  }
+  
+  // NEW: Generate personalized recommendations with concrete examples
+  private static generatePersonalizedRecommendations(
+    content: DomainScore, 
+    structure: DomainScore, 
+    language: DomainScore, 
+    grammar: DomainScore,
+    essayText: string
+  ): PersonalizedRecommendation[] {
+    const recommendations: PersonalizedRecommendation[] = [];
+    const domains = [
+      { name: "Ideas & Content", score: content.score, domain: content },
+      { name: "Structure & Organization", score: structure.score, domain: structure },
+      { name: "Language & Vocabulary", score: language.score, domain: language },
+      { name: "Spelling & Grammar", score: grammar.score, domain: grammar }
+    ];
+
+    // Sort by score to prioritize lowest areas
+    domains.sort((a, b) => a.score - b.score);
+
+    // Generate recommendations for the lowest scoring areas
+    for (const domainInfo of domains) {
+      if (domainInfo.score <= 6 && recommendations.length < 3) { // Focus on areas that need improvement
+        switch (domainInfo.name) {
+          case "Ideas & Content":
+            recommendations.push({
+              title: "Develop Your Creative Ideas",
+              description: "Make your ideas more interesting and detailed to captivate your readers.",
+              examples: [
+                "Instead of 'The door was old,' try 'The wooden door creaked and groaned, its rusty hinges protesting with every movement.'",
+                "Add sensory details: What do you see, hear, smell, feel, and taste in your story?",
+                "Create unexpected plot twists or unique character traits to surprise your readers."
+              ],
+              priority: 'high'
+            });
+            break;
+          case "Structure & Organization":
+            recommendations.push({
+              title: "Improve Your Story Organization",
+              description: "Help your readers follow your story by organizing your ideas in a logical, clear order.",
+              examples: [
+                "Plan with a simple outline: Beginning (introduce characters/setting) → Middle (main events/problem) → End (resolution)",
+                "Use connecting words like 'First,' 'Then,' 'Meanwhile,' 'Finally' to link your ideas together",
+                "Make sure each paragraph focuses on one main idea or event"
+              ],
+              priority: 'high'
+            });
+            break;
+          case "Language & Vocabulary":
+            recommendations.push({
+              title: "Enhance Your Word Choice",
+              description: "Use more exciting and varied vocabulary to make your writing more engaging.",
+              examples: [
+                "Replace simple words: instead of 'big,' try 'enormous,' 'gigantic,' or 'massive'",
+                "Vary how you start sentences - not every sentence needs to begin the same way",
+                "Try using similes: 'The cat moved like a shadow in the night'"
+              ],
+              priority: 'medium'
+            });
+            break;
+          case "Spelling & Grammar":
+            recommendations.push({
+              title: "Master Writing Mechanics",
+              description: "Focus on spelling, punctuation, and grammar to make your writing clear and easy to read.",
+              examples: [
+                "Always capitalize the word 'I' and the first word of each sentence",
+                "Use commas after introductory phrases: 'After the storm passed, the sun came out'",
+                "Read your work aloud to catch mistakes your eyes might miss"
+              ],
+              priority: 'high'
+            });
+            break;
+        }
+      }
+    }
+
+    // If all scores are good, provide growth recommendations
+    if (recommendations.length === 0) {
+      recommendations.push({
+        title: "Challenge Yourself Further",
+        description: "Your writing is already strong! Try these advanced techniques to make it even better.",
+        examples: [
+          "Experiment with different narrative perspectives (first person vs. third person)",
+          "Try writing in different genres like mystery, fantasy, or science fiction",
+          "Practice writing dialogue that reveals character personality"
+        ],
+        priority: 'low'
+      });
+    }
+
+    return recommendations;
+  }
+  
+  // NEW: Identify specific strengths with text examples
+  private static identifySpecificStrengths(
+    content: DomainScore, 
+    structure: DomainScore, 
+    language: DomainScore, 
+    grammar: DomainScore,
+    essayText: string
+  ): SpecificStrength[] {
+    const strengths: SpecificStrength[] = [];
+    
+    if (content.score >= 6) {
+      const firstSentence = essayText.split(/[.!?]+/)[0]?.trim();
+      strengths.push({
+        area: "Creative Ideas",
+        description: "You show great imagination and creativity in your writing.",
+        textExample: firstSentence ? `Your opening: "${firstSentence}..."` : undefined,
+        encouragement: "Your creative thinking makes your story unique and interesting to read!"
+      });
+    }
+    
+    if (structure.score >= 6) {
+      const paragraphCount = essayText.split(/\n\s*\n/).filter(p => p.trim().length > 0).length;
+      strengths.push({
+        area: "Story Organization",
+        description: "Your writing has a clear structure that's easy to follow.",
+        textExample: paragraphCount > 1 ? `You organized your ideas into ${paragraphCount} clear paragraphs` : undefined,
+        encouragement: "Good organization helps readers enjoy your story from beginning to end!"
+      });
+    }
+    
+    if (language.score >= 6) {
+      strengths.push({
+        area: "Word Choice",
+        description: "You use interesting and appropriate words to express your ideas.",
+        encouragement: "Your vocabulary choices help create vivid pictures in the reader's mind!"
+      });
+    }
+    
+    if (grammar.score >= 6) {
+      strengths.push({
+        area: "Writing Mechanics",
+        description: "You show good control of spelling, punctuation, and grammar.",
+        encouragement: "Your attention to detail makes your writing clear and easy to understand!"
+      });
+    }
+
+    return strengths;
+  }
+  
+  // NEW: Identify specific improvements with concrete examples
+  private static identifySpecificImprovements(
+    content: DomainScore, 
+    structure: DomainScore, 
+    language: DomainScore, 
+    grammar: DomainScore,
+    essayText: string
+  ): SpecificImprovement[] {
+    const improvements: SpecificImprovement[] = [];
+    
+    if (content.score < 6) {
+      improvements.push({
+        area: "Ideas & Content",
+        issue: "Your ideas need more development and creative details.",
+        suggestion: "Add specific descriptions and examples to bring your ideas to life.",
+        concreteExample: "Instead of saying 'The place was nice,' describe what made it special: the colors, sounds, or feelings it gave you."
+      });
+    }
+    
+    if (structure.score < 6) {
+      improvements.push({
+        area: "Structure & Organization",
+        issue: "Your writing could be better organized to help readers follow your story.",
+        suggestion: "Plan your writing with a clear beginning, middle, and end before you start.",
+        concreteExample: "Try making an outline: Introduction (hook the reader) → Body (main events) → Conclusion (wrap up the story)."
+      });
+    }
+    
+    if (language.score < 6) {
+      improvements.push({
+        area: "Language & Vocabulary",
+        issue: "Your vocabulary could be more varied and interesting.",
+        suggestion: "Try using more descriptive and exciting words instead of simple ones.",
+        concreteExample: "Instead of 'walked,' try 'strolled,' 'marched,' 'tiptoed,' or 'wandered' depending on how the character moved."
+      });
+    }
+    
+    if (grammar.score < 6) {
+      // Check for specific issues in the text
+      const hasCommaIssues = /afternoon you|However you|Finally you/.test(essayText);
+      const hasCapitalizationIssues = /\bi\s/.test(essayText);
+      
+      if (hasCommaIssues) {
+        improvements.push({
+          area: "Punctuation",
+          issue: "Missing commas after introductory phrases.",
+          suggestion: "Remember to use a comma after introductory words or phrases.",
+          concreteExample: "Change 'One rainy afternoon you stumble upon...' to 'One rainy afternoon, you stumble upon...'",
+          textReference: "Found in your essay: missing comma after introductory phrase"
+        });
+      } else if (hasCapitalizationIssues) {
+        improvements.push({
+          area: "Capitalization",
+          issue: "The word 'I' should always be capitalized.",
+          suggestion: "Always write 'I' as a capital letter, even in the middle of sentences.",
+          concreteExample: "Change 'i went to the store' to 'I went to the store'",
+          textReference: "Found in your essay: lowercase 'i'"
+        });
+      } else {
+        improvements.push({
+          area: "Spelling & Grammar",
+          issue: "Some spelling, punctuation, or grammar errors need attention.",
+          suggestion: "Proofread your work carefully, focusing on one type of error at a time.",
+          concreteExample: "Read your work aloud to catch mistakes your eyes might miss."
+        });
+      }
+    }
+
+    return improvements;
+  }
+  
+  // NEW: Generate child-friendly explanations for all domains
+  private static generateChildFriendlyExplanations(
+    content: DomainScore, 
+    structure: DomainScore, 
+    language: DomainScore, 
+    grammar: DomainScore
+  ): ChildFriendlyExplanations {
+    return {
+      ideasContent: content.childFriendlyExplanation,
+      structure: structure.childFriendlyExplanation,
+      language: language.childFriendlyExplanation,
+      grammar: grammar.childFriendlyExplanation
+    };
   }
 }
