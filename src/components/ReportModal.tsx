@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Download, FileText, Printer, Share2, Heart, Lightbulb, Star, Target, CheckCircle, AlertCircle, TrendingUp, BookOpen, Award } from 'lucide-react';
+import { X, Download, FileText, Printer, Share2, Heart, Lightbulb, Star, Target, CheckCircle, AlertCircle, TrendingUp, BookOpen, Award, BarChart3 } from 'lucide-react';
 import type { DetailedFeedback, LintFix } from "../types/feedback";
 
 interface Props {
