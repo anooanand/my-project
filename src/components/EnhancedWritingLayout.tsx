@@ -9,6 +9,7 @@ import { ReportModal } from './ReportModal'; // Import enhanced ReportModal
 import type { DetailedFeedback, LintFix } from '../types/feedback';
 import { eventBus } from '../lib/eventBus';
 import { detectNewParagraphs } from '../lib/paragraphDetection';
+import { getRandomPromptForTextType, getDefaultPromptForTextType } from '../lib/textTypePrompts';
 import {
   PenTool,
   Play,
@@ -89,19 +90,20 @@ export function EnhancedWritingLayout({
       }
 
       // Check for text-type specific prompt
+         // Check for text-type specific prompt
       const textTypePrompt = localStorage.getItem(`${textType.toLowerCase()}_prompt`);
       if (textTypePrompt && textTypePrompt.trim()) {
         console.log("📝 getCurrentPrompt: Using text-type specific prompt:", textTypePrompt.substring(0, 50) + "...");
         return textTypePrompt;
       }
 
-      // Fallback to default prompt
-      const fallbackPrompt = "The Secret Door in the Library: During a rainy afternoon, you decide to explore the dusty old library in your town that you've never visited before. As you wander through the aisles, you discover a hidden door behind a bookshelf. It's slightly ajar, and a faint, warm light spills out from the crack. What happens when you push the door open? Describe the world you enter and the adventures that await you inside. Who do you meet, and what challenges do you face? How does this experience change you by the time you return to the library? Let your imagination run wild as you take your reader on a journey through this mysterious door!";
-      console.log('📝 Using fallback prompt');
+      // Fallback to text-type appropriate default prompt
+      const fallbackPrompt = getDefaultPromptForTextType(textType);
+      console.log('📝 Using text-type appropriate fallback prompt for:', textType);
       return fallbackPrompt;
-    } catch (error) {
+      } catch (error) {
       console.error('Error getting current prompt:', error);
-      return "Write an engaging story that captures your reader's imagination.";
+      return getDefaultPromptForTextType(textType);
     }
   };
 
