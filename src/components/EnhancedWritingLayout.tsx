@@ -5,6 +5,7 @@ import { StructureGuideModal } from './StructureGuideModal';
 import { TipsModal } from './TipsModal';
 import { TabbedCoachPanel } from './TabbedCoachPanel';
 import { NSWStandaloneSubmitSystem } from './NSWStandaloneSubmitSystem';
+import { ReportModal } from './ReportModal'; // Import ReportModal
 import type { DetailedFeedback, LintFix } from '../types/feedback';
 import { eventBus } from '../lib/eventBus';
 import { detectNewParagraphs } from '../lib/paragraphDetection';
@@ -384,6 +385,13 @@ export function EnhancedWritingLayout({
           textType={textType}
           onComplete={handleNSWEvaluationComplete}
           onClose={() => setShowNSWEvaluation(false)}
+        />
+      )}
+
+      {nswReport && (
+        <ReportModal
+          report={nswReport}
+          onClose={() => setNswReport(null)}
         />
       )}
 
