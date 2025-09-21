@@ -242,3 +242,4 @@ export function SignInForm({ onSuccess, onSignUpClick }: SignInFormProps) {
     </div>
   );
 }
+
