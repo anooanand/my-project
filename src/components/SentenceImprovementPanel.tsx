@@ -281,25 +281,14 @@ Focus on making sentences more engaging and sophisticated.`;
   }, []);
 
   return (
-    <div className={`bg-white rounded-lg border shadow-sm ${className}`}>
-      <div className="p-4 border-b bg-gradient-to-r from-yellow-50 to-orange-50">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Sparkles className="h-5 w-5 text-orange-600" />
-            <h3 className="font-semibold text-gray-800 text-xl">
-              Sentence Improvement Lab
-            </h3>
+    <div className={`bg-white rounded-lg ${className}`}>
+      <div className="space-y-4">
+        {isAnalyzing && (
+          <div className="flex items-center space-x-2 text-sm text-orange-600 bg-orange-50 p-3 rounded-lg">
+            <Loader className="h-4 w-4 animate-spin" />
+            <span>Analyzing your writing...</span>
           </div>
-          {isAnalyzing && (
-            <div className="flex items-center space-x-2 text-sm text-orange-600">
-              <Loader className="h-4 w-4 animate-spin" />
-              <span>Analyzing your writing...</span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="p-4 space-y-4">
+        )}
         {error && (
           <div className="flex items-center space-x-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
             <AlertCircle className="h-4 w-4 text-yellow-600" />
