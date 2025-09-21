@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { isEmailVerified, hasAnyAccess, getUserAccessStatus } from '../lib/supabase';
 import { WritingTypeSelectionModal } from './WritingTypeSelectionModal';
 import { PromptOptionsModal } from './PromptOptionsModal';
+import { CustomPromptModal } from './CustomPromptModal';
 import { generatePrompt } from '../lib/openai';
 import {
   Mail,
@@ -60,6 +61,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
   // Modal states for proper sequence
   const [showWritingTypeModal, setShowWritingTypeModal] = useState(false);
   const [showPromptOptionsModal, setShowPromptOptionsModal] = useState(false);
+  const [showCustomPromptModal, setShowCustomPromptModal] = useState(false);
   const [selectedWritingType, setSelectedWritingType] = useState<string>('');
   const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false);
 
@@ -270,16 +272,24 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
     localStorage.setItem('promptType', 'custom');
     localStorage.setItem('selectedWritingType', selectedWritingType);
 
-    // Close prompt options modal
+    // Close prompt options modal and show custom prompt modal
     setShowPromptOptionsModal(false);
+    setShowCustomPromptModal(true);
+  };
+
+  // Handle custom prompt submission and navigate to writing area
+  const handleCustomPromptSubmit = (prompt: string) => {
+    console.log('✏️ Dashboard: Custom prompt submitted:', prompt.substring(0, 50) + '...');
+
+    // Close custom prompt modal
+    setShowCustomPromptModal(false);
 
     // Navigate to writing page (Step 4 - Writing Area)
-    console.log('📍 Dashboard: Navigating to writing area...');
+    console.log('📍 Dashboard: Navigating to writing area with custom prompt...');
 
     // FIXED: Use React Router navigate directly for consistent navigation
     try {
       navigate('/writing');
-      setShowPromptOptionsModal(false);
     } catch (error) {
       console.error('❌ Dashboard: Navigation error:', error);
       // Fallback to onNavigate if available
@@ -667,8 +677,16 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
           onClose={() => setShowPromptOptionsModal(false)}
           onGeneratePrompt={handleGeneratePrompt}
           onCustomPrompt={handleCustomPrompt}
-          writingType={selectedWritingType}
-          isGenerating={isGeneratingPrompt}
+          textType={selectedWritingType}
+        />
+      )}
+
+      {showCustomPromptModal && (
+        <CustomPromptModal
+          isOpen={showCustomPromptModal}
+          onClose={() => setShowCustomPromptModal(false)}
+          onSubmit={handleCustomPromptSubmit}
+          textType={selectedWritingType}
         />
       )}
     </div>
