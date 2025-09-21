@@ -3,6 +3,9 @@ import { CoachProvider } from "./CoachProvider";
 import { RubricPanel } from "./RubricPanel";
 import { VocabCoach } from "./VocabCoach";
 import { ReportModal } from "./ReportModal";
+import { VocabSuggestionPanel } from "./VocabSuggestionPanel";
+import { NarrativeStructureGuide } from "./NarrativeStructureGuide";
+import { SentenceImprovementPanel } from "./SentenceImprovementPanel";
 import type { DetailedFeedback, LintFix } from "../types/feedback";
 import { ExternalLink, FileText, MessageSquare, BarChart3, BookOpen, TrendingUp } from 'lucide-react';
 
@@ -14,15 +17,35 @@ type Props = {
   onWordSelect?: (word: string) => void;
 };
 
-export function TabbedCoachPanel({ 
-  analysis, 
-  onApplyFix, 
-  content = '', 
-  textType = 'narrative',
+export function TabbedCoachPanel({
+  analysis,
+  onApplyFix,
+  content = ",
+  textType = "narrative",
   onWordSelect = () => {}
 }: Props) {
   const [tab, setTab] = useState<"coach" | "analysis" | "vocab" | "progress">("coach");
   const [showFullReport, setShowFullReport] = useState(false);
+
+  const handleWordReplace = (oldWord: string, newWord: string, position: number) => {
+    console.log(`Replace "${oldWord}" with "${newWord}" at position ${position}`);
+    // In a real app, this would update the content state in the parent component
+  };
+
+  const handleAddToPersonalList = (word: string) => {
+    console.log(`Added "${word}" to personal word list`);
+    // In a real app, this would save to a personal word list
+  };
+
+  const handleSentenceImprovement = (original: string, improved: string) => {
+    console.log(`Improve sentence: "${original}" -> "${improved}"`);
+    // In a real app, this would update the content state in the parent component
+  };
+
+  const handleContentChange = (newContent: string) => {
+    console.log(`Content updated: ${newContent.length} characters`);
+    // In a real app, this would update the content state in the parent component
+  };
   
   const Tab = ({ id, label, icon: Icon }:{ 
     id: "coach"|"analysis"|"vocab"|"progress"; 
@@ -59,8 +82,28 @@ export function TabbedCoachPanel({
         <div className="flex-1 p-4 overflow-hidden">
           <div className="h-full rounded-xl bg-white text-gray-900 shadow-inner">
             {tab === "coach" && (
-              <div className="h-full">
-                <CoachProvider content={content} />
+              <div className="h-full overflow-auto p-4 space-y-4">
+                {/* NSW Narrative Structure Guide */}
+                {textType === 'narrative' && (
+                  <NarrativeStructureGuide
+                    content={content}
+                    onContentUpdate={handleContentChange}
+                    className="border-0 shadow-none bg-transparent"
+                  />
+                )}
+                
+                {/* Sentence Improvement Panel */}
+                <SentenceImprovementPanel
+                  content={content}
+                  textType={textType}
+                  onApplyImprovement={handleSentenceImprovement}
+                  className="border-0 shadow-none bg-transparent"
+                />
+                
+                {/* Original Coach Provider for backward compatibility */}
+                <div className="border-t pt-4">
+                  <CoachProvider content={content} />
+                </div>
               </div>
             )}
             
@@ -178,13 +221,25 @@ export function TabbedCoachPanel({
             )}
             
             {tab === "vocab" && (
-              <div className="h-full overflow-auto p-4">
-                <VocabCoach 
+              <div className="h-full overflow-auto p-4 space-y-4">
+                {/* Enhanced Vocab Suggestion Panel */}
+                <VocabSuggestionPanel
                   content={content}
                   textType={textType}
-                  onWordSelect={onWordSelect}
-                  className="border-0 shadow-none bg-transparent h-full"
+                  onWordReplace={handleWordReplace}
+                  onAddToPersonalList={handleAddToPersonalList}
+                  className="border-0 shadow-none bg-transparent"
                 />
+                
+                {/* Original Vocab Coach for backward compatibility */}
+                <div className="border-t pt-4">
+                  <VocabCoach 
+                    content={content}
+                    textType={textType}
+                    onWordSelect={onWordSelect}
+                    className="border-0 shadow-none bg-transparent"
+                  />
+                </div>
               </div>
             )}
             
