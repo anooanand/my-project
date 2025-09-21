@@ -20,7 +20,7 @@ type Props = {
 export function TabbedCoachPanel({
   analysis,
   onApplyFix,
-  content = ",
+  content = "",
   textType = "narrative",
   onWordSelect = () => {}
 }: Props) {
