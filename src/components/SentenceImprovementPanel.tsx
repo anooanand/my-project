@@ -1,182 +1,117 @@
 import React, { useState, useEffect } from 'react';
-import { BookOpen, Lightbulb, CheckCircle, XCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { Lightbulb, Sparkles, ArrowRight, RefreshCcw } from 'lucide-react';
 
-interface NarrativeStructureGuideProps {
+interface SentenceImprovementPanelProps {
   content: string;
-  onContentUpdate?: (newContent: string) => void;
+  textType: string;
+  onApplyImprovement?: (original: string, improved: string) => void;
   className?: string;
 }
 
-interface StoryPhase {
-  id: string;
-  title: string;
-  description: string;
-  sentenceStarters: string[];
-  powerWords: string[];
-  sensoryDetails: {
-    sight: string[];
-    sound: string[];
-    touch: string[];
-    smell: string[];
-    feelings: string[];
-  };
+interface SentenceExample {
+  original: string;
+  improved: string;
+  explanation: string;
+  type: 'clarity' | 'conciseness' | 'vocabulary' | 'structure';
 }
 
-const NARRATIVE_PHASES: StoryPhase[] = [
+// Examples are now focused on NSW Selective Test level
+const SAMPLE_SENTENCE_EXAMPLES: SentenceExample[] = [
   {
-    id: 'introduction',
-    title: '1. Introduction: Setting the Scene',
-    description: 'Introduce your main character, the setting (where and when the story takes place), and a hint of the problem or adventure to come.',
-    sentenceStarters: [
-      'One [adjective] morning/afternoon/evening...', 
-      'In a place where [description of setting]...', 
-      'Meet [character name], a [adjective] [noun] who...', 
-      'Little did [character name] know that today would be different...'
-    ],
-    powerWords: ['suddenly', 'unexpectedly', 'curiously', 'peculiar', 'ancient', 'mysterious', 'eerie', 'sparkling', 'whispering'],
-    sensoryDetails: {
-      sight: ['gloomy shadows', 'flickering candlelight', 'dusty corners', 'gleaming object', 'cobweb-draped'],
-      sound: ['creaking floorboards', 'distant rumble', 'soft rustle', 'heart pounding', 'silence'],
-      touch: ['cold metal', 'rough wood', 'soft velvet', 'prickly bush', 'smooth stone'],
-      smell: ['musty air', 'sweet scent', 'earthy aroma', 'faint perfume', 'smoky haze'],
-      feelings: ['nervous', 'excited', 'curious', 'apprehensive', 'calm']
-    }
+    original: 'The student wrote a good essay.',
+    improved: 'The diligent student crafted a compelling essay.',
+    explanation: 'Replaced \'good\' with \'compelling\' and added \'diligent\' to describe the student, enhancing vocabulary and impact.',
+    type: 'vocabulary',
   },
   {
-    id: 'rising-action',
-    title: '2. Rising Action: The Adventure Begins',
-    description: 'The main character faces challenges, makes discoveries, and the plot thickens. Build suspense and show, don\'t just tell, what happens.',
-    sentenceStarters: [
-      'As [character name] ventured deeper...', 
-      'Suddenly, a [event] occurred...', 
-      'With a [sound/action], [character name] discovered...', 
-      'The journey was fraught with [challenge]...'
-    ],
-    powerWords: ['bravely', 'cautiously', 'desperately', 'intense', 'perilous', 'shimmering', 'enormous', 'terrifying', 'courageous'],
-    sensoryDetails: {
-      sight: ['towering trees', 'winding path', 'glittering treasure', 'dark abyss', 'blinding light'],
-      sound: ['howling wind', 'crashing waves', 'distant roar', 'footsteps echoing', 'gasp of surprise'],
-      touch: ['sharp thorns', 'slippery rocks', 'warm embrace', 'chilling breeze', 'rough rope'],
-      smell: ['fresh pine', 'salty air', 'foul odor', 'sweet blossoms', 'burning wood'],
-      feelings: ['determined', 'fearful', 'hopeful', 'confused', 'exhausted']
-    }
+    original: 'Because of the fact that it was raining, we stayed inside.',
+    improved: 'As it was raining, we stayed inside.',
+    explanation: 'Simplified the phrase \'Because of the fact that\' to \'As\', making the sentence more concise.',
+    type: 'conciseness',
   },
   {
-    id: 'climax',
-    title: '3. Climax: The Turning Point',
-    description: 'This is the most exciting part of your story where the main character confronts the biggest challenge or makes a crucial decision. The tension is at its peak!',
-    sentenceStarters: [
-      'Finally, [character name] stood before...', 
-      'With a surge of [emotion], [character name]...', 
-      'This was it. The moment of truth...', 
-      'All at once, [event]...'
-    ],
-    powerWords: ['decisive', 'critical', 'momentous', 'shattering', 'overwhelming', 'triumphant', 'despair', 'furious', 'relentless'],
-    sensoryDetails: {
-      sight: ['blinding flash', 'crumbling walls', 'fierce glare', 'desperate struggle', 'victory in sight'],
-      sound: ['deafening crash', 'piercing scream', 'triumphant shout', 'ominous silence', 'rapid heartbeat'],
-      touch: ['burning heat', 'icy grip', 'shaking ground', 'painful blow', 'gentle touch'],
-      smell: ['acrid smoke', 'sweet victory', 'metallic tang', 'fresh rain', 'fear in the air'],
-      feelings: ['terrified', 'exhilarated', 'resolved', 'defeated', 'victorious']
-    }
+    original: 'He was very sad when his pet died.',
+    improved: 'A profound sorrow enveloped him upon the demise of his beloved pet.',
+    explanation: 'Used more sophisticated vocabulary (profound sorrow, enveloped, demise) and a more formal structure.',
+    type: 'vocabulary',
   },
   {
-    id: 'resolution',
-    title: '4. Resolution: Tying Up Loose Ends',
-    description: 'Show how the character has changed and what happens after the main problem is solved. Conclude your story by reflecting on the adventure.',
-    sentenceStarters: [
-      'After the dust settled...', 
-      'With a newfound sense of [emotion]...', 
-      'Life in [setting] was never the same...', 
-      'From that day forward, [character name]...'
-    ],
-    powerWords: ['transformed', 'reflecting', 'peaceful', 'content', 'grateful', 'wiser', 'haunting', 'cherished', 'legacy'],
-    sensoryDetails: {
-      sight: ['calm waters', 'setting sun', 'familiar faces', 'new beginnings', 'scarred landscape'],
-      sound: ['gentle breeze', 'birds chirping', 'laughter echoing', 'soft whispers', 'peaceful quiet'],
-      touch: ['warm sunlight', 'comforting hug', 'soft grass', 'cool breeze', 'gentle rain'],
-      smell: ['fresh baked bread', 'clean air', 'fragrant flowers', 'old memories', 'new hope'],
-      feelings: ['relieved', 'satisfied', 'changed', 'thoughtful', 'hopeful']
-    }
+    original: 'The book was interesting to read.',
+    improved: 'The book offered a captivating narrative, engaging readers from the very first page.',
+    explanation: 'Provided more specific details about why the book was interesting and improved sentence structure.',
+    type: 'structure',
   },
 ];
 
-export const NarrativeStructureGuide: React.FC<NarrativeStructureGuideProps> = ({
+export const SentenceImprovementPanel: React.FC<SentenceImprovementPanelProps> = ({
   content,
-  onContentUpdate,
+  textType,
+  onApplyImprovement,
   className = ""
 }) => {
-  const [activePhase, setActivePhase] = useState<string | null>(null);
+  const [examples, setExamples] = useState<SentenceExample[]>([]);
+
+  useEffect(() => {
+    // All examples are now geared towards the selective test level
+    setExamples(SAMPLE_SENTENCE_EXAMPLES);
+  }, []);
 
   return (
     <div className={`bg-white rounded-lg border shadow-sm ${className}`}>
-      <div className="p-4 border-b bg-gradient-to-r from-blue-50 to-green-50">
+      <div className="p-4 border-b bg-gradient-to-r from-yellow-50 to-orange-50">
         <div className="flex items-center space-x-2">
-          <BookOpen className="h-5 w-5 text-green-600" />
-          <h3 className={
-            'font-semibold text-gray-800 text-xl'
-          }>
-            Story Adventure Mission: Narrative Structure
+          <Sparkles className="h-5 w-5 text-orange-600" />
+          <h3 className={'font-semibold text-gray-800 text-xl'}>
+            Sentence Improvement Lab
           </h3>
         </div>
       </div>
 
       <div className="p-4 space-y-4">
-        {NARRATIVE_PHASES.map((phase) => (
-          <div key={phase.id} className="border rounded-lg overflow-hidden">
-            <button
-              className={
-                'flex justify-between items-center w-full p-3 font-medium text-left bg-gray-100 text-gray-800 text-base'
-              }
-              onClick={() => setActivePhase(activePhase === phase.id ? null : phase.id)}
-            >
-              <span>{phase.title}</span>
-              {activePhase === phase.id ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-            </button>
-            {activePhase === phase.id && (
-              <div className="p-3 space-y-3 bg-white">
-                <p className={'text-gray-700 text-sm'}>{phase.description}</p>
+        <p className={'text-gray-700 text-sm'}>
+          See how you can transform simple sentences into more impactful and sophisticated ones.
+        </p>
 
-                <div>
-                  <h5 className={'font-semibold mb-1 text-sm'}>Sentence Starters:</h5>
-                  <div className="flex flex-wrap gap-2">
-                    {phase.sentenceStarters.map((starter, i) => (
-                      <span key={i} className={'px-2 py-1 rounded-full bg-green-50 text-green-700 text-xs'}>
-                        {starter}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <h5 className={'font-semibold mb-1 text-sm'}>Power Words:</h5>
-                  <div className="flex flex-wrap gap-2">
-                    {phase.powerWords.map((word, i) => (
-                      <span key={i} className={'px-2 py-1 rounded-full bg-purple-50 text-purple-700 text-xs'}>
-                        {word}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <h5 className={'font-semibold mb-1 text-sm'}>Sensory Details:</h5>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    {Object.entries(phase.sensoryDetails).map(([type, details], i) => (
-                      <div key={i} className="bg-gray-50 p-2 rounded">
-                        <p className="font-medium text-gray-700 capitalize">{type}:</p>
-                        <p className="text-gray-600 text-xs">{details.join(', ')}</p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+        {examples.map((example, index) => (
+          <div key={index} className="border rounded-lg p-3 bg-gray-50">
+            <div className="mb-2">
+              <p className={'font-medium text-gray-700 text-sm'}>Original:</p>
+              <p className={'text-red-600 italic text-sm'}>"{example.original}"</p>
+            </div>
+            <div className="mb-2 flex items-center space-x-2">
+              <p className={'font-medium text-gray-700 text-sm'}>Improved:</p>
+              <ArrowRight className="h-4 w-4 text-green-600" />
+              <p className={'text-green-600 italic text-sm'}>"{example.improved}"</p>
+            </div>
+            <div className="mb-2">
+              <p className={'font-medium text-gray-700 text-sm'}>Explanation:</p>
+              <p className={'text-gray-600 text-xs'}>{example.explanation}</p>
+            </div>
+            {onApplyImprovement && (
+              <div className="mt-3 flex justify-end">
+                <button
+                  onClick={() => onApplyImprovement(example.original, example.improved)}
+                  className="px-3 py-1 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 transition-colors flex items-center space-x-1"
+                >
+                  <RefreshCcw className="h-3 w-3" />
+                  <span>Apply Suggestion</span>
+                </button>
               </div>
             )}
           </div>
         ))}
+
+        <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+          <div className="flex items-start space-x-2">
+            <Lightbulb className="flex-shrink-0 h-5 w-5 text-blue-600" />
+            <p className="text-sm text-blue-700">
+              <strong>Pro Tip:</strong> Try to identify sentences in your writing that could be improved using these techniques!
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
 };
 
-export default NarrativeStructureGuide;
+export default SentenceImprovementPanel;
