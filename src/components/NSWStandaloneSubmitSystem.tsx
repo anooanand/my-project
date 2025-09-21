@@ -53,7 +53,7 @@ export function NSWStandaloneSubmitSystem({
         onComplete(null); // Indicate failure
       } finally {
         setIsSubmitting(false);
-        onClose(); // Close the modal after submission (success or error)
+        // onClose(); // Removed to allow report display
       }
     };
 
