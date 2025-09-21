@@ -20,7 +20,7 @@ interface Props {
   onTextTypeChange?: (textType: string) => void;
   onPopupCompleted?: () => void;
   onPromptGenerated?: (prompt: string) => void;
-  onSubmit?: () => void;
+  onSubmit?: (content: string, textType: string) => void;
   assistanceLevel?: string;
   selectedText?: string;
   onTimerStart?: (started: boolean) => void;
@@ -48,56 +48,27 @@ function fallbackPrompt(textType?: string) {
       console.log("📝 fallbackPrompt: Using text-type specific prompt:", byType.substring(0, 50) + "...");
       return byType;
     }
-  } catch { /* ignore */ }
-  return defaultPrompt;
+    console.log("📝 fallbackPrompt: Using default prompt");
+    return defaultPrompt;
+  } catch (e) {
+    console.warn("📝 fallbackPrompt: Error accessing localStorage, using default:", e);
+    return defaultPrompt;
+  }
 }
 
 function WritingAreaImpl(props: Props) {
-  // -------- Prompt header (visible) --------
-  const [displayPrompt, setDisplayPrompt] = useState<string>("");
-
-   useEffect(() => {
-    const next =
-      (typeof props.prompt === "string" && props.prompt.trim()) ||
-      fallbackPrompt(props.textType);
-    setDisplayPrompt(next);
-    console.log('📝 WritingArea: Prompt updated:', { 
-      hasPromptProp: !!(props.prompt && props.prompt.trim()),
-      promptPreview: next.substring(0, 50) + '...', 
-      source: props.prompt && props.prompt.trim() ? 'prop' : 'fallback'
-    });
-  }, [props.prompt, props.textType]);
-
-  // Allow other tabs to update localStorage → refresh card
-  useEffect(() => {
-    const onStorage = () => {
-      // Only update from localStorage if no prompt prop is provided
-      if (!props.prompt || !props.prompt.trim()) {
-        const newPrompt = fallbackPrompt(props.textType);
-        setDisplayPrompt(newPrompt);
-        console.log('📡 WritingArea: Storage change detected, updated prompt from localStorage');
-      }
-    };
-    window.addEventListener("storage", onStorage);
-    return () => window.removeEventListener("storage", onStorage);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.prompt, props.textType]);
-  
-
-  // -------- Editor state --------
-  const [content, setContent] = useState<string>(props.content ?? "");
+  // -------- Core state --------
+  const [content, setContent] = useState(props.content || "");
   const [textType, setTextType] = useState<TextType>((props.textType as TextType) || "narrative");
-  const prevTextRef = useRef<string>(content);
+  const [displayPrompt, setDisplayPrompt] = useState(props.prompt || fallbackPrompt(textType));
 
-  // Sync with parent if controlled
-  useEffect(() => { if (typeof props.content === "string") setContent(props.content); }, [props.content]);
-  useEffect(() => { if (typeof props.textType === "string") setTextType(props.textType as TextType); }, [props.textType]);
-  useEffect(() => { prevTextRef.current = content; }, [content]);
-
-  // -------- Analysis state --------
-  const [analysis, setAnalysis] = useState<DetailedFeedback | null>(null);
+  // -------- Evaluation state --------
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
-  const [err, setErr] = useState<string>();
+  const [err, setErr] = useState<string | undefined>();
+  const [analysis, setAnalysis] = useState<DetailedFeedback | null>(null);
+
+  // -------- Paragraph detection --------
+  const prevTextRef = useRef("");
 
   // -------- Autosave --------
   const [version, setVersion] = useState(0);
@@ -120,7 +91,7 @@ function WritingAreaImpl(props: Props) {
   // Submit → strict JSON rubric (server)
   const onSubmitForEvaluation = async () => {
     if (props.onSubmit) {
-      props.onSubmit();
+      props.onSubmit(content, textType);
       return;
     }
 
