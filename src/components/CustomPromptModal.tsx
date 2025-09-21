@@ -21,6 +21,15 @@ export function CustomPromptModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault(); 
     if (prompt.trim()) {
+      // Store the custom prompt in localStorage
+      localStorage.setItem('customPrompt', prompt.trim());
+      localStorage.setItem('promptType', 'custom');
+      
+      // Dispatch a custom event to notify other components
+      window.dispatchEvent(new CustomEvent('customPromptCreated', {
+        detail: { prompt: prompt.trim(), textType }
+      }));
+      
       onSubmit(prompt.trim());
       setPrompt('');
       onClose();
