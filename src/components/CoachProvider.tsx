@@ -1,5 +1,5 @@
-// src/components/CoachProvider.tsx - FIXED VERSION
-// Handles undefined values and provides better error handling
+// src/components/CoachProvider.tsx - ENHANCED VERSION WITH FEEDBACK ROTATION AND MEMORY
+// Implements contextual memory and varied feedback to prevent repetition
 
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageSquare, Sparkles, ChevronDown, ChevronUp, ThumbsUp, Lightbulb, HelpCircle, Target, AlertCircle, Star, Zap, Gift, Heart, X, Send, User, RefreshCw, Bot, Loader } from 'lucide-react';
@@ -24,8 +24,22 @@ interface AIStatus {
   lastChecked: Date | null;
 }
 
+interface FeedbackMemory {
+  givenFeedback: string[];
+  focusAreas: string[];
+  lastFeedbackType: string;
+  contentAnalysis: {
+    hasDialogue: boolean;
+    hasDescription: boolean;
+    hasCharacterDevelopment: boolean;
+    hasConflict: boolean;
+    sentenceVariety: 'simple' | 'mixed' | 'complex';
+    vocabularyLevel: 'basic' | 'intermediate' | 'advanced';
+  };
+}
+
 interface CoachProviderProps {
-  content?: string; // Direct content prop for monitoring
+  content?: string;
   onContentChange?: (content: string) => void;
 }
 
@@ -45,6 +59,21 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
 
   const [lastFeedbackTime, setLastFeedbackTime] = useState<number>(0);
   const [feedbackCount, setFeedbackCount] = useState<number>(0);
+
+  // ENHANCED: Feedback memory system
+  const [feedbackMemory, setFeedbackMemory] = useState<FeedbackMemory>({
+    givenFeedback: [],
+    focusAreas: [],
+    lastFeedbackType: '',
+    contentAnalysis: {
+      hasDialogue: false,
+      hasDescription: false,
+      hasCharacterDevelopment: false,
+      hasConflict: false,
+      sentenceVariety: 'simple',
+      vocabularyLevel: 'basic'
+    }
+  });
 
   // Direct content monitoring
   const [previousContent, setPreviousContent] = useState<string>('');
@@ -71,7 +100,7 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
     checkAIConnection();
   }, []);
 
-  // FIXED: Direct content monitoring effect with proper null checks
+  // ENHANCED: Content monitoring with memory updates
   useEffect(() => {
     const safeContent = content || '';
     const safePreviousContent = contentMonitorRef.current || '';
@@ -81,7 +110,10 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
       setPreviousContent(safePreviousContent);
       setLastChangeTime(Date.now());
 
-      // Trigger feedback analysis with safe values
+      // Update content analysis
+      updateContentAnalysis(safeContent);
+
+      // Trigger feedback analysis with memory
       analyzeFeedbackTrigger(safePreviousContent, safeContent);
     }
   }, [content]);
@@ -105,21 +137,79 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
     }
   };
 
-  // FIXED: Coach tip function with proper error handling
-  const coachTip = async (paragraph: string) => {
+  // ENHANCED: Analyze content for various elements
+  const updateContentAnalysis = (text: string) => {
+    const safeText = text || '';
+    
+    setFeedbackMemory(prev => ({
+      ...prev,
+      contentAnalysis: {
+        hasDialogue: /["'].*?["']|".*?"|'.*?'/.test(safeText),
+        hasDescription: /\b(beautiful|dark|bright|cold|warm|soft|rough|smooth|loud|quiet|sweet|bitter)\b/i.test(safeText),
+        hasCharacterDevelopment: /\b(felt|thought|realized|wondered|decided|remembered)\b/i.test(safeText),
+        hasConflict: /\b(but|however|suddenly|unfortunately|problem|trouble|danger|afraid|worried)\b/i.test(safeText),
+        sentenceVariety: analyzeSentenceVariety(safeText),
+        vocabularyLevel: analyzeVocabularyLevel(safeText)
+      }
+    }));
+  };
+
+  const analyzeSentenceVariety = (text: string): 'simple' | 'mixed' | 'complex' => {
+    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    if (sentences.length < 3) return 'simple';
+    
+    const complexSentences = sentences.filter(s => 
+      s.includes(',') || s.includes(';') || /\b(because|although|while|when|if|since)\b/i.test(s)
+    );
+    
+    const ratio = complexSentences.length / sentences.length;
+    if (ratio > 0.6) return 'complex';
+    if (ratio > 0.3) return 'mixed';
+    return 'simple';
+  };
+
+  const analyzeVocabularyLevel = (text: string): 'basic' | 'intermediate' | 'advanced' => {
+    const words = text.toLowerCase().split(/\s+/);
+    const advancedWords = words.filter(word => 
+      word.length > 7 || /\b(magnificent|extraordinary|mysterious|fascinating|tremendous)\b/.test(word)
+    );
+    
+    const ratio = advancedWords.length / words.length;
+    if (ratio > 0.15) return 'advanced';
+    if (ratio > 0.08) return 'intermediate';
+    return 'basic';
+  };
+
+  // ENHANCED: Contextual coach tip with memory
+  const coachTip = async (paragraph: string, feedbackType: string) => {
     try {
-      // Validate input
       if (!paragraph || typeof paragraph !== 'string' || paragraph.trim().length === 0) {
         throw new Error('Invalid paragraph provided');
       }
 
+      // Get contextual feedback based on memory and analysis
+      const contextualFeedback = getContextualFeedback(paragraph, feedbackType);
+      
       const response = await generateChatResponse({
-        userMessage: `Please provide a brief, encouraging writing tip for this paragraph: "${paragraph}". Keep it under 50 words and focus on one specific improvement.`,
+        userMessage: `${contextualFeedback.prompt}: "${paragraph}". ${contextualFeedback.instruction}`,
         textType: 'narrative',
         currentContent: paragraph,
         wordCount: paragraph.trim().split(/\s+/).length,
-        context: JSON.stringify({ type: 'coach_tip' })
+        context: JSON.stringify({ 
+          type: 'coach_tip',
+          feedbackType: feedbackType,
+          previousFeedback: feedbackMemory.givenFeedback.slice(-3),
+          contentAnalysis: feedbackMemory.contentAnalysis
+        })
       });
+      
+      // Update memory
+      setFeedbackMemory(prev => ({
+        ...prev,
+        givenFeedback: [...prev.givenFeedback, contextualFeedback.type].slice(-10), // Keep last 10
+        lastFeedbackType: contextualFeedback.type,
+        focusAreas: [...new Set([...prev.focusAreas, contextualFeedback.type])].slice(-5) // Keep last 5 unique areas
+      }));
       
       return { tip: response };
     } catch (error) {
@@ -128,36 +218,106 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
     }
   };
 
-  // FIXED: Analyze content changes for feedback triggers with proper validation
+  // ENHANCED: Get contextual feedback based on content analysis and memory
+  const getContextualFeedback = (text: string, trigger: string) => {
+    const { contentAnalysis, givenFeedback, lastFeedbackType } = feedbackMemory;
+    
+    // Avoid repeating the same type of feedback
+    const availableFeedbackTypes = [
+      {
+        type: 'sensory_details',
+        prompt: 'Analyze this paragraph for sensory details',
+        instruction: 'Suggest specific sensory details (sight, sound, smell, touch, taste) that could be added. Keep it under 50 words and be encouraging.',
+        condition: () => !contentAnalysis.hasDescription && !givenFeedback.includes('sensory_details')
+      },
+      {
+        type: 'dialogue',
+        prompt: 'Analyze this paragraph for dialogue opportunities',
+        instruction: 'Suggest where dialogue could be added to bring characters to life. Keep it under 50 words and be encouraging.',
+        condition: () => !contentAnalysis.hasDialogue && !givenFeedback.includes('dialogue')
+      },
+      {
+        type: 'character_emotions',
+        prompt: 'Analyze this paragraph for character development',
+        instruction: 'Suggest how to show character emotions or thoughts more effectively. Keep it under 50 words and be encouraging.',
+        condition: () => !contentAnalysis.hasCharacterDevelopment && !givenFeedback.includes('character_emotions')
+      },
+      {
+        type: 'sentence_variety',
+        prompt: 'Analyze this paragraph for sentence structure',
+        instruction: 'Suggest ways to vary sentence length and structure for better flow. Keep it under 50 words and be encouraging.',
+        condition: () => contentAnalysis.sentenceVariety === 'simple' && !givenFeedback.includes('sentence_variety')
+      },
+      {
+        type: 'vocabulary_enhancement',
+        prompt: 'Analyze this paragraph for vocabulary improvements',
+        instruction: 'Suggest more vivid or specific words to replace common ones. Keep it under 50 words and be encouraging.',
+        condition: () => contentAnalysis.vocabularyLevel === 'basic' && !givenFeedback.includes('vocabulary_enhancement')
+      },
+      {
+        type: 'conflict_tension',
+        prompt: 'Analyze this paragraph for story tension',
+        instruction: 'Suggest ways to add tension, conflict, or suspense to make the story more engaging. Keep it under 50 words and be encouraging.',
+        condition: () => !contentAnalysis.hasConflict && !givenFeedback.includes('conflict_tension')
+      },
+      {
+        type: 'pacing',
+        prompt: 'Analyze this paragraph for pacing',
+        instruction: 'Suggest how to improve the pacing - whether to slow down for important moments or speed up action. Keep it under 50 words and be encouraging.',
+        condition: () => !givenFeedback.includes('pacing')
+      },
+      {
+        type: 'setting_details',
+        prompt: 'Analyze this paragraph for setting description',
+        instruction: 'Suggest specific details about the setting that would help readers visualize the scene better. Keep it under 50 words and be encouraging.',
+        condition: () => !givenFeedback.includes('setting_details')
+      }
+    ];
+
+    // Filter available feedback types based on conditions
+    const validFeedbackTypes = availableFeedbackTypes.filter(fb => fb.condition());
+    
+    // If we have valid options, use them; otherwise, use a general feedback
+    if (validFeedbackTypes.length > 0) {
+      // Rotate through different types, avoiding the last one used
+      const filteredTypes = validFeedbackTypes.filter(fb => fb.type !== lastFeedbackType);
+      const selectedType = filteredTypes.length > 0 ? filteredTypes[0] : validFeedbackTypes[0];
+      return selectedType;
+    }
+
+    // Fallback to general feedback
+    return {
+      type: 'general_encouragement',
+      prompt: 'Provide encouraging feedback on this paragraph',
+      instruction: 'Give specific, positive feedback about what the student is doing well and one small suggestion for improvement. Keep it under 50 words and be encouraging.'
+    };
+  };
+
+  // ENHANCED: Analyze content changes with memory-aware feedback
   const analyzeFeedbackTrigger = async (prevContent: string, newContent: string) => {
     try {
-      // Safely handle undefined/null values
       const safePrevContent = prevContent || '';
       const safeNewContent = newContent || '';
       
       if (!safeNewContent || safeNewContent.trim().length === 0) {
-        console.log("No content to analyze");
         return;
       }
 
       const wordCount = safeNewContent.trim().split(/\s+/).filter(word => word.length > 0).length;
       if (wordCount < 15) {
-        console.log("Content too short for feedback");
-        return; // Minimum threshold
+        return;
       }
 
       // Prevent too frequent feedback
       const now = Date.now();
-      if (now - lastFeedbackTime < 8000) { // 8 second cooldown
-        console.log("Skipping feedback due to cooldown");
+      if (now - lastFeedbackTime < 8000) {
         return;
       }
 
       // Check for word threshold triggers
       const thresholdResult = detectWordThreshold(safePrevContent, safeNewContent, 20);
       if (thresholdResult) {
-        console.log("Word threshold trigger detected:", thresholdResult);
-        await provideFeedback(thresholdResult.text, thresholdResult.trigger);
+        await provideFeedback(thresholdResult.text, 'word_threshold');
         return;
       }
 
@@ -166,22 +326,19 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
       const newParas = splitParas(safeNewContent);
       
       if (newParas.length > prevParas.length) {
-        // New paragraph created, provide feedback on the completed one
         const completedParagraph = newParas[newParas.length - 2];
         if (completedParagraph && completedParagraph.trim().split(/\s+/).length >= 20) {
-          console.log("New paragraph detected:", completedParagraph);
           await provideFeedback(completedParagraph, 'paragraph_completed');
           return;
         }
       }
 
-      // Check for significant content addition (every 30 words)
+      // Check for significant content addition
       const prevWords = safePrevContent.trim() ? safePrevContent.trim().split(/\s+/).length : 0;
       const newWords = safeNewContent.trim() ? safeNewContent.trim().split(/\s+/).length : 0;
       const wordDifference = newWords - prevWords;
 
       if (wordDifference >= 30 && newWords >= 50) {
-        console.log("Significant content addition detected");
         const currentParagraph = newParas[newParas.length - 1] || safeNewContent.slice(-200);
         await provideFeedback(currentParagraph, 'progress_milestone');
       }
@@ -191,12 +348,10 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
     }
   };
 
-  // FIXED: Provide feedback with proper validation
+  // ENHANCED: Provide contextual feedback with memory
   const provideFeedback = async (text: string, trigger: string) => {
     try {
-      // Validate input
       if (!text || typeof text !== 'string' || text.trim().length === 0) {
-        console.log("Invalid text provided for feedback");
         return;
       }
 
@@ -214,9 +369,8 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
       setMessages(prev => [...prev, typingMessage]);
 
       try {
-        const res = await coachTip(text);
+        const res = await coachTip(text, trigger);
         
-        // Remove typing indicator and add real response
         setMessages(prev => {
           const withoutTyping = prev.filter(msg => !msg.isTyping);
           return [...withoutTyping, {
@@ -230,9 +384,6 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
 
         setFeedbackCount(prev => prev + 1);
       } catch (error) {
-        console.log("Coach tip failed:", error);
-        
-        // Remove typing indicator and add fallback response
         setMessages(prev => {
           const withoutTyping = prev.filter(msg => !msg.isTyping);
           return [...withoutTyping, {
@@ -253,29 +404,58 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
     }
   };
 
-  // FIXED: Get varied fallback tips with proper validation
+  // ENHANCED: Varied fallback tips with memory awareness
   const getVariedFallbackTip = (text: string, count: number): string => {
-    const safeText = text || '';
-    const tips = [
-      "Great progress! Try adding more descriptive details to paint a picture for your readers. 🎨",
-      "Nice work! Consider adding dialogue to bring your characters to life. What might they say? 💬",
-      "You're doing well! Think about using stronger verbs to make your action more exciting. ⚡",
-      "Good writing! Try to show emotions through actions rather than just telling us how characters feel. 😊",
-      "Keep going! Add some sensory details - what can your character see, hear, or smell? 👃",
-      "Excellent! Consider varying your sentence lengths to create better rhythm in your writing. 🎵",
-      "Well done! Think about adding a surprising detail that will hook your reader's attention. 🎣",
-      "Great job! Try using more specific nouns instead of general ones to be more precise. 🎯"
+    const { contentAnalysis, givenFeedback } = feedbackMemory;
+    
+    // Context-aware fallback tips
+    const contextualTips = [];
+    
+    if (!contentAnalysis.hasDialogue && !givenFeedback.includes('dialogue')) {
+      contextualTips.push("Great progress! Try adding some dialogue to bring your characters to life. What might they say in this moment? 💬");
+    }
+    
+    if (!contentAnalysis.hasDescription && !givenFeedback.includes('sensory_details')) {
+      contextualTips.push("Nice work! Consider adding sensory details - what can your character see, hear, or smell? This helps readers feel like they're there! 👃");
+    }
+    
+    if (contentAnalysis.sentenceVariety === 'simple' && !givenFeedback.includes('sentence_variety')) {
+      contextualTips.push("You're doing well! Try mixing short and long sentences to create better rhythm in your writing. 🎵");
+    }
+    
+    if (!contentAnalysis.hasCharacterDevelopment && !givenFeedback.includes('character_emotions')) {
+      contextualTips.push("Good writing! Show us how your character feels through their actions and thoughts, not just by telling us. 😊");
+    }
+    
+    if (contentAnalysis.vocabularyLevel === 'basic' && !givenFeedback.includes('vocabulary_enhancement')) {
+      contextualTips.push("Keep going! Try using more specific words instead of general ones - like 'whispered' instead of 'said'. 🎯");
+    }
+    
+    if (!contentAnalysis.hasConflict && !givenFeedback.includes('conflict_tension')) {
+      contextualTips.push("Excellent! Consider adding a small challenge or surprise to keep your readers curious about what happens next. 🎣");
+    }
+
+    // If we have contextual tips, use them
+    if (contextualTips.length > 0) {
+      return contextualTips[count % contextualTips.length];
+    }
+
+    // General fallback tips
+    const generalTips = [
+      "Great progress! Your story is developing nicely. Keep building on what you've written! 🌟",
+      "Well done! Each sentence adds to your story. What exciting thing will happen next? ⚡",
+      "Nice work! Your writing is getting stronger with each paragraph. Keep it up! 💪",
+      "Excellent! You're creating a vivid world for your readers. Continue painting that picture! 🎨"
     ];
     
-    return tips[count % tips.length];
+    return generalTips[count % generalTips.length];
   };
 
-  // FIXED: Handle sending messages with proper validation
+  // Handle sending messages (unchanged from original)
   const handleSendMessage = async () => {
     const message = inputMessage.trim();
     if (!message) return;
 
-    // Add user message
     const userMessage: ChatMessage = {
       id: 'user-' + Date.now(),
       text: message,
@@ -287,7 +467,6 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
     setInputMessage('');
     setIsAITyping(true);
 
-    // Add typing indicator
     const typingMessage: ChatMessage = {
       id: 'typing-' + Date.now(),
       text: '🤖 Thinking...',
@@ -308,11 +487,12 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
         wordCount: wordCount,
         context: JSON.stringify({ 
           conversationHistory: messages.slice(-4).map(m => ({ text: m.text, isUser: m.isUser })),
-          writingStage: wordCount < 50 ? 'beginning' : wordCount < 150 ? 'developing' : 'expanding'
+          writingStage: wordCount < 50 ? 'beginning' : wordCount < 150 ? 'developing' : 'expanding',
+          contentAnalysis: feedbackMemory.contentAnalysis,
+          previousFeedback: feedbackMemory.givenFeedback.slice(-3)
         })
       });
 
-      // Remove typing indicator and add AI response
       setMessages(prev => {
         const withoutTyping = prev.filter(msg => !msg.isTyping);
         return [...withoutTyping, {
@@ -326,7 +506,6 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
     } catch (error) {
       console.error('Failed to get AI response:', error);
       
-      // Remove typing indicator and add error message
       setMessages(prev => {
         const withoutTyping = prev.filter(msg => !msg.isTyping);
         return [...withoutTyping, {
@@ -341,16 +520,11 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
     }
   };
 
-  // FIXED: Event bus listener with proper validation
+  // Event bus listener (unchanged from original)
   useEffect(() => {
     const handleParagraphReady = (event: any) => {
-      console.log("Event bus paragraph received:", event);
-      
-      // Safely handle the event
       if (event && event.text && typeof event.text === 'string') {
         provideFeedback(event.text, event.trigger || 'paragraph_ready');
-      } else {
-        console.log("Invalid paragraph event received:", event);
       }
     };
 
@@ -393,6 +567,10 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
               <RefreshCw className={`w-3 h-3 text-gray-400 ${aiStatus.loading ? 'animate-spin' : ''}`} />
             </button>
           </div>
+        </div>
+        {/* ENHANCED: Memory status indicator */}
+        <div className="mt-2 text-xs text-gray-500">
+          Focus areas: {feedbackMemory.focusAreas.join(', ') || 'Getting to know your writing...'}
         </div>
       </div>
 
