@@ -197,7 +197,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
     setShowPromptOptionsModal(true);
   };
 
-  // FIXED: Step 3 - Handle prompt generation, then navigate to writing area
+  // FIXED: Step 3 - Handle prompt generation with timestamp, then navigate to writing area
   const handleGeneratePrompt = async () => {
     console.log('🎯 Dashboard: Generating prompt for:', selectedWritingType);
     setIsGeneratingPrompt(true);
@@ -209,15 +209,20 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
       if (prompt) {
         console.log('✅ Prompt generated successfully:', prompt);
 
-        // CRITICAL: Save to localStorage so WritingArea can access it
-        localStorage.setItem(`${selectedWritingType}_prompt`, prompt);
-        localStorage.setItem('generatedPrompt', prompt);
+        // CRITICAL: Clear custom prompt and save generated prompt with timestamp
+        localStorage.removeItem("customPrompt");
+        localStorage.removeItem("customPromptTimestamp");
+        localStorage.setItem("generatedPrompt", prompt);
+        localStorage.setItem("generatedPromptTimestamp", new Date().toISOString());
         localStorage.setItem('selectedWritingType', selectedWritingType);
         localStorage.setItem("promptType", "generated");
-        localStorage.setItem("generatedPrompt", prompt);
 
+        console.log('✅ Prompt saved to localStorage with timestamp');
 
-        console.log('✅ Prompt saved to localStorage');
+        // Dispatch custom event to notify other components
+        window.dispatchEvent(new CustomEvent('promptGenerated', {
+          detail: { prompt, textType: selectedWritingType, timestamp: new Date().toISOString() }
+        }));
 
         // Small delay to ensure localStorage is written
         await new Promise(resolve => setTimeout(resolve, 200));
@@ -266,7 +271,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
     }
   };
 
-  // FIXED: Step 3 - Handle custom prompt, then navigate to writing area
+  // FIXED: Step 3 - Handle custom prompt with timestamp, then navigate to writing area
   const handleCustomPrompt = () => {
     console.log('✏️ Dashboard: Using custom prompt for:', selectedWritingType);
 
@@ -282,6 +287,19 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
   // Handle custom prompt submission and navigate to writing area
   const handleCustomPromptSubmit = (prompt: string) => {
     console.log('✏️ Dashboard: Custom prompt submitted:', prompt.substring(0, 50) + '...');
+
+    // FIXED: Clear generated prompt and save custom prompt with timestamp
+    localStorage.removeItem("generatedPrompt");
+    localStorage.removeItem("generatedPromptTimestamp");
+    localStorage.setItem("customPrompt", prompt);
+    localStorage.setItem("customPromptTimestamp", new Date().toISOString());
+
+    console.log('✅ Custom prompt saved to localStorage with timestamp');
+
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new CustomEvent('promptGenerated', {
+      detail: { prompt, textType: 'custom', timestamp: new Date().toISOString() }
+    }));
 
     // Close custom prompt modal
     setShowCustomPromptModal(false);
@@ -382,51 +400,8 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
                 onClick={handleDismissWelcome}
                 className="px-8 py-3 bg-green-500 text-white rounded-full font-bold text-lg shadow-lg hover:bg-green-600 transition-colors transform hover:scale-105 flex items-center justify-center gap-2 mx-auto"
               >
-                Let's Write! <ArrowRight className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Start Here Guide - New feature for first-time users */}
-      {showStartHereGuide && !showWelcomeMessage && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl max-w-lg w-full relative">
-            <button
-              onClick={handleDismissGuide}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors bg-white dark:bg-gray-700 p-2 rounded-full shadow-md hover:shadow-lg transform hover:scale-110 transition-all duration-300"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            <div className="p-8 text-center">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <HelpCircle className="h-8 w-8 text-blue-600" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">New Here? Start Here!</h2>
-              <div className="text-left space-y-3 mb-6">
-                <div className="flex items-center text-gray-700 dark:text-gray-300">
-                  <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">1</div>
-                  <span>Click "Start Writing" to begin</span>
-                </div>
-                <div className="flex items-center text-gray-700 dark:text-gray-300">
-                  <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">2</div>
-                  <span>Choose what type of story you want to write</span>
-                </div>
-                <div className="flex items-center text-gray-700 dark:text-gray-300">
-                  <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">3</div>
-                  <span>Get a fun writing prompt or use your own idea</span>
-                </div>
-                <div className="flex items-center text-gray-700 dark:text-gray-300">
-                  <div className="w-6 h-6 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">4</div>
-                  <span>Start writing and get help from your AI buddy!</span>
-                </div>
-              </div>
-              <button
-                onClick={handleDismissGuide}
-                className="px-8 py-3 bg-blue-500 text-white rounded-full font-bold text-lg shadow-lg hover:bg-blue-600 transition-colors transform hover:scale-105 flex items-center justify-center gap-2 mx-auto"
-              >
-                Got It! <ArrowRight className="w-5 h-5" />
+                <Rocket className="h-5 w-5" />
+                Let's Go!
               </button>
             </div>
           </div>
@@ -434,30 +409,19 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
       )}
 
       {/* Main Dashboard Content */}
-      <div className="relative z-10 p-6">
-        <div className="max-w-6xl mx-auto bg-white dark:bg-gray-900 rounded-3xl shadow-2xl p-6 md:p-8 border-4 border-blue-200 dark:border-blue-800">
-          
-          {/* Header Section - Simplified */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 pb-4 border-b-2 border-gray-200 dark:border-gray-700">
-            <div className="flex items-center mb-4 md:mb-0">
-              <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mr-3 shadow-lg">
-                <Rocket className="h-6 w-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl md:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 mb-1">
-                  Your Writing Space
-                </h1>
-                <p className="text-gray-600 dark:text-gray-300 text-base">
-                  Hi {getUserName()}! Ready to write something awesome?
-                </p>
-              </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
+        <header className="mb-8">
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-4xl font-bold text-gray-900 dark:text-white">Hi, {getUserName()}!</h1>
+              <p className="text-lg text-gray-600 dark:text-gray-400 mt-1">Ready to create your next masterpiece?</p>
             </div>
-            <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex items-center space-x-4">
               <button
                 onClick={() => onNavigate && onNavigate('settings')}
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-full font-semibold text-sm shadow-lg hover:bg-gray-300 transition-colors transform hover:scale-105 flex items-center justify-center gap-2"
+                className="p-3 bg-white dark:bg-gray-800 rounded-full shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-110"
               >
-                <Settings className="h-4 w-4" /> Settings
+                <Settings className="h-6 w-6 text-gray-600 dark:text-gray-300" />
               </button>
               <button
                 onClick={onSignOut}
@@ -467,37 +431,35 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
               </button>
             </div>
           </div>
+        </header>
 
-          {/* Access Status Section - Simplified */}
-          <div className="mb-8 p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-900 rounded-2xl shadow-inner border border-blue-100 dark:border-gray-700">
-            <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-3 flex items-center gap-2">
-              <Zap className="h-5 w-5 text-yellow-500 fill-yellow-500" /> Your Access
-            </h2>
-            {isLoading ? (
-              <div className="flex items-center text-gray-600 dark:text-gray-400">
-                <Clock className="h-4 w-4 animate-spin mr-2" /> Checking...
+        <div className="bg-white dark:bg-gray-800/50 backdrop-blur-lg rounded-2xl shadow-lg p-6">
+          {/* Verification Status Banner */}
+          <div className="mb-6">
+            {isVerified ? (
+              <div className="bg-green-100 dark:bg-green-900/50 border-l-4 border-green-500 text-green-800 dark:text-green-200 p-4 rounded-lg shadow-sm">
+                <div className="flex items-center">
+                  <CheckCircle className="h-6 w-6 mr-3 text-green-500" />
+                  <div>
+                    <p className="font-bold">Access Verified</p>
+                    {accessType === 'permanent' ? (
+                      <p className="text-sm">You have full access to all features. Happy writing!</p>
+                    ) : (
+                      <p className="text-sm">Your temporary access is active until {formatDateTime(tempAccessUntil!)} ({getTimeRemaining(tempAccessUntil!)}).</p>
+                    )}
+                  </div>
+                </div>
               </div>
             ) : (
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-center text-base font-medium">
-                  {isVerified ? (
-                    <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                  ) : (
-                    <X className="h-5 w-5 text-red-500 mr-2" />
-                  )}
-                  <span className="text-gray-700 dark:text-gray-300">
-                    {isVerified ? (
-                      accessType === 'permanent' ? (
-                        'Full Access ✨'
-                      ) : (
-                        `Access Until: ${formatDateTime(tempAccessUntil || '')}`
-                      )
-                    ) : (
-                      'No Access Yet'
-                    )}
-                  </span>
+              <div className="bg-yellow-100 dark:bg-yellow-900/50 border-l-4 border-yellow-500 text-yellow-800 dark:text-yellow-200 p-4 rounded-lg shadow-sm">
+                <div className="flex items-center mb-2">
+                  <Mail className="h-6 w-6 mr-3 text-yellow-500" />
+                  <div>
+                    <p className="font-bold">Action Required: Verify Your Email</p>
+                    <p className="text-sm">Please check your inbox for a verification link to unlock all features.</p>
+                  </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex items-center space-x-4 mt-3">
                   {!isVerified && (
                     <button
                       onClick={() => onNavigate && onNavigate('pricing')}
