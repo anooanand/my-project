@@ -559,7 +559,7 @@ export function EnhancedWritingLayout({
                 </div>
               )}
 
-              {/* Submit Button */}
+              {/* Submit Button - ONLY ONE BUTTON */}
               <button
                 onClick={() => handleSubmitForEvaluation(currentContent, textType)}
                 disabled={!hasContent || evaluationStatus === "loading"}
@@ -577,7 +577,7 @@ export function EnhancedWritingLayout({
           </div>
         </div>
 
-        {/* Writing Area with Enhanced Styling */}
+        {/* Writing Area with Enhanced Styling - NO DUPLICATE PROMPT */}
         <div className="flex-1 overflow-hidden">
           <WritingArea
             content={currentContent}
@@ -592,6 +592,9 @@ export function EnhancedWritingLayout({
               lineHeight: '1.8',
               letterSpacing: '0.01em'
             }}
+            // Prevent WritingArea from showing its own prompt or submit button
+            hidePrompt={true}
+            hideSubmitButton={true}
           />
         </div>
       </div>
@@ -608,6 +611,8 @@ export function EnhancedWritingLayout({
             wordCount={wordCount}
             wpm={wpm}
             writingTime={writingTime}
+            // Prevent TabbedCoachPanel from showing duplicate submit button
+            hideSubmitButton={true}
           />
         </div>
       )}
