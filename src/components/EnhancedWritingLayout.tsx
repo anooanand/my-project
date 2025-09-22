@@ -74,18 +74,41 @@ export function EnhancedWritingLayout({
   // Function to get the current prompt from localStorage or fallback
   const getCurrentPrompt = () => {
     try {
-      // First check for a custom prompt from "Use My Own Idea"
-      const customPrompt = localStorage.getItem("customPrompt");
-      if (customPrompt && customPrompt.trim()) {
-        console.log("📝 getCurrentPrompt: Using Custom Prompt from localStorage:", customPrompt.substring(0, 50) + "...");
-        return customPrompt;
+      // Check promptType to determine which prompt to use
+      const promptType = localStorage.getItem("promptType");
+      console.log("📝 getCurrentPrompt: promptType from localStorage:", promptType);
+
+      // If promptType is 'generated', prioritize generatedPrompt
+      if (promptType === 'generated') {
+        const magicalPrompt = localStorage.getItem("generatedPrompt");
+        if (magicalPrompt && magicalPrompt.trim()) {
+          console.log("📝 getCurrentPrompt: Using Magical Prompt (prioritized by promptType):", magicalPrompt.substring(0, 50) + "...");
+          return magicalPrompt;
+        }
       }
 
-      // Then check for a generated prompt from Magical Prompt
+      // If promptType is 'custom', prioritize customPrompt
+      if (promptType === 'custom') {
+        const customPrompt = localStorage.getItem("customPrompt");
+        if (customPrompt && customPrompt.trim()) {
+          console.log("📝 getCurrentPrompt: Using Custom Prompt (prioritized by promptType):", customPrompt.substring(0, 50) + "...");
+          return customPrompt;
+        }
+      }
+
+      // Fallback order when no specific promptType or prompts are missing
+      // First check for a generated prompt from Magical Prompt
       const magicalPrompt = localStorage.getItem("generatedPrompt");
       if (magicalPrompt && magicalPrompt.trim()) {
-        console.log("📝 getCurrentPrompt: Using Magical Prompt from localStorage:", magicalPrompt.substring(0, 50) + "...");
+        console.log("📝 getCurrentPrompt: Using Magical Prompt from localStorage (fallback):", magicalPrompt.substring(0, 50) + "...");
         return magicalPrompt;
+      }
+
+      // Then check for a custom prompt from "Use My Own Idea"
+      const customPrompt = localStorage.getItem("customPrompt");
+      if (customPrompt && customPrompt.trim()) {
+        console.log("📝 getCurrentPrompt: Using Custom Prompt from localStorage (fallback):", customPrompt.substring(0, 50) + "...");
+        return customPrompt;
       }
 
       // Check for text-type specific prompt
@@ -117,7 +140,7 @@ export function EnhancedWritingLayout({
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       console.log('📡 handleStorageChange: Storage event detected. Key:', e.key, 'New Value:', e.newValue?.substring(0, 50) + '...');
-      if (e.key === 'customPrompt' || e.key === 'generatedPrompt' || e.key === `${textType.toLowerCase()}_prompt`) {
+      if (e.key === 'customPrompt' || e.key === 'generatedPrompt' || e.key === 'promptType' || e.key === `${textType.toLowerCase()}_prompt`) {
         console.log('📡 handleStorageChange: Relevant storage key changed. Updating prompt.');
         const newPrompt = getCurrentPrompt();
         setCurrentPrompt(newPrompt);
