@@ -1,6 +1,5 @@
 import React from 'react';
 import { X, Sparkles, Edit3, Wand, Star, Zap } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 
 interface PromptOptionsModalProps {
   isOpen: boolean;
@@ -17,30 +16,15 @@ export function PromptOptionsModal({
   onCustomPrompt,
   textType
 }: PromptOptionsModalProps) {
-  const navigate = useNavigate();
-
   if (!isOpen) return null;
 
-  // FIXED: Let parent component handle the flow instead of navigating directly
   const handleGeneratePrompt = () => {
     console.log('🎯 PromptOptionsModal: Generate prompt clicked for:', textType);
-
-    // Store the choice for the parent component to handle
-    localStorage.setItem('promptType', 'generated');
-    localStorage.setItem('selectedWritingType', textType);
-
-    // Call the parent's callback to handle prompt generation
     onGeneratePrompt();
   };
 
   const handleCustomPrompt = () => {
     console.log('✏️ PromptOptionsModal: Custom prompt clicked for:', textType);
-
-    // Store the choice for the parent component to handle
-    localStorage.setItem('promptType', 'custom');
-    localStorage.setItem('selectedWritingType', textType);
-
-    // Call the parent's callback to handle custom prompt
     onCustomPrompt();
   };
 
