@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 
 // Server-backed API (Netlify functions only)
 import { evaluateEssay, saveDraft } from "../lib/api";
@@ -61,6 +61,13 @@ function WritingAreaImpl(props: Props) {
   const [content, setContent] = useState(props.content || "");
   const [textType, setTextType] = useState<TextType>((props.textType as TextType) || "narrative");
   const [displayPrompt, setDisplayPrompt] = useState(props.prompt || fallbackPrompt(textType));
+
+  // Update displayPrompt when props.prompt changes
+  useEffect(() => {
+    if (props.prompt) {
+      setDisplayPrompt(props.prompt);
+    }
+  }, [props.prompt]);
 
   // -------- Evaluation state --------
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
