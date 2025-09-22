@@ -131,7 +131,6 @@ export function EnhancedWritingLayout({
   // Initialize and sync prompt on component mount and when textType changes
   useEffect(() => {
     const prompt = getCurrentPrompt();
-    console.log("🔄 useEffect[textType]: Initializing/Syncing prompt.");
     setCurrentPrompt(prompt);
     console.log("✅ useEffect[textType]: currentPrompt set to:", prompt.substring(0, 50) + "...");
   }, [textType]);
@@ -167,244 +166,177 @@ export function EnhancedWritingLayout({
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('promptGenerated', handlePromptGenerated as EventListener);
     window.addEventListener('customPromptCreated', handleCustomPromptCreated as EventListener);
-    
+
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('promptGenerated', handlePromptGenerated as EventListener);
       window.removeEventListener('customPromptCreated', handleCustomPromptCreated as EventListener);
     };
-  }, [textType, evaluationStatus]);
+  }, [textType]);
 
   // Sync local content with prop content
   useEffect(() => {
     setLocalContent(content);
   }, [content]);
 
-  // Handle content changes from WritingArea
+  // Enhanced content change handler with real-time analysis
   const handleContentChange = (newContent: string) => {
     setLocalContent(newContent);
     onChange(newContent);
-  };
 
-  // Track content changes for word count and coach feedback
-  useEffect(() => {
-    const currentContent = localContent || content;
-    const words = currentContent.trim().split(/\s+/).filter(word => word.length > 0);
+    // Update word count
+    const words = newContent.trim().split(/\s+/).filter(word => word.length > 0);
     setWordCount(words.length);
 
-    // Trigger coach feedback for new paragraphs
-    const events = detectNewParagraphs(prevTextRef.current, currentContent);
-    if (events.length) {
-      console.log("Emitting paragraph.ready event:", events[events.length - 1]);
-      eventBus.emit("paragraph.ready", events[events.length - 1]);
+    // Detect new paragraphs for coaching
+    const newParagraphs = detectNewParagraphs(prevTextRef.current, newContent);
+    if (newParagraphs.length > 0) {
+      eventBus.emit('newParagraphsDetected', { paragraphs: newParagraphs, textType });
     }
-    prevTextRef.current = currentContent;
-  }, [localContent, content]);
+    prevTextRef.current = newContent;
+  };
 
-  // Enhanced NSW Evaluation Submit Handler
-  const handleNSWSubmit = async (submittedContent?: string, submittedTextType?: string) => {
-    const contentToEvaluate = submittedContent || localContent;
-    const typeToEvaluate = submittedTextType || textType;
-
-    console.log("🎯 NSW Submit triggered from EnhancedWritingLayout");
-    console.log("Content check:", {
-      localContent: contentToEvaluate?.substring(0, 50) + "...",
-      propContent: content?.substring(0, 50) + "...",
-      hasContent: !!contentToEvaluate?.trim(),
-      contentLength: contentToEvaluate?.length || 0
+  // Enhanced submission handler with NSW evaluation
+  const handleSubmitForEvaluation = async (submissionContent: string, submissionTextType: string) => {
+    console.log('🎯 handleSubmitForEvaluation called with:', {
+      contentLength: submissionContent.length,
+      textType: submissionTextType,
+      currentStatus: evaluationStatus
     });
+
+    if (evaluationStatus === "loading") {
+      console.log('⚠️ Already evaluating, skipping...');
+      return;
+    }
+
+    if (!submissionContent.trim()) {
+      console.log('⚠️ No content to evaluate');
+      return;
+    }
 
     setEvaluationStatus("loading");
     setShowNSWEvaluation(true);
-    setEvaluationProgress("Analyzing your writing...");
+    setEvaluationProgress("Analyzing your writing structure...");
 
     try {
-      if (!contentToEvaluate || contentToEvaluate.trim().length === 0) {
-        throw new Error("Please write some content before submitting for evaluation");
+      // Simulate evaluation progress
+      const progressSteps = [
+        "Analyzing your writing structure...",
+        "Evaluating content quality...",
+        "Checking grammar and style...",
+        "Assessing language techniques...",
+        "Generating personalized feedback..."
+      ];
+
+      for (let i = 0; i < progressSteps.length; i++) {
+        setEvaluationProgress(progressSteps[i]);
+        await new Promise(resolve => setTimeout(resolve, 1000));
       }
 
-      console.log("NSW Evaluation initiated for:", {
-        text: contentToEvaluate.substring(0, 100) + "...",
-        textType: typeToEvaluate,
-        wordCount
-      });
-
-      // Simulate progress updates for better user experience
-      setTimeout(() => setEvaluationProgress("Evaluating ideas and creativity..."), 1000);
-      setTimeout(() => setEvaluationProgress("Checking structure and organization..."), 2000);
-      setTimeout(() => setEvaluationProgress("Analyzing language and vocabulary..."), 3000);
-      setTimeout(() => setEvaluationProgress("Reviewing spelling and grammar..."), 4000);
-      setTimeout(() => setEvaluationProgress("Generating your personalized report..."), 5000);
-
-    } catch (e: any) {
-      console.error("NSW Submit error:", e);
+      // Call the original onSubmit function
+      await onSubmit(submissionContent, submissionTextType);
+      
+      setEvaluationStatus("success");
+      console.log('✅ Evaluation completed successfully');
+      
+    } catch (error) {
+      console.error('❌ Evaluation failed:', error);
       setEvaluationStatus("error");
+    } finally {
       setShowNSWEvaluation(false);
-      setEvaluationProgress("");
     }
   };
 
-  // Enhanced NSW evaluation completion handler
+  // Handle NSW evaluation completion
   const handleNSWEvaluationComplete = (report: any) => {
-    console.log("NSW Evaluation completed:", report);
+    console.log('📊 NSW Evaluation completed:', report);
     setNswReport(report);
-    setEvaluationStatus("success");
+    setAnalysis(report);
     setShowNSWEvaluation(false);
-    setEvaluationProgress("");
     setShowReportModal(true);
-    
-    // Convert NSW report to DetailedFeedback format for compatibility with enhanced ReportModal
-    const convertedAnalysis: DetailedFeedback = {
-      overallScore: report.overallScore || 0,
-      criteria: {
-        ideasContent: {
-          score: Math.round((report.domains?.contentAndIdeas?.score || 0) / 2), // Convert from 10-point to 5-point scale
-          weight: report.domains?.contentAndIdeas?.weight || 40,
-          strengths: report.strengths?.filter((s: any) => s.area === "Creative Ideas") || 
-                    [{ text: report.domains?.contentAndIdeas?.feedback?.[0] || "Good content development" }],
-          improvements: report.areasForImprovement?.filter((i: any) => i.area === "Ideas & Content") || []
-        },
-        structureOrganization: {
-          score: Math.round((report.domains?.textStructure?.score || 0) / 2),
-          weight: report.domains?.textStructure?.weight || 20,
-          strengths: report.strengths?.filter((s: any) => s.area === "Story Organization") || 
-                    [{ text: report.domains?.textStructure?.feedback?.[0] || "Clear structure" }],
-          improvements: report.areasForImprovement?.filter((i: any) => i.area === "Structure & Organization") || []
-        },
-        languageVocab: {
-          score: Math.round((report.domains?.languageFeatures?.score || 0) / 2),
-          weight: report.domains?.languageFeatures?.weight || 25,
-          strengths: report.strengths?.filter((s: any) => s.area === "Word Choice") || 
-                    [{ text: report.domains?.languageFeatures?.feedback?.[0] || "Good language use" }],
-          improvements: report.areasForImprovement?.filter((i: any) => i.area === "Language & Vocabulary") || []
-        },
-        spellingPunctuationGrammar: {
-          score: Math.round((report.domains?.spellingAndGrammar?.score || 0) / 2),
-          weight: report.domains?.spellingAndGrammar?.weight || 15,
-          strengths: report.strengths?.filter((s: any) => s.area === "Writing Mechanics") || 
-                    [{ text: report.domains?.spellingAndGrammar?.feedback?.[0] || "Accurate conventions" }],
-          improvements: report.areasForImprovement?.filter((i: any) => i.area.includes("Grammar") || i.area.includes("Spelling")) || []
-        }
-      },
-      grammarCorrections: report.grammarCorrections || [],
-      vocabularyEnhancements: report.vocabularyEnhancements || [],
-      id: report.id || `nsw-${Date.now()}`,
-      assessmentId: report.assessmentId
-    };
-    
-    setAnalysis(convertedAnalysis);
+    setEvaluationStatus("success");
   };
 
-  const handleSubmitForEvaluation = async (contentToSubmit: string, typeToSubmit: string) => {
-    await handleNSWSubmit(contentToSubmit, typeToSubmit);
-  };
-
-  const handleApplyFix = (fix: LintFix) => {
-    // Apply text fixes to content
-    console.log('Applying fix:', fix);
-  };
-
-  const handleCloseReportModal = () => {
-    setShowReportModal(false);
-    setNswReport(null);
-    setAnalysis(null);
-    setEvaluationStatus("idle");
-  };
-
+  // Handle closing NSW evaluation
   const handleCloseNSWEvaluation = () => {
     setShowNSWEvaluation(false);
     setEvaluationStatus("idle");
-    setEvaluationProgress("");
   };
 
-  // Check if word count exceeds target
-  const showWordCountWarning = wordCount > 300;
+  // Handle closing report modal
+  const handleCloseReportModal = () => {
+    setShowReportModal(false);
+  };
 
-  // Check if we have content for submit button
+  // Handle applying fixes from analysis
+  const handleApplyFix = (fix: LintFix) => {
+    console.log('🔧 Applying fix:', fix);
+    const newContent = localContent.slice(0, fix.start) + fix.replacement + localContent.slice(fix.end);
+    handleContentChange(newContent);
+  };
+
+  // Calculate current content for operations
   const currentContent = localContent || content;
-  const hasContent = currentContent && currentContent.trim().length > 0;
+  const hasContent = currentContent.trim().length > 0;
+  const showWordCountWarning = wordCount > 300; // Adjust threshold as needed
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      {/* Left side - Writing Area Content */}
-      <div className="flex-[7] flex flex-col min-w-0"> 
-        {/* Enhanced Writing Prompt Section */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-5 mb-4 mx-4 mt-4 shadow-sm">
-          <div className="flex items-center mb-3">
-            <LightbulbIcon className="w-6 h-6 mr-3 text-blue-600" />
-            <h3 className="font-bold text-blue-800 text-lg">Your Writing Prompt</h3>
-            <div className="ml-auto flex items-center space-x-2">
-              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">
-                {textType}
-              </span>
-            </div>
-          </div>
-          <p className="text-blue-700 leading-relaxed">
-            {currentPrompt}
-          </p>
-        </div>
+    <div className="h-screen flex bg-gray-50">
+      {/* Left side - Enhanced Writing Interface */}
+      <div className="flex-1 flex flex-col">
+        {/* Compact Header with Tools */}
+        <div className="bg-white border-b border-gray-200 px-4 py-3">
+          <div className="flex items-center justify-between">
+            {/* Left side - Navigation and Tools */}
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={() => onNavigate('dashboard')}
+                className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 transition-colors"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span className="font-medium">Back</span>
+              </button>
 
-        {/* Enhanced Action Buttons and Stats Section */}
-        <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4 mx-4 shadow-sm">
-          <div className="flex justify-between items-center">
-            {/* Left side - Action Buttons */}
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setShowPlanningTool(true)}
-                className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium shadow-sm"
-                title="Plan your writing structure and ideas"
-              >
-                <PenTool className="w-4 h-4" />
-                <span>Planning</span>
-              </button>
-              
-              <button
-                onClick={() => setExamMode(!examMode)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium shadow-sm ${
-                  examMode 
-                    ? 'bg-green-600 text-white hover:bg-green-700' 
-                    : 'bg-green-500 text-white hover:bg-green-600'
-                }`}
-                title="Toggle exam simulation mode"
-              >
-                <Play className="w-4 h-4" />
-                <span>{examMode ? 'Exit Exam' : 'Exam Mode'}</span>
-              </button>
-              
-              <button
-                onClick={() => setShowStructureGuide(true)}
-                className="flex items-center space-x-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors text-sm font-medium shadow-sm"
-                title="Learn about story structure and organization"
-              >
-                <BookOpen className="w-4 h-4" />
-                <span>Structure</span>
-              </button>
-              
-              <button
-                onClick={() => setShowTips(true)}
-                className="flex items-center space-x-2 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm font-medium shadow-sm"
-                title="Get helpful writing tips and techniques"
-              >
-                <LightbulbIcon className="w-4 h-4" />
-                <span>Tips</span>
-              </button>
-              
-              <button
-                onClick={() => setFocusMode(!focusMode)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium shadow-sm ${
-                  focusMode 
-                    ? 'bg-gray-700 text-white hover:bg-gray-800' 
-                    : 'bg-gray-600 text-white hover:bg-gray-700'
-                }`}
-                title="Toggle distraction-free writing mode"
-              >
-                {focusMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                <span>{focusMode ? 'Exit Focus' : 'Focus Mode'}</span>
-              </button>
+              <div className="h-6 w-px bg-gray-300"></div>
+
+              {/* Enhanced Tool Buttons */}
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setShowPlanningTool(true)}
+                  className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                >
+                  <PenTool className="w-4 h-4" />
+                  <span>Planning</span>
+                </button>
+
+                <button
+                  onClick={() => setShowStructureGuide(true)}
+                  className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-purple-600 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors"
+                >
+                  <BookOpen className="w-4 h-4" />
+                  <span>Structure</span>
+                </button>
+
+                <button
+                  onClick={() => setShowTips(true)}
+                  className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-yellow-600 bg-yellow-50 hover:bg-yellow-100 rounded-lg transition-colors"
+                >
+                  <LightbulbIcon className="w-4 h-4" />
+                  <span>Tips</span>
+                </button>
+
+                <button
+                  onClick={() => setFocusMode(!focusMode)}
+                  className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-green-600 bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
+                >
+                  {focusMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  <span>{focusMode ? 'Exit Focus' : 'Focus Mode'}</span>
+                </button>
+              </div>
             </div>
 
             {/* Right side - Enhanced Writing Statistics */}
-            <div className="flex items-center space-x-6 text-sm">
+            <div className="flex items-center space-x-4 text-sm">
               <div className="flex items-center space-x-2">
                 <FileText className="w-4 h-4 text-blue-500" />
                 <span className="font-medium">{wordCount} words</span>
@@ -415,70 +347,55 @@ export function EnhancedWritingLayout({
                   </div>
                 )}
               </div>
-              
-              <div className="flex items-center space-x-2">
-                <Clock className="w-4 h-4 text-orange-500" />
-                <span className="font-medium">0 WPM</span>
-              </div>
 
-              {/* Progress indicator */}
-              <div className="flex items-center space-x-2">
-                <Target className="w-4 h-4 text-green-500" />
-                <span className="font-medium text-green-600">
-                  {wordCount < 50 ? 'Getting Started' : 
-                   wordCount < 150 ? 'Building Ideas' : 
-                   wordCount < 250 ? 'Developing Story' : 
-                   'Ready to Review'}
-                </span>
-              </div>
+              {evaluationStatus === "success" && (
+                <div className="flex items-center space-x-1 text-green-600">
+                  <Award className="w-4 h-4" />
+                  <span className="font-medium text-xs">Evaluated</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Text Editor Section */}
-        <div className="flex-1 mx-4 mb-4">
-          <div className="bg-white border border-gray-200 rounded-lg h-full shadow-sm">
-            <WritingArea
-              content={currentContent}
-              onChange={handleContentChange}
-              onSubmit={handleSubmitForEvaluation}
-              textType={textType}
-              assistanceLevel={assistanceLevel}
-              selectedText={selectedText}
-              onTimerStart={onTimerStart}
-              onTextTypeChange={onTextTypeChange}
-              onPopupCompleted={onPopupCompleted}
-              onNavigate={onNavigate}
-              evaluationStatus={evaluationStatus}
-              examMode={examMode}
-              hidePromptAndSubmit={true}
-              prompt={currentPrompt}
-              onPromptGenerated={setCurrentPrompt}
-            />
-          </div>
+        {/* Enhanced Writing Area - Full height utilization */}
+        <div className="flex-1 bg-white">
+          <WritingArea
+            content={currentContent}
+            onChange={handleContentChange}
+            onSubmit={handleSubmitForEvaluation}
+            textType={textType}
+            assistanceLevel={assistanceLevel}
+            selectedText={selectedText}
+            onTimerStart={onTimerStart}
+            onTextTypeChange={onTextTypeChange}
+            onPopupCompleted={onPopupCompleted}
+            onNavigate={onNavigate}
+            evaluationStatus={evaluationStatus}
+            examMode={examMode}
+            focusMode={focusMode}
+            hidePromptAndSubmit={true}
+            prompt={currentPrompt}
+            onPromptGenerated={setCurrentPrompt}
+          />
         </div>
 
-        {/* Enhanced Submit for Evaluation Button */}
-        <div className="px-4 pb-4">
+        {/* Enhanced Submit Button - Compact */}
+        <div className="bg-white border-t border-gray-200 p-3">
           <button
-            onClick={() => handleSubmitForEvaluation(localContent, textType)}
+            onClick={() => handleSubmitForEvaluation(currentContent, textType)}
             disabled={evaluationStatus === "loading" || !hasContent}
-            className={`w-full font-bold py-4 px-6 rounded-lg transition-all duration-200 flex items-center justify-center shadow-lg ${
-              evaluationStatus === "loading" || !hasContent
-                ? 'bg-gray-400 cursor-not-allowed text-gray-600'
-                : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white transform hover:scale-[1.02]'
-            }`}
+            className="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 disabled:from-gray-400 disabled:to-gray-500 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 disabled:cursor-not-allowed shadow-lg"
           >
             {evaluationStatus === "loading" ? (
               <>
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
-                <span>Analyzing Your Writing...</span>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                <span>Evaluating...</span>
               </>
             ) : (
               <>
-                <Award className="w-5 h-5 mr-3" />
-                <span>Get My Writing Report</span>
-                <TrendingUp className="w-5 h-5 ml-3" />
+                <Target className="w-5 h-5" />
+                <span>Submit for Evaluation</span>
               </>
             )}
           </button>
@@ -491,31 +408,31 @@ export function EnhancedWritingLayout({
         </div>
       </div>
 
-      {/* Right side - Coach Panel (hidden in focus mode) */}
+      {/* Right side - Coach Panel - Optimized width (hidden in focus mode) */}
       {!focusMode && (
-        <div className="flex-[3] border-l border-gray-200 bg-white">
-          <TabbedCoachPanel
+        <div className="w-96 border-l border-gray-200 bg-white flex flex-col">
+          <TabbedCoachPanel 
+            analysis={analysis} 
+            onApplyFix={handleApplyFix}
             content={currentContent}
             textType={textType}
-            assistanceLevel={assistanceLevel}
-            selectedText={selectedText}
-            onApplyFix={handleApplyFix}
-            wordCount={wordCount}
           />
         </div>
       )}
 
-      {/* Enhanced NSW Evaluation Loading Modal */}
+      {/* NSW Evaluation Loading Modal */}
       {showNSWEvaluation && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4 shadow-2xl">
+          <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-purple-600 mx-auto mb-6"></div>
-              <h3 className="text-xl font-bold text-gray-800 mb-4">Analyzing Your Writing</h3>
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-600 mx-auto mb-4"></div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                Evaluating Your Writing
+              </h3>
               <p className="text-gray-600 mb-4">{evaluationProgress}</p>
               <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
                 <div 
-                  className="bg-gradient-to-r from-purple-600 to-indigo-600 h-2 rounded-full transition-all duration-1000"
+                  className="bg-purple-600 h-2 rounded-full transition-all duration-500"
                   style={{ 
                     width: evaluationProgress.includes("Analyzing") ? "20%" :
                            evaluationProgress.includes("Evaluating") ? "40%" :
