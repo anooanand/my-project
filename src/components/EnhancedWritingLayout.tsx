@@ -74,18 +74,24 @@ export function EnhancedWritingLayout({
   // Function to get the current prompt from localStorage or fallback
   const getCurrentPrompt = () => {
     try {
-      // First check for a custom prompt from "Use My Own Idea"
-      const customPrompt = localStorage.getItem("customPrompt");
-      if (customPrompt && customPrompt.trim()) {
-        console.log("📝 getCurrentPrompt: Using Custom Prompt from localStorage:", customPrompt.substring(0, 50) + "...");
-        return customPrompt;
+      const promptType = localStorage.getItem("promptType");
+
+      // If promptType is 'generated', prioritize generatedPrompt
+      if (promptType === 'generated') {
+        const magicalPrompt = localStorage.getItem("generatedPrompt");
+        if (magicalPrompt && magicalPrompt.trim()) {
+          console.log("📝 getCurrentPrompt: Using Magical Prompt from localStorage:", magicalPrompt.substring(0, 50) + "...");
+          return magicalPrompt; // Magical prompt gets priority!
+        }
       }
 
-      // Then check for a generated prompt from Magical Prompt
-      const magicalPrompt = localStorage.getItem("generatedPrompt");
-      if (magicalPrompt && magicalPrompt.trim()) {
-        console.log("📝 getCurrentPrompt: Using Magical Prompt from localStorage:", magicalPrompt.substring(0, 50) + "...");
-        return magicalPrompt;
+      // If promptType is 'custom', prioritize customPrompt  
+      if (promptType === 'custom') {
+        const customPrompt = localStorage.getItem("customPrompt");
+        if (customPrompt && customPrompt.trim()) {
+          console.log("📝 getCurrentPrompt: Using Custom Prompt from localStorage:", customPrompt.substring(0, 50) + "...");
+          return customPrompt; // Custom prompt gets priority!
+        }
       }
 
       // Check for text-type specific prompt
@@ -360,210 +366,146 @@ export function EnhancedWritingLayout({
               <button
                 onClick={() => setShowTips(true)}
                 className="flex items-center space-x-2 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm font-medium shadow-sm"
-                title="Get helpful writing tips and techniques"
+                title="Get writing tips and advice"
               >
                 <LightbulbIcon className="w-4 h-4" />
                 <span>Tips</span>
               </button>
-              
+            </div>
+
+            {/* Right side - Stats and Focus Mode */}
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-1 text-gray-600">
+                <FileText className="w-4 h-4" />
+                <span className="text-sm font-medium">Words: {wordCount}</span>
+              </div>
+              <div className="flex items-center space-x-1 text-gray-600">
+                <Clock className="w-4 h-4" />
+                <span className="text-sm font-medium">Time: 00:00</span> {/* Placeholder for timer */}
+              </div>
               <button
                 onClick={() => setFocusMode(!focusMode)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium shadow-sm ${
-                  focusMode 
-                    ? 'bg-gray-700 text-white hover:bg-gray-800' 
-                    : 'bg-gray-600 text-white hover:bg-gray-700'
-                }`}
-                title="Toggle distraction-free writing mode"
+                className="p-2 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                title={focusMode ? "Exit Focus Mode" : "Enter Focus Mode"}
               >
-                {focusMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                <span>{focusMode ? 'Exit Focus' : 'Focus Mode'}</span>
+                {focusMode ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
-
-            {/* Right side - Enhanced Writing Statistics */}
-            <div className="flex items-center space-x-6 text-sm">
-              <div className="flex items-center space-x-2">
-                <FileText className="w-4 h-4 text-blue-500" />
-                <span className="font-medium">{wordCount} words</span>
-                {showWordCountWarning && (
-                  <div className="flex items-center space-x-1 text-orange-600">
-                    <AlertCircle className="w-4 h-4" />
-                    <span className="font-medium text-xs">Over target!</span>
-                  </div>
-                )}
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Clock className="w-4 h-4 text-orange-500" />
-                <span className="font-medium">0 WPM</span>
-              </div>
-
-              {/* Progress indicator */}
-              <div className="flex items-center space-x-2">
-                <Target className="w-4 h-4 text-green-500" />
-                <span className="font-medium text-green-600">
-                  {wordCount < 50 ? 'Getting Started' : 
-                   wordCount < 150 ? 'Building Ideas' : 
-                   wordCount < 250 ? 'Developing Story' : 
-                   'Ready to Review'}
-                </span>
-              </div>
+          </div>
+          {showWordCountWarning && (
+            <div className="mt-3 flex items-center text-orange-600 text-sm font-medium">
+              <AlertCircle className="w-4 h-4 mr-2" />
+              <span>Warning: Your word count ({wordCount}) is getting high. Consider editing for conciseness.</span>
             </div>
-          </div>
-        </div>
-
-        {/* Text Editor Section */}
-        <div className="flex-1 mx-4 mb-4">
-          <div className="bg-white border border-gray-200 rounded-lg h-full shadow-sm">
-            <WritingArea
-              content={currentContent}
-              onChange={handleContentChange}
-              onSubmit={handleSubmitForEvaluation}
-              textType={textType}
-              assistanceLevel={assistanceLevel}
-              selectedText={selectedText}
-              onTimerStart={onTimerStart}
-              onTextTypeChange={onTextTypeChange}
-              onPopupCompleted={onPopupCompleted}
-              onNavigate={onNavigate}
-              evaluationStatus={evaluationStatus}
-              examMode={examMode}
-              hidePromptAndSubmit={true}
-              prompt={currentPrompt}
-              onPromptGenerated={setCurrentPrompt}
-            />
-          </div>
-        </div>
-
-        {/* Enhanced Submit for Evaluation Button */}
-        <div className="px-4 pb-4">
-          <button
-            onClick={() => handleSubmitForEvaluation(localContent, textType)}
-            disabled={evaluationStatus === "loading" || !hasContent}
-            className={`w-full font-bold py-4 px-6 rounded-lg transition-all duration-200 flex items-center justify-center shadow-lg ${
-              evaluationStatus === "loading" || !hasContent
-                ? 'bg-gray-400 cursor-not-allowed text-gray-600'
-                : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white transform hover:scale-[1.02]'
-            }`}
-          >
-            {evaluationStatus === "loading" ? (
-              <>
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
-                <span>Analyzing Your Writing...</span>
-              </>
-            ) : (
-              <>
-                <Award className="w-5 h-5 mr-3" />
-                <span>Get My Writing Report</span>
-                <TrendingUp className="w-5 h-5 ml-3" />
-              </>
-            )}
-          </button>
-          
-          {!hasContent && (
-            <p className="text-center text-gray-500 text-sm mt-2">
-              Start writing to unlock your personalized assessment report
-            </p>
           )}
+        </div>
+
+        {/* Writing Area */}
+        <div className="flex-1 mx-4 mb-4 overflow-hidden rounded-lg shadow-lg">
+          <WritingArea
+            content={localContent}
+            onChange={handleContentChange}
+            assistanceLevel={assistanceLevel}
+            selectedText={selectedText}
+            examMode={examMode}
+            focusMode={focusMode}
+          />
+        </div>
+
+        {/* Submit Button and Evaluation Status */}
+        <div className="bg-white border-t border-gray-200 p-4 flex justify-between items-center shadow-inner">
+          <button
+            onClick={() => onNavigate('home')}
+            className="flex items-center space-x-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to Dashboard</span>
+          </button>
+
+          <div className="flex items-center space-x-3">
+            {evaluationStatus === "loading" && (
+              <div className="flex items-center text-blue-600 text-sm font-medium">
+                <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>{evaluationProgress}</span>
+              </div>
+             )}
+            {evaluationStatus === "success" && (
+              <div className="flex items-center text-green-600 text-sm font-medium">
+                <Award className="w-4 h-4 mr-2" />
+                <span>Evaluation Complete!</span>
+              </div>
+            )}
+            {evaluationStatus === "error" && (
+              <div className="flex items-center text-red-600 text-sm font-medium">
+                <AlertCircle className="w-4 h-4 mr-2" />
+                <span>Evaluation Failed. Please try again.</span>
+              </div>
+            )}
+            <button
+              onClick={() => handleSubmitForEvaluation(localContent, textType)}
+              className={`flex items-center space-x-2 px-6 py-3 rounded-lg text-white font-bold text-lg transition-colors shadow-md ${
+                hasContent && evaluationStatus !== "loading"
+                  ? 'bg-indigo-600 hover:bg-indigo-700'
+                  : 'bg-gray-400 cursor-not-allowed'
+              }`}
+              disabled={!hasContent || evaluationStatus === "loading"}
+            >
+              <TrendingUp className="w-5 h-5" />
+              <span>Submit for Evaluation</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Right side - Coach Panel (hidden in focus mode) */}
-      {!focusMode && (
-        <div className="flex-[3] border-l border-gray-200 bg-white">
-          <TabbedCoachPanel
-            content={currentContent}
-            textType={textType}
-            assistanceLevel={assistanceLevel}
-            selectedText={selectedText}
-            onApplyFix={handleApplyFix}
-            wordCount={wordCount}
-          />
-        </div>
-      )}
-
-      {/* Enhanced NSW Evaluation Loading Modal */}
-      {showNSWEvaluation && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4 shadow-2xl">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-purple-600 mx-auto mb-6"></div>
-              <h3 className="text-xl font-bold text-gray-800 mb-4">Analyzing Your Writing</h3>
-              <p className="text-gray-600 mb-4">{evaluationProgress}</p>
-              <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
-                <div 
-                  className="bg-gradient-to-r from-purple-600 to-indigo-600 h-2 rounded-full transition-all duration-1000"
-                  style={{ 
-                    width: evaluationProgress.includes("Analyzing") ? "20%" :
-                           evaluationProgress.includes("Evaluating") ? "40%" :
-                           evaluationProgress.includes("Checking") ? "60%" :
-                           evaluationProgress.includes("language") ? "80%" :
-                           evaluationProgress.includes("Generating") ? "100%" : "0%"
-                  }}
-                ></div>
-              </div>
-              <p className="text-sm text-gray-500">
-                We're creating a detailed, personalized report just for you!
-              </p>
-              <button
-                onClick={handleCloseNSWEvaluation}
-                className="mt-4 px-4 py-2 text-gray-500 hover:text-gray-700 transition-colors"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Enhanced Report Modal */}
-      {showReportModal && analysis && (
-        <ReportModal
-          isOpen={showReportModal}
-          onClose={handleCloseReportModal}
-          data={analysis}
+      {/* Right side - Coach Panel */}
+      <div className="flex-[3] min-w-[300px] max-w-[400px] border-l border-gray-200 bg-white flex flex-col">
+        <TabbedCoachPanel
+          content={localContent}
+          textType={textType}
+          assistanceLevel={assistanceLevel}
+          selectedText={selectedText}
           onApplyFix={handleApplyFix}
-          studentName="Student"
-          essayText={currentContent}
+          onNSWEvaluationComplete={handleNSWEvaluationComplete}
+          evaluationStatus={evaluationStatus}
+          evaluationProgress={evaluationProgress}
         />
-      )}
+      </div>
 
       {/* Modals */}
-      {showPlanningTool && (
-        <PlanningToolModal
-          isOpen={showPlanningTool}
-          onClose={() => setShowPlanningTool(false)}
-          textType={textType}
-          plan={plan}
-          onPlanChange={setPlan}
-        />
-      )}
-
-      {showStructureGuide && (
-        <StructureGuideModal
-          isOpen={showStructureGuide}
-          onClose={() => setShowStructureGuide(false)}
-          textType={textType}
-        />
-      )}
-
-      {showTips && (
-        <TipsModal
-          isOpen={showTips}
-          onClose={() => setShowTips(false)}
-          textType={textType}
-        />
-      )}
-
-      {/* NSW Standalone Submit System */}
-      {showNSWEvaluation && (
-        <NSWStandaloneSubmitSystem
-          content={currentContent}
-          textType={textType}
-          onComplete={handleNSWEvaluationComplete}
-          onClose={handleCloseNSWEvaluation}
-        />
-      )}
+      <PlanningToolModal
+        isOpen={showPlanningTool}
+        onClose={() => setShowPlanningTool(false)}
+        onSavePlan={setPlan}
+        initialPlan={plan}
+        currentPrompt={currentPrompt}
+      />
+      <StructureGuideModal
+        isOpen={showStructureGuide}
+        onClose={() => setShowStructureGuide(false)}
+        textType={textType}
+      />
+      <TipsModal
+        isOpen={showTips}
+        onClose={() => setShowTips(false)}
+      />
+      <NSWStandaloneSubmitSystem
+        isOpen={showNSWEvaluation}
+        onClose={handleCloseNSWEvaluation}
+        content={localContent}
+        textType={textType}
+        onEvaluationComplete={handleNSWEvaluationComplete}
+        evaluationStatus={evaluationStatus}
+        evaluationProgress={evaluationProgress}
+      />
+      <ReportModal
+        isOpen={showReportModal}
+        onClose={handleCloseReportModal}
+        analysis={analysis}
+        nswReport={nswReport}
+      />
     </div>
   );
 }
