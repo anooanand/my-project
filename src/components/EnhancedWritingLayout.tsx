@@ -72,25 +72,47 @@ export function EnhancedWritingLayout({
   // Local content state to ensure we have the latest content
   const [localContent, setLocalContent] = useState<string>(content);
 
-  // Function to get the current prompt from localStorage or fallback
+  // FIXED: Function to get the current prompt based on user's selection
   const getCurrentPrompt = () => {
     try {
-      // First check for a custom prompt from "Use My Own Idea"
-      const customPrompt = localStorage.getItem("customPrompt");
-      if (customPrompt && customPrompt.trim()) {
-        console.log("📝 getCurrentPrompt: Using Custom Prompt from localStorage:", customPrompt.substring(0, 50) + "...");
-        return customPrompt;
+      // First check what type of prompt the user last selected
+      const promptType = localStorage.getItem("promptType");
+      console.log("📝 getCurrentPrompt: Checking promptType:", promptType);
+
+      // If user selected "generated" (Magical Prompt), prioritize generatedPrompt
+      if (promptType === "generated") {
+        const magicalPrompt = localStorage.getItem("generatedPrompt");
+        if (magicalPrompt && magicalPrompt.trim()) {
+          console.log("📝 getCurrentPrompt: Using Magical Prompt from localStorage:", magicalPrompt.substring(0, 50) + "...");
+          return magicalPrompt;
+        }
       }
 
-      // Then check for a generated prompt from Magical Prompt
+      // If user selected "custom" (Use My Own Idea), prioritize customPrompt
+      if (promptType === "custom") {
+        const customPrompt = localStorage.getItem("customPrompt");
+        if (customPrompt && customPrompt.trim()) {
+          console.log("📝 getCurrentPrompt: Using Custom Prompt from localStorage:", customPrompt.substring(0, 50) + "...");
+          return customPrompt;
+        }
+      }
+
+      // Fallback logic: check for any available prompt
+      // First check for a generated prompt from Magical Prompt
       const magicalPrompt = localStorage.getItem("generatedPrompt");
       if (magicalPrompt && magicalPrompt.trim()) {
-        console.log("📝 getCurrentPrompt: Using Magical Prompt from localStorage:", magicalPrompt.substring(0, 50) + "...");
+        console.log("📝 getCurrentPrompt: Using Magical Prompt from localStorage (fallback):", magicalPrompt.substring(0, 50) + "...");
         return magicalPrompt;
       }
 
+      // Then check for a custom prompt from "Use My Own Idea"
+      const customPrompt = localStorage.getItem("customPrompt");
+      if (customPrompt && customPrompt.trim()) {
+        console.log("📝 getCurrentPrompt: Using Custom Prompt from localStorage (fallback):", customPrompt.substring(0, 50) + "...");
+        return customPrompt;
+      }
+
       // Check for text-type specific prompt
-         // Check for text-type specific prompt
       const textTypePrompt = localStorage.getItem(`${textType.toLowerCase()}_prompt`);
       if (textTypePrompt && textTypePrompt.trim()) {
         console.log("📝 getCurrentPrompt: Using text-type specific prompt:", textTypePrompt.substring(0, 50) + "...");
@@ -115,11 +137,11 @@ export function EnhancedWritingLayout({
     console.log("✅ useEffect[textType]: currentPrompt set to:", prompt.substring(0, 50) + "...");
   }, [textType]);
 
-  // Listen for localStorage changes (from other tabs/components)
+  // FIXED: Enhanced event listeners for prompt updates
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
       console.log('📡 handleStorageChange: Storage event detected. Key:', e.key, 'New Value:', e.newValue?.substring(0, 50) + '...');
-      if (e.key === 'customPrompt' || e.key === 'generatedPrompt' || e.key === `${textType.toLowerCase()}_prompt`) {
+      if (e.key === 'customPrompt' || e.key === 'generatedPrompt' || e.key === 'promptType' || e.key === `${textType.toLowerCase()}_prompt`) {
         console.log('📡 handleStorageChange: Relevant storage key changed. Updating prompt.');
         const newPrompt = getCurrentPrompt();
         setCurrentPrompt(newPrompt);
@@ -130,17 +152,33 @@ export function EnhancedWritingLayout({
     // Listen for custom events from Magical Prompt generation
     const handlePromptGenerated = (event: CustomEvent) => {
       console.log("🎯 handlePromptGenerated: Custom event received. Detail:", event.detail);
+      // When a magical prompt is generated, clear any existing custom prompt to avoid conflicts
+      localStorage.removeItem("customPrompt");
+      localStorage.setItem("promptType", "generated");
       const newPrompt = getCurrentPrompt();
       setCurrentPrompt(newPrompt);
       console.log("✅ handlePromptGenerated: currentPrompt set to:", newPrompt.substring(0, 50) + "...");
     };
 
+    // FIXED: Listen for custom prompt creation events
+    const handleCustomPromptCreated = (event: CustomEvent) => {
+      console.log("✏️ handleCustomPromptCreated: Custom event received. Detail:", event.detail);
+      // When a custom prompt is created, clear any existing generated prompt to avoid conflicts
+      localStorage.removeItem("generatedPrompt");
+      localStorage.setItem("promptType", "custom");
+      const newPrompt = getCurrentPrompt();
+      setCurrentPrompt(newPrompt);
+      console.log("✅ handleCustomPromptCreated: currentPrompt set to:", newPrompt.substring(0, 50) + "...");
+    };
+
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('promptGenerated', handlePromptGenerated as EventListener);
+    window.addEventListener('customPromptCreated', handleCustomPromptCreated as EventListener);
     
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('promptGenerated', handlePromptGenerated as EventListener);
+      window.removeEventListener('customPromptCreated', handleCustomPromptCreated as EventListener);
     };
   }, [textType, evaluationStatus]);
 
@@ -372,131 +410,94 @@ export function EnhancedWritingLayout({
               </button>
             </div>
 
-            {/* Right side - Enhanced Writing Statistics */}
-            <div className="flex items-center space-x-6 text-sm">
-              <div className="flex items-center space-x-2">
-                <FileText className="w-4 h-4 text-blue-500" />
-                <span className="font-medium">{wordCount} words</span>
+            {/* Right side - Enhanced Stats and Submit */}
+            <div className="flex items-center space-x-4">
+              {/* Word Count with Warning */}
+              <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium ${
+                showWordCountWarning 
+                  ? 'bg-red-100 text-red-700 border border-red-200' 
+                  : 'bg-gray-100 text-gray-700 border border-gray-200'
+              }`}>
+                <FileText className="w-4 h-4" />
+                <span>{wordCount} words</span>
                 {showWordCountWarning && (
-                  <div className="flex items-center space-x-1 text-orange-600">
-                    <AlertCircle className="w-4 h-4" />
-                    <span className="font-medium text-xs">Over target!</span>
-                  </div>
+                  <AlertCircle className="w-4 h-4 text-red-500" />
                 )}
               </div>
-              
-              <div className="flex items-center space-x-2">
-                <Clock className="w-4 h-4 text-orange-500" />
-                <span className="font-medium">0 WPM</span>
-              </div>
 
-              {/* Progress indicator */}
-              <div className="flex items-center space-x-2">
-                <Target className="w-4 h-4 text-green-500" />
-                <span className="font-medium text-green-600">
-                  {wordCount < 50 ? 'Getting Started' : 
-                   wordCount < 150 ? 'Building Ideas' : 
-                   wordCount < 250 ? 'Developing Story' : 
-                   'Ready to Review'}
-                </span>
-              </div>
+              {/* Submit Button */}
+              <button
+                onClick={() => handleSubmitForEvaluation(currentContent, textType)}
+                disabled={!hasContent || evaluationStatus === "loading"}
+                className={`flex items-center space-x-2 px-6 py-2 rounded-lg text-sm font-medium shadow-sm transition-all ${
+                  hasContent && evaluationStatus !== "loading"
+                    ? 'bg-green-600 text-white hover:bg-green-700 transform hover:scale-105'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
+                title={hasContent ? "Submit your writing for NSW evaluation" : "Write some content first"}
+              >
+                {evaluationStatus === "loading" ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                    <span>Evaluating...</span>
+                  </>
+                ) : (
+                  <>
+                    <Award className="w-4 h-4" />
+                    <span>Submit for Evaluation</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Text Editor Section */}
+        {/* Writing Area */}
         <div className="flex-1 mx-4 mb-4">
-          <div className="bg-white border border-gray-200 rounded-lg h-full shadow-sm">
-            <WritingArea
-              content={currentContent}
-              onChange={handleContentChange}
-              onSubmit={handleSubmitForEvaluation}
-              textType={textType}
-              assistanceLevel={assistanceLevel}
-              selectedText={selectedText}
-              onTimerStart={onTimerStart}
-              onTextTypeChange={onTextTypeChange}
-              onPopupCompleted={onPopupCompleted}
-              onNavigate={onNavigate}
-              evaluationStatus={evaluationStatus}
-              examMode={examMode}
-              hidePromptAndSubmit={true}
-              prompt={currentPrompt}
-              onPromptGenerated={setCurrentPrompt}
-            />
-          </div>
-        </div>
-
-        {/* Enhanced Submit for Evaluation Button */}
-        <div className="px-4 pb-4">
-          <button
-            onClick={() => handleSubmitForEvaluation(localContent, textType)}
-            disabled={evaluationStatus === "loading" || !hasContent}
-            className={`w-full font-bold py-4 px-6 rounded-lg transition-all duration-200 flex items-center justify-center shadow-lg ${
-              evaluationStatus === "loading" || !hasContent
-                ? 'bg-gray-400 cursor-not-allowed text-gray-600'
-                : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white transform hover:scale-[1.02]'
-            }`}
-          >
-            {evaluationStatus === "loading" ? (
-              <>
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
-                <span>Analyzing Your Writing...</span>
-              </>
-            ) : (
-              <>
-                <Award className="w-5 h-5 mr-3" />
-                <span>Get My Writing Report</span>
-                <TrendingUp className="w-5 h-5 ml-3" />
-              </>
-            )}
-          </button>
-          
-          {!hasContent && (
-            <p className="text-center text-gray-500 text-sm mt-2">
-              Start writing to unlock your personalized assessment report
-            </p>
-          )}
+          <WritingArea
+            content={currentContent}
+            onChange={handleContentChange}
+            textType={textType}
+            assistanceLevel={assistanceLevel}
+            selectedText={selectedText}
+            onTimerStart={onTimerStart}
+            examMode={examMode}
+            focusMode={focusMode}
+            showWordCount={true}
+            wordCount={wordCount}
+            showWordCountWarning={showWordCountWarning}
+          />
         </div>
       </div>
 
-      {/* Right side - Coach Panel (hidden in focus mode) */}
+      {/* Right side - Coach Panel */}
       {!focusMode && (
-        <div className="flex-[3] border-l border-gray-200 bg-white">
+        <div className="flex-[3] min-w-[300px] max-w-[400px] border-l border-gray-200 bg-white">
           <TabbedCoachPanel
             content={currentContent}
             textType={textType}
             assistanceLevel={assistanceLevel}
             selectedText={selectedText}
-            onApplyFix={handleApplyFix}
-            wordCount={wordCount}
+            onNavigate={onNavigate}
           />
         </div>
       )}
 
-      {/* Enhanced NSW Evaluation Loading Modal */}
+      {/* NSW Evaluation Loading Modal */}
       {showNSWEvaluation && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4 shadow-2xl">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-purple-600 mx-auto mb-6"></div>
-              <h3 className="text-xl font-bold text-gray-800 mb-4">Analyzing Your Writing</h3>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-8 text-center">
+            <div className="mb-6">
+              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                <TrendingUp className="w-8 h-8 text-white animate-pulse" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">NSW Evaluation in Progress</h3>
               <p className="text-gray-600 mb-4">{evaluationProgress}</p>
               <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
-                <div 
-                  className="bg-gradient-to-r from-purple-600 to-indigo-600 h-2 rounded-full transition-all duration-1000"
-                  style={{ 
-                    width: evaluationProgress.includes("Analyzing") ? "20%" :
-                           evaluationProgress.includes("Evaluating") ? "40%" :
-                           evaluationProgress.includes("Checking") ? "60%" :
-                           evaluationProgress.includes("language") ? "80%" :
-                           evaluationProgress.includes("Generating") ? "100%" : "0%"
-                  }}
-                ></div>
+                <div className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full animate-pulse" style={{width: '60%'}}></div>
               </div>
-              <p className="text-sm text-gray-500">
-                We're creating a detailed, personalized report just for you!
-              </p>
+            </div>
+            <div className="flex justify-center">
               <button
                 onClick={handleCloseNSWEvaluation}
                 className="mt-4 px-4 py-2 text-gray-500 hover:text-gray-700 transition-colors"
