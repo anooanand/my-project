@@ -1,6 +1,6 @@
 import React from 'react';
 import { Award, Target, TrendingUp, CheckCircle, AlertCircle, Star } from 'lucide-react';
-import { getNSWSelectiveFeedback } from '../lib/openai';
+import { openai } from '../lib/openai';
 
 // NSW text type guides for enhanced OpenAI prompts
 const NSW_TEXT_TYPE_GUIDES = {
@@ -75,7 +75,7 @@ export function EnhancedNSWFeedback({ essay, textType }: EnhancedNSWFeedbackProp
     setLoading(true);
     try {
       // Call the actual AI feedback function from openai.ts
-      const result = await getNSWSelectiveFeedback(essay, textType);
+      const result = await openai.getNSWSelectiveFeedback(essay, textType);
       setFeedback(result);
     } catch (error) {
       console.error("Error getting feedback:", error);
