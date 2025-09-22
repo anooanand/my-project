@@ -140,7 +140,7 @@ export function EnhancedWritingLayout({
       console.log('📡 handleStorageChange: Storage event detected. Key:', e.key, 'New Value:', e.newValue?.substring(0, 50) + '...');
       
       // Handle magical prompt generation - set timestamp when new prompt is generated
-      if (e.key === 'generatedPrompt' && e.newValue) {
+      if (e.key === 'generatedPrompt') {
         localStorage.setItem("generatedPromptTimestamp", new Date().toISOString());
         console.log('📡 handleStorageChange: Set timestamp for generated prompt');
       }
@@ -369,32 +369,32 @@ export function EnhancedWritingLayout({
                 className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium shadow-sm ${
                   examMode 
                     ? 'bg-green-600 text-white hover:bg-green-700' 
-                    : 'bg-green-500 text-white hover:bg-green-600'
+                    : 'bg-gray-600 text-white hover:bg-gray-700'
                 }`}
                 title="Toggle exam simulation mode"
               >
-                <Play className="w-4 h-4" />
+                <Target className="w-4 h-4" />
                 <span>{examMode ? 'Exit Exam' : 'Exam Mode'}</span>
               </button>
-              
+
               <button
                 onClick={() => setShowStructureGuide(true)}
                 className="flex items-center space-x-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors text-sm font-medium shadow-sm"
-                title="Learn about story structure and organization"
+                title="View structure guide for your text type"
               >
                 <BookOpen className="w-4 h-4" />
                 <span>Structure</span>
               </button>
-              
+
               <button
                 onClick={() => setShowTips(true)}
-                className="flex items-center space-x-2 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm font-medium shadow-sm"
-                title="Get helpful writing tips and techniques"
+                className="flex items-center space-x-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium shadow-sm"
+                title="Get writing tips and techniques"
               >
                 <LightbulbIcon className="w-4 h-4" />
                 <span>Tips</span>
               </button>
-              
+
               <button
                 onClick={() => setFocusMode(!focusMode)}
                 className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium shadow-sm ${
@@ -485,6 +485,8 @@ export function EnhancedWritingLayout({
             onSubmit={onSubmit}
             onTextTypeChange={onTextTypeChange}
             onPopupCompleted={onPopupCompleted}
+            prompt={currentPrompt}
+            hidePromptAndSubmit={true}
           />
         </div>
       </div>
