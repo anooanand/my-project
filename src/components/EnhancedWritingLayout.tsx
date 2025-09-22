@@ -335,21 +335,7 @@ export function EnhancedWritingLayout({
     <div className="flex h-screen bg-gray-50">
       {/* Left side - Writing Area Content */}
       <div className="flex-[7] flex flex-col min-w-0"> 
-        {/* Enhanced Writing Prompt Section */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-5 mb-4 mx-4 mt-4 shadow-sm">
-          <div className="flex items-center mb-3">
-            <LightbulbIcon className="w-6 h-6 mr-3 text-blue-600" />
-            <h3 className="font-bold text-blue-800 text-lg">Your Writing Prompt</h3>
-            <div className="ml-auto flex items-center space-x-2">
-              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">
-                {textType}
-              </span>
-            </div>
-          </div>
-          <p className="text-blue-700 leading-relaxed">
-            {currentPrompt}
-          </p>
-        </div>
+
 
         {/* Enhanced Action Buttons and Stats Section */}
         <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4 mx-4 shadow-sm">
@@ -429,10 +415,10 @@ export function EnhancedWritingLayout({
               <button
                 onClick={() => handleSubmitForEvaluation(currentContent, textType)}
                 disabled={!hasContent || evaluationStatus === "loading"}
-                className={`flex items-center space-x-2 px-6 py-2 rounded-lg text-sm font-medium shadow-sm transition-all ${
-                  hasContent && evaluationStatus !== "loading"
-                    ? 'bg-green-600 text-white hover:bg-green-700 transform hover:scale-105'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                className={`flex items-center space-x-2 px-6 py-2 rounded-lg font-medium shadow-sm transition-colors ${
+                  !hasContent || evaluationStatus === "loading" 
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                    : 'bg-green-500 text-white hover:bg-green-600'
                 }`}
                 title={hasContent ? "Submit your writing for NSW evaluation" : "Write some content first"}
               >
