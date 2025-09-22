@@ -6,13 +6,19 @@ interface EnhancedWritingLayoutProps {
   onContentChange: (content: string) => void;
   prompt?: string;
   className?: string;
+  onSubmit?: () => void;
+  wordCount?: number;
+  timeElapsed?: number;
 }
 
 export const EnhancedWritingLayout: React.FC<EnhancedWritingLayoutProps> = ({
   content,
   onContentChange,
   prompt = "The Mysterious Door: One rainy afternoon, while exploring your grandmother's attic, you stumble upon a dusty, old door that you've never seen before. It's covered in strange symbols and has a shimmering handle that feels warm to the touch. Curiosity gets the better of you, and you decide to open it. As you turn the handle, the door creaks open to reveal a world filled with vibrant colors, talking animals, and peculiar creatures that seem to be waiting for you. But there's a catch: you have one hour to complete a task that will help save this magical realm. What task do you complete? Who will help you along the way? What challenges will you face? Let your imagination run wild as you explore this enchanting world and discover your role in it!",
-  className = ""
+  className = "",
+  onSubmit,
+  wordCount = 0,
+  timeElapsed = 0
 }) => {
   // Font and display settings
   const [fontSize, setFontSize] = useState<'S' | 'M' | 'L' | 'XL' | 'XXL'>('L');
@@ -20,17 +26,13 @@ export const EnhancedWritingLayout: React.FC<EnhancedWritingLayoutProps> = ({
   const [focusMode, setFocusMode] = useState(false);
   
   // Writing metrics
-  const [wordCount, setWordCount] = useState(0);
   const [wpm, setWpm] = useState(0);
-  const [timeElapsed, setTimeElapsed] = useState(0);
   const [isWriting, setIsWriting] = useState(false);
   
   // Refs for tracking
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const startTimeRef = useRef<number | null>(null);
   const lastWordCountRef = useRef(0);
-  const wpmIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Font size mapping
   const fontSizeMap = {
@@ -50,53 +52,24 @@ export const EnhancedWritingLayout: React.FC<EnhancedWritingLayoutProps> = ({
     'Helvetica': 'Helvetica, sans-serif'
   };
 
-  // Update word count when content changes
+  // Start writing session if content is being added
   useEffect(() => {
-    const words = content.trim().split(/\s+/).filter(word => word.length > 0);
-    setWordCount(words.length);
-    
-    // Start writing session if content is being added
-    if (words.length > lastWordCountRef.current && !isWriting) {
+    if (wordCount > lastWordCountRef.current && !isWriting) {
       setIsWriting(true);
       startTimeRef.current = Date.now();
-      
-      // Start timer
-      timerIntervalRef.current = setInterval(() => {
-        if (startTimeRef.current) {
-          setTimeElapsed(Math.floor((Date.now() - startTimeRef.current) / 1000));
-        }
-      }, 1000);
     }
-    
-    lastWordCountRef.current = words.length;
-  }, [content, isWriting]);
+    lastWordCountRef.current = wordCount;
+  }, [wordCount, isWriting]);
 
   // Calculate WPM
   useEffect(() => {
-    if (isWriting && startTimeRef.current) {
-      wpmIntervalRef.current = setInterval(() => {
-        const timeInMinutes = (Date.now() - startTimeRef.current!) / 60000;
-        if (timeInMinutes > 0) {
-          const currentWpm = Math.round(wordCount / timeInMinutes);
-          setWpm(currentWpm);
-        }
-      }, 5000); // Update every 5 seconds
-    }
-
-    return () => {
-      if (wpmIntervalRef.current) {
-        clearInterval(wpmIntervalRef.current);
+    if (isWriting && timeElapsed > 0) {
+      const timeInMinutes = timeElapsed / 60;
+      if (timeInMinutes > 0) {
+        setWpm(Math.round(wordCount / timeInMinutes));
       }
-    };
-  }, [isWriting, wordCount]);
-
-  // Cleanup intervals
-  useEffect(() => {
-    return () => {
-      if (wpmIntervalRef.current) clearInterval(wpmIntervalRef.current);
-      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
-    };
-  }, []);
+    }
+  }, [isWriting, timeElapsed, wordCount]);
 
   // Format time display
   const formatTime = (seconds: number): string => {
@@ -110,22 +83,8 @@ export const EnhancedWritingLayout: React.FC<EnhancedWritingLayoutProps> = ({
     onContentChange(e.target.value);
   };
 
-  // Reset writing session
-  const resetSession = () => {
-    setIsWriting(false);
-    setTimeElapsed(0);
-    setWpm(0);
-    startTimeRef.current = null;
-    if (timerIntervalRef.current) {
-      clearInterval(timerIntervalRef.current);
-    }
-    if (wpmIntervalRef.current) {
-      clearInterval(wpmIntervalRef.current);
-    }
-  };
-
   return (
-    <div className={`flex flex-col h-full bg-gray-50 ${className}`}>
+    <div className={`flex flex-col h-full ${className}`}>
       {/* Prompt Section */}
       <div className="bg-blue-50 border-b border-blue-200 p-4">
         <div className="flex items-center gap-2 mb-2">
@@ -223,48 +182,12 @@ export const EnhancedWritingLayout: React.FC<EnhancedWritingLayoutProps> = ({
               </div>
               <span className="text-sm font-semibold text-gray-900">{formatTime(timeElapsed)}</span>
             </div>
-
-            {/* Reset Button */}
-            {isWriting && (
-              <button
-                onClick={resetSession}
-                className="px-3 py-1 text-xs bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors"
-              >
-                Reset
-              </button>
-            )}
           </div>
         </div>
       </div>
 
-      {/* Writing Area */}
-      <div className="flex-1 p-6">
-        <div className="h-full bg-white rounded-lg border border-gray-200 shadow-sm relative overflow-hidden">
-          <textarea
-            ref={textareaRef}
-            value={content}
-            onChange={handleTextChange}
-            placeholder="Start writing your story here..."
-            className="w-full h-full p-6 border-none outline-none resize-none"
-            style={{
-              fontSize: fontSizeMap[fontSize],
-              fontFamily: fontFamilyMap[fontFamily],
-              lineHeight: '1.6',
-              background: focusMode ? '#fafafa' : 'white'
-            }}
-          />
-          
-          {/* Focus Mode Overlay */}
-          {focusMode && (
-            <div className="absolute inset-0 pointer-events-none">
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-gray-100 opacity-50"></div>
-            </div>
-          )}
-        </div>
-      </div>
-
       {/* Action Buttons */}
-      <div className="bg-white border-t border-gray-200 p-4">
+      <div className="bg-white border-b border-gray-200 p-4">
         <div className="flex justify-between items-center">
           <div className="flex gap-2">
             <button className="px-4 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors">
@@ -292,6 +215,51 @@ export const EnhancedWritingLayout: React.FC<EnhancedWritingLayoutProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Writing Area */}
+      <div className="flex-1 p-6 bg-white">
+        <div className="h-full bg-white rounded-lg border border-gray-200 shadow-sm relative overflow-hidden">
+          <textarea
+            ref={textareaRef}
+            value={content}
+            onChange={handleTextChange}
+            placeholder="Start writing your story here..."
+            className="w-full h-full p-6 border-none outline-none resize-none"
+            style={{
+              fontSize: fontSizeMap[fontSize],
+              fontFamily: fontFamilyMap[fontFamily],
+              lineHeight: '1.6',
+              background: focusMode ? '#fafafa' : 'white'
+            }}
+          />
+          
+          {/* Focus Mode Overlay */}
+          {focusMode && (
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-gray-100 opacity-50"></div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Submit Button */}
+      {onSubmit && (
+        <div className="bg-white border-t border-gray-200 p-4">
+          <div className="flex justify-end">
+            <button
+              onClick={onSubmit}
+              disabled={wordCount < 50}
+              className={`px-6 py-3 rounded-lg font-semibold text-white transition-all duration-200 ${
+                wordCount < 50
+                  ? 'bg-gray-300 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-lg hover:shadow-xl'
+              }`}
+            >
+              Get My Report ({wordCount} words)
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
