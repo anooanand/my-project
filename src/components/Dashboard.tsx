@@ -213,7 +213,9 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
         localStorage.setItem(`${selectedWritingType}_prompt`, prompt);
         localStorage.setItem('generatedPrompt', prompt);
         localStorage.setItem('selectedWritingType', selectedWritingType);
-        localStorage.setItem('promptType', 'generated');
+        localStorage.setItem("promptType", "generated");
+        localStorage.setItem("generatedPrompt", prompt);
+
 
         console.log('✅ Prompt saved to localStorage');
 
