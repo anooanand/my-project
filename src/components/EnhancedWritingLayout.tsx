@@ -58,6 +58,7 @@ export function EnhancedWritingLayout({
   const [currentPrompt, setCurrentPrompt] = useState('');
   const [examMode, setExamMode] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
+  const [timerStarted, setTimerStarted] = useState(false);
   const [evaluationStatus, setEvaluationStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   
   // Enhanced NSW Evaluation States
