@@ -5,10 +5,11 @@ import { StructureGuideModal } from './StructureGuideModal';
 import { TipsModal } from './TipsModal';
 import { TabbedCoachPanel } from './TabbedCoachPanel';
 import { NSWStandaloneSubmitSystem } from './NSWStandaloneSubmitSystem';
-import { ReportModal } from './ReportModal';
+import { ReportModal } from './ReportModal'; // Import enhanced ReportModal
 import type { DetailedFeedback, LintFix } from '../types/feedback';
 import { eventBus } from '../lib/eventBus';
 import { detectNewParagraphs } from '../lib/paragraphDetection';
+import { getRandomPromptForTextType, getDefaultPromptForTextType } from '../lib/textTypePrompts';
 import {
   PenTool,
   Play,
@@ -22,10 +23,7 @@ import {
   Clock,
   AlertCircle,
   Award,
-  TrendingUp,
-  Type,
-  Timer,
-  Maximize2
+  TrendingUp
 } from 'lucide-react';
 
 interface EnhancedWritingLayoutProps {
@@ -62,47 +60,17 @@ export function EnhancedWritingLayout({
   const [focusMode, setFocusMode] = useState(false);
   const [evaluationStatus, setEvaluationStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   
-  // Font and Display Controls
-  const [fontSize, setFontSize] = useState<'S' | 'M' | 'L' | 'XL' | 'XXL'>('L');
-  const [fontFamily, setFontFamily] = useState<'serif' | 'sans' | 'mono'>('serif');
-  
-  // Writing Analytics
-  const [wordCount, setWordCount] = useState<number>(0);
-  const [wpm, setWpm] = useState<number>(0);
-  const [startTime, setStartTime] = useState<Date | null>(null);
-  const [isWriting, setIsWriting] = useState<boolean>(false);
-  const [lastWordCount, setLastWordCount] = useState<number>(0);
-  const [writingTime, setWritingTime] = useState<number>(0); // in seconds
-  
   // Enhanced NSW Evaluation States
   const [showNSWEvaluation, setShowNSWEvaluation] = useState<boolean>(false);
   const [nswReport, setNswReport] = useState<any>(null);
   const [showReportModal, setShowReportModal] = useState<boolean>(false);
   const [analysis, setAnalysis] = useState<DetailedFeedback | null>(null);
+  const [wordCount, setWordCount] = useState<number>(0);
   const [evaluationProgress, setEvaluationProgress] = useState<string>("");
   const prevTextRef = useRef<string>("");
 
   // Local content state to ensure we have the latest content
   const [localContent, setLocalContent] = useState<string>(content);
-
-  // Timer for WPM calculation
-  const wpmTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Font size mappings
-  const fontSizeMap = {
-    'S': 'text-sm',
-    'M': 'text-base',
-    'L': 'text-lg',
-    'XL': 'text-xl',
-    'XXL': 'text-2xl'
-  };
-
-  // Font family mappings
-  const fontFamilyMap = {
-    'serif': { class: 'font-serif', name: 'Serif (Georgia)', description: 'Traditional & elegant' },
-    'sans': { class: 'font-sans', name: 'Sans Serif (Inter)', description: 'Modern & clean' },
-    'mono': { class: 'font-mono', name: 'Monospace (Courier)', description: 'Typewriter style' }
-  };
 
   // Function to get the current prompt from localStorage or fallback
   const getCurrentPrompt = () => {
@@ -122,19 +90,20 @@ export function EnhancedWritingLayout({
       }
 
       // Check for text-type specific prompt
+         // Check for text-type specific prompt
       const textTypePrompt = localStorage.getItem(`${textType.toLowerCase()}_prompt`);
       if (textTypePrompt && textTypePrompt.trim()) {
         console.log("📝 getCurrentPrompt: Using text-type specific prompt:", textTypePrompt.substring(0, 50) + "...");
         return textTypePrompt;
       }
 
-      // Fallback to default prompt
-      const fallbackPrompt = "The Secret Door in the Library: During a rainy afternoon, you decide to explore the dusty old library in your town that you've never visited before. As you wander through the aisles, you discover a hidden door behind a bookshelf. It's slightly ajar, and a faint, warm light spills out from the crack. What happens when you push the door open? Describe the world you enter and the adventures that await you inside. Who do you meet, and what challenges do you face? How does this experience change you by the time you return to the library? Let your imagination run wild as you take your reader on a journey through this mysterious door!";
-      console.log('📝 Using fallback prompt');
+      // Fallback to text-type appropriate default prompt
+      const fallbackPrompt = getDefaultPromptForTextType(textType);
+      console.log('📝 Using text-type appropriate fallback prompt for:', textType);
       return fallbackPrompt;
-    } catch (error) {
+      } catch (error) {
       console.error('Error getting current prompt:', error);
-      return "Write an engaging story that captures your reader's imagination.";
+      return getDefaultPromptForTextType(textType);
     }
   };
 
@@ -166,22 +135,12 @@ export function EnhancedWritingLayout({
       console.log("✅ handlePromptGenerated: currentPrompt set to:", newPrompt.substring(0, 50) + "...");
     };
 
-    // Listen for custom prompt creation events
-    const handleCustomPromptCreated = (event: CustomEvent) => {
-      console.log("✏️ handleCustomPromptCreated: Custom prompt event received. Detail:", event.detail);
-      const newPrompt = getCurrentPrompt();
-      setCurrentPrompt(newPrompt);
-      console.log("✅ handleCustomPromptCreated: currentPrompt set to:", newPrompt.substring(0, 50) + "...");
-    };
-
     window.addEventListener('storage', handleStorageChange);
     window.addEventListener('promptGenerated', handlePromptGenerated as EventListener);
-    window.addEventListener('customPromptCreated', handleCustomPromptCreated as EventListener);
     
     return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('promptGenerated', handlePromptGenerated as EventListener);
-      window.removeEventListener('customPromptCreated', handleCustomPromptCreated as EventListener);
     };
   }, [textType, evaluationStatus]);
 
@@ -194,33 +153,13 @@ export function EnhancedWritingLayout({
   const handleContentChange = (newContent: string) => {
     setLocalContent(newContent);
     onChange(newContent);
-    
-    // Start writing session if not already started
-    if (!isWriting && newContent.trim().length > 0) {
-      setIsWriting(true);
-      setStartTime(new Date());
-      onTimerStart(true);
-    }
   };
 
-  // Track content changes for word count, WPM, and coach feedback
+  // Track content changes for word count and coach feedback
   useEffect(() => {
     const currentContent = localContent || content;
     const words = currentContent.trim().split(/\s+/).filter(word => word.length > 0);
-    const newWordCount = words.length;
-    setWordCount(newWordCount);
-
-    // Calculate WPM if writing session is active
-    if (isWriting && startTime) {
-      const currentTime = new Date();
-      const timeElapsed = (currentTime.getTime() - startTime.getTime()) / 1000 / 60; // in minutes
-      const wordsWritten = newWordCount - lastWordCount;
-      
-      if (timeElapsed > 0 && wordsWritten > 0) {
-        const currentWPM = Math.round(wordsWritten / timeElapsed);
-        setWpm(currentWPM);
-      }
-    }
+    setWordCount(words.length);
 
     // Trigger coach feedback for new paragraphs
     const events = detectNewParagraphs(prevTextRef.current, currentContent);
@@ -229,22 +168,7 @@ export function EnhancedWritingLayout({
       eventBus.emit("paragraph.ready", events[events.length - 1]);
     }
     prevTextRef.current = currentContent;
-  }, [localContent, content, isWriting, startTime, lastWordCount]);
-
-  // Timer for writing session
-  useEffect(() => {
-    if (isWriting) {
-      const timer = setInterval(() => {
-        if (startTime) {
-          const currentTime = new Date();
-          const elapsed = Math.floor((currentTime.getTime() - startTime.getTime()) / 1000);
-          setWritingTime(elapsed);
-        }
-      }, 1000);
-
-      return () => clearInterval(timer);
-    }
-  }, [isWriting, startTime]);
+  }, [localContent, content]);
 
   // Enhanced NSW Evaluation Submit Handler
   const handleNSWSubmit = async (submittedContent?: string, submittedTextType?: string) => {
@@ -362,13 +286,6 @@ export function EnhancedWritingLayout({
     setEvaluationProgress("");
   };
 
-  // Format time display
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
   // Check if word count exceeds target
   const showWordCountWarning = wordCount > 300;
 
@@ -378,242 +295,216 @@ export function EnhancedWritingLayout({
 
   return (
     <div className="flex h-screen bg-gray-50">
-      {/* OPTIMIZED LAYOUT - Full width utilization */}
-      
-      {/* Left side - Writing Area Content - Optimized spacing */}
-      <div className="flex-1 flex flex-col min-w-0 max-w-none"> 
-        {/* Enhanced Writing Prompt Section - Compact */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200 p-3 shadow-sm">
-          <div className="flex items-center mb-2">
-            <LightbulbIcon className="w-5 h-5 mr-2 text-blue-600" />
-            <h3 className="font-bold text-blue-800 text-base">Your Writing Prompt</h3>
+      {/* Left side - Writing Area Content */}
+      <div className="flex-[7] flex flex-col min-w-0"> 
+        {/* Enhanced Writing Prompt Section */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-5 mb-4 mx-4 mt-4 shadow-sm">
+          <div className="flex items-center mb-3">
+            <LightbulbIcon className="w-6 h-6 mr-3 text-blue-600" />
+            <h3 className="font-bold text-blue-800 text-lg">Your Writing Prompt</h3>
             <div className="ml-auto flex items-center space-x-2">
               <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">
                 {textType}
               </span>
             </div>
           </div>
-          <p className="text-blue-700 leading-relaxed text-sm">
+          <p className="text-blue-700 leading-relaxed">
             {currentPrompt}
           </p>
         </div>
 
-        {/* NEW: Font and Display Controls Section */}
-        <div className="bg-white border-b border-gray-200 p-4 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
-            {/* Font Size Controls */}
-            <div className="flex items-center space-x-3">
-              <div className="flex items-center space-x-2">
-                <Type className="w-4 h-4 text-gray-600" />
-                <span className="text-sm font-medium text-gray-700">Font Size:</span>
-              </div>
-              <div className="flex items-center space-x-1">
-                {(['S', 'M', 'L', 'XL', 'XXL'] as const).map((size) => (
-                  <button
-                    key={size}
-                    onClick={() => setFontSize(size)}
-                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                      fontSize === size
-                        ? 'bg-blue-500 text-white shadow-sm'
-                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    {size}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Focus Mode Toggle */}
-            <div className="flex items-center space-x-3">
-              <Maximize2 className="w-4 h-4 text-gray-600" />
-              <span className="text-sm font-medium text-gray-700">Focus Mode:</span>
-              <button
-                onClick={() => setFocusMode(!focusMode)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  focusMode ? 'bg-blue-500' : 'bg-gray-300'
-                }`}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    focusMode ? 'translate-x-6' : 'translate-x-1'
-                  }`}
-                />
-              </button>
-            </div>
-          </div>
-
-          {/* Font Family Controls */}
-          <div className="flex items-center space-x-3">
-            <span className="text-sm font-medium text-gray-700">Font Family:</span>
-            <div className="relative">
-              <select
-                value={fontFamily}
-                onChange={(e) => setFontFamily(e.target.value as 'serif' | 'sans' | 'mono')}
-                className="appearance-none bg-white border border-gray-300 rounded-md px-4 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                {Object.entries(fontFamilyMap).map(([key, value]) => (
-                  <option key={key} value={key}>
-                    {value.name}
-                  </option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                  <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
-                </svg>
-              </div>
-            </div>
-            <span className="text-xs text-gray-500 italic">
-              {fontFamilyMap[fontFamily].description}
-            </span>
-          </div>
-        </div>
-
-        {/* Enhanced Action Buttons and Stats Section - Compact */}
-        <div className="bg-white border-b border-gray-200 p-3 shadow-sm">
+        {/* Enhanced Action Buttons and Stats Section */}
+        <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4 mx-4 shadow-sm">
           <div className="flex justify-between items-center">
-            {/* Left side - Action Buttons - Compact */}
+            {/* Left side - Action Buttons */}
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setShowPlanningTool(true)}
-                className="flex items-center space-x-1 px-3 py-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium shadow-sm"
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium shadow-sm"
                 title="Plan your writing structure and ideas"
               >
-                <PenTool className="w-3 h-3" />
+                <PenTool className="w-4 h-4" />
                 <span>Planning</span>
               </button>
               
               <button
                 onClick={() => setExamMode(!examMode)}
-                className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg transition-colors text-sm font-medium shadow-sm ${
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium shadow-sm ${
                   examMode 
                     ? 'bg-green-600 text-white hover:bg-green-700' 
                     : 'bg-green-500 text-white hover:bg-green-600'
                 }`}
                 title="Toggle exam simulation mode"
               >
-                <Play className="w-3 h-3" />
-                <span>Exam</span>
+                <Play className="w-4 h-4" />
+                <span>{examMode ? 'Exit Exam' : 'Exam Mode'}</span>
               </button>
               
               <button
                 onClick={() => setShowStructureGuide(true)}
-                className="flex items-center space-x-1 px-3 py-1.5 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors text-sm font-medium shadow-sm"
+                className="flex items-center space-x-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors text-sm font-medium shadow-sm"
                 title="Learn about story structure and organization"
               >
-                <BookOpen className="w-3 h-3" />
+                <BookOpen className="w-4 h-4" />
                 <span>Structure</span>
               </button>
               
               <button
                 onClick={() => setShowTips(true)}
-                className="flex items-center space-x-1 px-3 py-1.5 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium shadow-sm"
-                title="Get writing tips and suggestions"
+                className="flex items-center space-x-2 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm font-medium shadow-sm"
+                title="Get helpful writing tips and techniques"
               >
-                <LightbulbIcon className="w-3 h-3" />
+                <LightbulbIcon className="w-4 h-4" />
                 <span>Tips</span>
               </button>
               
               <button
                 onClick={() => setFocusMode(!focusMode)}
-                className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg transition-colors text-sm font-medium shadow-sm ${
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium shadow-sm ${
                   focusMode 
                     ? 'bg-gray-700 text-white hover:bg-gray-800' 
                     : 'bg-gray-600 text-white hover:bg-gray-700'
                 }`}
-                title="Toggle focus mode to minimize distractions"
+                title="Toggle distraction-free writing mode"
               >
-                {focusMode ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                <span>Focus</span>
-              </button>
-              
-              <button
-                onClick={() => setExamMode(!examMode)}
-                className="flex items-center space-x-1 px-3 py-1.5 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors text-sm font-medium shadow-sm"
-                title="Toggle dark mode"
-              >
-                <span>Dark</span>
+                {focusMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                <span>{focusMode ? 'Exit Focus' : 'Focus Mode'}</span>
               </button>
             </div>
 
-            {/* Right side - Writing Analytics - Enhanced */}
-            <div className="flex items-center space-x-4">
-              {/* Word Count */}
-              <div className="flex items-center space-x-1 text-sm">
-                <FileText className="w-4 h-4 text-blue-600" />
-                <span className="font-medium text-gray-700">{wordCount} words</span>
+            {/* Right side - Enhanced Writing Statistics */}
+            <div className="flex items-center space-x-6 text-sm">
+              <div className="flex items-center space-x-2">
+                <FileText className="w-4 h-4 text-blue-500" />
+                <span className="font-medium">{wordCount} words</span>
+                {showWordCountWarning && (
+                  <div className="flex items-center space-x-1 text-orange-600">
+                    <AlertCircle className="w-4 h-4" />
+                    <span className="font-medium text-xs">Over target!</span>
+                  </div>
+                )}
               </div>
               
-              {/* WPM Counter */}
-              <div className="flex items-center space-x-1 text-sm">
-                <Clock className="w-4 h-4 text-orange-600" />
-                <span className="font-medium text-gray-700">{wpm} WPM</span>
+              <div className="flex items-center space-x-2">
+                <Clock className="w-4 h-4 text-orange-500" />
+                <span className="font-medium">0 WPM</span>
               </div>
 
-              {/* Timer Display */}
-              {isWriting && (
-                <div className="flex items-center space-x-1 text-sm">
-                  <Timer className="w-4 h-4 text-green-600" />
-                  <span className="font-medium text-gray-700">{formatTime(writingTime)}</span>
-                </div>
-              )}
-
-              {/* Submit Button - ONLY ONE BUTTON */}
-              <button
-                onClick={() => handleSubmitForEvaluation(currentContent, textType)}
-                disabled={!hasContent || evaluationStatus === "loading"}
-                className={`flex items-center space-x-1 px-4 py-1.5 rounded-lg transition-colors text-sm font-medium shadow-sm ${
-                  hasContent && evaluationStatus !== "loading"
-                    ? 'bg-blue-600 text-white hover:bg-blue-700'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
-                title="Submit your writing for evaluation"
-              >
-                <Award className="w-3 h-3" />
-                <span>Get My Report</span>
-              </button>
+              {/* Progress indicator */}
+              <div className="flex items-center space-x-2">
+                <Target className="w-4 h-4 text-green-500" />
+                <span className="font-medium text-green-600">
+                  {wordCount < 50 ? 'Getting Started' : 
+                   wordCount < 150 ? 'Building Ideas' : 
+                   wordCount < 250 ? 'Developing Story' : 
+                   'Ready to Review'}
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Writing Area with Enhanced Styling - NO DUPLICATE PROMPT */}
-        <div className="flex-1 overflow-hidden">
-          <WritingArea
-            content={currentContent}
-            onChange={handleContentChange}
-            placeholder="Start writing your story here..."
-            className={`h-full w-full p-6 border-none resize-none focus:outline-none bg-white ${
-              fontSizeMap[fontSize]
-            } ${fontFamilyMap[fontFamily].class} leading-relaxed ${
-              focusMode ? 'bg-gray-50' : ''
+        {/* Text Editor Section */}
+        <div className="flex-1 mx-4 mb-4">
+          <div className="bg-white border border-gray-200 rounded-lg h-full shadow-sm">
+            <WritingArea
+              content={currentContent}
+              onChange={handleContentChange}
+              onSubmit={handleSubmitForEvaluation}
+              textType={textType}
+              assistanceLevel={assistanceLevel}
+              selectedText={selectedText}
+              onTimerStart={onTimerStart}
+              onTextTypeChange={onTextTypeChange}
+              onPopupCompleted={onPopupCompleted}
+              onNavigate={onNavigate}
+              evaluationStatus={evaluationStatus}
+              examMode={examMode}
+              hidePromptAndSubmit={true}
+              prompt={currentPrompt}
+              onPromptGenerated={setCurrentPrompt}
+            />
+          </div>
+        </div>
+
+        {/* Enhanced Submit for Evaluation Button */}
+        <div className="px-4 pb-4">
+          <button
+            onClick={() => handleSubmitForEvaluation(localContent, textType)}
+            disabled={evaluationStatus === "loading" || !hasContent}
+            className={`w-full font-bold py-4 px-6 rounded-lg transition-all duration-200 flex items-center justify-center shadow-lg ${
+              evaluationStatus === "loading" || !hasContent
+                ? 'bg-gray-400 cursor-not-allowed text-gray-600'
+                : 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white transform hover:scale-[1.02]'
             }`}
-            style={{
-              lineHeight: '1.8',
-              letterSpacing: '0.01em'
-            }}
-            // Prevent WritingArea from showing its own prompt or submit button
-            hidePrompt={true}
-            hideSubmitButton={true}
-          />
+          >
+            {evaluationStatus === "loading" ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+                <span>Analyzing Your Writing...</span>
+              </>
+            ) : (
+              <>
+                <Award className="w-5 h-5 mr-3" />
+                <span>Get My Writing Report</span>
+                <TrendingUp className="w-5 h-5 ml-3" />
+              </>
+            )}
+          </button>
+          
+          {!hasContent && (
+            <p className="text-center text-gray-500 text-sm mt-2">
+              Start writing to unlock your personalized assessment report
+            </p>
+          )}
         </div>
       </div>
 
-      {/* Right side - Coach Panel - Conditional rendering based on focus mode */}
+      {/* Right side - Coach Panel (hidden in focus mode) */}
       {!focusMode && (
-        <div className="w-96 border-l border-gray-200 bg-white shadow-lg flex flex-col">
+        <div className="flex-[3] border-l border-gray-200 bg-white">
           <TabbedCoachPanel
             content={currentContent}
             textType={textType}
-            selectedText={selectedText}
             assistanceLevel={assistanceLevel}
-            onSubmit={handleSubmitForEvaluation}
+            selectedText={selectedText}
+            onApplyFix={handleApplyFix}
             wordCount={wordCount}
-            wpm={wpm}
-            writingTime={writingTime}
-            // Prevent TabbedCoachPanel from showing duplicate submit button
-            hideSubmitButton={true}
           />
+        </div>
+      )}
+
+      {/* Enhanced NSW Evaluation Loading Modal */}
+      {showNSWEvaluation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 max-w-md w-full mx-4 shadow-2xl">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-purple-600 mx-auto mb-6"></div>
+              <h3 className="text-xl font-bold text-gray-800 mb-4">Analyzing Your Writing</h3>
+              <p className="text-gray-600 mb-4">{evaluationProgress}</p>
+              <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+                <div 
+                  className="bg-gradient-to-r from-purple-600 to-indigo-600 h-2 rounded-full transition-all duration-1000"
+                  style={{ 
+                    width: evaluationProgress.includes("Analyzing") ? "20%" :
+                           evaluationProgress.includes("Evaluating") ? "40%" :
+                           evaluationProgress.includes("Checking") ? "60%" :
+                           evaluationProgress.includes("language") ? "80%" :
+                           evaluationProgress.includes("Generating") ? "100%" : "0%"
+                  }}
+                ></div>
+              </div>
+              <p className="text-sm text-gray-500">
+                We're creating a detailed, personalized report just for you!
+              </p>
+              <button
+                onClick={handleCloseNSWEvaluation}
+                className="mt-4 px-4 py-2 text-gray-500 hover:text-gray-700 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
