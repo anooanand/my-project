@@ -400,7 +400,7 @@ export function EnhancedWritingLayout({
           )}
         </div>
 
-        {/* Writing Area */}
+            {/* Writing Area */}
         <div className="flex-1 mx-4 mb-4 overflow-hidden rounded-lg shadow-lg">
           <WritingArea
             content={localContent}
@@ -409,8 +409,11 @@ export function EnhancedWritingLayout({
             selectedText={selectedText}
             examMode={examMode}
             focusMode={focusMode}
+            hidePromptAndSubmit={true}
+            prompt={currentPrompt}
           />
         </div>
+
 
         {/* Submit Button and Evaluation Status */}
         <div className="bg-white border-t border-gray-200 p-4 flex justify-between items-center shadow-inner">
@@ -444,7 +447,7 @@ export function EnhancedWritingLayout({
                 <span>Evaluation Failed. Please try again.</span>
               </div>
             )}
-            <button
+                        <button
               onClick={() => handleSubmitForEvaluation(localContent, textType)}
               className={`flex items-center space-x-2 px-6 py-3 rounded-lg text-white font-bold text-lg transition-colors shadow-md ${
                 hasContent && evaluationStatus !== "loading"
@@ -454,7 +457,7 @@ export function EnhancedWritingLayout({
               disabled={!hasContent || evaluationStatus === "loading"}
             >
               <TrendingUp className="w-5 h-5" />
-              <span>Submit for Evaluation</span>
+              <span>Get My Writing Report</span>
             </button>
           </div>
         </div>
