@@ -113,9 +113,9 @@ const GRAMMAR_RULES = {
   // More granular punctuation rules
   morePunctuation: [
     {
-      pattern: /([a-zA-Z0-9])([.,!?;:])(?![\s.,!?;:])/g,
+      pattern: /([a-zA-Z0-9])([.,!?;:])(?!\s)/g,
       message: "Missing space after punctuation mark.",
-      suggestions: (match: string) => [match.replace(/([.,!?;:])/, ", ")]
+      suggestions: (match: string) => [match.replace(/([.,!?;:])/, '$1 ')]
     },
     {
       pattern: /\s{2,}[.,!?;:]/g,
@@ -125,7 +125,7 @@ const GRAMMAR_RULES = {
     {
       pattern: /([a-zA-Z])([,.;:])([a-zA-Z])/g,
       message: "Missing space after punctuation mark.",
-      suggestions: (match: string) => [match.replace(/([,.;:])/, ", ")]
+      suggestions: (match: string) => [match.replace(/([,.;:])/, '$1 ')]
     },
     {
       pattern: /\b(i)\b/g,
@@ -420,6 +420,8 @@ export class GrammarSpellingChecker {
       case 'punctuation': return 'punctuation';
       case 'capitalization': return 'capitalization';
       case 'style': return 'style';
+      case 'morePunctuation': return 'punctuation'; // Map new category to existing type
+      case 'commonGrammar': return 'grammar'; // Map new category to existing type
       default: return 'grammar';
     }
   }
@@ -430,6 +432,8 @@ export class GrammarSpellingChecker {
       case 'subjectVerbAgreement':
       case 'punctuation':
       case 'capitalization':
+      case 'morePunctuation': // Assign severity for new category
+      case 'commonGrammar': // Assign severity for new category
         return 'high';
       case 'wordChoice':
         return 'medium';
