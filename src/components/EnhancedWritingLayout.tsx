@@ -29,14 +29,7 @@ import {
   Moon,
   Sun,
   Maximize2,
-  Minimize2,
-  HelpCircle,
-  Layers,
-  Zap,
-  Palette,
-  CheckCircle,
-  XCircle,
-  Edit3
+  Minimize2
 } from 'lucide-react';
 
 interface EnhancedWritingLayoutProps {
@@ -50,6 +43,34 @@ interface EnhancedWritingLayoutProps {
   onTextTypeChange: (newTextType: string) => void;
   onPopupCompleted: () => void;
   onNavigate: (page: string) => void;
+}
+
+// Enhanced feedback interfaces for coach panel integration
+export interface IdeasFeedback {
+  feedback: string[];
+  promptAnalysis: {
+    elements: string[];
+    covered: string[];
+    missing: string[];
+  };
+}
+
+export interface StructureFeedback {
+  narrativeArc: string;
+  paragraphTransitions: string[];
+  pacingAdvice: string;
+}
+
+export interface LanguageFeedback {
+  figurativeLanguage: string[];
+  showDontTell: string[];
+  sentenceVariety: string;
+}
+
+export interface GrammarFeedback {
+  contextualErrors: Array<{error: string, explanation: string, suggestion: string}>;
+  punctuationTips: string[];
+  commonErrors: string[];
 }
 
 export function EnhancedWritingLayout({
@@ -97,38 +118,26 @@ export function EnhancedWritingLayout({
   // Local content state to ensure we have the latest content
   const [localContent, setLocalContent] = useState<string>(content);
 
-  // Enhanced Ideas & Content Feedback States (Recommendation 1)
-  const [showIdeasHelper, setShowIdeasHelper] = useState(false);
-  const [ideasFeedback, setIdeasFeedback] = useState<string[]>([]);
-  const [promptAnalysis, setPromptAnalysis] = useState<{
-    elements: string[];
-    covered: string[];
-    missing: string[];
-  }>({ elements: [], covered: [], missing: [] });
-
-  // Enhanced Structure & Organization Feedback States (Recommendation 2)
-  const [showStructureHelper, setShowStructureHelper] = useState(false);
-  const [structureFeedback, setStructureFeedback] = useState<{
-    narrativeArc: string;
-    paragraphTransitions: string[];
-    pacingAdvice: string;
-  }>({ narrativeArc: '', paragraphTransitions: [], pacingAdvice: '' });
-
-  // NEW: Language Features & Vocabulary Feedback States (Recommendation 3)
-  const [showLanguageHelper, setShowLanguageHelper] = useState(false);
-  const [languageFeedback, setLanguageFeedback] = useState<{
-    figurativeLanguage: string[];
-    showDontTell: string[];
-    sentenceVariety: string;
-  }>({ figurativeLanguage: [], showDontTell: [], sentenceVariety: '' });
-
-  // NEW: Spelling & Grammar Feedback States (Recommendation 4)
-  const [showGrammarHelper, setShowGrammarHelper] = useState(false);
-  const [grammarFeedback, setGrammarFeedback] = useState<{
-    contextualErrors: Array<{error: string, explanation: string, suggestion: string}>;
-    punctuationTips: string[];
-    commonErrors: string[];
-  }>({ contextualErrors: [], punctuationTips: [], commonErrors: [] });
+  // Enhanced feedback states for coach panel integration
+  const [ideasFeedback, setIdeasFeedback] = useState<IdeasFeedback>({
+    feedback: [],
+    promptAnalysis: { elements: [], covered: [], missing: [] }
+  });
+  const [structureFeedback, setStructureFeedback] = useState<StructureFeedback>({
+    narrativeArc: '',
+    paragraphTransitions: [],
+    pacingAdvice: ''
+  });
+  const [languageFeedback, setLanguageFeedback] = useState<LanguageFeedback>({
+    figurativeLanguage: [],
+    showDontTell: [],
+    sentenceVariety: ''
+  });
+  const [grammarFeedback, setGrammarFeedback] = useState<GrammarFeedback>({
+    contextualErrors: [],
+    punctuationTips: [],
+    commonErrors: []
+  });
 
   // Font size options
   const fontSizes = [
@@ -291,7 +300,7 @@ export function EnhancedWritingLayout({
     return { narrativeArc, paragraphTransitions: transitions, pacingAdvice };
   };
 
-  // NEW: Analyze Language Features & Vocabulary (Recommendation 3)
+  // Analyze Language Features & Vocabulary (Recommendation 3)
   const analyzeLanguageFeatures = (content: string) => {
     const figurativeLanguage = [];
     const showDontTell = [];
@@ -336,7 +345,7 @@ export function EnhancedWritingLayout({
     return { figurativeLanguage, showDontTell, sentenceVariety };
   };
 
-  // NEW: Analyze Spelling & Grammar (Recommendation 4)
+  // Analyze Spelling & Grammar (Recommendation 4)
   const analyzeGrammarSpelling = (content: string) => {
     const contextualErrors = [];
     const punctuationTips = [];
@@ -421,7 +430,10 @@ export function EnhancedWritingLayout({
     
     // Analyze prompt elements for Ideas & Content feedback
     const elements = analyzePromptElements(prompt);
-    setPromptAnalysis(prev => ({ ...prev, elements }));
+    setIdeasFeedback(prev => ({ 
+      ...prev, 
+      promptAnalysis: { ...prev.promptAnalysis, elements }
+    }));
   }, [textType]);
 
   // Listen for localStorage changes (from other tabs/components)
@@ -436,7 +448,10 @@ export function EnhancedWritingLayout({
         
         // Update prompt analysis
         const elements = analyzePromptElements(newPrompt);
-        setPromptAnalysis(prev => ({ ...prev, elements }));
+        setIdeasFeedback(prev => ({ 
+          ...prev, 
+          promptAnalysis: { ...prev.promptAnalysis, elements }
+        }));
       }
     };
 
@@ -449,7 +464,10 @@ export function EnhancedWritingLayout({
       
       // Update prompt analysis
       const elements = analyzePromptElements(newPrompt);
-      setPromptAnalysis(prev => ({ ...prev, elements }));
+      setIdeasFeedback(prev => ({ 
+        ...prev, 
+        promptAnalysis: { ...prev.promptAnalysis, elements }
+      }));
     };
 
     // Listen for custom prompt creation events
@@ -461,7 +479,10 @@ export function EnhancedWritingLayout({
       
       // Update prompt analysis
       const elements = analyzePromptElements(newPrompt);
-      setPromptAnalysis(prev => ({ ...prev, elements }));
+      setIdeasFeedback(prev => ({ 
+        ...prev, 
+        promptAnalysis: { ...prev.promptAnalysis, elements }
+      }));
     };
 
     window.addEventListener('storage', handleStorageChange);
@@ -496,21 +517,21 @@ export function EnhancedWritingLayout({
     if (currentContent.length > 50) {
       // Ideas & Content feedback (Recommendation 1)
       const newIdeasFeedback = generateIdeasFeedback(currentContent, currentPrompt);
-      setIdeasFeedback(newIdeasFeedback);
-      
-      // Check prompt coverage
-      const coverage = checkPromptCoverage(currentContent, promptAnalysis.elements);
-      setPromptAnalysis(prev => ({ ...prev, ...coverage }));
+      const coverage = checkPromptCoverage(currentContent, ideasFeedback.promptAnalysis.elements);
+      setIdeasFeedback(prev => ({
+        feedback: newIdeasFeedback,
+        promptAnalysis: { ...prev.promptAnalysis, ...coverage }
+      }));
       
       // Structure & Organization feedback (Recommendation 2)
       const newStructureFeedback = analyzeNarrativeStructure(currentContent);
       setStructureFeedback(newStructureFeedback);
 
-      // NEW: Language Features & Vocabulary feedback (Recommendation 3)
+      // Language Features & Vocabulary feedback (Recommendation 3)
       const newLanguageFeedback = analyzeLanguageFeatures(currentContent);
       setLanguageFeedback(newLanguageFeedback);
 
-      // NEW: Spelling & Grammar feedback (Recommendation 4)
+      // Spelling & Grammar feedback (Recommendation 4)
       const newGrammarFeedback = analyzeGrammarSpelling(currentContent);
       setGrammarFeedback(newGrammarFeedback);
     }
@@ -522,7 +543,7 @@ export function EnhancedWritingLayout({
       eventBus.emit("paragraph.ready", events[events.length - 1]);
     }
     prevTextRef.current = currentContent;
-  }, [localContent, content, currentPrompt, promptAnalysis.elements]);
+  }, [localContent, content, currentPrompt, ideasFeedback.promptAnalysis.elements]);
 
   // Enhanced NSW Evaluation Submit Handler
   const handleNSWSubmit = async (submittedContent?: string, submittedTextType?: string) => {
@@ -676,306 +697,12 @@ export function EnhancedWritingLayout({
               }`}>
                 {textType}
               </span>
-              
-              {/* Ideas Helper Button (Recommendation 1) */}
-              <button
-                onClick={() => setShowIdeasHelper(!showIdeasHelper)}
-                className={`flex items-center space-x-1 px-2 py-1 rounded text-xs transition-colors ${
-                  showIdeasHelper
-                    ? darkMode ? 'bg-purple-700 text-purple-200' : 'bg-purple-100 text-purple-800'
-                    : darkMode ? 'bg-gray-700 text-gray-300 hover:bg-purple-700' : 'bg-gray-100 text-gray-600 hover:bg-purple-100'
-                }`}
-                title="Ideas & Content Helper"
-              >
-                <Zap className="w-3 h-3" />
-                <span>Ideas</span>
-              </button>
-
-              {/* Structure Helper Button (Recommendation 2) */}
-              <button
-                onClick={() => setShowStructureHelper(!showStructureHelper)}
-                className={`flex items-center space-x-1 px-2 py-1 rounded text-xs transition-colors ${
-                  showStructureHelper
-                    ? darkMode ? 'bg-green-700 text-green-200' : 'bg-green-100 text-green-800'
-                    : darkMode ? 'bg-gray-700 text-gray-300 hover:bg-green-700' : 'bg-gray-100 text-gray-600 hover:bg-green-100'
-                }`}
-                title="Structure & Organization Helper"
-              >
-                <Layers className="w-3 h-3" />
-                <span>Structure</span>
-              </button>
-
-              {/* NEW: Language Helper Button (Recommendation 3) */}
-              <button
-                onClick={() => setShowLanguageHelper(!showLanguageHelper)}
-                className={`flex items-center space-x-1 px-2 py-1 rounded text-xs transition-colors ${
-                  showLanguageHelper
-                    ? darkMode ? 'bg-orange-700 text-orange-200' : 'bg-orange-100 text-orange-800'
-                    : darkMode ? 'bg-gray-700 text-gray-300 hover:bg-orange-700' : 'bg-gray-100 text-gray-600 hover:bg-orange-100'
-                }`}
-                title="Language & Vocabulary Helper"
-              >
-                <Palette className="w-3 h-3" />
-                <span>Language</span>
-              </button>
-
-              {/* NEW: Grammar Helper Button (Recommendation 4) */}
-              <button
-                onClick={() => setShowGrammarHelper(!showGrammarHelper)}
-                className={`flex items-center space-x-1 px-2 py-1 rounded text-xs transition-colors ${
-                  showGrammarHelper
-                    ? darkMode ? 'bg-red-700 text-red-200' : 'bg-red-100 text-red-800'
-                    : darkMode ? 'bg-gray-700 text-gray-300 hover:bg-red-700' : 'bg-gray-100 text-gray-600 hover:bg-red-100'
-                }`}
-                title="Spelling & Grammar Helper"
-              >
-                <CheckCircle className="w-3 h-3" />
-                <span>Grammar</span>
-              </button>
             </div>
           </div>
           
           <div className={`text-sm leading-relaxed ${darkMode ? 'text-blue-100' : 'text-blue-900'}`}>
             {currentPrompt}
           </div>
-
-          {/* Ideas & Content Helper Panel (Recommendation 1) */}
-          {showIdeasHelper && (
-            <div className={`mt-3 p-3 rounded-lg border ${
-              darkMode ? 'bg-purple-900/20 border-purple-700' : 'bg-purple-50 border-purple-200'
-            }`}>
-              <h4 className={`font-semibold text-sm mb-2 flex items-center ${
-                darkMode ? 'text-purple-200' : 'text-purple-800'
-              }`}>
-                <Zap className="w-4 h-4 mr-1" />
-                Ideas & Content Helper (30% of your score)
-              </h4>
-              
-              {/* Prompt Coverage Tracker */}
-              {promptAnalysis.elements.length > 0 && (
-                <div className="mb-3">
-                  <p className={`text-xs font-medium mb-1 ${darkMode ? 'text-purple-300' : 'text-purple-700'}`}>
-                    Prompt Elements to Cover:
-                  </p>
-                  <div className="space-y-1">
-                    {promptAnalysis.elements.map((element, index) => (
-                      <div key={index} className="flex items-center space-x-2">
-                        <div className={`w-2 h-2 rounded-full ${
-                          promptAnalysis.covered.includes(element)
-                            ? 'bg-green-500'
-                            : 'bg-gray-400'
-                        }`} />
-                        <span className={`text-xs ${
-                          promptAnalysis.covered.includes(element)
-                            ? darkMode ? 'text-green-300' : 'text-green-700'
-                            : darkMode ? 'text-gray-400' : 'text-gray-600'
-                        }`}>
-                          {element}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Ideas Feedback */}
-              {ideasFeedback.length > 0 && (
-                <div className="space-y-2">
-                  {ideasFeedback.map((feedback, index) => (
-                    <div key={index} className={`text-xs p-2 rounded ${
-                      darkMode ? 'bg-purple-800/30 text-purple-200' : 'bg-purple-100 text-purple-800'
-                    }`}>
-                      {feedback}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Missing Elements Prompts */}
-              {promptAnalysis.missing.length > 0 && (
-                <div className="mt-2">
-                  <p className={`text-xs font-medium mb-1 ${darkMode ? 'text-orange-300' : 'text-orange-700'}`}>
-                    Consider adding:
-                  </p>
-                  <div className="space-y-1">
-                    {promptAnalysis.missing.slice(0, 2).map((element, index) => (
-                      <div key={index} className={`text-xs p-2 rounded ${
-                        darkMode ? 'bg-orange-900/30 text-orange-200' : 'bg-orange-100 text-orange-800'
-                      }`}>
-                        💡 {element}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Structure & Organization Helper Panel (Recommendation 2) */}
-          {showStructureHelper && (
-            <div className={`mt-3 p-3 rounded-lg border ${
-              darkMode ? 'bg-green-900/20 border-green-700' : 'bg-green-50 border-green-200'
-            }`}>
-              <h4 className={`font-semibold text-sm mb-2 flex items-center ${
-                darkMode ? 'text-green-200' : 'text-green-800'
-              }`}>
-                <Layers className="w-4 h-4 mr-1" />
-                Structure & Organization Helper (25% of your score)
-              </h4>
-              
-              {/* Narrative Arc Feedback */}
-              {structureFeedback.narrativeArc && (
-                <div className={`mb-3 p-2 rounded text-xs ${
-                  darkMode ? 'bg-green-800/30 text-green-200' : 'bg-green-100 text-green-800'
-                }`}>
-                  <strong>📖 Story Structure:</strong> {structureFeedback.narrativeArc}
-                </div>
-              )}
-
-              {/* Paragraph Transitions */}
-              {structureFeedback.paragraphTransitions.length > 0 && (
-                <div className="mb-3">
-                  <p className={`text-xs font-medium mb-1 ${darkMode ? 'text-green-300' : 'text-green-700'}`}>
-                    Transition Tips:
-                  </p>
-                  {structureFeedback.paragraphTransitions.slice(0, 2).map((tip, index) => (
-                    <div key={index} className={`text-xs p-2 rounded mb-1 ${
-                      darkMode ? 'bg-blue-900/30 text-blue-200' : 'bg-blue-100 text-blue-800'
-                    }`}>
-                      🔗 {tip}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Pacing Advice */}
-              {structureFeedback.pacingAdvice && (
-                <div className={`p-2 rounded text-xs ${
-                  darkMode ? 'bg-yellow-900/30 text-yellow-200' : 'bg-yellow-100 text-yellow-800'
-                }`}>
-                  <strong>⚡ Pacing:</strong> {structureFeedback.pacingAdvice}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* NEW: Language Features & Vocabulary Helper Panel (Recommendation 3) */}
-          {showLanguageHelper && (
-            <div className={`mt-3 p-3 rounded-lg border ${
-              darkMode ? 'bg-orange-900/20 border-orange-700' : 'bg-orange-50 border-orange-200'
-            }`}>
-              <h4 className={`font-semibold text-sm mb-2 flex items-center ${
-                darkMode ? 'text-orange-200' : 'text-orange-800'
-              }`}>
-                <Palette className="w-4 h-4 mr-1" />
-                Language Features & Vocabulary Helper (25% of your score)
-              </h4>
-              
-              {/* Figurative Language Suggestions */}
-              {languageFeedback.figurativeLanguage.length > 0 && (
-                <div className="mb-3">
-                  <p className={`text-xs font-medium mb-1 ${darkMode ? 'text-orange-300' : 'text-orange-700'}`}>
-                    Figurative Language Tips:
-                  </p>
-                  {languageFeedback.figurativeLanguage.map((tip, index) => (
-                    <div key={index} className={`text-xs p-2 rounded mb-1 ${
-                      darkMode ? 'bg-orange-800/30 text-orange-200' : 'bg-orange-100 text-orange-800'
-                    }`}>
-                      {tip}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Show Don't Tell Suggestions */}
-              {languageFeedback.showDontTell.length > 0 && (
-                <div className="mb-3">
-                  <p className={`text-xs font-medium mb-1 ${darkMode ? 'text-orange-300' : 'text-orange-700'}`}>
-                    Show, Don't Tell:
-                  </p>
-                  {languageFeedback.showDontTell.map((tip, index) => (
-                    <div key={index} className={`text-xs p-2 rounded mb-1 ${
-                      darkMode ? 'bg-purple-900/30 text-purple-200' : 'bg-purple-100 text-purple-800'
-                    }`}>
-                      ✨ {tip}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Sentence Variety Feedback */}
-              {languageFeedback.sentenceVariety && (
-                <div className={`p-2 rounded text-xs ${
-                  darkMode ? 'bg-blue-900/30 text-blue-200' : 'bg-blue-100 text-blue-800'
-                }`}>
-                  <strong>📝 Sentence Variety:</strong> {languageFeedback.sentenceVariety}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* NEW: Spelling & Grammar Helper Panel (Recommendation 4) */}
-          {showGrammarHelper && (
-            <div className={`mt-3 p-3 rounded-lg border ${
-              darkMode ? 'bg-red-900/20 border-red-700' : 'bg-red-50 border-red-200'
-            }`}>
-              <h4 className={`font-semibold text-sm mb-2 flex items-center ${
-                darkMode ? 'text-red-200' : 'text-red-800'
-              }`}>
-                <CheckCircle className="w-4 h-4 mr-1" />
-                Spelling & Grammar Helper (20% of your score)
-              </h4>
-              
-              {/* Contextual Grammar Errors */}
-              {grammarFeedback.contextualErrors.length > 0 && (
-                <div className="mb-3">
-                  <p className={`text-xs font-medium mb-1 ${darkMode ? 'text-red-300' : 'text-red-700'}`}>
-                    Grammar Check:
-                  </p>
-                  {grammarFeedback.contextualErrors.map((error, index) => (
-                    <div key={index} className={`text-xs p-2 rounded mb-1 ${
-                      darkMode ? 'bg-red-800/30 text-red-200' : 'bg-red-100 text-red-800'
-                    }`}>
-                      <strong>❌ {error.error}:</strong> {error.explanation}<br />
-                      <strong>✅ Try:</strong> {error.suggestion}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Punctuation Tips */}
-              {grammarFeedback.punctuationTips.length > 0 && (
-                <div className="mb-3">
-                  <p className={`text-xs font-medium mb-1 ${darkMode ? 'text-red-300' : 'text-red-700'}`}>
-                    Punctuation for Effect:
-                  </p>
-                  {grammarFeedback.punctuationTips.map((tip, index) => (
-                    <div key={index} className={`text-xs p-2 rounded mb-1 ${
-                      darkMode ? 'bg-yellow-900/30 text-yellow-200' : 'bg-yellow-100 text-yellow-800'
-                    }`}>
-                      {tip}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Common Errors */}
-              {grammarFeedback.commonErrors.length > 0 && (
-                <div>
-                  <p className={`text-xs font-medium mb-1 ${darkMode ? 'text-red-300' : 'text-red-700'}`}>
-                    Writing Tips:
-                  </p>
-                  {grammarFeedback.commonErrors.map((error, index) => (
-                    <div key={index} className={`text-xs p-2 rounded mb-1 ${
-                      darkMode ? 'bg-gray-800/30 text-gray-200' : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      💡 {error}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
         {/* Original Buttons Section */}
@@ -1185,7 +912,7 @@ export function EnhancedWritingLayout({
         </div>
       </div>
 
-      {/* Right side - Coach Panel - Optimized width */}
+      {/* Right side - Enhanced Coach Panel with integrated feedback */}
       <div className={`w-96 border-l flex flex-col transition-colors duration-300 ${
         darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
       }`}>
@@ -1194,6 +921,11 @@ export function EnhancedWritingLayout({
           onApplyFix={handleApplyFix}
           content={currentContent}
           textType={textType}
+          // Pass enhanced feedback data to coach panel
+          ideasFeedback={ideasFeedback}
+          structureFeedback={structureFeedback}
+          languageFeedback={languageFeedback}
+          grammarFeedback={grammarFeedback}
         />
       </div>
 
