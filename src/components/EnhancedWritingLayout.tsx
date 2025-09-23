@@ -677,6 +677,5 @@ export function EnhancedWritingLayout({
           onClose={handleCloseNSWEvaluation}
         />
       )}
-    </div>
   );
 }
