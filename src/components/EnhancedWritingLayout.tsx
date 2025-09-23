@@ -99,7 +99,6 @@ export function EnhancedWritingLayout({
       }
 
       // Check for text-type specific prompt
-         // Check for text-type specific prompt
       const textTypePrompt = localStorage.getItem(`${textType.toLowerCase()}_prompt`);
       if (textTypePrompt && textTypePrompt.trim()) {
         console.log("📝 getCurrentPrompt: Using text-type specific prompt:", textTypePrompt.substring(0, 50) + "...");
@@ -110,7 +109,7 @@ export function EnhancedWritingLayout({
       const fallbackPrompt = getDefaultPromptForTextType(textType);
       console.log('📝 Using text-type appropriate fallback prompt for:', textType);
       return fallbackPrompt;
-      } catch (error) {
+    } catch (error) {
       console.error('Error getting current prompt:', error);
       return getDefaultPromptForTextType(textType);
     }
@@ -157,8 +156,6 @@ export function EnhancedWritingLayout({
   useEffect(() => {
     setLocalContent(content);
   }, [content]);
-
-
 
   // Track content changes for word count and coach feedback
   useEffect(() => {
@@ -300,147 +297,190 @@ export function EnhancedWritingLayout({
 
   return (
     <div className="flex h-screen bg-gray-50">
-      {/* Left side - Writing Area Content */}
-      <div className="flex-[7] flex flex-col min-w-0"> 
-        {/* Enhanced Writing Prompt Section */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-5 mb-4 mx-4 mt-4 shadow-sm">
-          <div className="flex items-center mb-3">
-            <LightbulbIcon className="w-6 h-6 mr-3 text-blue-600" />
-            <h3 className="font-bold text-blue-800 text-lg">Your Writing Prompt</h3>
+      {/* OPTIMIZED LAYOUT - Full width utilization, no wasted space */}
+      
+      {/* Left side - Writing Area Content - Optimized for maximum space */}
+      <div className="flex-1 flex flex-col min-w-0 max-w-none"> 
+        {/* Enhanced Writing Prompt Section - Compact */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200 p-3 shadow-sm">
+          <div className="flex items-center mb-2">
+            <LightbulbIcon className="w-5 h-5 mr-2 text-blue-600" />
+            <h3 className="font-bold text-blue-800 text-base">Your Writing Prompt</h3>
             <div className="ml-auto flex items-center space-x-2">
               <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">
                 {textType}
               </span>
             </div>
           </div>
-          <p className="text-blue-700 leading-relaxed">
+          <p className="text-blue-700 leading-relaxed text-sm">
             {currentPrompt}
           </p>
         </div>
 
-        {/* Enhanced Action Buttons and Stats Section */}
-        <div className="bg-white border border-gray-200 rounded-lg p-4 mb-4 mx-4 shadow-sm">
+        {/* Enhanced Action Buttons and Stats Section - Compact */}
+        <div className="bg-white border-b border-gray-200 p-3 shadow-sm">
           <div className="flex justify-between items-center">
-            {/* Left side - Action Buttons */}
+            {/* Left side - Action Buttons - Compact */}
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setShowPlanningTool(true)}
-                className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium shadow-sm"
+                className="flex items-center space-x-1 px-3 py-1.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium shadow-sm"
                 title="Plan your writing structure and ideas"
               >
-                <PenTool className="w-4 h-4" />
-                <span>Planning</span>
+                <PenTool className="w-3 h-3" />
+                <span>Plan</span>
               </button>
               
               <button
                 onClick={() => setExamMode(!examMode)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium shadow-sm ${
+                className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg transition-colors text-sm font-medium shadow-sm ${
                   examMode 
                     ? 'bg-green-600 text-white hover:bg-green-700' 
                     : 'bg-green-500 text-white hover:bg-green-600'
                 }`}
                 title="Toggle exam simulation mode"
               >
-                <Play className="w-4 h-4" />
-                <span>{examMode ? 'Exit Exam' : 'Exam Mode'}</span>
+                <Play className="w-3 h-3" />
+                <span>{examMode ? 'Exit' : 'Exam'}</span>
               </button>
               
               <button
                 onClick={() => setShowStructureGuide(true)}
-                className="flex items-center space-x-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors text-sm font-medium shadow-sm"
+                className="flex items-center space-x-1 px-3 py-1.5 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors text-sm font-medium shadow-sm"
                 title="Learn about story structure and organization"
               >
-                <BookOpen className="w-4 h-4" />
-                <span>Structure</span>
+                <BookOpen className="w-3 h-3" />
+                <span>Guide</span>
               </button>
               
               <button
                 onClick={() => setShowTips(true)}
-                className="flex items-center space-x-2 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm font-medium shadow-sm"
+                className="flex items-center space-x-1 px-3 py-1.5 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm font-medium shadow-sm"
                 title="Get helpful writing tips and techniques"
               >
-                <LightbulbIcon className="w-4 h-4" />
+                <LightbulbIcon className="w-3 h-3" />
                 <span>Tips</span>
               </button>
               
               <button
                 onClick={() => setFocusMode(!focusMode)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium shadow-sm ${
+                className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg transition-colors text-sm font-medium shadow-sm ${
                   focusMode 
                     ? 'bg-gray-700 text-white hover:bg-gray-800' 
                     : 'bg-gray-600 text-white hover:bg-gray-700'
                 }`}
                 title="Toggle distraction-free writing mode"
               >
-                {focusMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                <span>{focusMode ? 'Exit Focus' : 'Focus Mode'}</span>
+                {focusMode ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                <span>{focusMode ? 'Exit' : 'Focus'}</span>
               </button>
             </div>
 
-            {/* Right side - Enhanced Writing Statistics */}
+            {/* Right side - Enhanced Writing Statistics - Compact */}
             <div className="flex items-center space-x-4 text-sm text-gray-600">
               <div className="flex items-center space-x-1">
                 <FileText className="w-4 h-4 text-gray-500" />
-                <span>{wordCount} words</span>
+                <span className="font-medium">{wordCount} words</span>
               </div>
               <div className="flex items-center space-x-1">
                 <Clock className="w-4 h-4 text-gray-500" />
-                <span>0:00</span> {/* Placeholder for timer */}
+                <span className="font-medium">0:00</span>
               </div>
               {showWordCountWarning && (
                 <div className="flex items-center space-x-1 text-orange-500">
-                  <AlertCircle className="w-4 h-4" />
-                  <span>Word count high!</span>
+                  <AlertCircle className="w-3 h-3" />
+                  <span className="text-xs font-medium">High!</span>
+                </div>
+              )}
+              {evaluationStatus === "success" && (
+                <div className="flex items-center space-x-1 text-green-600">
+                  <Award className="w-4 h-4" />
+                  <span className="text-xs font-medium">Evaluated</span>
                 </div>
               )}
             </div>
           </div>
         </div>
 
-        {/* Text Editor Section */}
-        <div className="flex-1 mx-4 mb-4">
-          <div className="bg-white border border-gray-200 rounded-lg h-full shadow-sm">
-            <textarea
-              className="w-full h-full p-3 rounded-lg border border-gray-200 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Start writing your amazing story here! Let your creativity flow and bring your ideas to life…"
-              value={localContent}
-              onChange={(e) => onEditorChange(e.target.value)}
-            />
-          </div>
+        {/* Text Editor Section - Full height utilization */}
+        <div className="flex-1 bg-white">
+          <textarea
+            className={`w-full h-full p-4 resize-none focus:outline-none transition-all duration-300 ${
+              focusMode 
+                ? 'text-lg leading-relaxed bg-gray-50 focus:bg-white' 
+                : 'text-base leading-normal'
+            }`}
+            placeholder={focusMode 
+              ? "Focus on your writing. Let your thoughts flow freely..." 
+              : "Start writing your amazing story here! Let your creativity flow and bring your ideas to life…"
+            }
+            value={localContent}
+            onChange={(e) => onEditorChange(e.target.value)}
+            style={{
+              fontFamily: "'Georgia', 'Times New Roman', serif",
+              fontSize: focusMode ? '18px' : '16px',
+              lineHeight: focusMode ? '1.7' : '1.6',
+              letterSpacing: '0.01em'
+            }}
+          />
         </div>
 
-        {/* Submit Button */}
-        <div className="mx-4 mb-4">
+        {/* Submit Button - Compact */}
+        <div className="bg-white border-t border-gray-200 p-3">
           <button
             onClick={() => handleSubmitForEvaluation(localContent, textType)}
-            disabled={!hasContent}
-            className={`w-full px-6 py-3 rounded-lg text-white font-semibold shadow-md transition-colors ${hasContent
-                ? "bg-blue-600 hover:bg-blue-700"
+            disabled={!hasContent || evaluationStatus === "loading"}
+            className={`w-full px-6 py-3 rounded-lg text-white font-semibold shadow-lg transition-all duration-200 flex items-center justify-center space-x-2 ${
+              hasContent && evaluationStatus !== "loading"
+                ? "bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800"
                 : "bg-gray-400 cursor-not-allowed"
             }`}
           >
-            {"Submit for Evaluation"}
+            {evaluationStatus === "loading" ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                <span>Evaluating...</span>
+              </>
+            ) : (
+              <>
+                <Target className="w-5 h-5" />
+                <span>Submit for Evaluation</span>
+              </>
+            )}
           </button>
         </div>
 
         {/* Evaluation Progress Overlay */}
         {showNSWEvaluation && evaluationStatus === "loading" && (
           <div className="absolute inset-0 bg-white bg-opacity-90 flex items-center justify-center z-50">
-            <div className="text-center">
-              <svg className="animate-spin mx-auto h-10 w-10 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              <p className="mt-4 text-lg font-medium text-gray-900">{evaluationProgress}</p>
+            <div className="text-center bg-white p-8 rounded-lg shadow-xl max-w-md">
+              <div className="animate-spin mx-auto h-12 w-12 border-4 border-purple-600 border-t-transparent rounded-full mb-4"></div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Evaluating Your Writing</h3>
+              <p className="text-lg font-medium text-gray-700 mb-4">{evaluationProgress}</p>
+              <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+                <div 
+                  className="bg-purple-600 h-2 rounded-full transition-all duration-500"
+                  style={{ 
+                    width: evaluationProgress.includes("Analyzing") ? "20%" :
+                           evaluationProgress.includes("Evaluating") ? "40%" :
+                           evaluationProgress.includes("Checking") ? "60%" :
+                           evaluationProgress.includes("language") ? "80%" :
+                           evaluationProgress.includes("Generating") ? "100%" : "0%"
+                  }}
+                ></div>
+              </div>
+              <p className="text-sm text-gray-500 mb-4">
+                We're creating a detailed, personalized report just for you!
+              </p>
               <button
                 onClick={handleCloseNSWEvaluation}
-                className="mt-4 px-4 py-2 text-gray-500 hover:text-gray-700 transition-colors"
+                className="px-4 py-2 text-gray-500 hover:text-gray-700 transition-colors"
               >
                 Cancel
               </button>
             </div>
           </div>
-         )}
+        )}
 
         {/* Enhanced Report Modal */}
         {showReportModal && analysis && (
@@ -492,8 +532,8 @@ export function EnhancedWritingLayout({
         )}
       </div>
 
-      {/* Right side - Tabbed Coach Panel */}
-      <div className="flex-[3] border-l border-gray-200">
+      {/* Right side - Tabbed Coach Panel - Optimized fixed width */}
+      <div className="w-96 border-l border-gray-200 flex-shrink-0">
         <TabbedCoachPanel
           content={localContent}
           textType={textType}
