@@ -32,7 +32,11 @@ import {
   Minimize2,
   HelpCircle,
   Layers,
-  Zap
+  Zap,
+  Palette,
+  CheckCircle,
+  XCircle,
+  Edit3
 } from 'lucide-react';
 
 interface EnhancedWritingLayoutProps {
@@ -93,7 +97,7 @@ export function EnhancedWritingLayout({
   // Local content state to ensure we have the latest content
   const [localContent, setLocalContent] = useState<string>(content);
 
-  // NEW: Enhanced Ideas & Content Feedback States (Recommendation 1)
+  // Enhanced Ideas & Content Feedback States (Recommendation 1)
   const [showIdeasHelper, setShowIdeasHelper] = useState(false);
   const [ideasFeedback, setIdeasFeedback] = useState<string[]>([]);
   const [promptAnalysis, setPromptAnalysis] = useState<{
@@ -102,13 +106,29 @@ export function EnhancedWritingLayout({
     missing: string[];
   }>({ elements: [], covered: [], missing: [] });
 
-  // NEW: Enhanced Structure & Organization Feedback States (Recommendation 2)
+  // Enhanced Structure & Organization Feedback States (Recommendation 2)
   const [showStructureHelper, setShowStructureHelper] = useState(false);
   const [structureFeedback, setStructureFeedback] = useState<{
     narrativeArc: string;
     paragraphTransitions: string[];
     pacingAdvice: string;
   }>({ narrativeArc: '', paragraphTransitions: [], pacingAdvice: '' });
+
+  // NEW: Language Features & Vocabulary Feedback States (Recommendation 3)
+  const [showLanguageHelper, setShowLanguageHelper] = useState(false);
+  const [languageFeedback, setLanguageFeedback] = useState<{
+    figurativeLanguage: string[];
+    showDontTell: string[];
+    sentenceVariety: string;
+  }>({ figurativeLanguage: [], showDontTell: [], sentenceVariety: '' });
+
+  // NEW: Spelling & Grammar Feedback States (Recommendation 4)
+  const [showGrammarHelper, setShowGrammarHelper] = useState(false);
+  const [grammarFeedback, setGrammarFeedback] = useState<{
+    contextualErrors: Array<{error: string, explanation: string, suggestion: string}>;
+    punctuationTips: string[];
+    commonErrors: string[];
+  }>({ contextualErrors: [], punctuationTips: [], commonErrors: [] });
 
   // Font size options
   const fontSizes = [
@@ -139,7 +159,7 @@ export function EnhancedWritingLayout({
     localStorage.setItem('writingDarkMode', darkMode.toString());
   }, [darkMode]);
 
-  // NEW: Analyze prompt elements for Ideas & Content feedback (Recommendation 1)
+  // Analyze prompt elements for Ideas & Content feedback (Recommendation 1)
   const analyzePromptElements = (prompt: string) => {
     const elements = [];
     const lowerPrompt = prompt.toLowerCase();
@@ -170,7 +190,7 @@ export function EnhancedWritingLayout({
     return elements;
   };
 
-  // NEW: Check which prompt elements are covered in the content (Recommendation 1)
+  // Check which prompt elements are covered in the content (Recommendation 1)
   const checkPromptCoverage = (content: string, elements: string[]) => {
     const lowerContent = content.toLowerCase();
     const covered = [];
@@ -192,7 +212,7 @@ export function EnhancedWritingLayout({
     return { covered, missing };
   };
 
-  // NEW: Generate Ideas & Content feedback (Recommendation 1)
+  // Generate Ideas & Content feedback (Recommendation 1)
   const generateIdeasFeedback = (content: string, prompt: string) => {
     const feedback = [];
     const wordCount = content.trim().split(/\s+/).length;
@@ -227,7 +247,7 @@ export function EnhancedWritingLayout({
     return feedback;
   };
 
-  // NEW: Analyze narrative structure (Recommendation 2)
+  // Analyze narrative structure (Recommendation 2)
   const analyzeNarrativeStructure = (content: string) => {
     const paragraphs = content.split('\n\n').filter(p => p.trim().length > 0);
     let narrativeArc = '';
@@ -271,6 +291,93 @@ export function EnhancedWritingLayout({
     return { narrativeArc, paragraphTransitions: transitions, pacingAdvice };
   };
 
+  // NEW: Analyze Language Features & Vocabulary (Recommendation 3)
+  const analyzeLanguageFeatures = (content: string) => {
+    const figurativeLanguage = [];
+    const showDontTell = [];
+    let sentenceVariety = '';
+
+    // Check for figurative language opportunities
+    const lowerContent = content.toLowerCase();
+    const figurativeWords = ['like', 'as', 'seemed', 'appeared', 'sounded'];
+    const hasFigurative = figurativeWords.some(word => lowerContent.includes(word));
+    
+    if (!hasFigurative && content.length > 100) {
+      figurativeLanguage.push("🎨 Try adding a simile! Compare your magical creature to something familiar. Example: 'The dragon's scales shimmered like emeralds in sunlight.'");
+    }
+    
+    if (!lowerContent.includes('whisper') && !lowerContent.includes('roar') && !lowerContent.includes('crash')) {
+      figurativeLanguage.push("🔊 Add some onomatopoeia! Words like 'whoosh,' 'crash,' or 'whisper' make your story come alive.");
+    }
+
+    // Check for "show don't tell" opportunities
+    const tellingWords = ['was scared', 'was happy', 'was sad', 'was angry', 'was excited'];
+    tellingWords.forEach(telling => {
+      if (lowerContent.includes(telling)) {
+        const emotion = telling.split(' ')[1];
+        showDontTell.push(`Instead of "was ${emotion}," show the emotion! Example: "Her hands trembled" instead of "she was scared."`);
+      }
+    });
+
+    // Analyze sentence variety
+    const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    if (sentences.length > 3) {
+      const lengths = sentences.map(s => s.trim().split(' ').length);
+      const avgLength = lengths.reduce((a, b) => a + b, 0) / lengths.length;
+      const hasVariety = Math.max(...lengths) - Math.min(...lengths) > 5;
+      
+      if (!hasVariety) {
+        sentenceVariety = "Mix up your sentence lengths! Try combining short, punchy sentences with longer, descriptive ones.";
+      } else {
+        sentenceVariety = "Great sentence variety! This keeps your writing engaging.";
+      }
+    }
+
+    return { figurativeLanguage, showDontTell, sentenceVariety };
+  };
+
+  // NEW: Analyze Spelling & Grammar (Recommendation 4)
+  const analyzeGrammarSpelling = (content: string) => {
+    const contextualErrors = [];
+    const punctuationTips = [];
+    const commonErrors = [];
+
+    // Check for common 10-12 year old errors
+    const lowerContent = content.toLowerCase();
+    
+    // Subject-verb agreement
+    if (lowerContent.includes('they was') || lowerContent.includes('we was')) {
+      contextualErrors.push({
+        error: "Subject-verb disagreement",
+        explanation: "When the subject is plural (they, we), use 'were' not 'was'",
+        suggestion: "Change 'they was' to 'they were'"
+      });
+    }
+
+    // Run-on sentences (very basic check)
+    const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    const longSentences = sentences.filter(s => s.split(' ').length > 25);
+    if (longSentences.length > 0) {
+      commonErrors.push("Some sentences are quite long. Try breaking them into shorter sentences for better flow.");
+    }
+
+    // Punctuation for effect opportunities
+    if (!content.includes('...') && content.length > 100) {
+      punctuationTips.push("💫 Try using ellipses (...) to create suspense: 'As I opened the door...'");
+    }
+    
+    if (!content.includes('—') && !content.includes(' - ')) {
+      punctuationTips.push("✨ Use dashes for emphasis: 'The creature was enormous—bigger than a house!'");
+    }
+
+    // Check for dialogue punctuation
+    if (content.includes('"') && !content.includes('," ') && !content.includes('." ')) {
+      commonErrors.push("Remember to put commas and periods inside quotation marks when writing dialogue.");
+    }
+
+    return { contextualErrors, punctuationTips, commonErrors };
+  };
+
   // Function to get the current prompt from localStorage or fallback
   const getCurrentPrompt = () => {
     try {
@@ -312,7 +419,7 @@ export function EnhancedWritingLayout({
     setCurrentPrompt(prompt);
     console.log("✅ useEffect[textType]: currentPrompt set to:", prompt.substring(0, 50) + "...");
     
-    // NEW: Analyze prompt elements for Ideas & Content feedback
+    // Analyze prompt elements for Ideas & Content feedback
     const elements = analyzePromptElements(prompt);
     setPromptAnalysis(prev => ({ ...prev, elements }));
   }, [textType]);
@@ -327,7 +434,7 @@ export function EnhancedWritingLayout({
         setCurrentPrompt(newPrompt);
         console.log('✅ handleStorageChange: currentPrompt set to:', newPrompt.substring(0, 50) + '...');
         
-        // NEW: Update prompt analysis
+        // Update prompt analysis
         const elements = analyzePromptElements(newPrompt);
         setPromptAnalysis(prev => ({ ...prev, elements }));
       }
@@ -340,7 +447,7 @@ export function EnhancedWritingLayout({
       setCurrentPrompt(newPrompt);
       console.log("✅ handlePromptGenerated: currentPrompt set to:", newPrompt.substring(0, 50) + "...");
       
-      // NEW: Update prompt analysis
+      // Update prompt analysis
       const elements = analyzePromptElements(newPrompt);
       setPromptAnalysis(prev => ({ ...prev, elements }));
     };
@@ -352,7 +459,7 @@ export function EnhancedWritingLayout({
       setCurrentPrompt(newPrompt);
       console.log("✅ handleCustomPromptCreated: currentPrompt set to:", newPrompt.substring(0, 50) + "...");
       
-      // NEW: Update prompt analysis
+      // Update prompt analysis
       const elements = analyzePromptElements(newPrompt);
       setPromptAnalysis(prev => ({ ...prev, elements }));
     };
@@ -385,7 +492,7 @@ export function EnhancedWritingLayout({
     const words = currentContent.trim().split(/\s+/).filter(word => word.length > 0);
     setWordCount(words.length);
 
-    // NEW: Generate enhanced feedback based on recommendations 1 & 2
+    // Generate enhanced feedback based on all 4 recommendations
     if (currentContent.length > 50) {
       // Ideas & Content feedback (Recommendation 1)
       const newIdeasFeedback = generateIdeasFeedback(currentContent, currentPrompt);
@@ -398,6 +505,14 @@ export function EnhancedWritingLayout({
       // Structure & Organization feedback (Recommendation 2)
       const newStructureFeedback = analyzeNarrativeStructure(currentContent);
       setStructureFeedback(newStructureFeedback);
+
+      // NEW: Language Features & Vocabulary feedback (Recommendation 3)
+      const newLanguageFeedback = analyzeLanguageFeatures(currentContent);
+      setLanguageFeedback(newLanguageFeedback);
+
+      // NEW: Spelling & Grammar feedback (Recommendation 4)
+      const newGrammarFeedback = analyzeGrammarSpelling(currentContent);
+      setGrammarFeedback(newGrammarFeedback);
     }
 
     // Trigger coach feedback for new paragraphs
@@ -562,7 +677,7 @@ export function EnhancedWritingLayout({
                 {textType}
               </span>
               
-              {/* NEW: Ideas Helper Button (Recommendation 1) */}
+              {/* Ideas Helper Button (Recommendation 1) */}
               <button
                 onClick={() => setShowIdeasHelper(!showIdeasHelper)}
                 className={`flex items-center space-x-1 px-2 py-1 rounded text-xs transition-colors ${
@@ -576,7 +691,7 @@ export function EnhancedWritingLayout({
                 <span>Ideas</span>
               </button>
 
-              {/* NEW: Structure Helper Button (Recommendation 2) */}
+              {/* Structure Helper Button (Recommendation 2) */}
               <button
                 onClick={() => setShowStructureHelper(!showStructureHelper)}
                 className={`flex items-center space-x-1 px-2 py-1 rounded text-xs transition-colors ${
@@ -589,6 +704,34 @@ export function EnhancedWritingLayout({
                 <Layers className="w-3 h-3" />
                 <span>Structure</span>
               </button>
+
+              {/* NEW: Language Helper Button (Recommendation 3) */}
+              <button
+                onClick={() => setShowLanguageHelper(!showLanguageHelper)}
+                className={`flex items-center space-x-1 px-2 py-1 rounded text-xs transition-colors ${
+                  showLanguageHelper
+                    ? darkMode ? 'bg-orange-700 text-orange-200' : 'bg-orange-100 text-orange-800'
+                    : darkMode ? 'bg-gray-700 text-gray-300 hover:bg-orange-700' : 'bg-gray-100 text-gray-600 hover:bg-orange-100'
+                }`}
+                title="Language & Vocabulary Helper"
+              >
+                <Palette className="w-3 h-3" />
+                <span>Language</span>
+              </button>
+
+              {/* NEW: Grammar Helper Button (Recommendation 4) */}
+              <button
+                onClick={() => setShowGrammarHelper(!showGrammarHelper)}
+                className={`flex items-center space-x-1 px-2 py-1 rounded text-xs transition-colors ${
+                  showGrammarHelper
+                    ? darkMode ? 'bg-red-700 text-red-200' : 'bg-red-100 text-red-800'
+                    : darkMode ? 'bg-gray-700 text-gray-300 hover:bg-red-700' : 'bg-gray-100 text-gray-600 hover:bg-red-100'
+                }`}
+                title="Spelling & Grammar Helper"
+              >
+                <CheckCircle className="w-3 h-3" />
+                <span>Grammar</span>
+              </button>
             </div>
           </div>
           
@@ -596,7 +739,7 @@ export function EnhancedWritingLayout({
             {currentPrompt}
           </div>
 
-          {/* NEW: Ideas & Content Helper Panel (Recommendation 1) */}
+          {/* Ideas & Content Helper Panel (Recommendation 1) */}
           {showIdeasHelper && (
             <div className={`mt-3 p-3 rounded-lg border ${
               darkMode ? 'bg-purple-900/20 border-purple-700' : 'bg-purple-50 border-purple-200'
@@ -668,7 +811,7 @@ export function EnhancedWritingLayout({
             </div>
           )}
 
-          {/* NEW: Structure & Organization Helper Panel (Recommendation 2) */}
+          {/* Structure & Organization Helper Panel (Recommendation 2) */}
           {showStructureHelper && (
             <div className={`mt-3 p-3 rounded-lg border ${
               darkMode ? 'bg-green-900/20 border-green-700' : 'bg-green-50 border-green-200'
@@ -711,6 +854,124 @@ export function EnhancedWritingLayout({
                   darkMode ? 'bg-yellow-900/30 text-yellow-200' : 'bg-yellow-100 text-yellow-800'
                 }`}>
                   <strong>⚡ Pacing:</strong> {structureFeedback.pacingAdvice}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* NEW: Language Features & Vocabulary Helper Panel (Recommendation 3) */}
+          {showLanguageHelper && (
+            <div className={`mt-3 p-3 rounded-lg border ${
+              darkMode ? 'bg-orange-900/20 border-orange-700' : 'bg-orange-50 border-orange-200'
+            }`}>
+              <h4 className={`font-semibold text-sm mb-2 flex items-center ${
+                darkMode ? 'text-orange-200' : 'text-orange-800'
+              }`}>
+                <Palette className="w-4 h-4 mr-1" />
+                Language Features & Vocabulary Helper (25% of your score)
+              </h4>
+              
+              {/* Figurative Language Suggestions */}
+              {languageFeedback.figurativeLanguage.length > 0 && (
+                <div className="mb-3">
+                  <p className={`text-xs font-medium mb-1 ${darkMode ? 'text-orange-300' : 'text-orange-700'}`}>
+                    Figurative Language Tips:
+                  </p>
+                  {languageFeedback.figurativeLanguage.map((tip, index) => (
+                    <div key={index} className={`text-xs p-2 rounded mb-1 ${
+                      darkMode ? 'bg-orange-800/30 text-orange-200' : 'bg-orange-100 text-orange-800'
+                    }`}>
+                      {tip}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Show Don't Tell Suggestions */}
+              {languageFeedback.showDontTell.length > 0 && (
+                <div className="mb-3">
+                  <p className={`text-xs font-medium mb-1 ${darkMode ? 'text-orange-300' : 'text-orange-700'}`}>
+                    Show, Don't Tell:
+                  </p>
+                  {languageFeedback.showDontTell.map((tip, index) => (
+                    <div key={index} className={`text-xs p-2 rounded mb-1 ${
+                      darkMode ? 'bg-purple-900/30 text-purple-200' : 'bg-purple-100 text-purple-800'
+                    }`}>
+                      ✨ {tip}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Sentence Variety Feedback */}
+              {languageFeedback.sentenceVariety && (
+                <div className={`p-2 rounded text-xs ${
+                  darkMode ? 'bg-blue-900/30 text-blue-200' : 'bg-blue-100 text-blue-800'
+                }`}>
+                  <strong>📝 Sentence Variety:</strong> {languageFeedback.sentenceVariety}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* NEW: Spelling & Grammar Helper Panel (Recommendation 4) */}
+          {showGrammarHelper && (
+            <div className={`mt-3 p-3 rounded-lg border ${
+              darkMode ? 'bg-red-900/20 border-red-700' : 'bg-red-50 border-red-200'
+            }`}>
+              <h4 className={`font-semibold text-sm mb-2 flex items-center ${
+                darkMode ? 'text-red-200' : 'text-red-800'
+              }`}>
+                <CheckCircle className="w-4 h-4 mr-1" />
+                Spelling & Grammar Helper (20% of your score)
+              </h4>
+              
+              {/* Contextual Grammar Errors */}
+              {grammarFeedback.contextualErrors.length > 0 && (
+                <div className="mb-3">
+                  <p className={`text-xs font-medium mb-1 ${darkMode ? 'text-red-300' : 'text-red-700'}`}>
+                    Grammar Check:
+                  </p>
+                  {grammarFeedback.contextualErrors.map((error, index) => (
+                    <div key={index} className={`text-xs p-2 rounded mb-1 ${
+                      darkMode ? 'bg-red-800/30 text-red-200' : 'bg-red-100 text-red-800'
+                    }`}>
+                      <strong>❌ {error.error}:</strong> {error.explanation}<br />
+                      <strong>✅ Try:</strong> {error.suggestion}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Punctuation Tips */}
+              {grammarFeedback.punctuationTips.length > 0 && (
+                <div className="mb-3">
+                  <p className={`text-xs font-medium mb-1 ${darkMode ? 'text-red-300' : 'text-red-700'}`}>
+                    Punctuation for Effect:
+                  </p>
+                  {grammarFeedback.punctuationTips.map((tip, index) => (
+                    <div key={index} className={`text-xs p-2 rounded mb-1 ${
+                      darkMode ? 'bg-yellow-900/30 text-yellow-200' : 'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {tip}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Common Errors */}
+              {grammarFeedback.commonErrors.length > 0 && (
+                <div>
+                  <p className={`text-xs font-medium mb-1 ${darkMode ? 'text-red-300' : 'text-red-700'}`}>
+                    Writing Tips:
+                  </p>
+                  {grammarFeedback.commonErrors.map((error, index) => (
+                    <div key={index} className={`text-xs p-2 rounded mb-1 ${
+                      darkMode ? 'bg-gray-800/30 text-gray-200' : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      💡 {error}
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
