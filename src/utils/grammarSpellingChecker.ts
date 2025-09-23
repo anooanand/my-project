@@ -282,7 +282,7 @@ export class GrammarSpellingChecker {
 
     // Check all grammar rule categories
     Object.entries(GRAMMAR_RULES).forEach(([category, rules]) => {
-      rules.forEach(rule => {
+      (rules as any[]).forEach(rule => {
         let match;
         const regex = new RegExp(rule.pattern);
         
@@ -449,7 +449,7 @@ export const createDebouncedChecker = (
   checker: GrammarSpellingChecker,
   delay: number = 1000
 ) => {
-  let timeoutId: NodeJS.Timeout;
+  let timeoutId: any;
   
   return (text: string, callback: (errors: GrammarError[]) => void) => {
     clearTimeout(timeoutId);
@@ -487,4 +487,3 @@ export class EnhancedWritingAnalyzer {
     };
   }
 }
-
