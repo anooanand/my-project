@@ -717,11 +717,57 @@ export function EnhancedWritingLayout({
           )}
         </div>
 
-        {/* Enhanced Writing Controls - Compact */}
+        {/* Original Buttons Section */}
         <div className={`border-b px-3 py-2 transition-colors duration-300 ${
           darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
         }`}>
           <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              {/* Plan Button */}
+              <button
+                onClick={() => setShowPlanningTool(true)}
+                className="flex items-center space-x-1 px-3 py-1 rounded-md text-sm font-medium bg-blue-500 text-white hover:bg-blue-600 transition-colors"
+                title="Planning Tool"
+              >
+                <PenTool className="w-4 h-4" />
+                <span>Plan</span>
+              </button>
+
+              {/* Exam Button */}
+              <button
+                onClick={() => setExamMode(!examMode)}
+                className={`flex items-center space-x-1 px-3 py-1 rounded-md text-sm font-medium ${
+                  examMode
+                    ? 'bg-red-500 text-white hover:bg-red-600'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                } transition-colors`}
+                title="Toggle Exam Mode"
+              >
+                <Play className="w-4 h-4" />
+                <span>Exam</span>
+              </button>
+
+              {/* Guide Button */}
+              <button
+                onClick={() => setShowStructureGuide(true)}
+                className="flex items-center space-x-1 px-3 py-1 rounded-md text-sm font-medium bg-green-500 text-white hover:bg-green-600 transition-colors"
+                title="Structure Guide"
+              >
+                <BookOpen className="w-4 h-4" />
+                <span>Guide</span>
+              </button>
+
+              {/* Tips Button */}
+              <button
+                onClick={() => setShowTips(true)}
+                className="flex items-center space-x-1 px-3 py-1 rounded-md text-sm font-medium bg-yellow-500 text-white hover:bg-yellow-600 transition-colors"
+                title="Writing Tips"
+              >
+                <LightbulbIcon className="w-4 h-4" />
+                <span>Tips</span>
+              </button>
+            </div>
+
             {/* Word Count and Status */}
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
@@ -745,7 +791,14 @@ export function EnhancedWritingLayout({
                 </div>
               )}
             </div>
+          </div>
+        </div>
 
+        {/* Enhanced Writing Controls - Compact */}
+        <div className={`border-b px-3 py-2 transition-colors duration-300 ${
+          darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+        }`}>
+          <div className="flex items-center justify-between">
             {/* Font Size Controls */}
             <div className="flex items-center space-x-2">
               {fontSizes.map((size) => (
