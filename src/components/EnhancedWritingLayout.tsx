@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { WritingArea } from './WritingArea';
 import { PlanningToolModal } from './PlanningToolModal';
 import { StructureGuideModal } from './StructureGuideModal';
 import { TipsModal } from './TipsModal';
@@ -432,21 +431,29 @@ export function EnhancedWritingLayout({
             </div>
           </div>
 
-          {/* Writing Area */}
+          {/* Writing Area - FIXED: Replaced WritingArea component with textarea */}
           <div className="flex-1 flex flex-col">
-            <WritingArea 
-              value={localContent} 
-              onChange={handleContentChange} 
-              style={{ fontSize: `${fontSize}px`, fontFamily: currentFont.css }}
-              className="flex-1 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-inner"
+            <textarea
+              value={localContent}
+              onChange={(e) => handleContentChange(e.target.value)}
+              style={{ 
+                fontSize: `${fontSize}px`, 
+                fontFamily: currentFont.css,
+                lineHeight: '1.6'
+              }}
+              className="flex-1 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-inner border border-gray-200 dark:border-gray-700 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+              placeholder="Start writing your story here..."
             />
-            <div className="flex-shrink-0 mt-4">
-              <NSWStandaloneSubmitSystem 
-                content={localContent} 
-                textType={textType} 
-                onSubmit={onSubmit} 
-                wordCount={wordCount}
-              />
+            <div className="flex-shrink-0 mt-4 flex justify-between items-center">
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                Words: {wordCount}
+              </div>
+              <button
+                onClick={() => onSubmit(localContent, textType)}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                Submit for Evaluation
+              </button>
             </div>
           </div>
         </div>
