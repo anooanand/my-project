@@ -29,7 +29,10 @@ import {
   Moon,
   Sun,
   Maximize2,
-  Minimize2
+  Minimize2,
+  Settings,
+  ChevronDown,
+  Info
 } from 'lucide-react';
 
 interface EnhancedWritingLayoutProps {
@@ -76,6 +79,10 @@ export function EnhancedWritingLayout({
   const [darkMode, setDarkMode] = useState(() => {
     return localStorage.getItem('writingDarkMode') === 'true';
   });
+  
+  // UX Enhancement States
+  const [showSettings, setShowSettings] = useState(false);
+  const [isPromptCollapsed, setIsPromptCollapsed] = useState(false);
   
   // Enhanced NSW Evaluation States
   const [showNSWEvaluation, setShowNSWEvaluation] = useState<boolean>(false);
@@ -325,23 +332,25 @@ export function EnhancedWritingLayout({
 
   return (
     <div className={`flex h-screen transition-colors duration-300 ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
-      {/* Left side - Writing Area Content - Clean Layout */}
-      <div className="flex-1 flex flex-col min-w-0 max-w-none bg-white dark:bg-gray-800 rounded-lg m-4 shadow-lg overflow-hidden"> 
-        {/* Writing Prompt Section - Clean Card Style */}
-        <div className={`p-4 border-b transition-colors duration-300 ${
+      {/* Left side - Writing Area Content - Professional UX Layout */}
+      <div className="flex-1 flex flex-col min-w-0 max-w-none"> 
+        
+        {/* Collapsible Writing Prompt Section - UX Improvement */}
+        <div className={`transition-all duration-300 border-b shadow-sm ${
+          isPromptCollapsed ? 'h-12' : 'min-h-[120px]'
+        } ${
           darkMode 
             ? 'bg-gradient-to-r from-blue-900/10 to-indigo-900/10 border-blue-800/20' 
             : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-100'
         }`}>
-          <div className="flex items-start mb-3">
+          {/* Prompt Header - Always Visible */}
+          <div className="flex items-center justify-between p-3 cursor-pointer" onClick={() => setIsPromptCollapsed(!isPromptCollapsed)}>
             <div className="flex items-center">
               <LightbulbIcon className={`w-5 h-5 mr-2 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
               <h3 className={`font-semibold text-base ${darkMode ? 'text-blue-200' : 'text-blue-800'}`}>
                 Your Writing Prompt
               </h3>
-            </div>
-            <div className="ml-auto">
-              <span className={`text-xs px-3 py-1 rounded-full font-medium ${
+              <span className={`ml-3 text-xs px-2 py-1 rounded-full font-medium ${
                 darkMode 
                   ? 'bg-blue-800/50 text-blue-200' 
                   : 'bg-blue-100 text-blue-700'
@@ -349,100 +358,41 @@ export function EnhancedWritingLayout({
                 {textType}
               </span>
             </div>
-          </div>
-          <p className={`leading-relaxed text-sm ${darkMode ? 'text-blue-100' : 'text-blue-900'}`}>
-            {currentPrompt}
-          </p>
-        </div>
-
-        {/* Font Controls Section - Clean and Organized */}
-        <div className={`px-4 py-3 border-b transition-colors duration-300 ${
-          darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-        }`}>
-          <div className="flex items-center justify-between">
-            {/* Font Size Controls */}
             <div className="flex items-center space-x-2">
-              <Type className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />
-              <span className={`text-sm font-medium mr-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                Font Size:
-              </span>
-              {fontSizes.map((size) => (
-                <button
-                  key={size.value}
-                  onClick={() => setFontSize(size.value)}
-                  className={`px-2 py-1 text-sm font-medium rounded transition-colors ${
-                    fontSize === size.value
-                      ? 'bg-blue-500 text-white shadow-sm'
-                      : darkMode
-                      ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                  title={`${size.name} (${size.value}px)`}
-                >
-                  {size.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Font Family and Mode Controls */}
-            <div className="flex items-center space-x-4">
-              {/* Font Family */}
-              <div className="flex items-center space-x-2">
-                <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  Font Family:
-                </span>
-                <select
-                  value={fontFamily}
-                  onChange={(e) => setFontFamily(e.target.value)}
-                  className={`text-sm px-3 py-1 rounded border transition-colors ${
-                    darkMode
-                      ? 'bg-gray-700 border-gray-600 text-gray-200'
-                      : 'bg-white border-gray-300 text-gray-700'
-                  }`}
-                >
-                  {fontFamilies.map((family) => (
-                    <option key={family.value} value={family.value}>
-                      {family.name}
-                    </option>
-                  ))}
-                </select>
-                <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                  Traditional & elegant
-                </span>
-              </div>
-
-              {/* Focus Mode Toggle */}
-              <div className="flex items-center space-x-2">
-                <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  Focus Mode:
-                </span>
-                <button
-                  onClick={() => setFocusMode(!focusMode)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    focusMode ? 'bg-blue-600' : darkMode ? 'bg-gray-600' : 'bg-gray-300'
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                      focusMode ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
+              <button
+                className={`p-1 rounded-full transition-colors ${
+                  darkMode ? 'hover:bg-blue-800/30' : 'hover:bg-blue-200/50'
+                }`}
+                title={isPromptCollapsed ? 'Expand prompt' : 'Collapse prompt'}
+              >
+                <ChevronDown className={`w-4 h-4 transition-transform ${
+                  isPromptCollapsed ? 'rotate-180' : ''
+                } ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
+              </button>
             </div>
           </div>
+          
+          {/* Prompt Content - Collapsible */}
+          {!isPromptCollapsed && (
+            <div className="px-3 pb-3">
+              <p className={`leading-relaxed text-sm ${darkMode ? 'text-blue-100' : 'text-blue-900'}`}>
+                {currentPrompt}
+              </p>
+            </div>
+          )}
         </div>
 
-        {/* Action Buttons Section - Clean Row */}
-        <div className={`px-4 py-3 border-b transition-colors duration-300 ${
+        {/* Compact Toolbar - UX Improvement */}
+        <div className={`border-b transition-colors duration-300 ${
           darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
         }`}>
-          <div className="flex items-center justify-between">
-            {/* Action Buttons */}
+          {/* Primary Actions Row */}
+          <div className="flex items-center justify-between px-4 py-2">
+            {/* Left: Primary Action Buttons */}
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setShowPlanningTool(true)}
-                className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium shadow-sm"
+                className="flex items-center space-x-1 px-3 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm font-medium"
               >
                 <PenTool className="w-4 h-4" />
                 <span>Planning</span>
@@ -450,7 +400,7 @@ export function EnhancedWritingLayout({
               
               <button
                 onClick={() => setExamMode(!examMode)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium shadow-sm ${
+                className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
                   examMode 
                     ? 'bg-green-600 text-white hover:bg-green-700' 
                     : 'bg-green-500 text-white hover:bg-green-600'
@@ -462,7 +412,7 @@ export function EnhancedWritingLayout({
               
               <button
                 onClick={() => setShowStructureGuide(true)}
-                className="flex items-center space-x-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors text-sm font-medium shadow-sm"
+                className="flex items-center space-x-1 px-3 py-1.5 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition-colors text-sm font-medium"
               >
                 <BookOpen className="w-4 h-4" />
                 <span>Structure</span>
@@ -470,7 +420,7 @@ export function EnhancedWritingLayout({
               
               <button
                 onClick={() => setShowTips(true)}
-                className="flex items-center space-x-2 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm font-medium shadow-sm"
+                className="flex items-center space-x-1 px-3 py-1.5 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors text-sm font-medium"
               >
                 <LightbulbIcon className="w-4 h-4" />
                 <span>Tips</span>
@@ -478,7 +428,7 @@ export function EnhancedWritingLayout({
               
               <button
                 onClick={() => setFocusMode(!focusMode)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium shadow-sm ${
+                className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
                   focusMode 
                     ? 'bg-gray-700 text-white hover:bg-gray-800' 
                     : 'bg-gray-600 text-white hover:bg-gray-700'
@@ -487,25 +437,18 @@ export function EnhancedWritingLayout({
                 {focusMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 <span>Focus</span>
               </button>
-
-              <button
-                onClick={() => setDarkMode(!darkMode)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium shadow-sm ${
-                  darkMode
-                    ? 'bg-gray-700 text-white hover:bg-gray-600'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                <span>Dark</span>
-              </button>
             </div>
 
-            {/* Stats */}
-            <div className="flex items-center space-x-4 text-sm">
+            {/* Right: Stats and Settings */}
+            <div className="flex items-center space-x-3">
+              {/* Word Count */}
               <div className="flex items-center space-x-1">
                 <FileText className={`w-4 h-4 ${darkMode ? 'text-blue-400' : 'text-blue-500'}`} />
-                <span className={`font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>
+                <span className={`text-sm font-medium ${
+                  showWordCountWarning 
+                    ? 'text-orange-600' 
+                    : darkMode ? 'text-gray-300' : 'text-gray-700'
+                }`}>
                   {wordCount} words
                 </span>
                 {showWordCountWarning && (
@@ -513,27 +456,139 @@ export function EnhancedWritingLayout({
                 )}
               </div>
               
+              {/* WPM */}
               <div className="flex items-center space-x-1">
                 <Clock className={`w-4 h-4 ${darkMode ? 'text-orange-400' : 'text-orange-500'}`} />
-                <span className={`font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>
+                <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   0 WPM
                 </span>
               </div>
 
-              {evaluationStatus === "success" && (
-                <div className="flex items-center space-x-1 text-green-600">
-                  <Award className="w-4 h-4" />
-                  <span className="font-medium text-sm">Evaluated</span>
-                </div>
-              )}
+              {/* Settings Toggle */}
+              <button
+                onClick={() => setShowSettings(!showSettings)}
+                className={`p-1.5 rounded-md transition-colors ${
+                  showSettings
+                    ? 'bg-blue-500 text-white'
+                    : darkMode
+                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+                title="Writing Settings"
+              >
+                <Settings className="w-4 h-4" />
+              </button>
             </div>
           </div>
+
+          {/* Collapsible Settings Panel - UX Improvement */}
+          {showSettings && (
+            <div className={`border-t px-4 py-3 transition-colors duration-300 ${
+              darkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+            }`}>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Font Size */}
+                <div className="space-y-2">
+                  <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    Font Size
+                  </label>
+                  <div className="flex items-center space-x-1">
+                    {fontSizes.map((size) => (
+                      <button
+                        key={size.value}
+                        onClick={() => setFontSize(size.value)}
+                        className={`px-2 py-1 text-sm font-medium rounded transition-colors ${
+                          fontSize === size.value
+                            ? 'bg-blue-500 text-white'
+                            : darkMode
+                            ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                        title={`${size.name} (${size.value}px)`}
+                      >
+                        {size.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Font Family */}
+                <div className="space-y-2">
+                  <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    Font Family
+                  </label>
+                  <select
+                    value={fontFamily}
+                    onChange={(e) => setFontFamily(e.target.value)}
+                    className={`w-full text-sm px-3 py-1.5 rounded border transition-colors ${
+                      darkMode
+                        ? 'bg-gray-700 border-gray-600 text-gray-200'
+                        : 'bg-white border-gray-300 text-gray-700'
+                    }`}
+                  >
+                    {fontFamilies.map((family) => (
+                      <option key={family.value} value={family.value}>
+                        {family.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Mode Toggles */}
+                <div className="space-y-2">
+                  <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    Modes
+                  </label>
+                  <div className="flex items-center space-x-4">
+                    {/* Focus Mode */}
+                    <div className="flex items-center space-x-2">
+                      <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                        Focus
+                      </span>
+                      <button
+                        onClick={() => setFocusMode(!focusMode)}
+                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                          focusMode ? 'bg-blue-600' : darkMode ? 'bg-gray-600' : 'bg-gray-300'
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                            focusMode ? 'translate-x-5' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    {/* Dark Mode */}
+                    <div className="flex items-center space-x-2">
+                      <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                        Dark
+                      </span>
+                      <button
+                        onClick={() => setDarkMode(!darkMode)}
+                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                          darkMode ? 'bg-blue-600' : 'bg-gray-300'
+                        }`}
+                      >
+                        <span
+                          className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
+                            darkMode ? 'translate-x-5' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Writing Area - Scrollable and Full Height */}
-        <div className={`flex-1 overflow-hidden transition-colors duration-300 ${
+        {/* Enhanced Writing Area - Professional UX */}
+        <div className={`flex-1 relative transition-colors duration-300 ${
           darkMode ? 'bg-gray-800' : 'bg-white'
         } ${focusMode ? 'bg-opacity-95' : ''}`}>
+          {/* Writing Area with Enhanced UX */}
           <textarea
             className={`w-full h-full p-6 resize-none focus:outline-none transition-all duration-300 ${
               darkMode 
@@ -558,35 +613,64 @@ export function EnhancedWritingLayout({
               scrollbarColor: darkMode ? '#4B5563 #374151' : '#CBD5E1 #F1F5F9'
             }}
           />
+
+          {/* Floating Action Button for Quick Settings - UX Enhancement */}
+          {!showSettings && (
+            <button
+              onClick={() => setShowSettings(true)}
+              className={`absolute bottom-6 right-6 p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-105 ${
+                darkMode 
+                  ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                  : 'bg-blue-500 hover:bg-blue-600 text-white'
+              }`}
+              title="Quick Settings"
+            >
+              <Settings className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
-        {/* Submit Button */}
+        {/* Enhanced Submit Button with Better UX */}
         <div className={`p-4 border-t transition-colors duration-300 ${
           darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
         }`}>
-          <button
-            onClick={() => handleSubmitForEvaluation(currentContent, textType)}
-            disabled={evaluationStatus === "loading" || !hasContent}
-            className="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 disabled:from-gray-400 disabled:to-gray-500 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 disabled:cursor-not-allowed shadow-lg"
-          >
-            {evaluationStatus === "loading" ? (
-              <>
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                <span>Evaluating...</span>
-              </>
-            ) : (
-              <>
-                <Target className="w-5 h-5" />
-                <span>Submit for Evaluation</span>
-              </>
-            )}
-          </button>
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => handleSubmitForEvaluation(currentContent, textType)}
+              disabled={evaluationStatus === "loading" || !hasContent}
+              className="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 disabled:from-gray-400 disabled:to-gray-500 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 disabled:cursor-not-allowed shadow-lg"
+            >
+              {evaluationStatus === "loading" ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  <span>Evaluating...</span>
+                </>
+              ) : (
+                <>
+                  <Target className="w-5 h-5" />
+                  <span>Submit for Evaluation</span>
+                </>
+              )}
+            </button>
+            
+            {/* Quick Info Button */}
+            <button
+              className={`p-3 rounded-lg transition-colors ${
+                darkMode
+                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+              title="Evaluation Info"
+            >
+              <Info className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Right side - Coach Panel - Clean Card */}
-      <div className={`w-96 flex-shrink-0 m-4 ml-0 rounded-lg shadow-lg overflow-hidden transition-colors duration-300 ${
-        darkMode ? 'bg-gray-800' : 'bg-white'
+      {/* Right side - Coach Panel - Enhanced UX */}
+      <div className={`w-96 flex-shrink-0 border-l transition-colors duration-300 ${
+        darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
       }`}>
         <TabbedCoachPanel 
           analysis={analysis} 
