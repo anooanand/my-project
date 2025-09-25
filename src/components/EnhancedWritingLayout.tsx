@@ -32,7 +32,10 @@ import {
   Minimize2,
   Settings,
   ChevronDown,
-  Info
+  Info,
+  PlayCircle,
+  PauseCircle,
+  RotateCcw
 } from 'lucide-react';
 
 interface EnhancedWritingLayoutProps {
@@ -69,6 +72,12 @@ export function EnhancedWritingLayout({
   const [focusMode, setFocusMode] = useState(false);
   const [evaluationStatus, setEvaluationStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   
+  // Timer states
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [startTime, setStartTime] = useState<number | null>(null);
+  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  
   // Enhanced Writing Features
   const [fontSize, setFontSize] = useState(() => {
     return parseInt(localStorage.getItem('writingFontSize') || '16');
@@ -95,6 +104,65 @@ export function EnhancedWritingLayout({
 
   // Local content state to ensure we have the latest content
   const [localContent, setLocalContent] = useState<string>(content);
+
+  // Timer functions
+  const formatTime = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainingSeconds = seconds % 60;
+    
+    if (hours > 0) {
+      return `${hours}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+    }
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  const startTimer = () => {
+    if (!isTimerRunning) {
+      const now = Date.now();
+      setStartTime(now);
+      setIsTimerRunning(true);
+      onTimerStart(true);
+      
+      timerIntervalRef.current = setInterval(() => {
+        setElapsedTime(prev => prev + 1);
+      }, 1000);
+    }
+  };
+
+  const pauseTimer = () => {
+    if (isTimerRunning && timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+      setIsTimerRunning(false);
+      onTimerStart(false);
+    }
+  };
+
+  const resetTimer = () => {
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+    }
+    setIsTimerRunning(false);
+    setElapsedTime(0);
+    setStartTime(null);
+    onTimerStart(false);
+  };
+
+  // Auto-start timer when user starts typing
+  useEffect(() => {
+    if (localContent && localContent.trim().length > 0 && !isTimerRunning && elapsedTime === 0) {
+      startTimer();
+    }
+  }, [localContent, isTimerRunning, elapsedTime]);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+      }
+    };
+  }, []);
 
   // Font size options
   const fontSizes = [
@@ -397,27 +465,29 @@ export function EnhancedWritingLayout({
                 <PenTool className="w-4 h-4" />
                 <span>Planning</span>
               </button>
-              
+
               <button
                 onClick={() => setExamMode(!examMode)}
                 className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
-                  examMode 
-                    ? 'bg-green-600 text-white hover:bg-green-700' 
-                    : 'bg-green-500 text-white hover:bg-green-600'
+                  examMode
+                    ? 'bg-red-500 text-white hover:bg-red-600'
+                    : darkMode
+                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
               >
                 <Play className="w-4 h-4" />
                 <span>Exam</span>
               </button>
-              
+
               <button
                 onClick={() => setShowStructureGuide(true)}
-                className="flex items-center space-x-1 px-3 py-1.5 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition-colors text-sm font-medium"
+                className="flex items-center space-x-1 px-3 py-1.5 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors text-sm font-medium"
               >
                 <BookOpen className="w-4 h-4" />
-                <span>Structure</span>
+                <span>Guide</span>
               </button>
-              
+
               <button
                 onClick={() => setShowTips(true)}
                 className="flex items-center space-x-1 px-3 py-1.5 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors text-sm font-medium"
@@ -425,67 +495,97 @@ export function EnhancedWritingLayout({
                 <LightbulbIcon className="w-4 h-4" />
                 <span>Tips</span>
               </button>
-              
-              <button
-                onClick={() => setFocusMode(!focusMode)}
-                className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
-                  focusMode 
-                    ? 'bg-gray-700 text-white hover:bg-gray-800' 
-                    : 'bg-gray-600 text-white hover:bg-gray-700'
-                }`}
-              >
-                {focusMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                <span>Focus</span>
-              </button>
             </div>
 
-            {/* Right: Stats and Settings */}
-            <div className="flex items-center space-x-3">
-              {/* Word Count */}
+            {/* Right: Stats with Timer */}
+            <div className="flex items-center space-x-4 text-sm">
+              {/* Writing Timer */}
+              <div className="flex items-center space-x-2">
+                <Clock className={`w-4 h-4 ${darkMode ? 'text-blue-400' : 'text-blue-500'}`} />
+                <span className={`font-mono font-medium ${
+                  isTimerRunning 
+                    ? 'text-green-600' 
+                    : darkMode ? 'text-gray-200' : 'text-gray-700'
+                }`}>
+                  {formatTime(elapsedTime)}
+                </span>
+                
+                {/* Timer Controls */}
+                <div className="flex items-center space-x-1">
+                  {!isTimerRunning ? (
+                    <button
+                      onClick={startTimer}
+                      className={`p-1 rounded hover:bg-gray-200 ${
+                        darkMode ? 'hover:bg-gray-700 text-gray-400' : 'text-gray-600'
+                      } transition-colors`}
+                      title="Start Timer"
+                    >
+                      <PlayCircle className="w-4 h-4" />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={pauseTimer}
+                      className={`p-1 rounded hover:bg-gray-200 ${
+                        darkMode ? 'hover:bg-gray-700 text-gray-400' : 'text-gray-600'
+                      } transition-colors`}
+                      title="Pause Timer"
+                    >
+                      <PauseCircle className="w-4 h-4" />
+                    </button>
+                  )}
+                  
+                  <button
+                    onClick={resetTimer}
+                    className={`p-1 rounded hover:bg-gray-200 ${
+                      darkMode ? 'hover:bg-gray-700 text-gray-400' : 'text-gray-600'
+                    } transition-colors`}
+                    title="Reset Timer"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
               <div className="flex items-center space-x-1">
                 <FileText className={`w-4 h-4 ${darkMode ? 'text-blue-400' : 'text-blue-500'}`} />
-                <span className={`text-sm font-medium ${
-                  showWordCountWarning 
-                    ? 'text-orange-600' 
-                    : darkMode ? 'text-gray-300' : 'text-gray-700'
-                }`}>
+                <span className={`font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>
                   {wordCount} words
                 </span>
                 {showWordCountWarning && (
                   <AlertCircle className="w-4 h-4 text-orange-500" />
                 )}
               </div>
-              
-              {/* WPM */}
-              <div className="flex items-center space-x-1">
-                <Clock className={`w-4 h-4 ${darkMode ? 'text-orange-400' : 'text-orange-500'}`} />
-                <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  0 WPM
-                </span>
-              </div>
 
-              {/* Settings Toggle */}
-              <button
-                onClick={() => setShowSettings(!showSettings)}
-                className={`p-1.5 rounded-md transition-colors ${
-                  showSettings
-                    ? 'bg-blue-500 text-white'
-                    : darkMode
-                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-                title="Writing Settings"
-              >
-                <Settings className="w-4 h-4" />
-              </button>
+              {evaluationStatus === "success" && (
+                <div className="flex items-center space-x-1 text-green-600">
+                  <Award className="w-4 h-4" />
+                  <span className="font-medium text-sm">Evaluated</span>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Collapsible Settings Panel - UX Improvement */}
+          {/* Settings Panel - Collapsible */}
           {showSettings && (
             <div className={`border-t px-4 py-3 transition-colors duration-300 ${
-              darkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+              darkMode ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-gray-50'
             }`}>
+              <div className="flex items-center justify-between mb-3">
+                <h4 className={`font-medium text-sm ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                  Writing Settings
+                </h4>
+                <button
+                  onClick={() => setShowSettings(false)}
+                  className={`text-sm px-2 py-1 rounded transition-colors ${
+                    darkMode
+                      ? 'text-gray-400 hover:text-gray-200'
+                      : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  Close
+                </button>
+              </div>
+              
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Font Size */}
                 <div className="space-y-2">
@@ -497,7 +597,7 @@ export function EnhancedWritingLayout({
                       <button
                         key={size.value}
                         onClick={() => setFontSize(size.value)}
-                        className={`px-2 py-1 text-sm font-medium rounded transition-colors ${
+                        className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
                           fontSize === size.value
                             ? 'bg-blue-500 text-white'
                             : darkMode
