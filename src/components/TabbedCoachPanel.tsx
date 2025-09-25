@@ -57,7 +57,7 @@ export function TabbedCoachPanel({
   const [chatMessages, setChatMessages] = useState<FeedbackMessage[]>([
     {
       id: "1",
-      text: "Hi I\"m your AI Writing Buddy! 🤖 I\"m here to help you write amazing stories. Ask me anything about writing, or just start typing and I\"ll give you feedback!",
+      text: "Hi I'm your AI Writing Buddy! 🤖 I'm here to help you write amazing stories. Ask me anything about writing, or just start typing and I'll give you feedback!",
       timestamp: new Date(),
       isUser: false
     }
@@ -75,17 +75,17 @@ export function TabbedCoachPanel({
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const handleWordReplace = (oldWord: string, newWord: string, position: number) => {
-    console.log("Replace \"" + oldWord + "\" with \"" + newWord + "\" at position " + position);
+    console.log(`Replace "${oldWord}" with "${newWord}" at position ${position}`);
     // In a real app, this would update the content state in the parent component
   };
 
   const handleAddToPersonalList = (word: string) => {
-    console.log("Added \"" + word + "\" to personal word list");
+    console.log(`Added "${word}" to personal word list`);
     // In a real app, this would save to a personal word list
   };
 
   const handleSentenceImprovement = (original: string, improved: string) => {
-    console.log("Improve sentence: \"" + original + "\" -> \"" + improved + "\"");
+    console.log(`Improve sentence: "${original}" -> "${improved}"`);
     
     // Switch to Coach tab to show the feedback
     setTab("coach");
@@ -93,7 +93,7 @@ export function TabbedCoachPanel({
     // Add a chat message about the improvement
     const improvementMessage: FeedbackMessage = {
       id: Date.now().toString(),
-      text: String.fromCodePoint(0x1F4A1) + " **Sentence Improvement Applied!**\n\n**Original:** \"" + original + "\"\n\n**Improved:** \"" + improved + "\"\n\nThis enhancement makes your writing more sophisticated and engaging! Keep up the great work! " + String.fromCodePoint(0x1F3AF) + String.fromCodePoint(0x2728),
+      text: `💡 **Sentence Improvement Applied!**\n\n**Original:** "${original}"\n\n**Improved:** "${improved}"\n\nThis enhancement makes your writing more sophisticated and engaging! Keep up the great work! 🎯✨`,
       timestamp: new Date(),
       isUser: false,
       isFeedback: true
@@ -110,7 +110,7 @@ export function TabbedCoachPanel({
   };
 
   const handleContentChange = (newContent: string) => {
-    console.log("Content updated: " + newContent.length + " characters");
+    console.log(`Content updated: ${newContent.length} characters`);
     // In a real app, this would update the content state in the parent component
   };
 
@@ -143,7 +143,7 @@ export function TabbedCoachPanel({
       }
 
       const response = await generateChatResponse({
-        userMessage: "Please provide a brief, encouraging writing tip for this paragraph: \"" + paragraph + "\". Keep it under 50 words and focus on one specific improvement.",
+        userMessage: `Please provide a brief, encouraging writing tip for this paragraph: "${paragraph}". Keep it under 50 words and focus on one specific improvement.`,
         textType: textType,
         currentContent: paragraph,
         wordCount: paragraph.trim().split(/\s+/).length,
@@ -239,7 +239,7 @@ export function TabbedCoachPanel({
           const withoutTyping = prev.filter(msg => !msg.isTyping);
           return [...withoutTyping, {
             id: "coach-" + Date.now(),
-            text: `\u{2728} ${res.tip || getVariedFallbackTip(text, feedbackCount)}`,
+            text: `✨ ${res.tip || getVariedFallbackTip(text, feedbackCount)}`,
             timestamp: new Date(),
             isUser: false,
             isFeedback: true
@@ -253,7 +253,7 @@ export function TabbedCoachPanel({
           const withoutTyping = prev.filter(msg => !msg.isTyping);
           return [...withoutTyping, {
             id: "fallback-" + Date.now(),
-            text: `\u{2728} ${getVariedFallbackTip(text, feedbackCount)}`,
+            text: `✨ ${getVariedFallbackTip(text, feedbackCount)}`,
             timestamp: new Date(),
             isUser: false,
             isFeedback: true
@@ -272,14 +272,14 @@ export function TabbedCoachPanel({
   // Get varied fallback tips
   const getVariedFallbackTip = (text: string, count: number): string => {
     const tips = [
-      "Great progress! Try adding more descriptive details to paint a picture for your readers. \u{1F3A8}",
-      "Nice work! Consider adding dialogue to bring your characters to life. What might they say? \u{1F4AC}",
-      "You\"re doing well! Think about using stronger verbs to make your action more exciting. \u{26A1}",
-      "Good writing! Try to show emotions through actions rather than just telling us how characters feel. \u{1F60A}",
-      "Keep going! Add some sensory details - what can your character see, hear, or smell? \u{1F443}",
-      "Excellent! Consider varying your sentence lengths to create better rhythm in your writing. \u{1F3B5}",
-      "Well done! Think about adding a surprising detail that will hook your reader\"s attention. \u{1F3A3}",
-      "Great job! Try using more specific nouns instead of general ones to be more precise. \u{1F3AF}"
+      "Great progress! Try adding more descriptive details to paint a picture for your readers. 🎨",
+      "Nice work! Consider adding dialogue to bring your characters to life. What might they say? 💬",
+      "You're doing well! Think about using stronger verbs to make your action more exciting. ⚡",
+      "Good writing! Try to show emotions through actions rather than just telling us how characters feel. 😊",
+      "Keep going! Add some sensory details - what can your character see, hear, or smell? 👃",
+      "Excellent! Consider varying your sentence lengths to create better rhythm in your writing. 🎵",
+      "Well done! Think about adding a surprising detail that will hook your reader's attention. 🎣",
+      "Great job! Try using more specific nouns instead of general ones to be more precise. 🎯"
     ];
     
     return tips[count % tips.length];
@@ -357,11 +357,11 @@ export function TabbedCoachPanel({
 
   const generateAIResponse = (userMessage: string): string => {
     const responses = [
-      "That\"s a great question! \u{1F31F} To make your paragraph even more engaging, try adding a few descriptive words. For example, describe the sounds of the whispering or the colors of the flickering light. This will help readers feel more immersed in your magical forest! Keep it up!",
-      "What a captivating start! \u{1F3AD} To make your paragraph even more engaging, try adding a few descriptive words. For example, describe the sounds of the whispering or the colors of the flickering light. This will help readers feel more immersed in your magical forest! Keep it up!",
-      "I love your creativity! \u{2728} Try to identify sentences in your writing that could be improved using these techniques!",
-      "Great work! \u{1F4DD} Remember to vary your sentence length to keep readers engaged. Mix short, punchy sentences with longer, more descriptive ones.",
-      "Excellent progress! \u{1F680} Don\"t forget to use the \"show, don\"t tell\" technique - instead of saying \"he was scared\", describe his trembling hands or racing heart."
+      "That's a great question! 🌟 To make your paragraph even more engaging, try adding a few descriptive words. For example, describe the sounds of the whispering or the colors of the flickering light. This will help readers feel more immersed in your magical forest! Keep it up!",
+      "What a captivating start! 🎭 To make your paragraph even more engaging, try adding a few descriptive words. For example, describe the sounds of the whispering or the colors of the flickering light. This will help readers feel more immersed in your magical forest! Keep it up!",
+      "I love your creativity! ✨ Try to identify sentences in your writing that could be improved using these techniques!",
+      "Great work! 📝 Remember to vary your sentence length to keep readers engaged. Mix short, punchy sentences with longer, more descriptive ones.",
+      "Excellent progress! 🚀 Don't forget to use the \"show, don't tell\" technique - instead of saying \"he was scared\", describe his trembling hands or racing heart."
     ];
     return responses[Math.floor(Math.random() * responses.length)];
   };
@@ -409,7 +409,7 @@ export function TabbedCoachPanel({
                   <div className="px-4 py-2 border-b border-blue-200">
                     <div className="flex items-center space-x-2">
                       <Bot className="h-4 w-4 text-blue-600" />
-                      <h3 className="font-medium text-blue-800 text-sm">\u{1F4AC} Writing Buddy Chat</h3>
+                      <h3 className="font-medium text-blue-800 text-sm"><span role="img" aria-label="speech bubble">💬</span> Writing Buddy Chat</h3>
                     </div>
                   </div>
                   
@@ -419,22 +419,21 @@ export function TabbedCoachPanel({
                       {chatMessages.map((message) => (
                         <div key={message.id} className={`flex ${message.isUser ? "justify-end" : "justify-start"}`}>
                           <div className={`max-w-xs lg:max-w-md px-3 py-2 rounded-lg ${
-                            message.isUser 
-                              ? "bg-blue-600 text-white" 
+                            message.isUser
+                              ? "bg-blue-500 text-white rounded-br-none"
                               : message.isFeedback
-                                ? "bg-green-50 border border-green-200 text-green-800"
-                                : "bg-white border border-gray-200 text-gray-800"
+                                ? "bg-green-100 text-green-800 rounded-bl-none"
+                                : "bg-gray-100 text-gray-800 rounded-bl-none"
                           }`}>
-                            <div className="flex items-start space-x-2">
-                              {!message.isUser && (
-                                message.isTyping ? 
-                                  <Loader className="h-4 w-4 mt-0.5 text-blue-600 animate-spin" /> :
-                                  <Bot className={`h-4 w-4 mt-0.5 ${message.isFeedback ? "text-green-600" : "text-blue-600"}`} />
-                              )}
-                              <p className="text-sm" dangerouslySetInnerHTML={{ __html: message.text.replace(/\n/g, ")" }} />
-                            </div>
+                            {message.isFeedback && (
+                              <div className="flex items-center text-green-600 mb-1">
+                                <Bot className={`h-4 w-4 mt-0.5 ${message.isFeedback ? "text-green-600" : "text-blue-600"}`} />
+                                <span className="font-semibold ml-1">Coach Feedback</span>
+                              </div>
+                            )}
+                            <p className="text-sm whitespace-pre-wrap">{message.text}</p>
                             <span className={`block text-xs mt-1 ${message.isUser ? "text-blue-200" : "text-gray-500"}`}>
-                              {message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                              {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
                           </div>
                         </div>
@@ -443,32 +442,27 @@ export function TabbedCoachPanel({
                     </div>
 
                     {/* Chat Input */}
-                    <div className="flex-shrink-0 border-t border-blue-200 p-4">
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="text"
-                          className="flex-1 p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                          placeholder="Ask me anything about writing..."
-                          value={newMessage}
-                          onChange={(e) => setNewMessage(e.target.value)}
-                          onKeyPress={(e) => {
-                            if (e.key === "Enter") {
-                              handleSendMessage();
-                            }
-                          }}
-                          disabled={isAITyping}
-                        />
-                        <button
-                          onClick={handleSendMessage}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-                          disabled={isAITyping}
-                        >
-                          Send
-                        </button>
-                      </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        Feedback given: {feedbackCount} • Words: {content.split(" ").filter(w => w.length > 0).length} • Last: {lastFeedbackTime ? new Date(lastFeedbackTime).toLocaleTimeString() : "N/A"}
-                      </div>
+                    <div className="border-t border-gray-200 p-4 flex items-center">
+                      <input
+                        type="text"
+                        className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        placeholder="Ask your writing buddy a question..."
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            handleSendMessage();
+                          }
+                        }}
+                        disabled={isAITyping}
+                      />
+                      <button
+                        className="ml-2 px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-semibold hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        onClick={handleSendMessage}
+                        disabled={isAITyping}
+                      >
+                        Send
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -477,12 +471,12 @@ export function TabbedCoachPanel({
 
             {tab === "ideas" && ideasFeedback && (
               <div className="h-full overflow-auto p-4 space-y-4">
-                <h3 className="text-lg font-bold text-purple-700 mb-3">\u{1F4A1} Ideas & Content (30% of score)</h3>
+                <h3 className="text-lg font-bold text-purple-700 mb-3">💡 Ideas & Content (30% of score)</h3>
                 
                 {ideasFeedback.promptAnalysis.elements.length > 0 && (
                   <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
-                    <h4 className="font-semibold text-purple-800 mb-2">Prompt Elements to Cover:</h4>
-                    <ul className="list-disc list-inside text-sm text-purple-700 space-y-1">
+                    <h4 className="font-semibold text-purple-800 mb-2">Prompt Elements Covered:</h4>
+                    <ul>
                       {ideasFeedback.promptAnalysis.elements.map((element, index) => (
                         <li key={index} className={`flex items-center ${ideasFeedback.promptAnalysis.covered.includes(element) ? "text-green-600" : "text-red-600"}`}>
                           {ideasFeedback.promptAnalysis.covered.includes(element) ? <CheckCircle className="w-4 h-4 mr-2" /> : <AlertCircle className="w-4 h-4 mr-2" />}
@@ -490,20 +484,20 @@ export function TabbedCoachPanel({
                         </li>
                       ))}
                     </ul>
-                    {ideasFeedback.promptAnalysis.missing.length > 0 && (
-                      <p className="text-sm text-red-600 mt-2">Missing: {ideasFeedback.promptAnalysis.missing.join(", ")}</p>
-                    )}
                   </div>
                 )}
 
-                {ideasFeedback.feedback.length > 0 && (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                    <h4 className="font-semibold text-yellow-800 mb-2">Tips for Ideas & Content:</h4>
-                    <ul className="list-disc list-inside text-sm text-yellow-700 space-y-1">
-                      {ideasFeedback.feedback.map((tip, index) => (
-                        <li key={index}>{tip}</li>
-                      ))}
-                    </ul>
+                {ideasFeedback.creativityScore && (
+                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                    <h4 className="font-semibold text-purple-800 mb-2">Creativity Score: {ideasFeedback.creativityScore}/10</h4>
+                    <p className="text-sm text-purple-700">{ideasFeedback.creativityAnalysis}</p>
+                  </div>
+                )}
+
+                {ideasFeedback.originalityScore && (
+                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
+                    <h4 className="font-semibold text-purple-800 mb-2">Originality Score: {ideasFeedback.originalityScore}/10</h4>
+                    <p className="text-sm text-purple-700">{ideasFeedback.originalityAnalysis}</p>
                   </div>
                 )}
               </div>
@@ -511,7 +505,7 @@ export function TabbedCoachPanel({
 
             {tab === "structure" && structureFeedback && (
               <div className="h-full overflow-auto p-4 space-y-4">
-                <h3 className="text-lg font-bold text-green-700 mb-3">\u{1F4DA} Structure & Organization (25% of score)</h3>
+                <h3 className="text-lg font-bold text-green-700 mb-3">📚 Structure & Organization (25% of score)</h3>
                 
                 {structureFeedback.narrativeArc && (
                   <div className="bg-green-50 border border-green-200 rounded-lg p-3">
@@ -520,21 +514,17 @@ export function TabbedCoachPanel({
                   </div>
                 )}
 
-                {structureFeedback.paragraphTransitions.length > 0 && (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                    <h4 className="font-semibold text-yellow-800 mb-2">Paragraph Transitions:</h4>
-                    <ul className="list-disc list-inside text-sm text-yellow-700 space-y-1">
-                      {structureFeedback.paragraphTransitions.map((tip, index) => (
-                        <li key={index}>{tip}</li>
-                      ))}
-                    </ul>
+                {structureFeedback.cohesion && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                    <h4 className="font-semibold text-green-800 mb-2">Cohesion & Flow:</h4>
+                    <p className="text-sm text-green-700">{structureFeedback.cohesion}</p>
                   </div>
                 )}
 
-                {structureFeedback.pacingAdvice && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                    <h4 className="font-semibold text-blue-800 mb-2">Pacing Advice:</h4>
-                    <p className="text-sm text-blue-700">{structureFeedback.pacingAdvice}</p>
+                {structureFeedback.paragraphing && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                    <h4 className="font-semibold text-green-800 mb-2">Paragraphing:</h4>
+                    <p className="text-sm text-green-700">{structureFeedback.paragraphing}</p>
                   </div>
                 )}
               </div>
@@ -542,34 +532,30 @@ export function TabbedCoachPanel({
 
             {tab === "language" && languageFeedback && (
               <div className="h-full overflow-auto p-4 space-y-4">
-                <h3 className="text-lg font-bold text-orange-700 mb-3">\u{1F3A8} Language Features & Vocabulary (25% of score)</h3>
+                <h3 className="text-lg font-bold text-orange-700 mb-3">🎨 Language Features & Vocabulary (25% of score)</h3>
                 
                 {languageFeedback.figurativeLanguage.length > 0 && (
                   <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
                     <h4 className="font-semibold text-orange-800 mb-2">Figurative Language:</h4>
-                    <ul className="list-disc list-inside text-sm text-orange-700 space-y-1">
-                      {languageFeedback.figurativeLanguage.map((tip, index) => (
-                        <li key={index}>{tip}</li>
+                    <ul className="list-disc list-inside text-sm text-orange-700">
+                      {languageFeedback.figurativeLanguage.map((item, index) => (
+                        <li key={index}>{item}</li>
                       ))}
                     </ul>
                   </div>
                 )}
 
-                {languageFeedback.showDontTell.length > 0 && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                    <h4 className="font-semibold text-red-800 mb-2">"Show, Don't Tell" Tips:</h4>
-                    <ul className="list-disc list-inside text-sm text-red-700 space-y-1">
-                      {languageFeedback.showDontTell.map((tip, index) => (
-                        <li key={index}>{tip}</li>
-                      ))}
-                    </ul>
+                {languageFeedback.vocabularyVariety && (
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                    <h4 className="font-semibold text-orange-800 mb-2">Vocabulary Variety:</h4>
+                    <p className="text-sm text-orange-700">{languageFeedback.vocabularyVariety}</p>
                   </div>
                 )}
 
                 {languageFeedback.sentenceVariety && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                    <h4 className="font-semibold text-blue-800 mb-2">Sentence Variety:</h4>
-                    <p className="text-sm text-blue-700">{languageFeedback.sentenceVariety}</p>
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                    <h4 className="font-semibold text-orange-800 mb-2">Sentence Variety:</h4>
+                    <p className="text-sm text-orange-700">{languageFeedback.sentenceVariety}</p>
                   </div>
                 )}
               </div>
@@ -577,42 +563,30 @@ export function TabbedCoachPanel({
 
             {tab === "grammar" && grammarFeedback && (
               <div className="h-full overflow-auto p-4 space-y-4">
-                <h3 className="text-lg font-bold text-red-700 mb-3">\u{1F4DD} Spelling & Grammar (20% of score)</h3>
+                <h3 className="text-lg font-bold text-red-700 mb-3">📝 Spelling & Grammar (20% of score)</h3>
                 
                 {grammarFeedback.contextualErrors.length > 0 && (
                   <div className="bg-red-50 border border-red-200 rounded-lg p-3">
                     <h4 className="font-semibold text-red-800 mb-2">Contextual Errors:</h4>
-                    <ul className="list-disc list-inside text-sm text-red-700 space-y-1">
-                      {grammarFeedback.contextualErrors.map((error, index) => (
-                        <li key={index}>
-                          **Error:** {error.error} <br />
-                          **Suggestion:** {error.suggestion} <br />
-                          **Explanation:** {error.explanation}
-                        </li>
+                    <ul className="list-disc list-inside text-sm text-red-700">
+                      {grammarFeedback.contextualErrors.map((item, index) => (
+                        <li key={index}>{item}</li>
                       ))}
                     </ul>
                   </div>
                 )}
 
-                {grammarFeedback.punctuationTips.length > 0 && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                    <h4 className="font-semibold text-blue-800 mb-2">Punctuation Tips:</h4>
-                    <ul className="list-disc list-inside text-sm text-blue-700 space-y-1">
-                      {grammarFeedback.punctuationTips.map((tip, index) => (
-                        <li key={index}>{tip}</li>
-                      ))}
-                    </ul>
+                {grammarFeedback.punctuation && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                    <h4 className="font-semibold text-red-800 mb-2">Punctuation:</h4>
+                    <p className="text-sm text-red-700">{grammarFeedback.punctuation}</p>
                   </div>
                 )}
 
-                {grammarFeedback.commonErrors.length > 0 && (
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                    <h4 className="font-semibold text-yellow-800 mb-2">Common Errors:</h4>
-                    <ul className="list-disc list-inside text-sm text-yellow-700 space-y-1">
-                      {grammarFeedback.commonErrors.map((error, index) => (
-                        <li key={index}>{error}</li>
-                      ))}
-                    </ul>
+                {grammarFeedback.spelling && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                    <h4 className="font-semibold text-red-800 mb-2">Spelling:</h4>
+                    <p className="text-sm text-red-700">{grammarFeedback.spelling}</p>
                   </div>
                 )}
               </div>
@@ -620,24 +594,40 @@ export function TabbedCoachPanel({
 
             {tab === "toolkit" && (
               <div className="h-full overflow-auto p-4 space-y-4">
-                <h3 className="text-lg font-bold text-purple-700 mb-3">\u{1F6E0}\u{FE0F} Toolkit</h3>
+                <h3 className="text-lg font-bold text-purple-700 mb-3">🛠️ Toolkit</h3>
                 <div className="bg-white border border-gray-200 rounded-lg p-4">
                   <h4 className="font-semibold text-gray-800 mb-2">Rubric Panel</h4>
                   <RubricPanel analysis={analysis} togglePhase={togglePhase} expandedPhases={expandedPhases} />
                 </div>
-                <div className="bg-white border border-gray-200 rounded-lg p-4 mt-4">
+                <div className="bg-white border border-gray-200 rounded-lg p-4">
                   <h4 className="font-semibold text-gray-800 mb-2">Vocabulary Coach</h4>
-                  <VocabCoach content={content} onWordReplace={handleWordReplace} onAddToPersonalList={handleAddToPersonalList} />
+                  <VocabCoach onWordSelect={onWordSelect} />
                 </div>
-                <div className="bg-white border border-gray-200 rounded-lg p-4 mt-4">
-                  <h4 className="font-semibold text-gray-800 mb-2">Sentence Improvement Lab</h4>
-                  <SentenceImprovementPanel content={content} onImproveSentence={handleSentenceImprovement} />
+                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-800 mb-2">Sentence Improvement</h4>
+                  <SentenceImprovementPanel onImproveSentence={handleSentenceImprovement} />
+                </div>
+                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-800 mb-2">Full Report</h4>
+                  <button
+                    className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors"
+                    onClick={() => setShowFullReport(true)}
+                  >
+                    View Full Report
+                  </button>
                 </div>
               </div>
             )}
           </div>
         </div>
       </div>
+
+      {showFullReport && analysis && (
+        <ReportModal
+          analysis={analysis}
+          onClose={() => setShowFullReport(false)}
+        />
+      )}
     </>
   );
 }
