@@ -7,15 +7,15 @@ import { VocabSuggestionPanel } from "./VocabSuggestionPanel";
 import { SentenceImprovementPanel } from "./SentenceImprovementPanel";
 import { FeedbackChat } from "./FeedbackChat";
 import type { DetailedFeedback, LintFix } from "../types/feedback";
-import { generateChatResponse, checkOpenAIConnectionStatus } from "../lib/openai";
-import { detectWordThreshold, splitParas } from "../lib/paragraphDetection";
+import { generateChatResponse, checkOpenAIConnectionStatus } from '../lib/openai';
+import { detectWordThreshold, splitParas } from '../lib/paragraphDetection';
 import {
   ExternalLink, FileText, MessageSquare, BarChart3, BookOpen, TrendingUp, Bot, User, Lightbulb, Sparkles, ArrowRight, RefreshCcw, ChevronDown, ChevronUp, Loader,
   Zap, Layers, Palette, CheckCircle, AlertCircle
-} from "lucide-react";
+} from 'lucide-react';
 
 // Import the new feedback interfaces from EnhancedWritingLayout
-import type { IdeasFeedback, StructureFeedback, LanguageFeedback, GrammarFeedback } from "./EnhancedWritingLayout";
+import type { IdeasFeedback, StructureFeedback, LanguageFeedback, GrammarFeedback } from './EnhancedWritingLayout';
 
 type Props = {
   analysis: DetailedFeedback | null;
@@ -51,27 +51,27 @@ export function TabbedCoachPanel({
   languageFeedback,
   grammarFeedback,
 }: Props) {
-  const [tab, setTab] = useState<"coach" | "ideas" | "structure" | "language" | "grammar" | "toolkit">("coach");
+  const [tab, setTab] = useState<"coach" | "toolkit" | "ideas" | "structure" | "language" | "grammar">("coach");
   const [showFullReport, setShowFullReport] = useState(false);
   const [expandedPhases, setExpandedPhases] = useState<{ [key: string]: boolean }>({});
   const [chatMessages, setChatMessages] = useState<FeedbackMessage[]>([
     {
-      id: "1",
-      text: "Hi I'm your AI Writing Buddy! 🤖 I'm here to help you write amazing stories. Ask me anything about writing, or just start typing and I'll give you feedback!",
+      id: '1',
+      text: 'Hi I\'m your AI Writing Buddy! 🤖 I\'m here to help you write amazing stories. Ask me anything about writing, or just start typing and I\'ll give you feedback!',
       timestamp: new Date(),
       isUser: false
     }
   ]);
-  const [newMessage, setNewMessage] = useState("");
+  const [newMessage, setNewMessage] = useState('');
   
   // Automatic feedback state
   const [isAITyping, setIsAITyping] = useState(false);
   const [lastFeedbackTime, setLastFeedbackTime] = useState<number>(0);
   const [feedbackCount, setFeedbackCount] = useState<number>(0);
-  const [previousContent, setPreviousContent] = useState<string>("");
+  const [previousContent, setPreviousContent] = useState<string>('');
   
   // Refs for content monitoring
-  const contentMonitorRef = useRef<string>("");
+  const contentMonitorRef = useRef<string>('');
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   const handleWordReplace = (oldWord: string, newWord: string, position: number) => {
@@ -88,7 +88,7 @@ export function TabbedCoachPanel({
     console.log(`Improve sentence: "${original}" -> "${improved}"`);
     
     // Switch to Coach tab to show the feedback
-    setTab("coach");
+    setTab('coach');
     
     // Add a chat message about the improvement
     const improvementMessage: FeedbackMessage = {
@@ -104,7 +104,7 @@ export function TabbedCoachPanel({
     // Scroll to bottom after a brief delay to ensure the message is rendered
     setTimeout(() => {
       if (chatEndRef.current) {
-        chatEndRef.current.scrollIntoView({ behavior: "smooth" });
+        chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
       }
     }, 100);
   };
@@ -116,8 +116,8 @@ export function TabbedCoachPanel({
 
   // Content monitoring effect for automatic feedback
   useEffect(() => {
-    const safeContent = content || "";
-    const safePreviousContent = contentMonitorRef.current || "";
+    const safeContent = content || '';
+    const safePreviousContent = contentMonitorRef.current || '';
     
     if (safeContent !== safePreviousContent) {
       contentMonitorRef.current = safeContent;
@@ -131,15 +131,15 @@ export function TabbedCoachPanel({
   // Auto-scroll to bottom of chat
   useEffect(() => {
     if (chatEndRef.current) {
-      chatEndRef.current.scrollIntoView({ behavior: "smooth" });
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [chatMessages]);
 
   // Coach tip function
   const coachTip = async (paragraph: string) => {
     try {
-      if (!paragraph || typeof paragraph !== "string" || paragraph.trim().length === 0) {
-        throw new Error("Invalid paragraph provided");
+      if (!paragraph || typeof paragraph !== 'string' || paragraph.trim().length === 0) {
+        throw new Error('Invalid paragraph provided');
       }
 
       const response = await generateChatResponse({
@@ -147,12 +147,12 @@ export function TabbedCoachPanel({
         textType: textType,
         currentContent: paragraph,
         wordCount: paragraph.trim().split(/\s+/).length,
-        context: JSON.stringify({ type: "coach_tip" })
+        context: JSON.stringify({ type: 'coach_tip' })
       });
       
       return { tip: response };
     } catch (error) {
-      console.error("Coach tip error:", error);
+      console.error('Coach tip error:', error);
       throw error;
     }
   };
@@ -160,8 +160,8 @@ export function TabbedCoachPanel({
   // Analyze content changes for feedback triggers
   const analyzeFeedbackTrigger = async (prevContent: string, newContent: string) => {
     try {
-      const safePrevContent = prevContent || "";
-      const safeNewContent = newContent || "";
+      const safePrevContent = prevContent || '';
+      const safeNewContent = newContent || '';
       
       if (!safeNewContent || safeNewContent.trim().length === 0) {
         return;
@@ -192,7 +192,7 @@ export function TabbedCoachPanel({
       if (newParas.length > prevParas.length) {
         const completedParagraph = newParas[newParas.length - 2];
         if (completedParagraph && completedParagraph.trim().split(/\s+/).length >= 20) {
-          await provideFeedback(completedParagraph, "paragraph_completed");
+          await provideFeedback(completedParagraph, 'paragraph_completed');
           return;
         }
       }
@@ -204,7 +204,7 @@ export function TabbedCoachPanel({
 
       if (wordDifference >= 30 && newWords >= 50) {
         const currentParagraph = newParas[newParas.length - 1] || safeNewContent.slice(-200);
-        await provideFeedback(currentParagraph, "progress_milestone");
+        await provideFeedback(currentParagraph, 'progress_milestone');
       }
 
     } catch (error) {
@@ -215,7 +215,7 @@ export function TabbedCoachPanel({
   // Provide automatic feedback
   const provideFeedback = async (text: string, trigger: string) => {
     try {
-      if (!text || typeof text !== "string" || text.trim().length === 0) {
+      if (!text || typeof text !== 'string' || text.trim().length === 0) {
         return;
       }
 
@@ -223,11 +223,12 @@ export function TabbedCoachPanel({
       setLastFeedbackTime(Date.now());
 
       const typingMessage: FeedbackMessage = {
-        id: "typing-" + Date.now(),
-        text: "🤖 Reading your writing...",
+        id: 'typing-' + Date.now(),
+        text: '🤖 Reading your writing...',
         timestamp: new Date(),
         isUser: false,
-        isTyping: true
+        isTyping: true,
+        isFeedback: true
       };
       setChatMessages(prev => [...prev, typingMessage]);
 
@@ -238,7 +239,7 @@ export function TabbedCoachPanel({
         setChatMessages(prev => {
           const withoutTyping = prev.filter(msg => !msg.isTyping);
           return [...withoutTyping, {
-            id: "coach-" + Date.now(),
+            id: 'coach-' + Date.now(),
             text: `✨ ${res.tip || getVariedFallbackTip(text, feedbackCount)}`,
             timestamp: new Date(),
             isUser: false,
@@ -252,7 +253,7 @@ export function TabbedCoachPanel({
         setChatMessages(prev => {
           const withoutTyping = prev.filter(msg => !msg.isTyping);
           return [...withoutTyping, {
-            id: "fallback-" + Date.now(),
+            id: 'fallback-' + Date.now(),
             text: `✨ ${getVariedFallbackTip(text, feedbackCount)}`,
             timestamp: new Date(),
             isUser: false,
@@ -298,20 +299,20 @@ export function TabbedCoachPanel({
 
     // Add user message
     const userMessage: FeedbackMessage = {
-      id: "user-" + Date.now(),
+      id: 'user-' + Date.now(),
       text: message,
       timestamp: new Date(),
       isUser: true
     };
 
     setChatMessages(prev => [...prev, userMessage]);
-    setNewMessage("");
+    setNewMessage('');
     setIsAITyping(true);
 
     // Add typing indicator
     const typingMessage: FeedbackMessage = {
-      id: "typing-" + Date.now(),
-      text: "🤖 Thinking...",
+      id: 'typing-' + Date.now(),
+      text: '🤖 Thinking...',
       timestamp: new Date(),
       isUser: false,
       isTyping: true
@@ -323,28 +324,28 @@ export function TabbedCoachPanel({
         userMessage: message,
         textType: textType,
         currentContent: content,
-        wordCount: content.split(" ").filter(w => w.length > 0).length,
-        context: JSON.stringify({ type: "user_question" })
+        wordCount: content.split(' ').filter(w => w.length > 0).length,
+        context: JSON.stringify({ type: 'user_question' })
       });
 
       // Remove typing indicator and add real response
       setChatMessages(prev => {
         const withoutTyping = prev.filter(msg => !msg.isTyping);
         return [...withoutTyping, {
-          id: "ai-" + Date.now(),
+          id: 'ai-' + Date.now(),
           text: response || generateAIResponse(message),
           timestamp: new Date(),
           isUser: false
         }];
       });
     } catch (error) {
-      console.error("AI response error:", error);
+      console.error('AI response error:', error);
       
       // Remove typing indicator and add fallback response
       setChatMessages(prev => {
         const withoutTyping = prev.filter(msg => !msg.isTyping);
         return [...withoutTyping, {
-          id: "fallback-" + Date.now(),
+          id: 'fallback-' + Date.now(),
           text: generateAIResponse(message),
           timestamp: new Date(),
           isUser: false
@@ -361,13 +362,13 @@ export function TabbedCoachPanel({
       "What a captivating start! 🎭 To make your paragraph even more engaging, try adding a few descriptive words. For example, describe the sounds of the whispering or the colors of the flickering light. This will help readers feel more immersed in your magical forest! Keep it up!",
       "I love your creativity! ✨ Try to identify sentences in your writing that could be improved using these techniques!",
       "Great work! 📝 Remember to vary your sentence length to keep readers engaged. Mix short, punchy sentences with longer, more descriptive ones.",
-      "Excellent progress! 🚀 Don't forget to use the \"show, don't tell\" technique - instead of saying \"he was scared\", describe his trembling hands or racing heart."
+      "Excellent progress! 🚀 Don't forget to use the 'show, don't tell' technique - instead of saying 'he was scared', describe his trembling hands or racing heart."
     ];
     return responses[Math.floor(Math.random() * responses.length)];
   };
   
   const Tab = ({ id, label, icon: Icon }:{ 
-    id: "coach" | "ideas" | "structure" | "language" | "grammar" | "toolkit"; 
+    id: "coach" | "toolkit" | "ideas" | "structure" | "language" | "grammar"; 
     label: string;
     icon: React.ComponentType<any>;
   }) => (
@@ -401,38 +402,41 @@ export function TabbedCoachPanel({
 
         {/* Tab Content */}
         <div className="flex-1 p-4 overflow-hidden">
-          <div className="h-full rounded-xl bg-white text-gray-900 shadow-inner flex flex-col">
+          <div className="h-full rounded-xl bg-white text-gray-900 shadow-inner">
             {tab === "coach" && (
-              <div className="h-full overflow-auto p-4 space-y-4 flex flex-col">
+              <div className="h-full overflow-auto p-4 space-y-4">
                 {/* Writing Buddy Chat */}
-                <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg flex-1 flex flex-col">
+                <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg h-full flex flex-col">
                   <div className="px-4 py-2 border-b border-blue-200">
                     <div className="flex items-center space-x-2">
                       <Bot className="h-4 w-4 text-blue-600" />
-                      <h3 className="font-medium text-blue-800 text-sm"><span role="img" aria-label="speech bubble">💬</span> Writing Buddy Chat</h3>
+                      <h3 className="font-medium text-blue-800 text-sm">💬 Writing Buddy Chat</h3>
                     </div>
                   </div>
                   
                   <div className="flex-1 flex flex-col">
                     {/* Chat Messages - Expanded to fill available space */}
-                    <div className="flex-1 overflow-y-auto space-y-3 mb-3 p-4">
+                    <div className="flex-1 overflow-y-auto space-y-3 mb-3">
                       {chatMessages.map((message) => (
-                        <div key={message.id} className={`flex ${message.isUser ? "justify-end" : "justify-start"}`}>
+                        <div key={message.id} className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}>
                           <div className={`max-w-xs lg:max-w-md px-3 py-2 rounded-lg ${
-                            message.isUser
-                              ? "bg-blue-500 text-white rounded-br-none"
+                            message.isUser 
+                              ? 'bg-blue-600 text-white' 
                               : message.isFeedback
-                                ? "bg-green-100 text-green-800 rounded-bl-none"
-                                : "bg-gray-100 text-gray-800 rounded-bl-none"
+                                ? 'bg-green-50 border border-green-200 text-green-800'
+                                : 'bg-white border border-gray-200 text-gray-800'
                           }`}>
-                            {message.isFeedback && (
-                              <div className="flex items-center text-green-600 mb-1">
-                                <Bot className={`h-4 w-4 mt-0.5 ${message.isFeedback ? "text-green-600" : "text-blue-600"}`} />
-                                <span className="font-semibold ml-1">Coach Feedback</span>
-                              </div>
-                            )}
-                            <p className="text-sm whitespace-pre-wrap">{message.text}</p>
-                            <span className={`block text-xs mt-1 ${message.isUser ? "text-blue-200" : "text-gray-500"}`}>
+                            <div className="flex items-start space-x-2">
+                              {!message.isUser && (
+                                message.isTyping ? 
+                                  <Loader className="h-4 w-4 mt-0.5 text-blue-600 animate-spin" /> :
+                                  <Bot className={`h-4 w-4 mt-0.5 ${message.isFeedback ? 'text-green-600' : 'text-gray-600'}`} />
+                              )}
+                              <p className={`text-sm ${message.isUser ? 'text-white' : 'text-gray-800'}`}>
+                                {message.text}
+                              </p>
+                            </div>
+                            <span className={`block text-right text-xs mt-1 ${message.isUser ? 'text-blue-200' : 'text-gray-500'}`}>
                               {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
                           </div>
@@ -442,192 +446,226 @@ export function TabbedCoachPanel({
                     </div>
 
                     {/* Chat Input */}
-                    <div className="border-t border-gray-200 p-4 flex items-center">
-                      <input
-                        type="text"
-                        className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-                        placeholder="Ask your writing buddy a question..."
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        onKeyPress={(e) => {
-                          if (e.key === 'Enter') {
-                            handleSendMessage();
-                          }
-                        }}
-                        disabled={isAITyping}
-                      />
-                      <button
-                        className="ml-2 px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-semibold hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        onClick={handleSendMessage}
-                        disabled={isAITyping}
-                      >
-                        Send
-                      </button>
+                    <div className="border-t border-blue-200 p-3">
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="text"
+                          value={newMessage}
+                          onChange={(e) => setNewMessage(e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter' && !isAITyping) {
+                              handleSendMessage();
+                            }
+                          }}
+                          placeholder="Ask me anything about writing..."
+                          className="flex-1 p-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          disabled={isAITyping}
+                        />
+                        <button
+                          onClick={handleSendMessage}
+                          disabled={isAITyping || !newMessage.trim()}
+                          className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                        >
+                          Send
+                        </button>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Feedback given: {feedbackCount} • Words: {content.split(' ').filter(w => w.length > 0).length} • Last: {new Date(lastFeedbackTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                      {isAITyping && <p className="text-xs text-gray-500 mt-1">AI is typing...</p>}
                     </div>
                   </div>
                 </div>
               </div>
             )}
 
+            {/* Ideas Feedback Tab Content */}
             {tab === "ideas" && ideasFeedback && (
               <div className="h-full overflow-auto p-4 space-y-4">
-                <h3 className="text-lg font-bold text-purple-700 mb-3">💡 Ideas & Content (30% of score)</h3>
+                <h3 className="font-bold text-lg text-purple-800 flex items-center"><Zap className="w-5 h-5 mr-2" /> Ideas & Content (30% of score)</h3>
                 
                 {ideasFeedback.promptAnalysis.elements.length > 0 && (
                   <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
-                    <h4 className="font-semibold text-purple-800 mb-2">Prompt Elements Covered:</h4>
-                    <ul>
+                    <p className="font-semibold text-sm text-purple-700 mb-2">Prompt Elements to Cover:</p>
+                    <div className="space-y-1">
                       {ideasFeedback.promptAnalysis.elements.map((element, index) => (
-                        <li key={index} className={`flex items-center ${ideasFeedback.promptAnalysis.covered.includes(element) ? "text-green-600" : "text-red-600"}`}>
-                          {ideasFeedback.promptAnalysis.covered.includes(element) ? <CheckCircle className="w-4 h-4 mr-2" /> : <AlertCircle className="w-4 h-4 mr-2" />}
-                          {element}
+                        <div key={index} className="flex items-center space-x-2">
+                          <div className={`w-2 h-2 rounded-full ${
+                            ideasFeedback.promptAnalysis.covered.includes(element)
+                              ? 'bg-green-500'
+                              : 'bg-gray-400'
+                          }`} />
+                          <span className={`text-sm ${
+                            ideasFeedback.promptAnalysis.covered.includes(element)
+                              ? 'text-green-700'
+                              : 'text-gray-600'
+                          }`}>
+                            {element}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    {ideasFeedback.promptAnalysis.missing.length > 0 && (
+                      <div className="mt-3 p-2 bg-orange-100 border border-orange-300 rounded text-sm text-orange-800">
+                        <p className="font-semibold mb-1">💡 Consider adding:</p>
+                        <ul className="list-disc list-inside">
+                          {ideasFeedback.promptAnalysis.missing.map((element, index) => (
+                            <li key={index}>{element}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {ideasFeedback.feedback.length > 0 && (
+                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 space-y-2">
+                    <p className="font-semibold text-sm text-purple-700 mb-2">Tips for Ideas & Content:</p>
+                    {ideasFeedback.feedback.map((tip, index) => (
+                      <div key={index} className="text-sm p-2 bg-purple-100 border border-purple-300 rounded">
+                        {tip}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {!ideasFeedback.feedback.length && !ideasFeedback.promptAnalysis.elements.length && (
+                  <p className="text-gray-600">Start writing to get real-time feedback on your ideas and content!</p>
+                )}
+              </div>
+            )}
+
+            {/* Structure Feedback Tab Content */}
+            {tab === "structure" && structureFeedback && (
+              <div className="h-full overflow-auto p-4 space-y-4">
+                <h3 className="font-bold text-lg text-green-800 flex items-center"><Layers className="w-5 h-5 mr-2" /> Structure & Organization (25% of score)</h3>
+                
+                {structureFeedback.narrativeArc && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm">
+                    <p className="font-semibold text-green-700 mb-1">📖 Narrative Arc:</p>
+                    <p>{structureFeedback.narrativeArc}</p>
+                  </div>
+                )}
+
+                {structureFeedback.paragraphTransitions.length > 0 && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                    <p className="font-semibold text-green-700 mb-1">🔗 Paragraph Transitions:</p>
+                    <ul className="list-disc list-inside text-sm">
+                      {structureFeedback.paragraphTransitions.map((tip, index) => (
+                        <li key={index}>{tip}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {structureFeedback.pacingAdvice && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm">
+                    <p className="font-semibold text-green-700 mb-1">⚡ Pacing Advice:</p>
+                    <p>{structureFeedback.pacingAdvice}</p>
+                  </div>
+                )}
+                {!structureFeedback.narrativeArc && !structureFeedback.paragraphTransitions.length && !structureFeedback.pacingAdvice && (
+                  <p className="text-gray-600">Start writing to get real-time feedback on your story's structure and organization!</p>
+                )}
+              </div>
+            )}
+
+            {/* Language Feedback Tab Content */}
+            {tab === "language" && languageFeedback && (
+              <div className="h-full overflow-auto p-4 space-y-4">
+                <h3 className="font-bold text-lg text-orange-800 flex items-center"><Palette className="w-5 h-5 mr-2" /> Language Features & Vocabulary (25% of score)</h3>
+                
+                {languageFeedback.figurativeLanguage.length > 0 && (
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                    <p className="font-semibold text-orange-700 mb-1">🎨 Figurative Language Tips:</p>
+                    <ul className="list-disc list-inside text-sm">
+                      {languageFeedback.figurativeLanguage.map((tip, index) => (
+                        <li key={index}>{tip}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {languageFeedback.showDontTell.length > 0 && (
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
+                    <p className="font-semibold text-orange-700 mb-1">✨ Show, Don't Tell:</p>
+                    <ul className="list-disc list-inside text-sm">
+                      {languageFeedback.showDontTell.map((tip, index) => (
+                        <li key={index}>{tip}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {languageFeedback.sentenceVariety && (
+                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-sm">
+                    <p className="font-semibold text-orange-700 mb-1">📝 Sentence Variety:</p>
+                    <p>{languageFeedback.sentenceVariety}</p>
+                  </div>
+                )}
+                {!languageFeedback.figurativeLanguage.length && !languageFeedback.showDontTell.length && !languageFeedback.sentenceVariety && (
+                  <p className="text-gray-600">Start writing to get real-time feedback on your language features and vocabulary!</p>
+                )}
+              </div>
+            )}
+
+            {/* Grammar Feedback Tab Content */}
+            {tab === "grammar" && grammarFeedback && (
+              <div className="h-full overflow-auto p-4 space-y-4">
+                <h3 className="font-bold text-lg text-red-800 flex items-center"><CheckCircle className="w-5 h-5 mr-2" /> Spelling & Grammar (20% of score)</h3>
+                
+                {grammarFeedback.contextualErrors.length > 0 && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                    <p className="font-semibold text-red-700 mb-1">❌ Grammar Check:</p>
+                    <ul className="list-disc list-inside text-sm">
+                      {grammarFeedback.contextualErrors.map((error, index) => (
+                        <li key={index}>
+                          <strong>{error.error}:</strong> {error.explanation}<br />
+                          <strong>✅ Try:</strong> {error.suggestion}
                         </li>
                       ))}
                     </ul>
                   </div>
                 )}
 
-                {ideasFeedback.creativityScore && (
-                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
-                    <h4 className="font-semibold text-purple-800 mb-2">Creativity Score: {ideasFeedback.creativityScore}/10</h4>
-                    <p className="text-sm text-purple-700">{ideasFeedback.creativityAnalysis}</p>
-                  </div>
-                )}
-
-                {ideasFeedback.originalityScore && (
-                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
-                    <h4 className="font-semibold text-purple-800 mb-2">Originality Score: {ideasFeedback.originalityScore}/10</h4>
-                    <p className="text-sm text-purple-700">{ideasFeedback.originalityAnalysis}</p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {tab === "structure" && structureFeedback && (
-              <div className="h-full overflow-auto p-4 space-y-4">
-                <h3 className="text-lg font-bold text-green-700 mb-3">📚 Structure & Organization (25% of score)</h3>
-                
-                {structureFeedback.narrativeArc && (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                    <h4 className="font-semibold text-green-800 mb-2">Narrative Arc:</h4>
-                    <p className="text-sm text-green-700">{structureFeedback.narrativeArc}</p>
-                  </div>
-                )}
-
-                {structureFeedback.cohesion && (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                    <h4 className="font-semibold text-green-800 mb-2">Cohesion & Flow:</h4>
-                    <p className="text-sm text-green-700">{structureFeedback.cohesion}</p>
-                  </div>
-                )}
-
-                {structureFeedback.paragraphing && (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                    <h4 className="font-semibold text-green-800 mb-2">Paragraphing:</h4>
-                    <p className="text-sm text-green-700">{structureFeedback.paragraphing}</p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {tab === "language" && languageFeedback && (
-              <div className="h-full overflow-auto p-4 space-y-4">
-                <h3 className="text-lg font-bold text-orange-700 mb-3">🎨 Language Features & Vocabulary (25% of score)</h3>
-                
-                {languageFeedback.figurativeLanguage.length > 0 && (
-                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-                    <h4 className="font-semibold text-orange-800 mb-2">Figurative Language:</h4>
-                    <ul className="list-disc list-inside text-sm text-orange-700">
-                      {languageFeedback.figurativeLanguage.map((item, index) => (
-                        <li key={index}>{item}</li>
+                {grammarFeedback.punctuationTips.length > 0 && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                    <p className="font-semibold text-red-700 mb-1">💫 Punctuation for Effect:</p>
+                    <ul className="list-disc list-inside text-sm">
+                      {grammarFeedback.punctuationTips.map((tip, index) => (
+                        <li key={index}>{tip}</li>
                       ))}
                     </ul>
                   </div>
                 )}
 
-                {languageFeedback.vocabularyVariety && (
-                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-                    <h4 className="font-semibold text-orange-800 mb-2">Vocabulary Variety:</h4>
-                    <p className="text-sm text-orange-700">{languageFeedback.vocabularyVariety}</p>
-                  </div>
-                )}
-
-                {languageFeedback.sentenceVariety && (
-                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
-                    <h4 className="font-semibold text-orange-800 mb-2">Sentence Variety:</h4>
-                    <p className="text-sm text-orange-700">{languageFeedback.sentenceVariety}</p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {tab === "grammar" && grammarFeedback && (
-              <div className="h-full overflow-auto p-4 space-y-4">
-                <h3 className="text-lg font-bold text-red-700 mb-3">📝 Spelling & Grammar (20% of score)</h3>
-                
-                {grammarFeedback.contextualErrors.length > 0 && (
+                {grammarFeedback.commonErrors.length > 0 && (
                   <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                    <h4 className="font-semibold text-red-800 mb-2">Contextual Errors:</h4>
-                    <ul className="list-disc list-inside text-sm text-red-700">
-                      {grammarFeedback.contextualErrors.map((item, index) => (
-                        <li key={index}>{item}</li>
+                    <p className="font-semibold text-red-700 mb-1">💡 Writing Tips:</p>
+                    <ul className="list-disc list-inside text-sm">
+                      {grammarFeedback.commonErrors.map((error, index) => (
+                        <li key={index}>{error}</li>
                       ))}
                     </ul>
                   </div>
                 )}
-
-                {grammarFeedback.punctuation && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                    <h4 className="font-semibold text-red-800 mb-2">Punctuation:</h4>
-                    <p className="text-sm text-red-700">{grammarFeedback.punctuation}</p>
-                  </div>
-                )}
-
-                {grammarFeedback.spelling && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                    <h4 className="font-semibold text-red-800 mb-2">Spelling:</h4>
-                    <p className="text-sm text-red-700">{grammarFeedback.spelling}</p>
-                  </div>
+                {!grammarFeedback.contextualErrors.length && !grammarFeedback.punctuationTips.length && !grammarFeedback.commonErrors.length && (
+                  <p className="text-gray-600">Start writing to get real-time feedback on your spelling and grammar!</p>
                 )}
               </div>
             )}
 
             {tab === "toolkit" && (
               <div className="h-full overflow-auto p-4 space-y-4">
-                <h3 className="text-lg font-bold text-purple-700 mb-3">🛠️ Toolkit</h3>
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-gray-800 mb-2">Rubric Panel</h4>
-                  <RubricPanel analysis={analysis} togglePhase={togglePhase} expandedPhases={expandedPhases} />
-                </div>
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-gray-800 mb-2">Vocabulary Coach</h4>
-                  <VocabCoach onWordSelect={onWordSelect} />
-                </div>
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-gray-800 mb-2">Sentence Improvement</h4>
-                  <SentenceImprovementPanel onImproveSentence={handleSentenceImprovement} />
-                </div>
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <h4 className="font-semibold text-gray-800 mb-2">Full Report</h4>
-                  <button
-                    className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors"
-                    onClick={() => setShowFullReport(true)}
-                  >
-                    View Full Report
-                  </button>
-                </div>
+                <h3 className="font-bold text-lg text-gray-800 flex items-center"><BookOpen className="w-5 h-5 mr-2" /> Toolkit</h3>
+                <RubricPanel analysis={analysis} togglePhase={togglePhase} expandedPhases={expandedPhases} />
+                <VocabCoach content={content} onWordSelect={onWordSelect} />
+                <VocabSuggestionPanel content={content} onWordReplace={handleWordReplace} onAddToPersonalList={handleAddToPersonalList} />
+                <SentenceImprovementPanel content={content} onImproveSentence={handleSentenceImprovement} />
               </div>
             )}
           </div>
         </div>
       </div>
-
-      {showFullReport && analysis && (
-        <ReportModal
-          analysis={analysis}
-          onClose={() => setShowFullReport(false)}
-        />
-      )}
     </>
   );
 }
