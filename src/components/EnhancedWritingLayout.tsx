@@ -184,7 +184,7 @@ export function EnhancedWritingLayout({
     return { covered, missing };
   };
 
-  const generateIdeasFeedback = (content: string, prompt: string, elements: string[]) => {
+  const generateIdeasFeedback = (content: string, prompt: string, elements: string[]): IdeasFeedback => {
     const feedback: string[] = [];
     const wordCount = content.trim().split(/\s+/).length;
     if (content.length > 100) {
@@ -220,7 +220,7 @@ export function EnhancedWritingLayout({
       const currentStart = paragraphs[i].slice(0, 50).toLowerCase();
       const transitionWords = ['then', 'next', 'after', 'meanwhile', 'suddenly', 'later', 'finally'];
       if (!transitionWords.some(word => currentStart.includes(word))) {
-        transitions.push(`Consider adding a transition between paragraphs ${i} and ${i+1}. Try words like "Meanwhile," "After that," or "Suddenly,"");
+        transitions.push(`Consider adding a transition between paragraphs ${i} and ${i+1}. Try words like "Meanwhile," "After that," or "Suddenly,"`);
       }
     }
 
