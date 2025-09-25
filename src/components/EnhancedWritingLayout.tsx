@@ -45,34 +45,6 @@ interface EnhancedWritingLayoutProps {
   onNavigate: (page: string) => void;
 }
 
-// Enhanced feedback interfaces for coach panel integration
-export interface IdeasFeedback {
-  feedback: string[];
-  promptAnalysis: {
-    elements: string[];
-    covered: string[];
-    missing: string[];
-  };
-}
-
-export interface StructureFeedback {
-  narrativeArc: string;
-  paragraphTransitions: string[];
-  pacingAdvice: string;
-}
-
-export interface LanguageFeedback {
-  figurativeLanguage: string[];
-  showDontTell: string[];
-  sentenceVariety: string;
-}
-
-export interface GrammarFeedback {
-  contextualErrors: Array<{error: string, explanation: string, suggestion: string}>;
-  punctuationTips: string[];
-  commonErrors: string[];
-}
-
 export function EnhancedWritingLayout({
   content,
   onChange,
@@ -104,7 +76,6 @@ export function EnhancedWritingLayout({
   const [darkMode, setDarkMode] = useState(() => {
     return localStorage.getItem('writingDarkMode') === 'true';
   });
-  const [fullscreen, setFullscreen] = useState(false);
   
   // Enhanced NSW Evaluation States
   const [showNSWEvaluation, setShowNSWEvaluation] = useState<boolean>(false);
@@ -117,27 +88,6 @@ export function EnhancedWritingLayout({
 
   // Local content state to ensure we have the latest content
   const [localContent, setLocalContent] = useState<string>(content);
-
-  // Enhanced feedback states for coach panel integration
-  const [ideasFeedback, setIdeasFeedback] = useState<IdeasFeedback>({
-    feedback: [],
-    promptAnalysis: { elements: [], covered: [], missing: [] }
-  });
-  const [structureFeedback, setStructureFeedback] = useState<StructureFeedback>({
-    narrativeArc: '',
-    paragraphTransitions: [],
-    pacingAdvice: ''
-  });
-  const [languageFeedback, setLanguageFeedback] = useState<LanguageFeedback>({
-    figurativeLanguage: [],
-    showDontTell: [],
-    sentenceVariety: ''
-  });
-  const [grammarFeedback, setGrammarFeedback] = useState<GrammarFeedback>({
-    contextualErrors: [],
-    punctuationTips: [],
-    commonErrors: []
-  });
 
   // Font size options
   const fontSizes = [
@@ -168,253 +118,29 @@ export function EnhancedWritingLayout({
     localStorage.setItem('writingDarkMode', darkMode.toString());
   }, [darkMode]);
 
-  // Analyze prompt elements for Ideas & Content feedback (Recommendation 1)
-  const analyzePromptElements = (prompt: string) => {
-    const elements = [];
-    const lowerPrompt = prompt.toLowerCase();
-    
-    // Extract key elements from the prompt
-    if (lowerPrompt.includes('creature') || lowerPrompt.includes('character')) {
-      elements.push('Main character/creature description');
-    }
-    if (lowerPrompt.includes('world') || lowerPrompt.includes('place') || lowerPrompt.includes('setting')) {
-      elements.push('World/setting details');
-    }
-    if (lowerPrompt.includes('adventure') || lowerPrompt.includes('journey')) {
-      elements.push('Adventure/journey elements');
-    }
-    if (lowerPrompt.includes('challenge') || lowerPrompt.includes('problem')) {
-      elements.push('Challenges faced');
-    }
-    if (lowerPrompt.includes('lesson') || lowerPrompt.includes('learn')) {
-      elements.push('Lessons learned');
-    }
-    if (lowerPrompt.includes('friend') || lowerPrompt.includes('meet')) {
-      elements.push('New friendships/relationships');
-    }
-    if (lowerPrompt.includes('change') || lowerPrompt.includes('transform')) {
-      elements.push('Character transformation');
-    }
-
-    return elements;
-  };
-
-  // Check which prompt elements are covered in the content (Recommendation 1)
-  const checkPromptCoverage = (content: string, elements: string[]) => {
-    const lowerContent = content.toLowerCase();
-    const covered = [];
-    const missing = [];
-
-    elements.forEach(element => {
-      const keywords = element.toLowerCase().split('/');
-      const isCovered = keywords.some(keyword => 
-        keyword.split(' ').some(word => lowerContent.includes(word))
-      );
-      
-      if (isCovered) {
-        covered.push(element);
-      } else {
-        missing.push(element);
-      }
-    });
-
-    return { covered, missing };
-  };
-
-  // Generate Ideas & Content feedback (Recommendation 1)
-  const generateIdeasFeedback = (content: string, prompt: string) => {
-    const feedback = [];
-    const wordCount = content.trim().split(/\s+/).length;
-    
-    // Check for unique angles
-    if (content.length > 100) {
-      const commonWords = ['went', 'saw', 'found', 'then', 'suddenly'];
-      const hasCommonStarters = commonWords.some(word => 
-        content.toLowerCase().includes(word)
-      );
-      
-      if (hasCommonStarters) {
-        feedback.push("💡 Try starting with a more unique angle! Instead of 'I went' or 'I saw', consider beginning with dialogue, a sound, or an unusual detail.");
-      }
-    }
-
-    // Check for elaboration opportunities
-    if (wordCount < 150) {
-      feedback.push("🔍 Add more specific details! What does your magical creature look like? What sounds, smells, and textures are in this new world?");
-    }
-
-    // Check for sensory details
-    const sensoryWords = ['heard', 'smelled', 'felt', 'tasted', 'saw', 'sound', 'smell', 'touch'];
-    const hasSensoryDetails = sensoryWords.some(word => 
-      content.toLowerCase().includes(word)
-    );
-    
-    if (!hasSensoryDetails && content.length > 50) {
-      feedback.push("👂 Bring your story to life with sensory details! How does the magical world feel, smell, and sound?");
-    }
-
-    return feedback;
-  };
-
-  // Analyze narrative structure (Recommendation 2)
-  const analyzeNarrativeStructure = (content: string) => {
-    const paragraphs = content.split('\n\n').filter(p => p.trim().length > 0);
-    let narrativeArc = '';
-    const transitions = [];
-    let pacingAdvice = '';
-
-    // Analyze narrative arc
-    if (paragraphs.length === 1) {
-      narrativeArc = "Consider breaking your story into paragraphs. Try: Introduction → Rising Action → Climax → Resolution";
-    } else if (paragraphs.length === 2) {
-      narrativeArc = "Good start with paragraphs! Consider adding a middle section to build tension before your conclusion.";
-    } else if (paragraphs.length >= 3) {
-      narrativeArc = "Excellent paragraph structure! Make sure each paragraph moves your story forward.";
-    }
-
-    // Check transitions between paragraphs
-    for (let i = 1; i < paragraphs.length; i++) {
-      const prevEnd = paragraphs[i-1].slice(-50).toLowerCase();
-      const currentStart = paragraphs[i].slice(0, 50).toLowerCase();
-      
-      const transitionWords = ['then', 'next', 'after', 'meanwhile', 'suddenly', 'later', 'finally'];
-      const hasTransition = transitionWords.some(word => currentStart.includes(word));
-      
-      if (!hasTransition) {
-        transitions.push(`Consider adding a transition between paragraphs ${i} and ${i+1}. Try words like "Meanwhile," "After that," or "Suddenly,"`);
-      }
-    }
-
-    // Analyze pacing
-    const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 0);
-    const avgSentenceLength = content.length / sentences.length;
-    
-    if (avgSentenceLength > 100) {
-      pacingAdvice = "Try mixing in some shorter sentences to create better pacing and build tension.";
-    } else if (avgSentenceLength < 30) {
-      pacingAdvice = "Consider combining some short sentences with connecting words to improve flow.";
-    } else {
-      pacingAdvice = "Good sentence variety! This helps control the pace of your story.";
-    }
-
-    return { narrativeArc, paragraphTransitions: transitions, pacingAdvice };
-  };
-
-  // Analyze Language Features & Vocabulary (Recommendation 3)
-  const analyzeLanguageFeatures = (content: string) => {
-    const figurativeLanguage = [];
-    const showDontTell = [];
-    let sentenceVariety = '';
-
-    // Check for figurative language opportunities
-    const lowerContent = content.toLowerCase();
-    const figurativeWords = ['like', 'as', 'seemed', 'appeared', 'sounded'];
-    const hasFigurative = figurativeWords.some(word => lowerContent.includes(word));
-    
-    if (!hasFigurative && content.length > 100) {
-      figurativeLanguage.push("🎨 Try adding a simile! Compare your magical creature to something familiar. Example: 'The dragon's scales shimmered like emeralds in sunlight.'");
-    }
-    
-    if (!lowerContent.includes('whisper') && !lowerContent.includes('roar') && !lowerContent.includes('crash')) {
-      figurativeLanguage.push("🔊 Add some onomatopoeia! Words like 'whoosh,' 'crash,' or 'whisper' make your story come alive.");
-    }
-
-    // Check for "show don't tell" opportunities
-    const tellingWords = ['was scared', 'was happy', 'was sad', 'was angry', 'was excited'];
-    tellingWords.forEach(telling => {
-      if (lowerContent.includes(telling)) {
-        const emotion = telling.split(' ')[1];
-        showDontTell.push(`Instead of "was ${emotion}," show the emotion! Example: "Her hands trembled" instead of "she was scared."`);
-      }
-    });
-
-    // Analyze sentence variety
-    const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 0);
-    if (sentences.length > 3) {
-      const lengths = sentences.map(s => s.trim().split(' ').length);
-      const avgLength = lengths.reduce((a, b) => a + b, 0) / lengths.length;
-      const hasVariety = Math.max(...lengths) - Math.min(...lengths) > 5;
-      
-      if (!hasVariety) {
-        sentenceVariety = "Mix up your sentence lengths! Try combining short, punchy sentences with longer, descriptive ones.";
-      } else {
-        sentenceVariety = "Great sentence variety! This keeps your writing engaging.";
-      }
-    }
-
-    return { figurativeLanguage, showDontTell, sentenceVariety };
-  };
-
-  // Analyze Spelling & Grammar (Recommendation 4)
-  const analyzeGrammarSpelling = (content: string) => {
-    const contextualErrors = [];
-    const punctuationTips = [];
-    const commonErrors = [];
-
-    // Check for common 10-12 year old errors
-    const lowerContent = content.toLowerCase();
-    
-    // Subject-verb agreement
-    if (lowerContent.includes('they was') || lowerContent.includes('we was')) {
-      contextualErrors.push({
-        error: "Subject-verb disagreement",
-        explanation: "When the subject is plural (they, we), use 'were' not 'was'",
-        suggestion: "Change 'they was' to 'they were'"
-      });
-    }
-
-    // Run-on sentences (very basic check)
-    const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 0);
-    const longSentences = sentences.filter(s => s.split(' ').length > 25);
-    if (longSentences.length > 0) {
-      commonErrors.push("Some sentences are quite long. Try breaking them into shorter sentences for better flow.");
-    }
-
-    // Punctuation for effect opportunities
-    if (!content.includes('...') && content.length > 100) {
-      punctuationTips.push("💫 Try using ellipses (...) to create suspense: 'As I opened the door...'");
-    }
-    
-    if (!content.includes('—') && !content.includes(' - ')) {
-      punctuationTips.push("✨ Use dashes for emphasis: 'The creature was enormous—bigger than a house!'");
-    }
-
-    // Check for dialogue punctuation
-    if (content.includes('"') && !content.includes('," ') && !content.includes('." ')) {
-      commonErrors.push("Remember to put commas and periods inside quotation marks when writing dialogue.");
-    }
-
-    return { contextualErrors, punctuationTips, commonErrors };
-  };
-
   // Function to get the current prompt from localStorage or fallback
   const getCurrentPrompt = () => {
     try {
       // First check for a custom prompt from "Use My Own Idea"
       const customPrompt = localStorage.getItem("customPrompt");
       if (customPrompt && customPrompt.trim()) {
-        console.log("📝 getCurrentPrompt: Using Custom Prompt from localStorage:", customPrompt.substring(0, 50) + "...");
         return customPrompt;
       }
 
       // Then check for a generated prompt from Magical Prompt
       const magicalPrompt = localStorage.getItem("generatedPrompt");
       if (magicalPrompt && magicalPrompt.trim()) {
-        console.log("📝 getCurrentPrompt: Using Magical Prompt from localStorage:", magicalPrompt.substring(0, 50) + "...");
         return magicalPrompt;
       }
 
       // Check for text-type specific prompt
       const textTypePrompt = localStorage.getItem(`${textType.toLowerCase()}_prompt`);
       if (textTypePrompt && textTypePrompt.trim()) {
-        console.log("📝 getCurrentPrompt: Using text-type specific prompt:", textTypePrompt.substring(0, 50) + "...");
         return textTypePrompt;
       }
 
       // Fallback to default prompt
-      const fallbackPrompt = "The Secret Door in the Library: During a rainy afternoon, you decide to explore the dusty old library in your town that you've never visited before. As you wander through the aisles, you discover a hidden door behind a bookshelf. It's slightly ajar, and a faint, warm light spills out from the crack. What happens when you push the door open? Describe the world you enter and the adventures that await you inside. Who do you meet, and what challenges do you face? How does this experience change you by the time you return to the library? Let your imagination run wild as you take your reader on a journey through this mysterious door!";
-      console.log('📝 Using fallback prompt');
-      return fallbackPrompt;
+      return "The Secret Door in the Library: During a rainy afternoon, you decide to explore the dusty old library in your town that you've never visited before. As you wander through the aisles, you discover a hidden door behind a bookshelf. It's slightly ajar, and a faint, warm light spills out from the crack. What happens when you push the door open? Describe the world you enter and the adventures that await you inside. Who do you meet, and what challenges do you face? How does this experience change you by the time you return to the library? Let your imagination run wild as you take your reader on a journey through this mysterious door!";
     } catch (error) {
       console.error('Error getting current prompt:', error);
       return "Write an engaging story that captures your reader's imagination.";
@@ -424,65 +150,28 @@ export function EnhancedWritingLayout({
   // Initialize and sync prompt on component mount and when textType changes
   useEffect(() => {
     const prompt = getCurrentPrompt();
-    console.log("🔄 useEffect[textType]: Initializing/Syncing prompt.");
     setCurrentPrompt(prompt);
-    console.log("✅ useEffect[textType]: currentPrompt set to:", prompt.substring(0, 50) + "...");
-    
-    // Analyze prompt elements for Ideas & Content feedback
-    const elements = analyzePromptElements(prompt);
-    setIdeasFeedback(prev => ({ 
-      ...prev, 
-      promptAnalysis: { ...prev.promptAnalysis, elements }
-    }));
   }, [textType]);
 
   // Listen for localStorage changes (from other tabs/components)
   useEffect(() => {
     const handleStorageChange = (e: StorageEvent) => {
-      console.log('📡 handleStorageChange: Storage event detected. Key:', e.key, 'New Value:', e.newValue?.substring(0, 50) + '...');
       if (e.key === 'customPrompt' || e.key === 'generatedPrompt' || e.key === `${textType.toLowerCase()}_prompt`) {
-        console.log('📡 handleStorageChange: Relevant storage key changed. Updating prompt.');
         const newPrompt = getCurrentPrompt();
         setCurrentPrompt(newPrompt);
-        console.log('✅ handleStorageChange: currentPrompt set to:', newPrompt.substring(0, 50) + '...');
-        
-        // Update prompt analysis
-        const elements = analyzePromptElements(newPrompt);
-        setIdeasFeedback(prev => ({ 
-          ...prev, 
-          promptAnalysis: { ...prev.promptAnalysis, elements }
-        }));
       }
     };
 
     // Listen for custom events from Magical Prompt generation
     const handlePromptGenerated = (event: CustomEvent) => {
-      console.log("🎯 handlePromptGenerated: Custom event received. Detail:", event.detail);
       const newPrompt = getCurrentPrompt();
       setCurrentPrompt(newPrompt);
-      console.log("✅ handlePromptGenerated: currentPrompt set to:", newPrompt.substring(0, 50) + "...");
-      
-      // Update prompt analysis
-      const elements = analyzePromptElements(newPrompt);
-      setIdeasFeedback(prev => ({ 
-        ...prev, 
-        promptAnalysis: { ...prev.promptAnalysis, elements }
-      }));
     };
 
     // Listen for custom prompt creation events
     const handleCustomPromptCreated = (event: CustomEvent) => {
-      console.log("✏️ handleCustomPromptCreated: Custom prompt event received. Detail:", event.detail);
       const newPrompt = getCurrentPrompt();
       setCurrentPrompt(newPrompt);
-      console.log("✅ handleCustomPromptCreated: currentPrompt set to:", newPrompt.substring(0, 50) + "...");
-      
-      // Update prompt analysis
-      const elements = analyzePromptElements(newPrompt);
-      setIdeasFeedback(prev => ({ 
-        ...prev, 
-        promptAnalysis: { ...prev.promptAnalysis, elements }
-      }));
     };
 
     window.addEventListener('storage', handleStorageChange);
@@ -501,7 +190,7 @@ export function EnhancedWritingLayout({
     setLocalContent(content);
   }, [content]);
 
-  // Handle content changes from WritingArea
+  // Handle content changes
   const handleContentChange = (newContent: string) => {
     setLocalContent(newContent);
     onChange(newContent);
@@ -513,50 +202,18 @@ export function EnhancedWritingLayout({
     const words = currentContent.trim().split(/\s+/).filter(word => word.length > 0);
     setWordCount(words.length);
 
-    // Generate enhanced feedback based on all 4 recommendations
-    if (currentContent.length > 50) {
-      // Ideas & Content feedback (Recommendation 1)
-      const newIdeasFeedback = generateIdeasFeedback(currentContent, currentPrompt);
-      const coverage = checkPromptCoverage(currentContent, ideasFeedback.promptAnalysis.elements);
-      setIdeasFeedback(prev => ({
-        feedback: newIdeasFeedback,
-        promptAnalysis: { ...prev.promptAnalysis, ...coverage }
-      }));
-      
-      // Structure & Organization feedback (Recommendation 2)
-      const newStructureFeedback = analyzeNarrativeStructure(currentContent);
-      setStructureFeedback(newStructureFeedback);
-
-      // Language Features & Vocabulary feedback (Recommendation 3)
-      const newLanguageFeedback = analyzeLanguageFeatures(currentContent);
-      setLanguageFeedback(newLanguageFeedback);
-
-      // Spelling & Grammar feedback (Recommendation 4)
-      const newGrammarFeedback = analyzeGrammarSpelling(currentContent);
-      setGrammarFeedback(newGrammarFeedback);
-    }
-
     // Trigger coach feedback for new paragraphs
     const events = detectNewParagraphs(prevTextRef.current, currentContent);
     if (events.length) {
-      console.log("Emitting paragraph.ready event:", events[events.length - 1]);
       eventBus.emit("paragraph.ready", events[events.length - 1]);
     }
     prevTextRef.current = currentContent;
-  }, [localContent, content, currentPrompt, ideasFeedback.promptAnalysis.elements]);
+  }, [localContent, content]);
 
   // Enhanced NSW Evaluation Submit Handler
   const handleNSWSubmit = async (submittedContent?: string, submittedTextType?: string) => {
     const contentToEvaluate = submittedContent || localContent;
     const typeToEvaluate = submittedTextType || textType;
-
-    console.log("🎯 NSW Submit triggered from EnhancedWritingLayout");
-    console.log("Content check:", {
-      localContent: contentToEvaluate?.substring(0, 50) + "...",
-      propContent: content?.substring(0, 50) + "...",
-      hasContent: !!contentToEvaluate?.trim(),
-      contentLength: contentToEvaluate?.length || 0
-    });
 
     setEvaluationStatus("loading");
     setShowNSWEvaluation(true);
@@ -566,12 +223,6 @@ export function EnhancedWritingLayout({
       if (!contentToEvaluate || contentToEvaluate.trim().length === 0) {
         throw new Error("Please write some content before submitting for evaluation");
       }
-
-      console.log("NSW Evaluation initiated for:", {
-        text: contentToEvaluate.substring(0, 100) + "...",
-        textType: typeToEvaluate,
-        wordCount
-      });
 
       // Simulate progress updates for better user experience
       setTimeout(() => setEvaluationProgress("Evaluating ideas and creativity..."), 1000);
@@ -590,19 +241,18 @@ export function EnhancedWritingLayout({
 
   // Enhanced NSW evaluation completion handler
   const handleNSWEvaluationComplete = (report: any) => {
-    console.log("NSW Evaluation completed:", report);
     setNswReport(report);
     setEvaluationStatus("success");
     setShowNSWEvaluation(false);
     setEvaluationProgress("");
     setShowReportModal(true);
     
-    // Convert NSW report to DetailedFeedback format for compatibility with enhanced ReportModal
+    // Convert NSW report to DetailedFeedback format
     const convertedAnalysis: DetailedFeedback = {
       overallScore: report.overallScore || 0,
       criteria: {
         ideasContent: {
-          score: Math.round((report.domains?.contentAndIdeas?.score || 0) / 2), // Convert from 10-point to 5-point scale
+          score: Math.round((report.domains?.contentAndIdeas?.score || 0) / 2),
           weight: report.domains?.contentAndIdeas?.weight || 40,
           strengths: report.strengths?.filter((s: any) => s.area === "Creative Ideas") || 
                     [{ text: report.domains?.contentAndIdeas?.feedback?.[0] || "Good content development" }],
@@ -644,7 +294,6 @@ export function EnhancedWritingLayout({
   };
 
   const handleApplyFix = (fix: LintFix) => {
-    // Apply text fixes to content
     console.log('Applying fix:', fix);
   };
 
@@ -676,144 +325,76 @@ export function EnhancedWritingLayout({
 
   return (
     <div className={`flex h-screen transition-colors duration-300 ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
-      {/* OPTIMIZED LAYOUT - Full width utilization */}
-      
-      {/* Left side - Writing Area Content - Optimized spacing */}
-      <div className="flex-1 flex flex-col min-w-0 max-w-none"> 
-        {/* Enhanced Writing Prompt Section - Compact */}
-        <div className={`border-b p-3 shadow-sm transition-colors duration-300 ${
+      {/* Left side - Writing Area Content - Clean Layout */}
+      <div className="flex-1 flex flex-col min-w-0 max-w-none bg-white dark:bg-gray-800 rounded-lg m-4 shadow-lg overflow-hidden"> 
+        {/* Writing Prompt Section - Clean Card Style */}
+        <div className={`p-4 border-b transition-colors duration-300 ${
           darkMode 
-            ? 'bg-gradient-to-r from-blue-900/20 to-indigo-900/20 border-blue-800' 
-            : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200'
+            ? 'bg-gradient-to-r from-blue-900/10 to-indigo-900/10 border-blue-800/20' 
+            : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-100'
         }`}>
-          <div className="flex items-center mb-2">
-            <LightbulbIcon className={`w-5 h-5 mr-2 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
-            <h3 className={`font-bold text-base ${darkMode ? 'text-blue-200' : 'text-blue-800'}`}>Your Writing Prompt</h3>
-            <div className="ml-auto flex items-center space-x-2">
-              <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+          <div className="flex items-start mb-3">
+            <div className="flex items-center">
+              <LightbulbIcon className={`w-5 h-5 mr-2 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
+              <h3 className={`font-semibold text-base ${darkMode ? 'text-blue-200' : 'text-blue-800'}`}>
+                Your Writing Prompt
+              </h3>
+            </div>
+            <div className="ml-auto">
+              <span className={`text-xs px-3 py-1 rounded-full font-medium ${
                 darkMode 
-                  ? 'bg-blue-800 text-blue-200' 
-                  : 'bg-blue-100 text-blue-800'
+                  ? 'bg-blue-800/50 text-blue-200' 
+                  : 'bg-blue-100 text-blue-700'
               }`}>
                 {textType}
               </span>
             </div>
           </div>
-          
-          <div className={`text-sm leading-relaxed ${darkMode ? 'text-blue-100' : 'text-blue-900'}`}>
+          <p className={`leading-relaxed text-sm ${darkMode ? 'text-blue-100' : 'text-blue-900'}`}>
             {currentPrompt}
-          </div>
+          </p>
         </div>
 
-        {/* Original Buttons Section */}
-        <div className={`border-b px-3 py-2 transition-colors duration-300 ${
-          darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-        }`}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              {/* Plan Button */}
-              <button
-                onClick={() => setShowPlanningTool(true)}
-                className="flex items-center space-x-1 px-3 py-1 rounded-md text-sm font-medium bg-blue-500 text-white hover:bg-blue-600 transition-colors"
-                title="Planning Tool"
-              >
-                <PenTool className="w-4 h-4" />
-                <span>Plan</span>
-              </button>
-
-              {/* Exam Button */}
-              <button
-                onClick={() => setExamMode(!examMode)}
-                className={`flex items-center space-x-1 px-3 py-1 rounded-md text-sm font-medium ${
-                  examMode
-                    ? 'bg-red-500 text-white hover:bg-red-600'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                } transition-colors`}
-                title="Toggle Exam Mode"
-              >
-                <Play className="w-4 h-4" />
-                <span>Exam</span>
-              </button>
-
-              {/* Guide Button */}
-              <button
-                onClick={() => setShowStructureGuide(true)}
-                className="flex items-center space-x-1 px-3 py-1 rounded-md text-sm font-medium bg-green-500 text-white hover:bg-green-600 transition-colors"
-                title="Structure Guide"
-              >
-                <BookOpen className="w-4 h-4" />
-                <span>Guide</span>
-              </button>
-
-              {/* Tips Button */}
-              <button
-                onClick={() => setShowTips(true)}
-                className="flex items-center space-x-1 px-3 py-1 rounded-md text-sm font-medium bg-yellow-500 text-white hover:bg-yellow-600 transition-colors"
-                title="Writing Tips"
-              >
-                <LightbulbIcon className="w-4 h-4" />
-                <span>Tips</span>
-              </button>
-            </div>
-
-            {/* Word Count and Status */}
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <Type className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />
-                <span className={`text-sm font-medium ${
-                  showWordCountWarning 
-                    ? 'text-orange-600' 
-                    : darkMode ? 'text-gray-300' : 'text-gray-700'
-                }`}>
-                  {wordCount} words
-                </span>
-                {showWordCountWarning && (
-                  <AlertCircle className="w-4 h-4 text-orange-500" />
-                )}
-              </div>
-              
-              {examMode && (
-                <div className="flex items-center space-x-1 text-red-600">
-                  <Clock className="w-4 h-4" />
-                  <span className="text-sm font-medium">Exam Mode</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Enhanced Writing Controls - Compact */}
-        <div className={`border-b px-3 py-2 transition-colors duration-300 ${
+        {/* Font Controls Section - Clean and Organized */}
+        <div className={`px-4 py-3 border-b transition-colors duration-300 ${
           darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
         }`}>
           <div className="flex items-center justify-between">
             {/* Font Size Controls */}
             <div className="flex items-center space-x-2">
+              <Type className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />
+              <span className={`text-sm font-medium mr-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                Font Size:
+              </span>
               {fontSizes.map((size) => (
                 <button
                   key={size.value}
                   onClick={() => setFontSize(size.value)}
-                  className={`w-8 h-8 rounded text-xs font-medium transition-colors ${
+                  className={`px-2 py-1 text-sm font-medium rounded transition-colors ${
                     fontSize === size.value
-                      ? darkMode ? 'bg-blue-600 text-white' : 'bg-blue-500 text-white'
-                      : darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                      ? 'bg-blue-500 text-white shadow-sm'
+                      : darkMode
+                      ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
-                  title={size.name}
+                  title={`${size.name} (${size.value}px)`}
                 >
                   {size.label}
                 </button>
               ))}
             </div>
 
-            {/* Font Family and Theme Controls */}
-            <div className="flex items-center space-x-3">
-              {/* Font Family Selector */}
+            {/* Font Family and Mode Controls */}
+            <div className="flex items-center space-x-4">
+              {/* Font Family */}
               <div className="flex items-center space-x-2">
-                <span className={`text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Font:</span>
+                <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  Font Family:
+                </span>
                 <select
                   value={fontFamily}
                   onChange={(e) => setFontFamily(e.target.value)}
-                  className={`text-xs px-2 py-1 rounded border transition-colors ${
+                  className={`text-sm px-3 py-1 rounded border transition-colors ${
                     darkMode
                       ? 'bg-gray-700 border-gray-600 text-gray-200'
                       : 'bg-white border-gray-300 text-gray-700'
@@ -825,47 +406,136 @@ export function EnhancedWritingLayout({
                     </option>
                   ))}
                 </select>
+                <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  Traditional & elegant
+                </span>
               </div>
 
               {/* Focus Mode Toggle */}
-              <div className="flex items-center space-x-1">
-                <span className={`text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Focus:</span>
+              <div className="flex items-center space-x-2">
+                <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  Focus Mode:
+                </span>
                 <button
                   onClick={() => setFocusMode(!focusMode)}
-                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
                     focusMode ? 'bg-blue-600' : darkMode ? 'bg-gray-600' : 'bg-gray-300'
                   }`}
                 >
                   <span
-                    className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${
-                      focusMode ? 'translate-x-5' : 'translate-x-1'
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      focusMode ? 'translate-x-6' : 'translate-x-1'
                     }`}
                   />
                 </button>
               </div>
-
-              {/* Dark Mode Toggle */}
-              <button
-                onClick={() => setDarkMode(!darkMode)}
-                className={`flex items-center space-x-1 px-2 py-1 rounded transition-colors text-xs ${
-                  darkMode
-                    ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                {darkMode ? <Sun className="w-3 h-3" /> : <Moon className="w-3 h-3" />}
-                <span>{darkMode ? 'Light' : 'Dark'}</span>
-              </button>
             </div>
           </div>
         </div>
 
-        {/* Enhanced Writing Area - Full height utilization */}
-        <div className={`flex-1 transition-colors duration-300 ${
+        {/* Action Buttons Section - Clean Row */}
+        <div className={`px-4 py-3 border-b transition-colors duration-300 ${
+          darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+        }`}>
+          <div className="flex items-center justify-between">
+            {/* Action Buttons */}
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setShowPlanningTool(true)}
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium shadow-sm"
+              >
+                <PenTool className="w-4 h-4" />
+                <span>Planning</span>
+              </button>
+              
+              <button
+                onClick={() => setExamMode(!examMode)}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium shadow-sm ${
+                  examMode 
+                    ? 'bg-green-600 text-white hover:bg-green-700' 
+                    : 'bg-green-500 text-white hover:bg-green-600'
+                }`}
+              >
+                <Play className="w-4 h-4" />
+                <span>Exam</span>
+              </button>
+              
+              <button
+                onClick={() => setShowStructureGuide(true)}
+                className="flex items-center space-x-2 px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors text-sm font-medium shadow-sm"
+              >
+                <BookOpen className="w-4 h-4" />
+                <span>Structure</span>
+              </button>
+              
+              <button
+                onClick={() => setShowTips(true)}
+                className="flex items-center space-x-2 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm font-medium shadow-sm"
+              >
+                <LightbulbIcon className="w-4 h-4" />
+                <span>Tips</span>
+              </button>
+              
+              <button
+                onClick={() => setFocusMode(!focusMode)}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium shadow-sm ${
+                  focusMode 
+                    ? 'bg-gray-700 text-white hover:bg-gray-800' 
+                    : 'bg-gray-600 text-white hover:bg-gray-700'
+                }`}
+              >
+                {focusMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                <span>Focus</span>
+              </button>
+
+              <button
+                onClick={() => setDarkMode(!darkMode)}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors text-sm font-medium shadow-sm ${
+                  darkMode
+                    ? 'bg-gray-700 text-white hover:bg-gray-600'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                <span>Dark</span>
+              </button>
+            </div>
+
+            {/* Stats */}
+            <div className="flex items-center space-x-4 text-sm">
+              <div className="flex items-center space-x-1">
+                <FileText className={`w-4 h-4 ${darkMode ? 'text-blue-400' : 'text-blue-500'}`} />
+                <span className={`font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>
+                  {wordCount} words
+                </span>
+                {showWordCountWarning && (
+                  <AlertCircle className="w-4 h-4 text-orange-500" />
+                )}
+              </div>
+              
+              <div className="flex items-center space-x-1">
+                <Clock className={`w-4 h-4 ${darkMode ? 'text-orange-400' : 'text-orange-500'}`} />
+                <span className={`font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>
+                  0 WPM
+                </span>
+              </div>
+
+              {evaluationStatus === "success" && (
+                <div className="flex items-center space-x-1 text-green-600">
+                  <Award className="w-4 h-4" />
+                  <span className="font-medium text-sm">Evaluated</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Writing Area - Scrollable and Full Height */}
+        <div className={`flex-1 overflow-hidden transition-colors duration-300 ${
           darkMode ? 'bg-gray-800' : 'bg-white'
         } ${focusMode ? 'bg-opacity-95' : ''}`}>
           <textarea
-            className={`w-full h-full p-4 resize-none focus:outline-none transition-all duration-300 ${
+            className={`w-full h-full p-6 resize-none focus:outline-none transition-all duration-300 ${
               darkMode 
                 ? 'bg-transparent text-white placeholder-gray-400' 
                 : 'bg-transparent text-gray-900 placeholder-gray-500'
@@ -883,13 +553,15 @@ export function EnhancedWritingLayout({
               letterSpacing: '0.01em',
               textRendering: 'optimizeLegibility',
               WebkitFontSmoothing: 'antialiased',
-              MozOsxFontSmoothing: 'grayscale'
+              MozOsxFontSmoothing: 'grayscale',
+              scrollbarWidth: 'thin',
+              scrollbarColor: darkMode ? '#4B5563 #374151' : '#CBD5E1 #F1F5F9'
             }}
           />
         </div>
 
-        {/* Enhanced Submit Button - Compact */}
-        <div className={`border-t p-3 transition-colors duration-300 ${
+        {/* Submit Button */}
+        <div className={`p-4 border-t transition-colors duration-300 ${
           darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
         }`}>
           <button
@@ -912,20 +584,15 @@ export function EnhancedWritingLayout({
         </div>
       </div>
 
-      {/* Right side - Enhanced Coach Panel with integrated feedback */}
-      <div className={`w-96 border-l flex flex-col transition-colors duration-300 ${
-        darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+      {/* Right side - Coach Panel - Clean Card */}
+      <div className={`w-96 flex-shrink-0 m-4 ml-0 rounded-lg shadow-lg overflow-hidden transition-colors duration-300 ${
+        darkMode ? 'bg-gray-800' : 'bg-white'
       }`}>
         <TabbedCoachPanel 
           analysis={analysis} 
           onApplyFix={handleApplyFix}
           content={currentContent}
           textType={textType}
-          // Pass enhanced feedback data to coach panel
-          ideasFeedback={ideasFeedback}
-          structureFeedback={structureFeedback}
-          languageFeedback={languageFeedback}
-          grammarFeedback={grammarFeedback}
         />
       </div>
 
