@@ -35,7 +35,8 @@ import {
   Info,
   PlayCircle,
   PauseCircle,
-  RotateCcw
+  RotateCcw,
+  X
 } from 'lucide-react';
 
 interface EnhancedWritingLayoutProps {
@@ -72,7 +73,7 @@ export function EnhancedWritingLayout({
   const [focusMode, setFocusMode] = useState(false);
   const [evaluationStatus, setEvaluationStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   
-  // Timer states
+  // Timer states - Preserved from current implementation
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [startTime, setStartTime] = useState<number | null>(null);
@@ -105,7 +106,7 @@ export function EnhancedWritingLayout({
   // Local content state to ensure we have the latest content
   const [localContent, setLocalContent] = useState<string>(content);
 
-  // Timer functions
+  // Timer functions - Preserved from current implementation
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
@@ -465,29 +466,27 @@ export function EnhancedWritingLayout({
                 <PenTool className="w-4 h-4" />
                 <span>Planning</span>
               </button>
-
+              
               <button
                 onClick={() => setExamMode(!examMode)}
                 className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
-                  examMode
-                    ? 'bg-red-500 text-white hover:bg-red-600'
-                    : darkMode
-                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  examMode 
+                    ? 'bg-green-600 text-white hover:bg-green-700' 
+                    : 'bg-green-500 text-white hover:bg-green-600'
                 }`}
               >
                 <Play className="w-4 h-4" />
                 <span>Exam</span>
               </button>
-
+              
               <button
                 onClick={() => setShowStructureGuide(true)}
-                className="flex items-center space-x-1 px-3 py-1.5 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors text-sm font-medium"
+                className="flex items-center space-x-1 px-3 py-1.5 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition-colors text-sm font-medium"
               >
                 <BookOpen className="w-4 h-4" />
-                <span>Guide</span>
+                <span>Structure</span>
               </button>
-
+              
               <button
                 onClick={() => setShowTips(true)}
                 className="flex items-center space-x-1 px-3 py-1.5 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors text-sm font-medium"
@@ -495,14 +494,38 @@ export function EnhancedWritingLayout({
                 <LightbulbIcon className="w-4 h-4" />
                 <span>Tips</span>
               </button>
+              
+              <button
+                onClick={() => setFocusMode(!focusMode)}
+                className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
+                  focusMode 
+                    ? 'bg-gray-700 text-white hover:bg-gray-800' 
+                    : 'bg-gray-600 text-white hover:bg-gray-700'
+                }`}
+              >
+                {focusMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                <span>Focus</span>
+              </button>
             </div>
 
-            {/* Right: Stats with Prominent Timer */}
-            <div className="flex items-center space-x-4 text-sm">
-              {/* Writing Timer - Enhanced Prominence */}
-              <div className="flex items-center space-x-2 p-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 shadow-sm">
-                <Clock className={`w-6 h-6 ${darkMode ? 'text-blue-300' : 'text-blue-600'}`} />
-                <span className={`text-xl font-extrabold font-mono ${isTimerRunning ? 'text-green-500 animate-pulse' : darkMode ? 'text-gray-100' : 'text-gray-800'}`}>
+            {/* Right: Enhanced Timer, Stats and Settings */}
+            <div className="flex items-center space-x-3">
+              {/* Enhanced Writing Timer */}
+              <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg border shadow-sm ${
+                darkMode 
+                  ? 'border-gray-600 bg-gray-700' 
+                  : 'border-gray-300 bg-gray-50'
+              }`}>
+                <Clock className={`w-5 h-5 ${
+                  isTimerRunning 
+                    ? 'text-green-500' 
+                    : darkMode ? 'text-blue-400' : 'text-blue-600'
+                }`} />
+                <span className={`text-lg font-bold font-mono ${
+                  isTimerRunning 
+                    ? 'text-green-500' 
+                    : darkMode ? 'text-gray-100' : 'text-gray-800'
+                }`}>
                   {formatTime(elapsedTime)}
                 </span>
                 
@@ -511,40 +534,51 @@ export function EnhancedWritingLayout({
                   {!isTimerRunning ? (
                     <button
                       onClick={startTimer}
-                      className={`p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 ${
-                        darkMode ? 'text-gray-400' : 'text-gray-600'
-                      } transition-colors`}
+                      className={`p-1 rounded-full transition-colors ${
+                        darkMode 
+                          ? 'hover:bg-gray-600 text-gray-400' 
+                          : 'hover:bg-gray-200 text-gray-600'
+                      }`}
                       title="Start Timer"
                     >
-                      <PlayCircle className="w-5 h-5" />
+                      <PlayCircle className="w-4 h-4" />
                     </button>
                   ) : (
                     <button
                       onClick={pauseTimer}
-                      className={`p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 ${
-                        darkMode ? 'text-gray-400' : 'text-gray-600'
-                      } transition-colors`}
+                      className={`p-1 rounded-full transition-colors ${
+                        darkMode 
+                          ? 'hover:bg-gray-600 text-gray-400' 
+                          : 'hover:bg-gray-200 text-gray-600'
+                      }`}
                       title="Pause Timer"
                     >
-                      <PauseCircle className="w-5 h-5" />
+                      <PauseCircle className="w-4 h-4" />
                     </button>
                   )}
                   
                   <button
                     onClick={resetTimer}
-                    className={`p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 ${
-                      darkMode ? 'text-gray-400' : 'text-gray-600'
-                    } transition-colors`}
+                    className={`p-1 rounded-full transition-colors ${
+                      darkMode 
+                        ? 'hover:bg-gray-600 text-gray-400' 
+                        : 'hover:bg-gray-200 text-gray-600'
+                    }`}
                     title="Reset Timer"
                   >
-                    <RotateCcw className="w-5 h-5" />
+                    <RotateCcw className="w-4 h-4" />
                   </button>
                 </div>
               </div>
 
+              {/* Word Count */}
               <div className="flex items-center space-x-1">
                 <FileText className={`w-4 h-4 ${darkMode ? 'text-blue-400' : 'text-blue-500'}`} />
-                <span className={`font-medium ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>
+                <span className={`text-sm font-medium ${
+                  showWordCountWarning 
+                    ? 'text-orange-600' 
+                    : darkMode ? 'text-gray-300' : 'text-gray-700'
+                }`}>
                   {wordCount} words
                 </span>
                 {showWordCountWarning && (
@@ -552,19 +586,27 @@ export function EnhancedWritingLayout({
                 )}
               </div>
 
-              {evaluationStatus === "success" && (
-                <div className="flex items-center space-x-1 text-green-600">
-                  <Award className="w-4 h-4" />
-                  <span className="font-medium text-sm">Evaluated</span>
-                </div>
-              )}
+              {/* Settings Toggle */}
+              <button
+                onClick={() => setShowSettings(!showSettings)}
+                className={`p-2 rounded-md transition-colors ${
+                  showSettings
+                    ? 'bg-blue-500 text-white'
+                    : darkMode
+                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+                title="Writing Settings"
+              >
+                <Settings className="w-4 h-4" />
+              </button>
             </div>
           </div>
 
-          {/* Settings Panel - Collapsible */}
+          {/* Collapsible Settings Panel - UX Improvement */}
           {showSettings && (
             <div className={`border-t px-4 py-3 transition-colors duration-300 ${
-              darkMode ? 'border-gray-700 bg-gray-800/50' : 'border-gray-200 bg-gray-50'
+              darkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
             }`}>
               <div className="flex items-center justify-between mb-3">
                 <h4 className={`font-medium text-sm ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
@@ -572,13 +614,13 @@ export function EnhancedWritingLayout({
                 </h4>
                 <button
                   onClick={() => setShowSettings(false)}
-                  className={`text-sm px-2 py-1 rounded transition-colors ${
+                  className={`p-1 rounded-full transition-colors ${
                     darkMode
-                      ? 'text-gray-400 hover:text-gray-200'
-                      : 'text-gray-600 hover:text-gray-800'
+                      ? 'text-gray-400 hover:text-gray-200 hover:bg-gray-700'
+                      : 'text-gray-600 hover:text-gray-800 hover:bg-gray-200'
                   }`}
                 >
-                  Close
+                  <X className="w-4 h-4" />
                 </button>
               </div>
               
@@ -593,9 +635,9 @@ export function EnhancedWritingLayout({
                       <button
                         key={size.value}
                         onClick={() => setFontSize(size.value)}
-                        className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
+                        className={`px-2 py-1 text-sm font-medium rounded transition-colors ${
                           fontSize === size.value
-                            ? 'bg-blue-500 text-white'
+                            ? 'bg-blue-500 text-white shadow-sm'
                             : darkMode
                             ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                             : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
