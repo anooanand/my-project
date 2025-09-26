@@ -114,7 +114,7 @@ export function EnhancedWritingLayout({
     if (hours > 0) {
       return `${hours}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
     }
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
   const startTimer = () => {
@@ -497,16 +497,12 @@ export function EnhancedWritingLayout({
               </button>
             </div>
 
-            {/* Right: Stats with Timer */}
+            {/* Right: Stats with Prominent Timer */}
             <div className="flex items-center space-x-4 text-sm">
-              {/* Writing Timer */}
-              <div className="flex items-center space-x-2">
-                <Clock className={`w-4 h-4 ${darkMode ? 'text-blue-400' : 'text-blue-500'}`} />
-                <span className={`font-mono font-medium ${
-                  isTimerRunning 
-                    ? 'text-green-600' 
-                    : darkMode ? 'text-gray-200' : 'text-gray-700'
-                }`}>
+              {/* Writing Timer - Enhanced Prominence */}
+              <div className="flex items-center space-x-2 p-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 shadow-sm">
+                <Clock className={`w-6 h-6 ${darkMode ? 'text-blue-300' : 'text-blue-600'}`} />
+                <span className={`text-xl font-extrabold font-mono ${isTimerRunning ? 'text-green-500 animate-pulse' : darkMode ? 'text-gray-100' : 'text-gray-800'}`}>
                   {formatTime(elapsedTime)}
                 </span>
                 
@@ -515,33 +511,33 @@ export function EnhancedWritingLayout({
                   {!isTimerRunning ? (
                     <button
                       onClick={startTimer}
-                      className={`p-1 rounded hover:bg-gray-200 ${
-                        darkMode ? 'hover:bg-gray-700 text-gray-400' : 'text-gray-600'
+                      className={`p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 ${
+                        darkMode ? 'text-gray-400' : 'text-gray-600'
                       } transition-colors`}
                       title="Start Timer"
                     >
-                      <PlayCircle className="w-4 h-4" />
+                      <PlayCircle className="w-5 h-5" />
                     </button>
                   ) : (
                     <button
                       onClick={pauseTimer}
-                      className={`p-1 rounded hover:bg-gray-200 ${
-                        darkMode ? 'hover:bg-gray-700 text-gray-400' : 'text-gray-600'
+                      className={`p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 ${
+                        darkMode ? 'text-gray-400' : 'text-gray-600'
                       } transition-colors`}
                       title="Pause Timer"
                     >
-                      <PauseCircle className="w-4 h-4" />
+                      <PauseCircle className="w-5 h-5" />
                     </button>
                   )}
                   
                   <button
                     onClick={resetTimer}
-                    className={`p-1 rounded hover:bg-gray-200 ${
-                      darkMode ? 'hover:bg-gray-700 text-gray-400' : 'text-gray-600'
+                    className={`p-1.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 ${
+                      darkMode ? 'text-gray-400' : 'text-gray-600'
                     } transition-colors`}
                     title="Reset Timer"
                   >
-                    <RotateCcw className="w-4 h-4" />
+                    <RotateCcw className="w-5 h-5" />
                   </button>
                 </div>
               </div>
