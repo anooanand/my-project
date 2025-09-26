@@ -40,6 +40,37 @@ import {
   X
 } from 'lucide-react';
 
+// Define feedback interfaces
+export interface IdeasFeedback {
+  promptAnalysis: {
+    elements: string[];
+    missing: string[];
+  };
+  feedback: string[];
+}
+
+export interface StructureFeedback {
+  narrativeArc?: string;
+  paragraphTransitions: string[];
+  pacingAdvice?: string;
+}
+
+export interface LanguageFeedback {
+  figurativeLanguage: string[];
+  showDontTell: string[];
+  sentenceVariety?: string;
+}
+
+export interface GrammarFeedback {
+  contextualErrors: Array<{
+    error: string;
+    explanation: string;
+    suggestion: string;
+  }>;
+  punctuationTips: string[];
+  commonErrors: string[];
+}
+
 interface EnhancedWritingLayoutProps {
   content: string;
   onChange: (content: string) => void;
@@ -106,6 +137,118 @@ export function EnhancedWritingLayout({
 
   // Local content state to ensure we have the latest content
   const [localContent, setLocalContent] = useState<string>(content);
+
+  // Feedback states for TabbedCoachPanel
+  const [ideasFeedback, setIdeasFeedback] = useState<IdeasFeedback>({
+    promptAnalysis: {
+      elements: [
+        "Setting description",
+        "Character development", 
+        "Plot progression",
+        "Dialogue usage",
+        "Descriptive language"
+      ],
+      missing: []
+    },
+    feedback: [
+      "Great start! Try adding more sensory details to help readers visualize your story world.",
+      "Consider developing your characters' emotions and motivations more deeply.",
+      "Your plot has good potential - think about adding some unexpected twists!"
+    ]
+  });
+
+  const [structureFeedback, setStructureFeedback] = useState<StructureFeedback>({
+    narrativeArc: "Your story has a clear beginning. Consider developing the middle conflict and resolution more fully.",
+    paragraphTransitions: [
+      "Use transition words like 'Meanwhile', 'Suddenly', or 'Later' to connect your paragraphs",
+      "Try starting new paragraphs when the scene, time, or speaker changes",
+      "Consider using bridge sentences that link one idea to the next"
+    ],
+    pacingAdvice: "Vary your sentence lengths to create rhythm - mix short, punchy sentences with longer descriptive ones."
+  });
+
+  const [languageFeedback, setLanguageFeedback] = useState<LanguageFeedback>({
+    figurativeLanguage: [
+      "Try using similes: 'The wind howled like a wild animal'",
+      "Add metaphors: 'Her voice was music to his ears'",
+      "Use personification: 'The trees danced in the breeze'"
+    ],
+    showDontTell: [
+      "Instead of 'He was scared', try 'His hands trembled and his heart raced'",
+      "Rather than 'It was beautiful', describe what makes it beautiful",
+      "Show emotions through actions and dialogue rather than stating them directly"
+    ],
+    sentenceVariety: "Great job mixing different sentence types! Try adding more complex sentences with clauses."
+  });
+
+  const [grammarFeedback, setGrammarFeedback] = useState<GrammarFeedback>({
+    contextualErrors: [
+      {
+        error: "Subject-verb agreement",
+        explanation: "Make sure singular subjects have singular verbs",
+        suggestion: "The dog runs (not 'run') in the park"
+      }
+    ],
+    punctuationTips: [
+      "Use commas to separate items in a list",
+      "Put periods inside quotation marks in dialogue",
+      "Use exclamation points sparingly for maximum impact"
+    ],
+    commonErrors: [
+      "Check for run-on sentences - break them into shorter ones",
+      "Make sure each sentence has a subject and verb",
+      "Watch out for commonly confused words like 'there/their/they're'"
+    ]
+  });
+
+  // Update feedback based on content changes
+  useEffect(() => {
+    const currentContent = localContent || content;
+    const words = currentContent.trim().split(/\s+/).filter(word => word.length > 0);
+    const wordCount = words.length;
+    
+    // Update ideas feedback based on content
+    if (wordCount > 0) {
+      const hasDialogue = currentContent.includes('"') || currentContent.includes("'");
+      const hasDescriptiveWords = /\b(beautiful|amazing|wonderful|terrible|huge|tiny|bright|dark)\b/i.test(currentContent);
+      
+      setIdeasFeedback(prev => ({
+        ...prev,
+        promptAnalysis: {
+          ...prev.promptAnalysis,
+          missing: [
+            ...(!hasDialogue ? ["Add dialogue to bring characters to life"] : []),
+            ...(!hasDescriptiveWords ? ["Include more descriptive adjectives"] : [])
+          ]
+        }
+      }));
+    }
+
+    // Update structure feedback
+    const paragraphs = currentContent.split('\n\n').filter(p => p.trim().length > 0);
+    if (paragraphs.length > 1) {
+      setStructureFeedback(prev => ({
+        ...prev,
+        narrativeArc: `Good progress! You have ${paragraphs.length} paragraphs. Consider how each one builds your story.`
+      }));
+    }
+
+    // Update language feedback
+    const sentences = currentContent.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    const avgSentenceLength = sentences.length > 0 ? wordCount / sentences.length : 0;
+    
+    if (avgSentenceLength > 0) {
+      setLanguageFeedback(prev => ({
+        ...prev,
+        sentenceVariety: avgSentenceLength > 15 
+          ? "Try mixing in some shorter sentences for better flow"
+          : avgSentenceLength < 8
+          ? "Consider combining some short sentences for variety"
+          : "Great sentence variety! Keep it up!"
+      }));
+    }
+
+  }, [localContent, content]);
 
   // Timer functions - Preserved from current implementation
   const formatTime = (seconds: number) => {
@@ -420,60 +563,48 @@ export function EnhancedWritingLayout({
               <h3 className={`font-semibold text-base ${darkMode ? 'text-blue-200' : 'text-blue-800'}`}>
                 Your Writing Prompt
               </h3>
-              <span className={`ml-3 text-xs px-2 py-1 rounded-full font-medium ${
-                darkMode 
-                  ? 'bg-blue-800/50 text-blue-200' 
-                  : 'bg-blue-100 text-blue-700'
+              <span className={`ml-3 text-xs px-2 py-1 rounded-full ${
+                darkMode ? 'bg-blue-800/50 text-blue-200' : 'bg-blue-200 text-blue-800'
               }`}>
                 {textType}
               </span>
             </div>
             
-            {/* Kid-Friendly Show/Hide Button */}
             <button
               onClick={() => setIsPromptCollapsed(!isPromptCollapsed)}
-              className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg font-medium text-sm transition-all duration-200 hover:scale-105 ${
-                isPromptCollapsed
-                  ? darkMode 
-                    ? 'bg-green-600 hover:bg-green-700 text-white' 
-                    : 'bg-green-500 hover:bg-green-600 text-white'
-                  : darkMode
-                  ? 'bg-orange-600 hover:bg-orange-700 text-white'
-                  : 'bg-orange-500 hover:bg-orange-600 text-white'
+              className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
+                darkMode
+                  ? 'text-blue-300 hover:text-blue-100 hover:bg-blue-800/30'
+                  : 'text-blue-700 hover:text-blue-900 hover:bg-blue-200'
               }`}
-              title={isPromptCollapsed ? 'Click to show the writing prompt' : 'Click to hide the writing prompt'}
             >
-              {isPromptCollapsed ? (
-                <>
-                  <ChevronDown className="w-4 h-4" />
-                  <span>Show Prompt</span>
-                </>
-              ) : (
-                <>
-                  <ChevronUp className="w-4 h-4" />
-                  <span>Hide Prompt</span>
-                </>
-              )}
+              {isPromptCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+              <span>{isPromptCollapsed ? 'Show Prompt' : 'Hide Prompt'}</span>
             </button>
           </div>
-          
-          {/* Prompt Content - Collapsible */}
+
+          {/* Prompt Content */}
           {!isPromptCollapsed && (
-            <div className="px-3 pb-3">
-              <p className={`leading-relaxed text-sm ${darkMode ? 'text-blue-100' : 'text-blue-900'}`}>
-                {currentPrompt}
-              </p>
+            <div className="px-4 pb-4">
+              <div className={`p-4 rounded-lg border ${
+                darkMode 
+                  ? 'bg-blue-900/20 border-blue-800/30 text-blue-100' 
+                  : 'bg-white border-blue-200 text-blue-900'
+              }`}>
+                <p className="text-sm leading-relaxed">
+                  <strong>Prompt:</strong> {currentPrompt}
+                </p>
+              </div>
             </div>
           )}
         </div>
 
-        {/* Compact Toolbar - Kid-Friendly */}
-        <div className={`border-b transition-colors duration-300 ${
+        {/* Enhanced Writing Toolbar - Kid-Friendly Design */}
+        <div className={`px-4 py-3 border-b transition-colors duration-300 ${
           darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
         }`}>
-          {/* Primary Actions Row */}
-          <div className="flex items-center justify-between px-4 py-2">
-            {/* Left: Primary Action Buttons */}
+          <div className="flex items-center justify-between">
+            {/* Left: Writing Tools */}
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setShowPlanningTool(true)}
@@ -484,20 +615,8 @@ export function EnhancedWritingLayout({
               </button>
               
               <button
-                onClick={() => setExamMode(!examMode)}
-                className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
-                  examMode 
-                    ? 'bg-green-600 text-white hover:bg-green-700' 
-                    : 'bg-green-500 text-white hover:bg-green-600'
-                }`}
-              >
-                <Play className="w-4 h-4" />
-                <span>Exam</span>
-              </button>
-              
-              <button
                 onClick={() => setShowStructureGuide(true)}
-                className="flex items-center space-x-1 px-3 py-1.5 bg-purple-500 text-white rounded-md hover:bg-purple-600 transition-colors text-sm font-medium"
+                className="flex items-center space-x-1 px-3 py-1.5 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors text-sm font-medium"
               >
                 <BookOpen className="w-4 h-4" />
                 <span>Structure</span>
@@ -825,7 +944,7 @@ export function EnhancedWritingLayout({
         </div>
       </div>
 
-      {/* Right side - Coach Panel - Enhanced UX */}
+      {/* Right side - Coach Panel - Enhanced UX with ALL FEEDBACK PROPS */}
       <div className={`w-96 flex-shrink-0 border-l transition-colors duration-300 ${
         darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
       }`}>
@@ -834,6 +953,10 @@ export function EnhancedWritingLayout({
           onApplyFix={handleApplyFix}
           content={currentContent}
           textType={textType}
+          ideasFeedback={ideasFeedback}
+          structureFeedback={structureFeedback}
+          languageFeedback={languageFeedback}
+          grammarFeedback={grammarFeedback}
         />
       </div>
 
@@ -861,19 +984,16 @@ export function EnhancedWritingLayout({
                            evaluationProgress.includes("Evaluating") ? "40%" :
                            evaluationProgress.includes("Checking") ? "60%" :
                            evaluationProgress.includes("language") ? "80%" :
-                           evaluationProgress.includes("Generating") ? "100%" : "0%"
+                           evaluationProgress.includes("Generating") ? "100%" : "10%"
                   }}
-                ></div>
+                />
               </div>
-              <p className={`text-sm mb-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                We're creating a detailed, personalized report just for you!
-              </p>
               <button
                 onClick={handleCloseNSWEvaluation}
-                className={`mt-4 px-4 py-2 transition-colors ${
-                  darkMode 
-                    ? 'text-gray-400 hover:text-gray-200' 
-                    : 'text-gray-500 hover:text-gray-700'
+                className={`px-4 py-2 rounded-lg text-sm transition-colors ${
+                  darkMode
+                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
               >
                 Cancel
@@ -883,26 +1003,14 @@ export function EnhancedWritingLayout({
         </div>
       )}
 
-      {/* Enhanced Report Modal */}
-      {showReportModal && analysis && (
-        <ReportModal
-          isOpen={showReportModal}
-          onClose={handleCloseReportModal}
-          data={analysis}
-          onApplyFix={handleApplyFix}
-          studentName="Student"
-          essayText={currentContent}
-        />
-      )}
-
       {/* Modals */}
       {showPlanningTool && (
         <PlanningToolModal
           isOpen={showPlanningTool}
           onClose={() => setShowPlanningTool(false)}
-          textType={textType}
           plan={plan}
           onPlanChange={setPlan}
+          textType={textType}
         />
       )}
 
@@ -922,13 +1030,12 @@ export function EnhancedWritingLayout({
         />
       )}
 
-      {/* NSW Standalone Submit System */}
-      {showNSWEvaluation && (
-        <NSWStandaloneSubmitSystem
-          content={currentContent}
-          textType={textType}
-          onComplete={handleNSWEvaluationComplete}
-          onClose={handleCloseNSWEvaluation}
+      {showReportModal && nswReport && (
+        <ReportModal
+          isOpen={showReportModal}
+          onClose={handleCloseReportModal}
+          report={nswReport}
+          analysis={analysis}
         />
       )}
     </div>
