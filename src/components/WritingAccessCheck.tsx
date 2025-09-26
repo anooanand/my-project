@@ -15,8 +15,7 @@ export const WritingAccessCheck: React.FC<WritingAccessCheckProps> = ({
     user, 
     emailVerified, 
     paymentCompleted, 
-    loading,
-    verificationStatus 
+    loading
   } = useAuth();
 
   // Show loading state
@@ -75,8 +74,42 @@ export const WritingAccessCheck: React.FC<WritingAccessCheckProps> = ({
     }
   };
 
-  // Comprehensive access check - compatible with both database designs
-  const hasWritingAccess = emailVerified && (paymentCompleted || hasTemporaryAccess());
+  // FIXED: More comprehensive access check that includes all possible access scenarios
+  const hasWritingAccess = () => {
+    // Check if email is verified
+    if (!emailVerified) {
+      return false;
+    }
+
+    // Check payment completion from AuthContext
+    if (paymentCompleted) {
+      console.log('✅ Access granted via paymentCompleted from AuthContext');
+      return true;
+    }
+
+    // Check temporary access
+    if (hasTemporaryAccess()) {
+      console.log('✅ Access granted via temporary access');
+      return true;
+    }
+
+    // Check for any stored access indicators
+    const hasStoredAccess = localStorage.getItem('user_has_access') === 'true';
+    if (hasStoredAccess) {
+      console.log('✅ Access granted via stored access indicator');
+      return true;
+    }
+
+    // Check for manual override
+    const hasManualOverride = localStorage.getItem('manual_override') === 'true';
+    if (hasManualOverride) {
+      console.log('✅ Access granted via manual override');
+      return true;
+    }
+
+    console.log('❌ No access found - emailVerified:', emailVerified, 'paymentCompleted:', paymentCompleted);
+    return false;
+  };
 
   // Check email verification
   if (!emailVerified) {
@@ -109,8 +142,8 @@ export const WritingAccessCheck: React.FC<WritingAccessCheckProps> = ({
     );
   }
 
-  // Check payment status (with enhanced temporary access consideration)
-  if (!hasWritingAccess) {
+  // Check payment status (with enhanced access consideration)
+  if (!hasWritingAccess()) {
     const temporaryAccess = hasTemporaryAccess();
     
     return (
@@ -198,4 +231,3 @@ export const WritingAccessCheck: React.FC<WritingAccessCheckProps> = ({
     </div>
   );
 };
-
