@@ -367,36 +367,80 @@ export function TabbedCoachPanel({
     return responses[Math.floor(Math.random() * responses.length)];
   };
   
-  const Tab = ({ id, label, icon: Icon }:{ 
+  // Enhanced Tab Component with better styling and accessibility
+  const Tab = ({ 
+    id, 
+    label, 
+    icon: Icon,
+    description 
+  }: { 
     id: "coach" | "toolkit" | "ideas" | "structure" | "language" | "grammar"; 
     label: string;
     icon: React.ComponentType<any>;
+    description?: string;
   }) => (
     <button
-      className={`flex items-center space-x-2 px-4 py-3 rounded-lg text-sm font-bold transition-all duration-200 flex-1 ${
+      className={`flex items-center justify-center space-x-2 px-3 py-2.5 rounded-lg text-xs font-bold transition-all duration-200 flex-1 min-h-[44px] ${
         tab === id 
-          ? "bg-white text-purple-700 shadow-md border-2 border-purple-200" 
-          : "bg-purple-500/20 text-white/90 hover:bg-purple-500/30 hover:text-white"
+          ? "bg-white text-purple-700 shadow-lg border-2 border-purple-200 transform scale-105" 
+          : "bg-purple-500/20 text-white/90 hover:bg-purple-500/30 hover:text-white hover:scale-102"
       }`}
       onClick={() => setTab(id)}
+      title={description || label}
+      aria-label={`${label} tab${description ? `: ${description}` : ''}`}
     >
-      <Icon className="w-4 h-4" />
-      <span className="text-center font-extrabold">{label}</span>
+      <Icon className="w-4 h-4 flex-shrink-0" />
+      <span className="text-center font-extrabold leading-tight">{label}</span>
     </button>
   );
 
   return (
     <>
       <div className="h-full flex flex-col rounded-2xl bg-gradient-to-br from-purple-600 via-purple-700 to-fuchsia-600 text-white shadow-xl">
-        {/* Tab Navigation - New 2-tab Layout */}
+        {/* Enhanced Tab Navigation - Two-Row Grouped Layout */}
         <div className="p-3 border-b border-white/20">
-          <div className="flex gap-1">
-            <Tab id="coach" label="Coach" icon={MessageSquare} />
-            <Tab id="ideas" label="Ideas" icon={Zap} />
-            <Tab id="structure" label="Structure" icon={Layers} />
-            <Tab id="language" label="Language" icon={Palette} />
-            <Tab id="grammar" label="Grammar" icon={CheckCircle} />
-            <Tab id="toolkit" label="Toolkit" icon={BookOpen} />
+          {/* Primary Coaching Features - Row 1 */}
+          <div className="grid grid-cols-3 gap-1 mb-2">
+            <Tab 
+              id="coach" 
+              label="Coach" 
+              icon={MessageSquare} 
+              description="AI Writing Buddy chat and real-time feedback"
+            />
+            <Tab 
+              id="ideas" 
+              label="Ideas" 
+              icon={Zap} 
+              description="Creative inspiration and content development"
+            />
+            <Tab 
+              id="structure" 
+              label="Structure" 
+              icon={Layers} 
+              description="Story organization and flow guidance"
+            />
+          </div>
+          
+          {/* Technical Enhancement Features - Row 2 */}
+          <div className="grid grid-cols-3 gap-1">
+            <Tab 
+              id="language" 
+              label="Language" 
+              icon={Palette} 
+              description="Vocabulary and style improvements"
+            />
+            <Tab 
+              id="grammar" 
+              label="Grammar" 
+              icon={CheckCircle} 
+              description="Spelling, punctuation, and grammar check"
+            />
+            <Tab 
+              id="toolkit" 
+              label="Toolkit" 
+              icon={BookOpen} 
+              description="Additional writing tools and resources"
+            />
           </div>
         </div>
 
@@ -419,60 +463,59 @@ export function TabbedCoachPanel({
                     <div className="flex-1 overflow-y-auto space-y-3 mb-3">
                       {chatMessages.map((message) => (
                         <div key={message.id} className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}>
-                          <div className={`max-w-xs lg:max-w-md px-3 py-2 rounded-lg ${
+                          <div className={`max-w-[85%] p-3 rounded-lg text-sm ${
                             message.isUser 
-                              ? 'bg-blue-600 text-white' 
+                              ? 'bg-blue-500 text-white rounded-br-sm' 
                               : message.isFeedback
-                                ? 'bg-green-50 border border-green-200 text-green-800'
-                                : 'bg-white border border-gray-200 text-gray-800'
+                              ? 'bg-purple-100 text-purple-800 border border-purple-200 rounded-bl-sm'
+                              : 'bg-gray-100 text-gray-800 rounded-bl-sm'
                           }`}>
-                            <div className="flex items-start space-x-2">
-                              {!message.isUser && (
-                                message.isTyping ? 
-                                  <Loader className="h-4 w-4 mt-0.5 text-blue-600 animate-spin" /> :
-                                  <Bot className={`h-4 w-4 mt-0.5 ${message.isFeedback ? 'text-green-600' : 'text-gray-600'}`} />
-                              )}
-                              <p className={`text-sm ${message.isUser ? 'text-white' : 'text-gray-800'}`}>
-                                {message.text}
-                              </p>
-                            </div>
-                            <span className={`block text-right text-xs mt-1 ${message.isUser ? 'text-blue-200' : 'text-gray-500'}`}>
+                            {message.isTyping ? (
+                              <div className="flex items-center space-x-2">
+                                <div className="flex space-x-1">
+                                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
+                                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                                </div>
+                                <span className="text-purple-600">{message.text}</span>
+                              </div>
+                            ) : (
+                              <div className="whitespace-pre-wrap">{message.text}</div>
+                            )}
+                            <div className={`text-xs mt-1 opacity-70 ${
+                              message.isUser ? 'text-blue-100' : 'text-gray-500'
+                            }`}>
                               {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </span>
+                            </div>
                           </div>
                         </div>
                       ))}
                       <div ref={chatEndRef} />
                     </div>
-
+                    
                     {/* Chat Input */}
                     <div className="border-t border-blue-200 p-3">
-                      <div className="flex items-center space-x-2">
+                      <div className="flex space-x-2">
                         <input
                           type="text"
                           value={newMessage}
                           onChange={(e) => setNewMessage(e.target.value)}
-                          onKeyPress={(e) => {
-                            if (e.key === 'Enter' && !isAITyping) {
-                              handleSendMessage();
-                            }
-                          }}
-                          placeholder="Ask me anything about writing..."
-                          className="flex-1 p-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                          placeholder="Ask me anything about writing, or just start typing and I'll give you feedback!"
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                           disabled={isAITyping}
                         />
                         <button
                           onClick={handleSendMessage}
-                          disabled={isAITyping || !newMessage.trim()}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                          disabled={!newMessage.trim() || isAITyping}
+                          className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
                           Send
                         </button>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Feedback given: {feedbackCount} • Words: {content.split(' ').filter(w => w.length > 0).length} • Last: {new Date(lastFeedbackTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </p>
-                      {isAITyping && <p className="text-xs text-gray-500 mt-1">AI is typing...</p>}
+                      <div className="mt-2 text-xs text-gray-500">
+                        Feedback given: {feedbackCount} • Words: {content.split(' ').filter(w => w.length > 0).length} • Last: {lastFeedbackTime ? new Date(lastFeedbackTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '10:00 AM'}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -482,22 +525,18 @@ export function TabbedCoachPanel({
             {/* Ideas Feedback Tab Content */}
             {tab === "ideas" && ideasFeedback && (
               <div className="h-full overflow-auto p-4 space-y-4">
-                <h3 className="font-bold text-lg text-purple-800 flex items-center"><Zap className="w-5 h-5 mr-2" /> Ideas & Content (30% of score)</h3>
+                <h3 className="font-bold text-lg text-blue-800 flex items-center"><Zap className="w-5 h-5 mr-2" /> Ideas & Content (30% of score)</h3>
                 
-                {ideasFeedback.promptAnalysis.elements.length > 0 && (
-                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-3">
-                    <p className="font-semibold text-sm text-purple-700 mb-2">Prompt Elements to Cover:</p>
-                    <div className="space-y-1">
+                {ideasFeedback.promptAnalysis && ideasFeedback.promptAnalysis.elements.length > 0 && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <p className="font-semibold text-blue-700 mb-2">📝 Prompt Elements Addressed:</p>
+                    <div className="grid grid-cols-1 gap-1">
                       {ideasFeedback.promptAnalysis.elements.map((element, index) => (
                         <div key={index} className="flex items-center space-x-2">
-                          <div className={`w-2 h-2 rounded-full ${
-                            ideasFeedback.promptAnalysis.covered.includes(element)
-                              ? 'bg-green-500'
-                              : 'bg-gray-400'
-                          }`} />
+                          <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
                           <span className={`text-sm ${
-                            ideasFeedback.promptAnalysis.covered.includes(element)
-                              ? 'text-green-700'
+                            ideasFeedback.promptAnalysis.missing.includes(element) 
+                              ? 'text-orange-600' 
                               : 'text-gray-600'
                           }`}>
                             {element}
