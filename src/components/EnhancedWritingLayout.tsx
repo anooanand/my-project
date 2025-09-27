@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { WritingArea } from './WritingArea';
+import { GrammarCheckedTextEditor } from './GrammarCheckedTextEditor';
+import { ErrorSummaryPanel } from './ErrorSummaryPanel';
+import { AchievementSystem } from './AchievementSystem';
 import { PlanningToolModal } from './PlanningToolModal';
 import { StructureGuideModal } from './StructureGuideModal';
 import { TipsModal } from './TipsModal';
@@ -7,6 +9,7 @@ import { TabbedCoachPanel } from './TabbedCoachPanel';
 import { NSWStandaloneSubmitSystem } from './NSWStandaloneSubmitSystem';
 import { ReportModal } from './ReportModal';
 import type { DetailedFeedback, LintFix } from '../types/feedback';
+import { GrammarCheckResult, GrammarError } from '../types/grammarChecker';
 import { eventBus } from '../lib/eventBus';
 import { detectNewParagraphs } from '../lib/paragraphDetection';
 import {
@@ -130,6 +133,11 @@ export function EnhancedWritingLayout({
   const [showNSWEvaluation, setShowNSWEvaluation] = useState<boolean>(false);
   const [nswReport, setNswReport] = useState<any>(null);
   const [showReportModal, setShowReportModal] = useState<boolean>(false);
+  
+  // Grammar Checker States
+  const [grammarCheckResult, setGrammarCheckResult] = useState<GrammarCheckResult | null>(null);
+  const [ignoredErrors, setIgnoredErrors] = useState<Set<string>>(new Set());
+  const [showAchievements, setShowAchievements] = useState(false);
   
   // Initialize analysis with default values to prevent undefined errors
   const [analysis, setAnalysis] = useState<DetailedFeedback>({
@@ -826,6 +834,33 @@ export function EnhancedWritingLayout({
                 )}
               </div>
 
+              {/* Grammar Score */}
+              {grammarCheckResult && (
+                <div className="flex items-center space-x-1">
+                  <Target className={`w-4 h-4 ${
+                    grammarCheckResult.overallScore >= 90 ? 'text-green-500' :
+                    grammarCheckResult.overallScore >= 70 ? 'text-yellow-500' : 'text-red-500'
+                  }`} />
+                  <span className={`text-sm font-medium ${
+                    grammarCheckResult.overallScore >= 90 ? 'text-green-600' :
+                    grammarCheckResult.overallScore >= 70 ? 'text-yellow-600' : 'text-red-600'
+                  }`}>
+                    {grammarCheckResult.overallScore}%
+                  </span>
+                </div>
+              )}
+
+              {/* Achievements Button */}
+              {grammarCheckResult?.achievements && grammarCheckResult.achievements.length > 0 && (
+                <button
+                  onClick={() => setShowAchievements(!showAchievements)}
+                  className="flex items-center space-x-1 px-2 py-1 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors text-sm"
+                >
+                  <Award className="w-4 h-4" />
+                  <span>{grammarCheckResult.achievements.length}</span>
+                </button>
+              )}
+
               {/* Kid-Friendly Settings Button */}
               <button
                 onClick={() => setShowSettings(!showSettings)}
@@ -964,50 +999,93 @@ export function EnhancedWritingLayout({
           )}
         </div>
 
-        {/* Enhanced Writing Area - Professional UX */}
-        <div className={`flex-1 relative transition-colors duration-300 ${
+        {/* Enhanced Writing Area with Grammar Checking */}
+        <div className={`flex-1 flex transition-colors duration-300 ${
           darkMode ? 'bg-gray-800' : 'bg-white'
-        } ${focusMode ? 'bg-opacity-95' : ''}`}>
-          {/* Writing Area with Enhanced UX */}
-          <textarea
-            className={`w-full h-full p-6 resize-none focus:outline-none transition-all duration-300 ${
-              darkMode 
-                ? 'bg-transparent text-white placeholder-gray-400' 
-                : 'bg-transparent text-gray-900 placeholder-gray-500'
-            } ${focusMode ? 'shadow-inner' : ''}`}
-            placeholder={focusMode 
-              ? "Focus on your writing. Let your thoughts flow freely..." 
-              : "Start writing your amazing story here! Let your creativity flow and bring your ideas to life…"
-            }
-            value={localContent}
-            onChange={(e) => handleContentChange(e.target.value)}
-            style={{
-              fontFamily: getCurrentFontFamily(),
-              fontSize: `${fontSize}px`,
-              lineHeight: focusMode ? '1.8' : '1.6',
-              letterSpacing: '0.01em',
-              textRendering: 'optimizeLegibility',
-              WebkitFontSmoothing: 'antialiased',
-              MozOsxFontSmoothing: 'grayscale',
-              scrollbarWidth: 'thin',
-              scrollbarColor: darkMode ? '#4B5563 #374151' : '#CBD5E1 #F1F5F9'
-            }}
-          />
+        }`}>
+          {/* Main Writing Editor */}
+          <div className={`flex-1 relative ${focusMode ? 'bg-opacity-95' : ''}`}>
+            <GrammarCheckedTextEditor
+              value={localContent}
+              onChange={handleContentChange}
+              placeholder={focusMode 
+                ? "Focus on your writing. Let your thoughts flow freely..." 
+                : "Start writing your amazing story here! Let your creativity flow and bring your ideas to life…"
+              }
+              className="h-full"
+              darkMode={darkMode}
+              fontSize={fontSize}
+              fontFamily={fontFamily}
+              onAnalyze={(result) => {
+                setGrammarCheckResult(result);
+                // Update analysis state with grammar check results
+                setAnalysis(prev => ({
+                  ...prev,
+                  overallScore: result.overallScore,
+                  grammarCorrections: result.errors
+                    .filter(e => e.type === 'grammar' || e.type === 'spelling')
+                    .map(e => ({
+                      original: e.originalText,
+                      replacement: e.suggestions[0] || '',
+                      explanation: e.message,
+                      position: e.startPos,
+                      type: e.type
+                    })),
+                  vocabularyEnhancements: result.errors
+                    .filter(e => e.type === 'language-convention')
+                    .map(e => ({
+                      original: e.originalText,
+                      replacement: e.suggestions[0] || '',
+                      explanation: e.message,
+                      position: e.startPos,
+                      type: 'vocabulary'
+                    }))
+                }));
+              }}
+            />
 
-          {/* Kid-Friendly Floating Settings Button */}
-          {!showSettings && (
-            <button
-              onClick={() => setShowSettings(true)}
-              className={`absolute bottom-6 right-6 flex items-center space-x-2 px-4 py-3 rounded-full shadow-lg transition-all duration-300 hover:scale-105 ${
-                darkMode 
-                  ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-                  : 'bg-blue-500 hover:bg-blue-600 text-white'
-              }`}
-              title="Open Writing Settings"
-            >
-              <Settings className="w-5 h-5" />
-              <span className="text-sm font-medium">Settings</span>
-            </button>
+            {/* Kid-Friendly Floating Settings Button */}
+            {!showSettings && (
+              <button
+                onClick={() => setShowSettings(true)}
+                className={`absolute bottom-6 right-6 flex items-center space-x-2 px-4 py-3 rounded-full shadow-lg transition-all duration-300 hover:scale-105 ${
+                  darkMode 
+                    ? 'bg-blue-600 hover:bg-blue-700 text-white' 
+                    : 'bg-blue-500 hover:bg-blue-600 text-white'
+                }`}
+                title="Open Writing Settings"
+              >
+                <Settings className="w-5 h-5" />
+                <span className="text-sm font-medium">Settings</span>
+              </button>
+            )}
+          </div>
+
+          {/* Grammar Error Panel - Only show when not in focus mode */}
+          {!focusMode && (
+            <div className={`w-80 flex-shrink-0 border-l ${
+              darkMode ? 'border-gray-700' : 'border-gray-200'
+            }`}>
+              <ErrorSummaryPanel
+                checkResult={grammarCheckResult}
+                ignoredErrors={ignoredErrors}
+                onErrorClick={(error) => {
+                  // Handle error click - could scroll to error position
+                  console.log('Error clicked:', error);
+                }}
+                onIgnoreError={(errorId) => {
+                  setIgnoredErrors(prev => new Set([...prev, errorId]));
+                }}
+                onFixError={(error, suggestion) => {
+                  const newContent = localContent.substring(0, error.startPos) + 
+                                   suggestion + 
+                                   localContent.substring(error.endPos);
+                  handleContentChange(newContent);
+                }}
+                darkMode={darkMode}
+                className="h-full"
+              />
+            </div>
           )}
         </div>
 
@@ -1142,6 +1220,23 @@ export function EnhancedWritingLayout({
           report={nswReport}
           analysis={analysis}
         />
+      )}
+
+      {/* Achievement System Modal */}
+      {showAchievements && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className={`rounded-lg max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto ${
+            darkMode ? 'bg-gray-800' : 'bg-white'
+          }`}>
+            <AchievementSystem
+              checkResult={grammarCheckResult}
+              wordCount={wordCount}
+              sessionTime={Math.floor(elapsedTime / 60)} // Convert to minutes
+              darkMode={darkMode}
+              onClose={() => setShowAchievements(false)}
+            />
+          </div>
+        </div>
       )}
     </div>
   );
