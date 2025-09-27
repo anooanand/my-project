@@ -972,13 +972,13 @@ export function EnhancedWritingLayout({
                   ? 'bg-blue-600 hover:bg-blue-700 text-white' 
                   : 'bg-blue-500 hover:bg-blue-600 text-white'
               }`}
-              title="Open Writing Settings"
+              title="Exit Focus Mode"
             >
               <Settings className="w-5 h-5" />
-              <span className="text-sm font-medium">Settings</span>
+              <span className="text-sm font-medium">Exit Focus</span>
             </button>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Enhanced Submit Button with Better UX */}
         <div className={`p-4 border-t transition-colors duration-300 ${
