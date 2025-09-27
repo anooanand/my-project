@@ -11,7 +11,7 @@ import { generateChatResponse, checkOpenAIConnectionStatus } from '../lib/openai
 import { detectWordThreshold, splitParas } from '../lib/paragraphDetection';
 import {
   ExternalLink, FileText, MessageSquare, BarChart3, BookOpen, TrendingUp, Bot, User, Lightbulb, Sparkles, ArrowRight, RefreshCcw, ChevronDown, ChevronUp, Loader,
-  Zap, Layers, Palette, CheckCircle, AlertCircle, Target, Award, Send, PenTool, Eye, EyeOff, Settings, Info, Clock, Type, Hash, Percent
+  Zap, Layers, Palette, CheckCircle, AlertCircle, Target, Award, Send, PenTool, Eye, EyeOff, Settings, Info, Clock, Type, Hash, Percent, ChevronRight
 } from 'lucide-react';
 
 // Import the new feedback interfaces from EnhancedWritingLayout
