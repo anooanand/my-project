@@ -1,96 +1,10 @@
 /**
- * WORKING InteractiveTextEditor - Based on the old working version
- * Replace your src/components/InteractiveTextEditor.tsx with this content
+ * Enhanced InteractiveTextEditor with improved paragraph detection and automatic feedback
+ * Copy to: src/components/InteractiveTextEditor.tsx
  */
 import React from "react";
-
-// Safe versions of the utility functions
-const safeDetectNewParagraphs = (prev: string, next: string): { paragraph: string; index: number }[] => {
-  try {
-    if (!prev || !next || typeof prev !== 'string' || typeof next !== 'string') {
-      return [];
-    }
-
-    const splitParas = (text: string): string[] => {
-      try {
-        return text
-          .replace(/\r\n/g, "\n")
-          .split(/\n\s*\n/)
-          .map(p => p.trim())
-          .filter(Boolean);
-      } catch (error) {
-        return [];
-      }
-    };
-
-    const a = splitParas(prev);
-    const b = splitParas(next);
-    const out: { paragraph: string; index: number }[] = [];
-
-    const max = Math.max(a.length, b.length);
-    let pivot = -1;
-    
-    for (let i = 0; i < max; i++) {
-      if (a[i] !== b[i]) { 
-        pivot = i; 
-        break; 
-      }
-    }
-    
-    if (pivot === -1) return out;
-
-    const completedIndex = pivot - 1;
-    if (completedIndex >= 0 && completedIndex < b.length && b[completedIndex]) {
-      out.push({ paragraph: b[completedIndex], index: completedIndex });
-    }
-    
-    return out;
-  } catch (error) {
-    console.warn('safeDetectNewParagraphs error:', error);
-    return [];
-  }
-};
-
-const safeDetectWordThreshold = (
-  prev: string,
-  next: string,
-  wordThreshold: number = 20
-): { text: string; wordCount: number; trigger: string } | null => {
-  try {
-    if (!prev || !next || typeof prev !== 'string' || typeof next !== 'string') {
-      return null;
-    }
-
-    const prevWords = prev.trim() ? prev.trim().split(/\s+/).length : 0;
-    const nextWords = next.trim() ? next.trim().split(/\s+/).length : 0;
-    
-    // First time reaching word threshold
-    if (prevWords < wordThreshold && nextWords >= wordThreshold) {
-      return {
-        text: next,
-        wordCount: nextWords,
-        trigger: 'initial_threshold'
-      };
-    }
-    
-    return null;
-  } catch (error) {
-    console.warn('safeDetectWordThreshold error:', error);
-    return null;
-  }
-};
-
-// Safe event bus
-const safeEventBus = {
-  emit: (event: string, data: any) => {
-    try {
-      // Simple console log instead of complex event system
-      console.log(`Event: ${event}`, data);
-    } catch (error) {
-      console.warn('Event bus error:', error);
-    }
-  }
-};
+import { detectNewParagraphs, detectWordThreshold } from "../lib/paragraphDetection";
+import { eventBus } from "../lib/eventBus";
 
 export interface EditorHandle {
   getText(): string;
@@ -116,63 +30,69 @@ export const InteractiveTextEditor = React.forwardRef<EditorHandle, {
     getText: () => text,
     setText: (t: string) => setText(t),
     applyFix: (start: number, end: number, replacement: string) => {
-      try {
-        const before = text.slice(0, start);
-        const after = text.slice(end);
-        const newText = before + replacement + after;
-        setText(newText);
-        prevRef.current = newText;
-      } catch (error) {
-        console.warn('applyFix error:', error);
-      }
+      const before = text.slice(0, start);
+      const after = text.slice(end);
+      const newText = before + replacement + after;
+      setText(newText);
+      prevRef.current = newText;
     }
   }), [text]);
 
   function onChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    try {
-      const next = e.target.value;
-      
-      // Clear existing timeout
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
-      }
-
-      // 1. Check for completed paragraphs (safe version)
-      const paragraphEvents = safeDetectNewParagraphs(prevRef.current, next);
-      paragraphEvents.forEach(event => {
-        safeEventBus.emit('paragraph.ready', event);
-      });
-
-      // 2. Check for word threshold milestones (safe version)
-      const wordThresholdEvent = safeDetectWordThreshold(prevRef.current, next, 20);
-      if (wordThresholdEvent && wordThresholdEvent.wordCount > lastFeedbackWordCountRef.current + 15) {
-        safeEventBus.emit('word.threshold', wordThresholdEvent);
-        lastFeedbackWordCountRef.current = wordThresholdEvent.wordCount;
-      }
-
-      // 3. Set up delayed feedback for when user pauses typing
-      typingTimeoutRef.current = setTimeout(() => {
-        try {
-          const currentWordCount = next.trim() ? next.trim().split(/\s+/).length : 0;
-          if (currentWordCount >= 15) {
-            safeEventBus.emit('typing.pause', {
-              text: next,
-              wordCount: currentWordCount,
-              trigger: 'pause_feedback'
-            });
-          }
-        } catch (error) {
-          console.warn('Typing timeout error:', error);
-        }
-      }, 3000);
-
-      prevRef.current = next;
-      setText(next);
-    } catch (error) {
-      console.warn('onChange error:', error);
-      // Fallback: just update the text
-      setText(e.target.value);
+    const next = e.target.value;
+    
+    // Clear existing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
     }
+
+    // 1. Check for completed paragraphs
+    const paragraphEvents = detectNewParagraphs(prevRef.current, next);
+    if (paragraphEvents.length > 0) {
+      console.log("New paragraphs detected:", paragraphEvents);
+      paragraphEvents.forEach(event => {
+        eventBus.emit("paragraph.ready", event);
+      });
+    }
+
+    // 2. Check for word threshold milestones
+    const wordThresholdEvent = detectWordThreshold(prevRef.current, next, 20);
+    if (wordThresholdEvent) {
+      console.log("Word threshold reached:", wordThresholdEvent);
+      eventBus.emit("paragraph.ready", {
+        paragraph: wordThresholdEvent.text,
+        index: 0,
+        wordCount: wordThresholdEvent.wordCount,
+        trigger: wordThresholdEvent.trigger
+      });
+    }
+
+    // 3. Set up delayed feedback for when user pauses typing
+    typingTimeoutRef.current = setTimeout(() => {
+      const currentWordCount = next.trim() ? next.trim().split(/\s+/).length : 0;
+      const lastFeedbackWordCount = lastFeedbackWordCountRef.current;
+      
+      // Provide feedback if user has written substantial content and paused
+      if (currentWordCount >= 15 && currentWordCount > lastFeedbackWordCount + 10) {
+        console.log("Typing pause detected, providing feedback");
+        
+        // Get the most recent content
+        const paragraphs = next.split('\n\n').filter(p => p.trim());
+        const recentText = paragraphs[paragraphs.length - 1] || next.slice(-200);
+        
+        eventBus.emit("paragraph.ready", {
+          paragraph: recentText,
+          index: 0,
+          wordCount: currentWordCount,
+          trigger: 'typing_pause'
+        });
+        
+        lastFeedbackWordCountRef.current = currentWordCount;
+      }
+    }, 3000); // 3 second pause
+
+    prevRef.current = next;
+    setText(next);
   }
 
   // Cleanup timeout on unmount
@@ -185,13 +105,16 @@ export const InteractiveTextEditor = React.forwardRef<EditorHandle, {
   }, []);
 
   return (
-    <textarea
-      className={className}
-      value={text}
-      onChange={onChange}
-      placeholder={placeholder}
-    />
+    <div className="relative">
+      <textarea
+        className={className}
+        value={text}
+        onChange={onChange}
+        placeholder={placeholder}
+      />
+      <div className="absolute bottom-2 right-2 text-xs text-gray-400">
+        {text.trim() ? text.trim().split(/\s+/).length : 0} words
+      </div>
+    </div>
   );
 });
-
-InteractiveTextEditor.displayName = 'InteractiveTextEditor';
