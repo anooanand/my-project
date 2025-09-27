@@ -536,10 +536,12 @@ export function EnhancedWritingLayout({
     prevTextRef.current = currentContent;
   }, [localContent, content]);
 
-  // OPTIMIZED NSW Evaluation Submit Handler - Removed artificial delays
+  // FIXED NSW Evaluation Submit Handler - Proper error handling
   const handleNSWSubmit = async (submittedContent?: string, submittedTextType?: string) => {
     const contentToEvaluate = submittedContent || localContent;
     const typeToEvaluate = submittedTextType || textType;
+
+    console.log("handleNSWSubmit called with:", { contentToEvaluate, typeToEvaluate });
 
     setEvaluationStatus("loading");
     setShowNSWEvaluation(true);
@@ -551,8 +553,17 @@ export function EnhancedWritingLayout({
       }
 
       // Generate report immediately without artificial delays
-      const prompt = localStorage.getItem("generatedPrompt") || localStorage.getItem(`${typeToEvaluate.toLowerCase()}_prompt`) || "";
+      const prompt = localStorage.getItem("generatedPrompt") || localStorage.getItem(`${typeToEvaluate.toLowerCase()}_prompt`) || getCurrentPrompt();
       const wordCount = contentToEvaluate.trim().split(/\s+/).filter(word => word.length > 0).length;
+
+      console.log("Calling NSWEvaluationReportGenerator.generateReport with:", {
+        essayContent: contentToEvaluate,
+        textType: typeToEvaluate,
+        prompt: prompt,
+        wordCount: wordCount,
+        targetWordCountMin: 100,
+        targetWordCountMax: 500,
+      });
 
       const report = NSWEvaluationReportGenerator.generateReport({
         essayContent: contentToEvaluate,
@@ -563,6 +574,8 @@ export function EnhancedWritingLayout({
         targetWordCountMax: 500,
       });
 
+      console.log("Generated report:", report);
+
       // Complete evaluation immediately
       handleNSWEvaluationComplete(report);
 
@@ -571,60 +584,73 @@ export function EnhancedWritingLayout({
       setEvaluationStatus("error");
       setShowNSWEvaluation(false);
       setEvaluationProgress("");
+      
+      // Show error to user
+      alert(`Error generating report: ${e.message}`);
     }
   };
 
-  // Enhanced NSW evaluation completion handler
+  // FIXED NSW evaluation completion handler - Proper report conversion
   const handleNSWEvaluationComplete = (report: any) => {
+    console.log("handleNSWEvaluationComplete called with report:", report);
+    
     setNswReport(report);
     setEvaluationStatus("success");
     setShowNSWEvaluation(false);
     setEvaluationProgress("");
     setShowReportModal(true);
     
-    // Convert NSW report to DetailedFeedback format
-    const convertedAnalysis: DetailedFeedback = {
-      overallScore: report.overallScore || 0,
-      criteria: {
-        ideasContent: {
-          score: Math.round((report.domains?.contentAndIdeas?.score || 0) / 2),
-          weight: report.domains?.contentAndIdeas?.weight || 40,
-          strengths: report.strengths?.filter((s: any) => s.area === "Creative Ideas") || 
-                    [{ text: report.domains?.contentAndIdeas?.feedback?.[0] || "Good content development" }],
-          improvements: report.areasForImprovement?.filter((i: any) => i.area === "Ideas & Content") || []
+    // FIXED: Convert NSW report to DetailedFeedback format properly
+    try {
+      const convertedAnalysis: DetailedFeedback = {
+        overallScore: report.overallScore || 0,
+        criteria: {
+          ideasContent: {
+            score: Math.round((report.domains?.contentAndIdeas?.score || 0) / 2),
+            weight: report.domains?.contentAndIdeas?.weight || 40,
+            strengths: report.strengths?.map((s: string) => ({ text: s })) || 
+                      [{ text: "Good content development" }],
+            improvements: report.areasForImprovement?.map((i: string) => ({
+              issue: i,
+              suggestion: "Continue developing this area",
+              evidence: { text: "Based on your writing" }
+            })) || []
+          },
+          structureOrganization: {
+            score: Math.round((report.domains?.textStructure?.score || 0) / 2),
+            weight: report.domains?.textStructure?.weight || 20,
+            strengths: [{ text: report.domains?.textStructure?.feedback?.[0] || "Clear structure" }],
+            improvements: []
+          },
+          languageVocab: {
+            score: Math.round((report.domains?.languageFeatures?.score || 0) / 2),
+            weight: report.domains?.languageFeatures?.weight || 25,
+            strengths: [{ text: report.domains?.languageFeatures?.feedback?.[0] || "Good language use" }],
+            improvements: []
+          },
+          spellingPunctuationGrammar: {
+            score: Math.round((report.domains?.spellingAndGrammar?.score || 0) / 2),
+            weight: report.domains?.spellingAndGrammar?.weight || 15,
+            strengths: [{ text: report.domains?.spellingAndGrammar?.feedback?.[0] || "Accurate conventions" }],
+            improvements: []
+          }
         },
-        structureOrganization: {
-          score: Math.round((report.domains?.textStructure?.score || 0) / 2),
-          weight: report.domains?.textStructure?.weight || 20,
-          strengths: report.strengths?.filter((s: any) => s.area === "Story Organization") || 
-                    [{ text: report.domains?.textStructure?.feedback?.[0] || "Clear structure" }],
-          improvements: report.areasForImprovement?.filter((i: any) => i.area === "Structure & Organization") || []
-        },
-        languageVocab: {
-          score: Math.round((report.domains?.languageFeatures?.score || 0) / 2),
-          weight: report.domains?.languageFeatures?.weight || 25,
-          strengths: report.strengths?.filter((s: any) => s.area === "Word Choice") || 
-                    [{ text: report.domains?.languageFeatures?.feedback?.[0] || "Good language use" }],
-          improvements: report.areasForImprovement?.filter((i: any) => i.area === "Language & Vocabulary") || []
-        },
-        spellingPunctuationGrammar: {
-          score: Math.round((report.domains?.spellingAndGrammar?.score || 0) / 2),
-          weight: report.domains?.spellingAndGrammar?.weight || 15,
-          strengths: report.strengths?.filter((s: any) => s.area === "Writing Mechanics") || 
-                    [{ text: report.domains?.spellingAndGrammar?.feedback?.[0] || "Accurate conventions" }],
-          improvements: report.areasForImprovement?.filter((i: any) => i.area.includes("Grammar") || i.area.includes("Spelling")) || []
-        }
-      },
-      grammarCorrections: report.grammarCorrections || [],
-      vocabularyEnhancements: report.vocabularyEnhancements || [],
-      id: report.id || `nsw-${Date.now()}`,
-      assessmentId: report.assessmentId
-    };
-    
-    setAnalysis(convertedAnalysis);
+        grammarCorrections: report.grammarCorrections || [],
+        vocabularyEnhancements: report.vocabularyEnhancements || [],
+        id: report.id || `nsw-${Date.now()}`,
+        assessmentId: report.assessmentId || `assessment-${Date.now()}`
+      };
+      
+      console.log("Converted analysis:", convertedAnalysis);
+      setAnalysis(convertedAnalysis);
+    } catch (conversionError) {
+      console.error("Error converting report:", conversionError);
+      // Keep the default analysis if conversion fails
+    }
   };
 
   const handleSubmitForEvaluation = async (contentToSubmit: string, typeToSubmit: string) => {
+    console.log("handleSubmitForEvaluation called");
     await handleNSWSubmit(contentToSubmit, typeToSubmit);
   };
 
