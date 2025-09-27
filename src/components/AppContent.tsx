@@ -410,6 +410,11 @@ function AppContent() {
           <Route path="/settings" element={
             user ? <SettingsPage onBack={() => setActivePage('dashboard')} /> : <Navigate to="/" />
           } />
+          <Route path="/exam" element={
+            <WritingAccessCheck onNavigate={handleNavigation}>
+              <ExamSimulationMode onExit={() => navigate("/dashboard")} />
+            </WritingAccessCheck>
+          } />
           <Route path="/writing" element={
             <WritingAccessCheck onNavigate={handleNavigation}>
               <div className="writing-route h-screen flex flex-col">
@@ -434,34 +439,35 @@ function AppContent() {
                       assistanceLevel={assistanceLevel}
                       selectedText={selectedText}
                       onTimerStart={setTimerStarted}
-                      onSubmit={handleSubmit}
-                      onTextTypeChange={handleTextTypeChange}
                       onPopupCompleted={handlePopupCompleted}
-                      onNavigate={handleNavigation}
-                      onShowHelpCenter={() => setShowHelpCenter(true)}
-                      onShowPlanningTool={() => setShowPlanningTool(true)}
+                      onTextTypeChange={handleTextTypeChange}
+                      onSubmit={handleSubmit}
+                      showPlanningTool={showPlanningTool}
+                      onTogglePlanningTool={() => setShowPlanningTool(!showPlanningTool)}
+                      showHelpCenter={showHelpCenter}
+                      onToggleHelpCenter={() => setShowHelpCenter(!showHelpCenter)}
+                      openAIConnected={openAIConnected}
+                      openAILoading={openAILoading}
                     />
                   </div>
                 )}
               </div>
             </WritingAccessCheck>
           } />
-          <Route path="/payment-success" element={
-            <PaymentSuccessPage 
-              planType={pendingPaymentPlan || ''}
-              onNavigate={handleNavigation}
-            />
-          } />
+          <Route path="/payment-success" element={<PaymentSuccessPage onNavigate={handleNavigation} />} />
+          <Route path="/auth/callback" element={<EmailVerificationHandler onAuthSuccess={handleAuthSuccess} />} />
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
+      </div>
+      {shouldShowFooter() && <Footer />}
+      {showAuthModal && (
         <AuthModal
           isOpen={showAuthModal}
-          mode={authModalMode}
           onClose={() => setShowAuthModal(false)}
+          mode={authModalMode}
           onAuthSuccess={handleAuthSuccess}
         />
-      </div>
-      {shouldShowFooter() && <Footer onNavigate={handleNavigation} />}
-      <AdminButton />
+      )}
     </div>
   );
 }
