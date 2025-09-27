@@ -1,13 +1,10 @@
-/**
- * FIXED App.tsx - Remove SafeModeWrapper to prevent safe mode activation
- * Replace your src/App.tsx with this content
- */
 import React from 'react';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { AppProvider } from './contexts/AppContext';
 import AppContent from './components/AppContent';
+import NSWDemoPage from './components/NSWDemoPage';
 
 function App() {
   return (
