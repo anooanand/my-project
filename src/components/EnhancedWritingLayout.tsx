@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { WritingArea } from './WritingArea';
 import { PlanningToolModal } from './PlanningToolModal';
 import { StructureGuideModal } from './StructureGuideModal';
 import { TipsModal } from './TipsModal';
@@ -946,39 +945,52 @@ export function EnhancedWritingLayout({
           )}
         </div>
 
-        {/* Enhanced Writing Area */}
-        <div className="flex-1 flex flex-col min-h-0">
-          <WritingArea
-            content={currentContent}
-            onChange={handleContentChange}
-            textType={textType}
-            assistanceLevel={assistanceLevel}
-            selectedText={selectedText}
-            fontSize={fontSize}
-            fontFamily={getCurrentFontFamily()}
-            darkMode={darkMode}
-            focusMode={focusMode}
-            examMode={examMode}
+        {/* ORIGINAL SIMPLE WRITING AREA - NO WritingArea COMPONENT */}
+        <div className={`flex-1 relative transition-colors duration-300 ${
+          darkMode ? 'bg-gray-800' : 'bg-white'
+        } ${focusMode ? 'bg-opacity-95' : ''}`}>
+          {/* Writing Area with Enhanced UX - ORIGINAL TEXTAREA */}
+          <textarea
+            className={`w-full h-full p-6 resize-none focus:outline-none transition-all duration-300 ${
+              darkMode 
+                ? 'bg-transparent text-white placeholder-gray-400' 
+                : 'bg-transparent text-gray-900 placeholder-gray-500'
+            } ${focusMode ? 'shadow-inner' : ''}`}
+            placeholder={focusMode 
+              ? "Focus on your writing. Let your thoughts flow freely..." 
+              : "Start writing your amazing story here! Let your creativity flow and bring your ideas to life…"
+            }
+            value={localContent}
+            onChange={(e) => handleContentChange(e.target.value)}
+            style={{
+              fontFamily: getCurrentFontFamily(),
+              fontSize: `${fontSize}px`,
+              lineHeight: focusMode ? '1.8' : '1.6',
+              letterSpacing: '0.01em',
+              textRendering: 'optimizeLegibility',
+              WebkitFontSmoothing: 'antialiased',
+              MozOsxFontSmoothing: 'grayscale',
+              scrollbarWidth: 'thin',
+              scrollbarColor: darkMode ? '#4B5563 #374151' : '#CBD5E1 #F1F5F9'
+            }}
           />
-        </div>
 
-        {/* Focus Mode Overlay */}
-        {focusMode && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40">
+          {/* Kid-Friendly Floating Settings Button */}
+          {!showSettings && (
             <button
-              onClick={() => setFocusMode(false)}
+              onClick={() => setShowSettings(true)}
               className={`absolute bottom-6 right-6 flex items-center space-x-2 px-4 py-3 rounded-full shadow-lg transition-all duration-300 hover:scale-105 ${
                 darkMode 
                   ? 'bg-blue-600 hover:bg-blue-700 text-white' 
                   : 'bg-blue-500 hover:bg-blue-600 text-white'
               }`}
-              title="Exit Focus Mode"
+              title="Open Writing Settings"
             >
               <Settings className="w-5 h-5" />
-              <span className="text-sm font-medium">Exit Focus</span>
+              <span className="text-sm font-medium">Settings</span>
             </button>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Enhanced Submit Button with Better UX */}
         <div className={`p-4 border-t transition-colors duration-300 ${
