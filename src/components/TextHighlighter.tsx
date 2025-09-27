@@ -129,7 +129,11 @@ export const TextHighlighter: React.FC<TextHighlighterProps> = ({
 
   // Create text segments with highlighting
   const createHighlightedText = useCallback(() => {
-    if (sortedHighlights.length === 0) {
+    if (!text || typeof text !== 'string' || text.length === 0) {
+      return [{ text: text || '', isHighlighted: false, highlight: null }];
+    }
+
+    if (!Array.isArray(sortedHighlights) || sortedHighlights.length === 0) {
       return [{ text, isHighlighted: false, highlight: null }];
     }
 
@@ -204,12 +208,26 @@ export const TextHighlighter: React.FC<TextHighlighterProps> = ({
     }
   };
 
-  const segments = createHighlightedText();
+  let segments: Array<{
+    text: string;
+    isHighlighted: boolean;
+    highlight: HighlightedText | null;
+  }> = [];
+
+  try {
+    segments = createHighlightedText();
+  } catch (error) {
+    console.error("Error creating highlighted text segments:", error);
+    // Fallback to displaying raw text if segment creation fails
+    segments = [{ text: text, isHighlighted: false, highlight: null }];
+  }
 
   return (
     <div className={`relative ${className}`}>
       <div className="whitespace-pre-wrap leading-relaxed">
-        {segments.map((segment, index) => (
+        {(() => {
+          try {
+            return segments.map((segment, index) => (
           <span key={index}>
             {segment.isHighlighted && segment.highlight ? (
               <span
@@ -223,7 +241,12 @@ export const TextHighlighter: React.FC<TextHighlighterProps> = ({
               segment.text
             )}
           </span>
-        ))}
+        ));
+          } catch (error) {
+            console.error("Error rendering highlighted segments:", error);
+            return <span className="text-red-500">Error displaying text. Please refresh.</span>;
+          }
+        })()}
       </div>
 
       {/* Suggestion Bubble */}
@@ -256,7 +279,7 @@ export const useTextHighlights = (
     const highlights: HighlightedText[] = [];
 
     // Process feedback items to create highlights
-    if (feedbackData.feedbackItems) {
+    if (feedbackData.feedbackItems && Array.isArray(feedbackData.feedbackItems)) {
       feedbackData.feedbackItems.forEach((item: any) => {
         if (item.exampleFromText) {
           const startIndex = text.indexOf(item.exampleFromText);
@@ -276,7 +299,7 @@ export const useTextHighlights = (
     }
 
     // Process grammar and spelling corrections
-    if (feedbackData.corrections) {
+    if (feedbackData.corrections && Array.isArray(feedbackData.corrections)) {
       feedbackData.corrections.forEach((correction: any) => {
         if (correction.original) {
           const startIndex = text.indexOf(correction.original);
@@ -295,7 +318,7 @@ export const useTextHighlights = (
     }
 
     // Process vocabulary suggestions
-    if (feedbackData.vocabularyEnhancements) {
+    if (feedbackData.vocabularyEnhancements && Array.isArray(feedbackData.vocabularyEnhancements)) {
       feedbackData.vocabularyEnhancements.forEach((enhancement: any) => {
         if (enhancement.original) {
           const startIndex = text.indexOf(enhancement.original);
@@ -318,4 +341,3 @@ export const useTextHighlights = (
 };
 
 export default TextHighlighter;
-
