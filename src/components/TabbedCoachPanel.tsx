@@ -161,7 +161,8 @@ export function TabbedCoachPanel({
     assessmentId: `nsw-${Date.now()}`
   };
 
-  // Use the provided analysis or fall back to default
+  // Ensure textType and analysis are always valid
+  const safeTextType = textType && typeof textType === 'string' ? textType : 'narrative';
   const safeAnalysis = analysis || defaultAnalysis;
 
   const handleWordReplace = (oldWord: string, newWord: string, position: number) => {
@@ -234,7 +235,7 @@ export function TabbedCoachPanel({
 
       const response = await generateChatResponse({
         userMessage: `Please provide a brief, encouraging writing tip for this paragraph: "${paragraph}". Keep it under 50 words and focus on one specific improvement.`,
-        textType: textType,
+        textType: safeTextType,
         currentContent: paragraph,
         wordCount: paragraph.trim().split(/\s+/).length,
         context: JSON.stringify({ type: 'coach_tip' })
@@ -412,7 +413,7 @@ export function TabbedCoachPanel({
     try {
       const response = await generateChatResponse({
         userMessage: message,
-        textType: textType,
+        textType: safeTextType,
         currentContent: content,
         wordCount: content.split(' ').filter(w => w.length > 0).length,
         context: JSON.stringify({ type: 'user_question' })
@@ -774,7 +775,7 @@ export function TabbedCoachPanel({
               </div>
             )}
 
-            {/* Toolkit Tab Content - Fixed with Safe Analysis */}
+            {/* Toolkit Tab Content - Fixed with Safe Analysis and Props */}
             {tab === "toolkit" && (
               <div className="h-full overflow-auto p-4 space-y-4">
                 <h3 className="font-bold text-lg text-gray-800 flex items-center"><BookOpen className="w-5 h-5 mr-2" /> Toolkit</h3>
@@ -790,3 +791,4 @@ export function TabbedCoachPanel({
     </>
   );
 }
+
