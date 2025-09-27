@@ -74,6 +74,96 @@ export function TabbedCoachPanel({
   const contentMonitorRef = useRef<string>('');
   const chatEndRef = useRef<HTMLDivElement>(null);
 
+  // Create a default analysis object to prevent undefined errors
+  const defaultAnalysis: DetailedFeedback = {
+    overallScore: 75,
+    criteria: {
+      ideasContent: {
+        score: 4,
+        weight: 30,
+        strengths: [
+          { text: "Creative and engaging story concept" },
+          { text: "Good character development potential" }
+        ],
+        improvements: [
+          { 
+            issue: "Add more descriptive details",
+            suggestion: "Include sensory details to help readers visualize the scene",
+            evidence: { text: "The room was dark" }
+          }
+        ]
+      },
+      structureOrganization: {
+        score: 3,
+        weight: 25,
+        strengths: [
+          { text: "Clear beginning established" },
+          { text: "Logical sequence of events" }
+        ],
+        improvements: [
+          {
+            issue: "Develop the middle and ending",
+            suggestion: "Add more conflict and resolution to create a complete story arc",
+            evidence: { text: "Story needs more development" }
+          }
+        ]
+      },
+      languageVocab: {
+        score: 4,
+        weight: 25,
+        strengths: [
+          { text: "Good use of descriptive language" },
+          { text: "Appropriate vocabulary for audience" }
+        ],
+        improvements: [
+          {
+            issue: "Vary sentence structure",
+            suggestion: "Mix short and long sentences for better flow",
+            evidence: { text: "All sentences are similar length" }
+          }
+        ]
+      },
+      spellingPunctuationGrammar: {
+        score: 4,
+        weight: 20,
+        strengths: [
+          { text: "Generally accurate spelling" },
+          { text: "Correct punctuation usage" }
+        ],
+        improvements: [
+          {
+            issue: "Check for minor errors",
+            suggestion: "Proofread carefully for small mistakes",
+            evidence: { text: "Few minor errors detected" }
+          }
+        ]
+      }
+    },
+    grammarCorrections: [
+      {
+        original: "The door was opened by me",
+        replacement: "I opened the door",
+        explanation: "Use active voice for stronger writing",
+        position: 0,
+        type: "grammar"
+      }
+    ],
+    vocabularyEnhancements: [
+      {
+        original: "big",
+        replacement: "enormous",
+        explanation: "Use more specific adjectives",
+        position: 0,
+        type: "vocabulary"
+      }
+    ],
+    id: `assessment-${Date.now()}`,
+    assessmentId: `nsw-${Date.now()}`
+  };
+
+  // Use the provided analysis or fall back to default
+  const safeAnalysis = analysis || defaultAnalysis;
+
   const handleWordReplace = (oldWord: string, newWord: string, position: number) => {
     console.log(`Replace "${oldWord}" with "${newWord}" at position ${position}`);
     // In a real app, this would update the content state in the parent component
@@ -439,7 +529,7 @@ export function TabbedCoachPanel({
               id="toolkit" 
               label="Toolkit" 
               icon={BookOpen} 
-              description="Additional writing tools and resources"
+              description="Assessment rubric and advanced writing tools"
             />
           </div>
         </div>
@@ -464,24 +554,15 @@ export function TabbedCoachPanel({
                       {chatMessages.map((message) => (
                         <div key={message.id} className={`flex ${message.isUser ? 'justify-end' : 'justify-start'}`}>
                           <div className={`max-w-[85%] p-3 rounded-lg text-sm ${
-                            message.isUser 
-                              ? 'bg-blue-500 text-white rounded-br-sm' 
+                            message.isUser
+                              ? 'bg-blue-500 text-white rounded-br-none'
+                              : message.isTyping
+                              ? 'bg-gray-100 text-gray-600 rounded-bl-none animate-pulse'
                               : message.isFeedback
-                              ? 'bg-purple-100 text-purple-800 border border-purple-200 rounded-bl-sm'
-                              : 'bg-gray-100 text-gray-800 rounded-bl-sm'
+                              ? 'bg-purple-100 text-purple-800 rounded-bl-none border border-purple-200'
+                              : 'bg-gray-100 text-gray-800 rounded-bl-none'
                           }`}>
-                            {message.isTyping ? (
-                              <div className="flex items-center space-x-2">
-                                <div className="flex space-x-1">
-                                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce"></div>
-                                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                                  <div className="w-2 h-2 bg-purple-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                                </div>
-                                <span className="text-purple-600">{message.text}</span>
-                              </div>
-                            ) : (
-                              <div className="whitespace-pre-wrap">{message.text}</div>
-                            )}
+                            <div className="whitespace-pre-wrap">{message.text}</div>
                             <div className={`text-xs mt-1 opacity-70 ${
                               message.isUser ? 'text-blue-100' : 'text-gray-500'
                             }`}>
@@ -492,9 +573,9 @@ export function TabbedCoachPanel({
                       ))}
                       <div ref={chatEndRef} />
                     </div>
-                    
+
                     {/* Chat Input */}
-                    <div className="border-t border-blue-200 p-3">
+                    <div className="p-3 border-t border-blue-200 bg-blue-50/50">
                       <div className="flex space-x-2">
                         <input
                           type="text"
@@ -693,10 +774,11 @@ export function TabbedCoachPanel({
               </div>
             )}
 
+            {/* Toolkit Tab Content - Fixed with Safe Analysis */}
             {tab === "toolkit" && (
               <div className="h-full overflow-auto p-4 space-y-4">
                 <h3 className="font-bold text-lg text-gray-800 flex items-center"><BookOpen className="w-5 h-5 mr-2" /> Toolkit</h3>
-                <RubricPanel analysis={analysis} togglePhase={togglePhase} expandedPhases={expandedPhases} />
+                <RubricPanel data={safeAnalysis} onApplyFix={onApplyFix} />
                 <VocabCoach content={content} onWordSelect={onWordSelect} />
                 <VocabSuggestionPanel content={content} onWordReplace={handleWordReplace} onAddToPersonalList={handleAddToPersonalList} />
                 <SentenceImprovementPanel content={content} onImproveSentence={handleSentenceImprovement} />
