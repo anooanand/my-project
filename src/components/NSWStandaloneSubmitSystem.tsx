@@ -37,6 +37,8 @@ export function NSWStandaloneSubmitSystem({
         }
 
         console.log("NSWStandaloneSubmitSystem: Generating report...");
+        
+        // OPTIMIZED: Generate report immediately without artificial delays
         const report = NSWEvaluationReportGenerator.generateReport({
           essayContent: content,
           textType: textType,
@@ -45,6 +47,7 @@ export function NSWStandaloneSubmitSystem({
           targetWordCountMin: targetWordCountMin,
           targetWordCountMax: targetWordCountMax,
         });
+
         console.log("NSWStandaloneSubmitSystem: Report generated successfully:", report);
         onComplete(report);
       } catch (err: any) {
@@ -62,4 +65,3 @@ export function NSWStandaloneSubmitSystem({
 
   return null; // This component no longer renders UI directly
 }
-
