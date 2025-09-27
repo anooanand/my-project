@@ -36,7 +36,17 @@ import {
   Camera,
   Gamepad2,
   HelpCircle,
-  ArrowRight
+  ArrowRight,
+  Play,
+  Calendar,
+  Users,
+  ChevronRight,
+  Activity,
+  BookMarked,
+  Edit3,
+  Timer,
+  Brain,
+  Lightbulb
 } from 'lucide-react';
 
 interface DashboardProps {
@@ -360,268 +370,377 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400 text-lg">Loading your dashboard...</p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="relative">
+            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
+            <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-r-indigo-400 rounded-full animate-spin mx-auto" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+          </div>
+          <div className="space-y-2">
+            <p className="text-slate-700 text-lg font-medium">Loading your dashboard...</p>
+            <p className="text-slate-500 text-sm">Preparing your writing journey</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 relative overflow-hidden">
-      {/* Background decorative elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-200 rounded-full opacity-20 animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-200 rounded-full opacity-20 animate-pulse"></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-pink-200 rounded-full opacity-10 animate-pulse"></div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative">
+      {/* Background Pattern */}
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute inset-0" style={{
+          backgroundImage: `radial-gradient(circle at 25% 25%, rgba(59, 130, 246, 0.1) 0%, transparent 50%), 
+                           radial-gradient(circle at 75% 75%, rgba(99, 102, 241, 0.1) 0%, transparent 50%)`
+        }}></div>
       </div>
 
-      {/* Welcome Message Modal - Improved for kids */}
+      {/* Welcome Message Modal - Modern Design */}
       {showWelcomeMessage && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-2xl max-w-md w-full relative transform animate-bounce">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full relative border border-slate-200">
             <button
               onClick={handleDismissWelcome}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors bg-white dark:bg-gray-700 p-2 rounded-full shadow-md hover:shadow-lg transform hover:scale-110 transition-all duration-300"
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors bg-slate-100 hover:bg-slate-200 p-2 rounded-full"
             >
-              <X className="w-5 h-5" />
+              <X className="h-5 w-5" />
             </button>
+            
             <div className="p-8 text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Smile className="h-8 w-8 text-green-600" />
+              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Sparkles className="h-8 w-8 text-white" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Welcome, {getUserName()}!</h2>
-              <p className="text-gray-700 dark:text-gray-300 text-base mb-6">
-                We're excited to help you become an amazing writer! Let's get started.
+              
+              <h2 className="text-2xl font-bold text-slate-900 mb-4">
+                Welcome, {getUserName()}! 🎉
+              </h2>
+              
+              <p className="text-slate-600 mb-6 leading-relaxed">
+                You're all set to start your writing journey! Your AI writing buddy is ready to help you create amazing stories and essays.
               </p>
+              
               <button
                 onClick={handleDismissWelcome}
-                className="px-8 py-3 bg-green-500 text-white rounded-full font-bold text-lg shadow-lg hover:bg-green-600 transition-colors transform hover:scale-105 flex items-center justify-center gap-2 mx-auto"
+                className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-semibold transition-all duration-200 transform hover:scale-105"
               >
-                <Rocket className="h-5 w-5" />
-                Let's Go!
+                Let's Get Started!
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Main Dashboard Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative z-10">
-        <header className="mb-8">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-4xl font-bold text-gray-900 dark:text-white">Hi, {getUserName()}!</h1>
-              <p className="text-lg text-gray-600 dark:text-gray-400 mt-1">Ready to create your next masterpiece?</p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={() => onNavigate && onNavigate('settings')}
-                className="p-3 bg-white dark:bg-gray-800 rounded-full shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-110"
-              >
-                <Settings className="h-6 w-6 text-gray-600 dark:text-gray-300" />
-              </button>
-              <button
-                onClick={onSignOut}
-                className="px-4 py-2 bg-red-500 text-white rounded-full font-semibold text-sm shadow-lg hover:bg-red-600 transition-colors transform hover:scale-105"
-              >
-                Sign Out
-              </button>
-            </div>
-          </div>
-        </header>
-
-        <div className="bg-white dark:bg-gray-800/50 backdrop-blur-lg rounded-2xl shadow-lg p-6">
-          {/* Verification Status Banner */}
-          <div className="mb-6">
-            {isVerified ? (
-              <div className="bg-green-100 dark:bg-green-900/50 border-l-4 border-green-500 text-green-800 dark:text-green-200 p-4 rounded-lg shadow-sm">
-                <div className="flex items-center">
-                  <CheckCircle className="h-6 w-6 mr-3 text-green-500" />
-                  <div>
-                    <p className="font-bold">Access Verified</p>
-                    {accessType === 'permanent' ? (
-                      <p className="text-sm">You have full access to all features. Happy writing!</p>
-                    ) : (
-                      <p className="text-sm">Your temporary access is active until {formatDateTime(tempAccessUntil!)} ({getTimeRemaining(tempAccessUntil!)}).</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="bg-yellow-100 dark:bg-yellow-900/50 border-l-4 border-yellow-500 text-yellow-800 dark:text-yellow-200 p-4 rounded-lg shadow-sm">
-                <div className="flex items-center mb-2">
-                  <Mail className="h-6 w-6 mr-3 text-yellow-500" />
-                  <div>
-                    <p className="font-bold">Action Required: Verify Your Email</p>
-                    <p className="text-sm">Please check your inbox for a verification link to unlock all features.</p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-4 mt-3">
-                  {!isVerified && (
-                    <button
-                      onClick={() => onNavigate && onNavigate('pricing')}
-                      className="px-4 py-2 bg-blue-500 text-white rounded-full font-semibold text-sm shadow-lg hover:bg-blue-600 transition-colors transform hover:scale-105"
-                    >
-                      Get Access
-                    </button>
-                  )}
-                  {isVerified && accessType === 'temporary' && (
-                    <button
-                      onClick={() => onNavigate && onNavigate('pricing')}
-                      className="px-4 py-2 bg-purple-500 text-white rounded-full font-semibold text-sm shadow-lg hover:bg-purple-600 transition-colors transform hover:scale-105"
-                    >
-                      Keep Forever
-                    </button>
-                  )}
-                  <button
-                    onClick={handleManualRefresh}
-                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded-full font-semibold text-sm shadow-lg hover:bg-gray-300 transition-colors transform hover:scale-105 flex items-center justify-center gap-2"
-                  >
-                    <Mail className="h-4 w-4" /> Refresh
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Main Actions Grid - Improved sizing and spacing */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      {/* Start Here Guide Modal */}
+      {showStartHereGuide && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full relative border border-slate-200">
+            <button
+              onClick={handleDismissGuide}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors bg-slate-100 hover:bg-slate-200 p-2 rounded-full"
+            >
+              <X className="h-5 w-5" />
+            </button>
             
-            {/* Start Writing Card - Reduced size, clearer language */}
-            <div
-              onClick={handleStartWriting}
-              className="relative bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 cursor-pointer overflow-hidden group"
-            >
-              <div className="absolute inset-0 bg-black opacity-10 rounded-2xl"></div>
-              <div className="absolute top-0 right-0 -mr-6 -mt-6 w-24 h-24 rounded-full bg-blue-400 opacity-20 group-hover:scale-125 transition-transform"></div>
-              <div className="absolute bottom-0 left-0 -ml-6 -mb-6 w-20 h-20 rounded-full bg-purple-400 opacity-20 group-hover:scale-125 transition-transform"></div>
-              
-              <div className="flex items-center mb-4 relative z-10">
-                <div className="p-3 bg-white/20 rounded-full mr-3 shadow-md">
-                  <PenTool className="h-6 w-6 text-white" />
+            <div className="p-8">
+              <div className="text-center mb-8">
+                <div className="w-20 h-20 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Lightbulb className="h-10 w-10 text-white" />
                 </div>
-                <h2 className="text-2xl font-bold text-white">Start Writing</h2>
+                <h2 className="text-3xl font-bold text-slate-900 mb-2">Quick Start Guide</h2>
+                <p className="text-slate-600">Follow these simple steps to begin writing</p>
               </div>
               
-              <p className="text-blue-100 text-base mb-4 relative z-10">
-                Ready to write? Pick a story type and get started!
-              </p>
-              
-              <div className="flex items-center text-white font-semibold relative z-10">
-                <span>Let's Go</span>
-                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-              </div>
-            </div>
-
-            {/* Practice Exam Card - Reduced size, clearer language */}
-            <div
-              onClick={handlePracticeExam}
-              className="relative bg-gradient-to-br from-green-500 to-teal-600 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 cursor-pointer overflow-hidden group"
-            >
-              <div className="absolute inset-0 bg-black opacity-10 rounded-2xl"></div>
-              <div className="absolute top-0 right-0 -mr-6 -mt-6 w-24 h-24 rounded-full bg-green-400 opacity-20 group-hover:scale-125 transition-transform"></div>
-              <div className="absolute bottom-0 left-0 -ml-6 -mb-6 w-20 h-20 rounded-full bg-teal-400 opacity-20 group-hover:scale-125 transition-transform"></div>
-              
-              <div className="flex items-center mb-4 relative z-10">
-                <div className="p-3 bg-white/20 rounded-full mr-3 shadow-md">
-                  <FileText className="h-6 w-6 text-white" />
+              <div className="space-y-4 mb-8">
+                <div className="flex items-start space-x-4 p-4 bg-blue-50 rounded-xl">
+                  <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">1</div>
+                  <div>
+                    <h3 className="font-semibold text-slate-900 mb-1">Start Writing</h3>
+                    <p className="text-slate-600 text-sm">Click the "Start Writing" button to begin your writing session</p>
+                  </div>
                 </div>
-                <h2 className="text-2xl font-bold text-white">Practice Test</h2>
+                
+                <div className="flex items-start space-x-4 p-4 bg-purple-50 rounded-xl">
+                  <div className="w-8 h-8 bg-purple-500 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">2</div>
+                  <div>
+                    <h3 className="font-semibold text-slate-900 mb-1">Choose Writing Type</h3>
+                    <p className="text-slate-600 text-sm">Select from narrative, persuasive, descriptive, and more</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-4 p-4 bg-emerald-50 rounded-xl">
+                  <div className="w-8 h-8 bg-emerald-500 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">3</div>
+                  <div>
+                    <h3 className="font-semibold text-slate-900 mb-1">Get Your Prompt</h3>
+                    <p className="text-slate-600 text-sm">Receive an AI-generated prompt or create your own</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-4 p-4 bg-orange-50 rounded-xl">
+                  <div className="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">4</div>
+                  <div>
+                    <h3 className="font-semibold text-slate-900 mb-1">Write & Get Feedback</h3>
+                    <p className="text-slate-600 text-sm">Start writing and receive real-time AI feedback to improve</p>
+                  </div>
+                </div>
               </div>
               
-              <p className="text-green-100 text-base mb-4 relative z-10">
-                Practice writing like it's a real test. Get ready to ace it!
-              </p>
-              
-              <div className="flex items-center text-white font-semibold relative z-10">
-                <span>Start Practice</span>
-                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              <div className="flex space-x-3">
+                <button
+                  onClick={handleDismissGuide}
+                  className="flex-1 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-semibold transition-colors"
+                >
+                  Skip for Now
+                </button>
+                <button
+                  onClick={() => {
+                    handleDismissGuide();
+                    handleStartWriting();
+                  }}
+                  className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-semibold transition-all duration-200 transform hover:scale-105"
+                >
+                  Start Writing Now
+                </button>
               </div>
             </div>
           </div>
+        </div>
+      )}
 
-          {/* Quick Tools Section - Simplified with smaller icons */}
-          <div className="mb-8">
-            <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-purple-500" /> Quick Tools
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      {/* Main Content */}
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header Section */}
+        <div className="mb-12">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <div className="mb-6 lg:mb-0">
+              <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 mb-3">
+                Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">{getUserName()}</span>! 👋
+              </h1>
+              <p className="text-xl text-slate-600 font-medium">
+                Ready to create something amazing today?
+              </p>
+            </div>
+            
+            {/* Quick Stats */}
+            <div className="flex space-x-4">
+              <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-slate-200 shadow-sm">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
+                    <Trophy className="h-5 w-5 text-emerald-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-slate-900">12</p>
+                    <p className="text-sm text-slate-600">Essays Written</p>
+                  </div>
+                </div>
+              </div>
               
-              <button
-                onClick={() => onNavigate && onNavigate('progress')}
-                className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-center hover:bg-blue-50 dark:hover:bg-gray-700 border-2 border-transparent hover:border-blue-300"
-              >
-                <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                  <BarChart3 className="h-5 w-5 text-blue-600" />
+              <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-slate-200 shadow-sm">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <TrendingUp className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold text-slate-900">85%</p>
+                    <p className="text-sm text-slate-600">Avg Score</p>
+                  </div>
                 </div>
-                <h3 className="font-semibold text-gray-800 dark:text-white text-sm">My Progress</h3>
-                <p className="text-gray-600 dark:text-gray-400 text-xs">See how you're doing</p>
-              </button>
-
-              <button
-                onClick={() => onNavigate && onNavigate('learning')}
-                className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-center hover:bg-green-50 dark:hover:bg-gray-700 border-2 border-transparent hover:border-green-300"
-              >
-                <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                  <BookOpen className="h-5 w-5 text-green-600" />
-                </div>
-                <h3 className="font-semibold text-gray-800 dark:text-white text-sm">Learn</h3>
-                <p className="text-gray-600 dark:text-gray-400 text-xs">Writing tips & tricks</p>
-              </button>
-
-              <button
-                onClick={() => onNavigate && onNavigate('help')}
-                className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-center hover:bg-purple-50 dark:hover:bg-gray-700 border-2 border-transparent hover:border-purple-300"
-              >
-                <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                  <HelpCircle className="h-5 w-5 text-purple-600" />
-                </div>
-                <h3 className="font-semibold text-gray-800 dark:text-white text-sm">Help</h3>
-                <p className="text-gray-600 dark:text-gray-400 text-xs">Need assistance?</p>
-              </button>
-
-              <button
-                onClick={() => onNavigate && onNavigate('achievements')}
-                className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-center hover:bg-yellow-50 dark:hover:bg-gray-700 border-2 border-transparent hover:border-yellow-300"
-              >
-                <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                  <Trophy className="h-5 w-5 text-yellow-600" />
-                </div>
-                <h3 className="font-semibold text-gray-800 dark:text-white text-sm">Achievements</h3>
-                <p className="text-gray-600 dark:text-gray-400 text-xs">Your awards</p>
-              </button>
+              </div>
             </div>
           </div>
+        </div>
 
-          {/* Recent Activity - Simplified */}
-          <div className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-6">
-            <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center gap-2">
-              <Clock className="h-5 w-5 text-gray-600" /> What's New?
-            </h2>
-            <div className="space-y-3">
-              <div className="flex items-center p-3 bg-white dark:bg-gray-700 rounded-xl shadow-sm">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                  <Star className="h-4 w-4 text-blue-600" />
+        {/* Main Action Cards */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+          {/* Start Writing Card */}
+          <div
+            onClick={handleStartWriting}
+            className="group relative bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 rounded-2xl p-8 cursor-pointer overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-6">
+                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                  <Edit3 className="h-8 w-8 text-white" />
                 </div>
-                <div>
-                  <p className="font-medium text-gray-800 dark:text-white text-sm">New writing prompts added!</p>
-                  <p className="text-gray-600 dark:text-gray-400 text-xs">Check out the latest story ideas</p>
-                </div>
+                <ArrowRight className="h-6 w-6 text-white/70 group-hover:text-white group-hover:translate-x-1 transition-all duration-300" />
               </div>
               
-              <div className="flex items-center p-3 bg-white dark:bg-gray-700 rounded-xl shadow-sm">
-                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
-                  <Gift className="h-4 w-4 text-green-600" />
+              <h2 className="text-3xl font-bold text-white mb-3">Start Writing</h2>
+              <p className="text-blue-100 text-lg mb-6 leading-relaxed">
+                Begin a new writing session with AI-powered guidance and real-time feedback
+              </p>
+              
+              <div className="flex items-center space-x-4 text-blue-100">
+                <div className="flex items-center space-x-2">
+                  <Brain className="h-4 w-4" />
+                  <span className="text-sm">AI Assistance</span>
                 </div>
-                <div>
-                  <p className="font-medium text-gray-800 dark:text-white text-sm">Writing buddy got smarter!</p>
-                  <p className="text-gray-600 dark:text-gray-400 text-xs">Better help with your stories</p>
+                <div className="flex items-center space-x-2">
+                  <Zap className="h-4 w-4" />
+                  <span className="text-sm">Real-time Feedback</span>
                 </div>
               </div>
             </div>
+            
+            {/* Decorative Elements */}
+            <div className="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
+            <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-indigo-400/20 rounded-full blur-xl"></div>
+          </div>
+
+          {/* Practice Exam Card */}
+          <div
+            onClick={handlePracticeExam}
+            className="group relative bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800 rounded-2xl p-8 cursor-pointer overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-6">
+                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                  <Timer className="h-8 w-8 text-white" />
+                </div>
+                <ArrowRight className="h-6 w-6 text-white/70 group-hover:text-white group-hover:translate-x-1 transition-all duration-300" />
+              </div>
+              
+              <h2 className="text-3xl font-bold text-white mb-3">Practice Exam</h2>
+              <p className="text-emerald-100 text-lg mb-6 leading-relaxed">
+                Test your skills with timed practice sessions under real exam conditions
+              </p>
+              
+              <div className="flex items-center space-x-4 text-emerald-100">
+                <div className="flex items-center space-x-2">
+                  <Clock className="h-4 w-4" />
+                  <span className="text-sm">Timed Sessions</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Target className="h-4 w-4" />
+                  <span className="text-sm">NSW Aligned</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Decorative Elements */}
+            <div className="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
+            <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-teal-400/20 rounded-full blur-xl"></div>
+          </div>
+        </div>
+
+        {/* Progress & Activities Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+          {/* Progress Overview */}
+          <div className="lg:col-span-2 bg-white/80 backdrop-blur-sm rounded-2xl p-8 border border-slate-200 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold text-slate-900">Your Progress</h3>
+              <button className="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center space-x-1">
+                <span>View All</span>
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+              <div className="text-center">
+                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <FileText className="h-8 w-8 text-white" />
+                </div>
+                <p className="text-3xl font-bold text-slate-900 mb-1">12</p>
+                <p className="text-slate-600 text-sm">Essays Completed</p>
+              </div>
+              
+              <div className="text-center">
+                <div className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Award className="h-8 w-8 text-white" />
+                </div>
+                <p className="text-3xl font-bold text-slate-900 mb-1">85%</p>
+                <p className="text-slate-600 text-sm">Average Score</p>
+              </div>
+              
+              <div className="text-center">
+                <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Flame className="h-8 w-8 text-white" />
+                </div>
+                <p className="text-3xl font-bold text-slate-900 mb-1">7</p>
+                <p className="text-slate-600 text-sm">Day Streak</p>
+              </div>
+            </div>
+            
+            {/* Progress Bar */}
+            <div className="bg-slate-100 rounded-full h-3 mb-3">
+              <div className="bg-gradient-to-r from-blue-500 to-indigo-600 h-3 rounded-full" style={{ width: '68%' }}></div>
+            </div>
+            <p className="text-sm text-slate-600">68% towards your monthly goal of 20 essays</p>
+          </div>
+
+          {/* Recent Activity */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-slate-200 shadow-sm">
+            <h3 className="text-xl font-bold text-slate-900 mb-6">Recent Activity</h3>
+            
+            <div className="space-y-4">
+              <div className="flex items-start space-x-3">
+                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <BookOpen className="h-4 w-4 text-blue-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-slate-900">Completed Narrative Essay</p>
+                  <p className="text-xs text-slate-600">Score: 92% • 2 hours ago</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-3">
+                <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Trophy className="h-4 w-4 text-emerald-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-slate-900">Achievement Unlocked</p>
+                  <p className="text-xs text-slate-600">"Writing Streak" • Yesterday</p>
+                </div>
+              </div>
+              
+              <div className="flex items-start space-x-3">
+                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Star className="h-4 w-4 text-purple-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-slate-900">Practice Exam</p>
+                  <p className="text-xs text-slate-600">Score: 88% • 2 days ago</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 border border-slate-200 shadow-sm">
+          <h3 className="text-2xl font-bold text-slate-900 mb-6">Quick Actions</h3>
+          
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <button className="flex flex-col items-center p-4 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors group">
+              <div className="w-12 h-12 bg-blue-100 group-hover:bg-blue-200 rounded-xl flex items-center justify-center mb-3 transition-colors">
+                <BookMarked className="h-6 w-6 text-blue-600" />
+              </div>
+              <span className="text-sm font-medium text-slate-700">View Essays</span>
+            </button>
+            
+            <button className="flex flex-col items-center p-4 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors group">
+              <div className="w-12 h-12 bg-emerald-100 group-hover:bg-emerald-200 rounded-xl flex items-center justify-center mb-3 transition-colors">
+                <BarChart3 className="h-6 w-6 text-emerald-600" />
+              </div>
+              <span className="text-sm font-medium text-slate-700">Progress</span>
+            </button>
+            
+            <button className="flex flex-col items-center p-4 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors group">
+              <div className="w-12 h-12 bg-purple-100 group-hover:bg-purple-200 rounded-xl flex items-center justify-center mb-3 transition-colors">
+                <Settings className="h-6 w-6 text-purple-600" />
+              </div>
+              <span className="text-sm font-medium text-slate-700">Settings</span>
+            </button>
+            
+            <button className="flex flex-col items-center p-4 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors group">
+              <div className="w-12 h-12 bg-orange-100 group-hover:bg-orange-200 rounded-xl flex items-center justify-center mb-3 transition-colors">
+                <HelpCircle className="h-6 w-6 text-orange-600" />
+              </div>
+              <span className="text-sm font-medium text-slate-700">Help</span>
+            </button>
           </div>
         </div>
       </div>
@@ -641,7 +760,8 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
           onClose={() => setShowPromptOptionsModal(false)}
           onGeneratePrompt={handleGeneratePrompt}
           onCustomPrompt={handleCustomPrompt}
-          textType={selectedWritingType}
+          selectedWritingType={selectedWritingType}
+          isGenerating={isGeneratingPrompt}
         />
       )}
 
@@ -650,7 +770,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
           isOpen={showCustomPromptModal}
           onClose={() => setShowCustomPromptModal(false)}
           onSubmit={handleCustomPromptSubmit}
-          textType={selectedWritingType}
+          writingType={selectedWritingType}
         />
       )}
     </div>
