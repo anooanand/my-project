@@ -5,7 +5,7 @@ import { TipsModal } from './TipsModal';
 import { TabbedCoachPanel } from './TabbedCoachPanel';
 import { NSWStandaloneSubmitSystem } from './NSWStandaloneSubmitSystem';
 import { ReportModal } from './ReportModal';
-import type { LintFix } from '../types/feedback';
+import type { DetailedFeedback, LintFix } from '../types/feedback';
 import { eventBus } from '../lib/eventBus';
 import { detectNewParagraphs } from '../lib/paragraphDetection';
 import { NSWEvaluationReportGenerator } from './NSWEvaluationReportGenerator';
@@ -69,78 +69,6 @@ export interface GrammarFeedback {
   }>;
   punctuationTips: string[];
   commonErrors: string[];
-}
-
-interface DetailedFeedback {
-  overallScore: number;
-  overallGrade: string;
-  domains: {
-    contentAndIdeas: DomainScore;
-    textStructure: DomainScore;
-    languageFeatures: DomainScore;
-    spellingAndGrammar: DomainScore;
-  };
-  detailedFeedback: {
-    wordCount: number;
-    sentenceVariety: {
-      simple: number;
-      compound: number;
-      complex: number;
-      analysis: string;
-    };
-    vocabularyAnalysis: {
-      sophisticatedWords: string[];
-      repetitiveWords: string[];
-      suggestions: string[];
-    };
-    literaryDevices: {
-      identified: string[];
-      suggestions: string[];
-    };
-    structuralElements: {
-      hasIntroduction: boolean;
-      hasConclusion: boolean;
-      paragraphCount: number;
-      coherence: string;
-    };
-    technicalAccuracy: {
-      spellingErrors: number;
-      grammarIssues: string[];
-      punctuationIssues: string[];
-    };
-  };
-  recommendations: string[];
-  strengths: string[];
-  areasForImprovement: string[];
-  essayContent: string;
-  grammarCorrections: Array<{
-    original: string;
-    replacement: string;
-    explanation: string;
-    position: number;
-    type: string;
-  }>;
-  vocabularyEnhancements: Array<{
-    original: string;
-    replacement: string;
-    explanation: string;
-    position: number;
-    type: string;
-  }>;
-  id: string;
-  assessmentId: string;
-}
-
-interface DomainScore {
-  score: number;
-  maxScore: number;
-  percentage: number;
-  band: string;
-  weight: number;
-  weightedScore: number;
-  feedback: string[];
-  specificExamples: string[];
-  childFriendlyExplanation: string;
 }
 
 interface EnhancedWritingLayoutProps {
@@ -411,23 +339,22 @@ export function EnhancedWritingLayout({
 
     // Update analysis scores based on content
     if (wordCount > 50) {
-      setAnalysis(prev => ({
-        ...prev,
-        overallScore: Math.min(95, 60 + Math.floor(wordCount / 10)),
-        criteria: {
-          ...prev.criteria,
-          ideasContent: {
-            ...prev.criteria.ideasContent,
-            score: Math.min(5, Math.floor(wordCount / 20) + 2)
-          },
-          structureOrganization: {
-            ...prev.criteria.structureOrganization,
-            score: Math.min(5, Math.floor(paragraphs.length) + 2)
-          }
+    setAnalysis(prev => {
+        const newDomains = { ...prev.domains };
+        if (newDomains.contentAndIdeas) {
+          newDomains.contentAndIdeas = { ...newDomains.contentAndIdeas, score: Math.min(5, Math.floor(wordCount / 20) + 2) };
         }
-      }));
-    }
+        if (newDomains.textStructure) {
+          newDomains.textStructure = { ...newDomains.textStructure, score: Math.min(5, Math.floor(paragraphs.length) + 2) };
+        }
 
+        return {
+          ...prev,
+          overallScore: Math.min(95, 60 + Math.floor(wordCount / 10)),
+          domains: newDomains
+        };
+      });
+    }
   }, [localContent, content]);
 
   // Timer functions - Preserved from current implementation
@@ -678,17 +605,47 @@ export function EnhancedWritingLayout({
     try {
       const convertedAnalysis: DetailedFeedback = {
         overallScore: report.overallScore || 0,
-        overallGrade: report.overallGrade || 'N/A',
-        domains: report.domains,
-        detailedFeedback: report.detailedFeedback || {},
-        recommendations: report.recommendations || [],
-        strengths: report.strengths || [],
-        areasForImprovement: report.areasForImprovement || [],
-        essayContent: report.essayContent || '',
+        criteria: {
+          ideasContent: {
+            score: report.domains?.contentAndIdeas?.score || 0,
+            weight: report.domains?.contentAndIdeas?.weight || 40,
+            strengths: report.domains?.contentAndIdeas?.feedback?.map((s: string) => ({ text: s })) || [],
+            improvements: report.areasForImprovement?.map((i: string) => ({
+              issue: i,
+              suggestion: "Continue developing this area",
+              evidence: { text: "Based on your writing" }
+            })) || []
+          },
+          structureOrganization: {
+            score: report.domains?.textStructure?.score || 0,
+            weight: report.domains?.textStructure?.weight || 20,
+            strengths: report.domains?.textStructure?.feedback?.map((s: string) => ({ text: s })) || [],
+            improvements: []
+          },
+          languageVocab: {
+            score: report.domains?.languageFeatures?.score || 0,
+            weight: report.domains?.languageFeatures?.weight || 25,
+            strengths: report.domains?.languageFeatures?.feedback?.map((s: string) => ({ text: s })) || [],
+            improvements: []
+          },
+          spellingPunctuationGrammar: {
+            score: report.domains?.spellingAndGrammar?.score || 0,
+            weight: report.domains?.spellingAndGrammar?.weight || 15,
+            strengths: report.domains?.spellingAndGrammar?.feedback?.map((s: string) => ({ text: s })) || [],
+            improvements: []
+          }
+        },
         grammarCorrections: report.detailedFeedback?.technicalAccuracy?.grammarIssues?.map((issue: string) => ({ original: "", replacement: "", explanation: issue, position: 0, type: "grammar" })) || [],
         vocabularyEnhancements: report.detailedFeedback?.vocabularyAnalysis?.suggestions?.map((suggestion: string) => ({ original: "", replacement: suggestion, explanation: "", position: 0, type: "vocabulary" })) || [],
         id: report.id || `nsw-${Date.now()}`,
         assessmentId: report.assessmentId || `assessment-${Date.now()}`,
+        overallScore: report.overallScore || 0,
+        overallGrade: report.overallGrade || 'N/A',
+        detailedFeedback: report.detailedFeedback || {},
+        recommendations: report.recommendations || [],
+        strengths: report.strengths || [],
+        areasForImprovement: report.areasForImprovement || [],
+        essayContent: report.essayContent || ''
       };
       
       console.log("Converted analysis:", convertedAnalysis);
@@ -940,27 +897,29 @@ export function EnhancedWritingLayout({
                 </h4>
                 <button
                   onClick={() => setShowSettings(false)}
-                  className={`flex items-center space-x-1 px-3 py-1 rounded-md transition-colors text-sm font-medium ${
+                  className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
                     darkMode
-                      ? 'text-gray-300 hover:text-gray-100 hover:bg-gray-700'
-                      : 'text-gray-700 hover:text-gray-900 hover:bg-gray-200'
+                      ? 'text-gray-400 hover:text-gray-200 hover:bg-gray-700'
+                      : 'text-gray-600 hover:text-gray-800 hover:bg-gray-200'
                   }`}
                 >
                   <X className="w-4 h-4" />
                   <span>Close</span>
                 </button>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Font Size Selector */}
-                <div>
-                  <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Font Size</label>
-                  <div className="flex space-x-2">
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Font Size */}
+                <div className="space-y-2">
+                  <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    📝 Text Size
+                  </label>
+                  <div className="flex items-center space-x-1">
                     {fontSizes.map((size) => (
                       <button
                         key={size.value}
                         onClick={() => setFontSize(size.value)}
-                        className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
+                        className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                           fontSize === size.value
                             ? 'bg-blue-500 text-white'
                             : darkMode
@@ -975,46 +934,43 @@ export function EnhancedWritingLayout({
                   </div>
                 </div>
 
-                {/* Font Family Selector */}
-                <div>
-                  <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Font Family</label>
-                  <div className="flex space-x-2">
-                    {fontFamilies.map((font) => (
-                      <button
-                        key={font.value}
-                        onClick={() => setFontFamily(font.value)}
-                        className={`px-3 py-1 rounded-md text-sm font-medium transition-colors ${
-                          fontFamily === font.value
-                            ? 'bg-blue-500 text-white'
-                            : darkMode
-                            ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                        }`}
-                        title={font.name}
-                      >
-                        {font.name.split(' ')[0]} 
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Dark Mode Toggle */}
-                <div className="flex items-center justify-between md:col-span-2">
-                  <label htmlFor="darkModeToggle" className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Dark Mode</label>
-                  <button
-                    id="darkModeToggle"
-                    onClick={() => setDarkMode(!darkMode)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                      darkMode ? 'bg-blue-600' : 'bg-gray-200'
-                    } ${
-                      darkMode ? 'focus:ring-blue-500' : 'focus:ring-gray-500'
+                {/* Font Family */}
+                <div className="space-y-2">
+                  <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    🔤 Font Style
+                  </label>
+                  <select
+                    value={fontFamily}
+                    onChange={(e) => setFontFamily(e.target.value)}
+                    className={`w-full px-3 py-2 rounded-md text-sm border transition-colors ${
+                      darkMode
+                        ? 'bg-gray-700 border-gray-600 text-gray-300'
+                        : 'bg-white border-gray-300 text-gray-700'
                     }`}
                   >
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                        darkMode ? 'translate-x-6' : 'translate-x-1'
-                      }`}
-                    />
+                    {fontFamilies.map((family) => (
+                      <option key={family.value} value={family.value}>
+                        {family.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Theme Toggle */}
+                <div className="space-y-2">
+                  <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    🌙 Theme
+                  </label>
+                  <button
+                    onClick={() => setDarkMode(!darkMode)}
+                    className={`w-full flex items-center justify-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      darkMode
+                        ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                  >
+                    {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                    <span>{darkMode ? 'Light Mode' : 'Dark Mode'}</span>
                   </button>
                 </div>
               </div>
@@ -1022,24 +978,26 @@ export function EnhancedWritingLayout({
           )}
         </div>
 
-        {/* Main Writing Area */}
-        <div className={`flex-1 p-4 overflow-y-auto custom-scrollbar ${
-          focusMode ? 'py-8' : ''
-        }`}>
+        {/* ORIGINAL SIMPLE WRITING AREA - NO WritingArea COMPONENT */}
+        <div className={`flex-1 relative transition-colors duration-300 ${
+          darkMode ? 'bg-gray-800' : 'bg-white'
+        } ${focusMode ? 'bg-opacity-95' : ''}`}>
+          {/* Writing Area with Enhanced UX - ORIGINAL TEXTAREA */}
           <textarea
-            className={`w-full h-full p-4 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300 ${
-              darkMode
-                ? 'bg-gray-900 border-gray-700 text-gray-100 placeholder-gray-400'
-                : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-            } ${
-              focusMode ? 'max-w-3xl mx-auto shadow-xl' : ''
-            }`}
+            className={`w-full h-full p-6 resize-none focus:outline-none transition-all duration-300 ${
+              darkMode 
+                ? 'bg-transparent text-white placeholder-gray-400' 
+                : 'bg-transparent text-gray-900 placeholder-gray-500'
+            } ${focusMode ? 'shadow-inner' : ''}`}
+            placeholder={focusMode 
+              ? "Focus on your writing. Let your thoughts flow freely..." 
+              : "Start writing your amazing story here! Let your creativity flow and bring your ideas to life…"
+            }
             value={localContent}
             onChange={(e) => handleContentChange(e.target.value)}
-            placeholder="Start writing your essay here..."
             style={{
-              fontSize: `${fontSize}px`,
               fontFamily: getCurrentFontFamily(),
+              fontSize: `${fontSize}px`,
               lineHeight: focusMode ? '1.8' : '1.6',
               letterSpacing: '0.01em',
               textRendering: 'optimizeLegibility',
