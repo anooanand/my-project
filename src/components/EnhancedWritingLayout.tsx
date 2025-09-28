@@ -429,15 +429,15 @@ export function EnhancedWritingLayout({
             <div className="flex items-center space-x-2">
               <button
                 onClick={() => setShowPlanningTool(true)}
-                className="flex items-center space-x-1 px-3 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm font-medium"
+                className="flex items-center space-x-1 px-3 py-1.5 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-md hover:from-purple-600 hover:to-purple-700 transition-all duration-200 text-sm font-medium shadow-sm"
               >
-                <PenTool className="w-4 h-4" />
-                <span>Planning</span>
+                <Target className="w-4 h-4" />
+                <span>Plan</span>
               </button>
               
               <button
                 onClick={() => setShowStructureGuide(true)}
-                className="flex items-center space-x-1 px-3 py-1.5 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors text-sm font-medium"
+                className="flex items-center space-x-1 px-3 py-1.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-md hover:from-blue-600 hover:to-blue-700 transition-all duration-200 text-sm font-medium shadow-sm"
               >
                 <BookOpen className="w-4 h-4" />
                 <span>Structure</span>
@@ -445,47 +445,21 @@ export function EnhancedWritingLayout({
               
               <button
                 onClick={() => setShowTips(true)}
-                className="flex items-center space-x-1 px-3 py-1.5 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors text-sm font-medium"
+                className="flex items-center space-x-1 px-3 py-1.5 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-md hover:from-green-600 hover:to-green-700 transition-all duration-200 text-sm font-medium shadow-sm"
               >
                 <LightbulbIcon className="w-4 h-4" />
                 <span>Tips</span>
               </button>
-              
-              <button
-                onClick={() => setFocusMode(!focusMode)}
-                className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
-                  focusMode 
-                    ? 'bg-gray-700 text-white hover:bg-gray-800' 
-                    : 'bg-gray-600 text-white hover:bg-gray-700'
-                }`}
-              >
-                {focusMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                <span>Focus</span>
-              </button>
             </div>
 
-            {/* Right: Enhanced Timer, Stats and Settings */}
-            <div className="flex items-center space-x-3">
-              {/* Enhanced Writing Timer */}
-              <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg border shadow-sm ${
-                darkMode 
-                  ? 'border-gray-600 bg-gray-700' 
-                  : 'border-gray-300 bg-gray-50'
-              }`}>
-                <Clock className={`w-5 h-5 ${
-                  isTimerRunning 
-                    ? 'text-green-500' 
-                    : darkMode ? 'text-blue-400' : 'text-blue-600'
-                }`} />
-                <span className={`text-lg font-bold font-mono ${
-                  isTimerRunning 
-                    ? 'text-green-500' 
-                    : darkMode ? 'text-gray-100' : 'text-gray-800'
-                }`}>
+            {/* Right: Status and Controls */}
+            <div className="flex items-center space-x-4">
+              {/* Timer */}
+              <div className="flex items-center space-x-2">
+                <Clock className={`w-4 h-4 ${darkMode ? 'text-blue-400' : 'text-blue-500'}`} />
+                <span className={`text-sm font-mono ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                   {formatTime(elapsedTime)}
                 </span>
-                
-                {/* Timer Controls */}
                 <div className="flex items-center space-x-1">
                   {!isTimerRunning ? (
                     <button
@@ -613,31 +587,35 @@ export function EnhancedWritingLayout({
                   <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                     🔤 Font Style
                   </label>
-                  <select
-                    value={fontFamily}
-                    onChange={(e) => setFontFamily(e.target.value)}
-                    className={`w-full px-3 py-2 rounded-md text-sm border transition-colors ${
-                      darkMode
-                        ? 'bg-gray-700 border-gray-600 text-gray-300'
-                        : 'bg-white border-gray-300 text-gray-700'
-                    }`}
-                  >
-                    {fontFamilies.map((family) => (
-                      <option key={family.value} value={family.value}>
-                        {family.name}
-                      </option>
+                  <div className="flex items-center space-x-1">
+                    {fontFamilies.map((font) => (
+                      <button
+                        key={font.value}
+                        onClick={() => setFontFamily(font.value)}
+                        className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                          fontFamily === font.value
+                            ? 'bg-blue-500 text-white'
+                            : darkMode
+                            ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                        }`}
+                        style={{ fontFamily: font.css }}
+                        title={font.name}
+                      >
+                        {font.name}
+                      </button>
                     ))}
-                  </select>
+                  </div>
                 </div>
 
                 {/* Theme Toggle */}
                 <div className="space-y-2">
                   <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    🌙 Theme
+                    🎨 Theme
                   </label>
                   <button
                     onClick={() => setDarkMode(!darkMode)}
-                    className={`w-full flex items-center justify-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                       darkMode
                         ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -652,99 +630,80 @@ export function EnhancedWritingLayout({
           )}
         </div>
 
-        {/* ORIGINAL SIMPLE WRITING AREA - RESTORED FROM OLD VERSION */}
-        <div className={`flex-1 relative transition-colors duration-300 ${
-          darkMode ? 'bg-gray-800' : 'bg-white'
-        } ${focusMode ? 'bg-opacity-95' : ''}`}>
-          {/* Writing Area with Enhanced UX - ORIGINAL TEXTAREA */}
-          <textarea
-            className={`w-full h-full p-6 resize-none focus:outline-none transition-all duration-300 ${
-              darkMode 
-                ? 'bg-transparent text-white placeholder-gray-400' 
-                : 'bg-transparent text-gray-900 placeholder-gray-500'
-            } ${focusMode ? 'shadow-inner' : ''}`}
-            placeholder={focusMode 
-              ? "Focus on your writing. Let your thoughts flow freely..." 
-              : "Start writing your amazing story here! Let your creativity flow and bring your ideas to life…"
-            }
-            value={localContent}
-            onChange={(e) => handleContentChange(e.target.value)}
-            style={{
-              fontFamily: getCurrentFontFamily(),
-              fontSize: `${fontSize}px`,
-              lineHeight: focusMode ? '1.8' : '1.6',
-              letterSpacing: '0.01em',
-              textRendering: 'optimizeLegibility',
-              WebkitFontSmoothing: 'antialiased',
-              MozOsxFontSmoothing: 'grayscale',
-              scrollbarWidth: 'thin',
-              scrollbarColor: darkMode ? '#4B5563 #374151' : '#CBD5E1 #F1F5F9'
-            }}
-          />
-
-          {/* Focus Mode Indicator */}
-          {focusMode && (
-            <div className={`absolute bottom-4 right-4 px-3 py-1 rounded-full text-sm font-medium ${
-              darkMode ? 'bg-blue-800 text-blue-200' : 'bg-blue-100 text-blue-800'
-            }`}>
-              Focus Mode
+        {/* Main Writing Area */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* Writing Area */}
+          <div className="flex-1 flex flex-col">
+            <div className="flex-1 p-6 overflow-auto">
+              <textarea
+                value={localContent}
+                onChange={(e) => handleContentChange(e.target.value)}
+                placeholder="Start writing your response here..."
+                className={`w-full h-full resize-none border-none outline-none transition-colors duration-300 ${
+                  darkMode 
+                    ? 'bg-transparent text-gray-100 placeholder-gray-500' 
+                    : 'bg-transparent text-gray-900 placeholder-gray-400'
+                }`}
+                style={{
+                  fontSize: `${fontSize}px`,
+                  fontFamily: getCurrentFontFamily(),
+                  lineHeight: '1.6'
+                }}
+              />
             </div>
-          )}
-        </div>
 
-        {/* Enhanced Submit Button with Better UX */}
-        <div className={`p-4 border-t transition-colors duration-300 ${
-          darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-        }`}>
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={() => handleSubmitForEvaluation(currentContent, textType)}
-              disabled={evaluationStatus === "loading" || !hasContent}
-              className="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 disabled:from-gray-400 disabled:to-gray-500 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 disabled:cursor-not-allowed shadow-lg"
-            >
-              {evaluationStatus === "loading" ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  <span>Evaluating...</span>
-                </>
-              ) : (
-                <>
-                  <Target className="w-5 h-5" />
-                  <span>Submit for Evaluation</span>
-                </>
-              )}
-            </button>
-            
-            {/* Quick Info Button */}
-            <button
-              className={`p-3 rounded-lg transition-colors ${
-                darkMode
-                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-              }`}
-              title="Evaluation Info"
-            >
-              <Info className="w-5 h-5" />
-            </button>
+            {/* Submit Button */}
+            <div className={`p-4 border-t transition-colors duration-300 ${
+              darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+            }`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Ready to get feedback on your writing?
+                  </span>
+                </div>
+                <button
+                  onClick={() => handleSubmitForEvaluation(currentContent, textType)}
+                  disabled={!hasContent || evaluationStatus === "loading"}
+                  className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
+                    hasContent && evaluationStatus !== "loading"
+                      ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white hover:from-purple-700 hover:to-purple-800 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  }`}
+                >
+                  {evaluationStatus === "loading" ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <span>Evaluating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Award className="w-4 h-4" />
+                      <span>Submit for Evaluation</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Panel - Coach */}
+          <div className={`w-80 border-l transition-colors duration-300 ${
+            darkMode ? 'border-gray-700' : 'border-gray-200'
+          }`}>
+            <TabbedCoachPanel
+              content={localContent}
+              textType={textType}
+              selectedText={selectedText}
+              ideasFeedback={ideasFeedback}
+              structureFeedback={structureFeedback}
+              languageFeedback={languageFeedback}
+              grammarFeedback={grammarFeedback}
+              onContentChange={handleContentChange}
+              darkMode={darkMode}
+            />
           </div>
         </div>
-      </div>
-
-      {/* Right side - Coach Panel */}
-      <div className={`w-96 flex-shrink-0 border-l transition-colors duration-300 ${
-        darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-      }`}>
-        <TabbedCoachPanel 
-          analysis={analysis} 
-          onApplyFix={handleApplyFix}
-          content={currentContent}
-          textType={textType}
-          timeElapsed={elapsedTime}
-          ideasFeedback={ideasFeedback}
-          structureFeedback={structureFeedback}
-          languageFeedback={languageFeedback}
-          grammarFeedback={grammarFeedback}
-        />
       </div>
 
       {/* Modals */}
@@ -763,13 +722,14 @@ export function EnhancedWritingLayout({
         isOpen={showTips}
         onClose={() => setShowTips(false)}
       />
-      <ReportModal
-        isOpen={showReportModal}
-        onClose={handleCloseReportModal}
-        report={nswReport}
-        analysis={analysis}
-        onApplyFix={handleApplyFix}
-      />
+      {analysis && (
+        <ReportModal
+          isOpen={showReportModal}
+          onClose={handleCloseReportModal}
+          data={analysis}
+          onApplyFix={handleApplyFix}
+        />
+      )}
 
       {/* NSW Evaluation Loading Modal */}
       {showNSWEvaluation && (
