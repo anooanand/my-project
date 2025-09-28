@@ -888,43 +888,22 @@ export function EnhancedWritingLayout({
 
           {/* Kid-Friendly Settings Panel */}
           {showSettings && (
-            <div className={`border-t px-4 py-3 transition-colors duration-300 ${
-              darkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+            <div className={`p-4 border-t transition-colors duration-300 ${
+              darkMode ? 'border-gray-700' : 'border-gray-200'
             }`}>
-              <div className="flex items-center justify-between mb-3">
-                <h4 className={`font-medium text-base ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-                  ⚙️ Writing Settings
-                </h4>
-                <button
-                  onClick={() => setShowSettings(false)}
-                  className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
-                    darkMode
-                      ? 'text-gray-400 hover:text-gray-200 hover:bg-gray-700'
-                      : 'text-gray-600 hover:text-gray-800 hover:bg-gray-200'
-                  }`}
-                >
-                  <X className="w-4 h-4" />
-                  <span>Close</span>
-                </button>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Font Size */}
-                <div className="space-y-2">
-                  <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    📝 Text Size
-                  </label>
-                  <div className="flex items-center space-x-1">
+              <div className="grid grid-cols-2 gap-4">
+                {/* Font Size Controls */}
+                <div>
+                  <h4 className={`text-sm font-semibold mb-2 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>Font Size</h4>
+                  <div className="flex items-center space-x-2">
                     {fontSizes.map((size) => (
                       <button
                         key={size.value}
                         onClick={() => setFontSize(size.value)}
-                        className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                        className={`w-8 h-8 rounded text-xs font-medium transition-colors ${
                           fontSize === size.value
-                            ? 'bg-blue-500 text-white'
-                            : darkMode
-                            ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                            ? darkMode ? 'bg-blue-600 text-white' : 'bg-blue-500 text-white'
+                            : darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                         }`}
                         title={size.name}
                       >
@@ -934,17 +913,15 @@ export function EnhancedWritingLayout({
                   </div>
                 </div>
 
-                {/* Font Family */}
-                <div className="space-y-2">
-                  <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    🔤 Font Style
-                  </label>
+                {/* Font Family Selector */}
+                <div>
+                  <h4 className={`text-sm font-semibold mb-2 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>Font Style</h4>
                   <select
                     value={fontFamily}
                     onChange={(e) => setFontFamily(e.target.value)}
-                    className={`w-full px-3 py-2 rounded-md text-sm border transition-colors ${
+                    className={`w-full text-sm px-3 py-2 rounded border transition-colors ${
                       darkMode
-                        ? 'bg-gray-700 border-gray-600 text-gray-300'
+                        ? 'bg-gray-700 border-gray-600 text-gray-200'
                         : 'bg-white border-gray-300 text-gray-700'
                     }`}
                   >
@@ -956,21 +933,19 @@ export function EnhancedWritingLayout({
                   </select>
                 </div>
 
-                {/* Theme Toggle */}
-                <div className="space-y-2">
-                  <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    🌙 Theme
-                  </label>
+                {/* Dark Mode Toggle */}
+                <div>
+                  <h4 className={`text-sm font-semibold mb-2 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>Theme</h4>
                   <button
                     onClick={() => setDarkMode(!darkMode)}
-                    className={`w-full flex items-center justify-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    className={`flex items-center space-x-2 px-3 py-2 rounded transition-colors text-sm w-full justify-center ${
                       darkMode
-                        ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                        ? 'bg-gray-700 text-gray-200 hover:bg-gray-600'
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                     }`}
                   >
                     {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                    <span>{darkMode ? 'Light Mode' : 'Dark Mode'}</span>
+                    <span>{darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}</span>
                   </button>
                 </div>
               </div>
@@ -978,23 +953,19 @@ export function EnhancedWritingLayout({
           )}
         </div>
 
-        {/* ORIGINAL SIMPLE WRITING AREA - NO WritingArea COMPONENT */}
+        {/* Enhanced Writing Area - Kid-Friendly Styling */}
         <div className={`flex-1 relative transition-colors duration-300 ${
           darkMode ? 'bg-gray-800' : 'bg-white'
         } ${focusMode ? 'bg-opacity-95' : ''}`}>
-          {/* Writing Area with Enhanced UX - ORIGINAL TEXTAREA */}
           <textarea
-            className={`w-full h-full p-6 resize-none focus:outline-none transition-all duration-300 ${
+            value={localContent}
+            onChange={(e) => handleContentChange(e.target.value)}
+            placeholder="Start your magical adventure here..."
+            className={`w-full h-full p-6 resize-none focus:outline-none transition-all duration-300 text-lg leading-relaxed ${
               darkMode 
                 ? 'bg-transparent text-white placeholder-gray-400' 
                 : 'bg-transparent text-gray-900 placeholder-gray-500'
-            } ${focusMode ? 'shadow-inner' : ''}`}
-            placeholder={focusMode 
-              ? "Focus on your writing. Let your thoughts flow freely..." 
-              : "Start writing your amazing story here! Let your creativity flow and bring your ideas to life…"
-            }
-            value={localContent}
-            onChange={(e) => handleContentChange(e.target.value)}
+            }`}
             style={{
               fontFamily: getCurrentFontFamily(),
               fontSize: `${fontSize}px`,
@@ -1074,7 +1045,7 @@ export function EnhancedWritingLayout({
           textType={textType}
           ideasFeedback={ideasFeedback}
           structureFeedback={structureFeedback}
-          languageFeedback={languageFeedback}
+          languageFeedback={languageLanguageFeedback}
           grammarFeedback={grammarFeedback}
         />
       </div>
