@@ -15,6 +15,10 @@ import {
   Bot
 } from 'lucide-react';
 
+import { generateNSWResponse, NSWCoachingResponse } from '../lib/updatedNswCoaching';
+import { TextAnalysis } from '../lib/textAnalyzer';
+import { ContextualState } from '../lib/contextualAwareness';
+
 // Types for enhanced coaching system
 interface ConversationMessage {
   id: string;
@@ -327,13 +331,34 @@ class EnhancedAIService {
         });
         
       case 'content_feedback':
-        return await this.makeAPICall(baseUrl, {
-          action: 'getNSWSelectiveFeedback',
-          content: input,
-          textType,
-          assistanceLevel: 'detailed',
-          context
-        });
+        // Dummy TextAnalysis and ContextualState for now
+        const dummyTextAnalysis: TextAnalysis = {
+          sentenceCount: 0,
+          wordCount: context.wordCount,
+          averageSentenceLength: 0,
+          vocabularyDiversity: 0,
+          grammarErrors: [],
+          spellingErrors: [],
+          literaryDevices: [],
+          showDontTellScore: 0,
+        };
+        const dummyContextualState: ContextualState = {
+          currentLesson: context.writingType,
+          previousFeedback: [],
+          userGoals: [],
+        };
+        const timeElapsed = 0; // Placeholder for now
+
+        const nswResponse: NSWCoachingResponse = await generateNSWResponse(
+          input, // userMessage
+          input, // currentContent (assuming input is the content for feedback)
+          dummyTextAnalysis,
+          dummyContextualState,
+          timeElapsed,
+          context.wordCount,
+          textType as any
+        );
+        return { type: 'getNSWSelectiveFeedback', data: nswResponse };
         
       default:
         return null;
@@ -406,17 +431,18 @@ class EnhancedAIService {
           break;
           
         case 'getNSWSelectiveFeedback':
-          if (result.data.feedbackItems) {
-            const strengths = result.data.feedbackItems.filter((item: any) => item.type === 'praise');
-            const improvements = result.data.feedbackItems.filter((item: any) => item.type === 'improvement');
-            
-            if (strengths.length > 0) {
-              response += `\n\n🌟 **Strengths:**\n${strengths.map((s: any) => `• ${s.text}`).join('\n')}`;
+          if (result.data) {
+            const nswFeedback = result.data as NSWCoachingResponse;
+            response += `\n\n${nswFeedback.encouragement}`;
+            response += `\n${nswFeedback.message}`;
+            if (nswFeedback.tips && nswFeedback.tips.length > 0) {
+              response += `\n\n💡 **Tips:**\n${nswFeedback.tips.map(tip => `• ${tip}`).join('\n')}`;
             }
-            
-            if (improvements.length > 0) {
-              response += `\n\n🎯 **Areas to Improve:**\n${improvements.map((i: any) => `• ${i.text}`).join('\n')}`;
+            if (nswFeedback.nextSteps && nswFeedback.nextSteps.length > 0) {
+              response += `\n\n➡️ **Next Steps:**\n${nswFeedback.nextSteps.map(step => `• ${step}`).join('\n')}`;
             }
+            response += `\n\n⏱️ **Time Advice:** ${nswFeedback.timeAdvice}`;
+            response += `\n📊 **Word Count:** ${nswFeedback.wordCountFeedback}`;
           }
           break;
       }
