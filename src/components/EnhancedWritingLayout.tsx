@@ -225,7 +225,8 @@ export function EnhancedWritingLayout({
     }
 
     setEvaluationStatus("loading");
-    setShowNSWEvaluation(true);
+    // We are not using the standalone system anymore, so we don't need to show it.
+    // setShowNSWEvaluation(true); 
     setEvaluationProgress("Analyzing your writing...");
 
     try {
@@ -234,9 +235,15 @@ export function EnhancedWritingLayout({
       setTimeout(() => setEvaluationProgress("Evaluating content and ideas..."), 2000);
       setTimeout(() => setEvaluationProgress("Generating detailed feedback..."), 3000);
 
-      // Generate NSW report
-      const reportGenerator = new NSWEvaluationReportGenerator();
-      const report = await reportGenerator.generateReport(contentToSubmit, typeToSubmit);
+      // CORRECTED: Call the static method with the correct object structure
+      const report = await NSWEvaluationReportGenerator.generateReport({
+        essayContent: contentToSubmit,
+        textType: typeToSubmit,
+        prompt: currentPrompt, // Assumes 'currentPrompt' is available in this scope
+        wordCount: wordCount, // Assumes 'wordCount' is available in this scope
+        targetWordCountMin: 100, // Example value, adjust as needed
+        targetWordCountMax: 500, // Example value, adjust as needed
+      });
       
       setNswReport(report);
       convertReportToAnalysis(report);
