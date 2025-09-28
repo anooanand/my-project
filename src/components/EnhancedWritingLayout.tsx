@@ -1045,7 +1045,7 @@ export function EnhancedWritingLayout({
           textType={textType}
           ideasFeedback={ideasFeedback}
           structureFeedback={structureFeedback}
-          languageFeedback={languageLanguageFeedback}
+          languageFeedback={languageFeedback}
           grammarFeedback={grammarFeedback}
         />
       </div>
