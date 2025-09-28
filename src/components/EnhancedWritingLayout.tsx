@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { PlanningToolModal } from './PlanningToolModal';
 import { StructureGuideModal } from './StructureGuideModal';
 import { TipsModal } from './TipsModal';
-import { TabbedCoachPanel } from './TabbedCoachPanel';
+import { EnhancedCoachPanel } from './EnhancedCoachPanel';
 import { NSWStandaloneSubmitSystem } from './NSWStandaloneSubmitSystem';
 import { ReportModal } from './ReportModal';
 import type { DetailedFeedback, LintFix } from '../types/feedback';
@@ -744,17 +744,11 @@ export function EnhancedWritingLayout({
       <div className={`w-96 flex-shrink-0 border-l transition-colors duration-300 ${
         darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
       }`}>
-        <TabbedCoachPanel 
-          analysis={analysis} 
-          onApplyFix={handleApplyFix}
-          content={currentContent}
-          textType={textType}
-          timeElapsed={elapsedTime}
-          ideasFeedback={ideasFeedback}
-          structureFeedback={structureFeedback}
-          languageFeedback={languageFeedback}
-          grammarFeedback={grammarFeedback}
-        />
+        <EnhancedCoachPanel
+            content={localContent}
+            textType={textType}
+            onContentChange={handleContentChange}
+          />
       </div>
 
       {/* Modals */}
