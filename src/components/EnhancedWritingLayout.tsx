@@ -604,7 +604,7 @@ export function EnhancedWritingLayout({
     try {
       const convertedAnalysis: DetailedFeedback = {
         overallScore: report.overallScore || 0,
-        criteria: {
+        criteria: report.criteria || {
           ideasContent: {
             score: Math.round((report.domains?.contentAndIdeas?.score || 0) / 2),
             weight: report.domains?.contentAndIdeas?.weight || 40,
