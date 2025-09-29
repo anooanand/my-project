@@ -1,772 +1,773 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { 
-  MessageCircle, 
-  Send, 
-  Loader2, 
-  Brain, 
-  BookOpen, 
-  Target, 
-  Lightbulb,
-  CheckCircle,
-  AlertCircle,
-  TrendingUp,
-  Clock,
-  User,
-  Bot
-} from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Send, MessageSquare, BarChart3, Lightbulb, Target, Star, TrendingUp, Award } from 'lucide-react';
 
-import { generateNSWResponse, NSWCoachingResponse } from '../lib/updatedNswCoaching';
-import { TextAnalysis } from '../lib/textAnalyzer';
-import { ContextualState } from '../lib/contextualAwareness';
+// NSW Criteria Analysis Engine
+class NSWCriteriaAnalyzer {
+  static analyzeContent(content: string, textType: string) {
+    const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
+    
+    return {
+      ideas: this.analyzeIdeasAndContent(content, textType, wordCount),
+      language: this.analyzeLanguageAndVocabulary(content, wordCount),
+      structure: this.analyzeStructureAndOrganization(content, wordCount),
+      grammar: this.analyzeGrammarAndSpelling(content)
+    };
+  }
 
-// Types for enhanced coaching system
-interface ConversationMessage {
-  id: string;
-  type: 'user' | 'ai' | 'system';
-  content: string;
-  timestamp: Date;
-  metadata?: {
-    inputType?: 'prompt' | 'question' | 'writing' | 'feedback_request';
-    writingStage?: 'initial' | 'planning' | 'writing' | 'revising' | 'complete';
-    wordCount?: number;
-    confidence?: number;
-    operations?: string[];
-  };
+  static analyzeIdeasAndContent(content: string, textType: string, wordCount: number) {
+    let score = 1;
+    let feedback = [];
+    let improvements = [];
+
+    // Basic content check
+    if (wordCount === 0) {
+      return {
+        score: 1,
+        feedback: ["Start writing to see your ideas assessment!"],
+        improvements: ["Begin by addressing the prompt and developing your main ideas."]
+      };
+    }
+
+    // Check for prompt engagement
+    const hasPromptElements = content.toLowerCase().includes('key') || 
+                             content.toLowerCase().includes('chest') || 
+                             content.toLowerCase().includes('grandmother') ||
+                             content.toLowerCase().includes('attic');
+    
+    if (hasPromptElements) {
+      score += 1;
+      feedback.push("Great! You're engaging with the prompt elements.");
+    } else {
+      improvements.push("Try to include more elements from the writing prompt in your story.");
+    }
+
+    // Check for descriptive details
+    const descriptiveWords = ['beautiful', 'mysterious', 'shimmering', 'dusty', 'ornate', 'magical'];
+    const hasDescriptiveLanguage = descriptiveWords.some(word => 
+      content.toLowerCase().includes(word.toLowerCase())
+    );
+
+    if (hasDescriptiveLanguage) {
+      score += 1;
+      feedback.push("Excellent use of descriptive language to bring your story to life!");
+    } else {
+      improvements.push("Add more descriptive words to help readers visualize your story.");
+    }
+
+    // Check for character development
+    const hasCharacterEmotions = content.toLowerCase().includes('felt') || 
+                                content.toLowerCase().includes('excited') ||
+                                content.toLowerCase().includes('nervous') ||
+                                content.toLowerCase().includes('curious');
+
+    if (hasCharacterEmotions) {
+      score += 1;
+      feedback.push("Nice work showing character emotions and feelings!");
+    } else {
+      improvements.push("Include more about how your character feels to create emotional connection.");
+    }
+
+    // Word count assessment
+    if (wordCount >= 200) {
+      score += 1;
+      feedback.push("Good length - you're developing your ideas well!");
+    } else if (wordCount >= 100) {
+      improvements.push("Try to expand your ideas with more details and examples.");
+    } else {
+      improvements.push("Your story needs more development. Aim for at least 200 words.");
+    }
+
+    return {
+      score: Math.min(score, 5),
+      feedback,
+      improvements
+    };
+  }
+
+  static analyzeLanguageAndVocabulary(content: string, wordCount: number) {
+    let score = 1;
+    let feedback = [];
+    let improvements = [];
+
+    if (wordCount === 0) {
+      return {
+        score: 1,
+        feedback: ["Start writing to see your language assessment!"],
+        improvements: ["Begin writing to analyze your vocabulary and language use."]
+      };
+    }
+
+    // Check for varied vocabulary
+    const words = content.toLowerCase().split(/\s+/);
+    const uniqueWords = new Set(words);
+    const vocabularyVariety = uniqueWords.size / words.length;
+
+    if (vocabularyVariety > 0.7) {
+      score += 2;
+      feedback.push("Excellent vocabulary variety! You're using diverse words effectively.");
+    } else if (vocabularyVariety > 0.5) {
+      score += 1;
+      feedback.push("Good vocabulary variety. Keep expanding your word choices!");
+      improvements.push("Try to avoid repeating the same words too often.");
+    } else {
+      improvements.push("Work on using more varied vocabulary to make your writing more interesting.");
+    }
+
+    // Check for sophisticated words
+    const sophisticatedWords = ['magnificent', 'extraordinary', 'mysterious', 'shimmering', 'ornate', 'ancient', 'whispered', 'discovered'];
+    const hasSophisticatedVocab = sophisticatedWords.some(word => 
+      content.toLowerCase().includes(word.toLowerCase())
+    );
+
+    if (hasSophisticatedVocab) {
+      score += 1;
+      feedback.push("Great use of sophisticated vocabulary!");
+    } else {
+      improvements.push("Try using more advanced vocabulary words to enhance your writing.");
+    }
+
+    // Check for sentence variety (basic check)
+    const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    const avgSentenceLength = words.length / sentences.length;
+
+    if (avgSentenceLength > 8 && avgSentenceLength < 20) {
+      score += 1;
+      feedback.push("Nice sentence variety and length!");
+    } else {
+      improvements.push("Try varying your sentence lengths - mix short and longer sentences.");
+    }
+
+    return {
+      score: Math.min(score, 5),
+      feedback,
+      improvements
+    };
+  }
+
+  static analyzeStructureAndOrganization(content: string, wordCount: number) {
+    let score = 1;
+    let feedback = [];
+    let improvements = [];
+
+    if (wordCount === 0) {
+      return {
+        score: 1,
+        feedback: ["Start writing to see your structure assessment!"],
+        improvements: ["Begin writing to analyze your story structure."]
+      };
+    }
+
+    // Check for clear beginning
+    const hasGoodOpening = content.length > 50 && (
+      content.toLowerCase().includes('one day') ||
+      content.toLowerCase().includes('once') ||
+      content.toLowerCase().includes('afternoon') ||
+      content.toLowerCase().includes('while')
+    );
+
+    if (hasGoodOpening) {
+      score += 1;
+      feedback.push("Good story opening! You're setting the scene well.");
+    } else {
+      improvements.push("Start with a clear opening that sets the scene for your reader.");
+    }
+
+    // Check for paragraphs (basic structure)
+    const paragraphs = content.split('\n\n').filter(p => p.trim().length > 0);
+    
+    if (paragraphs.length >= 3) {
+      score += 1;
+      feedback.push("Good use of paragraphs to organize your ideas!");
+    } else if (paragraphs.length >= 2) {
+      improvements.push("Consider breaking your writing into more paragraphs for better organization.");
+    } else {
+      improvements.push("Use paragraphs to organize different parts of your story.");
+    }
+
+    // Check for story progression
+    const hasMiddleDevelopment = content.length > 100 && wordCount > 50;
+    if (hasMiddleDevelopment) {
+      score += 1;
+      feedback.push("You're developing your story well!");
+    } else {
+      improvements.push("Develop the middle of your story with more events and details.");
+    }
+
+    // Check for conclusion indicators
+    const hasConclusion = content.toLowerCase().includes('finally') ||
+                         content.toLowerCase().includes('in the end') ||
+                         content.toLowerCase().includes('then') ||
+                         content.length > 200;
+
+    if (hasConclusion) {
+      score += 1;
+      feedback.push("Good story development towards a conclusion!");
+    } else {
+      improvements.push("Work towards a satisfying ending for your story.");
+    }
+
+    return {
+      score: Math.min(score, 5),
+      feedback,
+      improvements
+    };
+  }
+
+  static analyzeGrammarAndSpelling(content: string) {
+    let score = 3; // Start with average score
+    let feedback = [];
+    let improvements = [];
+
+    if (content.trim().length === 0) {
+      return {
+        score: 1,
+        feedback: ["Start writing to see your grammar assessment!"],
+        improvements: ["Begin writing to analyze your grammar and spelling."]
+      };
+    }
+
+    // Check for basic punctuation
+    const hasPunctuation = /[.!?]/.test(content);
+    if (hasPunctuation) {
+      feedback.push("Good use of punctuation to end sentences!");
+    } else {
+      score -= 1;
+      improvements.push("Remember to use punctuation marks like periods, exclamation marks, or question marks.");
+    }
+
+    // Check for capital letters at sentence beginnings
+    const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    const properCapitalization = sentences.every(sentence => {
+      const trimmed = sentence.trim();
+      return trimmed.length === 0 || /^[A-Z]/.test(trimmed);
+    });
+
+    if (properCapitalization && sentences.length > 0) {
+      feedback.push("Excellent capitalization at the start of sentences!");
+    } else if (sentences.length > 0) {
+      score -= 1;
+      improvements.push("Remember to start each sentence with a capital letter.");
+    }
+
+    // Check for common spelling patterns (basic check)
+    const commonErrors = ['teh', 'adn', 'hte', 'recieve', 'seperate'];
+    const hasCommonErrors = commonErrors.some(error => 
+      content.toLowerCase().includes(error)
+    );
+
+    if (!hasCommonErrors) {
+      score += 1;
+      feedback.push("Great spelling accuracy!");
+    } else {
+      improvements.push("Double-check your spelling, especially for common words.");
+    }
+
+    // Check for dialogue punctuation if present
+    if (content.includes('"')) {
+      const dialoguePattern = /"[^"]*"/g;
+      const dialogues = content.match(dialoguePattern);
+      if (dialogues) {
+        score += 1;
+        feedback.push("Nice use of dialogue in your story!");
+      }
+    }
+
+    return {
+      score: Math.max(1, Math.min(score, 5)),
+      feedback,
+      improvements
+    };
+  }
 }
 
-interface AIOperation {
-  type: 'grammar_check' | 'vocabulary_enhancement' | 'structure_analysis' | 'content_feedback' | 'question_analysis';
-  priority: number;
-  data?: any;
-}
+// Enhanced Coach Response Generator
+class EnhancedCoachResponseGenerator {
+  static generateResponse(content: string, textType: string, analysis: any) {
+    const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
+    
+    // Find the lowest scoring criterion to focus on
+    const scores = {
+      ideas: analysis.ideas.score,
+      language: analysis.language.score,
+      structure: analysis.structure.score,
+      grammar: analysis.grammar.score
+    };
+    
+    const lowestCriterion = Object.entries(scores).reduce((a, b) => 
+      scores[a[0]] <= scores[b[0]] ? a : b
+    )[0];
 
-interface ContextSummary {
-  writingType: string;
-  currentStage: string;
-  wordCount: number;
-  keyTopics: string[];
-  studentLevel: string;
-  progressNotes: string[];
-  lastFeedbackType: string;
+    const responses = {
+      ideas: this.generateIdeasResponse(content, analysis.ideas, wordCount),
+      language: this.generateLanguageResponse(content, analysis.language, wordCount),
+      structure: this.generateStructureResponse(content, analysis.structure, wordCount),
+      grammar: this.generateGrammarResponse(content, analysis.grammar, wordCount)
+    };
+
+    return responses[lowestCriterion] || this.generateGeneralResponse(content, wordCount);
+  }
+
+  static generateIdeasResponse(content: string, ideasAnalysis: any, wordCount: number) {
+    if (wordCount === 0) {
+      return {
+        encouragement: "Ready to start your creative journey? 🌟",
+        nswFocus: "Ideas & Content",
+        suggestion: "Begin by thinking about the mysterious key and chest from the prompt. What makes them special?",
+        example: "Try starting with: 'The old key felt warm in my hand, as if it held ancient secrets...'",
+        nextStep: "Write your opening sentence and describe what you see in the attic."
+      };
+    }
+
+    if (ideasAnalysis.score <= 2) {
+      return {
+        encouragement: "Great start! Let's develop your ideas further. 💡",
+        nswFocus: "Ideas & Content",
+        suggestion: "Add more specific details about the key, chest, and your character's feelings.",
+        example: "Instead of 'I found a key,' try 'I discovered an ornate silver key that seemed to glow in the dusty attic light.'",
+        nextStep: "Describe what your character is thinking and feeling as they hold the key."
+      };
+    }
+
+    if (ideasAnalysis.score <= 3) {
+      return {
+        encouragement: "Your ideas are developing nicely! 🎯",
+        nswFocus: "Ideas & Content",
+        suggestion: "Expand on the mystery - what might be inside the chest? What does your character hope to find?",
+        example: "Add thoughts like: 'Could it contain grandmother's lost treasures, or something even more magical?'",
+        nextStep: "Build suspense by describing the moment before opening the chest."
+      };
+    }
+
+    return {
+      encouragement: "Excellent creative ideas! Your story is captivating! ⭐",
+      nswFocus: "Ideas & Content",
+      suggestion: "Continue developing the consequences of the discovery - how does it change your character?",
+      example: "Show the impact: 'As the chest opened, everything I thought I knew about my family changed forever.'",
+      nextStep: "Develop the resolution and what your character learns from this experience."
+    };
+  }
+
+  static generateLanguageResponse(content: string, languageAnalysis: any, wordCount: number) {
+    if (wordCount === 0) {
+      return {
+        encouragement: "Let's focus on using amazing vocabulary! 📚",
+        nswFocus: "Language & Vocabulary",
+        suggestion: "Use descriptive words to paint a picture for your readers.",
+        example: "Instead of 'old chest,' try 'ancient, weathered chest' or 'mysterious, ornate chest.'",
+        nextStep: "Choose vivid adjectives to describe the attic setting."
+      };
+    }
+
+    if (languageAnalysis.score <= 2) {
+      return {
+        encouragement: "Good start! Let's enhance your word choices. 🎨",
+        nswFocus: "Language & Vocabulary",
+        suggestion: "Replace simple words with more interesting alternatives.",
+        example: "Change 'walked' to 'crept,' 'big' to 'enormous,' or 'nice' to 'magnificent.'",
+        nextStep: "Look for one simple word in your writing and replace it with a more exciting one."
+      };
+    }
+
+    if (languageAnalysis.score <= 3) {
+      return {
+        encouragement: "Your vocabulary is improving! 🌟",
+        nswFocus: "Language & Vocabulary",
+        suggestion: "Add more sensory details - what does your character see, hear, smell, or feel?",
+        example: "Try: 'The musty smell of old books filled my nostrils as dust particles danced in the afternoon sunlight.'",
+        nextStep: "Include at least one sentence that appeals to the senses."
+      };
+    }
+
+    return {
+      encouragement: "Outstanding vocabulary choices! 🏆",
+      nswFocus: "Language & Vocabulary",
+      suggestion: "Your word variety is excellent! Consider adding figurative language like similes or metaphors.",
+      example: "Try: 'The key sparkled like a fallen star' or 'My heart pounded like thunder.'",
+      nextStep: "Add one simile or metaphor to make your writing even more vivid."
+    };
+  }
+
+  static generateStructureResponse(content: string, structureAnalysis: any, wordCount: number) {
+    if (wordCount === 0) {
+      return {
+        encouragement: "Let's build a well-organized story! 🏗️",
+        nswFocus: "Structure & Organization",
+        suggestion: "Start with a clear beginning that sets the scene.",
+        example: "Open with: 'One sunny afternoon, while exploring grandmother's dusty attic...'",
+        nextStep: "Write an opening sentence that tells when and where your story takes place."
+      };
+    }
+
+    if (structureAnalysis.score <= 2) {
+      return {
+        encouragement: "Good beginning! Let's organize your story better. 📋",
+        nswFocus: "Structure & Organization",
+        suggestion: "Use paragraphs to separate different parts of your story.",
+        example: "Start a new paragraph when you move from finding the key to opening the chest.",
+        nextStep: "Break your writing into at least 2-3 paragraphs with different ideas in each."
+      };
+    }
+
+    if (structureAnalysis.score <= 3) {
+      return {
+        encouragement: "Your story structure is developing well! 🎯",
+        nswFocus: "Structure & Organization",
+        suggestion: "Make sure your story has a clear beginning, middle, and end.",
+        example: "Beginning: Finding the key, Middle: Opening the chest, End: What happens next.",
+        nextStep: "Work on developing the middle part of your story with more events."
+      };
+    }
+
+    return {
+      encouragement: "Excellent story organization! 🌟",
+      nswFocus: "Structure & Organization",
+      suggestion: "Your structure is strong! Focus on smooth transitions between ideas.",
+      example: "Use connecting words like 'suddenly,' 'then,' 'meanwhile,' or 'finally.'",
+      nextStep: "Add transition words to help your story flow smoothly from one idea to the next."
+    };
+  }
+
+  static generateGrammarResponse(content: string, grammarAnalysis: any, wordCount: number) {
+    if (wordCount === 0) {
+      return {
+        encouragement: "Let's focus on clear, correct writing! ✏️",
+        nswFocus: "Spelling & Grammar",
+        suggestion: "Remember to start sentences with capital letters and end with punctuation.",
+        example: "Every sentence should look like: 'The mysterious key was beautiful.'",
+        nextStep: "Write your first sentence with proper capitalization and punctuation."
+      };
+    }
+
+    if (grammarAnalysis.score <= 2) {
+      return {
+        encouragement: "Good effort! Let's polish your writing mechanics. 🔧",
+        nswFocus: "Spelling & Grammar",
+        suggestion: "Check that each sentence starts with a capital letter and ends with punctuation.",
+        example: "Make sure you have: 'I found the key. It was shining brightly!'",
+        nextStep: "Read through your writing and add any missing capitals or punctuation marks."
+      };
+    }
+
+    if (grammarAnalysis.score <= 3) {
+      return {
+        encouragement: "Your grammar is improving! 📝",
+        nswFocus: "Spelling & Grammar",
+        suggestion: "Double-check your spelling, especially for longer words.",
+        example: "Common words to check: 'beautiful,' 'mysterious,' 'grandmother,' 'discovered.'",
+        nextStep: "Read your writing aloud to catch any spelling or grammar mistakes."
+      };
+    }
+
+    return {
+      encouragement: "Excellent grammar and spelling! 🏆",
+      nswFocus: "Spelling & Grammar",
+      suggestion: "Your technical accuracy is great! Try using more complex sentence structures.",
+      example: "Combine sentences: 'I found the key, and it was glowing brightly in my hand.'",
+      nextStep: "Experiment with joining two related sentences using 'and,' 'but,' or 'because.'"
+    };
+  }
+
+  static generateGeneralResponse(content: string, wordCount: number) {
+    return {
+      encouragement: "Keep up the great writing! 🌟",
+      nswFocus: "Overall Writing",
+      suggestion: "Continue developing your story with rich details and clear organization.",
+      example: "Focus on showing what happens rather than just telling.",
+      nextStep: "Keep writing and let your creativity flow!"
+    };
+  }
 }
 
 interface EnhancedCoachPanelProps {
   content: string;
   textType: string;
-  onContentChange?: (content: string) => void;
-  onFeedbackReceived?: (feedback: any) => void;
-  className?: string;
+  onContentChange: (content: string) => void;
 }
 
-// Advanced input type detection
-class InputAnalyzer {
-  static analyzeInput(input: string, context: {
-    writingStage: string;
-    wordCount: number;
-    conversationHistory: ConversationMessage[];
-  }): {
-    type: 'prompt' | 'question' | 'writing' | 'feedback_request';
-    confidence: number;
-    suggestedOperations: AIOperation[];
-  } {
-    const trimmed = input.trim().toLowerCase();
-    const words = input.trim().split(/\s+/).filter(w => w.length > 0);
-    
-    // Question indicators
-    const questionWords = ['how', 'what', 'why', 'when', 'where', 'who', 'which', 'can', 'could', 'should', 'would', 'will'];
-    const hasQuestionWord = questionWords.some(word => trimmed.includes(word));
-    const hasQuestionMark = input.includes('?');
-    const isShort = words.length < 10;
-    
-    // Writing indicators
-    const writingIndicators = ['i think', 'in my opinion', 'firstly', 'secondly', 'in conclusion', 'however', 'therefore'];
-    const hasWritingIndicators = writingIndicators.some(phrase => trimmed.includes(phrase));
-    const isLong = words.length > 20;
-    
-    // Feedback request indicators
-    const feedbackIndicators = ['feedback', 'check', 'review', 'help', 'improve', 'better', 'correct'];
-    const hasFeedbackRequest = feedbackIndicators.some(word => trimmed.includes(word));
-    
-    // Prompt indicators
-    const promptIndicators = ['write about', 'essay on', 'discuss', 'explain', 'describe', 'argue'];
-    const hasPromptIndicators = promptIndicators.some(phrase => trimmed.includes(phrase));
-    
-    // Scoring system
-    let scores = {
-      prompt: 0,
-      question: 0,
-      writing: 0,
-      feedback_request: 0
-    };
-    
-    // Question scoring
-    if (hasQuestionWord) scores.question += 30;
-    if (hasQuestionMark) scores.question += 25;
-    if (isShort) scores.question += 15;
-    
-    // Writing scoring
-    if (hasWritingIndicators) scores.writing += 25;
-    if (isLong) scores.writing += 20;
-    if (context.writingStage === 'writing' || context.writingStage === 'revising') scores.writing += 15;
-    
-    // Feedback request scoring
-    if (hasFeedbackRequest) scores.feedback_request += 30;
-    if (context.wordCount > 50) scores.feedback_request += 15;
-    
-    // Prompt scoring
-    if (hasPromptIndicators) scores.prompt += 25;
-    if (context.writingStage === 'initial') scores.prompt += 20;
-    if (words.length > 5 && words.length < 30) scores.prompt += 10;
-    
-    // Determine type and confidence
-    const maxScore = Math.max(...Object.values(scores));
-    const type = Object.keys(scores).find(key => scores[key as keyof typeof scores] === maxScore) as any;
-    const confidence = Math.min(maxScore / 50, 1);
-    
-    // Suggest AI operations based on input type
-    const suggestedOperations: AIOperation[] = [];
-    
-    switch (type) {
-      case 'question':
-        suggestedOperations.push(
-          { type: 'question_analysis', priority: 1 },
-          { type: 'content_feedback', priority: 2 }
-        );
-        break;
-      case 'writing':
-        suggestedOperations.push(
-          { type: 'grammar_check', priority: 1 },
-          { type: 'vocabulary_enhancement', priority: 2 },
-          { type: 'structure_analysis', priority: 3 }
-        );
-        break;
-      case 'feedback_request':
-        suggestedOperations.push(
-          { type: 'content_feedback', priority: 1 },
-          { type: 'grammar_check', priority: 2 },
-          { type: 'structure_analysis', priority: 3 }
-        );
-        break;
-      case 'prompt':
-        suggestedOperations.push(
-          { type: 'question_analysis', priority: 1 },
-          { type: 'structure_analysis', priority: 2 }
-        );
-        break;
-    }
-    
-    return { type, confidence, suggestedOperations };
-  }
-}
-
-// Context manager for conversation history
-class ContextManager {
-  static createSummary(messages: ConversationMessage[], currentContent: string): ContextSummary {
-    const wordCount = currentContent.trim().split(/\s+/).filter(w => w.length > 0).length;
-    
-    // Determine writing stage based on word count and conversation
-    let currentStage = 'initial';
-    if (wordCount > 500) currentStage = 'complete';
-    else if (wordCount > 300) currentStage = 'revising';
-    else if (wordCount > 50) currentStage = 'writing';
-    else if (wordCount > 0) currentStage = 'planning';
-    
-    // Extract key topics from conversation
-    const allText = messages.map(m => m.content).join(' ').toLowerCase();
-    const keyTopics = this.extractKeyTopics(allText);
-    
-    // Determine student level based on vocabulary and complexity
-    const studentLevel = this.assessStudentLevel(messages);
-    
-    // Extract progress notes
-    const progressNotes = messages
-      .filter(m => m.type === 'ai' && m.content.includes('progress'))
-      .map(m => m.content.substring(0, 100) + '...')
-      .slice(-3);
-    
-    // Get last feedback type
-    const lastAIMessage = messages.filter(m => m.type === 'ai').pop();
-    const lastFeedbackType = lastAIMessage?.metadata?.operations?.[0] || 'general';
-    
-    return {
-      writingType: 'narrative', // This should be passed from props
-      currentStage,
-      wordCount,
-      keyTopics,
-      studentLevel,
-      progressNotes,
-      lastFeedbackType
-    };
-  }
-  
-  static extractKeyTopics(text: string): string[] {
-    // Simple keyword extraction - in production, use more sophisticated NLP
-    const commonWords = new Set(['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'can', 'this', 'that', 'these', 'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they']);
-    
-    const words = text.split(/\s+/)
-      .map(w => w.replace(/[^\w]/g, '').toLowerCase())
-      .filter(w => w.length > 3 && !commonWords.has(w));
-    
-    const wordCounts = words.reduce((acc, word) => {
-      acc[word] = (acc[word] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
-    
-    return Object.entries(wordCounts)
-      .sort(([,a], [,b]) => b - a)
-      .slice(0, 5)
-      .map(([word]) => word);
-  }
-  
-  static assessStudentLevel(messages: ConversationMessage[]): string {
-    // Simple assessment based on vocabulary complexity and sentence structure
-    const userMessages = messages.filter(m => m.type === 'user');
-    if (userMessages.length === 0) return 'beginner';
-    
-    const avgWordsPerMessage = userMessages.reduce((sum, m) => 
-      sum + m.content.split(/\s+/).length, 0) / userMessages.length;
-    
-    if (avgWordsPerMessage > 50) return 'advanced';
-    if (avgWordsPerMessage > 20) return 'intermediate';
-    return 'beginner';
-  }
-  
-  static shouldCreateSummary(messages: ConversationMessage[]): boolean {
-    return messages.length > 10;
-  }
-  
-  static createContextSummaryMessage(summary: ContextSummary): ConversationMessage {
-    const summaryText = `Context Summary: Student is working on ${summary.writingType} writing, currently in ${summary.currentStage} stage with ${summary.wordCount} words. Key topics: ${summary.keyTopics.join(', ')}. Student level: ${summary.studentLevel}.`;
-    
-    return {
-      id: `summary_${Date.now()}`,
-      type: 'system',
-      content: summaryText,
-      timestamp: new Date(),
-      metadata: {
-        writingStage: summary.currentStage as any,
-        wordCount: summary.wordCount
-      }
-    };
-  }
-}
-
-// Enhanced AI service for multiple operations
-class EnhancedAIService {
-  static async processMultipleOperations(
-    operations: AIOperation[],
-    input: string,
-    context: ContextSummary,
-    textType: string
-  ): Promise<{
-    response: string;
-    operations: string[];
-    feedback?: any;
-  }> {
-    const results: any[] = [];
-    const executedOperations: string[] = [];
-    
-    // Sort operations by priority
-    const sortedOperations = operations.sort((a, b) => a.priority - b.priority);
-    
-    for (const operation of sortedOperations) {
-      try {
-        const result = await this.executeOperation(operation, input, context, textType);
-        if (result) {
-          results.push(result);
-          executedOperations.push(operation.type);
-        }
-      } catch (error) {
-        console.error(`Error executing operation ${operation.type}:`, error);
-      }
-    }
-    
-    // Combine results into structured response
-    const response = this.combineResults(results, context);
-    
-    return {
-      response,
-      operations: executedOperations,
-      feedback: results.find(r => r.type === 'feedback')?.data
-    };
-  }
-  
-  static async executeOperation(
-    operation: AIOperation,
-    input: string,
-    context: ContextSummary,
-    textType: string
-  ): Promise<any> {
-    const baseUrl = '/netlify/functions/ai-operations';
-    
-    switch (operation.type) {
-      case 'question_analysis':
-        return await this.makeAPICall(baseUrl, {
-          action: 'analyzeQuestion',
-          question: input,
-          textType,
-          context
-        });
-        
-      case 'grammar_check':
-        return await this.makeAPICall(baseUrl, {
-          action: 'checkGrammarForEditor',
-          text: input,
-          includePositions: true
-        });
-        
-      case 'vocabulary_enhancement':
-        return await this.makeAPICall(baseUrl, {
-          action: 'enhanceVocabulary',
-          text: input,
-          level: context.studentLevel
-        });
-        
-      case 'structure_analysis':
-        return await this.makeAPICall(baseUrl, {
-          action: 'analyzeStructure',
-          text: input,
-          textType,
-          stage: context.currentStage
-        });
-        
-      case 'content_feedback':
-        // Dummy TextAnalysis and ContextualState for now
-        const dummyTextAnalysis: TextAnalysis = {
-          sentenceCount: 0,
-          wordCount: context.wordCount,
-          averageSentenceLength: 0,
-          vocabularyDiversity: 0,
-          grammarErrors: [],
-          spellingErrors: [],
-          literaryDevices: [],
-          showDontTellScore: 0,
-        };
-        const dummyContextualState: ContextualState = {
-          currentLesson: context.writingType,
-          previousFeedback: [],
-          userGoals: [],
-        };
-        const timeElapsed = 0; // Placeholder for now
-
-        const nswResponse: NSWCoachingResponse = await generateNSWResponse(
-          input, // userMessage
-          input, // currentContent (assuming input is the content for feedback)
-          dummyTextAnalysis,
-          dummyContextualState,
-          timeElapsed,
-          context.wordCount,
-          textType as any
-        );
-        return { type: 'getNSWSelectiveFeedback', data: nswResponse };
-        
-      default:
-        return null;
-    }
-  }
-  
-  static async makeAPICall(url: string, data: any): Promise<any> {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    });
-    
-    if (response.ok) {
-      const result = await response.json();
-      return { type: data.action, data: result };
-    }
-    
-    throw new Error(`API call failed: ${response.statusText}`);
-  }
-  
-  static combineResults(results: any[], context: ContextSummary): string {
-    if (results.length === 0) {
-      return "I'm here to help! Could you tell me more about what you're working on?";
-    }
-    
-    let response = "";
-    
-    // Add stage-appropriate greeting
-    if (context.currentStage === 'initial') {
-      response += "Great! Let's get started with your writing. ";
-    } else if (context.currentStage === 'planning') {
-      response += "I can see you're planning your writing. ";
-    } else if (context.currentStage === 'writing') {
-      response += `You're making good progress with ${context.wordCount} words! `;
-    } else if (context.currentStage === 'revising') {
-      response += "Excellent work! Let's polish your writing. ";
-    }
-    
-    // Process each result type
-    for (const result of results) {
-      switch (result.type) {
-        case 'analyzeQuestion':
-          if (result.data.guidance) {
-            response += `\n\n📝 **Writing Guidance:**\n${result.data.guidance}`;
-          }
-          if (result.data.structure) {
-            response += `\n\n🏗️ **Suggested Structure:**\n${result.data.structure}`;
-          }
-          break;
-          
-        case 'checkGrammarForEditor':
-          if (result.data.errors && result.data.errors.length > 0) {
-            response += `\n\n✏️ **Grammar & Spelling:**\nI found ${result.data.errors.length} areas to improve. Check the highlights in your text!`;
-          }
-          break;
-          
-        case 'enhanceVocabulary':
-          if (result.data.suggestions && result.data.suggestions.length > 0) {
-            response += `\n\n💡 **Vocabulary Enhancement:**\nI have some word suggestions to make your writing stronger!`;
-          }
-          break;
-          
-        case 'analyzeStructure':
-          if (result.data.feedback) {
-            response += `\n\n📊 **Structure Analysis:**\n${result.data.feedback}`;
-          }
-          break;
-          
-        case 'getNSWSelectiveFeedback':
-          if (result.data) {
-            const nswFeedback = result.data as NSWCoachingResponse;
-            response += `\n\n${nswFeedback.encouragement}`;
-            response += `\n${nswFeedback.message}`;
-            if (nswFeedback.tips && nswFeedback.tips.length > 0) {
-              response += `\n\n💡 **Tips:**\n${nswFeedback.tips.map(tip => `• ${tip}`).join('\n')}`;
-            }
-            if (nswFeedback.nextSteps && nswFeedback.nextSteps.length > 0) {
-              response += `\n\n➡️ **Next Steps:**\n${nswFeedback.nextSteps.map(step => `• ${step}`).join('\n')}`;
-            }
-            response += `\n\n⏱️ **Time Advice:** ${nswFeedback.timeAdvice}`;
-            response += `\n📊 **Word Count:** ${nswFeedback.wordCountFeedback}`;
-          }
-          break;
-      }
-    }
-    
-    // Add encouraging closing
-    if (context.currentStage !== 'complete') {
-      response += `\n\nKeep up the great work! What would you like to focus on next?`;
-    } else {
-      response += `\n\nFantastic job completing your writing! 🎉`;
-    }
-    
-    return response.trim();
-  }
-}
-
-// Main Enhanced Coach Panel Component
-export const EnhancedCoachPanel: React.FC<EnhancedCoachPanelProps> = ({
-  content,
-  textType,
-  onContentChange,
-  onFeedbackReceived,
-  className = ""
-}) => {
-  // State management
-  const [messages, setMessages] = useState<ConversationMessage[]>([]);
-  const [currentInput, setCurrentInput] = useState('');
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [contextSummary, setContextSummary] = useState<ContextSummary | null>(null);
-  
-  // Refs
+export function EnhancedCoachPanel({ content, textType, onContentChange }: EnhancedCoachPanelProps) {
+  const [messages, setMessages] = useState<any[]>([]);
+  const [inputValue, setInputValue] = useState('');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [currentView, setCurrentView] = useState<'coach' | 'nsw'>('coach');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
-  
-  // Auto-scroll to bottom
-  const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, []);
-  
+
+  // Analyze content and generate coaching response
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, scrollToBottom]);
-  
-  // Update context summary when content or messages change
-  useEffect(() => {
-    const summary = ContextManager.createSummary(messages, content);
-    setContextSummary(summary);
-    
-    // Add summary message if conversation is getting long
-    if (ContextManager.shouldCreateSummary(messages) && 
-        !messages.some(m => m.type === 'system' && m.content.includes('Context Summary'))) {
-      const summaryMessage = ContextManager.createContextSummaryMessage(summary);
-      setMessages(prev => [...prev, summaryMessage]);
-    }
-  }, [messages, content]);
-  
-  // Send initial greeting
-  useEffect(() => {
-    if (messages.length === 0) {
-      const greetingMessage: ConversationMessage = {
-        id: `greeting_${Date.now()}`,
-        type: 'ai',
-        content: `Hello! I'm your writing coach. I'm here to help you with your ${textType} writing. What would you like to work on today?`,
-        timestamp: new Date(),
-        metadata: {
-          writingStage: 'initial',
-          operations: ['greeting']
-        }
-      };
-      setMessages([greetingMessage]);
-    }
-  }, [textType, messages.length]);
-  
-  // Handle sending message - FIXED VERSION
-  const handleSendMessage = useCallback(async () => {
-    if (!currentInput.trim() || isProcessing) return;
-    
-    const userMessage: ConversationMessage = {
-      id: `user_${Date.now()}`,
-      type: 'user',
-      content: currentInput,
-      timestamp: new Date()
-    };
-    
-    setMessages(prev => [...prev, userMessage]);
-    const inputToProcess = currentInput; // Store the input before clearing
-    setCurrentInput('');
-    setIsProcessing(true);
-    
-    try {
-      // Create a default context summary if none exists
-      const currentContextSummary = contextSummary || {
-        writingType: textType,
-        currentStage: 'initial',
-        wordCount: content.trim().split(/\s+/).filter(w => w.length > 0).length,
-        keyTopics: [],
-        studentLevel: 'beginner',
-        progressNotes: [],
-        lastFeedbackType: 'general'
-      };
+    if (content.trim().length > 0) {
+      setIsAnalyzing(true);
       
-      // Analyze input
-      const analysis = InputAnalyzer.analyzeInput(inputToProcess, {
-        writingStage: currentContextSummary.currentStage,
-        wordCount: currentContextSummary.wordCount,
-        conversationHistory: messages
-      });
-      
-      // Update user message with metadata
-      userMessage.metadata = {
-        inputType: analysis.type,
-        confidence: analysis.confidence,
-        writingStage: currentContextSummary.currentStage as any,
-        wordCount: currentContextSummary.wordCount
-      };
-      
-      // Process with AI service
-      const result = await EnhancedAIService.processMultipleOperations(
-        analysis.suggestedOperations,
-        inputToProcess,
-        currentContextSummary,
-        textType
-      );
-      
-      // Create AI response message
-      const aiMessage: ConversationMessage = {
-        id: `ai_${Date.now()}`,
-        type: 'ai',
-        content: result.response,
-        timestamp: new Date(),
-        metadata: {
-          operations: result.operations,
-          writingStage: currentContextSummary.currentStage as any
-        }
-      };
-      
-      setMessages(prev => [...prev, aiMessage]);
-      
-      // Pass feedback to parent component
-      if (result.feedback && onFeedbackReceived) {
-        onFeedbackReceived(result.feedback);
-      }
-      
-    } catch (error) {
-      console.error('Error processing message:', error);
-      
-      const errorMessage: ConversationMessage = {
-        id: `error_${Date.now()}`,
-        type: 'ai',
-        content: "I'm sorry, I encountered an error. Could you try rephrasing your question?",
-        timestamp: new Date(),
-        metadata: {
-          operations: ['error']
-        }
-      };
-      
-      setMessages(prev => [...prev, errorMessage]);
-    } finally {
-      setIsProcessing(false);
-    }
-  }, [currentInput, isProcessing, contextSummary, messages, textType, content, onFeedbackReceived]);
-  
-  // Handle key press
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
-  
-  // Format message content
-  const formatMessageContent = (content: string) => {
-    // Convert markdown-like formatting to JSX
-    return content.split('\n').map((line, index) => {
-      if (line.startsWith('**') && line.endsWith('**')) {
-        return <div key={index} className="font-semibold text-gray-800 mt-3 mb-1">{line.slice(2, -2)}</div>;
-      }
-      if (line.startsWith('• ')) {
-        return <div key={index} className="ml-4 text-gray-700">{line}</div>;
-      }
-      if (line.trim() === '') {
-        return <div key={index} className="h-2"></div>;
-      }
-      return <div key={index} className="text-gray-700">{line}</div>;
-    });
-  };
-  
-  // Get message icon
-  const getMessageIcon = (message: ConversationMessage) => {
-    if (message.type === 'user') return <User className="h-4 w-4" />;
-    if (message.type === 'system') return <Brain className="h-4 w-4" />;
-    
-    const operations = message.metadata?.operations || [];
-    if (operations.includes('analyzeQuestion')) return <BookOpen className="h-4 w-4" />;
-    if (operations.includes('checkGrammarForEditor')) return <CheckCircle className="h-4 w-4" />;
-    if (operations.includes('getNSWSelectiveFeedback')) return <Target className="h-4 w-4" />;
-    
-    return <Bot className="h-4 w-4" />;
-  };
-  
-  return (
-    <div className={`flex flex-col h-full bg-white rounded-lg border shadow-sm ${className}`}>
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b bg-gray-50 rounded-t-lg">
-        <div className="flex items-center space-x-2">
-          <MessageCircle className="h-5 w-5 text-blue-600" />
-          <h3 className="font-semibold text-gray-800">Writing Coach</h3>
-        </div>
+      // Debounce the analysis
+      const timer = setTimeout(() => {
+        const analysis = NSWCriteriaAnalyzer.analyzeContent(content, textType);
+        const coachResponse = EnhancedCoachResponseGenerator.generateResponse(content, textType, analysis);
         
-        {contextSummary && (
-          <div className="flex items-center space-x-4 text-sm text-gray-600">
-            <div className="flex items-center space-x-1">
-              <Clock className="h-4 w-4" />
-              <span>{contextSummary.currentStage}</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <TrendingUp className="h-4 w-4" />
-              <span>{contextSummary.wordCount} words</span>
-            </div>
-          </div>
-        )}
-      </div>
+        // Add or update the latest coaching message
+        setMessages(prev => {
+          const filtered = prev.filter(msg => msg.type !== 'auto-coach');
+          return [...filtered, {
+            type: 'auto-coach',
+            content: coachResponse,
+            timestamp: new Date(),
+            analysis: analysis
+          }];
+        });
+        
+        setIsAnalyzing(false);
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    } else {
+      // Show welcome message when no content
+      setMessages([{
+        type: 'auto-coach',
+        content: {
+          encouragement: "Hello! I'm your AI Writing Buddy! 🤖",
+          nswFocus: "Getting Started",
+          suggestion: "I'm here to help you write amazing stories. Start typing and I'll give you feedback!",
+          example: "Try beginning with the prompt about the mysterious key in grandmother's attic.",
+          nextStep: "Write your first sentence and I'll help you improve it!"
+        },
+        timestamp: new Date(),
+        analysis: null
+      }]);
+    }
+  }, [content, textType]);
+
+  // Auto-scroll to bottom
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const handleSendMessage = () => {
+    if (inputValue.trim()) {
+      setMessages(prev => [...prev, {
+        type: 'user',
+        content: inputValue,
+        timestamp: new Date()
+      }]);
       
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex items-start space-x-3 ${
-              message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''
-            }`}
-          >
-            <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-              message.type === 'user' 
-                ? 'bg-blue-100 text-blue-600' 
-                : message.type === 'system'
-                ? 'bg-gray-100 text-gray-600'
-                : 'bg-green-100 text-green-600'
-            }`}>
-              {getMessageIcon(message)}
-            </div>
+      // Generate a response based on the user's question
+      setTimeout(() => {
+        setMessages(prev => [...prev, {
+          type: 'response',
+          content: {
+            encouragement: "Great question! 🤔",
+            nswFocus: "Writing Help",
+            suggestion: "I'm here to help with your writing. Keep working on your story and I'll provide specific feedback!",
+            example: "Try writing more of your story and I'll give you detailed suggestions.",
+            nextStep: "Continue writing and I'll analyze your progress!"
+          },
+          timestamp: new Date()
+        }]);
+      }, 500);
+      
+      setInputValue('');
+    }
+  };
+
+  const renderNSWCriteria = () => {
+    if (!messages.length || !messages[messages.length - 1].analysis) {
+      return (
+        <div className="p-4 text-center text-gray-500">
+          <BarChart3 className="w-12 h-12 mx-auto mb-2 opacity-50" />
+          <p>Start writing to see your NSW criteria scores!</p>
+        </div>
+      );
+    }
+
+    const analysis = messages[messages.length - 1].analysis;
+    const criteria = [
+      { name: 'Ideas & Content', key: 'ideas', icon: '💡', color: 'from-yellow-400 to-orange-500' },
+      { name: 'Language & Vocabulary', key: 'language', icon: '📚', color: 'from-blue-400 to-blue-600' },
+      { name: 'Structure & Organization', key: 'structure', icon: '🏗️', color: 'from-green-400 to-green-600' },
+      { name: 'Spelling & Grammar', key: 'grammar', icon: '✏️', color: 'from-purple-400 to-purple-600' }
+    ];
+
+    const overallScore = Math.round((analysis.ideas.score + analysis.language.score + analysis.structure.score + analysis.grammar.score) / 4 * 20);
+
+    return (
+      <div className="p-4 space-y-4">
+        {/* Overall Score */}
+        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-4 rounded-lg text-center">
+          <h3 className="font-bold text-lg">Overall NSW Score</h3>
+          <div className="text-3xl font-bold">{overallScore}%</div>
+          <div className="text-sm opacity-90">
+            {overallScore >= 80 ? 'Excellent!' : overallScore >= 60 ? 'Good Progress!' : 'Keep Improving!'}
+          </div>
+        </div>
+
+        {/* Individual Criteria */}
+        <div className="space-y-3">
+          {criteria.map(criterion => {
+            const criterionData = analysis[criterion.key];
+            const score = criterionData.score;
             
-            <div className={`flex-1 max-w-xs lg:max-w-md ${
-              message.type === 'user' ? 'text-right' : ''
-            }`}>
-              <div className={`p-3 rounded-lg ${
-                message.type === 'user'
-                  ? 'bg-blue-600 text-white'
-                  : message.type === 'system'
-                  ? 'bg-gray-100 text-gray-700 text-sm'
-                  : 'bg-gray-100 text-gray-800'
-              }`}>
-                {message.type === 'user' ? (
-                  <div>{message.content}</div>
-                ) : (
-                  <div className="space-y-1">
-                    {formatMessageContent(message.content)}
+            return (
+              <div key={criterion.key} className={`bg-gradient-to-r ${criterion.color} text-white p-3 rounded-lg`}>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-lg">{criterion.icon}</span>
+                    <span className="font-semibold text-sm">{criterion.name}</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    {[1, 2, 3, 4, 5].map(star => (
+                      <Star
+                        key={star}
+                        className={`w-4 h-4 ${star <= score ? 'fill-current' : 'fill-current opacity-30'}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+                
+                {criterionData.feedback.length > 0 && (
+                  <div className="text-xs opacity-90 mb-1">
+                    ✅ {criterionData.feedback[0]}
+                  </div>
+                )}
+                
+                {criterionData.improvements.length > 0 && (
+                  <div className="text-xs opacity-90">
+                    💡 {criterionData.improvements[0]}
                   </div>
                 )}
               </div>
-              
-              <div className={`text-xs text-gray-500 mt-1 ${
-                message.type === 'user' ? 'text-right' : ''
-              }`}>
-                {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                {message.metadata?.operations && (
-                  <span className="ml-2">
-                    • {message.metadata.operations.join(', ')}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
-        
-        {isProcessing && (
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
-              <Loader2 className="h-4 w-4 animate-spin" />
-            </div>
-            <div className="bg-gray-100 text-gray-600 p-3 rounded-lg">
-              <div className="flex items-center space-x-2">
-                <span>Analyzing your input...</span>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        <div ref={messagesEndRef} />
+            );
+          })}
+        </div>
       </div>
-      
-      {/* Input */}
-      <div className="p-4 border-t bg-gray-50 rounded-b-lg">
-        <div className="flex items-end space-x-2">
-          <div className="flex-1">
-            <textarea
-              ref={inputRef}
-              value={currentInput}
-              onChange={(e) => setCurrentInput(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Ask me anything about your writing..."
-              className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              rows={2}
-              disabled={isProcessing}
-            />
+    );
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Header with View Toggle */}
+      <div className="p-4 border-b bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-bold">Writing Coach</h2>
+          <div className="text-sm opacity-90">
+            {content.trim() ? `${content.trim().split(/\s+/).length} words` : '0 words'}
           </div>
-          <button
-            onClick={handleSendMessage}
-            disabled={!currentInput.trim() || isProcessing}
-            className="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            <Send className="h-4 w-4" />
-          </button>
         </div>
         
-        {contextSummary && (
-          <div className="mt-2 text-xs text-gray-500">
-            Stage: {contextSummary.currentStage} • Level: {contextSummary.studentLevel} • 
-            {contextSummary.keyTopics.length > 0 && ` Topics: ${contextSummary.keyTopics.slice(0, 3).join(', ')}`}
+        <div className="flex space-x-2">
+          <button
+            onClick={() => setCurrentView('coach')}
+            className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+              currentView === 'coach'
+                ? 'bg-white text-blue-600'
+                : 'bg-blue-500 text-white hover:bg-blue-400'
+            }`}
+          >
+            <MessageSquare className="w-4 h-4" />
+            <span>AI Coach</span>
+          </button>
+          
+          <button
+            onClick={() => setCurrentView('nsw')}
+            className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+              currentView === 'nsw'
+                ? 'bg-white text-purple-600'
+                : 'bg-purple-500 text-white hover:bg-purple-400'
+            }`}
+          >
+            <BarChart3 className="w-4 h-4" />
+            <span>NSW Criteria</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Content Area */}
+      <div className="flex-1 overflow-hidden">
+        {currentView === 'coach' ? (
+          <>
+            {/* Messages Area */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4" style={{ height: 'calc(100% - 80px)' }}>
+              {messages.map((message, index) => (
+                <div key={index} className={`${message.type === 'user' ? 'ml-8' : 'mr-8'}`}>
+                  {message.type === 'user' ? (
+                    <div className="bg-blue-500 text-white p-3 rounded-lg rounded-br-none">
+                      {message.content}
+                    </div>
+                  ) : (
+                    <div className="bg-gray-100 p-4 rounded-lg rounded-bl-none">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <div className="w-6 h-6 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center">
+                          <span className="text-white text-xs">🤖</span>
+                        </div>
+                        <span className="font-semibold text-sm text-gray-800">{message.content.encouragement}</span>
+                      </div>
+                      
+                      <div className="space-y-2 text-sm">
+                        <div className="bg-blue-50 p-2 rounded border-l-4 border-blue-400">
+                          <div className="font-medium text-blue-800">🎯 NSW Focus: {message.content.nswFocus}</div>
+                        </div>
+                        
+                        <div className="bg-green-50 p-2 rounded border-l-4 border-green-400">
+                          <div className="font-medium text-green-800 mb-1">💡 Suggestion:</div>
+                          <div className="text-green-700">{message.content.suggestion}</div>
+                        </div>
+                        
+                        <div className="bg-yellow-50 p-2 rounded border-l-4 border-yellow-400">
+                          <div className="font-medium text-yellow-800 mb-1">📝 Example:</div>
+                          <div className="text-yellow-700 italic">{message.content.example}</div>
+                        </div>
+                        
+                        <div className="bg-purple-50 p-2 rounded border-l-4 border-purple-400">
+                          <div className="font-medium text-purple-800 mb-1">⭐ Next Step:</div>
+                          <div className="text-purple-700">{message.content.nextStep}</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+              
+              {isAnalyzing && (
+                <div className="mr-8">
+                  <div className="bg-gray-100 p-4 rounded-lg rounded-bl-none">
+                    <div className="flex items-center space-x-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                      <span className="text-sm text-gray-600">Analyzing your writing...</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* Input Area */}
+            <div className="p-4 border-t bg-gray-50">
+              <div className="flex space-x-2">
+                <input
+                  type="text"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                  placeholder="Ask me anything about your writing..."
+                  className="flex-1 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  onClick={handleSendMessage}
+                  disabled={!inputValue.trim()}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="text-xs text-gray-500 mt-1">
+                Stage: writing • Level: beginner • Topics: your writing, hello
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="h-full overflow-y-auto">
+            {renderNSWCriteria()}
           </div>
         )}
       </div>
     </div>
   );
-};
+}
 
 export default EnhancedCoachPanel;
