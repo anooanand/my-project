@@ -27,7 +27,7 @@ import { ErrorBoundary } from './ErrorBoundary';
 import { SplitScreen } from './SplitScreen';
 // import { WritingArea } from './WritingArea';
 import { TabbedCoachPanel } from './TabbedCoachPanel';
-import { EnhancedWritingLayout } from './EnhancedWritingLayout';
+import { EnhancedWritingLayoutNSW } from './EnhancedWritingLayoutNSW';
 import { LearningPage } from './LearningPage';
 import { ExamSimulationMode } from './ExamSimulationMode';
 import { SupportiveFeatures } from './SupportiveFeatures';
@@ -412,7 +412,7 @@ function AppContent() {
           } />
           <Route path="/exam" element={
             <WritingAccessCheck onNavigate={handleNavigation}>
-              <ExamSimulationMode onExit={() => navigate("/dashboard")} />
+              <ExamSimulationMode onExit={() => navigate("/dashboard")}/>
             </WritingAccessCheck>
           } />
           <Route path="/writing" element={
@@ -432,42 +432,51 @@ function AppContent() {
                   />
                 ) : (
                   <div className="writing-layout-content flex-1 min-h-0">
-                    <EnhancedWritingLayout
+                    <EnhancedWritingLayoutNSW
                       content={content}
                       onChange={setContent}
                       textType={textType || 'narrative'}
                       assistanceLevel={assistanceLevel}
-                      selectedText={selectedText}
-                      onTimerStart={setTimerStarted}
-                      onPopupCompleted={handlePopupCompleted}
-                      onTextTypeChange={handleTextTypeChange}
+                      onAssistanceLevelChange={setAssistanceLevel}
                       onSubmit={handleSubmit}
-                      showPlanningTool={showPlanningTool}
-                      onTogglePlanningTool={() => setShowPlanningTool(!showPlanningTool)}
-                      showHelpCenter={showHelpCenter}
-                      onToggleHelpCenter={() => setShowHelpCenter(!showHelpCenter)}
+                      selectedText={selectedText}
+                      onTextTypeChange={handleTextTypeChange}
+                      onPopupCompleted={handlePopupCompleted}
+                      popupFlowCompleted={popupFlowCompleted}
+                      user={user}
                       openAIConnected={openAIConnected}
                       openAILoading={openAILoading}
+                      panelVisible={panelVisible}
+                      setPanelVisible={setPanelVisible}
                     />
                   </div>
                 )}
               </div>
             </WritingAccessCheck>
           } />
-          <Route path="/payment-success" element={<PaymentSuccessPage onNavigate={handleNavigation} />} />
-          <Route path="/auth/callback" element={<EmailVerificationHandler onAuthSuccess={handleAuthSuccess} />} />
+          <Route path="/payment-success" element={
+            <PaymentSuccessPage 
+              planType={pendingPaymentPlan}
+              onNavigate={handleNavigation}
+            />
+          } />
+          <Route path="/learning" element={<LearningPage />} />
+          <Route path="/supportive-features" element={<SupportiveFeatures />} />
+          <Route path="/help-center" element={<HelpCenter />} />
+          <Route path="/essay-feedback" element={<EssayFeedbackPage />} />
+          <Route path="/evaluation" element={<EvaluationPage />} />
+          <Route path="/auth/callback" element={<EmailVerificationHandler />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
-      </div>
-      {shouldShowFooter() && <Footer />}
-      {showAuthModal && (
-        <AuthModal
-          isOpen={showAuthModal}
+        <AuthModal 
+          show={showAuthModal}
           onClose={() => setShowAuthModal(false)}
           mode={authModalMode}
           onAuthSuccess={handleAuthSuccess}
+          onSwitchMode={(mode) => setAuthModalMode(mode)}
         />
-      )}
+      </div>
+      {shouldShowFooter() && <Footer />}
     </div>
   );
 }
