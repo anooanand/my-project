@@ -37,7 +37,9 @@ import {
   PlayCircle,
   PauseCircle,
   RotateCcw,
-  X
+  X,
+  BarChart3,
+  MessageSquare
 } from 'lucide-react';
 
 // Define feedback interfaces
@@ -105,7 +107,7 @@ export function EnhancedWritingLayout({
   const [focusMode, setFocusMode] = useState(false);
   const [evaluationStatus, setEvaluationStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   
-  // Timer states - Preserved from current implementation
+  // Timer states
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [startTime, setStartTime] = useState<number | null>(null);
@@ -217,7 +219,7 @@ export function EnhancedWritingLayout({
   // Word count calculation
   const wordCount = localContent.trim() ? localContent.trim().split(/\s+/).length : 0;
 
-  // NSW Submit handler - CORRECTED VERSION
+  // NSW Submit handler
   const handleNSWSubmit = async (contentToSubmit: string, typeToSubmit: string) => {
     if (!contentToSubmit.trim()) {
       alert("Please write something before submitting for evaluation.");
@@ -225,8 +227,7 @@ export function EnhancedWritingLayout({
     }
 
     setEvaluationStatus("loading");
-    // We are not using the standalone system anymore, so we don't need to show it.
-    // setShowNSWEvaluation(true); 
+    setShowNSWEvaluation(true);
     setEvaluationProgress("Analyzing your writing...");
 
     try {
@@ -235,14 +236,13 @@ export function EnhancedWritingLayout({
       setTimeout(() => setEvaluationProgress("Evaluating content and ideas..."), 2000);
       setTimeout(() => setEvaluationProgress("Generating detailed feedback..."), 3000);
 
-      // CORRECTED: Call the static method with the correct object structure
       const report = await NSWEvaluationReportGenerator.generateReport({
         essayContent: contentToSubmit,
         textType: typeToSubmit,
-        prompt: currentPrompt, // Assumes 'currentPrompt' is available in this scope
-        wordCount: wordCount, // Assumes 'wordCount' is available in this scope
-        targetWordCountMin: 100, // Example value, adjust as needed
-        targetWordCountMax: 500, // Example value, adjust as needed
+        prompt: currentPrompt,
+        wordCount: wordCount,
+        targetWordCountMin: 200,
+        targetWordCountMax: 300,
       });
       
       setNswReport(report);
@@ -374,7 +374,7 @@ export function EnhancedWritingLayout({
       {/* Left side - Writing Area Content */}
       <div className="flex-1 flex flex-col"> 
         
-        {/* Enhanced Writing Prompt Section - RESTORED FROM OLD VERSION */}
+        {/* Enhanced Writing Prompt Section */}
         <div className={`transition-all duration-300 border-b shadow-sm ${
           isPromptCollapsed ? 'h-16' : 'min-h-[140px]'
         } ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-blue-50 border-blue-200'}`}>
@@ -432,7 +432,7 @@ export function EnhancedWritingLayout({
                 className="flex items-center space-x-1 px-3 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm font-medium"
               >
                 <PenTool className="w-4 h-4" />
-                <span>Planning</span>
+                <span>Plan</span>
               </button>
               
               <button
@@ -449,6 +449,18 @@ export function EnhancedWritingLayout({
               >
                 <LightbulbIcon className="w-4 h-4" />
                 <span>Tips</span>
+              </button>
+
+              <button
+                onClick={() => setExamMode(!examMode)}
+                className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
+                  examMode
+                    ? 'bg-red-500 text-white hover:bg-red-600'
+                    : 'bg-gray-500 text-white hover:bg-gray-600'
+                }`}
+              >
+                <Target className="w-4 h-4" />
+                <span>Exam Mode</span>
               </button>
               
               <button
@@ -702,7 +714,7 @@ export function EnhancedWritingLayout({
           )}
         </div>
 
-        {/* Enhanced Submit Button with Better UX - RESTORED ORIGINAL POSITION */}
+        {/* Enhanced Submit Button with Better UX */}
         <div className={`p-4 border-t transition-colors duration-300 ${
           darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
         }`}>
@@ -720,7 +732,7 @@ export function EnhancedWritingLayout({
               ) : (
                 <>
                   <Target className="w-5 h-5" />
-                  <span>Submit for Evaluation</span>
+                  <span>Submit for NSW Evaluation</span>
                 </>
               )}
             </button>
@@ -732,7 +744,7 @@ export function EnhancedWritingLayout({
                   ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
               }`}
-              title="Evaluation Info"
+              title="NSW Evaluation Info"
             >
               <Info className="w-5 h-5" />
             </button>
@@ -740,15 +752,15 @@ export function EnhancedWritingLayout({
         </div>
       </div>
 
-      {/* Right side - Coach Panel - RESTORED ORIGINAL WIDTH */}
+      {/* Right side - Enhanced Coach Panel (PRESERVED ORIGINAL FUNCTIONALITY) */}
       <div className={`w-96 flex-shrink-0 border-l transition-colors duration-300 ${
         darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
       }`}>
         <EnhancedCoachPanel
-            content={localContent}
-            textType={textType}
-            onContentChange={handleContentChange}
-          />
+          content={localContent}
+          textType={textType}
+          onContentChange={handleContentChange}
+        />
       </div>
 
       {/* Modals */}
@@ -815,3 +827,5 @@ export function EnhancedWritingLayout({
     </div>
   );
 }
+
+export default EnhancedWritingLayout;
