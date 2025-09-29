@@ -1,0 +1,582 @@
+/* NSW AI Coach Enhancement CSS */
+
+/* NSW Criteria Cards */
+.criterion-card {
+  border-radius: 12px;
+  padding: 16px;
+  margin: 8px 0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: white;
+  background: var(--criterion-gradient);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.criterion-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+.criterion-card.expanded {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+}
+
+/* Criterion-specific gradients */
+.ideas-card { 
+  --criterion-gradient: linear-gradient(135deg, #F59E0B, #D97706);
+  --criterion-color: #F59E0B;
+  --criterion-rgb: 245, 158, 11;
+}
+
+.language-card { 
+  --criterion-gradient: linear-gradient(135deg, #3B82F6, #1D4ED8);
+  --criterion-color: #3B82F6;
+  --criterion-rgb: 59, 130, 246;
+}
+
+.structure-card { 
+  --criterion-gradient: linear-gradient(135deg, #10B981, #059669);
+  --criterion-color: #10B981;
+  --criterion-rgb: 16, 185, 129;
+}
+
+.grammar-card { 
+  --criterion-gradient: linear-gradient(135deg, #8B5CF6, #7C3AED);
+  --criterion-color: #8B5CF6;
+  --criterion-rgb: 139, 92, 246;
+}
+
+/* Enhanced Coach Messages */
+.enhanced-coach-message {
+  border-left: 4px solid var(--criterion-color);
+  background: linear-gradient(90deg, rgba(var(--criterion-rgb), 0.05), transparent);
+  border-radius: 8px;
+  margin: 12px 0;
+  padding: 16px;
+  transition: all 0.3s ease;
+}
+
+.enhanced-coach-message:hover {
+  background: linear-gradient(90deg, rgba(var(--criterion-rgb), 0.08), transparent);
+  transform: translateX(2px);
+}
+
+/* Criterion badges */
+.criterion-badge {
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--criterion-color);
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  backdrop-filter: blur(4px);
+}
+
+.ideas-focus { --criterion-color: #F59E0B; --criterion-rgb: 245, 158, 11; }
+.language-focus { --criterion-color: #3B82F6; --criterion-rgb: 59, 130, 246; }
+.structure-focus { --criterion-color: #10B981; --criterion-rgb: 16, 185, 129; }
+.grammar-focus { --criterion-color: #8B5CF6; --criterion-rgb: 139, 92, 246; }
+
+/* Star Rating System */
+.star-rating {
+  display: inline-flex;
+  gap: 2px;
+}
+
+.star {
+  font-size: 16px;
+  opacity: 0.3;
+  transition: opacity 0.3s ease, transform 0.2s ease;
+}
+
+.star.filled {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.star:hover {
+  transform: scale(1.2);
+}
+
+/* Progress Tracking */
+.nsw-progress-tracker {
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+  transition: all 0.3s ease;
+}
+
+.dark .nsw-progress-tracker {
+  background: rgba(31, 41, 55, 0.5);
+}
+
+.progress-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+  transition: all 0.3s ease;
+}
+
+.progress-item:hover {
+  transform: translateX(2px);
+}
+
+.progress-bar {
+  width: 100px;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.dark .progress-bar {
+  background: #374151;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10B981, #059669);
+  transition: width 0.3s ease;
+  border-radius: 4px;
+}
+
+.progress-fill.warning {
+  background: linear-gradient(90deg, #F59E0B, #D97706);
+}
+
+.progress-fill.danger {
+  background: linear-gradient(90deg, #EF4444, #DC2626);
+}
+
+/* NSW Dashboard Specific Styles */
+.nsw-criteria-dashboard {
+  height: 100%;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #CBD5E1 #F1F5F9;
+}
+
+.dark .nsw-criteria-dashboard {
+  scrollbar-color: #4B5563 #374151;
+}
+
+.nsw-criteria-dashboard::-webkit-scrollbar {
+  width: 6px;
+}
+
+.nsw-criteria-dashboard::-webkit-scrollbar-track {
+  background: #F1F5F9;
+  border-radius: 3px;
+}
+
+.dark .nsw-criteria-dashboard::-webkit-scrollbar-track {
+  background: #374151;
+}
+
+.nsw-criteria-dashboard::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 3px;
+}
+
+.dark .nsw-criteria-dashboard::-webkit-scrollbar-thumb {
+  background: #4B5563;
+}
+
+.nsw-criteria-dashboard::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+.dark .nsw-criteria-dashboard::-webkit-scrollbar-thumb:hover {
+  background: #6B7280;
+}
+
+/* Dashboard Header */
+.dashboard-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 16px;
+  border-radius: 8px 8px 0 0;
+  margin-bottom: 16px;
+}
+
+.overall-score {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.grade-indicator {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.grade-indicator.excellent {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10B981;
+  border: 1px solid #10B981;
+}
+
+.grade-indicator.high {
+  background: rgba(59, 130, 246, 0.2);
+  color: #3B82F6;
+  border: 1px solid #3B82F6;
+}
+
+.grade-indicator.sound {
+  background: rgba(245, 158, 11, 0.2);
+  color: #F59E0B;
+  border: 1px solid #F59E0B;
+}
+
+.grade-indicator.basic {
+  background: rgba(249, 115, 22, 0.2);
+  color: #F97316;
+  border: 1px solid #F97316;
+}
+
+.grade-indicator.minimal {
+  background: rgba(239, 68, 68, 0.2);
+  color: #EF4444;
+  border: 1px solid #EF4444;
+}
+
+/* Criteria Grid */
+.criteria-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.criterion-card .card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.criterion-card .card-header:hover {
+  transform: scale(1.02);
+}
+
+.criterion-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.criterion-icon {
+  font-size: 24px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+.criterion-name {
+  font-size: 16px;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.score-display {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.score-text {
+  font-size: 14px;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Card Content */
+.card-content {
+  background: rgba(255, 255, 255, 0.95);
+  margin: 12px -16px -16px -16px;
+  padding: 16px;
+  border-radius: 0 0 12px 12px;
+  backdrop-filter: blur(4px);
+}
+
+.current-feedback {
+  color: #374151;
+  font-size: 14px;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.improvement-section {
+  background: #F3F4F6;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.improvement-section strong {
+  color: #1F2937;
+  font-size: 13px;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.improvement-section p {
+  color: #4B5563;
+  font-size: 13px;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.tip-button {
+  width: 100%;
+  background: #374151;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.tip-button:hover {
+  background: #1F2937;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Exam Mode Styles */
+.exam-mode-indicator {
+  background: linear-gradient(135deg, #EF4444, #DC2626);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  animation: pulse 2s infinite;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+/* Time Warning Animations */
+.time-warning-low {
+  color: #F59E0B;
+  animation: gentle-pulse 3s infinite;
+}
+
+.time-warning-medium {
+  color: #F97316;
+  font-weight: 600;
+  animation: medium-pulse 2s infinite;
+}
+
+.time-warning-high {
+  color: #EF4444;
+  font-weight: 700;
+  animation: urgent-pulse 1s infinite;
+}
+
+@keyframes gentle-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes medium-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(1.05); }
+}
+
+@keyframes urgent-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.1); }
+}
+
+/* Progress Tracker Enhancements */
+.progress-tracker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.progress-metric {
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #E5E7EB;
+  transition: all 0.3s ease;
+}
+
+.dark .progress-metric {
+  background: rgba(31, 41, 55, 0.5);
+  border-color: #374151;
+}
+
+.progress-metric:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.metric-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.metric-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6B7280;
+}
+
+.dark .metric-label {
+  color: #9CA3AF;
+}
+
+.metric-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1F2937;
+}
+
+.dark .metric-value {
+  color: #F9FAFB;
+}
+
+/* Performance Level Indicators */
+.performance-excellent {
+  background: linear-gradient(135deg, #10B981, #059669);
+  color: white;
+}
+
+.performance-good {
+  background: linear-gradient(135deg, #3B82F6, #1D4ED8);
+  color: white;
+}
+
+.performance-fair {
+  background: linear-gradient(135deg, #F59E0B, #D97706);
+  color: white;
+}
+
+.performance-needs-improvement {
+  background: linear-gradient(135deg, #F97316, #EA580C);
+  color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .criterion-card {
+    margin: 6px 0;
+    padding: 12px;
+  }
+  
+  .criterion-icon {
+    font-size: 20px;
+  }
+  
+  .criterion-name {
+    font-size: 14px;
+  }
+  
+  .progress-tracker-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  .nsw-progress-tracker {
+    padding: 12px;
+    margin: 12px 0;
+  }
+}
+
+/* Accessibility Enhancements */
+.criterion-card:focus {
+  outline: 2px solid #3B82F6;
+  outline-offset: 2px;
+}
+
+.tip-button:focus {
+  outline: 2px solid #3B82F6;
+  outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .criterion-card {
+    border: 2px solid currentColor;
+  }
+  
+  .enhanced-coach-message {
+    border-left-width: 6px;
+  }
+  
+  .progress-fill {
+    border: 1px solid currentColor;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .criterion-card,
+  .enhanced-coach-message,
+  .progress-item,
+  .tip-button {
+    transition: none;
+  }
+  
+  .star {
+    transition: none;
+  }
+  
+  .exam-mode-indicator,
+  .time-warning-low,
+  .time-warning-medium,
+  .time-warning-high {
+    animation: none;
+  }
+}
+
+/* Print styles */
+@media print {
+  .nsw-criteria-dashboard {
+    background: white !important;
+    color: black !important;
+  }
+  
+  .criterion-card {
+    background: white !important;
+    color: black !important;
+    border: 2px solid black !important;
+    break-inside: avoid;
+  }
+  
+  .enhanced-coach-message {
+    background: white !important;
+    border: 1px solid black !important;
+    break-inside: avoid;
+  }
+}
