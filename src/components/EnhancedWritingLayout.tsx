@@ -42,7 +42,7 @@ import {
   MessageSquare
 } from 'lucide-react';
 
-// Define feedback interfaces (preserved from original)
+// Define feedback interfaces
 export interface IdeasFeedback {
   promptAnalysis: {
     elements: string[];
@@ -73,7 +73,7 @@ export interface GrammarFeedback {
   commonErrors: string[];
 }
 
-interface EnhancedWritingLayoutNSWProps {
+interface EnhancedWritingLayoutProps {
   content: string;
   onChange: (content: string) => void;
   textType: string;
@@ -86,7 +86,7 @@ interface EnhancedWritingLayoutNSWProps {
   onNavigate: (page: string) => void;
 }
 
-export function EnhancedWritingLayoutNSW({
+export function EnhancedWritingLayout({
   content,
   onChange,
   textType,
@@ -97,8 +97,7 @@ export function EnhancedWritingLayoutNSW({
   onTextTypeChange,
   onPopupCompleted,
   onNavigate
-}: EnhancedWritingLayoutNSWProps) {
-  // Preserved original state
+}: EnhancedWritingLayoutProps) {
   const [showPlanningTool, setShowPlanningTool] = useState(false);
   const [showStructureGuide, setShowStructureGuide] = useState(false);
   const [showTips, setShowTips] = useState(false);
@@ -108,13 +107,13 @@ export function EnhancedWritingLayoutNSW({
   const [focusMode, setFocusMode] = useState(false);
   const [evaluationStatus, setEvaluationStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   
-  // Timer states - Preserved from current implementation
+  // Timer states
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [startTime, setStartTime] = useState<number | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // UI states - Preserved
+  // UI states
   const [localContent, setLocalContent] = useState(content);
   const [isPromptCollapsed, setIsPromptCollapsed] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -122,14 +121,14 @@ export function EnhancedWritingLayoutNSW({
   const [fontFamily, setFontFamily] = useState('system');
   const [darkMode, setDarkMode] = useState(false);
 
-  // NSW Evaluation states - Preserved
+  // NSW Evaluation states
   const [showNSWEvaluation, setShowNSWEvaluation] = useState(false);
   const [evaluationProgress, setEvaluationProgress] = useState("");
   const [showReportModal, setShowReportModal] = useState(false);
   const [nswReport, setNswReport] = useState<any>(null);
   const [analysis, setAnalysis] = useState<DetailedFeedback | null>(null);
 
-  // Enhanced feedback states - Preserved
+  // Enhanced feedback states
   const [ideasFeedback, setIdeasFeedback] = useState<IdeasFeedback>({
     promptAnalysis: { elements: [], missing: [] },
     feedback: []
@@ -147,7 +146,7 @@ export function EnhancedWritingLayoutNSW({
     commonErrors: []
   });
 
-  // Font options - Preserved
+  // Font options
   const fontSizes = [
     { label: 'S', value: 14, name: 'Small' },
     { label: 'M', value: 16, name: 'Medium' },
@@ -161,7 +160,7 @@ export function EnhancedWritingLayoutNSW({
     { name: 'Mono', value: 'mono', css: 'Monaco, monospace' }
   ];
 
-  // Timer functions - Preserved
+  // Timer functions
   const startTimer = useCallback(() => {
     if (!isTimerRunning) {
       const now = Date.now();
@@ -189,7 +188,7 @@ export function EnhancedWritingLayoutNSW({
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Timer effect - Preserved
+  // Timer effect
   useEffect(() => {
     if (isTimerRunning && startTime) {
       timerRef.current = setInterval(() => {
@@ -211,21 +210,16 @@ export function EnhancedWritingLayoutNSW({
     };
   }, [isTimerRunning, startTime]);
 
-  // Content handling with AUTO-TIMER START
+  // Content handling
   const handleContentChange = (newContent: string) => {
     setLocalContent(newContent);
     onChange(newContent);
-    
-    // AUTO-START TIMER: Start timer when user begins typing
-    if (newContent.trim().length > 0 && !isTimerRunning && elapsedTime === 0) {
-      startTimer();
-    }
   };
 
-  // Word count calculation - Preserved
+  // Word count calculation
   const wordCount = localContent.trim() ? localContent.trim().split(/\s+/).length : 0;
 
-  // NSW Submit handler - Preserved with enhancements
+  // NSW Submit handler
   const handleNSWSubmit = async (contentToSubmit: string, typeToSubmit: string) => {
     if (!contentToSubmit.trim()) {
       alert("Please write something before submitting for evaluation.");
@@ -355,36 +349,32 @@ export function EnhancedWritingLayoutNSW({
     setEvaluationProgress("");
   };
 
-  // Get current font family CSS - Preserved
+  // Get current font family CSS
   const getCurrentFontFamily = () => {
     const family = fontFamilies.find(f => f.value === fontFamily);
     return family ? family.css : fontFamilies[0].css;
   };
 
-  // Check if word count exceeds target - Preserved
+  // Check if word count exceeds target
   const showWordCountWarning = wordCount > 300;
 
-  // Check if we have content for submit button - Preserved
+  // Check if we have content for submit button
   const currentContent = localContent || content;
   const hasContent = currentContent && currentContent.trim().length > 0;
 
-  // Set a default prompt for demonstration - Preserved
+  // Set a default prompt for demonstration
   useEffect(() => {
     if (!currentPrompt) {
       setCurrentPrompt("**Prompt: The Mysterious Key** One sunny afternoon, while exploring your grandmother's attic, you stumble upon an old, dusty chest that has been locked for decades. Next to it lies a beautiful, ornate key that seems to shimmer in the light. As you pick up the key, a strange feeling washes over you, as if it holds a secret waiting to be discovered. What could be inside the chest? Is it filled with treasures, forgotten memories, or perhaps something magical? As you unlock the chest, you hear a faint whisper coming from within. What do you find inside, and how does it change your life? Consider the emotions you feel as you uncover the mystery. Who will you share this discovery with, and what adventure will follow? Let your imagination lead you into the unknown!");
     }
   }, [currentPrompt]);
 
-  // Calculate time remaining for exam mode
-  const examDuration = 30 * 60; // 30 minutes in seconds
-  const timeRemaining = examMode ? Math.max(0, examDuration - elapsedTime) : 0;
-
   return (
     <div className={`flex h-screen transition-colors duration-300 ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
       {/* Left side - Writing Area Content */}
       <div className="flex-1 flex flex-col"> 
         
-        {/* Enhanced Writing Prompt Section - PRESERVED */}
+        {/* Enhanced Writing Prompt Section */}
         <div className={`transition-all duration-300 border-b shadow-sm ${
           isPromptCollapsed ? 'h-16' : 'min-h-[140px]'
         } ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-blue-50 border-blue-200'}`}>
@@ -399,14 +389,6 @@ export function EnhancedWritingLayoutNSW({
               }`}>
                 {textType}
               </span>
-              {/* Exam Mode Indicator */}
-              {examMode && (
-                <span className={`ml-2 text-xs px-2 py-1 rounded-full font-bold ${
-                  darkMode ? 'bg-red-800/50 text-red-200' : 'bg-red-200 text-red-800'
-                }`}>
-                  EXAM MODE
-                </span>
-              )}
             </div>
             
             <button
@@ -422,7 +404,7 @@ export function EnhancedWritingLayoutNSW({
             </button>
           </div>
 
-          {/* Prompt Content - PRESERVED */}
+          {/* Prompt Content */}
           {!isPromptCollapsed && (
             <div className="px-4 pb-4">
               <div className={`p-4 rounded-lg border ${
@@ -438,109 +420,84 @@ export function EnhancedWritingLayoutNSW({
           )}
         </div>
 
-        {/* Enhanced Writing Toolbar - PRESERVED */}
+        {/* Enhanced Writing Toolbar - RESTORED FROM OLD VERSION */}
         <div className={`px-4 py-3 border-b transition-colors duration-300 ${
           darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
         }`}>
           <div className="flex items-center justify-between">
-            {/* Left side - Writing Tools */}
-            <div className="flex items-center space-x-3">
+            {/* Left: Writing Tools */}
+            <div className="flex items-center space-x-2">
               <button
                 onClick={() => setShowPlanningTool(true)}
-                className={`flex items-center space-x-1 px-3 py-2 rounded-lg border shadow-sm transition-colors text-sm font-medium ${
-                  darkMode
-                    ? 'bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600'
-                    : 'bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100'
-                }`}
-                title="Planning Tool"
+                className="flex items-center space-x-1 px-3 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm font-medium"
               >
                 <PenTool className="w-4 h-4" />
                 <span>Plan</span>
               </button>
-
+              
               <button
                 onClick={() => setShowStructureGuide(true)}
-                className={`flex items-center space-x-1 px-3 py-2 rounded-lg border shadow-sm transition-colors text-sm font-medium ${
-                  darkMode
-                    ? 'bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600'
-                    : 'bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100'
-                }`}
-                title="Structure Guide"
+                className="flex items-center space-x-1 px-3 py-1.5 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors text-sm font-medium"
               >
                 <BookOpen className="w-4 h-4" />
                 <span>Structure</span>
               </button>
-
+              
               <button
                 onClick={() => setShowTips(true)}
-                className={`flex items-center space-x-1 px-3 py-2 rounded-lg border shadow-sm transition-colors text-sm font-medium ${
-                  darkMode
-                    ? 'bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600'
-                    : 'bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100'
-                }`}
-                title="Writing Tips"
+                className="flex items-center space-x-1 px-3 py-1.5 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors text-sm font-medium"
               >
                 <LightbulbIcon className="w-4 h-4" />
                 <span>Tips</span>
               </button>
 
-              {/* Exam Mode Toggle */}
               <button
                 onClick={() => setExamMode(!examMode)}
-                className={`flex items-center space-x-1 px-3 py-2 rounded-lg border shadow-sm transition-colors text-sm font-medium ${
+                className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
                   examMode
-                    ? 'bg-red-500 text-white border-red-500 hover:bg-red-600'
-                    : darkMode
-                    ? 'bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600'
-                    : 'bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100'
+                    ? 'bg-red-500 text-white hover:bg-red-600'
+                    : 'bg-gray-500 text-white hover:bg-gray-600'
                 }`}
-                title={examMode ? "Exit Exam Mode" : "Enter Exam Mode (30 min timer)"}
               >
                 <Target className="w-4 h-4" />
-                <span>{examMode ? 'Exit Exam' : 'Exam Mode'}</span>
+                <span>Exam Mode</span>
               </button>
-
+              
               <button
                 onClick={() => setFocusMode(!focusMode)}
-                className={`flex items-center space-x-1 px-3 py-2 rounded-lg border shadow-sm transition-colors text-sm font-medium ${
-                  focusMode
-                    ? 'bg-purple-500 text-white border-purple-500 hover:bg-purple-600'
-                    : darkMode
-                    ? 'bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600'
-                    : 'bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100'
+                className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
+                  focusMode 
+                    ? 'bg-gray-700 text-white hover:bg-gray-800' 
+                    : 'bg-gray-600 text-white hover:bg-gray-700'
                 }`}
-                title="Focus Mode"
               >
                 {focusMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 <span>Focus</span>
               </button>
             </div>
 
-            {/* Right side - Status and Controls */}
-            <div className="flex items-center space-x-4">
-              {/* Timer Controls - ENHANCED FOR EXAM MODE */}
-              <div className="flex items-center space-x-2">
-                <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg border shadow-sm ${
-                  examMode && timeRemaining <= 300 
-                    ? 'border-red-300 bg-red-50 text-red-700'
-                    : darkMode 
-                    ? 'border-gray-600 bg-gray-700 text-gray-300' 
-                    : 'border-gray-300 bg-gray-50 text-gray-700'
+            {/* Right: Enhanced Timer, Stats and Settings */}
+            <div className="flex items-center space-x-3">
+              {/* Enhanced Writing Timer */}
+              <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg border shadow-sm ${
+                darkMode 
+                  ? 'border-gray-600 bg-gray-700' 
+                  : 'border-gray-300 bg-gray-50'
+              }`}>
+                <Clock className={`w-5 h-5 ${
+                  isTimerRunning 
+                    ? 'text-green-500' 
+                    : darkMode ? 'text-blue-400' : 'text-blue-600'
+                }`} />
+                <span className={`text-lg font-bold font-mono ${
+                  isTimerRunning 
+                    ? 'text-green-500' 
+                    : darkMode ? 'text-gray-100' : 'text-gray-800'
                 }`}>
-                  <Clock className={`w-4 h-4 ${
-                    examMode && timeRemaining <= 300 ? 'text-red-600' : 
-                    darkMode ? 'text-blue-400' : 'text-blue-600'
-                  }`} />
-                  <span className={`text-sm font-semibold ${
-                    examMode && timeRemaining <= 300 ? 'animate-pulse' : ''
-                  }`}>
-                    {examMode ? 
-                      `${formatTime(timeRemaining)} left` : 
-                      formatTime(elapsedTime)
-                    }
-                  </span>
-                </div>
-
+                  {formatTime(elapsedTime)}
+                </span>
+                
+                {/* Timer Controls */}
                 <div className="flex items-center space-x-1">
                   {!isTimerRunning ? (
                     <button
@@ -582,7 +539,7 @@ export function EnhancedWritingLayoutNSW({
                 </div>
               </div>
 
-              {/* Word Count with Enhanced Styling - PRESERVED */}
+              {/* Word Count with Enhanced Styling */}
               <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg border shadow-sm ${
                 showWordCountWarning
                   ? 'border-orange-300 bg-orange-50'
@@ -607,7 +564,7 @@ export function EnhancedWritingLayoutNSW({
                 )}
               </div>
 
-              {/* Settings Toggle - PRESERVED */}
+              {/* Settings Toggle */}
               <button
                 onClick={() => setShowSettings(!showSettings)}
                 className={`flex items-center space-x-1 px-3 py-2 rounded-lg border shadow-sm transition-colors text-sm font-medium ${
@@ -625,7 +582,7 @@ export function EnhancedWritingLayoutNSW({
             </div>
           </div>
 
-          {/* Settings Panel - PRESERVED */}
+          {/* Settings Panel */}
           {showSettings && (
             <div className={`border-t px-4 py-3 transition-colors duration-300 ${
               darkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
@@ -717,9 +674,7 @@ export function EnhancedWritingLayoutNSW({
           )}
         </div>
 
-        {/* REMOVED: NSW Progress Tracker - This section has been completely removed to give more writing space */}
-
-        {/* ORIGINAL SIMPLE WRITING AREA - PRESERVED */}
+        {/* ORIGINAL SIMPLE WRITING AREA - RESTORED FROM OLD VERSION */}
         <div className={`flex-1 relative transition-colors duration-300 ${
           darkMode ? 'bg-gray-800' : 'bg-white'
         } ${focusMode ? 'bg-opacity-95' : ''}`}>
@@ -759,7 +714,7 @@ export function EnhancedWritingLayoutNSW({
           )}
         </div>
 
-        {/* Enhanced Submit Button with Better UX - PRESERVED */}
+        {/* Enhanced Submit Button with Better UX */}
         <div className={`p-4 border-t transition-colors duration-300 ${
           darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
         }`}>
@@ -808,7 +763,7 @@ export function EnhancedWritingLayoutNSW({
         />
       </div>
 
-      {/* Modals - PRESERVED */}
+      {/* Modals */}
       <PlanningToolModal
         isOpen={showPlanningTool}
         onClose={() => setShowPlanningTool(false)}
@@ -833,7 +788,7 @@ export function EnhancedWritingLayoutNSW({
         />
       )}
 
-      {/* NSW Evaluation Loading Modal - PRESERVED */}
+      {/* NSW Evaluation Loading Modal */}
       {showNSWEvaluation && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className={`rounded-lg p-8 max-w-md w-full mx-4 ${
@@ -873,4 +828,4 @@ export function EnhancedWritingLayoutNSW({
   );
 }
 
-export default EnhancedWritingLayoutNSW;
+export default EnhancedWritingLayout;
