@@ -5,9 +5,6 @@ import { TipsModal } from './TipsModal';
 import { EnhancedCoachPanel } from './EnhancedCoachPanel';
 import { NSWStandaloneSubmitSystem } from './NSWStandaloneSubmitSystem';
 import { ReportModal } from './ReportModal';
-import { NSWCriteriaDashboard } from './NSWCriteriaDashboard';
-import { NSWProgressTracker } from './NSWProgressTracker';
-import { EnhancedNSWCoachMessage, NSWCoachingLogic, EnhancedCoachResponse } from './EnhancedNSWCoachResponse';
 import type { DetailedFeedback, LintFix } from '../types/feedback';
 import { eventBus } from '../lib/eventBus';
 import { detectNewParagraphs } from '../lib/paragraphDetection';
@@ -150,12 +147,6 @@ export function EnhancedWritingLayoutNSW({
     commonErrors: []
   });
 
-  // NEW NSW-specific states
-  const [showNSWDashboard, setShowNSWDashboard] = useState(true);
-  const [nswCoachMessages, setNswCoachMessages] = useState<EnhancedCoachResponse[]>([]);
-  const [timeWarnings, setTimeWarnings] = useState<string[]>([]);
-  const [rightPanelView, setRightPanelView] = useState<'coach' | 'nsw-dashboard'>('coach');
-
   // Font options - Preserved
   const fontSizes = [
     { label: 'S', value: 14, name: 'Small' },
@@ -220,45 +211,19 @@ export function EnhancedWritingLayoutNSW({
     };
   }, [isTimerRunning, startTime]);
 
-  // Content handling - Preserved
+  // Content handling with AUTO-TIMER START
   const handleContentChange = (newContent: string) => {
     setLocalContent(newContent);
     onChange(newContent);
+    
+    // AUTO-START TIMER: Start timer when user begins typing
+    if (newContent.trim().length > 0 && !isTimerRunning && elapsedTime === 0) {
+      startTimer();
+    }
   };
 
   // Word count calculation - Preserved
   const wordCount = localContent.trim() ? localContent.trim().split(/\s+/).length : 0;
-
-  // NEW: NSW-specific functions
-  const handleCriterionTipRequest = (criterion: string) => {
-    // Generate NSW-specific coaching response
-    const primaryFocus = {
-      criterion: criterion as 'ideas' | 'language' | 'structure' | 'grammar',
-      score: 3 as 1 | 2 | 3 | 4 | 5, // Default score, would be calculated in real implementation
-      feedback: `Focus on improving your ${criterion} for better NSW performance.`
-    };
-    
-    const nswResponse = NSWCoachingLogic.generateCoachResponse(localContent, textType, primaryFocus);
-    setNswCoachMessages(prev => [...prev, nswResponse]);
-    
-    // Switch to coach view to show the response
-    setRightPanelView('coach');
-  };
-
-  const handleTimeWarning = (warning: string) => {
-    setTimeWarnings(prev => [...prev, warning]);
-    // Could also trigger a notification or modal here
-  };
-
-  const toggleExamMode = () => {
-    setExamMode(!examMode);
-    if (!examMode) {
-      // Starting exam mode - reset timer to 30 minutes
-      setElapsedTime(0);
-      setStartTime(null);
-      setIsTimerRunning(false);
-    }
-  };
 
   // NSW Submit handler - Preserved with enhancements
   const handleNSWSubmit = async (contentToSubmit: string, typeToSubmit: string) => {
@@ -268,6 +233,7 @@ export function EnhancedWritingLayoutNSW({
     }
 
     setEvaluationStatus("loading");
+    setShowNSWEvaluation(true);
     setEvaluationProgress("Analyzing your writing...");
 
     try {
@@ -433,7 +399,7 @@ export function EnhancedWritingLayoutNSW({
               }`}>
                 {textType}
               </span>
-              {/* NEW: Exam Mode Indicator */}
+              {/* Exam Mode Indicator */}
               {examMode && (
                 <span className={`ml-2 text-xs px-2 py-1 rounded-full font-bold ${
                   darkMode ? 'bg-red-800/50 text-red-200' : 'bg-red-200 text-red-800'
@@ -472,7 +438,7 @@ export function EnhancedWritingLayoutNSW({
           )}
         </div>
 
-        {/* Enhanced Writing Toolbar - ENHANCED WITH NSW FEATURES */}
+        {/* Enhanced Writing Toolbar - PRESERVED */}
         <div className={`px-4 py-3 border-b transition-colors duration-300 ${
           darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
         }`}>
@@ -518,9 +484,9 @@ export function EnhancedWritingLayoutNSW({
                 <span>Tips</span>
               </button>
 
-              {/* NEW: Exam Mode Toggle */}
+              {/* Exam Mode Toggle */}
               <button
-                onClick={toggleExamMode}
+                onClick={() => setExamMode(!examMode)}
                 className={`flex items-center space-x-1 px-3 py-2 rounded-lg border shadow-sm transition-colors text-sm font-medium ${
                   examMode
                     ? 'bg-red-500 text-white border-red-500 hover:bg-red-600'
@@ -751,16 +717,7 @@ export function EnhancedWritingLayoutNSW({
           )}
         </div>
 
-        {/* NEW: NSW Progress Tracker */}
-        <NSWProgressTracker
-          content={localContent}
-          textType={textType}
-          examMode={examMode}
-          timeRemaining={timeRemaining}
-          onTimeWarning={handleTimeWarning}
-          darkMode={darkMode}
-          className="border-b"
-        />
+        {/* REMOVED: NSW Progress Tracker - This section has been completely removed to give more writing space */}
 
         {/* ORIGINAL SIMPLE WRITING AREA - PRESERVED */}
         <div className={`flex-1 relative transition-colors duration-300 ${
@@ -840,61 +797,15 @@ export function EnhancedWritingLayoutNSW({
         </div>
       </div>
 
-      {/* Right side - Enhanced Coach Panel with NSW Dashboard */}
+      {/* Right side - Enhanced Coach Panel (PRESERVED ORIGINAL FUNCTIONALITY) */}
       <div className={`w-96 flex-shrink-0 border-l transition-colors duration-300 ${
         darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
       }`}>
-        {/* Panel Header with View Toggle */}
-        <div className={`p-4 border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={() => setRightPanelView('coach')}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                rightPanelView === 'coach'
-                  ? 'bg-blue-500 text-white'
-                  : darkMode
-                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              <MessageSquare className="w-4 h-4" />
-              <span>AI Coach</span>
-            </button>
-            
-            <button
-              onClick={() => setRightPanelView('nsw-dashboard')}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                rightPanelView === 'nsw-dashboard'
-                  ? 'bg-blue-500 text-white'
-                  : darkMode
-                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              <BarChart3 className="w-4 h-4" />
-              <span>NSW Criteria</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Panel Content */}
-        <div className="flex-1 overflow-hidden">
-          {rightPanelView === 'coach' ? (
-            <EnhancedCoachPanel
-              content={localContent}
-              textType={textType}
-              onContentChange={handleContentChange}
-            />
-          ) : (
-            <NSWCriteriaDashboard
-              content={localContent}
-              textType={textType}
-              onCriterionTipRequest={handleCriterionTipRequest}
-              darkMode={darkMode}
-              className="h-full overflow-y-auto"
-            />
-          )}
-        </div>
+        <EnhancedCoachPanel
+          content={localContent}
+          textType={textType}
+          onContentChange={handleContentChange}
+        />
       </div>
 
       {/* Modals - PRESERVED */}
@@ -956,20 +867,6 @@ export function EnhancedWritingLayoutNSW({
               </button>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* NEW: Time Warning Notifications */}
-      {timeWarnings.length > 0 && (
-        <div className="fixed top-4 right-4 z-40 space-y-2">
-          {timeWarnings.slice(-3).map((warning, index) => (
-            <div
-              key={index}
-              className="bg-orange-500 text-white px-4 py-2 rounded-lg shadow-lg animate-bounce"
-            >
-              {warning}
-            </div>
-          ))}
         </div>
       )}
     </div>
