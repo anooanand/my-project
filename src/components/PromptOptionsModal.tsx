@@ -14,12 +14,9 @@ interface PromptOption {
   title: string;
   description: string;
   icon: React.ReactNode;
-  difficulty: 'Beginner' | 'Intermediate' | 'Advanced';
-  estimatedTime: string;
+
   category: 'Quick Start' | 'Custom Prompts';
   isPopular?: boolean;
-  preview?: string;
-  successTip?: string;
 }
 
 export function PromptOptionsModal({
@@ -35,23 +32,17 @@ export function PromptOptionsModal({
       title: 'Magic Prompt Generator',
       description: 'Let our AI create an awesome prompt just for you! Perfect for getting started quickly.',
       icon: <Sparkles className="h-6 w-6" />,
-      difficulty: 'Beginner',
-      estimatedTime: '2-3 mins',
+
       category: 'Quick Start',
       isPopular: true,
-      preview: 'AI will generate a creative, engaging prompt tailored to your skill level and interests.',
-      successTip: 'Great for overcoming writer\'s block and discovering new ideas!'
     },
     {
       id: 'custom-idea',
       title: 'Use My Own Idea',
       description: 'Type in your own writing prompt or topic. Great for when you have a specific idea!',
       icon: <Edit3 className="h-6 w-6" />,
-      difficulty: 'Intermediate',
-      estimatedTime: '1-2 mins',
+
       category: 'Custom Prompts',
-      preview: 'Enter your own creative prompt and get structured guidance to develop it.',
-      successTip: 'Perfect when you have inspiration and want to explore it deeply!'
     },
   ];
 
@@ -66,8 +57,6 @@ export function PromptOptionsModal({
       onGeneratePrompt();
     } else if (optionId === 'custom-idea') {
       onCustomPrompt();
-    } else {
-      onGeneratePrompt();
     }
   };
 
@@ -139,17 +128,13 @@ export function PromptOptionsModal({
                 onClick={() => handleOptionClick(option.id)}
                 className="relative group cursor-pointer p-6 bg-white dark:bg-gray-800 rounded-2xl border-2 border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-600 transition-all duration-300 hover:shadow-xl hover:scale-105 transform"
               >
-                {/* Badges */}
-                <div className="absolute top-3 right-3 flex flex-col gap-1">
-                  {option.isPopular && (
-                    <div className="bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg">
-                      <Star className="h-3 w-3 fill-current" />
-                      Popular
-                    </div>
-                  )}
-                </div>
+                {option.isPopular && (
+                  <div className="absolute top-3 right-3 bg-gradient-to-r from-yellow-400 to-orange-400 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1 shadow-lg">
+                    <Star className="h-3 w-3 fill-current" />
+                    Popular
+                  </div>
+                )}
 
-                {/* Icon and Title */}
                 <div className="flex items-start space-x-4 mb-4">
                   <div className="p-3 bg-gradient-to-r from-purple-500 to-blue-500 rounded-2xl text-white shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-110">
                     {option.icon}
@@ -164,7 +149,6 @@ export function PromptOptionsModal({
                   </div>
                 </div>
 
-                {/* Metadata */}
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-3">
                     <span className={`px-2 py-1 rounded-lg text-xs font-medium border ${difficultyColors[option.difficulty]}`}>
@@ -177,7 +161,6 @@ export function PromptOptionsModal({
                   </div>
                 </div>
 
-                {/* Action Button */}
                 <button className="w-full py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-blue-700 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center space-x-2">
                   <span>Choose This Option</span>
                   <ChevronRight className="h-4 w-4" />
@@ -208,3 +191,4 @@ export function PromptOptionsModal({
     </div>
   );
 }
+
