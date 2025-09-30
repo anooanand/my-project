@@ -448,7 +448,7 @@ function AppContent() {
                       openAIConnected={openAIConnected}
                       openAILoading={openAILoading}
                       panelVisible={panelVisible}
-                      setPanelVisible={setPanelVisible},
+                      setPanelVisible={setPanelVisible}
                       setPrompt={setPrompt}
                     />
                   </div>
