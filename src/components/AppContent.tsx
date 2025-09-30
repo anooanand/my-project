@@ -1,4 +1,7 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+// CORRECT: AppContent Component with Prompt Handling
+// This is the correct AppContent code that should replace src/components/AppContent.tsx
+
+import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import './layout-fix.css';
@@ -65,6 +68,16 @@ function AppContent() {
   const [showHelpCenter, setShowHelpCenter] = useState(false);
   const [showPlanningTool, setShowPlanningTool] = useState(false);
   
+  // FIXED: Add prompt state and enhanced writing states
+  const [currentPrompt, setCurrentPrompt] = useState('');
+  const [wordCount, setWordCount] = useState(0);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [focusMode, setFocusMode] = useState(false);
+  const [showStructureGuide, setShowStructureGuide] = useState(false);
+  const [showTips, setShowTips] = useState(false);
+  const [analysis, setAnalysis] = useState(null);
+  
   // New state for popup flow completion
   const [popupFlowCompleted, setPopupFlowCompleted] = useState(false); 
   const [hasSignedIn, setHasSignedIn] = useState(false);
@@ -73,6 +86,88 @@ function AppContent() {
   const [panelVisible, setPanelVisible] = useState(true);
   const [openAIConnected, setOpenAIConnected] = useState<boolean | null>(null);
   const [openAILoading, setOpenAILoading] = useState<boolean>(true);
+
+  // FIXED: Load prompt from localStorage on component mount and listen for prompt generation
+  useEffect(() => {
+    const loadPromptFromStorage = () => {
+      try {
+        // Check for generated prompt first, then custom prompt
+        const generatedPrompt = localStorage.getItem("generatedPrompt");
+        const customPrompt = localStorage.getItem("customPrompt");
+        const storedTextType = localStorage.getItem('selectedWritingType');
+        
+        if (generatedPrompt) {
+          console.log('📝 AppContent: Loading generated prompt from localStorage:', generatedPrompt);
+          setCurrentPrompt(generatedPrompt);
+        } else if (customPrompt) {
+          console.log('📝 AppContent: Loading custom prompt from localStorage:', customPrompt);
+          setCurrentPrompt(customPrompt);
+        }
+        
+        if (storedTextType) {
+          console.log('📝 AppContent: Loading text type from localStorage:', storedTextType);
+          setTextType(storedTextType);
+        }
+      } catch (error) {
+        console.error('AppContent: Error loading prompt from localStorage:', error);
+      }
+    };
+
+    // Load prompt on mount
+    loadPromptFromStorage();
+
+    // Listen for prompt generation events
+    const handlePromptGenerated = (event: CustomEvent) => {
+      console.log('📝 AppContent: Received promptGenerated event:', event.detail);
+      if (event.detail.prompt) {
+        setCurrentPrompt(event.detail.prompt);
+        setTextType(event.detail.textType || 'narrative');
+      }
+    };
+
+    // Listen for storage changes (in case prompt is updated in another tab/component)
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'generatedPrompt' || event.key === 'customPrompt') {
+        console.log('📝 AppContent: Storage changed, reloading prompt');
+        loadPromptFromStorage();
+      }
+    };
+
+    window.addEventListener('promptGenerated', handlePromptGenerated as EventListener);
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('promptGenerated', handlePromptGenerated as EventListener);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
+  // FIXED: Timer functions
+  const startTimer = () => {
+    setIsTimerRunning(true);
+  };
+
+  const pauseTimer = () => {
+    setIsTimerRunning(false);
+  };
+
+  const resetTimer = () => {
+    setElapsedTime(0);
+    setIsTimerRunning(false);
+  };
+
+  // FIXED: Timer effect
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isTimerRunning) {
+      interval = setInterval(() => {
+        setElapsedTime(prev => prev + 1);
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isTimerRunning]);
 
   // Handle sign-in behavior - clear content and show modal when user signs in
   useEffect(() => {
@@ -98,334 +193,254 @@ function AppContent() {
   useEffect(() => {
     const fetchOpenAIStatus = async () => {
       setOpenAILoading(true);
-      const status = await checkOpenAIConnectionStatus();
-      setOpenAIConnected(status.is_connected);
-      setOpenAILoading(false);
+      try {
+        const connected = await checkOpenAIConnectionStatus();
+        setOpenAIConnected(connected);
+      } catch (error) {
+        console.error('Failed to check OpenAI status:', error);
+        setOpenAIConnected(false);
+      } finally {
+        setOpenAILoading(false);
+      }
     };
 
     fetchOpenAIStatus();
   }, []);
 
-  // Check for payment success in URL on mount
+  // Handle URL-based navigation
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const paymentSuccess = urlParams.get('paymentSuccess') === 'true' || urlParams.get('payment_success') === 'true';
-    const planType = urlParams.get('planType') || urlParams.get('plan');
-    const userEmail = urlParams.get('email');
-    
-    if (paymentSuccess && planType) {
-      console.log('[DEBUG] Payment success detected for plan:', planType);
-      
-      // Store payment info
-      if (userEmail) {
-        localStorage.setItem('userEmail', userEmail);
-      }
-      localStorage.setItem('payment_plan', planType);
-      localStorage.setItem('payment_date', new Date().toISOString());
-      
-      // Clear URL parameters
-      window.history.replaceState({}, document.title, window.location.pathname);
-      
-      setShowPaymentSuccess(true);
-      setPendingPaymentPlan(planType);
-      setActivePage('payment-success');
-    }
-  }, []);
-
-  // Set active page based on current path
-  useEffect(() => {
-    const path = location.pathname.substring(1) || 'home';
-    if (path !== 'auth/callback') { // Don't change active page during auth callback
-      setActivePage(path);
+    const path = location.pathname;
+    if (path === '/') {
+      setActivePage('home');
+    } else if (path === '/writing') {
+      setActivePage('writing');
+    } else if (path === '/dashboard') {
+      setActivePage('dashboard');
+    } else if (path === '/learning') {
+      setActivePage('learning');
+    } else if (path === '/pricing') {
+      setActivePage('pricing');
+    } else if (path === '/faq') {
+      setActivePage('faq');
+    } else if (path === '/about') {
+      setActivePage('about');
+    } else if (path === '/settings') {
+      setActivePage('settings');
+    } else if (path === '/evaluation') {
+      setActivePage('evaluation');
     }
   }, [location.pathname]);
 
-  // Text selection logic for writing area
+  // Handle payment success from URL params
   useEffect(() => {
-    const handleSelectionChange = () => {
-      const selection = window.getSelection();
-      if (selection && selection.toString().trim().length > 0) {
-        setSelectedText(selection.toString());
-      }
-    };
-
-    document.addEventListener('selectionchange', handleSelectionChange);
-    return () => document.removeEventListener('selectionchange', handleSelectionChange);
-  }, []);
-
-  // NAVIGATION FIX: Improved auth success handler
-  const handleAuthSuccess = useCallback(() => {
-    try {
-      setShowAuthModal(false);
-      
-      if (pendingPaymentPlan) {
-        setActivePage("payment-success");
-        setShowPaymentSuccess(true);
-      } else {
-        // Navigate to appropriate page based on user state
-        if (user && emailVerified && paymentCompleted) {
-          setActivePage("writing");
-        } else {
-          setActivePage("dashboard");
-        }
-      }
-    } catch (error) {
-      console.error('Auth success navigation error:', error);
-      // Fallback to dashboard
-      setActivePage('dashboard');
-      setShowAuthModal(false);
+    const urlParams = new URLSearchParams(location.search);
+    const paymentSuccess = urlParams.get('payment_success');
+    const planType = urlParams.get('plan_type');
+    
+    if (paymentSuccess === 'true' && planType) {
+      setShowPaymentSuccess(true);
+      setPendingPaymentPlan(planType);
+      // Clean up URL
+      navigate('/payment-success', { replace: true });
     }
-  }, [pendingPaymentPlan, user, emailVerified, paymentCompleted]);
+  }, [location.search, navigate]);
 
-  const handleForceSignOut = async () => {
-    try {
-      console.log('🔄 AppContent: Starting force sign out...');
-      
-      // Reset all local state first
-      setActivePage('home');
-      setShowAuthModal(false);
-      setShowPaymentSuccess(false);
-      setPendingPaymentPlan(null);
-      setContent('');
-      setTextType('');
-      setPopupFlowCompleted(false);
-      
-      console.log('✅ AppContent: Local state reset completed');
-      
-      // Then attempt auth sign out
-      await authSignOut();
-      console.log('✅ AppContent: Auth sign out completed');
-      
-    } catch (error) {
-      console.error('AppContent: Error during sign out:', error);
-      
-      // Force reset even if sign out fails
-      setActivePage('home');
-      setShowAuthModal(false);
-      setShowPaymentSuccess(false);
-      setPendingPaymentPlan(null);
-      
-      // Clear localStorage as fallback
-      localStorage.clear();
-      
-      console.log('⚠️ AppContent: Forced local state reset due to sign out error');
-    }
+  const handleNavigation = (page: string) => {
+    setActivePage(page);
+    navigate(`/${page === 'home' ? '' : page}`);
   };
 
-  // NAVIGATION FIX: Improved navigation handler with proper state management
-  const handleNavigation = useCallback(async (page: string) => {
-    try {
-      // Prevent navigation during loading states
-      if (isLoading) return;
-      
-      // Use React Router's navigate function for proper routing
-      navigate(`/${page === 'home' ? '' : page}`);
-      
-      // Update local state for UI consistency
-      setActivePage(page);
-      
-      // Always close auth modal on navigation
-      setShowAuthModal(false);
-      
-      // Clear any temporary states that might interfere
-      setSelectedText('');
-      
-    } catch (error) {
-      console.error('Navigation error:', error);
-      // Fallback to home page on navigation errors
-      navigate('/');
-      setActivePage('home');
-    }
-  }, [navigate, isLoading]);
-
-  // NAVIGATION FIX: Improved get started handler with consistent flow
-  const handleGetStarted = useCallback(async () => {
-    try {
-      if (user) {
-        if (!emailVerified) {
-          setActivePage('dashboard'); // Show email verification reminder
-        } else if (paymentCompleted) {
-          setActivePage('writing'); // Full access
-        } else {
-          setActivePage('pricing'); // Need to complete payment
-        }
-      } else {
-        setAuthModalMode('signup');
-        setShowAuthModal(true);
-      }
-    } catch (error) {
-      console.error('Get started error:', error);
-      // Fallback to showing auth modal
-      setAuthModalMode('signup');
-      setShowAuthModal(true);
-    }
-  }, [user, emailVerified, paymentCompleted]);
-
-  // FIXED: Dynamic textType handling with proper fallback
-  const handleSubmit = () => {
-    // Use the actual textType from state, with fallback only if truly empty
-    const submissionTextType = textType || 'narrative';
-    
-    console.log("Writing submitted:", { 
-      content, 
-      textType: submissionTextType,
-      originalTextType: textType,
-      contentLength: content.length 
-    });
-    
-    // Store the essay content and metadata for evaluation
-    localStorage.setItem("submittedEssay", content);
-    localStorage.setItem("submittedTextType", submissionTextType);
-    localStorage.setItem("submissionTimestamp", new Date().toISOString());
-    
-    console.log('✅ Essay data stored for NSW evaluation system');
-    
-    // Trigger a custom event that WritingWorkspace can listen to
-    window.dispatchEvent(new CustomEvent('submitForEvaluation', {
-      detail: { content, textType: submissionTextType }
-    }));
+  const handleAuthSuccess = () => {
+    setShowAuthModal(false);
+    // Don't automatically navigate - let user choose where to go
   };
 
-  // NAVIGATION FIX: Improved text type change handler
-  const handleTextTypeChange = useCallback((newTextType: string) => {
-    try {
-      setTextType(newTextType || ''); // Ensure we don't set undefined
-      console.log('Text type changed to:', newTextType);
-    } catch (error) {
-      console.error('Text type change error:', error);
-    }
-  }, []);
+  const handleSubmit = (submittedContent: string) => {
+    console.log('Content submitted:', submittedContent);
+    // Handle submission logic here
+  };
 
-  // NAVIGATION FIX: Improved popup completion handler
-  const handlePopupCompleted = useCallback(() => {
-    try {
-      setPopupFlowCompleted(true);
-    } catch (error) {
-      console.error('Popup completion error:', error);
-    }
-  }, []);
+  const handleTextTypeChange = (newTextType: string) => {
+    setTextType(newTextType);
+    localStorage.setItem('selectedWritingType', newTextType);
+  };
 
-  // NAVIGATION FIX: Improved footer visibility logic
-  const shouldShowFooter = useCallback(() => {
-    // Don't show footer on writing page or other specific pages
-    const noFooterPages = ['writing', 'exam', 'dashboard', 'settings'];
-    return !noFooterPages.includes(activePage);
-  }, [activePage]);
+  const handlePopupCompleted = () => {
+    setPopupFlowCompleted(true);
+  };
 
+  // Show loading screen while checking auth
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-300">Loading...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="app-content-wrapper bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
-      <div className="route-with-footer">
+    <ErrorBoundary>
+      <div className="min-h-screen bg-white">
         <Routes>
           <Route path="/" element={
             <>
               <NavBar 
-                activePage={activePage}
                 onNavigate={handleNavigation}
+                onAuthClick={() => setShowAuthModal(true)}
                 user={user}
-                onSignInClick={() => {
-                  setAuthModalMode('signin');
-                  setShowAuthModal(true);
-                }}
-                onSignUpClick={() => {
-                  setAuthModalMode('signup');
-                  setShowAuthModal(true);
-                }}
-                onForceSignOut={handleForceSignOut}
+                onSignOut={authSignOut}
               />
-              <div className="main-route-content">
-                <HeroSection onGetStarted={handleGetStarted} />
-                <FeaturesSection />
-                <EnhancedSuccessSection />
-              </div>
+              <HeroSection onNavigate={handleNavigation} />
+              <FeaturesSection />
+              <ToolsSection />
+              <WritingTypesSection />
+              <StudentSuccessSection />
+              <HowItWorksSection />
+              <EnhancedSuccessSection />
+              <Footer onNavigate={handleNavigation} />
             </>
           } />
-          <Route path="/home" element={
+          
+          <Route path="/pricing" element={
             <>
               <NavBar 
-                activePage={activePage}
                 onNavigate={handleNavigation}
+                onAuthClick={() => setShowAuthModal(true)}
                 user={user}
-                onSignInClick={() => {
-                  setAuthModalMode('signin');
-                  setShowAuthModal(true);
-                }}
-                onSignUpClick={() => {
-                  setAuthModalMode('signup');
-                  setShowAuthModal(true);
-                }}
-                onForceSignOut={handleForceSignOut}
+                onSignOut={authSignOut}
               />
-              <div className="main-route-content">
-                <HeroSection onGetStarted={handleGetStarted} />
-                <FeaturesSection />
-                <EnhancedSuccessSection />
-              </div>
+              <PricingPage onNavigate={handleNavigation} />
+              <Footer onNavigate={handleNavigation} />
             </>
           } />
-          <Route path="/features" element={
+          
+          <Route path="/faq" element={
             <>
               <NavBar 
-                activePage={activePage}
                 onNavigate={handleNavigation}
+                onAuthClick={() => setShowAuthModal(true)}
                 user={user}
-                onSignInClick={() => {
-                  setAuthModalMode('signin');
-                  setShowAuthModal(true);
-                }}
-                onSignUpClick={() => {
-                  setAuthModalMode('signup');
-                  setShowAuthModal(true);
-                }}
-                onForceSignOut={handleForceSignOut}
+                onSignOut={authSignOut}
               />
-              <div className="main-route-content">
-                <FeaturesSection />
-              </div>
+              <FAQPage />
+              <Footer onNavigate={handleNavigation} />
             </>
           } />
-          <Route path="/pricing" element={<PricingPage onNavigate={handleNavigation} />} />
-          <Route path="/faq" element={<FAQPage onNavigate={handleNavigation} />} />
-          <Route path="/about" element={<AboutPage onNavigate={handleNavigation} />} />
-          <Route path="/dashboard" element={
+          
+          <Route path="/about" element={
+            <>
+              <NavBar 
+                onNavigate={handleNavigation}
+                onAuthClick={() => setShowAuthModal(true)}
+                user={user}
+                onSignOut={authSignOut}
+              />
+              <AboutPage />
+              <Footer onNavigate={handleNavigation} />
+            </>
+          } />
+
+          <Route path="/settings" element={
             user ? (
-              <Dashboard 
-                onNavigate={handleNavigation}
-                onSignOut={handleForceSignOut}
-              />
+              <>
+                <NavBar 
+                  onNavigate={handleNavigation}
+                  onAuthClick={() => setShowAuthModal(true)}
+                  user={user}
+                  onSignOut={authSignOut}
+                />
+                <SettingsPage />
+                <Footer onNavigate={handleNavigation} />
+              </>
             ) : (
-              <Navigate to="/" />
+              <Navigate to="/" replace />
             )
           } />
-          <Route path="/settings" element={
-            user ? <SettingsPage onBack={() => setActivePage('dashboard')} /> : <Navigate to="/" />
+
+          <Route path="/dashboard" element={
+            user ? (
+              emailVerified ? (
+                paymentCompleted ? (
+                  <>
+                    <NavBar 
+                      onNavigate={handleNavigation}
+                      onAuthClick={() => setShowAuthModal(true)}
+                      user={user}
+                      onSignOut={authSignOut}
+                    />
+                    <Dashboard onNavigate={handleNavigation} />
+                  </>
+                ) : (
+                  <Navigate to="/pricing" replace />
+                )
+              ) : (
+                <EmailVerificationHandler />
+              )
+            ) : (
+              <Navigate to="/" replace />
+            )
           } />
-          <Route path="/exam" element={
-            <WritingAccessCheck onNavigate={handleNavigation}>
-              <ExamSimulationMode onExit={() => navigate("/dashboard")}/>
-            </WritingAccessCheck>
+
+          <Route path="/learning" element={
+            user ? (
+              emailVerified ? (
+                paymentCompleted ? (
+                  <>
+                    <NavBar 
+                      onNavigate={handleNavigation}
+                      onAuthClick={() => setShowAuthModal(true)}
+                      user={user}
+                      onSignOut={authSignOut}
+                    />
+                    <LearningPage />
+                  </>
+                ) : (
+                  <Navigate to="/pricing" replace />
+                )
+              ) : (
+                <EmailVerificationHandler />
+              )
+            ) : (
+              <Navigate to="/" replace />
+            )
           } />
+
+          <Route path="/evaluation" element={
+            user ? (
+              emailVerified ? (
+                paymentCompleted ? (
+                  <>
+                    <NavBar 
+                      onNavigate={handleNavigation}
+                      onAuthClick={() => setShowAuthModal(true)}
+                      user={user}
+                      onSignOut={authSignOut}
+                    />
+                    <EvaluationPage />
+                  </>
+                ) : (
+                  <Navigate to="/pricing" replace />
+                )
+              ) : (
+                <EmailVerificationHandler />
+              )
+            ) : (
+              <Navigate to="/" replace />
+            )
+          } />
+
           <Route path="/writing" element={
-            <WritingAccessCheck onNavigate={handleNavigation}>
-              <div className="writing-route h-screen flex flex-col">
+            <WritingAccessCheck user={user} emailVerified={emailVerified} paymentCompleted={paymentCompleted}>
+              <div className="h-screen flex flex-col">
                 <EnhancedHeader 
-                  textType={textType || 'narrative'}
-                  assistanceLevel={assistanceLevel}
-                  onTextTypeChange={setTextType}
-                  onTimerStart={() => setTimerStarted(true)}
-                  hideTextTypeSelector={popupFlowCompleted}
+                  onNavigate={handleNavigation}
+                  user={user}
+                  onSignOut={authSignOut}
+                  textType={textType}
                 />
-                
                 {showExamMode ? (
                   <ExamSimulationMode 
                     onExit={() => setShowExamMode(false)}
@@ -436,6 +451,22 @@ function AppContent() {
                       content={content}
                       onChange={setContent}
                       textType={textType || 'narrative'}
+                      prompt={currentPrompt}
+                      wordCount={wordCount}
+                      onWordCountChange={setWordCount}
+                      isTimerRunning={isTimerRunning}
+                      elapsedTime={elapsedTime}
+                      onStartTimer={startTimer}
+                      onPauseTimer={pauseTimer}
+                      onResetTimer={resetTimer}
+                      focusMode={focusMode}
+                      onToggleFocus={() => setFocusMode(!focusMode)}
+                      showStructureGuide={showStructureGuide}
+                      onToggleStructureGuide={() => setShowStructureGuide(!showStructureGuide)}
+                      showTips={showTips}
+                      onToggleTips={() => setShowTips(!showTips)}
+                      analysis={analysis}
+                      onAnalysisChange={setAnalysis}
                       assistanceLevel={assistanceLevel}
                       onAssistanceLevelChange={setAssistanceLevel}
                       onSubmit={handleSubmit}
@@ -460,24 +491,28 @@ function AppContent() {
               onNavigate={handleNavigation}
             />
           } />
-          <Route path="/learning" element={<LearningPage />} />
-          <Route path="/supportive-features" element={<SupportiveFeatures />} />
-          <Route path="/help-center" element={<HelpCenter />} />
-          <Route path="/essay-feedback" element={<EssayFeedbackPage />} />
-          <Route path="/evaluation" element={<EvaluationPage />} />
-          <Route path="/auth/callback" element={<EmailVerificationHandler />} />
-          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
-        <AuthModal 
-          show={showAuthModal}
-          onClose={() => setShowAuthModal(false)}
-          mode={authModalMode}
-          onAuthSuccess={handleAuthSuccess}
-          onSwitchMode={(mode) => setAuthModalMode(mode)}
-        />
+
+        {showAuthModal && (
+          <AuthModal
+            mode={authModalMode}
+            onClose={() => setShowAuthModal(false)}
+            onSuccess={handleAuthSuccess}
+            onSwitchMode={(mode) => setAuthModalMode(mode)}
+          />
+        )}
+
+        {showHelpCenter && (
+          <HelpCenter onClose={() => setShowHelpCenter(false)} />
+        )}
+
+        {showPlanningTool && (
+          <PlanningToolModal onClose={() => setShowPlanningTool(false)} />
+        )}
+
+        <AdminButton />
       </div>
-      {shouldShowFooter() && <Footer />}
-    </div>
+    </ErrorBoundary>
   );
 }
 
