@@ -1,4 +1,4 @@
-// src/components/AppContent.tsx - COMPLETE FIX
+// src/components/AppContent.tsx
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
@@ -6,7 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import './layout-fix.css';
 
 // Add this import at the top with other imports
-import WritingWorkspaceFixed from '../pages/WritingWorkspace';
+import WritingWorkspace from '../pages/WritingWorkspace'; // Changed from WritingWorkspaceFixed
 import { NavBar } from './NavBar';
 import { HeroSection } from './HeroSection';
 import { FeaturesSection } from './FeaturesSection';
@@ -432,29 +432,35 @@ function AppContent() {
                     onExit={() => setShowExamMode(false)}
                   />
                 ) : (
-                  <div className="writing-layout-content flex-1 min-h-0">
-                    <EnhancedWritingLayoutNSW
-                      content={content}
-                      onChange={setContent}
-                      textType={textType || 'narrative'}
-                      initialPrompt={prompt || ''} // FIXED: Pass the loaded prompt
-                      wordCount={content.trim().split(/\s+/).filter(word => word.length > 0).length}
-                      onWordCountChange={() => {}} // Word count is calculated from content
-                      assistanceLevel={assistanceLevel}
-                      onAssistanceLevelChange={setAssistanceLevel}
-                      onSubmit={handleSubmit}
-                      selectedText={selectedText}
-                      onTextTypeChange={handleTextTypeChange}
-                      onPopupCompleted={handlePopupCompleted}
-                      popupFlowCompleted={popupFlowCompleted}
-                      user={user}
-                      openAIConnected={openAIConnected}
-                      openAILoading={openAILoading}
-                      panelVisible={panelVisible}
-                      setPanelVisible={setPanelVisible}
-                      setPrompt={setPrompt} // FIXED: Pass setPrompt function
-                    />
-                  </div>
+                  <SplitScreen
+                    left={
+                      <WritingWorkspace
+                        initialPrompt={prompt || ''} // FIXED: Pass the loaded prompt
+                        wordCount={content.trim().split(/\s+/).filter(word => word.length > 0).length}
+                        onWordCountChange={() => {}} // Word count is calculated from content
+                        onContentChange={setContent}
+                        textType={textType}
+                        assistanceLevel={assistanceLevel}
+                        onTextTypeChange={handleTextTypeChange}
+                        onPromptChange={setPrompt} // FIXED: Pass setPrompt function
+                        popupFlowCompleted={popupFlowCompleted}
+                        onPopupCompleted={handlePopupCompleted}
+                        setPrompt={setPrompt} // FIXED: Pass setPrompt function
+                      />
+                    }
+                    right={
+                      <TabbedCoachPanel
+                        textType={textType}
+                        assistanceLevel={assistanceLevel}
+                        onTextTypeChange={handleTextTypeChange}
+                        onPromptChange={setPrompt}
+                        popupFlowCompleted={popupFlowCompleted}
+                        onPopupCompleted={handlePopupCompleted}
+                        panelVisible={panelVisible}
+                        setPanelVisible={setPanelVisible}
+                      />
+                    }
+                  />
                 )}
               </div>
             </WritingAccessCheck>
@@ -482,13 +488,12 @@ function AppContent() {
         {shouldShowFooter() && <Footer />}
 
         {/* Auth Modal */}
-        {showAuthModal && (
-          <AuthModal
-            mode={authModalMode}
-            onClose={() => setShowAuthModal(false)}
-            onSwitchMode={(mode) => setAuthModalMode(mode)}
-          />
-        )}
+        <AuthModal
+          isOpen={showAuthModal}
+          onClose={() => setShowAuthModal(false)}
+          mode={authModalMode}
+          onSwitchMode={(mode) => setAuthModalMode(mode)}
+        />
 
         {/* Help Center */}
         {showHelpCenter && (
