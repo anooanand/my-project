@@ -7,6 +7,9 @@ import { TipsModal } from './TipsModal';
 import { EnhancedCoachPanel } from './EnhancedCoachPanel';
 import { NSWStandaloneSubmitSystem } from './NSWStandaloneSubmitSystem';
 import { ReportModal } from './ReportModal';
+import { PromptOptionsModal } from './PromptOptionsModal';
+import { generatePrompt } from '../lib/openai'; // Assuming openai.ts has a generatePrompt function
+import { promptConfig } from '../config/prompts';
 import type { DetailedFeedback, LintFix } from '../types/feedback';
 import { eventBus } from '../lib/eventBus';
 import { detectNewParagraphs } from '../lib/paragraphDetection';
@@ -33,7 +36,7 @@ interface EnhancedWritingLayoutNSWProps {
   content: string;
   onChange: (content: string) => void;
   textType: string;
-  prompt: string;
+  initialPrompt: string;
   wordCount: number;
   onWordCountChange: (count: number) => void;
   darkMode?: boolean;
@@ -54,6 +57,7 @@ interface EnhancedWritingLayoutNSWProps {
   onToggleTips?: () => void;
   analysis?: DetailedFeedback | null;
   onAnalysisChange?: (analysis: DetailedFeedback | null) => void;
+  setPrompt?: (prompt: string) => void;
   // Additional props that might be passed from AppContent
   assistanceLevel?: string;
   onAssistanceLevelChange?: (level: string) => void;
@@ -73,7 +77,7 @@ export function EnhancedWritingLayoutNSW({
   content,
   onChange,
   textType,
-  prompt: currentPrompt,
+  initialPrompt,
   wordCount,
   onWordCountChange,
   darkMode = false,
@@ -106,7 +110,8 @@ export function EnhancedWritingLayoutNSW({
   openAIConnected,
   openAILoading,
   panelVisible,
-  setPanelVisible
+  setPanelVisible,
+  setPrompt,
 }: EnhancedWritingLayoutNSWProps) {
   // Local state for content management
   const [localContent, setLocalContent] = useState(content || '');
@@ -117,6 +122,9 @@ export function EnhancedWritingLayoutNSW({
   const [evaluationStatus, setEvaluationStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [evaluationProgress, setEvaluationProgress] = useState("");
   const [isComponentReady, setIsComponentReady] = useState(false);
+  const [showPromptOptionsModal, setShowPromptOptionsModal] = useState(false);
+  const [generatedPrompt, setGeneratedPrompt] = useState<string | null>(null);
+  const [customPromptInput, setCustomPromptInput] = useState<string | null>(null);
 
   // Refs
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -147,6 +155,13 @@ export function EnhancedWritingLayoutNSW({
       setLocalContent(content);
     }
   }, [content]);
+
+  // Manage prompt display and open PromptOptionsModal if no prompt is provided
+  useEffect(() => {
+    if (!initialPrompt && !generatedPrompt && !customPromptInput) {
+      setShowPromptOptionsModal(true);
+    }
+  }, [initialPrompt, generatedPrompt, customPromptInput]);
 
   // Auto-save functionality with error handling
   useEffect(() => {
@@ -188,6 +203,28 @@ export function EnhancedWritingLayoutNSW({
   };
 
   // Handle content change with auto-timer start and error handling
+  const handleGenerateNewPrompt = useCallback(async () => {
+    try {
+      const newPrompt = await generatePrompt(textType, promptConfig.systemPrompts.promptGenerator);
+      setGeneratedPrompt(newPrompt);
+      if (setPrompt) {
+        setPrompt(newPrompt);
+      }
+      setShowPromptOptionsModal(false);
+    } catch (error) {
+      console.error("Error generating prompt:", error);
+      alert("Failed to generate a prompt. Please try again.");
+    }
+  }, [textType, setPrompt]);
+
+  const handleCustomPromptInput = useCallback((promptText: string) => {
+    setCustomPromptInput(promptText);
+    if (setPrompt) {
+      setPrompt(promptText);
+    }
+    setShowPromptOptionsModal(false);
+  }, [setPrompt]);
+
   const handleContentChange = useCallback((newContent: string) => {
     try {
       setLocalContent(newContent);
@@ -208,6 +245,8 @@ export function EnhancedWritingLayoutNSW({
       console.error('EnhancedWritingLayoutNSW: Content change error:', error);
     }
   }, [content, isTimerRunning, elapsedTime, onStartTimer, textType]);
+
+  const effectivePrompt = generatedPrompt || customPromptInput || initialPrompt;
 
   // NSW Submit Handler with comprehensive error handling
   const handleNSWSubmit = useCallback(async (contentToSubmit: string, typeToSubmit: string) => {
@@ -234,7 +273,7 @@ export function EnhancedWritingLayoutNSW({
       const report = await NSWEvaluationReportGenerator.generateReport({
         essayContent: contentToSubmit,
         textType: typeToSubmit,
-        prompt: currentPrompt || '',
+        prompt: effectivePrompt || '',
         wordCount: wordCount || 0,
         targetWordCountMin: 200,
         targetWordCountMax: 300,
@@ -251,7 +290,7 @@ export function EnhancedWritingLayoutNSW({
       setShowNSWEvaluation(false);
       alert(`There was an error evaluating your writing: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`);
     }
-  }, [currentPrompt, wordCount]);
+  }, [effectivePrompt, wordCount]);
 
   // Convert report to analysis with comprehensive error handling
   const convertReportToAnalysis = useCallback((report: any) => {
@@ -406,58 +445,48 @@ export function EnhancedWritingLayoutNSW({
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center space-x-2">
               <PenTool className={`w-5 h-5 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
-              <h2 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                Your Writing Prompt
-              </h2>
-              <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                darkMode ? 'bg-purple-900 text-purple-200' : 'bg-purple-100 text-purple-800'
-              }`}>
-                {textType}
-              </span>
+              <h2 className={`text-lg font-semibold ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>Writing Task</h2>
             </div>
-            <button
-              onClick={() => setShowSettings(!showSettings)}
-              className={`p-2 rounded-lg transition-colors ${
-                darkMode
-                  ? 'text-gray-400 hover:text-white hover:bg-gray-700'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-              }`}
-              title="Hide Prompt"
-            >
-              {showSettings ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
+            <div className="flex items-center space-x-2">
+              <span className={`text-sm font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{textType}</span>
+            </div>
           </div>
 
-          {!showSettings && currentPrompt && (
-            <div className={`p-3 rounded-lg text-sm leading-relaxed ${
-              darkMode ? 'bg-gray-700 text-gray-200' : 'bg-blue-50 text-blue-900'
-            }`}>
-              <strong>Prompt:</strong> {currentPrompt}
+          {effectivePrompt && (
+            <div className="p-3 rounded-lg bg-opacity-50 mb-4" style={{ backgroundColor: darkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)' }}>
+              <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                {effectivePrompt}
+              </p>
             </div>
           )}
-        </div>
 
-        {/* Toolbar */}
-        <div className={`px-4 py-3 border-b flex items-center justify-between transition-colors duration-300 ${
-          darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-        }`}>
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 overflow-x-auto pb-2">
             <button
               onClick={onToggleStructureGuide}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+              className={`flex items-center space-x-1 px-3 py-2 rounded-lg border shadow-sm transition-colors text-sm font-medium ${
                 showStructureGuide
-                  ? darkMode
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-blue-600 text-white'
+                  ? 'bg-blue-500 text-white border-blue-500 hover:bg-blue-600'
                   : darkMode
-                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? 'bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600'
+                  : 'bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100'
               }`}
+              title="Structure Guide"
             >
               <BookOpen className="w-4 h-4" />
               <span>Structure</span>
             </button>
-
+            <button
+              onClick={() => setShowPromptOptionsModal(true)}
+              className={`flex items-center space-x-1 px-3 py-2 rounded-lg border shadow-sm transition-colors text-sm font-medium ${
+                darkMode
+                  ? 'bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600'
+                  : 'bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100'
+              }`}
+              title="Change Prompt"
+            >
+              <LightbulbIcon className="w-4 h-4" />
+              <span>Prompt</span>
+            </button>
             <button
               onClick={onToggleTips}
               className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -683,6 +712,15 @@ export function EnhancedWritingLayoutNSW({
           darkMode={darkMode}
         />
       )}
+
+      {/* Prompt Options Modal */}
+      <PromptOptionsModal
+        isOpen={showPromptOptionsModal}
+        onClose={() => setShowPromptOptionsModal(false)}
+        onGeneratePrompt={handleGenerateNewPrompt}
+        onCustomPrompt={handleCustomPromptInput}
+        textType={textType}
+      />
     </div>
   );
 }
