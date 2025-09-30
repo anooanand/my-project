@@ -1,519 +1,688 @@
-// FIXED: AppContent with proper prompt handling for EnhancedWritingLayoutNSW
-// This version adds prompt state and passes it to the writing layout component
+// CORRECT: EnhancedWritingLayoutNSW Component (Fixed Loading and Prompt Display)
+// This is the correct component code without circular imports
 
-import React, { useState, useEffect } from 'react';
-import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import './layout-fix.css';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { StructureGuideModal } from './StructureGuideModal';
+import { TipsModal } from './TipsModal';
+import { EnhancedCoachPanel } from './EnhancedCoachPanel';
+import { NSWStandaloneSubmitSystem } from './NSWStandaloneSubmitSystem';
+import { ReportModal } from './ReportModal';
+import type { DetailedFeedback, LintFix } from '../types/feedback';
+import { eventBus } from '../lib/eventBus';
+import { detectNewParagraphs } from '../lib/paragraphDetection';
+import { NSWEvaluationReportGenerator } from './NSWEvaluationReportGenerator';
+import {
+  PenTool,
+  Play,
+  BookOpen,
+  Lightbulb as LightbulbIcon,
+  Settings,
+  Pause,
+  RotateCcw,
+  Eye,
+  EyeOff,
+  Target,
+  Info,
+  Clock,
+  FileText,
+  Type,
+  Zap
+} from 'lucide-react';
 
-// Add this import at the top with other imports
-import WritingWorkspaceFixed from '../pages/WritingWorkspace';
-import { NavBar } from './NavBar';
-import { HeroSection } from './HeroSection';
-import { FeaturesSection } from './FeaturesSection';
-import { ToolsSection } from './ToolsSection';
-import { WritingTypesSection } from './WritingTypesSection';
-import { StudentSuccessSection } from './StudentSuccessSection';
-import { HowItWorksSection } from './HowItWorksSection';
-import { EnhancedSuccessSection } from './EnhancedSuccessSection';
-import { Footer } from './Footer';
-import { PaymentSuccessPage } from './PaymentSuccessPage';
-import { PricingPage } from './PricingPage';
-import { Dashboard } from './Dashboard';
-import { AuthModal } from './AuthModal';
-import { FAQPage } from './FAQPage';
-import { AboutPage } from './AboutPage';
-import { SettingsPage } from './SettingsPage';
-import { ErrorBoundary } from './ErrorBoundary';
+interface EnhancedWritingLayoutNSWProps {
+  content: string;
+  onChange: (content: string) => void;
+  textType: string;
+  prompt: string;
+  wordCount: number;
+  onWordCountChange: (count: number) => void;
+  darkMode?: boolean;
+  fontFamily?: string;
+  fontSize?: number;
+  lineHeight?: number;
+  onSettingsChange?: (settings: any) => void;
+  isTimerRunning?: boolean;
+  elapsedTime?: number;
+  onStartTimer?: () => void;
+  onPauseTimer?: () => void;
+  onResetTimer?: () => void;
+  focusMode?: boolean;
+  onToggleFocus?: () => void;
+  showStructureGuide?: boolean;
+  onToggleStructureGuide?: () => void;
+  showTips?: boolean;
+  onToggleTips?: () => void;
+  analysis?: DetailedFeedback | null;
+  onAnalysisChange?: (analysis: DetailedFeedback | null) => void;
+  // Additional props that might be passed from AppContent
+  assistanceLevel?: string;
+  onAssistanceLevelChange?: (level: string) => void;
+  onSubmit?: (content: string) => void;
+  selectedText?: string;
+  onTextTypeChange?: (type: string) => void;
+  onPopupCompleted?: () => void;
+  popupFlowCompleted?: boolean;
+  user?: any;
+  openAIConnected?: boolean;
+  openAILoading?: boolean;
+  panelVisible?: boolean;
+  setPanelVisible?: (visible: boolean) => void;
+}
 
-// Writing components
-import { SplitScreen } from './SplitScreen';
-// import { WritingArea } from './WritingArea';
-import { TabbedCoachPanel } from './TabbedCoachPanel';
-import { EnhancedWritingLayoutNSW } from './EnhancedWritingLayoutNSW';
-import { LearningPage } from './LearningPage';
-import { ExamSimulationMode } from './ExamSimulationMode';
-import { SupportiveFeatures } from './SupportiveFeatures';
-import { HelpCenter } from './HelpCenter';
-import { EssayFeedbackPage } from './EssayFeedbackPage';
-import { EnhancedHeader } from './EnhancedHeader';
-import { SpecializedCoaching } from './text-type-templates/SpecializedCoaching';
-import { BrainstormingTools } from './BrainstormingTools';
-import { WritingAccessCheck } from './WritingAccessCheck';
-import { WritingToolbar } from './WritingToolbar';
-import { PlanningToolModal } from './PlanningToolModal';
-import { EmailVerificationHandler } from './EmailVerificationHandler';
-import { EvaluationPage } from './EvaluationPage';
-// REMOVED: import { FloatingChatWindow } from './FloatingChatWindow';
-import { checkOpenAIConnectionStatus } from '../lib/openai';
-import { AdminButton } from './AdminButton';
+export function EnhancedWritingLayoutNSW({
+  content,
+  onChange,
+  textType,
+  prompt: currentPrompt,
+  wordCount,
+  onWordCountChange,
+  darkMode = false,
+  fontFamily = 'Inter',
+  fontSize = 16,
+  lineHeight = 1.6,
+  onSettingsChange,
+  isTimerRunning = false,
+  elapsedTime = 0,
+  onStartTimer,
+  onPauseTimer,
+  onResetTimer,
+  focusMode = false,
+  onToggleFocus,
+  showStructureGuide = false,
+  onToggleStructureGuide,
+  showTips = false,
+  onToggleTips,
+  analysis,
+  onAnalysisChange,
+  // Additional props
+  assistanceLevel,
+  onAssistanceLevelChange,
+  onSubmit,
+  selectedText,
+  onTextTypeChange,
+  onPopupCompleted,
+  popupFlowCompleted,
+  user,
+  openAIConnected,
+  openAILoading,
+  panelVisible,
+  setPanelVisible
+}: EnhancedWritingLayoutNSWProps) {
+  // Local state for content management
+  const [localContent, setLocalContent] = useState(content || '');
+  const [showSettings, setShowSettings] = useState(false);
+  const [showNSWEvaluation, setShowNSWEvaluation] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [nswReport, setNswReport] = useState<any>(null);
+  const [evaluationStatus, setEvaluationStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [evaluationProgress, setEvaluationProgress] = useState("");
+  const [isComponentReady, setIsComponentReady] = useState(false);
 
-function AppContent() {
-  const { user, loading: isLoading, paymentCompleted, emailVerified, authSignOut } = useAuth();
-  const [activePage, setActivePage] = useState('home');
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin');
-  const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
-  const [pendingPaymentPlan, setPendingPaymentPlan] = useState<string | null>(null);
-  const location = useLocation();
-  const navigate = useNavigate();
+  // Refs
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Writing state
-  const [content, setContent] = useState('');
-  const [textType, setTextType] = useState('');
-  const [assistanceLevel, setAssistanceLevel] = useState('detailed');
-  const [timerStarted, setTimerStarted] = useState(false);
-  const [selectedText, setSelectedText] = useState('');
-  const [showExamMode, setShowExamMode] = useState(false);
-  const [showHelpCenter, setShowHelpCenter] = useState(false);
-  const [showPlanningTool, setShowPlanningTool] = useState(false);
-  
-  // FIXED: Add prompt state
-  const [currentPrompt, setCurrentPrompt] = useState('');
-  const [wordCount, setWordCount] = useState(0);
-  const [elapsedTime, setElapsedTime] = useState(0);
-  const [isTimerRunning, setIsTimerRunning] = useState(false);
-  const [focusMode, setFocusMode] = useState(false);
-  const [showStructureGuide, setShowStructureGuide] = useState(false);
-  const [showTips, setShowTips] = useState(false);
-  const [analysis, setAnalysis] = useState(null);
-  
-  // New state for popup flow completion
-  const [popupFlowCompleted, setPopupFlowCompleted] = useState(false); 
-  const [hasSignedIn, setHasSignedIn] = useState(false);
-  
-  // Panel state for attached chat
-  const [panelVisible, setPanelVisible] = useState(true);
-  const [openAIConnected, setOpenAIConnected] = useState<boolean | null>(null);
-  const [openAILoading, setOpenAILoading] = useState<boolean>(true);
+  // Font families
+  const fontFamilies = [
+    { name: 'Inter', value: 'Inter', css: 'font-family: Inter, sans-serif;' },
+    { name: 'Georgia', value: 'Georgia', css: 'font-family: Georgia, serif;' },
+    { name: 'Times New Roman', value: 'Times New Roman', css: 'font-family: "Times New Roman", serif;' },
+    { name: 'Arial', value: 'Arial', css: 'font-family: Arial, sans-serif;' },
+    { name: 'Helvetica', value: 'Helvetica', css: 'font-family: Helvetica, sans-serif;' },
+    { name: 'Courier New', value: 'Courier New', css: 'font-family: "Courier New", monospace;' }
+  ];
 
-  // FIXED: Load prompt from localStorage on component mount and listen for prompt generation
+  // Component initialization with error boundary
   useEffect(() => {
-    const loadPromptFromStorage = () => {
-      try {
-        // Check for generated prompt first, then custom prompt
-        const generatedPrompt = localStorage.getItem("generatedPrompt");
-        const customPrompt = localStorage.getItem("customPrompt");
-        const storedTextType = localStorage.getItem('selectedWritingType');
-        
-        if (generatedPrompt) {
-          console.log('📝 AppContent: Loading generated prompt from localStorage:', generatedPrompt);
-          setCurrentPrompt(generatedPrompt);
-        } else if (customPrompt) {
-          console.log('📝 AppContent: Loading custom prompt from localStorage:', customPrompt);
-          setCurrentPrompt(customPrompt);
-        }
-        
-        if (storedTextType) {
-          console.log('📝 AppContent: Loading text type from localStorage:', storedTextType);
-          setTextType(storedTextType);
-        }
-      } catch (error) {
-        console.error('AppContent: Error loading prompt from localStorage:', error);
-      }
-    };
-
-    // Load prompt on mount
-    loadPromptFromStorage();
-
-    // Listen for prompt generation events
-    const handlePromptGenerated = (event: CustomEvent) => {
-      console.log('📝 AppContent: Received promptGenerated event:', event.detail);
-      if (event.detail.prompt) {
-        setCurrentPrompt(event.detail.prompt);
-        setTextType(event.detail.textType || 'narrative');
-      }
-    };
-
-    // Listen for storage changes (in case prompt is updated in another tab/component)
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === 'generatedPrompt' || event.key === 'customPrompt') {
-        console.log('📝 AppContent: Storage changed, reloading prompt');
-        loadPromptFromStorage();
-      }
-    };
-
-    window.addEventListener('promptGenerated', handlePromptGenerated as EventListener);
-    window.addEventListener('storage', handleStorageChange);
-
-    return () => {
-      window.removeEventListener('promptGenerated', handlePromptGenerated as EventListener);
-      window.removeEventListener('storage', handleStorageChange);
-    };
+    try {
+      setIsComponentReady(true);
+      console.log('EnhancedWritingLayoutNSW: Component initialized successfully');
+    } catch (error) {
+      console.error('EnhancedWritingLayoutNSW: Initialization error:', error);
+    }
   }, []);
 
-  // FIXED: Timer functions
-  const startTimer = () => {
-    setIsTimerRunning(true);
-  };
-
-  const pauseTimer = () => {
-    setIsTimerRunning(false);
-  };
-
-  const resetTimer = () => {
-    setElapsedTime(0);
-    setIsTimerRunning(false);
-  };
-
-  // FIXED: Timer effect
+  // Sync local content with prop
   useEffect(() => {
-    let interval: NodeJS.Timeout;
-    if (isTimerRunning) {
-      interval = setInterval(() => {
-        setElapsedTime(prev => prev + 1);
-      }, 1000);
+    if (content !== undefined && content !== localContent) {
+      setLocalContent(content);
     }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [isTimerRunning]);
+  }, [content]);
 
-  // Handle sign-in behavior - clear content and show modal when user signs in
+  // Auto-save functionality with error handling
   useEffect(() => {
-    if (user && !hasSignedIn) {
-      // User just signed in
-      setHasSignedIn(true);
-      
-      // Clear content and reset state
-      setContent('');
-      setTextType('');
-      setPopupFlowCompleted(false);
-      
-      // If we're on the writing page, this will trigger the writing type modal
-      if (activePage === 'writing') {
-        // The WritingArea component will handle showing the modal
-      }
-    } else if (!user && hasSignedIn) {
-      // User signed out
-      setHasSignedIn(false);
-    }
-  }, [user, hasSignedIn, activePage]);
-
-  useEffect(() => {
-    const fetchOpenAIStatus = async () => {
-      setOpenAILoading(true);
-      try {
-        const connected = await checkOpenAIConnectionStatus();
-        setOpenAIConnected(connected);
-      } catch (error) {
-        console.error('Failed to check OpenAI status:', error);
-        setOpenAIConnected(false);
-      } finally {
-        setOpenAILoading(false);
-      }
-    };
-
-    fetchOpenAIStatus();
-  }, []);
-
-  // Handle URL-based navigation
-  useEffect(() => {
-    const path = location.pathname;
-    if (path === '/') {
-      setActivePage('home');
-    } else if (path === '/writing') {
-      setActivePage('writing');
-    } else if (path === '/dashboard') {
-      setActivePage('dashboard');
-    } else if (path === '/learning') {
-      setActivePage('learning');
-    } else if (path === '/pricing') {
-      setActivePage('pricing');
-    } else if (path === '/faq') {
-      setActivePage('faq');
-    } else if (path === '/about') {
-      setActivePage('about');
-    } else if (path === '/settings') {
-      setActivePage('settings');
-    } else if (path === '/evaluation') {
-      setActivePage('evaluation');
-    }
-  }, [location.pathname]);
-
-  // Handle payment success from URL params
-  useEffect(() => {
-    const urlParams = new URLSearchParams(location.search);
-    const paymentSuccess = urlParams.get('payment_success');
-    const planType = urlParams.get('plan_type');
+    if (!isComponentReady) return;
     
-    if (paymentSuccess === 'true' && planType) {
-      setShowPaymentSuccess(true);
-      setPendingPaymentPlan(planType);
-      // Clean up URL
-      navigate('/payment-success', { replace: true });
+    const timer = setTimeout(() => {
+      try {
+        if (localContent !== content && onChange) {
+          onChange(localContent);
+        }
+      } catch (error) {
+        console.error('EnhancedWritingLayoutNSW: Auto-save error:', error);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [localContent, content, onChange, isComponentReady]);
+
+  // Word count calculation with error handling
+  useEffect(() => {
+    if (!isComponentReady) return;
+    
+    try {
+      const words = localContent.trim().split(/\s+/).filter(word => word.length > 0);
+      const newWordCount = words.length;
+      if (newWordCount !== wordCount && onWordCountChange) {
+        onWordCountChange(newWordCount);
+      }
+    } catch (error) {
+      console.error('EnhancedWritingLayoutNSW: Word count error:', error);
     }
-  }, [location.search, navigate]);
+  }, [localContent, wordCount, onWordCountChange, isComponentReady]);
 
-  const handleNavigation = (page: string) => {
-    setActivePage(page);
-    navigate(`/${page === 'home' ? '' : page}`);
+  // Format elapsed time
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleAuthSuccess = () => {
-    setShowAuthModal(false);
-    // Don't automatically navigate - let user choose where to go
+  // Handle content change with auto-timer start and error handling
+  const handleContentChange = useCallback((newContent: string) => {
+    try {
+      setLocalContent(newContent);
+      
+      // AUTO-START TIMER: Start timer when user begins typing
+      if (newContent.trim().length > 0 && !isTimerRunning && elapsedTime === 0 && onStartTimer) {
+        onStartTimer();
+      }
+      
+      // Detect new paragraphs and emit events
+      if (eventBus && detectNewParagraphs) {
+        const newParagraphs = detectNewParagraphs(content, newContent);
+        if (newParagraphs.length > 0) {
+          eventBus.emit('newParagraphsDetected', { paragraphs: newParagraphs, textType });
+        }
+      }
+    } catch (error) {
+      console.error('EnhancedWritingLayoutNSW: Content change error:', error);
+    }
+  }, [content, isTimerRunning, elapsedTime, onStartTimer, textType]);
+
+  // NSW Submit Handler with comprehensive error handling
+  const handleNSWSubmit = useCallback(async (contentToSubmit: string, typeToSubmit: string) => {
+    if (!contentToSubmit.trim()) {
+      alert("Please write something before submitting for evaluation.");
+      return;
+    }
+
+    setEvaluationStatus("loading");
+    setShowNSWEvaluation(true);
+    setEvaluationProgress("Analyzing your writing...");
+
+    try {
+      // Simulate evaluation progress
+      setTimeout(() => setEvaluationProgress("Checking grammar and structure..."), 1000);
+      setTimeout(() => setEvaluationProgress("Evaluating content and ideas..."), 2000);
+      setTimeout(() => setEvaluationProgress("Generating detailed feedback..."), 3000);
+
+      // Ensure NSWEvaluationReportGenerator is available
+      if (!NSWEvaluationReportGenerator) {
+        throw new Error("NSW Evaluation system is not available");
+      }
+
+      const report = await NSWEvaluationReportGenerator.generateReport({
+        essayContent: contentToSubmit,
+        textType: typeToSubmit,
+        prompt: currentPrompt || '',
+        wordCount: wordCount || 0,
+        targetWordCountMin: 200,
+        targetWordCountMax: 300,
+      });
+      
+      setNswReport(report);
+      convertReportToAnalysis(report);
+      setShowNSWEvaluation(false);
+      setShowReportModal(true);
+      setEvaluationStatus("success");
+    } catch (error) {
+      console.error("NSW evaluation error:", error);
+      setEvaluationStatus("error");
+      setShowNSWEvaluation(false);
+      alert(`There was an error evaluating your writing: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`);
+    }
+  }, [currentPrompt, wordCount]);
+
+  // Convert report to analysis with comprehensive error handling
+  const convertReportToAnalysis = useCallback((report: any) => {
+    try {
+      if (!report) {
+        throw new Error("Report is null or undefined");
+      }
+
+      // Create a properly typed DetailedFeedback object
+      const convertedAnalysis: DetailedFeedback = {
+        id: report.id || `nsw-${Date.now()}`,
+        overallScore: report.overallScore || 0,
+        criteria: {
+          ideasContent: {
+            score: report.domains?.contentAndIdeas?.score || 0,
+            weight: report.domains?.contentAndIdeas?.weight || 40,
+            strengths: (report.domains?.contentAndIdeas?.feedback || []).map((s: string) => ({ 
+              text: s, 
+              start: 0, 
+              end: 0 
+            })),
+            improvements: (report.areasForImprovement || [])
+              .filter((i: string) => i.includes("Ideas") || i.includes("Content"))
+              .map((i: string) => ({
+                issue: i,
+                suggestion: "Continue developing this area",
+                evidence: { text: "Based on your writing", start: 0, end: 0 }
+              }))
+          },
+          structureOrganization: {
+            score: report.domains?.textStructure?.score || 0,
+            weight: report.domains?.textStructure?.weight || 20,
+            strengths: (report.domains?.textStructure?.feedback || []).map((s: string) => ({ 
+              text: s, 
+              start: 0, 
+              end: 0 
+            })),
+            improvements: (report.areasForImprovement || [])
+              .filter((i: string) => i.includes("Structure") || i.includes("Organization"))
+              .map((i: string) => ({
+                issue: i,
+                suggestion: "Continue developing this area",
+                evidence: { text: "Based on your writing", start: 0, end: 0 }
+              }))
+          },
+          languageVocab: {
+            score: report.domains?.languageFeatures?.score || 0,
+            weight: report.domains?.languageFeatures?.weight || 25,
+            strengths: (report.domains?.languageFeatures?.feedback || []).map((s: string) => ({ 
+              text: s, 
+              start: 0, 
+              end: 0 
+            })),
+            improvements: (report.areasForImprovement || [])
+              .filter((i: string) => i.includes("Language") || i.includes("Vocabulary"))
+              .map((i: string) => ({
+                issue: i,
+                suggestion: "Continue developing this area",
+                evidence: { text: "Based on your writing", start: 0, end: 0 }
+              }))
+          },
+          spellingPunctuationGrammar: {
+            score: report.domains?.spellingAndGrammar?.score || 0,
+            weight: report.domains?.spellingAndGrammar?.weight || 15,
+            strengths: (report.domains?.spellingAndGrammar?.feedback || []).map((s: string) => ({ 
+              text: s, 
+              start: 0, 
+              end: 0 
+            })),
+            improvements: (report.areasForImprovement || [])
+              .filter((i: string) => i.includes("Grammar") || i.includes("Spelling"))
+              .map((i: string) => ({
+                issue: i,
+                suggestion: "Continue developing this area",
+                evidence: { text: "Based on your writing", start: 0, end: 0 }
+              }))
+          }
+        },
+        grammarCorrections: [],
+        vocabularyEnhancements: [],
+        modelVersion: "NSW-Enhanced-v1.0"
+      };
+      
+      console.log("Converted analysis:", convertedAnalysis);
+      if (onAnalysisChange) {
+        onAnalysisChange(convertedAnalysis);
+      }
+    } catch (conversionError) {
+      console.error("Error converting report:", conversionError);
+      alert("There was an error processing the evaluation report. Please try again.");
+    }
+  }, [onAnalysisChange]);
+
+  const handleSubmitForEvaluation = useCallback(async (contentToSubmit: string, typeToSubmit: string) => {
+    console.log("handleSubmitForEvaluation called");
+    await handleNSWSubmit(contentToSubmit, typeToSubmit);
+  }, [handleNSWSubmit]);
+
+  const handleApplyFix = useCallback((fix: LintFix) => {
+    console.log('Applying fix:', fix);
+  }, []);
+
+  const handleCloseReportModal = useCallback(() => {
+    setShowReportModal(false);
+    setNswReport(null);
+    setEvaluationStatus("idle");
+  }, []);
+
+  const handleCloseNSWEvaluation = useCallback(() => {
+    setShowNSWEvaluation(false);
+    setEvaluationStatus("idle");
+    setEvaluationProgress("");
+  }, []);
+
+  // Get current font family CSS
+  const getCurrentFontFamily = () => {
+    const family = fontFamilies.find(f => f.value === fontFamily);
+    return family ? family.css : fontFamilies[0].css;
   };
 
-  const handleSubmit = (submittedContent: string) => {
-    console.log('Content submitted:', submittedContent);
-    // Handle submission logic here
-  };
+  // Check if word count exceeds target
+  const showWordCountWarning = wordCount > 300;
 
-  const handleTextTypeChange = (newTextType: string) => {
-    setTextType(newTextType);
-    localStorage.setItem('selectedWritingType', newTextType);
-  };
+  // Check if we have content for submit button
+  const currentContent = localContent || content || '';
+  const hasContent = currentContent.trim().length > 0;
 
-  const handlePopupCompleted = () => {
-    setPopupFlowCompleted(true);
-  };
-
-  // Show loading screen while checking auth
-  if (isLoading) {
+  // Show loading state while component initializes
+  if (!isComponentReady) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center">
+      <div className={`flex h-screen items-center justify-center transition-colors duration-300 ${
+        darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'
+      }`}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <p className="text-lg font-medium">Loading Writing Area...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <ErrorBoundary>
-      <div className="min-h-screen bg-white">
-        <Routes>
-          <Route path="/" element={
-            <>
-              <NavBar 
-                onNavigate={handleNavigation}
-                onAuthClick={() => setShowAuthModal(true)}
-                user={user}
-                onSignOut={authSignOut}
-              />
-              <HeroSection onNavigate={handleNavigation} />
-              <FeaturesSection />
-              <ToolsSection />
-              <WritingTypesSection />
-              <StudentSuccessSection />
-              <HowItWorksSection />
-              <EnhancedSuccessSection />
-              <Footer onNavigate={handleNavigation} />
-            </>
-          } />
-          
-          <Route path="/pricing" element={
-            <>
-              <NavBar 
-                onNavigate={handleNavigation}
-                onAuthClick={() => setShowAuthModal(true)}
-                user={user}
-                onSignOut={authSignOut}
-              />
-              <PricingPage onNavigate={handleNavigation} />
-              <Footer onNavigate={handleNavigation} />
-            </>
-          } />
-          
-          <Route path="/faq" element={
-            <>
-              <NavBar 
-                onNavigate={handleNavigation}
-                onAuthClick={() => setShowAuthModal(true)}
-                user={user}
-                onSignOut={authSignOut}
-              />
-              <FAQPage />
-              <Footer onNavigate={handleNavigation} />
-            </>
-          } />
-          
-          <Route path="/about" element={
-            <>
-              <NavBar 
-                onNavigate={handleNavigation}
-                onAuthClick={() => setShowAuthModal(true)}
-                user={user}
-                onSignOut={authSignOut}
-              />
-              <AboutPage />
-              <Footer onNavigate={handleNavigation} />
-            </>
-          } />
+    <div className={`flex h-screen transition-colors duration-300 ${
+      darkMode ? 'bg-gray-900' : 'bg-gray-50'
+    }`}>
+      {/* Left side - Writing Area */}
+      <div className="flex-1 flex flex-col">
+        {/* Header with prompt and controls */}
+        <div className={`p-4 border-b transition-colors duration-300 ${
+          darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+        }`}>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center space-x-2">
+              <PenTool className={`w-5 h-5 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
+              <h2 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                Your Writing Prompt
+              </h2>
+              <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                darkMode ? 'bg-purple-900 text-purple-200' : 'bg-purple-100 text-purple-800'
+              }`}>
+                {textType}
+              </span>
+            </div>
+            <button
+              onClick={() => setShowSettings(!showSettings)}
+              className={`p-2 rounded-lg transition-colors ${
+                darkMode
+                  ? 'text-gray-400 hover:text-white hover:bg-gray-700'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+              title="Hide Prompt"
+            >
+              {showSettings ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
 
-          <Route path="/settings" element={
-            user ? (
-              <>
-                <NavBar 
-                  onNavigate={handleNavigation}
-                  onAuthClick={() => setShowAuthModal(true)}
-                  user={user}
-                  onSignOut={authSignOut}
-                />
-                <SettingsPage />
-                <Footer onNavigate={handleNavigation} />
-              </>
-            ) : (
-              <Navigate to="/" replace />
-            )
-          } />
+          {!showSettings && currentPrompt && (
+            <div className={`p-3 rounded-lg text-sm leading-relaxed ${
+              darkMode ? 'bg-gray-700 text-gray-200' : 'bg-blue-50 text-blue-900'
+            }`}>
+              <strong>Prompt:</strong> {currentPrompt}
+            </div>
+          )}
+        </div>
 
-          <Route path="/dashboard" element={
-            user ? (
-              emailVerified ? (
-                paymentCompleted ? (
-                  <>
-                    <NavBar 
-                      onNavigate={handleNavigation}
-                      onAuthClick={() => setShowAuthModal(true)}
-                      user={user}
-                      onSignOut={authSignOut}
-                    />
-                    <Dashboard onNavigate={handleNavigation} />
-                  </>
-                ) : (
-                  <Navigate to="/pricing" replace />
-                )
-              ) : (
-                <EmailVerificationHandler />
-              )
-            ) : (
-              <Navigate to="/" replace />
-            )
-          } />
+        {/* Toolbar */}
+        <div className={`px-4 py-3 border-b flex items-center justify-between transition-colors duration-300 ${
+          darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+        }`}>
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={onToggleStructureGuide}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                showStructureGuide
+                  ? darkMode
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-blue-600 text-white'
+                  : darkMode
+                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              <BookOpen className="w-4 h-4" />
+              <span>Structure</span>
+            </button>
 
-          <Route path="/learning" element={
-            user ? (
-              emailVerified ? (
-                paymentCompleted ? (
-                  <>
-                    <NavBar 
-                      onNavigate={handleNavigation}
-                      onAuthClick={() => setShowAuthModal(true)}
-                      user={user}
-                      onSignOut={authSignOut}
-                    />
-                    <LearningPage />
-                  </>
-                ) : (
-                  <Navigate to="/pricing" replace />
-                )
-              ) : (
-                <EmailVerificationHandler />
-              )
-            ) : (
-              <Navigate to="/" replace />
-            )
-          } />
+            <button
+              onClick={onToggleTips}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                showTips
+                  ? darkMode
+                    ? 'bg-yellow-600 text-white'
+                    : 'bg-yellow-500 text-white'
+                  : darkMode
+                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              <LightbulbIcon className="w-4 h-4" />
+              <span>Tips</span>
+            </button>
 
-          <Route path="/evaluation" element={
-            user ? (
-              emailVerified ? (
-                paymentCompleted ? (
-                  <>
-                    <NavBar 
-                      onNavigate={handleNavigation}
-                      onAuthClick={() => setShowAuthModal(true)}
-                      user={user}
-                      onSignOut={authSignOut}
-                    />
-                    <EvaluationPage />
-                  </>
-                ) : (
-                  <Navigate to="/pricing" replace />
-                )
-              ) : (
-                <EmailVerificationHandler />
-              )
-            ) : (
-              <Navigate to="/" replace />
-            )
-          } />
+            <button
+              className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                darkMode
+                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              <Zap className="w-4 h-4" />
+              <span>Exam Mode</span>
+            </button>
 
-          <Route path="/writing" element={
-            <WritingAccessCheck user={user} emailVerified={emailVerified} paymentCompleted={paymentCompleted}>
-              <div className="h-screen flex flex-col">
-                <EnhancedHeader 
-                  onNavigate={handleNavigation}
-                  user={user}
-                  onSignOut={authSignOut}
-                  textType={textType}
-                />
-                {showExamMode ? (
-                  <ExamSimulationMode 
-                    onExit={() => setShowExamMode(false)}
-                  />
-                ) : (
-                  <div className="writing-layout-content flex-1 min-h-0">
-                    <EnhancedWritingLayoutNSW
-                      content={content}
-                      onChange={setContent}
-                      textType={textType || 'narrative'}
-                      prompt={currentPrompt}
-                      wordCount={wordCount}
-                      onWordCountChange={setWordCount}
-                      isTimerRunning={isTimerRunning}
-                      elapsedTime={elapsedTime}
-                      onStartTimer={startTimer}
-                      onPauseTimer={pauseTimer}
-                      onResetTimer={resetTimer}
-                      focusMode={focusMode}
-                      onToggleFocus={() => setFocusMode(!focusMode)}
-                      showStructureGuide={showStructureGuide}
-                      onToggleStructureGuide={() => setShowStructureGuide(!showStructureGuide)}
-                      showTips={showTips}
-                      onToggleTips={() => setShowTips(!showTips)}
-                      analysis={analysis}
-                      onAnalysisChange={setAnalysis}
-                      assistanceLevel={assistanceLevel}
-                      onAssistanceLevelChange={setAssistanceLevel}
-                      onSubmit={handleSubmit}
-                      selectedText={selectedText}
-                      onTextTypeChange={handleTextTypeChange}
-                      onPopupCompleted={handlePopupCompleted}
-                      popupFlowCompleted={popupFlowCompleted}
-                      user={user}
-                      openAIConnected={openAIConnected}
-                      openAILoading={openAILoading}
-                      panelVisible={panelVisible}
-                      setPanelVisible={setPanelVisible}
-                    />
-                  </div>
-                )}
-              </div>
-            </WritingAccessCheck>
-          } />
-          <Route path="/payment-success" element={
-            <PaymentSuccessPage 
-              planType={pendingPaymentPlan}
-              onNavigate={handleNavigation}
-            />
-          } />
-        </Routes>
+            <button
+              onClick={onToggleFocus}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                focusMode
+                  ? darkMode
+                    ? 'bg-green-600 text-white'
+                    : 'bg-green-600 text-white'
+                  : darkMode
+                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              <Eye className="w-4 h-4" />
+              <span>Focus</span>
+            </button>
+          </div>
 
-        {showAuthModal && (
-          <AuthModal
-            mode={authModalMode}
-            onClose={() => setShowAuthModal(false)}
-            onSuccess={handleAuthSuccess}
-            onSwitchMode={(mode) => setAuthModalMode(mode)}
+          <div className="flex items-center space-x-4">
+            {/* Timer */}
+            <div className="flex items-center space-x-2">
+              <Clock className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />
+              <span className={`text-sm font-mono ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                {formatTime(elapsedTime)}
+              </span>
+              <button
+                onClick={isTimerRunning ? onPauseTimer : onStartTimer}
+                className={`p-1 rounded transition-colors ${
+                  darkMode
+                    ? 'text-gray-400 hover:text-white'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                {isTimerRunning ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+              </button>
+              <button
+                onClick={onResetTimer}
+                className={`p-1 rounded transition-colors ${
+                  darkMode
+                    ? 'text-gray-400 hover:text-white'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <RotateCcw className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Word Count */}
+            <div className="flex items-center space-x-2">
+              <FileText className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />
+              <span className={`text-sm font-medium ${
+                showWordCountWarning
+                  ? 'text-red-600'
+                  : darkMode
+                    ? 'text-gray-300'
+                    : 'text-gray-700'
+              }`}>
+                {wordCount} words
+              </span>
+            </div>
+
+            {/* Settings */}
+            <button
+              onClick={() => setShowSettings(!showSettings)}
+              className={`p-2 rounded-lg transition-colors ${
+                darkMode
+                  ? 'text-gray-400 hover:text-white hover:bg-gray-700'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+            >
+              <Settings className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Writing Area */}
+        <div className="flex-1 relative">
+          <textarea
+            ref={textareaRef}
+            value={localContent}
+            onChange={(e) => handleContentChange(e.target.value)}
+            placeholder="Start writing your amazing story here! Let your creativity flow and bring your ideas to life..."
+            className={`w-full h-full p-6 resize-none border-none outline-none transition-colors duration-300 ${
+              darkMode
+                ? 'bg-gray-900 text-gray-100 placeholder-gray-500'
+                : 'bg-white text-gray-900 placeholder-gray-400'
+            }`}
+            style={{
+              fontFamily: fontFamily,
+              fontSize: `${fontSize}px`,
+              lineHeight: lineHeight,
+            }}
           />
-        )}
 
-        {showHelpCenter && (
-          <HelpCenter onClose={() => setShowHelpCenter(false)} />
-        )}
+          {/* Focus Mode Indicator */}
+          {focusMode && (
+            <div className={`absolute bottom-4 right-4 px-3 py-1 rounded-full text-sm font-medium ${
+              darkMode ? 'bg-blue-800 text-blue-200' : 'bg-blue-100 text-blue-800'
+            }`}>
+              Focus Mode
+            </div>
+          )}
+        </div>
 
-        {showPlanningTool && (
-          <PlanningToolModal onClose={() => setShowPlanningTool(false)} />
-        )}
-
-        <AdminButton />
+        {/* Enhanced Submit Button */}
+        <div className={`p-4 border-t transition-colors duration-300 ${
+          darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+        }`}>
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => handleSubmitForEvaluation(currentContent, textType)}
+              disabled={evaluationStatus === "loading" || !hasContent}
+              className="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 disabled:from-gray-400 disabled:to-gray-500 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 disabled:cursor-not-allowed shadow-lg"
+            >
+              {evaluationStatus === "loading" ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  <span>Evaluating...</span>
+                </>
+              ) : (
+                <>
+                  <Target className="w-5 h-5" />
+                  <span>Submit for NSW Evaluation</span>
+                </>
+              )}
+            </button>
+            
+            {/* Quick Info Button */}
+            <button
+              className={`p-3 rounded-lg transition-colors ${
+                darkMode
+                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+              title="NSW Evaluation Info"
+            >
+              <Info className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
       </div>
-    </ErrorBoundary>
+
+      {/* Right side - Enhanced Coach Panel */}
+      <div className="w-96 border-l border-gray-200 dark:border-gray-700">
+        <EnhancedCoachPanel
+          content={currentContent}
+          textType={textType}
+          analysis={analysis}
+          onApplyFix={handleApplyFix}
+          darkMode={darkMode}
+        />
+      </div>
+
+      {/* Modals */}
+      {showStructureGuide && onToggleStructureGuide && (
+        <StructureGuideModal
+          textType={textType}
+          onClose={onToggleStructureGuide}
+          darkMode={darkMode}
+        />
+      )}
+
+      {showTips && onToggleTips && (
+        <TipsModal
+          textType={textType}
+          onClose={onToggleTips}
+          darkMode={darkMode}
+        />
+      )}
+
+      {/* NSW Evaluation Modal */}
+      {showNSWEvaluation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className={`p-6 rounded-lg max-w-md w-full mx-4 ${
+            darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'
+          }`}>
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+              <h3 className="text-lg font-semibold mb-2">Evaluating Your Writing</h3>
+              <p className="text-sm opacity-75">{evaluationProgress}</p>
+              <button
+                onClick={handleCloseNSWEvaluation}
+                className="mt-4 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Report Modal */}
+      {showReportModal && nswReport && (
+        <ReportModal
+          report={nswReport}
+          onClose={handleCloseReportModal}
+          darkMode={darkMode}
+        />
+      )}
+    </div>
   );
 }
-
-export default AppContent;
