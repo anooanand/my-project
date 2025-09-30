@@ -1,5 +1,5 @@
-// FIXED: EnhancedWritingLayoutNSW with Working Submit Button
-// This version fixes the TypeScript errors and makes the submit button functional
+// FIXED: EnhancedWritingLayoutNSW with Proper Loading and Export Handling
+// This version fixes the loading issues and export conflicts
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { StructureGuideModal } from './StructureGuideModal';
@@ -56,6 +56,7 @@ interface EnhancedWritingLayoutNSWProps {
   onAnalysisChange?: (analysis: DetailedFeedback | null) => void;
 }
 
+// FIXED: Single named export to avoid conflicts
 export function EnhancedWritingLayoutNSW({
   content,
   onChange,
@@ -82,14 +83,15 @@ export function EnhancedWritingLayoutNSW({
   analysis,
   onAnalysisChange
 }: EnhancedWritingLayoutNSWProps) {
-  // Local state for content management
-  const [localContent, setLocalContent] = useState(content);
+  // FIXED: Initialize state with proper error handling
+  const [localContent, setLocalContent] = useState(content || '');
   const [showSettings, setShowSettings] = useState(false);
   const [showNSWEvaluation, setShowNSWEvaluation] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [nswReport, setNswReport] = useState<any>(null);
   const [evaluationStatus, setEvaluationStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [evaluationProgress, setEvaluationProgress] = useState("");
+  const [isComponentReady, setIsComponentReady] = useState(false);
 
   // Refs
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -104,30 +106,54 @@ export function EnhancedWritingLayoutNSW({
     { name: 'Courier New', value: 'Courier New', css: 'font-family: "Courier New", monospace;' }
   ];
 
+  // FIXED: Component initialization with error boundary
+  useEffect(() => {
+    try {
+      setIsComponentReady(true);
+      console.log('EnhancedWritingLayoutNSW: Component initialized successfully');
+    } catch (error) {
+      console.error('EnhancedWritingLayoutNSW: Initialization error:', error);
+    }
+  }, []);
+
   // Sync local content with prop
   useEffect(() => {
-    setLocalContent(content);
+    if (content !== undefined && content !== localContent) {
+      setLocalContent(content);
+    }
   }, [content]);
 
-  // Auto-save functionality
+  // Auto-save functionality with error handling
   useEffect(() => {
+    if (!isComponentReady) return;
+    
     const timer = setTimeout(() => {
-      if (localContent !== content) {
-        onChange(localContent);
+      try {
+        if (localContent !== content && onChange) {
+          onChange(localContent);
+        }
+      } catch (error) {
+        console.error('EnhancedWritingLayoutNSW: Auto-save error:', error);
       }
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [localContent, content, onChange]);
+  }, [localContent, content, onChange, isComponentReady]);
 
-  // Word count calculation
+  // Word count calculation with error handling
   useEffect(() => {
-    const words = localContent.trim().split(/\s+/).filter(word => word.length > 0);
-    const newWordCount = words.length;
-    if (newWordCount !== wordCount) {
-      onWordCountChange(newWordCount);
+    if (!isComponentReady) return;
+    
+    try {
+      const words = localContent.trim().split(/\s+/).filter(word => word.length > 0);
+      const newWordCount = words.length;
+      if (newWordCount !== wordCount && onWordCountChange) {
+        onWordCountChange(newWordCount);
+      }
+    } catch (error) {
+      console.error('EnhancedWritingLayoutNSW: Word count error:', error);
     }
-  }, [localContent, wordCount, onWordCountChange]);
+  }, [localContent, wordCount, onWordCountChange, isComponentReady]);
 
   // Format elapsed time
   const formatTime = (seconds: number) => {
@@ -136,24 +162,30 @@ export function EnhancedWritingLayoutNSW({
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // FIXED: Handle content change with auto-timer start
-  const handleContentChange = (newContent: string) => {
-    setLocalContent(newContent);
-    
-    // AUTO-START TIMER: Start timer when user begins typing
-    if (newContent.trim().length > 0 && !isTimerRunning && elapsedTime === 0 && onStartTimer) {
-      onStartTimer();
+  // FIXED: Handle content change with auto-timer start and error handling
+  const handleContentChange = useCallback((newContent: string) => {
+    try {
+      setLocalContent(newContent);
+      
+      // AUTO-START TIMER: Start timer when user begins typing
+      if (newContent.trim().length > 0 && !isTimerRunning && elapsedTime === 0 && onStartTimer) {
+        onStartTimer();
+      }
+      
+      // Detect new paragraphs and emit events
+      if (eventBus && detectNewParagraphs) {
+        const newParagraphs = detectNewParagraphs(content, newContent);
+        if (newParagraphs.length > 0) {
+          eventBus.emit('newParagraphsDetected', { paragraphs: newParagraphs, textType });
+        }
+      }
+    } catch (error) {
+      console.error('EnhancedWritingLayoutNSW: Content change error:', error);
     }
-    
-    // Detect new paragraphs and emit events
-    const newParagraphs = detectNewParagraphs(content, newContent);
-    if (newParagraphs.length > 0) {
-      eventBus.emit('newParagraphsDetected', { paragraphs: newParagraphs, textType });
-    }
-  };
+  }, [content, isTimerRunning, elapsedTime, onStartTimer, textType]);
 
-  // FIXED: NSW Submit Handler with proper error handling
-  const handleNSWSubmit = async (contentToSubmit: string, typeToSubmit: string) => {
+  // FIXED: NSW Submit Handler with comprehensive error handling
+  const handleNSWSubmit = useCallback(async (contentToSubmit: string, typeToSubmit: string) => {
     if (!contentToSubmit.trim()) {
       alert("Please write something before submitting for evaluation.");
       return;
@@ -169,11 +201,16 @@ export function EnhancedWritingLayoutNSW({
       setTimeout(() => setEvaluationProgress("Evaluating content and ideas..."), 2000);
       setTimeout(() => setEvaluationProgress("Generating detailed feedback..."), 3000);
 
+      // FIXED: Ensure NSWEvaluationReportGenerator is available
+      if (!NSWEvaluationReportGenerator) {
+        throw new Error("NSW Evaluation system is not available");
+      }
+
       const report = await NSWEvaluationReportGenerator.generateReport({
         essayContent: contentToSubmit,
         textType: typeToSubmit,
-        prompt: currentPrompt,
-        wordCount: wordCount,
+        prompt: currentPrompt || '',
+        wordCount: wordCount || 0,
         targetWordCountMin: 200,
         targetWordCountMax: 300,
       });
@@ -187,13 +224,17 @@ export function EnhancedWritingLayoutNSW({
       console.error("NSW evaluation error:", error);
       setEvaluationStatus("error");
       setShowNSWEvaluation(false);
-      alert("There was an error evaluating your writing. Please try again.");
+      alert(`There was an error evaluating your writing: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`);
     }
-  };
+  }, [currentPrompt, wordCount]);
 
-  // FIXED: Convert report to analysis with proper type handling
-  const convertReportToAnalysis = (report: any) => {
+  // FIXED: Convert report to analysis with comprehensive error handling
+  const convertReportToAnalysis = useCallback((report: any) => {
     try {
+      if (!report) {
+        throw new Error("Report is null or undefined");
+      }
+
       // Create a properly typed DetailedFeedback object
       const convertedAnalysis: DetailedFeedback = {
         id: report.id || `nsw-${Date.now()}`,
@@ -202,58 +243,66 @@ export function EnhancedWritingLayoutNSW({
           ideasContent: {
             score: report.domains?.contentAndIdeas?.score || 0,
             weight: report.domains?.contentAndIdeas?.weight || 40,
-            strengths: report.domains?.contentAndIdeas?.feedback?.map((s: string) => ({ 
+            strengths: (report.domains?.contentAndIdeas?.feedback || []).map((s: string) => ({ 
               text: s, 
               start: 0, 
               end: 0 
-            })) || [],
-            improvements: report.areasForImprovement?.filter((i: string) => i.includes("Ideas") || i.includes("Content")).map((i: string) => ({
-              issue: i,
-              suggestion: "Continue developing this area",
-              evidence: { text: "Based on your writing", start: 0, end: 0 }
-            })) || []
+            })),
+            improvements: (report.areasForImprovement || [])
+              .filter((i: string) => i.includes("Ideas") || i.includes("Content"))
+              .map((i: string) => ({
+                issue: i,
+                suggestion: "Continue developing this area",
+                evidence: { text: "Based on your writing", start: 0, end: 0 }
+              }))
           },
           structureOrganization: {
             score: report.domains?.textStructure?.score || 0,
             weight: report.domains?.textStructure?.weight || 20,
-            strengths: report.domains?.textStructure?.feedback?.map((s: string) => ({ 
+            strengths: (report.domains?.textStructure?.feedback || []).map((s: string) => ({ 
               text: s, 
               start: 0, 
               end: 0 
-            })) || [],
-            improvements: report.areasForImprovement?.filter((i: string) => i.includes("Structure") || i.includes("Organization")).map((i: string) => ({
-              issue: i,
-              suggestion: "Continue developing this area",
-              evidence: { text: "Based on your writing", start: 0, end: 0 }
-            })) || []
+            })),
+            improvements: (report.areasForImprovement || [])
+              .filter((i: string) => i.includes("Structure") || i.includes("Organization"))
+              .map((i: string) => ({
+                issue: i,
+                suggestion: "Continue developing this area",
+                evidence: { text: "Based on your writing", start: 0, end: 0 }
+              }))
           },
           languageVocab: {
             score: report.domains?.languageFeatures?.score || 0,
             weight: report.domains?.languageFeatures?.weight || 25,
-            strengths: report.domains?.languageFeatures?.feedback?.map((s: string) => ({ 
+            strengths: (report.domains?.languageFeatures?.feedback || []).map((s: string) => ({ 
               text: s, 
               start: 0, 
               end: 0 
-            })) || [],
-            improvements: report.areasForImprovement?.filter((i: string) => i.includes("Language") || i.includes("Vocabulary")).map((i: string) => ({
-              issue: i,
-              suggestion: "Continue developing this area",
-              evidence: { text: "Based on your writing", start: 0, end: 0 }
-            })) || []
+            })),
+            improvements: (report.areasForImprovement || [])
+              .filter((i: string) => i.includes("Language") || i.includes("Vocabulary"))
+              .map((i: string) => ({
+                issue: i,
+                suggestion: "Continue developing this area",
+                evidence: { text: "Based on your writing", start: 0, end: 0 }
+              }))
           },
           spellingPunctuationGrammar: {
             score: report.domains?.spellingAndGrammar?.score || 0,
             weight: report.domains?.spellingAndGrammar?.weight || 15,
-            strengths: report.domains?.spellingAndGrammar?.feedback?.map((s: string) => ({ 
+            strengths: (report.domains?.spellingAndGrammar?.feedback || []).map((s: string) => ({ 
               text: s, 
               start: 0, 
               end: 0 
-            })) || [],
-            improvements: report.areasForImprovement?.filter((i: string) => i.includes("Grammar") || i.includes("Spelling")).map((i: string) => ({
-              issue: i,
-              suggestion: "Continue developing this area",
-              evidence: { text: "Based on your writing", start: 0, end: 0 }
-            })) || []
+            })),
+            improvements: (report.areasForImprovement || [])
+              .filter((i: string) => i.includes("Grammar") || i.includes("Spelling"))
+              .map((i: string) => ({
+                issue: i,
+                suggestion: "Continue developing this area",
+                evidence: { text: "Based on your writing", start: 0, end: 0 }
+              }))
           }
         },
         grammarCorrections: [],
@@ -267,50 +316,65 @@ export function EnhancedWritingLayoutNSW({
       }
     } catch (conversionError) {
       console.error("Error converting report:", conversionError);
+      alert("There was an error processing the evaluation report. Please try again.");
     }
-  };
+  }, [onAnalysisChange]);
 
-  const handleSubmitForEvaluation = async (contentToSubmit: string, typeToSubmit: string) => {
+  const handleSubmitForEvaluation = useCallback(async (contentToSubmit: string, typeToSubmit: string) => {
     console.log("handleSubmitForEvaluation called");
     await handleNSWSubmit(contentToSubmit, typeToSubmit);
-  };
+  }, [handleNSWSubmit]);
 
-  const handleApplyFix = (fix: LintFix) => {
+  const handleApplyFix = useCallback((fix: LintFix) => {
     console.log('Applying fix:', fix);
-  };
+  }, []);
 
-  const handleCloseReportModal = () => {
+  const handleCloseReportModal = useCallback(() => {
     setShowReportModal(false);
     setNswReport(null);
     setEvaluationStatus("idle");
-  };
+  }, []);
 
-  const handleCloseNSWEvaluation = () => {
+  const handleCloseNSWEvaluation = useCallback(() => {
     setShowNSWEvaluation(false);
     setEvaluationStatus("idle");
     setEvaluationProgress("");
-  };
+  }, []);
 
-  // Get current font family CSS - Preserved
+  // Get current font family CSS
   const getCurrentFontFamily = () => {
     const family = fontFamilies.find(f => f.value === fontFamily);
     return family ? family.css : fontFamilies[0].css;
   };
 
-  // Check if word count exceeds target - Preserved
+  // Check if word count exceeds target
   const showWordCountWarning = wordCount > 300;
 
-  // Check if we have content for submit button - Preserved
-  const currentContent = localContent || content;
-  const hasContent = currentContent && currentContent.trim().length > 0;
+  // Check if we have content for submit button
+  const currentContent = localContent || content || '';
+  const hasContent = currentContent.trim().length > 0;
+
+  // FIXED: Show loading state while component initializes
+  if (!isComponentReady) {
+    return (
+      <div className={`flex h-screen items-center justify-center transition-colors duration-300 ${
+        darkMode ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900'
+      }`}>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-lg font-medium">Loading Writing Area...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`flex h-screen transition-colors duration-300 ${
       darkMode ? 'bg-gray-900' : 'bg-gray-50'
     }`}>
-      {/* Left side - Writing Area (PRESERVED ORIGINAL LAYOUT) */}
+      {/* Left side - Writing Area */}
       <div className="flex-1 flex flex-col">
-        {/* Header with prompt and controls - Preserved */}
+        {/* Header with prompt and controls */}
         <div className={`p-4 border-b transition-colors duration-300 ${
           darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
         }`}>
@@ -348,7 +412,7 @@ export function EnhancedWritingLayoutNSW({
           )}
         </div>
 
-        {/* Toolbar - Preserved */}
+        {/* Toolbar */}
         <div className={`px-4 py-3 border-b flex items-center justify-between transition-colors duration-300 ${
           darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
         }`}>
@@ -470,7 +534,7 @@ export function EnhancedWritingLayoutNSW({
           </div>
         </div>
 
-        {/* Writing Area - Preserved */}
+        {/* Writing Area */}
         <div className="flex-1 relative">
           <textarea
             ref={textareaRef}
@@ -499,7 +563,7 @@ export function EnhancedWritingLayoutNSW({
           )}
         </div>
 
-        {/* FIXED: Enhanced Submit Button with Better UX */}
+        {/* Enhanced Submit Button */}
         <div className={`p-4 border-t transition-colors duration-300 ${
           darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
         }`}>
@@ -537,7 +601,7 @@ export function EnhancedWritingLayoutNSW({
         </div>
       </div>
 
-      {/* Right side - Enhanced Coach Panel (PRESERVED ORIGINAL FUNCTIONALITY) */}
+      {/* Right side - Enhanced Coach Panel */}
       <div className="w-96 border-l border-gray-200 dark:border-gray-700">
         <EnhancedCoachPanel
           content={currentContent}
@@ -548,19 +612,19 @@ export function EnhancedWritingLayoutNSW({
         />
       </div>
 
-      {/* Modals - Preserved */}
-      {showStructureGuide && (
+      {/* Modals */}
+      {showStructureGuide && onToggleStructureGuide && (
         <StructureGuideModal
           textType={textType}
-          onClose={() => onToggleStructureGuide?.()}
+          onClose={onToggleStructureGuide}
           darkMode={darkMode}
         />
       )}
 
-      {showTips && (
+      {showTips && onToggleTips && (
         <TipsModal
           textType={textType}
-          onClose={() => onToggleTips?.()}
+          onClose={onToggleTips}
           darkMode={darkMode}
         />
       )}
@@ -597,5 +661,3 @@ export function EnhancedWritingLayoutNSW({
     </div>
   );
 }
-
-export default EnhancedWritingLayoutNSW;
