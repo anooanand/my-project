@@ -64,6 +64,12 @@ function AppContent() {
   const [showExamMode, setShowExamMode] = useState(false);
   const [showHelpCenter, setShowHelpCenter] = useState(false);
   const [showPlanningTool, setShowPlanningTool] = useState(false);
+  const [prompt, setPrompt] = useState('');
+
+  useEffect(() => {
+    // Set a default prompt for demonstration purposes
+    setPrompt("One rainy afternoon, while exploring your grandmother's attic, you stumble upon an old, dusty mirror. As you wipe away the grime, you notice that your reflection begins to change-it shows a vibrant, magical world behind you instead of the attic. Curious, you touch the mirror and suddenly find yourself pulled into this enchanting land, where the sky is a brilliant shade of purple, and creatures of all shapes and sizes roam freely. In this new world, you meet a talking animal who claims to be your guide, but they have a problem that only you can help solve. What adventure awaits you in this realm? What challenges will you face, and what choices will you have to make? Describe the characters you meet, the landscapes you explore, and the lesson you learn along the way. How will you find your way back home, and what will you bring back with you?");
+  }, []);
   
   // New state for popup flow completion
   const [popupFlowCompleted, setPopupFlowCompleted] = useState(false); 
@@ -436,6 +442,7 @@ function AppContent() {
                       content={content}
                       onChange={setContent}
                       textType={textType || 'narrative'}
+                      prompt={prompt} // Pass the prompt here
                       assistanceLevel={assistanceLevel}
                       onAssistanceLevelChange={setAssistanceLevel}
                       onSubmit={handleSubmit}
@@ -460,23 +467,32 @@ function AppContent() {
               onNavigate={handleNavigation}
             />
           } />
-          <Route path="/learning" element={<LearningPage />} />
-          <Route path="/supportive-features" element={<SupportiveFeatures />} />
-          <Route path="/help-center" element={<HelpCenter />} />
-          <Route path="/essay-feedback" element={<EssayFeedbackPage />} />
-          <Route path="/evaluation" element={<EvaluationPage />} />
-          <Route path="/auth/callback" element={<EmailVerificationHandler />} />
+          <Route path="/learning" element={
+            <WritingAccessCheck onNavigate={handleNavigation}>
+              <LearningPage />
+            </WritingAccessCheck>
+          } />
+          <Route path="/support" element={
+            <HelpCenter />
+          } />
+          <Route path="/essay-feedback/:id" element={
+            <WritingAccessCheck onNavigate={handleNavigation}>
+              <EssayFeedbackPage />
+            </WritingAccessCheck>
+          } />
+          <Route path="/auth/callback" element={null} /> {/* Handled by AuthContext */}
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
-        <AuthModal 
-          show={showAuthModal}
-          onClose={() => setShowAuthModal(false)}
-          mode={authModalMode}
-          onAuthSuccess={handleAuthSuccess}
-          onSwitchMode={(mode) => setAuthModalMode(mode)}
-        />
+        {shouldShowFooter() && <Footer />}
+        {showAuthModal && (
+          <AuthModal
+            mode={authModalMode}
+            onClose={() => setShowAuthModal(false)}
+            onAuthSuccess={handleAuthSuccess}
+            onSwitchMode={(mode) => setAuthModalMode(mode)}
+          />
+        )}
       </div>
-      {shouldShowFooter() && <Footer />}
     </div>
   );
 }
