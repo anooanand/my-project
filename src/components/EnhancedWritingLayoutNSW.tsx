@@ -273,7 +273,7 @@ export function EnhancedWritingLayoutNSW({
               start: 0, 
               end: 0 
             })),
-            improvements: (report.areasForImprovement || [])
+            improvements: (Array.isArray(report.areasForImprovement) ? report.areasForImprovement : [])
               .filter((i: string) => i.includes("Ideas") || i.includes("Content"))
               .map((i: string) => ({
                 issue: i,
@@ -289,7 +289,7 @@ export function EnhancedWritingLayoutNSW({
               start: 0, 
               end: 0 
             })),
-            improvements: (report.areasForImprovement || [])
+            improvements: (Array.isArray(report.areasForImprovement) ? report.areasForImprovement : [])
               .filter((i: string) => i.includes("Structure") || i.includes("Organization"))
               .map((i: string) => ({
                 issue: i,
@@ -305,7 +305,7 @@ export function EnhancedWritingLayoutNSW({
               start: 0, 
               end: 0 
             })),
-            improvements: (report.areasForImprovement || [])
+            improvements: (Array.isArray(report.areasForImprovement) ? report.areasForImprovement : [])
               .filter((i: string) => i.includes("Language") || i.includes("Vocabulary"))
               .map((i: string) => ({
                 issue: i,
@@ -321,7 +321,7 @@ export function EnhancedWritingLayoutNSW({
               start: 0, 
               end: 0 
             })),
-            improvements: (report.areasForImprovement || [])
+            improvements: (Array.isArray(report.areasForImprovement) ? report.areasForImprovement : [])
               .filter((i: string) => i.includes("Grammar") || i.includes("Spelling"))
               .map((i: string) => ({
                 issue: i,
