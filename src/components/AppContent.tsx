@@ -64,7 +64,7 @@ function AppContent() {
   const [showExamMode, setShowExamMode] = useState(false);
   const [showHelpCenter, setShowHelpCenter] = useState(false);
   const [showPlanningTool, setShowPlanningTool] = useState(false);
-  const [prompt, setPrompt] = useState('');
+  const [prompt, setPrompt] = useState<string | null>(null);
   // New state for popup flow completion
   const [popupFlowCompleted, setPopupFlowCompleted] = useState(false); 
   const [hasSignedIn, setHasSignedIn] = useState(false);
@@ -436,7 +436,7 @@ function AppContent() {
                       content={content}
                       onChange={setContent}
                       textType={textType || 'narrative'}
-                      initialPrompt={prompt} // Pass the prompt here
+                      initialPrompt={prompt || ''} // Pass the prompt here
                       assistanceLevel={assistanceLevel}
                       onAssistanceLevelChange={setAssistanceLevel}
                       onSubmit={handleSubmit}
