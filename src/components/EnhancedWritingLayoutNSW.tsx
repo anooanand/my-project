@@ -163,6 +163,16 @@ export function EnhancedWritingLayoutNSW({
     }
   }, [initialPrompt, generatedPrompt, customPromptInput]);
 
+  // Effect to update localContent when a new prompt is generated or selected
+  useEffect(() => {
+    if (effectivePrompt && localContent !== effectivePrompt) {
+      setLocalContent(effectivePrompt);
+      if (onChange) {
+        onChange(effectivePrompt);
+      }
+    }
+  }, [effectivePrompt, localContent, onChange]);
+
   // Auto-save functionality with error handling
   useEffect(() => {
     if (!isComponentReady) return;
@@ -210,6 +220,11 @@ export function EnhancedWritingLayoutNSW({
       if (setPrompt) {
         setPrompt(newPrompt);
       }
+      // Immediately update localContent with the new prompt
+      setLocalContent(newPrompt);
+      if (onChange) {
+        onChange(newPrompt);
+      }
       setShowPromptOptionsModal(false);
     } catch (error) {
       console.error("Error generating prompt:", error);
@@ -218,11 +233,16 @@ export function EnhancedWritingLayoutNSW({
   }, [textType, setPrompt]);
 
   const handleCustomPromptInput = useCallback((promptText: string) => {
-    setCustomPromptInput(promptText);
-    if (setPrompt) {
-      setPrompt(promptText);
-    }
-    setShowPromptOptionsModal(false);
+      setCustomPromptInput(promptText);
+      if (setPrompt) {
+        setPrompt(promptText);
+      }
+      // Immediately update localContent with the custom prompt
+      setLocalContent(promptText);
+      if (onChange) {
+        onChange(promptText);
+      }
+      setShowPromptOptionsModal(false);
   }, [setPrompt]);
 
   const handleContentChange = useCallback((newContent: string) => {
