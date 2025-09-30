@@ -1,11 +1,13 @@
-// MINIMAL WORKING: AppContent Component to Fix Page Loading
-// This is a simplified version that should load without errors
+// CORRECT: AppContent Component with Prompt Handling
+// This is the correct AppContent code that should replace src/components/AppContent.tsx
 
 import React, { useState, useEffect } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import './layout-fix.css';
 
-// Import only essential components to avoid import errors
+// Add this import at the top with other imports
+import WritingWorkspaceFixed from '../pages/WritingWorkspace';
 import { NavBar } from './NavBar';
 import { HeroSection } from './HeroSection';
 import { FeaturesSection } from './FeaturesSection';
@@ -24,25 +26,27 @@ import { AboutPage } from './AboutPage';
 import { SettingsPage } from './SettingsPage';
 import { ErrorBoundary } from './ErrorBoundary';
 
-// Writing components - import with error handling
+// Writing components
+import { SplitScreen } from './SplitScreen';
+// import { WritingArea } from './WritingArea';
+import { TabbedCoachPanel } from './TabbedCoachPanel';
 import { EnhancedWritingLayoutNSW } from './EnhancedWritingLayoutNSW';
 import { LearningPage } from './LearningPage';
 import { ExamSimulationMode } from './ExamSimulationMode';
+import { SupportiveFeatures } from './SupportiveFeatures';
+import { HelpCenter } from './HelpCenter';
+import { EssayFeedbackPage } from './EssayFeedbackPage';
 import { EnhancedHeader } from './EnhancedHeader';
+import { SpecializedCoaching } from './text-type-templates/SpecializedCoaching';
+import { BrainstormingTools } from './BrainstormingTools';
 import { WritingAccessCheck } from './WritingAccessCheck';
+import { WritingToolbar } from './WritingToolbar';
+import { PlanningToolModal } from './PlanningToolModal';
 import { EmailVerificationHandler } from './EmailVerificationHandler';
 import { EvaluationPage } from './EvaluationPage';
+// REMOVED: import { FloatingChatWindow } from './FloatingChatWindow';
+import { checkOpenAIConnectionStatus } from '../lib/openai';
 import { AdminButton } from './AdminButton';
-
-// Optional imports with fallbacks
-let checkOpenAIConnectionStatus: any;
-try {
-  const openaiModule = require('../lib/openai');
-  checkOpenAIConnectionStatus = openaiModule.checkOpenAIConnectionStatus;
-} catch (error) {
-  console.warn('OpenAI module not available:', error);
-  checkOpenAIConnectionStatus = async () => false;
-}
 
 function AppContent() {
   const { user, loading: isLoading, paymentCompleted, emailVerified, authSignOut } = useAuth();
@@ -54,14 +58,17 @@ function AppContent() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Writing state with safe defaults
+  // Writing state
   const [content, setContent] = useState('');
-  const [textType, setTextType] = useState('narrative');
+  const [textType, setTextType] = useState('');
   const [assistanceLevel, setAssistanceLevel] = useState('detailed');
+  const [timerStarted, setTimerStarted] = useState(false);
   const [selectedText, setSelectedText] = useState('');
   const [showExamMode, setShowExamMode] = useState(false);
+  const [showHelpCenter, setShowHelpCenter] = useState(false);
+  const [showPlanningTool, setShowPlanningTool] = useState(false);
   
-  // Enhanced writing states
+  // FIXED: Add prompt state and enhanced writing states
   const [currentPrompt, setCurrentPrompt] = useState('');
   const [wordCount, setWordCount] = useState(0);
   const [elapsedTime, setElapsedTime] = useState(0);
@@ -71,26 +78,29 @@ function AppContent() {
   const [showTips, setShowTips] = useState(false);
   const [analysis, setAnalysis] = useState(null);
   
-  // Additional states
+  // New state for popup flow completion
   const [popupFlowCompleted, setPopupFlowCompleted] = useState(false); 
   const [hasSignedIn, setHasSignedIn] = useState(false);
+  
+  // Panel state for attached chat
   const [panelVisible, setPanelVisible] = useState(true);
   const [openAIConnected, setOpenAIConnected] = useState<boolean | null>(null);
-  const [openAILoading, setOpenAILoading] = useState<boolean>(false);
+  const [openAILoading, setOpenAILoading] = useState<boolean>(true);
 
-  // Safe prompt loading with error handling
+  // FIXED: Load prompt from localStorage on component mount and listen for prompt generation
   useEffect(() => {
     const loadPromptFromStorage = () => {
       try {
+        // Check for generated prompt first, then custom prompt
         const generatedPrompt = localStorage.getItem("generatedPrompt");
         const customPrompt = localStorage.getItem("customPrompt");
         const storedTextType = localStorage.getItem('selectedWritingType');
         
         if (generatedPrompt) {
-          console.log('📝 AppContent: Loading generated prompt from localStorage');
+          console.log('📝 AppContent: Loading generated prompt from localStorage:', generatedPrompt);
           setCurrentPrompt(generatedPrompt);
         } else if (customPrompt) {
-          console.log('📝 AppContent: Loading custom prompt from localStorage');
+          console.log('📝 AppContent: Loading custom prompt from localStorage:', customPrompt);
           setCurrentPrompt(customPrompt);
         }
         
@@ -100,101 +110,92 @@ function AppContent() {
         }
       } catch (error) {
         console.error('AppContent: Error loading prompt from localStorage:', error);
-        // Set fallback values
-        setCurrentPrompt('Write a creative story based on your imagination.');
-        setTextType('narrative');
       }
     };
 
+    // Load prompt on mount
     loadPromptFromStorage();
 
-    // Safe event listeners with error handling
-    const handlePromptGenerated = (event: any) => {
-      try {
-        console.log('📝 AppContent: Received promptGenerated event');
-        if (event.detail && event.detail.prompt) {
-          setCurrentPrompt(event.detail.prompt);
-          setTextType(event.detail.textType || 'narrative');
-        }
-      } catch (error) {
-        console.error('AppContent: Error handling prompt generated event:', error);
+    // Listen for prompt generation events
+    const handlePromptGenerated = (event: CustomEvent) => {
+      console.log('📝 AppContent: Received promptGenerated event:', event.detail);
+      if (event.detail.prompt) {
+        setCurrentPrompt(event.detail.prompt);
+        setTextType(event.detail.textType || 'narrative');
       }
     };
 
+    // Listen for storage changes (in case prompt is updated in another tab/component)
     const handleStorageChange = (event: StorageEvent) => {
-      try {
-        if (event.key === 'generatedPrompt' || event.key === 'customPrompt') {
-          console.log('📝 AppContent: Storage changed, reloading prompt');
-          loadPromptFromStorage();
-        }
-      } catch (error) {
-        console.error('AppContent: Error handling storage change:', error);
+      if (event.key === 'generatedPrompt' || event.key === 'customPrompt') {
+        console.log('📝 AppContent: Storage changed, reloading prompt');
+        loadPromptFromStorage();
       }
     };
 
-    window.addEventListener('promptGenerated', handlePromptGenerated);
+    window.addEventListener('promptGenerated', handlePromptGenerated as EventListener);
     window.addEventListener('storage', handleStorageChange);
 
     return () => {
-      window.removeEventListener('promptGenerated', handlePromptGenerated);
+      window.removeEventListener('promptGenerated', handlePromptGenerated as EventListener);
       window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
 
-  // Safe timer functions
+  // FIXED: Timer functions
   const startTimer = () => {
-    try {
-      setIsTimerRunning(true);
-    } catch (error) {
-      console.error('Error starting timer:', error);
-    }
+    setIsTimerRunning(true);
   };
 
   const pauseTimer = () => {
-    try {
-      setIsTimerRunning(false);
-    } catch (error) {
-      console.error('Error pausing timer:', error);
-    }
+    setIsTimerRunning(false);
   };
 
   const resetTimer = () => {
-    try {
-      setElapsedTime(0);
-      setIsTimerRunning(false);
-    } catch (error) {
-      console.error('Error resetting timer:', error);
-    }
+    setElapsedTime(0);
+    setIsTimerRunning(false);
   };
 
-  // Safe timer effect
+  // FIXED: Timer effect
   useEffect(() => {
     let interval: NodeJS.Timeout;
-    try {
-      if (isTimerRunning) {
-        interval = setInterval(() => {
-          setElapsedTime(prev => prev + 1);
-        }, 1000);
-      }
-    } catch (error) {
-      console.error('Timer effect error:', error);
+    if (isTimerRunning) {
+      interval = setInterval(() => {
+        setElapsedTime(prev => prev + 1);
+      }, 1000);
     }
     return () => {
       if (interval) clearInterval(interval);
     };
   }, [isTimerRunning]);
 
-  // Safe OpenAI status check
+  // Handle sign-in behavior - clear content and show modal when user signs in
+  useEffect(() => {
+    if (user && !hasSignedIn) {
+      // User just signed in
+      setHasSignedIn(true);
+      
+      // Clear content and reset state
+      setContent('');
+      setTextType('');
+      setPopupFlowCompleted(false);
+      
+      // If we're on the writing page, this will trigger the writing type modal
+      if (activePage === 'writing') {
+        // The WritingArea component will handle showing the modal
+      }
+    } else if (!user && hasSignedIn) {
+      // User signed out
+      setHasSignedIn(false);
+    }
+  }, [user, hasSignedIn, activePage]);
+
   useEffect(() => {
     const fetchOpenAIStatus = async () => {
+      setOpenAILoading(true);
       try {
-        setOpenAILoading(true);
-        if (checkOpenAIConnectionStatus) {
-          const connected = await checkOpenAIConnectionStatus();
-          setOpenAIConnected(connected);
-        } else {
-          setOpenAIConnected(false);
-        }
+        const connected = await checkOpenAIConnectionStatus();
+        setOpenAIConnected(connected);
       } catch (error) {
         console.error('Failed to check OpenAI status:', error);
         setOpenAIConnected(false);
@@ -208,91 +209,64 @@ function AppContent() {
 
   // Handle URL-based navigation
   useEffect(() => {
-    try {
-      const path = location.pathname;
-      if (path === '/') {
-        setActivePage('home');
-      } else if (path === '/writing') {
-        setActivePage('writing');
-      } else if (path === '/dashboard') {
-        setActivePage('dashboard');
-      } else if (path === '/learning') {
-        setActivePage('learning');
-      } else if (path === '/pricing') {
-        setActivePage('pricing');
-      } else if (path === '/faq') {
-        setActivePage('faq');
-      } else if (path === '/about') {
-        setActivePage('about');
-      } else if (path === '/settings') {
-        setActivePage('settings');
-      } else if (path === '/evaluation') {
-        setActivePage('evaluation');
-      }
-    } catch (error) {
-      console.error('Navigation error:', error);
+    const path = location.pathname;
+    if (path === '/') {
       setActivePage('home');
+    } else if (path === '/writing') {
+      setActivePage('writing');
+    } else if (path === '/dashboard') {
+      setActivePage('dashboard');
+    } else if (path === '/learning') {
+      setActivePage('learning');
+    } else if (path === '/pricing') {
+      setActivePage('pricing');
+    } else if (path === '/faq') {
+      setActivePage('faq');
+    } else if (path === '/about') {
+      setActivePage('about');
+    } else if (path === '/settings') {
+      setActivePage('settings');
+    } else if (path === '/evaluation') {
+      setActivePage('evaluation');
     }
   }, [location.pathname]);
 
   // Handle payment success from URL params
   useEffect(() => {
-    try {
-      const urlParams = new URLSearchParams(location.search);
-      const paymentSuccess = urlParams.get('payment_success');
-      const planType = urlParams.get('plan_type');
-      
-      if (paymentSuccess === 'true' && planType) {
-        setShowPaymentSuccess(true);
-        setPendingPaymentPlan(planType);
-        navigate('/payment-success', { replace: true });
-      }
-    } catch (error) {
-      console.error('Payment success handling error:', error);
+    const urlParams = new URLSearchParams(location.search);
+    const paymentSuccess = urlParams.get('payment_success');
+    const planType = urlParams.get('plan_type');
+    
+    if (paymentSuccess === 'true' && planType) {
+      setShowPaymentSuccess(true);
+      setPendingPaymentPlan(planType);
+      // Clean up URL
+      navigate('/payment-success', { replace: true });
     }
   }, [location.search, navigate]);
 
-  // Safe handlers
   const handleNavigation = (page: string) => {
-    try {
-      setActivePage(page);
-      navigate(`/${page === 'home' ? '' : page}`);
-    } catch (error) {
-      console.error('Navigation handler error:', error);
-    }
+    setActivePage(page);
+    navigate(`/${page === 'home' ? '' : page}`);
   };
 
   const handleAuthSuccess = () => {
-    try {
-      setShowAuthModal(false);
-    } catch (error) {
-      console.error('Auth success handler error:', error);
-    }
+    setShowAuthModal(false);
+    // Don't automatically navigate - let user choose where to go
   };
 
   const handleSubmit = (submittedContent: string) => {
-    try {
-      console.log('Content submitted:', submittedContent);
-    } catch (error) {
-      console.error('Submit handler error:', error);
-    }
+    console.log('Content submitted:', submittedContent);
+    // Handle submission logic here
   };
 
   const handleTextTypeChange = (newTextType: string) => {
-    try {
-      setTextType(newTextType);
-      localStorage.setItem('selectedWritingType', newTextType);
-    } catch (error) {
-      console.error('Text type change error:', error);
-    }
+    setTextType(newTextType);
+    localStorage.setItem('selectedWritingType', newTextType);
   };
 
   const handlePopupCompleted = () => {
-    try {
-      setPopupFlowCompleted(true);
-    } catch (error) {
-      console.error('Popup completed handler error:', error);
-    }
+    setPopupFlowCompleted(true);
   };
 
   // Show loading screen while checking auth
@@ -477,7 +451,7 @@ function AppContent() {
                       content={content}
                       onChange={setContent}
                       textType={textType || 'narrative'}
-                      prompt={currentPrompt || 'Write a creative story based on your imagination.'}
+                      prompt={currentPrompt}
                       wordCount={wordCount}
                       onWordCountChange={setWordCount}
                       isTimerRunning={isTimerRunning}
@@ -486,11 +460,11 @@ function AppContent() {
                       onPauseTimer={pauseTimer}
                       onResetTimer={resetTimer}
                       focusMode={focusMode}
-                      onToggleFocus={() => setFocusMode(!focusMode)}
+                      onToggleFocus={() => setFocusMode(prev => !prev)}
                       showStructureGuide={showStructureGuide}
-                      onToggleStructureGuide={() => setShowStructureGuide(!showStructureGuide)}
+                      onToggleStructureGuide={() => setShowStructureGuide(prev => !prev)}
                       showTips={showTips}
-                      onToggleTips={() => setShowTips(!showTips)}
+                      onToggleTips={() => setShowTips(prev => !prev)}
                       analysis={analysis}
                       onAnalysisChange={setAnalysis}
                       assistanceLevel={assistanceLevel}
@@ -511,25 +485,24 @@ function AppContent() {
               </div>
             </WritingAccessCheck>
           } />
-          
+
           <Route path="/payment-success" element={
             <PaymentSuccessPage 
               planType={pendingPaymentPlan}
-              onNavigate={handleNavigation}
+              onClose={() => setShowPaymentSuccess(false)}
             />
           } />
+
         </Routes>
 
         {showAuthModal && (
           <AuthModal
             mode={authModalMode}
             onClose={() => setShowAuthModal(false)}
-            onSuccess={handleAuthSuccess}
-            onSwitchMode={(mode) => setAuthModalMode(mode)}
+            onAuthSuccess={handleAuthSuccess}
+            onSwitchMode={() => setAuthModalMode(prev => (prev === 'signin' ? 'signup' : 'signin'))}
           />
         )}
-
-        <AdminButton />
       </div>
     </ErrorBoundary>
   );
