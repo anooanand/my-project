@@ -1,4 +1,4 @@
-// src/components/EnhancedWritingLayoutNSW.tsx - COMPLETE LAYOUT FIX
+// src/components/EnhancedWritingLayoutNSW.tsx - FINAL COMPLETE FIX
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { StructureGuideModal } from './StructureGuideModal';
@@ -73,133 +73,97 @@ interface EnhancedWritingLayoutNSWProps {
   setPanelVisible?: (visible: boolean) => void;
 }
 
-export function EnhancedWritingLayoutNSW({
-  content,
-  onChange,
-  textType,
-  initialPrompt,
-  wordCount,
-  onWordCountChange,
-  darkMode = false,
-  fontFamily = 'Inter',
-  fontSize = 16,
-  lineHeight = 1.6,
-  onSettingsChange,
-  isTimerRunning = false,
-  elapsedTime = 0,
-  onStartTimer,
-  onPauseTimer,
-  onResetTimer,
-  focusMode = false,
-  onToggleFocus,
-  showStructureGuide = false,
-  onToggleStructureGuide,
-  showTips = false,
-  onToggleTips,
-  analysis,
-  onAnalysisChange,
-  assistanceLevel,
-  onAssistanceLevelChange,
-  onSubmit,
-  selectedText,
-  onTextTypeChange,
-  onPopupCompleted,
-  popupFlowCompleted,
-  user,
-  openAIConnected,
-  openAILoading,
-  panelVisible,
-  setPanelVisible,
-  setPrompt,
-}: EnhancedWritingLayoutNSWProps) {
+export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
+  const {
+    content,
+    onChange,
+    textType,
+    initialPrompt,
+    wordCount,
+    onWordCountChange,
+    darkMode = false,
+    fontFamily = 'Inter',
+    fontSize = 16,
+    lineHeight = 1.6,
+    onSettingsChange,
+    isTimerRunning = false,
+    elapsedTime = 0,
+    onStartTimer,
+    onPauseTimer,
+    onResetTimer,
+    focusMode = false,
+    onToggleFocus,
+    showStructureGuide = false,
+    onToggleStructureGuide,
+    showTips = false,
+    onToggleTips,
+    analysis,
+    onAnalysisChange,
+    assistanceLevel,
+    onAssistanceLevelChange,
+    onSubmit,
+    selectedText,
+    onTextTypeChange,
+    onPopupCompleted,
+    popupFlowCompleted,
+    user,
+    openAIConnected,
+    openAILoading,
+    panelVisible = true,
+    setPanelVisible,
+    setPrompt,
+  } = props;
+
+  // State management
   const [generatedPrompt, setGeneratedPrompt] = useState<string | null>(null);
   const [customPromptInput, setCustomPromptInput] = useState<string | null>(null);
-
-  const effectivePrompt = generatedPrompt || customPromptInput || initialPrompt;
-
-  const [localContent, setLocalContent] = useState(content || '');
+  const [localContent, setLocalContent] = useState('');
   const [showSettings, setShowSettings] = useState(false);
   const [showNSWEvaluation, setShowNSWEvaluation] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [nswReport, setNswReport] = useState<any>(null);
   const [evaluationStatus, setEvaluationStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [evaluationProgress, setEvaluationProgress] = useState("");
-  const [isComponentReady, setIsComponentReady] = useState(false);
   const [showPromptOptionsModal, setShowPromptOptionsModal] = useState(false);
   const [hidePrompt, setHidePrompt] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const fontFamilies = [
-    { name: 'Inter', value: 'Inter', css: 'font-family: Inter, sans-serif;' },
-    { name: 'Georgia', value: 'Georgia', css: 'font-family: Georgia, serif;' },
-    { name: 'Times New Roman', value: 'Times New Roman', css: 'font-family: "Times New Roman", serif;' },
-    { name: 'Arial', value: 'Arial', css: 'font-family: Arial, sans-serif;' },
-    { name: 'Helvetica', value: 'Helvetica', css: 'font-family: Helvetica, sans-serif;' },
-    { name: 'Courier New', value: 'Courier New', css: 'font-family: "Courier New", monospace;' }
-  ];
+  // Get effective prompt
+  const effectivePrompt = generatedPrompt || customPromptInput || initialPrompt;
 
+  // Initialize content
   useEffect(() => {
-    try {
-      setIsComponentReady(true);
-    } catch (error) {
-      console.error('EnhancedWritingLayoutNSW: Initialization error:', error);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (content !== undefined && content !== localContent) {
+    if (content !== undefined) {
       setLocalContent(content);
     }
   }, [content]);
 
+  // Auto-save content changes
   useEffect(() => {
-    if (!initialPrompt && !generatedPrompt && !customPromptInput) {
-      setShowPromptOptionsModal(true);
-    }
-  }, [initialPrompt, generatedPrompt, customPromptInput]);
-
-  useEffect(() => {
-    if (effectivePrompt && !localContent.includes(effectivePrompt)) {
-      // Only set content to prompt if the writing area is empty
-      if (!localContent.trim()) {
-        setLocalContent(effectivePrompt);
-        if (onChange) {
-          onChange(effectivePrompt);
-        }
-      }
-    }
-  }, [effectivePrompt]);
-
-  useEffect(() => {
-    if (!isComponentReady) return;
-    
     const timer = setTimeout(() => {
-      try {
-        if (localContent !== content && onChange) {
-          onChange(localContent);
-        }
-      } catch (error) {
-        console.error('EnhancedWritingLayoutNSW: Auto-save error:', error);
+      if (localContent !== content && onChange) {
+        onChange(localContent);
       }
     }, 500);
-
     return () => clearTimeout(timer);
-  }, [localContent, content, onChange, isComponentReady]);
+  }, [localContent, content, onChange]);
 
+  // Update word count
   useEffect(() => {
-    if (!isComponentReady) return;
-    
-    try {
-      const words = localContent.trim().split(/\s+/).filter(word => word.length > 0);
-      const newWordCount = words.length;
-      if (newWordCount !== wordCount && onWordCountChange) {
-        onWordCountChange(newWordCount);
-      }
-    } catch (error) {
-      console.error('EnhancedWritingLayoutNSW: Word count error:', error);
+    const words = localContent.trim().split(/\s+/).filter(word => word.length > 0);
+    const newWordCount = words.length;
+    if (newWordCount !== wordCount && onWordCountChange) {
+      onWordCountChange(newWordCount);
     }
-  }, [localContent, wordCount, onWordCountChange, isComponentReady]);
+  }, [localContent, wordCount, onWordCountChange]);
+
+  // Show prompt modal if no prompt exists
+  useEffect(() => {
+    if (!effectivePrompt) {
+      setShowPromptOptionsModal(true);
+    }
+  }, [effectivePrompt]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -222,38 +186,40 @@ export function EnhancedWritingLayoutNSW({
   }, [textType, setPrompt]);
 
   const handleCustomPromptInput = useCallback((promptText: string) => {
-      setCustomPromptInput(promptText);
-      if (setPrompt) {
-        setPrompt(promptText);
-      }
-      setShowPromptOptionsModal(false);
+    setCustomPromptInput(promptText);
+    if (setPrompt) {
+      setPrompt(promptText);
+    }
+    setShowPromptOptionsModal(false);
   }, [setPrompt]);
 
   const handleContentChange = useCallback((newContent: string) => {
-    try {
-      setLocalContent(newContent);
-      
-      if (newContent.trim().length > 0 && !isTimerRunning && elapsedTime === 0 && onStartTimer) {
-        onStartTimer();
+    setLocalContent(newContent);
+    
+    if (newContent.trim().length > 0 && !isTimerRunning && elapsedTime === 0 && onStartTimer) {
+      onStartTimer();
+    }
+    
+    if (eventBus && detectNewParagraphs) {
+      const newParagraphs = detectNewParagraphs(content, newContent);
+      if (newParagraphs.length > 0) {
+        eventBus.emit('newParagraphsDetected', { paragraphs: newParagraphs, textType });
       }
-      
-      if (eventBus && detectNewParagraphs) {
-        const newParagraphs = detectNewParagraphs(content, newContent);
-        if (newParagraphs.length > 0) {
-          eventBus.emit('newParagraphsDetected', { paragraphs: newParagraphs, textType });
-        }
-      }
-    } catch (error) {
-      console.error('EnhancedWritingLayoutNSW: Content change error:', error);
     }
   }, [content, isTimerRunning, elapsedTime, onStartTimer, textType]);
 
-  const handleNSWSubmit = useCallback(async (contentToSubmit: string, typeToSubmit: string) => {
-    if (!contentToSubmit.trim()) {
+  const handleSubmitForEvaluation = useCallback(async () => {
+    if (!localContent.trim()) {
       alert("Please write something before submitting for evaluation.");
       return;
     }
 
+    if (onSubmit) {
+      onSubmit(localContent);
+      return;
+    }
+
+    // Fallback submission logic
     setEvaluationStatus("loading");
     setShowNSWEvaluation(true);
     setEvaluationProgress("Analyzing your writing...");
@@ -263,13 +229,9 @@ export function EnhancedWritingLayoutNSW({
       setTimeout(() => setEvaluationProgress("Evaluating content and ideas..."), 2000);
       setTimeout(() => setEvaluationProgress("Generating detailed feedback..."), 3000);
 
-      if (!NSWEvaluationReportGenerator) {
-        throw new Error("NSW Evaluation system is not available");
-      }
-
       const report = await NSWEvaluationReportGenerator.generateReport({
-        essayContent: contentToSubmit,
-        textType: typeToSubmit,
+        essayContent: localContent,
+        textType: textType,
         prompt: effectivePrompt || '',
         wordCount: wordCount || 0,
         targetWordCountMin: 200,
@@ -277,7 +239,6 @@ export function EnhancedWritingLayoutNSW({
       });
       
       setNswReport(report);
-      convertReportToAnalysis(report);
       setShowNSWEvaluation(false);
       setShowReportModal(true);
       setEvaluationStatus("success");
@@ -285,35 +246,9 @@ export function EnhancedWritingLayoutNSW({
       console.error("NSW evaluation error:", error);
       setEvaluationStatus("error");
       setShowNSWEvaluation(false);
-      alert(`There was an error evaluating your writing: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`);
+      alert(`There was an error evaluating your writing. Please try again.`);
     }
-  }, [effectivePrompt, wordCount]);
-
-  const convertReportToAnalysis = useCallback((report: any) => {
-    try {
-      if (!report) {
-        throw new Error("Report is null or undefined");
-      }
-
-      const convertedAnalysis: DetailedFeedback = {
-        id: report.id || `nsw-${Date.now()}`,
-        overallScore: report.overallScore || 0,
-        criteriaScores: report.criteriaScores || {},
-        feedbackItems: report.feedbackItems || [],
-        strengths: report.strengths || [],
-        areasForImprovement: report.areasForImprovement || [],
-        detailedAnalysis: report.detailedAnalysis || '',
-        band: report.band || { level: 0, description: '' },
-        generatedAt: report.generatedAt || new Date().toISOString(),
-      };
-
-      if (onAnalysisChange) {
-        onAnalysisChange(convertedAnalysis);
-      }
-    } catch (error) {
-      console.error("Error converting report to analysis:", error);
-    }
-  }, [onAnalysisChange]);
+  }, [localContent, textType, effectivePrompt, wordCount, onSubmit]);
 
   const handleApplyFix = useCallback((fix: LintFix) => {
     try {
@@ -325,39 +260,11 @@ export function EnhancedWritingLayoutNSW({
     }
   }, [localContent, handleContentChange]);
 
-  const handleCloseReportModal = () => {
-    setShowReportModal(false);
-    setNswReport(null);
-  };
-
-  const handleCloseNSWEvaluation = () => {
-    setShowNSWEvaluation(false);
-    setEvaluationStatus("idle");
-    setEvaluationProgress("");
-  };
-
-  const handleSubmitForEvaluation = () => {
-    if (onSubmit) {
-      onSubmit(localContent);
-    } else {
-      handleNSWSubmit(localContent, textType);
-    }
-  };
-
   const hasContent = localContent.trim().length > 0;
-  const showWordCountWarning = (wordCount || 0) < 200 || (wordCount || 0) > 300;
-
-  if (!isComponentReady) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-600"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
-      {/* Header - matches the correct layout */}
+      {/* Header */}
       <header className="flex items-center justify-between px-6 py-3 bg-white border-b border-gray-200">
         <div className="flex items-center space-x-4">
           <PenTool className="text-purple-500" size={24} />
@@ -375,6 +282,7 @@ export function EnhancedWritingLayoutNSW({
             <button 
               onClick={onStartTimer}
               className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
+              title="Start Timer"
             >
               <Play size={18} />
             </button>
@@ -383,6 +291,7 @@ export function EnhancedWritingLayoutNSW({
             <button 
               onClick={onPauseTimer}
               className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
+              title="Pause Timer"
             >
               <Pause size={18} />
             </button>
@@ -391,6 +300,7 @@ export function EnhancedWritingLayoutNSW({
             <button 
               onClick={onResetTimer}
               className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
+              title="Reset Timer"
             >
               <RotateCcw size={18} />
             </button>
@@ -398,12 +308,14 @@ export function EnhancedWritingLayoutNSW({
           <button
             onClick={onToggleFocus}
             className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
+            title="Toggle Focus Mode"
           >
             {focusMode ? <EyeOff size={18} /> : <Eye size={18} />}
           </button>
           <button
             onClick={() => setShowSettings(!showSettings)}
             className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
+            title="Settings"
           >
             <Settings size={18} />
           </button>
@@ -421,9 +333,12 @@ export function EnhancedWritingLayoutNSW({
                 onChange={(e) => onSettingsChange && onSettingsChange({ fontFamily: e.target.value })}
                 className="w-full p-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               >
-                {fontFamilies.map(font => (
-                  <option key={font.value} value={font.value}>{font.name}</option>
-                ))}
+                <option value="Inter">Inter</option>
+                <option value="Georgia">Georgia</option>
+                <option value="Times New Roman">Times New Roman</option>
+                <option value="Arial">Arial</option>
+                <option value="Helvetica">Helvetica</option>
+                <option value="Courier New">Courier New</option>
               </select>
             </div>
             <div>
@@ -449,7 +364,7 @@ export function EnhancedWritingLayoutNSW({
         </div>
       )}
 
-      {/* Main Content Area - matches the correct layout */}
+      {/* Main Content Area */}
       <div className="flex-1 flex min-h-0">
         {/* Left Side - Prompt and Writing Area */}
         <div className="flex-1 flex flex-col bg-white">
@@ -506,7 +421,7 @@ export function EnhancedWritingLayoutNSW({
               ref={textareaRef}
               value={localContent}
               onChange={(e) => handleContentChange(e.target.value)}
-              className="w-full h-full p-4 text-base leading-relaxed resize-none focus:outline-none border border-gray-200 rounded-lg"
+              className="w-full h-full p-4 text-base leading-relaxed resize-none focus:outline-none border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               style={{ fontFamily, fontSize: `${fontSize}px`, lineHeight }}
               placeholder="Start writing here..."
             />
@@ -515,17 +430,22 @@ export function EnhancedWritingLayoutNSW({
           {/* Footer with Submit Button */}
           <footer className="p-4 border-t border-gray-200 bg-white">
             <div className="flex items-center justify-center">
-              <NSWStandaloneSubmitSystem 
-                content={localContent}
-                textType={textType}
-                onSubmit={handleSubmitForEvaluation}
+              <button
+                onClick={handleSubmitForEvaluation}
                 disabled={!hasContent}
-              />
+                className={`px-8 py-3 rounded-lg font-medium text-white transition-colors ${
+                  hasContent 
+                    ? 'bg-purple-600 hover:bg-purple-700' 
+                    : 'bg-gray-400 cursor-not-allowed'
+                }`}
+              >
+                Submit for NSW Evaluation
+              </button>
             </div>
           </footer>
         </div>
 
-        {/* Right Sidebar - AI Coach Panel (narrower) */}
+        {/* Right Sidebar - AI Coach Panel */}
         {!focusMode && (
           <div className="w-80 border-l border-gray-200">
             <EnhancedCoachPanel
@@ -542,12 +462,27 @@ export function EnhancedWritingLayoutNSW({
       </div>
 
       {/* Modals */}
-      {showStructureGuide && <StructureGuideModal textType={textType} onClose={onToggleStructureGuide} darkMode={darkMode} />}
-      {showTips && <TipsModal textType={textType} onClose={onToggleTips} darkMode={darkMode} />}
+      {showStructureGuide && (
+        <StructureGuideModal 
+          textType={textType} 
+          onClose={() => onToggleStructureGuide && onToggleStructureGuide()} 
+          darkMode={darkMode} 
+        />
+      )}
+      {showTips && (
+        <TipsModal 
+          textType={textType} 
+          onClose={() => onToggleTips && onToggleTips()} 
+          darkMode={darkMode} 
+        />
+      )}
       {showReportModal && nswReport && (
         <ReportModal 
           report={nswReport} 
-          onClose={handleCloseReportModal} 
+          onClose={() => {
+            setShowReportModal(false);
+            setNswReport(null);
+          }} 
           darkMode={darkMode} 
         />
       )}
@@ -559,7 +494,11 @@ export function EnhancedWritingLayoutNSW({
             <p className="text-gray-600">{evaluationProgress}</p>
             {evaluationStatus === 'error' && (
               <button 
-                onClick={handleCloseNSWEvaluation}
+                onClick={() => {
+                  setShowNSWEvaluation(false);
+                  setEvaluationStatus("idle");
+                  setEvaluationProgress("");
+                }}
                 className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
               >
                 Close
