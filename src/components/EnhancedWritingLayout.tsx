@@ -362,20 +362,21 @@ export function EnhancedWritingLayout({
   const currentContent = localContent || content;
   const hasContent = currentContent && currentContent.trim().length > 0;
 
-  // Set a default prompt for demonstration
+  // Load prompt from localStorage
   useEffect(() => {
-    if (!currentPrompt) {
-      setCurrentPrompt("**Prompt: The Mysterious Key** One sunny afternoon, while exploring your grandmother's attic, you stumble upon an old, dusty chest that has been locked for decades. Next to it lies a beautiful, ornate key that seems to shimmer in the light. As you pick up the key, a strange feeling washes over you, as if it holds a secret waiting to be discovered. What could be inside the chest? Is it filled with treasures, forgotten memories, or perhaps something magical? As you unlock the chest, you hear a faint whisper coming from within. What do you find inside, and how does it change your life? Consider the emotions you feel as you uncover the mystery. Who will you share this discovery with, and what adventure will follow? Let your imagination lead you into the unknown!");
+    const storedPrompt = localStorage.getItem('generatedPrompt');
+    if (storedPrompt) {
+      setCurrentPrompt(storedPrompt);
     }
-  }, [currentPrompt]);
+  }, []);
 
   return (
     <div className={`flex h-screen transition-colors duration-300 ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
       {/* Left side - Writing Area Content */}
-      <div className="flex-1 flex flex-col"> 
+      <div className="flex-1 flex flex-col overflow-hidden"> 
         
-        {/* Enhanced Writing Prompt Section */}
-        <div className={`transition-all duration-300 border-b shadow-sm ${
+        {/* Enhanced Writing Prompt Section - FIXED: Removed duplicate "Prompt:" prefix */}
+        <div className={`transition-all duration-300 border-b shadow-sm flex-shrink-0 ${
           isPromptCollapsed ? 'h-16' : 'min-h-[140px]'
         } ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-blue-50 border-blue-200'}`}>
           <div className="flex items-center justify-between p-4">
@@ -404,7 +405,7 @@ export function EnhancedWritingLayout({
             </button>
           </div>
 
-          {/* Prompt Content */}
+          {/* Prompt Content - FIXED: Removed "Prompt:" prefix to avoid duplication */}
           {!isPromptCollapsed && (
             <div className="px-4 pb-4">
               <div className={`p-4 rounded-lg border ${
@@ -413,15 +414,15 @@ export function EnhancedWritingLayout({
                   : 'bg-white border-blue-200 text-blue-900'
               }`}>
                 <p className="text-sm leading-relaxed">
-                  <strong>Prompt:</strong> {currentPrompt}
+                  {currentPrompt}
                 </p>
               </div>
             </div>
           )}
         </div>
 
-        {/* Enhanced Writing Toolbar - RESTORED FROM OLD VERSION */}
-        <div className={`px-4 py-3 border-b transition-colors duration-300 ${
+        {/* Enhanced Writing Toolbar */}
+        <div className={`px-4 py-3 border-b transition-colors duration-300 flex-shrink-0 ${
           darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
         }`}>
           <div className="flex items-center justify-between">
@@ -451,53 +452,34 @@ export function EnhancedWritingLayout({
                 <span>Tips</span>
               </button>
 
-              <button
-                onClick={() => setExamMode(!examMode)}
-                className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
-                  examMode
-                    ? 'bg-red-500 text-white hover:bg-red-600'
-                    : 'bg-gray-500 text-white hover:bg-gray-600'
-                }`}
-              >
-                <Target className="w-4 h-4" />
-                <span>Exam Mode</span>
-              </button>
-              
+              {/* Focus Mode Toggle */}
               <button
                 onClick={() => setFocusMode(!focusMode)}
                 className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
-                  focusMode 
-                    ? 'bg-gray-700 text-white hover:bg-gray-800' 
-                    : 'bg-gray-600 text-white hover:bg-gray-700'
+                  focusMode
+                    ? 'bg-indigo-500 text-white'
+                    : darkMode
+                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
+                title="Focus Mode"
               >
-                {focusMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                {focusMode ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
                 <span>Focus</span>
               </button>
             </div>
 
-            {/* Right: Enhanced Timer, Stats and Settings */}
+            {/* Right: Timer, Word Count, Settings */}
             <div className="flex items-center space-x-3">
-              {/* Enhanced Writing Timer */}
+              {/* Timer */}
               <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg border shadow-sm ${
-                darkMode 
-                  ? 'border-gray-600 bg-gray-700' 
-                  : 'border-gray-300 bg-gray-50'
+                darkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-300 bg-gray-50'
               }`}>
-                <Clock className={`w-5 h-5 ${
-                  isTimerRunning 
-                    ? 'text-green-500' 
-                    : darkMode ? 'text-blue-400' : 'text-blue-600'
-                }`} />
-                <span className={`text-lg font-bold font-mono ${
-                  isTimerRunning 
-                    ? 'text-green-500' 
-                    : darkMode ? 'text-gray-100' : 'text-gray-800'
-                }`}>
+                <Clock className={`w-4 h-4 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
+                <span className={`text-sm font-mono font-semibold ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>
                   {formatTime(elapsedTime)}
                 </span>
                 
-                {/* Timer Controls */}
                 <div className="flex items-center space-x-1">
                   {!isTimerRunning ? (
                     <button
@@ -584,7 +566,7 @@ export function EnhancedWritingLayout({
 
           {/* Settings Panel */}
           {showSettings && (
-            <div className={`border-t px-4 py-3 transition-colors duration-300 ${
+            <div className={`border-t px-4 py-3 transition-colors duration-300 mt-3 ${
               darkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
             }`}>
               <div className="flex items-center justify-between mb-3">
@@ -674,11 +656,10 @@ export function EnhancedWritingLayout({
           )}
         </div>
 
-        {/* ORIGINAL SIMPLE WRITING AREA - RESTORED FROM OLD VERSION */}
-        <div className={`flex-1 relative transition-colors duration-300 ${
+        {/* Writing Area with Enhanced UX */}
+        <div className={`flex-1 relative transition-colors duration-300 overflow-hidden ${
           darkMode ? 'bg-gray-800' : 'bg-white'
         } ${focusMode ? 'bg-opacity-95' : ''}`}>
-          {/* Writing Area with Enhanced UX - ORIGINAL TEXTAREA */}
           <textarea
             className={`w-full h-full p-6 resize-none focus:outline-none transition-all duration-300 ${
               darkMode 
@@ -714,8 +695,8 @@ export function EnhancedWritingLayout({
           )}
         </div>
 
-        {/* Enhanced Submit Button with Better UX */}
-        <div className={`p-4 border-t transition-colors duration-300 ${
+        {/* Enhanced Submit Button - FIXED: Made always visible */}
+        <div className={`p-4 border-t transition-colors duration-300 flex-shrink-0 ${
           darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
         }`}>
           <div className="flex items-center space-x-3">
@@ -752,7 +733,7 @@ export function EnhancedWritingLayout({
         </div>
       </div>
 
-      {/* Right side - Enhanced Coach Panel (PRESERVED ORIGINAL FUNCTIONALITY) */}
+      {/* Right side - Enhanced Coach Panel - FIXED: Proper positioning */}
       <div className={`w-96 flex-shrink-0 border-l transition-colors duration-300 ${
         darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
       }`}>
