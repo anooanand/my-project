@@ -346,7 +346,11 @@ export default function WritingWorkspaceFixed() {
       <div className="flex-1 flex overflow-hidden">
         {/* Left Panel - Writing Area */}
         <div className="flex-1 flex flex-col">
-          <DynamicPromptDisplay prompt={prompt} />
+          {/* Prompt */}
+          <div className="bg-blue-50 border-b border-blue-200 p-4">
+            <h2 className="font-semibold text-blue-900 mb-2">Your Writing Prompt</h2>
+            <p className="text-sm text-blue-800 leading-relaxed">{prompt}</p>
+          </div>
 
           {/* Writing Area */}
           <div className="flex-1 p-6">
@@ -357,31 +361,31 @@ export default function WritingWorkspaceFixed() {
                 onProgressUpdate={onProgressUpdate}
                 className="h-full"
               />
+              
+              {/* Manual Submit Button - For direct testing */}
+              <div className="absolute bottom-4 left-4 right-4">
+                <button
+                  onClick={onNSWSubmit}
+                  disabled={status === "loading" || wordCount < 50}
+                  className={`w-full py-3 px-6 rounded-lg font-semibold text-white transition-all duration-200 ${
+                    status === "loading" 
+                      ? 'bg-gray-400 cursor-not-allowed' 
+                      : wordCount < 50
+                      ? 'bg-gray-300 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-lg hover:shadow-xl'
+                  }`}
+                >
+                  {status === "loading" ? (
+                    <div className="flex items-center justify-center">
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3"></div>
+                      Generating NSW Assessment Report...
+                    </div>
+                  ) : (
+                    `Submit for NSW Evaluation (${wordCount} words)`
+                  )}
+                </button>
+              </div>
             </div>
-          </div>
-
-          {/* Submit for NSW Evaluation Button - Placed at the bottom of the left panel */}
-          <div className="p-6 pt-0">
-            <button
-              onClick={onNSWSubmit}
-              disabled={status === "loading" || wordCount < 50}
-              className={`w-full py-3 px-6 rounded-lg font-semibold text-white transition-all duration-200 ${
-                status === "loading" 
-                  ? 'bg-gray-400 cursor-not-allowed' 
-                  : wordCount < 50
-                  ? 'bg-gray-300 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-lg hover:shadow-xl'
-              }`}
-            >
-              {status === "loading" ? (
-                <div className="flex items-center justify-center">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3"></div>
-                  Generating NSW Assessment Report...
-                </div>
-              ) : (
-                `Submit for NSW Evaluation (${wordCount} words)`
-              )}
-            </button>
           </div>
         </div>
 
