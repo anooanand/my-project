@@ -1,6 +1,6 @@
 import React from "react";
 import { InteractiveTextEditor, EditorHandle } from "../components/InteractiveTextEditor";
-import { FixedEnhancedTabbedCoachPanel } from "../components/EnhancedTabbedCoachPanel";
+import { TabbedCoachPanel } from "../components/TabbedCoachPanel";
 import { CoachProvider } from "../components/CoachProvider";
 import { WritingStatusBar } from "../components/WritingStatusBar";
 import { NSWStandaloneSubmitSystem } from "../components/NSWStandaloneSubmitSystem";
@@ -10,15 +10,6 @@ import { evaluateEssay, saveDraft } from "../lib/api";
 import { validateDetailedFeedback } from "../types/feedback.validate";
 import { eventBus } from "../lib/eventBus";
 import { detectNewParagraphs } from "../lib/paragraphDetection";
-import DynamicPromptDisplay from "../components/DynamicPromptDisplay";
-import {
-  Play,
-  Pause,
-  RotateCcw,
-  Eye,
-  EyeOff,
-  Clock,
-} from 'lucide-react';
 
 export default function WritingWorkspaceFixed() {
   const editorRef = React.useRef<EditorHandle>(null);
@@ -27,30 +18,17 @@ export default function WritingWorkspaceFixed() {
   const [status, setStatus] = React.useState<"idle"|"loading"|"success"|"error">("idle");
   const [err, setErr] = React.useState<string|undefined>(undefined);
   const [currentText, setCurrentText] = React.useState<string>("");
-  const [textType, setTextType] = React.useState<
-    "narrative" | "persuasive" | "informative"
-  >("narrative");
+  const [textType, setTextType] = React.useState<'narrative' | 'persuasive' | 'informative'>('narrative');
   const [targetWordCount, setTargetWordCount] = React.useState<number>(300);
   const [wordCount, setWordCount] = React.useState<number>(0);
-  const [showNSWEvaluation, setShowNSWEvaluation] = React.useState<boolean>(
-    false
-  );
+  const [showNSWEvaluation, setShowNSWEvaluation] = React.useState<boolean>(false);
   const prevTextRef = React.useRef<string>("");
-
-  // Timer states
-  const [isTimerRunning, setIsTimerRunning] = React.useState(false);
-  const [elapsedTime, setElapsedTime] = React.useState(0);
-  const [startTime, setStartTime] = React.useState<number | null>(null);
-  const timerRef = React.useRef<NodeJS.Timeout | null>(null);
-
-  // Focus mode state
-  const [focusMode, setFocusMode] = React.useState(false);
 
   const draftId = React.useRef<string>(
     `draft-${
-      globalThis.crypto && typeof globalThis.crypto.randomUUID === "function"
+      (globalThis.crypto && typeof globalThis.crypto.randomUUID === "function")
         ? globalThis.crypto.randomUUID()
-        : Date.now().toString(36) + Math.random().toString(36).slice(2)
+        : (Date.now().toString(36) + Math.random().toString(36).slice(2))
     }`
   );
   const [version, setVersion] = React.useState(0);
@@ -58,20 +36,14 @@ export default function WritingWorkspaceFixed() {
   // Listen for submit events from AppContent
   React.useEffect(() => {
     const handleSubmitEvent = (event: CustomEvent) => {
-      console.log("📨 WritingWorkspace: Received submit event:", event.detail);
+      console.log('📨 WritingWorkspace: Received submit event:', event.detail);
       onNSWSubmit();
     };
 
-    window.addEventListener(
-      "submitForEvaluation",
-      handleSubmitEvent as EventListener
-    );
-
+    window.addEventListener('submitForEvaluation', handleSubmitEvent as EventListener);
+    
     return () => {
-      window.removeEventListener(
-        "submitForEvaluation",
-        handleSubmitEvent as EventListener
-      );
+      window.removeEventListener('submitForEvaluation', handleSubmitEvent as EventListener);
     };
   }, []);
 
@@ -81,21 +53,15 @@ export default function WritingWorkspaceFixed() {
       const text = editorRef.current?.getText() || "";
       if (text !== currentText) {
         setCurrentText(text);
-
+        
         // Update word count
-        const words = text
-          .trim()
-          .split(/\s+/)
-          .filter((word) => word.length > 0);
+        const words = text.trim().split(/\s+/).filter(word => word.length > 0);
         setWordCount(words.length);
 
         // Trigger coach feedback for new paragraphs
         const events = detectNewParagraphs(prevTextRef.current, text);
         if (events.length) {
-          console.log(
-            "Emitting paragraph.ready event:",
-            events[events.length - 1]
-          );
+          console.log("Emitting paragraph.ready event:", events[events.length - 1]);
           eventBus.emit("paragraph.ready", events[events.length - 1]);
         }
         prevTextRef.current = text;
@@ -105,78 +71,27 @@ export default function WritingWorkspaceFixed() {
     return () => clearInterval(interval);
   }, [currentText]);
 
-  // Timer functions
-  const startTimer = React.useCallback(() => {
-    if (!isTimerRunning) {
-      const now = Date.now();
-      setStartTime(now - elapsedTime * 1000);
-      setIsTimerRunning(true);
-    }
-  }, [isTimerRunning, elapsedTime]);
-
-  const pauseTimer = React.useCallback(() => {
-    setIsTimerRunning(false);
-  }, []);
-
-  const resetTimer = React.useCallback(() => {
-    setIsTimerRunning(false);
-    setElapsedTime(0);
-    setStartTime(null);
-  }, []);
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  // Timer effect
-  React.useEffect(() => {
-    if (isTimerRunning && startTime) {
-      timerRef.current = setInterval(() => {
-        const now = Date.now();
-        const elapsed = Math.floor((now - startTime) / 1000);
-        setElapsedTime(elapsed);
-      }, 1000);
-    } else {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
-    };
-
-    return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
-    };
-  }, [isTimerRunning, startTime]);
-
   // NSW Evaluation Submit Handler
   async function onNSWSubmit() {
-    console.log("🎯 NSW Submit triggered");
+    console.log('🎯 NSW Submit triggered');
     setStatus("loading");
     setErr(undefined);
     setShowNSWEvaluation(true);
-
+    
     try {
       const text = editorRef.current?.getText() || currentText || "";
       if (!text.trim()) {
-        throw new Error(
-          "Please write some content before submitting for evaluation"
-        );
+        throw new Error("Please write some content before submitting for evaluation");
       }
-
-      console.log("NSW Evaluation initiated for:", {
-        text: text.substring(0, 100) + "...",
-        textType,
-        wordCount: text
-          .trim()
-          .split(/\s+/)
-          .filter((w) => w.length > 0).length,
+      
+      console.log("NSW Evaluation initiated for:", { 
+        text: text.substring(0, 100) + "...", 
+        textType, 
+        wordCount: text.trim().split(/\s+/).filter(w => w.length > 0).length 
       });
+      
     } catch (e: any) {
-      console.error("NSW Submit error:", e);
+      console.error('NSW Submit error:', e);
       setStatus("error");
       setErr(e?.message || "Failed to initiate NSW evaluation");
       setShowNSWEvaluation(false);
@@ -188,7 +103,7 @@ export default function WritingWorkspaceFixed() {
     console.log("NSW Evaluation completed:", report);
     setNswReport(report);
     setStatus("success");
-
+    
     // Convert NSW report to DetailedFeedback format for compatibility
     const convertedAnalysis: DetailedFeedback = {
       overallScore: report.overallScore || 0,
@@ -196,43 +111,34 @@ export default function WritingWorkspaceFixed() {
         ideasContent: {
           score: Math.round((report.domains?.contentAndIdeas?.score || 0) / 5),
           weight: 30,
-          strengths: [
-            report.domains?.contentAndIdeas?.feedback ||
-              "Good content development",
-          ],
-          improvements: report.domains?.contentAndIdeas?.improvements || [],
+          strengths: [report.domains?.contentAndIdeas?.feedback || "Good content development"],
+          improvements: report.domains?.contentAndIdeas?.improvements || []
         },
         structureOrganization: {
           score: Math.round((report.domains?.textStructure?.score || 0) / 5),
           weight: 25,
-          strengths: [
-            report.domains?.textStructure?.feedback || "Clear structure",
-          ],
-          improvements: report.domains?.textStructure?.improvements || [],
+          strengths: [report.domains?.textStructure?.feedback || "Clear structure"],
+          improvements: report.domains?.textStructure?.improvements || []
         },
         languageVocab: {
           score: Math.round((report.domains?.languageFeatures?.score || 0) / 5),
           weight: 25,
-          strengths: [
-            report.domains?.languageFeatures?.feedback || "Good language use",
-          ],
-          improvements: report.domains?.languageFeatures?.improvements || [],
+          strengths: [report.domains?.languageFeatures?.feedback || "Good language use"],
+          improvements: report.domains?.languageFeatures?.improvements || []
         },
         spellingPunctuationGrammar: {
           score: Math.round((report.domains?.conventions?.score || 0) / 5),
           weight: 20,
-          strengths: [
-            report.domains?.conventions?.feedback || "Accurate conventions",
-          ],
-          improvements: report.domains?.conventions?.improvements || [],
-        },
+          strengths: [report.domains?.conventions?.feedback || "Accurate conventions"],
+          improvements: report.domains?.conventions?.improvements || []
+        }
       },
       grammarCorrections: report.grammarCorrections || [],
       vocabularyEnhancements: report.vocabularyEnhancements || [],
       id: report.id || `nsw-${Date.now()}`,
-      assessmentId: report.assessmentId,
+      assessmentId: report.assessmentId
     };
-
+    
     setAnalysis(convertedAnalysis);
   }
 
@@ -241,7 +147,7 @@ export default function WritingWorkspaceFixed() {
   }
 
   function onProgressUpdate(metrics: any) {
-    console.log("Progress updated:", metrics);
+    console.log('Progress updated:', metrics);
   }
 
   // Simple autosave
@@ -272,8 +178,7 @@ export default function WritingWorkspaceFixed() {
     }
   }, []);
 
-  const prompt =
-    "The Secret Door in the Library: During a rainy afternoon, you decide to explore the dusty old library in your town that you\\\"ve never visited before. As you wander through the aisles, you discover a hidden door behind a bookshelf. It\\\"s slightly ajar, and a faint, warm light spills out from the crack. What happens when you push the door open? Describe the world you enter and the adventures that await you inside. Who do you meet, and what challenges do you face? How does this experience change you by the time you return to the library? Let your imagination run wild as you take your reader on a journey through this mysterious door!";
+  const prompt = "The Secret Door in the Library: During a rainy afternoon, you decide to explore the dusty old library in your town that you've never visited before. As you wander through the aisles, you discover a hidden door behind a bookshelf. It's slightly ajar, and a faint, warm light spills out from the crack. What happens when you push the door open? Describe the world you enter and the adventures that await you inside. Who do you meet, and what challenges do you face? How does this experience change you by the time you return to the library? Let your imagination run wild as you take your reader on a journey through this mysterious door!";
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
@@ -301,43 +206,6 @@ export default function WritingWorkspaceFixed() {
               targetWordCount={targetWordCount}
               status={status}
             />
-            {/* Timer Controls */}
-            <div className="flex items-center space-x-2 text-gray-600">
-              <Clock size={18} />
-              <span className="text-sm font-mono">{formatTime(elapsedTime)}</span>
-              {!isTimerRunning ? (
-                <button 
-                  onClick={startTimer}
-                  className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
-                  title="Start Timer"
-                >
-                  <Play size={18} />
-                </button>
-              ) : (
-                <button 
-                  onClick={pauseTimer}
-                  className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
-                  title="Pause Timer"
-                >
-                  <Pause size={18} />
-                </button>
-              )}
-              <button 
-                onClick={resetTimer}
-                className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
-                title="Reset Timer"
-              >
-                <RotateCcw size={18} />
-              </button>
-            </div>
-            {/* Focus Mode Toggle */}
-            <button
-              onClick={() => setFocusMode(!focusMode)}
-              className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
-              title="Toggle Focus Mode"
-            >
-              {focusMode ? <EyeOff size={18} /> : <Eye size={18} />}
-            </button>
           </div>
         </div>
       </div>
@@ -422,14 +290,12 @@ export default function WritingWorkspaceFixed() {
           ) : (
             /* Coach Panel */
             <div className="h-full">
-              <CoachProvider>
-                <FixedEnhancedTabbedCoachPanel 
-                  analysis={analysis}
-                  onApplyFix={onApplyFix}
-                  content={currentText}
-                  textType={textType}
-                />
-              </CoachProvider>
+              <TabbedCoachPanel 
+                analysis={analysis}
+                onApplyFix={onApplyFix}
+                content={currentText}
+                textType={textType}
+              />
             </div>
           )}
         </div>
