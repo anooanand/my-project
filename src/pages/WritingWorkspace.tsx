@@ -1,6 +1,6 @@
 import React from "react";
 import { InteractiveTextEditor, EditorHandle } from "../components/InteractiveTextEditor";
-import { TabbedCoachPanel } from "../components/TabbedCoachPanel";
+import { FixedEnhancedTabbedCoachPanel } from "../components/EnhancedTabbedCoachPanel";
 import { CoachProvider } from "../components/CoachProvider";
 import { WritingStatusBar } from "../components/WritingStatusBar";
 import { NSWStandaloneSubmitSystem } from "../components/NSWStandaloneSubmitSystem";
@@ -10,6 +10,7 @@ import { evaluateEssay, saveDraft } from "../lib/api";
 import { validateDetailedFeedback } from "../types/feedback.validate";
 import { eventBus } from "../lib/eventBus";
 import { detectNewParagraphs } from "../lib/paragraphDetection";
+import DynamicPromptDisplay from "../components/DynamicPromptDisplay";
 
 export default function WritingWorkspaceFixed() {
   const editorRef = React.useRef<EditorHandle>(null);
@@ -18,17 +19,21 @@ export default function WritingWorkspaceFixed() {
   const [status, setStatus] = React.useState<"idle"|"loading"|"success"|"error">("idle");
   const [err, setErr] = React.useState<string|undefined>(undefined);
   const [currentText, setCurrentText] = React.useState<string>("");
-  const [textType, setTextType] = React.useState<'narrative' | 'persuasive' | 'informative'>('narrative');
+  const [textType, setTextType] = React.useState<
+    "narrative" | "persuasive" | "informative"
+  >("narrative");
   const [targetWordCount, setTargetWordCount] = React.useState<number>(300);
   const [wordCount, setWordCount] = React.useState<number>(0);
-  const [showNSWEvaluation, setShowNSWEvaluation] = React.useState<boolean>(false);
+  const [showNSWEvaluation, setShowNSWEvaluation] = React.useState<boolean>(
+    false
+  );
   const prevTextRef = React.useRef<string>("");
 
   const draftId = React.useRef<string>(
     `draft-${
-      (globalThis.crypto && typeof globalThis.crypto.randomUUID === "function")
+      globalThis.crypto && typeof globalThis.crypto.randomUUID === "function"
         ? globalThis.crypto.randomUUID()
-        : (Date.now().toString(36) + Math.random().toString(36).slice(2))
+        : Date.now().toString(36) + Math.random().toString(36).slice(2)
     }`
   );
   const [version, setVersion] = React.useState(0);
@@ -36,14 +41,20 @@ export default function WritingWorkspaceFixed() {
   // Listen for submit events from AppContent
   React.useEffect(() => {
     const handleSubmitEvent = (event: CustomEvent) => {
-      console.log('📨 WritingWorkspace: Received submit event:', event.detail);
+      console.log("📨 WritingWorkspace: Received submit event:", event.detail);
       onNSWSubmit();
     };
 
-    window.addEventListener('submitForEvaluation', handleSubmitEvent as EventListener);
-    
+    window.addEventListener(
+      "submitForEvaluation",
+      handleSubmitEvent as EventListener
+    );
+
     return () => {
-      window.removeEventListener('submitForEvaluation', handleSubmitEvent as EventListener);
+      window.removeEventListener(
+        "submitForEvaluation",
+        handleSubmitEvent as EventListener
+      );
     };
   }, []);
 
@@ -53,15 +64,21 @@ export default function WritingWorkspaceFixed() {
       const text = editorRef.current?.getText() || "";
       if (text !== currentText) {
         setCurrentText(text);
-        
+
         // Update word count
-        const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+        const words = text
+          .trim()
+          .split(/\s+/)
+          .filter((word) => word.length > 0);
         setWordCount(words.length);
 
         // Trigger coach feedback for new paragraphs
         const events = detectNewParagraphs(prevTextRef.current, text);
         if (events.length) {
-          console.log("Emitting paragraph.ready event:", events[events.length - 1]);
+          console.log(
+            "Emitting paragraph.ready event:",
+            events[events.length - 1]
+          );
           eventBus.emit("paragraph.ready", events[events.length - 1]);
         }
         prevTextRef.current = text;
@@ -73,25 +90,29 @@ export default function WritingWorkspaceFixed() {
 
   // NSW Evaluation Submit Handler
   async function onNSWSubmit() {
-    console.log('🎯 NSW Submit triggered');
+    console.log("🎯 NSW Submit triggered");
     setStatus("loading");
     setErr(undefined);
     setShowNSWEvaluation(true);
-    
+
     try {
       const text = editorRef.current?.getText() || currentText || "";
       if (!text.trim()) {
-        throw new Error("Please write some content before submitting for evaluation");
+        throw new Error(
+          "Please write some content before submitting for evaluation"
+        );
       }
-      
-      console.log("NSW Evaluation initiated for:", { 
-        text: text.substring(0, 100) + "...", 
-        textType, 
-        wordCount: text.trim().split(/\s+/).filter(w => w.length > 0).length 
+
+      console.log("NSW Evaluation initiated for:", {
+        text: text.substring(0, 100) + "...",
+        textType,
+        wordCount: text
+          .trim()
+          .split(/\s+/)
+          .filter((w) => w.length > 0).length,
       });
-      
     } catch (e: any) {
-      console.error('NSW Submit error:', e);
+      console.error("NSW Submit error:", e);
       setStatus("error");
       setErr(e?.message || "Failed to initiate NSW evaluation");
       setShowNSWEvaluation(false);
@@ -103,7 +124,7 @@ export default function WritingWorkspaceFixed() {
     console.log("NSW Evaluation completed:", report);
     setNswReport(report);
     setStatus("success");
-    
+
     // Convert NSW report to DetailedFeedback format for compatibility
     const convertedAnalysis: DetailedFeedback = {
       overallScore: report.overallScore || 0,
@@ -111,34 +132,43 @@ export default function WritingWorkspaceFixed() {
         ideasContent: {
           score: Math.round((report.domains?.contentAndIdeas?.score || 0) / 5),
           weight: 30,
-          strengths: [report.domains?.contentAndIdeas?.feedback || "Good content development"],
-          improvements: report.domains?.contentAndIdeas?.improvements || []
+          strengths: [
+            report.domains?.contentAndIdeas?.feedback ||
+              "Good content development",
+          ],
+          improvements: report.domains?.contentAndIdeas?.improvements || [],
         },
         structureOrganization: {
           score: Math.round((report.domains?.textStructure?.score || 0) / 5),
           weight: 25,
-          strengths: [report.domains?.textStructure?.feedback || "Clear structure"],
-          improvements: report.domains?.textStructure?.improvements || []
+          strengths: [
+            report.domains?.textStructure?.feedback || "Clear structure",
+          ],
+          improvements: report.domains?.textStructure?.improvements || [],
         },
         languageVocab: {
           score: Math.round((report.domains?.languageFeatures?.score || 0) / 5),
           weight: 25,
-          strengths: [report.domains?.languageFeatures?.feedback || "Good language use"],
-          improvements: report.domains?.languageFeatures?.improvements || []
+          strengths: [
+            report.domains?.languageFeatures?.feedback || "Good language use",
+          ],
+          improvements: report.domains?.languageFeatures?.improvements || [],
         },
         spellingPunctuationGrammar: {
           score: Math.round((report.domains?.conventions?.score || 0) / 5),
           weight: 20,
-          strengths: [report.domains?.conventions?.feedback || "Accurate conventions"],
-          improvements: report.domains?.conventions?.improvements || []
-        }
+          strengths: [
+            report.domains?.conventions?.feedback || "Accurate conventions",
+          ],
+          improvements: report.domains?.conventions?.improvements || [],
+        },
       },
       grammarCorrections: report.grammarCorrections || [],
       vocabularyEnhancements: report.vocabularyEnhancements || [],
       id: report.id || `nsw-${Date.now()}`,
-      assessmentId: report.assessmentId
+      assessmentId: report.assessmentId,
     };
-    
+
     setAnalysis(convertedAnalysis);
   }
 
@@ -147,7 +177,7 @@ export default function WritingWorkspaceFixed() {
   }
 
   function onProgressUpdate(metrics: any) {
-    console.log('Progress updated:', metrics);
+    console.log("Progress updated:", metrics);
   }
 
   // Simple autosave
@@ -178,7 +208,8 @@ export default function WritingWorkspaceFixed() {
     }
   }, []);
 
-  const prompt = "The Secret Door in the Library: During a rainy afternoon, you decide to explore the dusty old library in your town that you've never visited before. As you wander through the aisles, you discover a hidden door behind a bookshelf. It's slightly ajar, and a faint, warm light spills out from the crack. What happens when you push the door open? Describe the world you enter and the adventures that await you inside. Who do you meet, and what challenges do you face? How does this experience change you by the time you return to the library? Let your imagination run wild as you take your reader on a journey through this mysterious door!";
+  const prompt =
+    "The Secret Door in the Library: During a rainy afternoon, you decide to explore the dusty old library in your town that you\\'ve never visited before. As you wander through the aisles, you discover a hidden door behind a bookshelf. It\\'s slightly ajar, and a faint, warm light spills out from the crack. What happens when you push the door open? Describe the world you enter and the adventures that await you inside. Who do you meet, and what challenges do you face? How does this experience change you by the time you return to the library? Let your imagination run wild as you take your reader on a journey through this mysterious door!";
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
@@ -214,11 +245,7 @@ export default function WritingWorkspaceFixed() {
       <div className="flex-1 flex overflow-hidden">
         {/* Left Panel - Writing Area */}
         <div className="flex-1 flex flex-col">
-          {/* Prompt */}
-          <div className="bg-blue-50 border-b border-blue-200 p-4">
-            <h2 className="font-semibold text-blue-900 mb-2">Your Writing Prompt</h2>
-            <p className="text-sm text-blue-800 leading-relaxed">{prompt}</p>
-          </div>
+          <DynamicPromptDisplay prompt={prompt} />
 
           {/* Writing Area */}
           <div className="flex-1 p-6">
@@ -229,31 +256,31 @@ export default function WritingWorkspaceFixed() {
                 onProgressUpdate={onProgressUpdate}
                 className="h-full"
               />
-              
-              {/* Manual Submit Button - For direct testing */}
-              <div className="absolute bottom-4 left-4 right-4">
-                <button
-                  onClick={onNSWSubmit}
-                  disabled={status === "loading" || wordCount < 50}
-                  className={`w-full py-3 px-6 rounded-lg font-semibold text-white transition-all duration-200 ${
-                    status === "loading" 
-                      ? 'bg-gray-400 cursor-not-allowed' 
-                      : wordCount < 50
-                      ? 'bg-gray-300 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-lg hover:shadow-xl'
-                  }`}
-                >
-                  {status === "loading" ? (
-                    <div className="flex items-center justify-center">
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3"></div>
-                      Generating NSW Assessment Report...
-                    </div>
-                  ) : (
-                    `Submit for NSW Evaluation (${wordCount} words)`
-                  )}
-                </button>
-              </div>
             </div>
+          </div>
+
+          {/* Submit for NSW Evaluation Button - Placed at the bottom of the left panel */}
+          <div className="p-6 pt-0">
+            <button
+              onClick={onNSWSubmit}
+              disabled={status === "loading" || wordCount < 50}
+              className={`w-full py-3 px-6 rounded-lg font-semibold text-white transition-all duration-200 ${
+                status === "loading" 
+                  ? 'bg-gray-400 cursor-not-allowed' 
+                  : wordCount < 50
+                  ? 'bg-gray-300 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-lg hover:shadow-xl'
+              }`}
+            >
+              {status === "loading" ? (
+                <div className="flex items-center justify-center">
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3"></div>
+                  Generating NSW Assessment Report...
+                </div>
+              ) : (
+                `Submit for NSW Evaluation (${wordCount} words)`
+              )}
+            </button>
           </div>
         </div>
 
@@ -290,12 +317,14 @@ export default function WritingWorkspaceFixed() {
           ) : (
             /* Coach Panel */
             <div className="h-full">
-              <TabbedCoachPanel 
-                analysis={analysis}
-                onApplyFix={onApplyFix}
-                content={currentText}
-                textType={textType}
-              />
+              <CoachProvider>
+                <FixedEnhancedTabbedCoachPanel 
+                  analysis={analysis}
+                  onApplyFix={onApplyFix}
+                  content={currentText}
+                  textType={textType}
+                />
+              </CoachProvider>
             </div>
           )}
         </div>
