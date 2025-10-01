@@ -11,6 +11,14 @@ import { validateDetailedFeedback } from "../types/feedback.validate";
 import { eventBus } from "../lib/eventBus";
 import { detectNewParagraphs } from "../lib/paragraphDetection";
 import DynamicPromptDisplay from "../components/DynamicPromptDisplay";
+import {
+  Play,
+  Pause,
+  RotateCcw,
+  Eye,
+  EyeOff,
+  Clock,
+} from 'lucide-react';
 
 export default function WritingWorkspaceFixed() {
   const editorRef = React.useRef<EditorHandle>(null);
@@ -28,6 +36,15 @@ export default function WritingWorkspaceFixed() {
     false
   );
   const prevTextRef = React.useRef<string>("");
+
+  // Timer states
+  const [isTimerRunning, setIsTimerRunning] = React.useState(false);
+  const [elapsedTime, setElapsedTime] = React.useState(0);
+  const [startTime, setStartTime] = React.useState<number | null>(null);
+  const timerRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  // Focus mode state
+  const [focusMode, setFocusMode] = React.useState(false);
 
   const draftId = React.useRef<string>(
     `draft-${
@@ -87,6 +104,53 @@ export default function WritingWorkspaceFixed() {
 
     return () => clearInterval(interval);
   }, [currentText]);
+
+  // Timer functions
+  const startTimer = React.useCallback(() => {
+    if (!isTimerRunning) {
+      const now = Date.now();
+      setStartTime(now - elapsedTime * 1000);
+      setIsTimerRunning(true);
+    }
+  }, [isTimerRunning, elapsedTime]);
+
+  const pauseTimer = React.useCallback(() => {
+    setIsTimerRunning(false);
+  }, []);
+
+  const resetTimer = React.useCallback(() => {
+    setIsTimerRunning(false);
+    setElapsedTime(0);
+    setStartTime(null);
+  }, []);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Timer effect
+  React.useEffect(() => {
+    if (isTimerRunning && startTime) {
+      timerRef.current = setInterval(() => {
+        const now = Date.now();
+        const elapsed = Math.floor((now - startTime) / 1000);
+        setElapsedTime(elapsed);
+      }, 1000);
+    } else {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, [isTimerRunning, startTime]);
 
   // NSW Evaluation Submit Handler
   async function onNSWSubmit() {
@@ -209,7 +273,7 @@ export default function WritingWorkspaceFixed() {
   }, []);
 
   const prompt =
-    "The Secret Door in the Library: During a rainy afternoon, you decide to explore the dusty old library in your town that you\\'ve never visited before. As you wander through the aisles, you discover a hidden door behind a bookshelf. It\\'s slightly ajar, and a faint, warm light spills out from the crack. What happens when you push the door open? Describe the world you enter and the adventures that await you inside. Who do you meet, and what challenges do you face? How does this experience change you by the time you return to the library? Let your imagination run wild as you take your reader on a journey through this mysterious door!";
+    "The Secret Door in the Library: During a rainy afternoon, you decide to explore the dusty old library in your town that you\\\"ve never visited before. As you wander through the aisles, you discover a hidden door behind a bookshelf. It\\\"s slightly ajar, and a faint, warm light spills out from the crack. What happens when you push the door open? Describe the world you enter and the adventures that await you inside. Who do you meet, and what challenges do you face? How does this experience change you by the time you return to the library? Let your imagination run wild as you take your reader on a journey through this mysterious door!";
 
   return (
     <div className="h-screen flex flex-col bg-gray-50">
@@ -237,6 +301,43 @@ export default function WritingWorkspaceFixed() {
               targetWordCount={targetWordCount}
               status={status}
             />
+            {/* Timer Controls */}
+            <div className="flex items-center space-x-2 text-gray-600">
+              <Clock size={18} />
+              <span className="text-sm font-mono">{formatTime(elapsedTime)}</span>
+              {!isTimerRunning ? (
+                <button 
+                  onClick={startTimer}
+                  className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
+                  title="Start Timer"
+                >
+                  <Play size={18} />
+                </button>
+              ) : (
+                <button 
+                  onClick={pauseTimer}
+                  className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
+                  title="Pause Timer"
+                >
+                  <Pause size={18} />
+                </button>
+              )}
+              <button 
+                onClick={resetTimer}
+                className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
+                title="Reset Timer"
+              >
+                <RotateCcw size={18} />
+              </button>
+            </div>
+            {/* Focus Mode Toggle */}
+            <button
+              onClick={() => setFocusMode(!focusMode)}
+              className="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
+              title="Toggle Focus Mode"
+            >
+              {focusMode ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
           </div>
         </div>
       </div>
