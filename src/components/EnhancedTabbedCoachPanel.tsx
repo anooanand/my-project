@@ -20,9 +20,9 @@ interface EnhancedTabbedCoachPanelProps {
   timeElapsed?: number;
 }
 
-export function FixedEnhancedTabbedCoachPanel({ 
-  analysis, 
-  onApplyFix, 
+export function FixedEnhancedTabbedCoachPanel({
+  analysis,
+  onApplyFix,
   content,
   textType = 'narrative',
   timeElapsed = 0
@@ -39,7 +39,7 @@ export function FixedEnhancedTabbedCoachPanel({
     if (textType !== currentTextType) {
       setCurrentTextType(textType);
       enhancedIntelligentResponseGenerator.setTextType(textType);
-      
+
       // Add a system message about the genre change
       const genreChangeMessage: ChatMessage = {
         id: Date.now().toString(),
@@ -89,7 +89,7 @@ export function FixedEnhancedTabbedCoachPanel({
       // Analyze current content
       const textAnalysis = analyzeText(content);
       const contextualState = analyzeContext(content, textAnalysis);
-      
+
       // Create enhanced coaching context
       const coachingContext: EnhancedCoachingContext = {
         textType: currentTextType,
@@ -195,7 +195,7 @@ export function FixedEnhancedTabbedCoachPanel({
               {Math.floor(timeElapsed / 60)}:{(timeElapsed % 60).toString().padStart(2, '0')}/40:00
             </div>
           </div>
-          
+
           {/* Progress section */}
           <div className="mb-3">
             <div className="flex justify-between text-xs text-gray-600 mb-1">
@@ -205,7 +205,7 @@ export function FixedEnhancedTabbedCoachPanel({
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
+              <div
                 className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all duration-300"
                 style={{ width: `${progress}%` }}
               />
@@ -266,9 +266,9 @@ export function FixedEnhancedTabbedCoachPanel({
                   >
                     <p className="text-sm whitespace-pre-wrap">{message.text}</p>
                     <p className="text-xs mt-1 opacity-70">
-                      {message.timestamp.toLocaleTimeString([], { 
-                        hour: '2-digit', 
-                        minute: '2-digit' 
+                      {message.timestamp.toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit'
                       })}
                       {message.priority && !message.isUser && (
                         <span className="ml-2 font-medium">{message.priority}</span>
