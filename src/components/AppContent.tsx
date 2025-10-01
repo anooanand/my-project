@@ -418,45 +418,7 @@ function AppContent() {
           } />
           <Route path="/writing" element={
             <WritingAccessCheck onNavigate={handleNavigation}>
-              <div className="writing-route h-screen flex flex-col">
-                <EnhancedHeader 
-                  textType={textType || 'narrative'}
-                  assistanceLevel={assistanceLevel}
-                  onTextTypeChange={setTextType}
-                  onTimerStart={() => setTimerStarted(true)}
-                  hideTextTypeSelector={popupFlowCompleted}
-                />
-                
-                {showExamMode ? (
-                  <ExamSimulationMode 
-                    onExit={() => setShowExamMode(false)}
-                  />
-                ) : (
-                  <div className="writing-layout-content flex-1 min-h-0">
-                    <EnhancedWritingLayoutNSW
-                      content={content}
-                      onChange={setContent}
-                      textType={textType || 'narrative'}
-                      initialPrompt={prompt || ''} // FIXED: Pass the loaded prompt
-                      wordCount={content.trim().split(/\s+/).filter(word => word.length > 0).length}
-                      onWordCountChange={() => {}} // Word count is calculated from content
-                      assistanceLevel={assistanceLevel}
-                      onAssistanceLevelChange={setAssistanceLevel}
-                      onSubmit={handleSubmit}
-                      selectedText={selectedText}
-                      onTextTypeChange={handleTextTypeChange}
-                      onPopupCompleted={handlePopupCompleted}
-                      popupFlowCompleted={popupFlowCompleted}
-                      user={user}
-                      openAIConnected={openAIConnected}
-                      openAILoading={openAILoading}
-                      panelVisible={panelVisible}
-                      setPanelVisible={setPanelVisible}
-                      setPrompt={setPrompt} // FIXED: Pass setPrompt function
-                    />
-                  </div>
-                )}
-              </div>
+              <WritingWorkspaceFixed />
             </WritingAccessCheck>
           } />
           <Route path="/learning" element={
