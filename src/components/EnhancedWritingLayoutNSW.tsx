@@ -384,8 +384,9 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
     }
   }, [localContent, handleContentChange]);
 
-  const hasContent = localContent.trim().length > 0;
-  const currentWordCount = localContent.trim() ? localContent.trim().split(/\s+/).length : 0;
+  // These were moved to the top of handleSubmitForEvaluation
+  // const hasContent = localContent.trim().length > 0;
+  // const currentWordCount = localContent.trim() ? localContent.trim().split(/\s+/).length : 0;
   const showWordCountWarning = currentWordCount > 300;
 
   return (
@@ -440,244 +441,283 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
                   onClick={() => setShowPromptOptionsModal(true)} 
                   className="flex items-center text-sm text-purple-600 hover:text-purple-800 transition-colors px-3 py-1 rounded border border-purple-200 hover:border-purple-300"
                 >
-                  <Zap size={16} className="mr-2" />
-                  Magical Prompt
+                  <Zap className="w-4 h-4 mr-1" />
+                  Change Prompt
                 </button>
               </div>
+            </div>
+          )}
+        </div>
+
+        {/* Main Writing Area */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* Writing Area */}
+          <div className="flex-1 p-6">
+            <textarea
+              ref={textareaRef}
+              value={localContent}
+              onChange={(e) => handleContentChange(e.target.value)}
+              className={`w-full h-full p-4 text-base leading-relaxed resize-none focus:outline-none border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                darkMode ? 'bg-gray-800 border-gray-700 text-gray-100' : 'bg-white border-gray-200 text-gray-800'
+              }`}
+              style={{ fontFamily, fontSize: `${fontSize}px`, lineHeight }}
+              placeholder="Start writing here..."
+            />
+          </div>
+
+          {/* Right Sidebar - AI Coach Panel (visible only if not in focus mode) */}
+          {!focusMode && panelVisible && (
+            <div className={`w-80 flex-shrink-0 border-l ${
+              darkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-gray-50'
+            }`}>
+              <EnhancedCoachPanel
+                textType={textType}
+                content={localContent}
+                analysis={analysis}
+                onApplyFix={handleApplyFix}
+                darkMode={darkMode}
+                panelVisible={panelVisible}
+                setPanelVisible={setPanelVisible}
+              />
             </div>
           )}
         </div>
 
         {/* Enhanced Writing Toolbar */}
-        <div className={`px-4 py-3 border-b transition-colors duration-300 flex-shrink-0 ${
+        <div className={`flex-shrink-0 border-t shadow-lg py-2 px-4 flex items-center justify-between ${
           darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
         }`}>
-          <div className="flex items-center justify-between">
-            {/* Left: Writing Tools */}
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setShowPlanningTool(true)}
-                className="flex items-center space-x-1 px-3 py-1.5 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm font-medium"
-              >
-                <PenTool className="w-4 h-4" />
-                <span>Plan</span>
-              </button>
+          {/* Left: Writing Tools */}
+          <div className="flex items-center space-x-3">
+            {/* Planning Tool */}
+            <button
+              onClick={() => setShowPlanningTool(true)}
+              className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
+                darkMode
+                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+              title="Planning Tool"
+            >
+              <PenTool className="w-4 h-4" />
+              <span>Plan</span>
+            </button>
+
+            {/* Structure Guide */}
+            <button
+              onClick={onToggleStructureGuide}
+              className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
+                showStructureGuide
+                  ? 'bg-blue-500 text-white border-blue-500 hover:bg-blue-600'
+                  : darkMode
+                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+              title="Structure Guide"
+            >
+              <BookOpen className="w-4 h-4" />
+              <span>Structure</span>
+            </button>
+
+            {/* Tips */}
+            <button
+              onClick={onToggleTips}
+              className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
+                showTips
+                  ? 'bg-blue-500 text-white border-blue-500 hover:bg-blue-600'
+                  : darkMode
+                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+              title="Writing Tips"
+            >
+              <LightbulbIcon className="w-4 h-4" />
+              <span>Tips</span>
+            </button>
+
+            {/* Focus Mode */}
+            <button
+              onClick={onToggleFocus}
+              className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
+                focusMode
+                  ? 'bg-blue-500 text-white border-blue-500 hover:bg-blue-600'
+                  : darkMode
+                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+              title="Focus Mode"
+            >
+              {focusMode ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+              <span>Focus</span>
+            </button>
+          </div>
+
+          {/* Right: Timer, Word Count, Settings */}
+          <div className="flex items-center space-x-3">
+            {/* Timer */}
+            <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg border shadow-sm ${
+              darkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-300 bg-gray-50'
+            }`}>
+              <Clock className={`w-4 h-4 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
+              <span className={`text-sm font-mono font-semibold ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>
+                {formatTime(elapsedTime)}
+              </span>
               
-              <button
-                onClick={() => onToggleStructureGuide && onToggleStructureGuide()}
-                className="flex items-center space-x-1 px-3 py-1.5 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors text-sm font-medium"
-              >
-                <BookOpen className="w-4 h-4" />
-                <span>Structure</span>
-              </button>
-              
-              <button
-                onClick={() => onToggleTips && onToggleTips()}
-                className="flex items-center space-x-1 px-3 py-1.5 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors text-sm font-medium"
-              >
-                <LightbulbIcon className="w-4 h-4" />
-                <span>Tips</span>
-              </button>
-
-              <button
-                onClick={() => setExamMode(!examMode)}
-                className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
-                  examMode
-                    ? 'bg-red-500 text-white'
-                    : darkMode
-                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-                title="Exam Mode"
-              >
-                <Target className="w-4 h-4" />
-                <span>Exam Mode</span>
-              </button>
-
-              {/* Focus Mode Toggle */}
-              <button
-                onClick={() => onToggleFocus && onToggleFocus()}
-                className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
-                  focusMode
-                    ? 'bg-indigo-500 text-white'
-                    : darkMode
-                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-                title="Focus Mode"
-              >
-                {focusMode ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                <span>Focus</span>
-              </button>
-            </div>
-
-            {/* Right: Timer, Word Count, Settings */}
-            <div className="flex items-center space-x-3">
-              {/* Timer */}
-              <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg border shadow-sm ${
-                darkMode ? 'border-gray-600 bg-gray-700' : 'border-gray-300 bg-gray-50'
-              }`}>
-                <Clock className={`w-4 h-4 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
-                <span className={`text-sm font-mono font-semibold ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>
-                  {formatTime(elapsedTime)}
-                </span>
-                
-                <div className="flex items-center space-x-1">
-                  {!isTimerRunning ? (
-                    <button
-                      onClick={onStartTimer}
-                      className={`p-1 rounded-full transition-colors ${
-                        darkMode 
-                          ? 'hover:bg-gray-600 text-gray-400' 
-                          : 'hover:bg-gray-200 text-gray-600'
-                      }`}
-                      title="Start Timer"
-                    >
-                      <PlayCircle className="w-4 h-4" />
-                    </button>
-                  ) : (
-                    <button
-                      onClick={onPauseTimer}
-                      className={`p-1 rounded-full transition-colors ${
-                        darkMode 
-                          ? 'hover:bg-gray-600 text-gray-400' 
-                          : 'hover:bg-gray-200 text-gray-600'
-                      }`}
-                      title="Pause Timer"
-                    >
-                      <PauseCircle className="w-4 h-4" />
-                    </button>
-                  )}
-                  
+              <div className="flex items-center space-x-1">
+                {!isTimerRunning ? (
                   <button
-                    onClick={onResetTimer}
+                    onClick={onStartTimer}
                     className={`p-1 rounded-full transition-colors ${
                       darkMode 
                         ? 'hover:bg-gray-600 text-gray-400' 
                         : 'hover:bg-gray-200 text-gray-600'
                     }`}
-                    title="Reset Timer"
+                    title="Start Timer"
                   >
-                    <RotateCcw className="w-4 h-4" />
+                    <PlayCircle className="w-4 h-4" />
                   </button>
-                </div>
-              </div>
-
-              {/* Word Count with Enhanced Styling */}
-              <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg border shadow-sm ${
-                showWordCountWarning
-                  ? 'border-orange-300 bg-orange-50'
-                  : darkMode 
-                  ? 'border-gray-600 bg-gray-700' 
-                  : 'border-gray-300 bg-gray-50'
-              }`}>
-                <FileText className={`w-4 h-4 ${
-                  showWordCountWarning 
-                    ? 'text-orange-600' 
-                    : darkMode ? 'text-blue-400' : 'text-blue-600'
-                }`} />
-                <span className={`text-sm font-semibold ${
-                  showWordCountWarning 
-                    ? 'text-orange-700' 
-                    : darkMode ? 'text-gray-100' : 'text-gray-800'
-                }`}>
-                  {currentWordCount} words
-                </span>
-                {showWordCountWarning && (
-                  <AlertCircle className="w-4 h-4 text-orange-600" />
+                ) : (
+                  <button
+                    onClick={onPauseTimer}
+                    className={`p-1 rounded-full transition-colors ${
+                      darkMode 
+                        ? 'hover:bg-gray-600 text-gray-400' 
+                        : 'hover:bg-gray-200 text-gray-600'
+                    }`}
+                    title="Pause Timer"
+                  >
+                    <PauseCircle className="w-4 h-4" />
+                  </button>
                 )}
-              </div>
-
-              {/* Settings Toggle */}
-              <button
-                onClick={() => setShowSettings(!showSettings)}
-                className={`flex items-center space-x-1 px-3 py-2 rounded-lg border shadow-sm transition-colors text-sm font-medium ${
-                  showSettings
-                    ? 'bg-blue-500 text-white border-blue-500 hover:bg-blue-600'
-                    : darkMode
-                    ? 'bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600'
-                    : 'bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100'
-                }`}
-                title="Writing Settings"
-              >
-                <Settings className="w-4 h-4" />
-                <span>Settings</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Settings Panel */}
-          {showSettings && (
-            <div className={`border-t px-4 py-3 transition-colors duration-300 mt-3 ${
-              darkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
-            }`}>
-              <div className="flex items-center justify-between mb-3">
-                <h4 className={`font-medium text-base ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-                  ⚙️ Writing Settings
-                </h4>
+                
                 <button
-                  onClick={() => setShowSettings(false)}
-                  className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
-                    darkMode
-                      ? 'text-gray-400 hover:text-gray-200 hover:bg-gray-700'
-                      : 'text-gray-600 hover:text-gray-800 hover:bg-gray-200'
+                  onClick={onResetTimer}
+                  className={`p-1 rounded-full transition-colors ${
+                    darkMode 
+                      ? 'hover:bg-gray-600 text-gray-400' 
+                      : 'hover:bg-gray-200 text-gray-600'
                   }`}
+                  title="Reset Timer"
                 >
-                  <X className="w-4 h-4" />
-                  <span>Close</span>
+                  <RotateCcw className="w-4 h-4" />
                 </button>
               </div>
+            </div>
+
+            {/* Word Count with Enhanced Styling */}
+            <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg border shadow-sm ${
+              showWordCountWarning
+                ? 'border-orange-300 bg-orange-50'
+                : darkMode 
+                ? 'border-gray-600 bg-gray-700' 
+                : 'border-gray-300 bg-gray-50'
+            }`}>
+              <FileText className={`w-4 h-4 ${
+                showWordCountWarning 
+                  ? 'text-orange-600' 
+                  : darkMode ? 'text-blue-400' : 'text-blue-600'
+              }`} />
+              <span className={`text-sm font-semibold ${
+                showWordCountWarning 
+                  ? 'text-orange-700' 
+                  : darkMode ? 'text-gray-100' : 'text-gray-800'
+              }`}>
+                {currentWordCount} words
+              </span>
+              {showWordCountWarning && (
+                <AlertCircle className="w-4 h-4 text-orange-600" />
+              )}
+            </div>
+
+            {/* Settings Toggle */}
+            <button
+              onClick={() => setShowSettings(!showSettings)}
+              className={`flex items-center space-x-1 px-3 py-2 rounded-lg border shadow-sm transition-colors text-sm font-medium ${
+                showSettings
+                  ? 'bg-blue-500 text-white border-blue-500 hover:bg-blue-600'
+                  : darkMode
+                  ? 'bg-gray-700 text-gray-300 border-gray-600 hover:bg-gray-600'
+                  : 'bg-gray-50 text-gray-700 border-gray-300 hover:bg-gray-100'
+              }`}
+              title="Writing Settings"
+            >
+              <Settings className="w-4 h-4" />
+              <span>Settings</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Settings Panel */}
+        {showSettings && (
+          <div className={`border-t px-4 py-3 transition-colors duration-300 mt-3 ${
+            darkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+          }`}>
+            <div className="flex items-center justify-between mb-3">
+              <h4 className={`font-medium text-base ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                ⚙️ Writing Settings
+              </h4>
+              <button
+                onClick={() => setShowSettings(false)}
+                className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
+                  darkMode
+                    ? 'text-gray-400 hover:text-gray-200 hover:bg-gray-700'
+                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-200'
+                }`}
+              >
+                <X className="w-4 h-4" />
+                <span>Close</span>
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Font Family */}
+              <div className="space-y-2">
+                <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  📝 Font Family
+                </label>
+                <select
+                  value={fontFamily}
+                  onChange={(e) => onSettingsChange && onSettingsChange({ fontFamily: e.target.value })}
+                  className="w-full p-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                >
+                  <option value="Inter">Inter</option>
+                  <option value="Georgia">Georgia</option>
+                  <option value="Times New Roman">Times New Roman</option>
+                  <option value="Arial">Arial</option>
+                  <option value="Helvetica">Helvetica</option>
+                  <option value="Courier New">Courier New</option>
+                </select>
+              </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Font Family */}
-                <div className="space-y-2">
-                  <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    📝 Font Family
-                  </label>
-                  <select
-                    value={fontFamily}
-                    onChange={(e) => onSettingsChange && onSettingsChange({ fontFamily: e.target.value })}
-                    className="w-full p-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  >
-                    <option value="Inter">Inter</option>
-                    <option value="Georgia">Georgia</option>
-                    <option value="Times New Roman">Times New Roman</option>
-                    <option value="Arial">Arial</option>
-                    <option value="Helvetica">Helvetica</option>
-                    <option value="Courier New">Courier New</option>
-                  </select>
-                </div>
-                
-                {/* Font Size */}
-                <div className="space-y-2">
-                  <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    📏 Font Size
-                  </label>
-                  <input
-                    type="number"
-                    value={fontSize}
-                    onChange={(e) => onSettingsChange && onSettingsChange({ fontSize: parseInt(e.target.value) })}
-                    className="w-full p-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  />
-                </div>
-                
-                {/* Line Height */}
-                <div className="space-y-2">
-                  <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    📐 Line Height
-                  </label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={lineHeight}
-                    onChange={(e) => onSettingsChange && onSettingsChange({ lineHeight: parseFloat(e.target.value) })}
-                    className="w-full p-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  />
-                </div>
+              {/* Font Size */}
+              <div className="space-y-2">
+                <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  📏 Font Size
+                </label>
+                <input
+                  type="number"
+                  value={fontSize}
+                  onChange={(e) => onSettingsChange && onSettingsChange({ fontSize: parseInt(e.target.value) })}
+                  className="w-full p-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+              </div>
+              
+              {/* Line Height */}
+              <div className="space-y-2">
+                <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  📐 Line Height
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={lineHeight}
+                  onChange={(e) => onSettingsChange && onSettingsChange({ lineHeight: parseFloat(e.target.value) })}
+                  className="w-full p-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Writing Area */}
         <div className="flex-1 p-6">
