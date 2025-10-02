@@ -7,7 +7,6 @@ import './layout-fix.css';
 
 // Add this import at the top with other imports
 import WritingWorkspaceFixed from '../pages/WritingWorkspace';
-import { EnhancedWritingLayoutNSW } from './EnhancedWritingLayoutNSW';
 import { NavBar } from './NavBar';
 import { HeroSection } from './HeroSection';
 import { FeaturesSection } from './FeaturesSection';
