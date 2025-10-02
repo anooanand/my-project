@@ -589,22 +589,42 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
           />
         </div>
 
-        {/* Footer with Submit Button */}
-        <footer className="p-4 border-t border-gray-200 bg-white">
-          <div className="flex items-center justify-center">
+        {/* Enhanced Submit Button - Full Width */}
+        <div className={`p-4 border-t transition-colors duration-300 flex-shrink-0 ${
+          darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
+        }`}>
+          <div className="flex items-center space-x-3">
             <button
-              onClick={handleSubmitForEvaluation}
-              disabled={!hasContent}
-              className={`px-8 py-3 rounded-lg font-medium text-white transition-colors ${
-                hasContent 
-                  ? 'bg-purple-600 hover:bg-purple-700' 
-                  : 'bg-gray-400 cursor-not-allowed'
-              }`}
+              onClick={() => handleSubmitForEvaluation()}
+              disabled={evaluationStatus === "loading" || !hasContent}
+              className="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 disabled:from-gray-400 disabled:to-gray-500 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 flex items-center justify-center space-x-2 disabled:cursor-not-allowed shadow-lg"
             >
-              Submit for NSW Evaluation
+              {evaluationStatus === "loading" ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  <span>Evaluating...</span>
+                </>
+              ) : (
+                <>
+                  <Target className="w-5 h-5" />
+                  <span>Submit for NSW Evaluation</span>
+                </>
+              )}
+            </button>
+            
+            {/* Quick Info Button */}
+            <button
+              className={`p-3 rounded-lg transition-colors ${
+                darkMode
+                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+              title="Evaluation Info"
+            >
+              <Info className="w-5 h-5" />
             </button>
           </div>
-        </footer>
+        </div>
       </div>
 
       {/* Right Sidebar - AI Coach Panel */}
