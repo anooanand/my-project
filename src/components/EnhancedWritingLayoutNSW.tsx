@@ -315,9 +315,9 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
     };
   };
 
+
+
   const handleSubmitForEvaluation = useCallback(async () => {
-    const hasContent = localContent.trim().length > 0;
-    const currentWordCount = localContent.trim() ? localContent.trim().split(/\s+/).length : 0;
     console.log('🎯 Submit button clicked!');
     console.log('Content length:', localContent.length);
     console.log('Has content:', hasContent);
