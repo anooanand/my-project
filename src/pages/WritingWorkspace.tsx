@@ -1,6 +1,6 @@
 import React from "react";
 import { InteractiveTextEditor, EditorHandle } from "../components/InteractiveTextEditor";
-import { TabbedCoachPanel } from "../components/TabbedCoachPanel";
+import { EnhancedCoachPanel } from "../components/EnhancedCoachPanel";
 import { CoachProvider } from "../components/CoachProvider";
 import { WritingStatusBar } from "../components/WritingStatusBar";
 import { NSWStandaloneSubmitSystem } from "../components/NSWStandaloneSubmitSystem";
@@ -290,9 +290,7 @@ export default function WritingWorkspaceFixed() {
           ) : (
             /* Coach Panel */
             <div className="h-full">
-              <TabbedCoachPanel 
-                analysis={analysis}
-                onApplyFix={onApplyFix}
+              <EnhancedCoachPanel 
                 content={currentText}
                 textType={textType}
               />
