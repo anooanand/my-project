@@ -230,18 +230,109 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
     }
   }, [content, isTimerRunning, elapsedTime, onStartTimer, textType]);
 
+  // Convert NSW report format to DetailedFeedback format
+  const convertNSWReportToDetailedFeedback = (report: any): any => {
+    return {
+      id: `nsw-${Date.now()}`,
+      overallScore: report.overallScore || 0,
+      criteria: {
+        ideasContent: {
+          score: report.domains?.contentAndIdeas?.score || 0,
+          weight: report.domains?.contentAndIdeas?.weight || 40,
+          strengths: (report.domains?.contentAndIdeas?.feedback || []).map((text: string) => ({ 
+            text, 
+            start: 0, 
+            end: 0 
+          })),
+          improvements: (report.areasForImprovement || [])
+            .filter((item: any) => item.toLowerCase().includes('idea') || item.toLowerCase().includes('content'))
+            .map((text: string) => ({
+              issue: text,
+              evidence: { text: '', start: 0, end: 0 },
+              suggestion: 'Consider developing this area further'
+            }))
+        },
+        structureOrganization: {
+          score: report.domains?.textStructure?.score || 0,
+          weight: report.domains?.textStructure?.weight || 20,
+          strengths: (report.domains?.textStructure?.feedback || []).map((text: string) => ({ 
+            text, 
+            start: 0, 
+            end: 0 
+          })),
+          improvements: (report.areasForImprovement || [])
+            .filter((item: any) => item.toLowerCase().includes('structure') || item.toLowerCase().includes('organization'))
+            .map((text: string) => ({
+              issue: text,
+              evidence: { text: '', start: 0, end: 0 },
+              suggestion: 'Work on improving your structure'
+            }))
+        },
+        languageVocab: {
+          score: report.domains?.languageFeatures?.score || 0,
+          weight: report.domains?.languageFeatures?.weight || 25,
+          strengths: (report.domains?.languageFeatures?.feedback || []).map((text: string) => ({ 
+            text, 
+            start: 0, 
+            end: 0 
+          })),
+          improvements: (report.areasForImprovement || [])
+            .filter((item: any) => item.toLowerCase().includes('language') || item.toLowerCase().includes('vocabulary'))
+            .map((text: string) => ({
+              issue: text,
+              evidence: { text: '', start: 0, end: 0 },
+              suggestion: 'Enhance your vocabulary'
+            }))
+        },
+        spellingPunctuationGrammar: {
+          score: report.domains?.spellingAndGrammar?.score || 0,
+          weight: report.domains?.spellingAndGrammar?.weight || 15,
+          strengths: (report.domains?.spellingAndGrammar?.feedback || []).map((text: string) => ({ 
+            text, 
+            start: 0, 
+            end: 0 
+          })),
+          improvements: (report.areasForImprovement || [])
+            .filter((item: any) => item.toLowerCase().includes('spelling') || item.toLowerCase().includes('grammar'))
+            .map((text: string) => ({
+              issue: text,
+              evidence: { text: '', start: 0, end: 0 },
+              suggestion: 'Review spelling and grammar rules'
+            }))
+        }
+      },
+      grammarCorrections: [],
+      vocabularyEnhancements: [],
+      // Pass through additional NSW-specific data
+      overallGrade: report.overallGrade,
+      domains: report.domains,
+      detailedFeedback: report.detailedFeedback,
+      recommendations: report.recommendations,
+      strengths: report.strengths,
+      areasForImprovement: report.areasForImprovement,
+      essayContent: report.essayContent,
+      originalityReport: report.originalityReport
+    };
+  };
+
   const handleSubmitForEvaluation = useCallback(async () => {
+    console.log('🎯 Submit button clicked!');
+    console.log('Content length:', localContent.length);
+    console.log('Has content:', hasContent);
+    
     if (!localContent.trim()) {
       alert("Please write something before submitting for evaluation.");
       return;
     }
 
     if (onSubmit) {
+      console.log('Calling onSubmit prop...');
       onSubmit(localContent);
       return;
     }
 
     // Fallback submission logic
+    console.log('Starting NSW evaluation...');
     setEvaluationStatus("loading");
     setShowNSWEvaluation(true);
     setEvaluationProgress("Analyzing your writing...");
@@ -251,26 +342,35 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
       setTimeout(() => setEvaluationProgress("Evaluating content and ideas..."), 2000);
       setTimeout(() => setEvaluationProgress("Generating detailed feedback..."), 3000);
 
-      const report = await NSWEvaluationReportGenerator.generateReport({
+      console.log('Calling NSWEvaluationReportGenerator.generateReport...');
+      const report = NSWEvaluationReportGenerator.generateReport({
         essayContent: localContent,
         textType: textType,
         prompt: effectivePrompt || '',
-        wordCount: wordCount || 0,
+        wordCount: currentWordCount,
         targetWordCountMin: 200,
         targetWordCountMax: 300,
       });
       
-      setNswReport(report);
+      console.log('Report generated:', report);
+      
+      // Convert to DetailedFeedback format
+      const convertedReport = convertNSWReportToDetailedFeedback(report);
+      console.log('Converted report:', convertedReport);
+      
+      setNswReport(convertedReport);
       setShowNSWEvaluation(false);
       setShowReportModal(true);
       setEvaluationStatus("success");
+      
+      console.log('✅ Evaluation complete!');
     } catch (error) {
-      console.error("NSW evaluation error:", error);
+      console.error("❌ NSW evaluation error:", error);
       setEvaluationStatus("error");
       setShowNSWEvaluation(false);
-      alert(`There was an error evaluating your writing. Please try again.`);
+      alert(`There was an error evaluating your writing: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`);
     }
-  }, [localContent, textType, effectivePrompt, wordCount, onSubmit]);
+  }, [localContent, textType, effectivePrompt, currentWordCount, onSubmit, hasContent]);
 
   const handleApplyFix = useCallback((fix: LintFix) => {
     try {
@@ -663,19 +763,16 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
       )}
       {showReportModal && nswReport && (
         <ReportModal
-          report={nswReport}
-          onClose={() => setShowReportModal(false)}
-          onNewEvaluation={() => {
+          isOpen={showReportModal}
+          data={nswReport}
+          onClose={() => {
+            setShowReportModal(false);
             setNswReport(null);
             if (onAnalysisChange) onAnalysisChange(null);
-            setShowReportModal(false);
-            setLocalContent('');
-            if (onChange) onChange('');
-            if (setPrompt) setPrompt('');
-            setGeneratedPrompt(null);
-            setCustomPromptInput(null);
-            if (onPopupCompleted) onPopupCompleted();
           }}
+          onApplyFix={handleApplyFix}
+          studentName="Student"
+          essayText={localContent}
         />
       )}
       {showNSWEvaluation && evaluationStatus === "loading" && (
