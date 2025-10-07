@@ -37,28 +37,14 @@ import {
   PauseCircle,
   X
 } from 'lucide-react';
-import { InteractiveTextEditor, EditorHandle } from './InteractiveTextEditor';
-import { WritingStatusBar } from './WritingStatusBar';
 
 interface EnhancedWritingLayoutNSWProps {
   content: string;
   onChange: (content: string) => void;
   textType: string;
-  onTextTypeChange: (type: string) => void;
   initialPrompt: string;
-  setPrompt: (prompt: string) => void;
   wordCount: number;
   onWordCountChange: (count: number) => void;
-  onSubmit: (content: string) => void;
-  analysis: DetailedFeedback | null;
-  onAnalysisChange: (analysis: DetailedFeedback | null) => void;
-  nswReport: any;
-  onNSWEvaluationComplete: (report: any) => void;
-  showNSWEvaluation: boolean;
-  setShowNSWEvaluation: (show: boolean) => void;
-  evaluationStatus: "idle" | "loading" | "success" | "error";
-  setEvaluationStatus: (status: "idle" | "loading" | "success" | "error") => void;
-  error?: string;
   darkMode?: boolean;
   fontFamily?: string;
   fontSize?: number;
@@ -75,9 +61,14 @@ interface EnhancedWritingLayoutNSWProps {
   onToggleStructureGuide?: () => void;
   showTips?: boolean;
   onToggleTips?: () => void;
+  analysis?: DetailedFeedback | null;
+  onAnalysisChange?: (analysis: DetailedFeedback | null) => void;
+  setPrompt?: (prompt: string) => void;
   assistanceLevel?: string;
   onAssistanceLevelChange?: (level: string) => void;
+  onSubmit?: (content: string) => void;
   selectedText?: string;
+  onTextTypeChange?: (type: string) => void;
   onPopupCompleted?: () => void;
   popupFlowCompleted?: boolean;
   user?: any;
@@ -88,25 +79,14 @@ interface EnhancedWritingLayoutNSWProps {
 }
 
 export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
+  console.log("EnhancedWritingLayoutNSW Props:", props);
   const {
     content,
     onChange,
     textType,
-    onTextTypeChange,
     initialPrompt,
-    setPrompt,
     wordCount,
     onWordCountChange,
-    onSubmit,
-    analysis,
-    onAnalysisChange,
-    nswReport,
-    onNSWEvaluationComplete,
-    showNSWEvaluation,
-    setShowNSWEvaluation,
-    evaluationStatus,
-    setEvaluationStatus,
-    error,
     darkMode = false,
     fontFamily = 'Inter',
     fontSize = 16,
@@ -123,9 +103,13 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
     onToggleStructureGuide,
     showTips = false,
     onToggleTips,
+    analysis,
+    onAnalysisChange,
     assistanceLevel,
     onAssistanceLevelChange,
+    onSubmit,
     selectedText,
+    onTextTypeChange,
     onPopupCompleted,
     popupFlowCompleted,
     user,
@@ -133,6 +117,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
     openAILoading,
     panelVisible = true,
     setPanelVisible,
+    setPrompt,
   } = props;
 
   // State management
@@ -140,10 +125,14 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
   const [customPromptInput, setCustomPromptInput] = useState<string | null>(null);
   const [localContent, setLocalContent] = useState('');
   const [showSettings, setShowSettings] = useState(false);
+  const [showNSWEvaluation, setShowNSWEvaluation] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [nswReport, setNswReport] = useState<any>(null);
+  const [evaluationStatus, setEvaluationStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [evaluationProgress, setEvaluationProgress] = useState("");
   const [showPromptOptionsModal, setShowPromptOptionsModal] = useState(false);
   const [hidePrompt, setHidePrompt] = useState(false);
+  const [isPromptCollapsed, setIsPromptCollapsed] = useState(false);
   
   // New states for missing functionality
   const [showPlanningTool, setShowPlanningTool] = useState(false);
@@ -153,6 +142,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
   // Get effective prompt
   const effectivePrompt = generatedPrompt || customPromptInput || initialPrompt;
+  console.log("EnhancedWritingLayoutNSW State:", { generatedPrompt, customPromptInput, localContent, effectivePrompt, showPromptOptionsModal, hidePrompt, popupFlowCompleted });
 
   // Initialize content
   useEffect(() => {
@@ -288,7 +278,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
           })),
           improvements: (report.areasForImprovement || [])
             .filter((item: any) => item.toLowerCase().includes('language') || item.toLowerCase().includes('vocabulary'))
-            .map((text: any) => ({
+            .map((text: string) => ({
               issue: text,
               evidence: { text: '', start: 0, end: 0 },
               suggestion: 'Enhance your vocabulary'
@@ -373,7 +363,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
       const convertedReport = convertNSWReportToDetailedFeedback(report);
       console.log('Converted report:', convertedReport);
       
-      onNSWEvaluationComplete(convertedReport);
+      setNswReport(convertedReport);
       setShowNSWEvaluation(false);
       setShowReportModal(true);
       setEvaluationStatus("success");
@@ -385,7 +375,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
       setShowNSWEvaluation(false);
       alert(`There was an error evaluating your writing: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`);
     }
-  }, [localContent, textType, effectivePrompt, currentWordCount, onSubmit, hasContent, onNSWEvaluationComplete, setEvaluationStatus, setShowNSWEvaluation]);
+  }, [localContent, textType, effectivePrompt, currentWordCount, onSubmit, hasContent]);
 
   const handleApplyFix = useCallback((fix: LintFix) => {
     try {
@@ -399,46 +389,68 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
   return (
     <div className={`flex h-screen transition-colors duration-300 ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between w-full">
-        <div className="flex items-center space-x-4">
-          <h1 className="text-xl font-bold text-gray-900">Your Writing Prompt</h1>
-          <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">{textType}</span>
-        </div>
-        <div className="flex items-center space-x-4">
-          <select 
-            value={textType} 
-            onChange={(e) => onTextTypeChange && onTextTypeChange(e.target.value)}
-            className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="narrative">Narrative</option>
-            <option value="persuasive">Persuasive</option>
-            <option value="informative">Informative</option>
-          </select>
-          <button onClick={() => setHidePrompt(!hidePrompt)} className="text-sm text-gray-600 hover:text-gray-900">{hidePrompt ? 'Show Prompt' : 'Hide Prompt'}</button>
-          <div className="flex items-center space-x-4">
-            <WritingStatusBar 
-              wordCount={currentWordCount}
-              targetWordCount={300} // Assuming a default target word count
-              status={evaluationStatus}
-            />
+      {/* Left side - Writing Area Content */}
+      <div className="flex-1 flex flex-col overflow-hidden"> 
+        
+        {/* Enhanced Writing Prompt Section */}
+        <div className={`transition-all duration-300 border-b shadow-sm flex-shrink-0 ${
+          isPromptCollapsed ? 'h-16' : 'min-h-[140px]'
+        } ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-blue-50 border-blue-200'}`}>
+          <div className="flex items-center justify-between p-4">
+            <div className="flex items-center">
+              <LightbulbIcon className={`w-5 h-5 mr-2 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
+              <h3 className={`font-semibold text-base ${darkMode ? 'text-blue-200' : 'text-blue-800'}`}>
+                Your Writing Prompt
+              </h3>
+              <span className={`ml-3 text-xs px-2 py-1 rounded-full ${
+                darkMode ? 'bg-blue-800/50 text-blue-200' : 'bg-blue-200 text-blue-800'
+              }`}>
+                {textType}
+              </span>
+            </div>
+            
+            <button
+              onClick={() => setIsPromptCollapsed(!isPromptCollapsed)}
+              className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
+                darkMode
+                  ? 'text-blue-300 hover:text-blue-100 hover:bg-blue-800/30'
+                  : 'text-blue-700 hover:text-blue-900 hover:bg-blue-200'
+              }`}
+            >
+              {isPromptCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+              <span>{isPromptCollapsed ? 'Show Prompt' : 'Hide Prompt'}</span>
+            </button>
           </div>
-        </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Left Panel - Writing Area */}
-        <div className="flex-1 flex flex-col p-6">
-          {/* Prompt */}
-          {!hidePrompt && effectivePrompt && (
-            <div className="bg-blue-50 border-b border-blue-200 p-3 mb-4">
-              <p className="text-sm text-blue-800 leading-relaxed">{effectivePrompt}</p>
+          {/* Prompt Content */}
+          {!isPromptCollapsed && effectivePrompt && (
+            <div className="px-4 pb-4">
+              <div className={`p-4 rounded-lg border ${
+                darkMode 
+                  ? 'bg-blue-900/20 border-blue-800/30 text-blue-100' 
+                  : 'bg-white border-blue-200 text-blue-900'
+              }`}>
+                <p className="text-sm leading-relaxed">
+                  {effectivePrompt}
+                </p>
+              </div>
+              <div className="mt-4">
+                <button 
+                  onClick={() => setShowPromptOptionsModal(true)} 
+                  className="flex items-center text-sm text-purple-600 hover:text-purple-800 transition-colors duration-200"
+                >
+                  <PenTool className="w-4 h-4 mr-1" />
+                  Change Prompt
+                </button>
+              </div>
             </div>
           )}
+        </div>
 
-          {/* Writing Area */}
-          <div className="flex-1 flex flex-col bg-white rounded-lg border border-gray-200 shadow-sm relative">
+        {/* Writing Area */}
+        <div className="flex-1 flex flex-col p-6 overflow-hidden">
+          <div className="flex-1 bg-white rounded-lg border border-gray-200 shadow-sm relative">
+            {/* Interactive Text Editor */}
             <InteractiveTextEditor
               value={localContent}
               onChange={handleContentChange}
@@ -446,55 +458,76 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
               className="h-full"
             />
           </div>
-          
-          {showNSWEvaluation ? (
-            <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-50">
-              <div className="bg-white rounded-lg p-8 shadow-xl w-full max-w-md text-center">
-                <div className="animate-pulse mb-4">
-                  <Zap className="w-12 h-12 text-blue-500 mx-auto" />
-                </div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-4">NSW Evaluation in Progress</h2>
-                <p className="text-gray-600 mb-6">{evaluationProgress}</p>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                  <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${evaluationProgress.length * 10}%` }}></div>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="mt-4">
-              <button
-                onClick={handleSubmitForEvaluation}
-                disabled={!hasContent || evaluationStatus === 'loading'}
-                className={`w-full px-6 py-3 text-white font-bold rounded-md transition-colors duration-300 ${!hasContent || evaluationStatus === 'loading' ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}>
-                {evaluationStatus === 'loading' ? (
-                  <div className="flex items-center justify-center">
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3"></div>
-                    Generating NSW Assessment Report...
-                  </div>
-                ) : (
-                  `Submit for NSW Evaluation (${currentWordCount} words)`
-                )}
-              </button>
-              {showWordCountWarning && (
-                <p className="text-sm text-red-600 mt-2">
-                  Note: The NSW evaluation is optimized for responses around 300 words. Longer texts may result in a less accurate assessment.
-                </p>
+
+          {/* Submission and Status Bar */}
+          <div className="mt-4 flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <WritingStatusBar 
+                wordCount={currentWordCount}
+                targetWordCount={300} // Assuming a default target word count
+                status={evaluationStatus}
+              />
+              {isTimerRunning ? (
+                <button 
+                  onClick={onPauseTimer} 
+                  className="flex items-center text-sm text-red-600 hover:text-red-800 transition-colors duration-200"
+                >
+                  <PauseCircle className="w-4 h-4 mr-1" />
+                  Pause Timer ({formatTime(elapsedTime)})
+                </button>
+              ) : (
+                <button 
+                  onClick={onStartTimer} 
+                  className="flex items-center text-sm text-green-600 hover:text-green-800 transition-colors duration-200"
+                >
+                  <PlayCircle className="w-4 h-4 mr-1" />
+                  Start Timer ({formatTime(elapsedTime)})
+                </button>
               )}
+              <button 
+                onClick={onResetTimer} 
+                className="flex items-center text-sm text-gray-600 hover:text-gray-800 transition-colors duration-200"
+              >
+                <RotateCcw className="w-4 h-4 mr-1" />
+                Reset Timer
+              </button>
             </div>
+            
+            <button
+              onClick={handleSubmitForEvaluation}
+              disabled={!hasContent || evaluationStatus === 'loading'}
+              className={`px-6 py-3 text-white font-bold rounded-md transition-colors duration-300 ${
+                !hasContent || evaluationStatus === 'loading' ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+              }`}
+            >
+              {evaluationStatus === 'loading' ? (
+                <div className="flex items-center justify-center">
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3"></div>
+                  Generating NSW Assessment Report...
+                </div>
+              ) : (
+                `Submit for NSW Evaluation (${currentWordCount} words)`
+              )}
+            </button>
+          </div>
+          {showWordCountWarning && (
+            <p className="text-sm text-red-600 mt-2">
+              Note: The NSW evaluation is optimized for responses around 300 words. Longer texts may result in a less accurate assessment.
+            </p>
           )}
         </div>
-
-        {/* Right Panel - Coach */}
-        {panelVisible && (
-          <div className="w-1/3 border-l border-gray-200 overflow-y-auto p-4">
-            <EnhancedCoachPanel 
-              content={localContent}
-              textType={textType}
-              analysis={analysis}
-            />
-          </div>
-        )}
       </div>
+
+      {/* Right Panel - Coach */}
+      {panelVisible && (
+        <div className="w-1/3 border-l border-gray-200 overflow-y-auto p-4">
+          <EnhancedCoachPanel 
+            content={localContent}
+            textType={textType}
+            analysis={analysis}
+          />
+        </div>
+      )}
 
       {/* Modals and other components */}
       <PlanningToolModal
@@ -527,6 +560,22 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
           report={nswReport}
           onApplyFix={handleApplyFix}
         />
+      )}
+
+      {/* NSW Evaluation Loading Overlay */}
+      {showNSWEvaluation && (
+        <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 shadow-xl w-full max-w-md text-center">
+            <div className="animate-pulse mb-4">
+              <Zap className="w-12 h-12 text-blue-500 mx-auto" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">NSW Evaluation in Progress</h2>
+            <p className="text-gray-600 mb-6">{evaluationProgress}</p>
+            <div className="w-full bg-gray-200 rounded-full h-2.5">
+              <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${evaluationProgress.length * 10}%` }}></div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Error Display */}
