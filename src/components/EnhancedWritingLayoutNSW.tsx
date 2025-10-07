@@ -1,4 +1,4 @@
-// src/components/EnhancedWritingLayoutNSW.tsx - COMPLETE FIX WITH TOOLBAR
+// src/components/EnhancedWritingLayoutNSW.tsx - COMPLETE FIX WITH TEXTAREA
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { PlanningToolModal } from './PlanningToolModal';
@@ -76,7 +76,6 @@ interface EnhancedWritingLayoutNSWProps {
   openAILoading?: boolean;
   panelVisible?: boolean;
   setPanelVisible?: (visible: boolean) => void;
-  children?: React.ReactNode;
 }
 
 export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
@@ -119,7 +118,6 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
     panelVisible = true,
     setPanelVisible,
     setPrompt,
-    children,
   } = props;
 
   // State management
@@ -690,9 +688,20 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
           </div>
         )}
 
-        {/* Writing Area - Now renders children instead of textarea */}
+        {/* Writing Area - Now includes the textarea */}
         <div className="flex-1 p-6">
-          {children}
+          <textarea
+            ref={textareaRef}
+            value={localContent}
+            onChange={(e) => handleContentChange(e.target.value)}
+            className={`w-full h-full p-4 text-base leading-relaxed resize-none focus:outline-none border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+              darkMode 
+                ? 'bg-gray-800 border-gray-600 text-gray-100 placeholder-gray-400' 
+                : 'bg-white border-gray-200 text-gray-900 placeholder-gray-500'
+            }`}
+            style={{ fontFamily, fontSize: `${fontSize}px`, lineHeight }}
+            placeholder="Start writing here..."
+          />
         </div>
 
         {/* Enhanced Submit Button - Full Width */}
