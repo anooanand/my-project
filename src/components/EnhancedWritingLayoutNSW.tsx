@@ -315,7 +315,10 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
     };
   };
 
-
+  // Calculate word count and content status - MUST be defined before handleSubmitForEvaluation
+  const hasContent = localContent.trim().length > 0;
+  const currentWordCount = localContent.trim() ? localContent.trim().split(/\s+/).length : 0;
+  const showWordCountWarning = currentWordCount > 300;
 
   const handleSubmitForEvaluation = useCallback(async () => {
     console.log('🎯 Submit button clicked!');
@@ -383,11 +386,6 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
       console.error("Error applying fix:", error);
     }
   }, [localContent, handleContentChange]);
-
-  // Calculate word count and content status
-  const hasContent = localContent.trim().length > 0;
-  const currentWordCount = localContent.trim() ? localContent.trim().split(/\s+/).length : 0;
-  const showWordCountWarning = currentWordCount > 300;
 
   return (
     <div className={`flex h-screen transition-colors duration-300 ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
