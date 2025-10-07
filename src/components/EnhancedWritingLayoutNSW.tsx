@@ -384,9 +384,9 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
     }
   }, [localContent, handleContentChange]);
 
-  // These were moved to the top of handleSubmitForEvaluation
-  // const hasContent = localContent.trim().length > 0;
-  // const currentWordCount = localContent.trim() ? localContent.trim().split(/\s+/).length : 0;
+  // Calculate word count and content status
+  const hasContent = localContent.trim().length > 0;
+  const currentWordCount = localContent.trim() ? localContent.trim().split(/\s+/).length : 0;
   const showWordCountWarning = currentWordCount > 300;
 
   return (
