@@ -719,14 +719,14 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
         {/* Writing Area */}
         <div className="flex-1 p-6">
-          <textarea
+         {/*} <textarea
             ref={textareaRef}
             value={localContent}
             onChange={(e) => handleContentChange(e.target.value)}
             className="w-full h-full p-4 text-base leading-relaxed resize-none focus:outline-none border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             style={{ fontFamily, fontSize: `${fontSize}px`, lineHeight }}
             placeholder="Start writing here..."
-          />
+          /> */}
         </div>
 
         {/* Enhanced Submit Button - Full Width */}
