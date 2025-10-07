@@ -373,7 +373,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
       const convertedReport = convertNSWReportToDetailedFeedback(report);
       console.log('Converted report:', convertedReport);
       
-      setNswReport(convertedReport);
+      onNSWEvaluationComplete(convertedReport);
       setShowNSWEvaluation(false);
       setShowReportModal(true);
       setEvaluationStatus("success");
@@ -385,7 +385,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
       setShowNSWEvaluation(false);
       alert(`There was an error evaluating your writing: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`);
     }
-  }, [localContent, textType, effectivePrompt, currentWordCount, onSubmit, hasContent]);
+  }, [localContent, textType, effectivePrompt, currentWordCount, onSubmit, hasContent, onNSWEvaluationComplete, setEvaluationStatus, setShowNSWEvaluation]);
 
   const handleApplyFix = useCallback((fix: LintFix) => {
     try {
@@ -400,7 +400,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
   return (
     <div className={`flex h-screen transition-colors duration-300 ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
+      <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between w-full">
         <div className="flex items-center space-x-4">
           <h1 className="text-xl font-bold text-gray-900">Your Writing Prompt</h1>
           <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">{textType}</span>
@@ -429,38 +429,44 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left Panel - Writing Area */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col p-6">
           {/* Prompt */}
           {!hidePrompt && effectivePrompt && (
-            <div className="bg-blue-50 border-b border-blue-200 p-3">
+            <div className="bg-blue-50 border-b border-blue-200 p-3 mb-4">
               <p className="text-sm text-blue-800 leading-relaxed">{effectivePrompt}</p>
             </div>
           )}
 
           {/* Writing Area */}
-          <div className="flex-1 flex flex-col p-6">
-            <div className="flex-1 bg-white rounded-lg border border-gray-200 shadow-sm relative mb-4">
-              <InteractiveTextEditor
-                value={localContent}
-                onChange={handleContentChange}
-                onAnalyze={() => { /* Implement analysis logic here if needed */ }}
-                className="h-full"
-              />
+          <div className="flex-1 flex flex-col bg-white rounded-lg border border-gray-200 shadow-sm relative">
+            <InteractiveTextEditor
+              value={localContent}
+              onChange={handleContentChange}
+              onAnalyze={() => { /* Implement analysis logic here if needed */ }}
+              className="h-full"
+            />
+          </div>
+          
+          {showNSWEvaluation ? (
+            <div className="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg p-8 shadow-xl w-full max-w-md text-center">
+                <div className="animate-pulse mb-4">
+                  <Zap className="w-12 h-12 text-blue-500 mx-auto" />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">NSW Evaluation in Progress</h2>
+                <p className="text-gray-600 mb-6">{evaluationProgress}</p>
+                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                  <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${evaluationProgress.length * 10}%` }}></div>
+                </div>
+              </div>
             </div>
-            {/* Submit Button */}
-            <div className="w-full">
+          ) : (
+            <div className="mt-4">
               <button
                 onClick={handleSubmitForEvaluation}
-                disabled={evaluationStatus === "loading" || currentWordCount < 50}
-                className={`w-full py-3 px-6 rounded-lg font-semibold text-white transition-all duration-200 ${
-                  evaluationStatus === "loading" 
-                    ? 'bg-gray-400 cursor-not-allowed' 
-                    : currentWordCount < 50
-                    ? 'bg-gray-300 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-lg hover:shadow-xl'
-                }`}
-              >
-                {evaluationStatus === "loading" ? (
+                disabled={!hasContent || evaluationStatus === 'loading'}
+                className={`w-full px-6 py-3 text-white font-bold rounded-md transition-colors duration-300 ${!hasContent || evaluationStatus === 'loading' ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}>
+                {evaluationStatus === 'loading' ? (
                   <div className="flex items-center justify-center">
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3"></div>
                     Generating NSW Assessment Report...
@@ -469,58 +475,25 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
                   `Submit for NSW Evaluation (${currentWordCount} words)`
                 )}
               </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Panel - Coach & Analysis */}
-        <div className="w-96 border-l border-gray-200 bg-white flex flex-col">
-          {showNSWEvaluation ? (
-            /* NSW Evaluation System */
-            <div className="h-full p-4">
-              <div className="h-full bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg border border-purple-200">
-                <div className="p-4 border-b border-purple-200">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-purple-800">NSW Assessment</h3>
-                    <button
-                      onClick={() => setShowNSWEvaluation(false)}
-                      className="text-purple-600 hover:text-purple-800 text-sm"
-                    >
-                      ← Back to Coach
-                    </button>
-                  </div>
-                </div>
-                <div className="h-full overflow-auto">
-                  <NSWStandaloneSubmitSystem
-                    content={localContent}
-                    wordCount={currentWordCount}
-                    targetWordCountMin={100}
-                    targetWordCountMax={400}
-                    textType={textType}
-                    prompt={effectivePrompt || ''}
-                    onSubmissionComplete={(report) => {
-                      const convertedReport = convertNSWReportToDetailedFeedback(report);
-                      setNswReport(convertedReport);
-                      setShowNSWEvaluation(false);
-                      setShowReportModal(true);
-                      setEvaluationStatus("success");
-                      if (onAnalysisChange) onAnalysisChange(convertedReport);
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-          ) : (
-            /* Coach Panel */
-            <div className="h-full">
-              <EnhancedCoachPanel 
-                content={localContent}
-                textType={textType}
-                analysis={analysis}
-              />
+              {showWordCountWarning && (
+                <p className="text-sm text-red-600 mt-2">
+                  Note: The NSW evaluation is optimized for responses around 300 words. Longer texts may result in a less accurate assessment.
+                </p>
+              )}
             </div>
           )}
         </div>
+
+        {/* Right Panel - Coach */}
+        {panelVisible && (
+          <div className="w-1/3 border-l border-gray-200 overflow-y-auto p-4">
+            <EnhancedCoachPanel 
+              content={localContent}
+              textType={textType}
+              analysis={analysis}
+            />
+          </div>
+        )}
       </div>
 
       {/* Modals and other components */}
@@ -571,3 +544,4 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
       )}
     </div>
   );
+}
