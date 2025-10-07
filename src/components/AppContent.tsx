@@ -7,6 +7,7 @@ import './layout-fix.css';
 
 // Add this import at the top with other imports
 import { EnhancedWritingLayoutNSW } from './EnhancedWritingLayoutNSW';
+import { LearningPage } from './LearningPage';
 
 import { NavBar } from './NavBar';
 import { HeroSection } from './HeroSection';
