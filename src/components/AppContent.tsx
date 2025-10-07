@@ -1,4 +1,4 @@
-// src/components/AppContent.tsx - COMPLETE FIX
+// src/components/AppContent.tsx
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
@@ -6,7 +6,8 @@ import { useAuth } from '../contexts/AuthContext';
 import './layout-fix.css';
 
 // Add this import at the top with other imports
-import WritingWorkspaceFixed from '../pages/WritingWorkspace';
+import { EnhancedWritingLayoutNSW } from './EnhancedWritingLayoutNSW';
+
 import { NavBar } from './NavBar';
 import { HeroSection } from './HeroSection';
 import { FeaturesSection } from './FeaturesSection';
@@ -24,12 +25,9 @@ import { FAQPage } from './FAQPage';
 import { AboutPage } from './AboutPage';
 import { SettingsPage } from './SettingsPage';
 import { ErrorBoundary } from './ErrorBoundary';
-
 // Writing components
 import { SplitScreen } from './SplitScreen';
 import { TabbedCoachPanel } from './TabbedCoachPanel';
-import { EnhancedWritingLayoutNSW } from './EnhancedWritingLayoutNSW';
-import { LearningPage } from './LearningPage';
 import { ExamSimulationMode } from './ExamSimulationMode';
 import { SupportiveFeatures } from './SupportiveFeatures';
 import { HelpCenter } from './HelpCenter';
@@ -418,40 +416,7 @@ function AppContent() {
           } />
           <Route path="/writing" element={
             <WritingAccessCheck onNavigate={handleNavigation}>
-              <EnhancedWritingLayoutNSW
-                content={content}
-                onChange={setContent}
-                textType={textType}
-                initialPrompt={prompt || ''}
-                wordCount={0} // This will be updated by the component itself
-                onWordCountChange={() => {}} // Placeholder, as the component manages it
-                isTimerRunning={timerStarted}
-                elapsedTime={0} // Placeholder, as the component manages it
-                onStartTimer={() => setTimerStarted(true)}
-                onPauseTimer={() => setTimerStarted(false)}
-                onResetTimer={() => { /* reset timer logic */ setTimerStarted(false); }}
-                focusMode={false} // Placeholder
-                onToggleFocus={() => {}} // Placeholder
-                showStructureGuide={showPlanningTool}
-                onToggleStructureGuide={() => setShowPlanningTool(!showPlanningTool)}
-                showTips={showHelpCenter}
-                onToggleTips={() => setShowHelpCenter(!showHelpCenter)}
-                analysis={null} // Placeholder
-                onAnalysisChange={() => {}} // Placeholder
-                setPrompt={setPrompt}
-                assistanceLevel={assistanceLevel}
-                onAssistanceLevelChange={setAssistanceLevel}
-                onSubmit={() => { /* submission logic */ }}
-                selectedText={selectedText}
-                onTextTypeChange={handleTextTypeChange}
-                onPopupCompleted={handlePopupCompleted}
-                popupFlowCompleted={popupFlowCompleted}
-                user={user}
-                openAIConnected={openAIConnected}
-                openAILoading={openAILoading}
-                panelVisible={panelVisible}
-                setPanelVisible={setPanelVisible}
-              />
+              <EnhancedWritingLayoutNSW />
             </WritingAccessCheck>
           } />
           <Route path="/learning" element={
@@ -468,39 +433,20 @@ function AppContent() {
             <PaymentSuccessPage 
               planType={pendingPaymentPlan || 'premium'}
               onNavigate={handleNavigation}
+              userEmail={user?.email || ''}
             />
           } />
           <Route path="/auth/callback" element={<EmailVerificationHandler />} />
+          <Route path="*" element={<Navigate to="/" />} />
         </Routes>
-
-        {/* Footer - only show on certain pages */}
-        {shouldShowFooter() && <Footer />}
-
-        {/* Auth Modal */}
-        {showAuthModal && (
-          <AuthModal
-            mode={authModalMode}
-            onClose={() => setShowAuthModal(false)}
-            onSwitchMode={(mode) => setAuthModalMode(mode)}
-          />
-        )}
-
-        {/* Help Center */}
-        {showHelpCenter && (
-          <HelpCenter onClose={() => setShowHelpCenter(false)} />
-        )}
-
-        {/* Planning Tool Modal */}
-        {showPlanningTool && (
-          <PlanningToolModal 
-            onClose={() => setShowPlanningTool(false)}
-            textType={textType}
-          />
-        )}
-
-        {/* Admin Button - only show for admin users */}
-        <AdminButton />
       </div>
+      {shouldShowFooter() && <Footer />}
+      <AuthModal
+        show={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        mode={authModalMode}
+        onModeChange={setAuthModalMode}
+      />
     </div>
   );
 }
