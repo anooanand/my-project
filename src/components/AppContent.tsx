@@ -417,7 +417,40 @@ function AppContent() {
           } />
           <Route path="/writing" element={
             <WritingAccessCheck onNavigate={handleNavigation}>
-              <EnhancedWritingLayoutNSW />
+              <EnhancedWritingLayoutNSW
+                content={content}
+                onChange={setContent}
+                textType={textType}
+                initialPrompt={prompt || ''}
+                wordCount={0} // This will be updated by the component itself
+                onWordCountChange={() => {}} // Placeholder, as the component manages it
+                isTimerRunning={timerStarted}
+                elapsedTime={0} // Placeholder, as the component manages it
+                onStartTimer={() => setTimerStarted(true)}
+                onPauseTimer={() => setTimerStarted(false)}
+                onResetTimer={() => { /* reset logic */ }}
+                focusMode={false}
+                onToggleFocus={() => { /* toggle logic */ }}
+                showStructureGuide={false}
+                onToggleStructureGuide={() => { /* toggle logic */ }}
+                showTips={false}
+                onToggleTips={() => { /* toggle logic */ }}
+                analysis={null}
+                onAnalysisChange={() => { /* handle analysis change */ }}
+                setPrompt={setPrompt}
+                assistanceLevel={assistanceLevel}
+                onAssistanceLevelChange={setAssistanceLevel}
+                onSubmit={handleSubmit}
+                selectedText={selectedText}
+                onTextTypeChange={handleTextTypeChange}
+                onPopupCompleted={handlePopupCompleted}
+                popupFlowCompleted={popupFlowCompleted}
+                user={user}
+                openAIConnected={openAIConnected}
+                openAILoading={openAILoading}
+                panelVisible={panelVisible}
+                setPanelVisible={setPanelVisible}
+              />
             </WritingAccessCheck>
           } />
           <Route path="/learning" element={
@@ -432,22 +465,31 @@ function AppContent() {
           } />
           <Route path="/payment-success" element={
             <PaymentSuccessPage 
-              planType={pendingPaymentPlan || 'premium'}
+              planType={pendingPaymentPlan}
               onNavigate={handleNavigation}
-              userEmail={user?.email || ''}
+              onClose={() => setShowPaymentSuccess(false)}
             />
           } />
-          <Route path="/auth/callback" element={<EmailVerificationHandler />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
+
+        {showAuthModal && (
+          <AuthModal
+            mode={authModalMode}
+            onClose={() => setShowAuthModal(false)}
+            onSignInSuccess={() => {
+              setShowAuthModal(false);
+              // navigate('/dashboard'); // Navigate to dashboard after successful sign-in
+            }}
+            onSignUpSuccess={() => {
+              setShowAuthModal(false);
+              // navigate('/dashboard'); // Navigate to dashboard after successful sign-up
+            }}
+          />
+        )}
+
+        {shouldShowFooter() && <Footer />}
       </div>
-      {shouldShowFooter() && <Footer />}
-      <AuthModal
-        show={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        mode={authModalMode}
-        onModeChange={setAuthModalMode}
-      />
     </div>
   );
 }
