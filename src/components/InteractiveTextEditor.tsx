@@ -12,14 +12,20 @@ export interface EditorHandle {
   applyFix(start: number, end: number, replacement: string): void;
 }
 
-export const InteractiveTextEditor = React.forwardRef<EditorHandle, { 
+interface InteractiveTextEditorProps {
   initial?: string;
   placeholder?: string;
   className?: string;
-}>(({ 
+  onTextChange?: (text: string) => void;
+  onProgressUpdate?: (metrics: any) => void;
+}
+
+export const InteractiveTextEditor = React.forwardRef<EditorHandle, InteractiveTextEditorProps>(({ 
   initial = "", 
   placeholder = "Start your draft here…",
-  className = "w-full h-96 p-3 rounded-xl border"
+  className = "w-full h-96 p-3 rounded-xl border",
+  onTextChange,
+  onProgressUpdate
 }, ref) => {
   const [text, setText] = React.useState(initial);
   const prevRef = React.useRef(initial);
@@ -35,8 +41,9 @@ export const InteractiveTextEditor = React.forwardRef<EditorHandle, {
       const newText = before + replacement + after;
       setText(newText);
       prevRef.current = newText;
+      if (onTextChange) onTextChange(newText);
     }
-  }), [text]);
+  }), [text, onTextChange]);
 
   function onChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
     const next = e.target.value;
@@ -93,6 +100,17 @@ export const InteractiveTextEditor = React.forwardRef<EditorHandle, {
 
     prevRef.current = next;
     setText(next);
+    
+    // Call the onTextChange callback
+    if (onTextChange) {
+      onTextChange(next);
+    }
+    
+    // Call progress update callback
+    if (onProgressUpdate) {
+      const wordCount = next.trim() ? next.trim().split(/\s+/).length : 0;
+      onProgressUpdate({ wordCount, text: next });
+    }
   }
 
   // Cleanup timeout on unmount
@@ -118,3 +136,9 @@ export const InteractiveTextEditor = React.forwardRef<EditorHandle, {
     </div>
   );
 });
+
+// Add display name for debugging
+InteractiveTextEditor.displayName = 'InteractiveTextEditor';
+
+// Default export for compatibility
+export default InteractiveTextEditor;
