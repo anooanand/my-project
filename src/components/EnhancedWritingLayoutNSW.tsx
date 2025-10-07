@@ -460,9 +460,11 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
           <div className="flex items-center space-x-3">
             {/* Planning Tool */}
             <button
-              onClick={() => setShowPlanningTool(true)}
+              onClick={() => setShowPlanningTool(!showPlanningTool)}
               className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
-                darkMode
+                showPlanningTool
+                  ? 'bg-blue-500 text-white border-blue-500 hover:bg-blue-600'
+                  : darkMode
                   ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
               }`}
@@ -474,7 +476,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
             {/* Structure Guide */}
             <button
-              onClick={onToggleStructureGuide}
+              onClick={() => onToggleStructureGuide && onToggleStructureGuide()}
               className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
                 showStructureGuide
                   ? 'bg-blue-500 text-white border-blue-500 hover:bg-blue-600'
@@ -490,7 +492,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
             {/* Tips */}
             <button
-              onClick={onToggleTips}
+              onClick={() => onToggleTips && onToggleTips()}
               className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
                 showTips
                   ? 'bg-blue-500 text-white border-blue-500 hover:bg-blue-600'
@@ -498,7 +500,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
                   ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
               }`}
-              title="Writing Tips"
+              title="Tips"
             >
               <LightbulbIcon className="w-4 h-4" />
               <span>Tips</span>
@@ -506,7 +508,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
             {/* Focus Mode */}
             <button
-              onClick={onToggleFocus}
+              onClick={() => onToggleFocus && onToggleFocus()}
               className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
                 focusMode
                   ? 'bg-blue-500 text-white border-blue-500 hover:bg-blue-600'
@@ -626,13 +628,15 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
                 ⚙️ Writing Settings
               </h4>
               <button
-                onClick={() => setShowSettings(false)}
-                className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
-                  darkMode
-                    ? 'text-gray-400 hover:text-gray-200 hover:bg-gray-700'
-                    : 'text-gray-600 hover:text-gray-800 hover:bg-gray-200'
-                }`}
-              >
+              onClick={() => setShowPlanningTool(!showPlanningTool)}
+              className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
+                showPlanningTool
+                  ? 'bg-blue-500 text-white border-blue-500 hover:bg-blue-600'
+                  : darkMode
+                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+              title="Planning Tool"    >
                 <X className="w-4 h-4" />
                 <span>Close</span>
               </button>
