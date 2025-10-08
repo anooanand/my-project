@@ -61,16 +61,35 @@ All original files saved in:
 
 ---
 
-## 🔄 Restoration Options
+## 🔄 Theme Control
 
-### Option 1: Quick Toggle (Recommended)
-Comment the import in `index.css` - **10 seconds**
+### ✨ NEW: Built-in Theme Toggle! ✨
 
-### Option 2: Full Restore
+**You can now switch between light and dark mode instantly!**
+
+**Desktop:** Look for the 🌙/☀️ button in the top navigation bar (top-right corner)
+**Mobile:** Open the hamburger menu - toggle is the first item
+
+**How it works:**
+- Click the moon icon (🌙) to switch to dark mode
+- Click the sun icon (☀️) to switch to light mode
+- Your preference is saved automatically
+- Works across all pages instantly
+
+**See:** `THEME_TOGGLE_GUIDE.md` for detailed instructions
+
+---
+
+### Manual Restoration (if needed)
+
+#### Option 1: Use the Toggle (Recommended)
+Click the theme button in the nav bar - **Instant**
+
+#### Option 2: Change Default Theme
+Edit `src/contexts/ThemeContext.tsx` line 16 - **30 seconds**
+
+#### Option 3: Full Restore
 Copy files from `.backups/` folder - **2 minutes**
-
-### Option 3: Keep Both
-Implement theme toggle button - Users choose!
 
 ---
 
