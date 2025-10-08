@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { PlanningToolModal } from './PlanningToolModal';
 import { StructureGuideModal } from './StructureGuideModal';
 import { TipsModal } from './TipsModal';
-import EnhancedCoachPanel from './EnhancedCoachPanel';
+import { EnhancedCoachPanel } from './EnhancedCoachPanel'; // Corrected import
 import { NSWStandaloneSubmitSystem } from './NSWStandaloneSubmitSystem';
 import { ReportModal } from './ReportModal';
 import { PromptOptionsModal } from './PromptOptionsModal';
@@ -436,24 +436,84 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
               }`}
             >
               {isPromptCollapsed ? (
-                <><ChevronDown className="w-4 h-4" /><span>Show Prompt</span></>
+                <>
+                  <ChevronDown className="w-4 h-4" />
+                  <span>Show Prompt</span>
+                </>
               ) : (
-                <><ChevronUp className="w-4 h-4" /><span>Hide Prompt</span></>
+                <>
+                  <ChevronUp className="w-4 h-4" />
+                  <span>Hide Prompt</span>
+                </>
               )}
             </button>
           </div>
           {!isPromptCollapsed && (
             <div className={`px-4 pb-4 text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-              <p className="whitespace-pre-wrap">{effectivePrompt}</p>
+              <p className="whitespace-pre-wrap">**Prompt**: {effectivePrompt}</p>
             </div>
           )}
         </div>
 
-        {/* Writing Controls Bar */}
-        <div className={`flex items-center justify-between p-3 border-b flex-shrink-0 ${
+        {/* Writing Tools Bar */}
+        <div className={`flex items-center justify-between p-4 border-b flex-shrink-0 ${
           darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
         }`}>
           <div className="flex items-center space-x-4">
+            {/* Planning Tool Button */}
+            <button
+              onClick={() => setShowPlanningTool(true)}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
+                showPlanningTool
+                  ? darkMode
+                    ? 'bg-blue-900 text-blue-200'
+                    : 'bg-blue-600 text-white'
+                  : darkMode
+                  ? 'text-gray-300 hover:bg-gray-700'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+              title="Planning Tool"
+            >
+              <PenTool className="w-4 h-4" />
+              <span className="text-sm font-medium">Plan</span>
+            </button>
+
+            {/* Structure Guide Button */}
+            <button
+              onClick={onToggleStructureGuide}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
+                showStructureGuide
+                  ? darkMode
+                    ? 'bg-green-900 text-green-200'
+                    : 'bg-green-600 text-white'
+                  : darkMode
+                  ? 'text-gray-300 hover:bg-gray-700'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+              title="Structure Guide"
+            >
+              <BarChart3 className="w-4 h-4" />
+              <span className="text-sm font-medium">Structure</span>
+            </button>
+
+            {/* Tips Button */}
+            <button
+              onClick={onToggleTips}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
+                showTips
+                  ? darkMode
+                    ? 'bg-yellow-900 text-yellow-200'
+                    : 'bg-yellow-600 text-white'
+                  : darkMode
+                  ? 'text-gray-300 hover:bg-gray-700'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+              title="Tips"
+            >
+              <LightbulbIcon className="w-4 h-4" />
+              <span className="text-sm font-medium">Tips</span>
+            </button>
+
             {/* Exam Mode Button */}
             <button
               onClick={() => setExamMode(!examMode)}
@@ -499,22 +559,17 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
                 {formatTime(elapsedTime)}
               </span>
               <button
-                onClick={onStartTimer}
+                onClick={isTimerRunning ? onPauseTimer : onStartTimer}
                 className={`p-1 rounded transition-colors ${
                   darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-200'
                 }`}
-                title="Start Timer"
+                title={isTimerRunning ? "Pause Timer" : "Start Timer"}
               >
-                <PlayCircle className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />
-              </button>
-              <button
-                onClick={onPauseTimer}
-                className={`p-1 rounded transition-colors ${
-                  darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-200'
-                }`}
-                title="Pause Timer"
-              >
-                <PauseCircle className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />
+                {isTimerRunning ? (
+                  <PauseCircle className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />
+                ) : (
+                  <PlayCircle className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />
+                )}
               </button>
               <button
                 onClick={onResetTimer}
@@ -533,9 +588,6 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
               <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                 {currentWordCount} words
               </span>
-              {showWordCountWarning && (
-                <AlertCircle className="w-4 h-4 text-red-500" title="Word count exceeds typical limits" />
-              )}
             </div>
 
             {/* Settings Button */}
@@ -686,8 +738,6 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
             openAIConnected={openAIConnected}
             openAILoading={openAILoading}
             onSubmitForEvaluation={handleSubmitForEvaluation}
-            // Pass elapsedTime to EnhancedCoachPanel
-            elapsedTime={elapsedTime}
           />
         </div>
       )}
