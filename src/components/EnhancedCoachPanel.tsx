@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Send, MessageSquare, BarChart3, Lightbulb, Target, Star, TrendingUp, Award } from 'lucide-react';
 
