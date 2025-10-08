@@ -37,7 +37,7 @@ export class NSWEvaluationReportGenerator {
         band: this.getScoreBand(contentAndIdeasScore),
         weight: 40,
         weightedScore: Math.round((contentAndIdeasScore / 10) * 40),
-        feedback: this.getFeedbackForContentAndIdeas(contentAndIdeasScore),
+        feedback: NSWEvaluationReportGenerator.getFeedbackForContentAndIdeas(contentAndIdeasScore),
         specificExamples: this.getSpecificExamplesForContentAndIdeas(essayContent, contentAndIdeasScore),
         childFriendlyExplanation: this.getChildFriendlyExplanation("contentAndIdeas", contentAndIdeasScore)
       },
@@ -48,7 +48,7 @@ export class NSWEvaluationReportGenerator {
         band: this.getScoreBand(textStructureScore),
         weight: 20,
         weightedScore: Math.round((textStructureScore / 10) * 20),
-        feedback: this.getFeedbackForTextStructure(textStructureScore),
+        feedback: NSWEvaluationReportGenerator.getFeedbackForTextStructure(textStructureScore),
         specificExamples: this.getSpecificExamplesForTextStructure(essayContent, textStructureScore),
         childFriendlyExplanation: this.getChildFriendlyExplanation("textStructure", textStructureScore)
       },
@@ -59,7 +59,7 @@ export class NSWEvaluationReportGenerator {
         band: this.getScoreBand(languageFeaturesScore),
         weight: 25,
         weightedScore: Math.round((languageFeaturesScore / 10) * 25),
-        feedback: this.getFeedbackForLanguageFeatures(languageFeaturesScore),
+        feedback: NSWEvaluationReportGenerator.getFeedbackForLanguageFeatures(languageFeaturesScore),
         specificExamples: this.getSpecificExamplesForLanguageFeatures(essayContent, languageFeaturesScore),
         childFriendlyExplanation: this.getChildFriendlyExplanation("languageFeatures", languageFeaturesScore)
       },
@@ -70,7 +70,7 @@ export class NSWEvaluationReportGenerator {
         band: this.getScoreBand(spellingAndGrammarScore),
         weight: 15,
         weightedScore: Math.round((spellingAndGrammarScore / 10) * 15),
-        feedback: this.getFeedbackForSpellingAndGrammar(spellingAndGrammarScore),
+        feedback: NSWEvaluationReportGenerator.getFeedbackForSpellingAndGrammar(spellingAndGrammarScore),
         specificExamples: this.getSpecificExamplesForSpellingAndGrammar(essayContent, spellingAndGrammarScore),
         childFriendlyExplanation: this.getChildFriendlyExplanation("spellingAndGrammar", spellingAndGrammarScore)
       },
@@ -264,7 +264,7 @@ export class NSWEvaluationReportGenerator {
     return "Limited";
   }
 
-  private static scoreContentAndIdeas(essayContent: string, prompt: string, wordCount: number, targetWordCountMin: number, targetWordCountMax: number, promptCheck: ReturnType<typeof NSWEvaluationReportGenerator['checkPromptRequirements']>): number {
+  private static scoreContentAndIdeas(essayContent: string, prompt: string, wordCount: number, targetWordCountMin: number, targetWordCountMax: number, promptCheck: ReturnType<typeof NSWEvaluationReportGenerator["checkPromptRequirements"]>): number {
     let score = 2; // Lowered base score
     const lowerContent = essayContent.toLowerCase();
     const words = essayContent.split(/\s+/);
@@ -454,7 +454,7 @@ export class NSWEvaluationReportGenerator {
     
     // Content-specific strengths
     const lowerContent = essayContent.toLowerCase();
-    if (essayContent.includes('"') || essayContent.includes("'")) {
+    if (essayContent.includes("\"") || essayContent.includes("'")) {
       strengths.push("Uses dialogue effectively");
     }
     
@@ -478,7 +478,7 @@ export class NSWEvaluationReportGenerator {
     wordCount: number,
     targetWordCountMin: number,
     targetWordCountMax: number,
-    promptCheck: ReturnType<typeof NSWEvaluationReportGenerator['checkPromptRequirements']>
+    promptCheck: ReturnType<typeof NSWEvaluationReportGenerator["checkPromptRequirements"]>
   ): string[] {
     const improvements: string[] = [];
     
@@ -516,16 +516,16 @@ export class NSWEvaluationReportGenerator {
     const articleErrors = essayContent.match(/\ba ([aeiouAEIOU]\w*)/g);
     if (articleErrors && articleErrors.length > 0) {
       const examples = articleErrors.slice(0, 2);
-      const fixed = examples.map(err => err.replace(/\ba /i, 'an ')).join(', ');
-      const original = examples.join(', ');
-      improvements.push(`🔤 Fix article error(s): "${original}" should be "${fixed}"`);
+      const fixed = examples.map(err => err.replace(/\ba /i, "an ")).join(", ");
+      const original = examples.join(", ");
+      improvements.push(`🔤 Fix article error(s): \"${original}\" should be \"${fixed}\"`)
     }
     
     // Check for "telling" vs "showing"
     const lowerContent = essayContent.toLowerCase();
     if (lowerContent.includes("teaching me") || lowerContent.includes("i learned that") ||
         lowerContent.includes("i realized that")) {
-      improvements.push(`✍️ Show character transformation through actions/dialogue instead of telling ("teaching me that...")`);
+      improvements.push(`✍️ Show character transformation through actions/dialogue instead of telling (\"teaching me that...\")`);
     }
     
     // Domain-specific improvements (only if score is below 7)
@@ -625,7 +625,7 @@ export class NSWEvaluationReportGenerator {
       }
     };
     
-    const level = score >= 8 ? 'high' : score >= 5 ? 'medium' : 'low';
+    const level = score >= 8 ? "high" : score >= 5 ? "medium" : "low";
     return explanations[domain]?.[level] || "Keep working on this area!";
   }
 
@@ -672,7 +672,7 @@ export class NSWEvaluationReportGenerator {
     if (score >= 7) {
       examples.push("Good use of sophisticated vocabulary");
       if (longWords.length > 3) {
-        examples.push(`Strong vocabulary examples: ${longWords.slice(0, 3).join(', ')}`);
+        examples.push(`Strong vocabulary examples: ${longWords.slice(0, 3).join(", ")}`);
       }
     } else if (score >= 5) {
       examples.push("Adequate vocabulary - add more figurative language");
@@ -694,7 +694,7 @@ export class NSWEvaluationReportGenerator {
     if (score >= 8) {
       examples.push("✅ Excellent technical accuracy throughout");
       if (articleErrors && articleErrors.length > 0) {
-        examples.push(`Minor fix needed: "${articleErrors[0]}" should use 'an' instead of 'a'`);
+        examples.push(`Minor fix needed: \"${articleErrors[0]}\" should use 'an' instead of 'a'`);
       } else {
         examples.push("Very few or no errors in spelling, punctuation, or grammar");
       }
@@ -702,16 +702,16 @@ export class NSWEvaluationReportGenerator {
       examples.push("Generally good with some minor errors to fix");
       if (articleErrors && articleErrors.length > 0) {
         const example = articleErrors[0];
-        const fixed = example.replace(/\ba /i, 'an ');
-        examples.push(`Article error: "${example}" should be "${fixed}"`);
+        const fixed = example.replace(/\ba /i, "an ");
+        examples.push(`Article error: \"${example}\" should be \"${fixed}\"`);
       }
       examples.push("Double-check article usage (a/an) and common homophones");
     } else {
       examples.push("Several errors need attention - proofread carefully");
       if (articleErrors && articleErrors.length > 0) {
         const example = articleErrors[0];
-        const fixed = example.replace(/\ba /i, 'an ');
-        examples.push(`Fix: "${example}" → "${fixed}"`);
+        const fixed = example.replace(/\ba /i, "an ");
+        examples.push(`Fix: \"${example}\" → \"${fixed}\"`);
       }
       examples.push("Focus on: spelling, article usage, punctuation");
     }
@@ -744,8 +744,8 @@ export class NSWEvaluationReportGenerator {
     const devices = [];
     const lower = essayContent.toLowerCase();
     
-    if (lower.includes(' like ') || lower.includes(' as ')) devices.push('Simile');
-    if (lower.match(/\b(\w+)\s+\1\b/)) devices.push('Repetition for effect');
+    if (lower.includes(" like ") || lower.includes(" as ")) devices.push("Simile");
+    if (lower.match(/\b(\w+)\s+\1\b/)) devices.push("Repetition for effect");
     
     return {
       identified: devices,
@@ -770,5 +770,33 @@ export class NSWEvaluationReportGenerator {
       grammarIssues: [],
       punctuationIssues: []
     };
+  }
+
+  private static getFeedbackForContentAndIdeas(score: number): string[] {
+    if (score >= 8) return ["Excellent, well-developed ideas that directly address the prompt."];
+    if (score >= 6) return ["Good ideas, but could be more developed or consistently linked to the prompt."];
+    if (score >= 4) return ["Ideas are present but may be generic or not fully address the prompt."];
+    return ["Ideas are unclear or do not address the prompt. Focus on understanding the question."];
+  }
+
+  private static getFeedbackForTextStructure(score: number): string[] {
+    if (score >= 8) return ["Clear and effective structure with a strong introduction, body, and conclusion."];
+    if (score >= 6) return ["Good structure, but could be improved with clearer topic sentences or transitions."];
+    if (score >= 4) return ["Some structure is present, but it may be inconsistent or confusing."];
+    return ["Lacks a clear structure. Focus on creating a clear beginning, middle, and end."];
+  }
+
+  private static getFeedbackForLanguageFeatures(score: number): string[] {
+    if (score >= 8) return ["Excellent use of language features, including sophisticated vocabulary and figurative language."];
+    if (score >= 6) return ["Good use of language features, but could be more varied or consistent."];
+    if (score >= 4) return ["Some use of language features, but they may be simple or used incorrectly."];
+    return ["Limited use of language features. Focus on using more descriptive language."];
+  }
+
+  private static getFeedbackForSpellingAndGrammar(score: number): string[] {
+    if (score >= 8) return ["Excellent spelling and grammar with very few errors."];
+    if (score >= 6) return ["Good spelling and grammar, but with some errors that need correction."];
+    if (score >= 4) return ["Several spelling and grammar errors that impact readability."];
+    return ["Numerous spelling and grammar errors that make the writing difficult to understand."];
   }
 }
