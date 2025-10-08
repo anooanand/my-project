@@ -144,6 +144,11 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Start with prompt collapsed to maximize writing space
+  useEffect(() => {
+    setIsPromptCollapsed(true);
+  }, []);
+
   // Calculate word count first (needed by other metrics)
   const currentWordCount = React.useMemo(() => {
     return localContent.trim() ? localContent.trim().split(/\s+/).length : 0;
@@ -479,40 +484,45 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
           </button>
         </div>
 
-        {/* Enhanced Writing Prompt Section */}
+        {/* Compact Writing Prompt Section */}
         <div className={`transition-all duration-300 border-b shadow-sm flex-shrink-0 ${
-          isPromptCollapsed ? 'h-16' : 'min-h-[140px]'
+          isPromptCollapsed ? 'h-10' : 'min-h-[120px]'
         } ${darkMode ? 'bg-slate-800 border-gray-700' : 'bg-blue-50 border-blue-200'}`}>
-          <div className="flex items-center justify-between p-4">
-            <div className="flex items-center">
-              <LightbulbIcon className={`w-5 h-5 mr-2 ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`} />
-              <h3 className={`font-semibold text-base ${darkMode ? 'text-gray-100' : 'text-blue-800'}`}>
-                Your Writing Prompt
+          <div className="flex items-center justify-between px-4 py-2">
+            <div className="flex items-center space-x-2 min-w-0 flex-1">
+              <LightbulbIcon className={`w-4 h-4 flex-shrink-0 ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`} />
+              <h3 className={`font-medium text-sm flex-shrink-0 ${darkMode ? 'text-gray-100' : 'text-blue-800'}`}>
+                Prompt
               </h3>
-              <span className={`ml-3 text-xs px-2 py-1 rounded-full ${
+              <span className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${
                 darkMode ? 'bg-cyan-900/50 text-cyan-200 border border-cyan-700' : 'bg-blue-200 text-blue-800'
               }`}>
                 {textType}
               </span>
+              {isPromptCollapsed && effectivePrompt && (
+                <span className={`text-xs italic truncate ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  {effectivePrompt.substring(0, 80)}...
+                </span>
+              )}
             </div>
 
             <button
               onClick={() => setIsPromptCollapsed(!isPromptCollapsed)}
-              className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
+              className={`flex items-center space-x-1 px-2 py-1 rounded-md transition-colors text-xs font-medium flex-shrink-0 ${
                 darkMode
                   ? 'text-cyan-300 hover:text-cyan-100 hover:bg-slate-700'
-                  : 'text-blue-700 hover:text-blue-900 hover:bg-blue-200'
+                  : 'text-blue-700 hover:text-blue-900 hover:bg-blue-100'
               }`}
             >
-              {isPromptCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
-              <span>{isPromptCollapsed ? 'Show Prompt' : 'Hide Prompt'}</span>
+              {isPromptCollapsed ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
+              <span>{isPromptCollapsed ? 'Show' : 'Hide'}</span>
             </button>
           </div>
 
           {/* Prompt Content */}
           {!isPromptCollapsed && effectivePrompt && (
-            <div className="px-4 pb-4">
-              <div className={`p-4 rounded-lg border ${
+            <div className="px-4 pb-3">
+              <div className={`p-3 rounded-lg border text-sm ${
                 darkMode
                   ? 'bg-slate-900/50 border-slate-700 text-gray-100'
                   : 'bg-white border-blue-200 text-blue-900'
@@ -523,57 +533,57 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
           )}
         </div>
 
-        {/* Toolbar Section - Moved above writing area */}
-        <div className={`flex items-center justify-between px-4 py-3 border-b flex-shrink-0 ${
+        {/* Toolbar Section - Compact */}
+        <div className={`flex items-center justify-between px-4 py-1.5 border-b flex-shrink-0 ${
           darkMode ? 'bg-slate-800 border-gray-700' : 'bg-white border-gray-200'
         }`}>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
             {/* Plan Button */}
             <button
               onClick={() => setShowPlanningTool(true)}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
+              className={`flex items-center space-x-1 px-2 py-1 rounded transition-colors ${
                 darkMode
                   ? 'text-gray-300 hover:bg-gray-700'
                   : 'text-gray-700 hover:bg-gray-100'
               }`}
               title="Planning Tool"
             >
-              <PenTool className="w-4 h-4" />
-              <span className="text-sm font-medium">Plan</span>
+              <PenTool className="w-3.5 h-3.5" />
+              <span className="text-xs font-medium">Plan</span>
             </button>
 
             {/* Structure Button */}
             <button
               onClick={onToggleStructureGuide}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
+              className={`flex items-center space-x-1 px-2 py-1 rounded transition-colors ${
                 darkMode
                   ? 'text-gray-300 hover:bg-gray-700'
                   : 'text-gray-700 hover:bg-gray-100'
               }`}
               title="Structure Guide"
             >
-              <BookOpen className="w-4 h-4" />
-              <span className="text-sm font-medium">Structure</span>
+              <BookOpen className="w-3.5 h-3.5" />
+              <span className="text-xs font-medium">Structure</span>
             </button>
 
             {/* Tips Button */}
             <button
               onClick={onToggleTips}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
+              className={`flex items-center space-x-1 px-2 py-1 rounded transition-colors ${
                 darkMode
                   ? 'text-gray-300 hover:bg-gray-700'
                   : 'text-gray-700 hover:bg-gray-100'
               }`}
               title="Writing Tips"
             >
-              <LightbulbIcon className="w-4 h-4" />
-              <span className="text-sm font-medium">Tips</span>
+              <LightbulbIcon className="w-3.5 h-3.5" />
+              <span className="text-xs font-medium">Tips</span>
             </button>
 
             {/* Exam Mode Button */}
             <button
               onClick={() => setExamMode(!examMode)}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
+              className={`flex items-center space-x-1 px-2 py-1 rounded transition-colors ${
                 examMode
                   ? darkMode
                     ? 'bg-purple-900 text-purple-200'
@@ -584,14 +594,14 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
               }`}
               title="Exam Mode"
             >
-              <Target className="w-4 h-4" />
-              <span className="text-sm font-medium">Exam Mode</span>
+              <Target className="w-3.5 h-3.5" />
+              <span className="text-xs font-medium">Exam</span>
             </button>
 
             {/* Focus Mode Button */}
             <button
               onClick={onToggleFocus}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
+              className={`flex items-center space-x-1 px-2 py-1 rounded transition-colors ${
                 focusMode
                   ? darkMode
                     ? 'bg-indigo-900 text-indigo-200'
@@ -602,8 +612,8 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
               }`}
               title="Focus Mode"
             >
-              {focusMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              <span className="text-sm font-medium">Focus</span>
+              {focusMode ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+              <span className="text-xs font-medium">Focus</span>
             </button>
           </div>
 
@@ -847,7 +857,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
           <div className={`border-t transition-all duration-300 ${
             darkMode ? 'bg-slate-900 border-gray-700' : 'bg-gray-50 border-gray-200'
           }`}>
-            <div className="px-4 py-3 flex items-center justify-between">
+            <div className="px-4 py-2 flex items-center justify-between">
               <div className="flex items-center space-x-4 text-xs flex-1">
                 <div className="flex items-center space-x-2">
                   <AlertCircle className={`w-4 h-4 ${darkMode ? 'text-yellow-400' : 'text-yellow-600'}`} />
@@ -919,7 +929,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
             {/* Expanded Tips */}
             {expandedGrammarStats && (
-              <div className={`px-4 pb-3 space-y-2 text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              <div className={`px-4 pb-2 space-y-1.5 text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                 {grammarStats.weakVerbs > 0 && (
                   <div className="flex items-start space-x-2 p-2 rounded bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-900/30">
                     <span className="text-yellow-600 dark:text-yellow-400">●</span>
@@ -957,25 +967,25 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
           </div>
         )}
 
-        {/* Bottom Submit Button Section - NEW LOCATION */}
+        {/* Bottom Submit Button Section - Compact */}
         <div className={`border-t flex-shrink-0 ${
           darkMode ? 'bg-slate-800 border-gray-700' : 'bg-white border-gray-200'
         }`}>
-          <div className="p-4 flex items-center justify-center">
-            {/* Submit Button - Increased Width */}
+          <div className="p-2 flex items-center justify-center">
+            {/* Submit Button - Compact */}
             <button
               onClick={handleSubmitForEvaluation}
               disabled={!hasContent}
-              className={`flex items-center justify-center space-x-3 px-16 py-4 rounded-lg font-semibold text-lg text-white transition-all duration-200 shadow-lg min-w-[500px] ${
+              className={`flex items-center justify-center space-x-2 px-6 py-2 rounded-lg font-medium text-sm text-white transition-all duration-200 shadow-md ${
                 hasContent
                   ? darkMode
-                    ? 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 hover:shadow-xl transform hover:scale-105'
-                    : 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 hover:shadow-xl transform hover:scale-105'
+                    ? 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 hover:shadow-lg'
+                    : 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 hover:shadow-lg'
                   : 'bg-gray-400 cursor-not-allowed opacity-50'
               }`}
             >
-              <Target className="w-6 h-6" />
-              <span>Submit for NSW Evaluation</span>
+              <Target className="w-4 h-4" />
+              <span>Submit for Evaluation</span>
             </button>
           </div>
         </div>
