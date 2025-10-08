@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { PlanningToolModal } from './PlanningToolModal';
 import { StructureGuideModal } from './StructureGuideModal';
 import { TipsModal } from './TipsModal';
-import { EnhancedCoachPanel } from './EnhancedCoachPanel';
+import EnhancedCoachPanel from './EnhancedCoachPanel';
 import { NSWStandaloneSubmitSystem } from './NSWStandaloneSubmitSystem';
 import { ReportModal } from './ReportModal';
 import { PromptOptionsModal } from './PromptOptionsModal';
