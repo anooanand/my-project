@@ -1,655 +1,731 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Send, MessageSquare, BarChart3, Lightbulb, Target, Star, TrendingUp, Award } from 'lucide-react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import {
+  MessageCircle,
+  Send,
+  Loader2,
+  Brain,
+  BookOpen,
+  Target,
+  Lightbulb,
+  CheckCircle,
+  AlertCircle,
+  TrendingUp,
+  Clock,
+  User,
+  Bot
+} from 'lucide-react';
 
-// Helper function to calculate readability (Flesch-Kincaid Grade Level)
-const calculateFleschKincaid = (text: string): number => {
-  if (!text || text.trim().length === 0) return 0;
-  const sentences = text.split(/[.!?]+/g).filter(s => s.trim().length > 0);
-  const words = text.split(/\s+/g).filter(w => w.trim().length > 0);
-  const syllables = words.reduce((acc, word) => acc + countSyllables(word), 0);
+// Types for enhanced coaching system
+interface ConversationMessage {
+  id: string;
+  type: 'user' | 'ai' | 'system';
+  content: string;
+  timestamp: Date;
+  metadata?: {
+    inputType?: 'prompt' | 'question' | 'writing' | 'feedback_request';
+    writingStage?: 'initial' | 'planning' | 'writing' | 'revising' | 'complete';
+    wordCount?: number;
+    confidence?: number;
+    operations?: string[];
+  };
+}
 
-  if (sentences.length === 0 || words.length === 0) return 0;
+interface AIOperation {
+  type: 'grammar_check' | 'vocabulary_enhancement' | 'structure_analysis' | 'content_feedback' | 'question_analysis';
+  priority: number;
+  data?: any;
+}
 
-  const ASL = words.length / sentences.length;
-  const ASW = syllables / words.length;
+interface ContextSummary {
+  writingType: string;
+  currentStage: string;
+  wordCount: number;
+  keyTopics: string[];
+  studentLevel: string;
+  progressNotes: string[];
+  lastFeedbackType: string;
+}
 
-  return 0.39 * ASL + 11.8 * ASW - 15.59;
-};
+interface EnhancedCoachPanelProps {
+  content: string;
+  textType: string;
+  onContentChange?: (content: string) => void;
+  onFeedbackReceived?: (feedback: any) => void;
+  className?: string;
+}
 
-const countSyllables = (word: string): number => {
-  word = word.toLowerCase();
-  if (word.length === 0) return 0;
-  word = word.replace(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/, '');
-  word = word.replace(/^y/, '');
-  const matches = word.match(/[aeiouy]{1,2}/g);
-  return matches ? matches.length : 0;
-};
+// Advanced input type detection
+class InputAnalyzer {
+  static analyzeInput(input: string, context: {
+    writingStage: string;
+    wordCount: number;
+    conversationHistory: ConversationMessage[];
+  }): {
+    type: 'prompt' | 'question' | 'writing' | 'feedback_request';
+    confidence: number;
+    suggestedOperations: AIOperation[];
+  } {
+    const trimmed = input.trim().toLowerCase();
+    const words = input.trim().split(/\s+/).filter(w => w.length > 0);
+    
+    // Question indicators
+    const questionWords = ['how', 'what', 'why', 'when', 'where', 'who', 'which', 'can', 'could', 'should', 'would', 'will'];
+    const hasQuestionWord = questionWords.some(word => trimmed.includes(word));
+    const hasQuestionMark = input.includes('?');
+    const isShort = words.length < 10;
+    
+    // Writing indicators
+    const writingIndicators = ['i think', 'in my opinion', 'firstly', 'secondly', 'in conclusion', 'however', 'therefore'];
+    const hasWritingIndicators = writingIndicators.some(phrase => trimmed.includes(phrase));
+    const isLong = words.length > 20;
+    
+    // Feedback request indicators
+    const feedbackIndicators = ['feedback', 'check', 'review', 'help', 'improve', 'better', 'correct'];
+    const hasFeedbackRequest = feedbackIndicators.some(word => trimmed.includes(word));
+    
+    // Prompt indicators
+    const promptIndicators = ['write about', 'essay on', 'discuss', 'explain', 'describe', 'argue'];
+    const hasPromptIndicators = promptIndicators.some(phrase => trimmed.includes(phrase));
+    
+    // Scoring system
+    let scores = {
+      prompt: 0,
+      question: 0,
+      writing: 0,
+      feedback_request: 0
+    };
+    
+    // Question scoring
+    if (hasQuestionWord) scores.question += 30;
+    if (hasQuestionMark) scores.question += 25;
+    if (isShort) scores.question += 15;
+    
+    // Writing scoring
+    if (hasWritingIndicators) scores.writing += 25;
+    if (isLong) scores.writing += 20;
+    if (context.writingStage === 'writing' || context.writingStage === 'revising') scores.writing += 15;
+    
+    // Feedback request scoring
+    if (hasFeedbackRequest) scores.feedback_request += 30;
+    if (context.wordCount > 50) scores.feedback_request += 15;
+    
+    // Prompt scoring
+    if (hasPromptIndicators) scores.prompt += 25;
+    if (context.writingStage === 'initial') scores.prompt += 20;
+    if (words.length > 5 && words.length < 30) scores.prompt += 10;
+    
+    // Determine type and confidence
+    const maxScore = Math.max(...Object.values(scores));
+    const type = Object.keys(scores).find(key => scores[key as keyof typeof scores] === maxScore) as any;
+    const confidence = Math.min(maxScore / 50, 1);
+    
+    // Suggest AI operations based on input type
+    const suggestedOperations: AIOperation[] = [];
+    
+    switch (type) {
+      case 'question':
+        suggestedOperations.push(
+          { type: 'question_analysis', priority: 1 },
+          { type: 'content_feedback', priority: 2 }
+        );
+        break;
+      case 'writing':
+        suggestedOperations.push(
+          { type: 'grammar_check', priority: 1 },
+          { type: 'vocabulary_enhancement', priority: 2 },
+          { type: 'structure_analysis', priority: 3 }
+        );
+        break;
+      case 'feedback_request':
+        suggestedOperations.push(
+          { type: 'content_feedback', priority: 1 },
+          { type: 'grammar_check', priority: 2 },
+          { type: 'structure_analysis', priority: 3 }
+        );
+        break;
+      case 'prompt':
+        suggestedOperations.push(
+          { type: 'question_analysis', priority: 1 },
+          { type: 'structure_analysis', priority: 2 }
+        );
+        break;
+    }
+    
+    return { type, confidence, suggestedOperations };
+  }
+}
 
-// NSW Criteria Analysis Engine
-class NSWCriteriaAnalyzer {
-  static analyzeContent(content: string, textType: string, wordCount: number, elapsedTime: number) {
+// Context manager for conversation history
+class ContextManager {
+  static createSummary(messages: ConversationMessage[], currentContent: string): ContextSummary {
+    const wordCount = currentContent.trim().split(/\s+/).filter(w => w.length > 0).length;
+    
+    // Determine writing stage based on word count and conversation
+    let currentStage = 'initial';
+    if (wordCount > 500) currentStage = 'complete';
+    else if (wordCount > 300) currentStage = 'revising';
+    else if (wordCount > 50) currentStage = 'writing';
+    else if (wordCount > 0) currentStage = 'planning';
+    
+    // Extract key topics from conversation
+    const allText = messages.map(m => m.content).join(' ').toLowerCase();
+    const keyTopics = this.extractKeyTopics(allText);
+    
+    // Determine student level based on vocabulary and complexity
+    const studentLevel = this.assessStudentLevel(messages);
+    
+    // Extract progress notes
+    const progressNotes = messages
+      .filter(m => m.type === 'ai' && m.content.includes('progress'))
+      .map(m => m.content.substring(0, 100) + '...')
+      .slice(-3);
+    
+    // Get last feedback type
+    const lastAIMessage = messages.filter(m => m.type === 'ai').pop();
+    const lastFeedbackType = lastAIMessage?.metadata?.operations?.[0] || 'general';
+    
     return {
-      ideas: this.analyzeIdeasAndContent(content, textType, wordCount, elapsedTime),
-      language: this.analyzeLanguageAndVocabulary(content, wordCount, elapsedTime),
-      structure: this.analyzeStructureAndOrganization(content, wordCount, elapsedTime),
-      grammar: this.analyzeGrammarAndSpelling(content, wordCount, elapsedTime)
+      writingType: 'narrative', // This should be passed from props
+      currentStage,
+      wordCount,
+      keyTopics,
+      studentLevel,
+      progressNotes,
+      lastFeedbackType
     };
   }
-
-  static analyzeIdeasAndContent(content: string, textType: string, wordCount: number, elapsedTime: number) {
-    let score = 1;
-    const feedback: string[] = [];
-    const improvements: string[] = [];
-    let strength = "";
-    let improvementArea = "";
-
-    if (wordCount === 0) {
-      return {
-        score: 1,
-        feedback: ["Start writing to see your ideas assessment!"],
-        improvements: ["Begin by addressing the prompt and developing your main ideas."],
-        strength: "",
-        improvementArea: ""
-      };
-    }
-
-    // Prompt engagement (example: assuming a prompt about a mysterious key in an attic)
-    const promptKeywords = ['key', 'chest', 'attic', 'grandmother', 'mystery'];
-    const engagedKeywords = promptKeywords.filter(keyword => content.toLowerCase().includes(keyword));
-    if (engagedKeywords.length >= 2) {
-      score += 1;
-      feedback.push(`You\'re engaging well with the prompt by mentioning key elements like '${engagedKeywords.join(", ")}'.`);
-      strength = `Engaging with prompt elements like '${engagedKeywords[0]}'.`;
-    } else if (engagedKeywords.length > 0) {
-      improvements.push("Try to include more elements from the writing prompt to fully address it.");
-      improvementArea = "Further prompt engagement.";
-    } else {
-      improvements.push("Ensure your writing directly addresses the prompt. What are the main ideas you need to cover?");
-      improvementArea = "Directly addressing the prompt.";
-    }
-
-    // Originality/Creativity (basic check)
-    const creativeIndicators = ['unexpected', 'suddenly', 'imagined', 'peculiar', 'unique'];
-    if (creativeIndicators.some(word => content.toLowerCase().includes(word))) {
-      score += 1;
-      feedback.push("Your writing shows signs of originality and creative thinking!");
-      if (!strength) strength = "Creative ideas.";
-    } else {
-      improvements.push("Think about adding a unique twist or an unexpected event to make your story more original.");
-      if (!improvementArea) improvementArea = "Adding originality.";
-    }
-
-    // Development: Ideas explained with details/examples
-    if (wordCount > 100 && content.split(/\n\n|\n/).filter(p => p.trim().length > 0).length >= 2) {
-      score += 1;
-      feedback.push("You\'re developing your ideas with some detail across paragraphs.");
-      if (!strength) strength = "Developing ideas.";
-    } else if (wordCount > 50) {
-      improvements.push("Expand on your main ideas with more descriptive details and examples.");
-      if (!improvementArea) improvementArea = "Expanding on ideas.";
-    }
-
-    // Relevance: Stays on topic throughout
-    // This is harder to assess without NLP, but we can do a basic check for consistency
-    if (wordCount > 150 && engagedKeywords.length > 0 && content.split(engagedKeywords[0]).length > 2) {
-      score += 1;
-      feedback.push("Your writing generally stays relevant to the prompt.");
-      if (!strength) strength = "Maintaining relevance.";
-    } else if (wordCount > 50) {
-      improvements.push("Periodically check if your writing is still focused on the main topic and prompt.");
-      if (!improvementArea) improvementArea = "Staying on topic.";
-    }
-
+  
+  static extractKeyTopics(text: string): string[] {
+    // Simple keyword extraction - in production, use more sophisticated NLP
+    const commonWords = new Set(['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might', 'can', 'this', 'that', 'these', 'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they']);
+    
+    const words = text.split(/\s+/)
+      .map(w => w.replace(/[^\w]/g, '').toLowerCase())
+      .filter(w => w.length > 3 && !commonWords.has(w));
+    
+    const wordCounts = words.reduce((acc, word) => {
+      acc[word] = (acc[word] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+    
+    return Object.entries(wordCounts)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 5)
+      .map(([word]) => word);
+  }
+  
+  static assessStudentLevel(messages: ConversationMessage[]): string {
+    // Simple assessment based on vocabulary complexity and sentence structure
+    const userMessages = messages.filter(m => m.type === 'user');
+    if (userMessages.length === 0) return 'beginner';
+    
+    const avgWordsPerMessage = userMessages.reduce((sum, m) => 
+      sum + m.content.split(/\s+/).length, 0) / userMessages.length;
+    
+    if (avgWordsPerMessage > 50) return 'advanced';
+    if (avgWordsPerMessage > 20) return 'intermediate';
+    return 'beginner';
+  }
+  
+  static shouldCreateSummary(messages: ConversationMessage[]): boolean {
+    return messages.length > 10;
+  }
+  
+  static createContextSummaryMessage(summary: ContextSummary): ConversationMessage {
+    const summaryText = `Context Summary: Student is working on ${summary.writingType} writing, currently in ${summary.currentStage} stage with ${summary.wordCount} words. Key topics: ${summary.keyTopics.join(', ')}. Student level: ${summary.studentLevel}.`;
+    
     return {
-      score: Math.min(score, 5),
-      feedback,
-      improvements,
-      strength,
-      improvementArea
+      id: `summary_${Date.now()}`,
+      type: 'system',
+      content: summaryText,
+      timestamp: new Date(),
+      metadata: {
+        writingStage: summary.currentStage as any,
+        wordCount: summary.wordCount
+      }
     };
   }
+}
 
-  static analyzeLanguageAndVocabulary(content: string, wordCount: number, elapsedTime: number) {
-    let score = 1;
-    const feedback: string[] = [];
-    const improvements: string[] = [];
-    let strength = "";
-    let improvementArea = "";
-
-    if (wordCount === 0) {
-      return {
-        score: 1,
-        feedback: ["Start writing to see your language assessment!"],
-        improvements: ["Begin writing to analyze your vocabulary and language use."],
-        strength: "",
-        improvementArea: ""
-      };
+// Enhanced AI service for multiple operations
+class EnhancedAIService {
+  static async processMultipleOperations(
+    operations: AIOperation[],
+    input: string,
+    context: ContextSummary,
+    textType: string
+  ): Promise<{
+    response: string;
+    operations: string[];
+    feedback?: any;
+  }> {
+    const results: any[] = [];
+    const executedOperations: string[] = [];
+    
+    // Sort operations by priority
+    const sortedOperations = operations.sort((a, b) => a.priority - b.priority);
+    
+    for (const operation of sortedOperations) {
+      try {
+        const result = await this.executeOperation(operation, input, context, textType);
+        if (result) {
+          results.push(result);
+          executedOperations.push(operation.type);
+        }
+      } catch (error) {
+        console.error(`Error executing operation ${operation.type}:`, error);
+      }
     }
-
-    const words = content.toLowerCase().split(/\s+/).filter(w => w.length > 0);
-    const uniqueWords = new Set(words);
-    const vocabularyVariety = uniqueWords.size / words.length;
-
-    // Vocabulary variety
-    if (vocabularyVariety > 0.6) {
-      score += 1;
-      feedback.push("Excellent vocabulary variety! You\'re using diverse words effectively.");
-      strength = "Diverse vocabulary.";
-    } else if (vocabularyVariety > 0.4) {
-      improvements.push("Good vocabulary variety. Keep expanding your word choices and avoid repetition.");
-      improvementArea = "Expanding word choices.";
-    } else {
-      improvements.push("Work on using more varied vocabulary to make your writing more interesting. Try a thesaurus!");
-      improvementArea = "Using varied vocabulary.";
-    }
-
-    // Sophisticated words (example list)
-    const sophisticatedWords = ['magnificent', 'extraordinary', 'mysterious', 'shimmering', 'ornate', 'ancient', 'whispered', 'discovered', 'pondered', 'enveloped', 'intricate', 'resplendent'];
-    const foundSophisticatedWords = sophisticatedWords.filter(word => content.toLowerCase().includes(word));
-    if (foundSophisticatedWords.length >= 2) {
-      score += 1;
-      feedback.push(`Great use of sophisticated vocabulary like '${foundSophisticatedWords.join(", ")}'!`);
-      if (!strength) strength = "Sophisticated vocabulary.";
-    } else if (foundSophisticatedWords.length > 0) {
-      improvements.push("Try incorporating more advanced vocabulary words to enhance your writing.");
-      if (!improvementArea) improvementArea = "Incorporating advanced vocabulary.";
-    }
-
-    // Figurative language (basic check for similes/metaphors)
-    const figurativeIndicators = ['like a', 'as a', 'was a', 'is a', 'like the', 'as the'];
-    if (figurativeIndicators.some(phrase => content.toLowerCase().includes(phrase))) {
-      score += 1;
-      feedback.push("Nice use of figurative language to create vivid imagery!");
-      if (!strength) strength = "Figurative language.";
-    } else {
-      improvements.push("Consider adding similes or metaphors to make your descriptions more imaginative.");
-      if (!improvementArea) improvementArea = "Adding figurative language.";
-    }
-
-    // Sensory details (basic check)
-    const sensoryWords = ['smell', 'taste', 'feel', 'sound', 'sight', 'glowing', 'whispering', 'rough', 'sweet', 'dazzling'];
-    if (sensoryWords.some(word => content.toLowerCase().includes(word))) {
-      score += 1;
-      feedback.push("You\'re appealing to the senses, bringing your writing to life!");
-      if (!strength) strength = "Sensory details.";
-    } else {
-      improvements.push("Engage the reader\'s senses by describing what characters see, hear, smell, taste, and feel.");
-      if (!improvementArea) improvementArea = "Adding sensory details.";
-    }
-
+    
+    // Combine results into structured response
+    const response = this.combineResults(results, context);
+    
     return {
-      score: Math.min(score, 5),
-      feedback,
-      improvements,
-      strength,
-      improvementArea
+      response,
+      operations: executedOperations,
+      feedback: results.find(r => r.type === 'feedback')?.data
     };
   }
-
-  static analyzeStructureAndOrganization(content: string, wordCount: number, elapsedTime: number) {
-    let score = 1;
-    const feedback: string[] = [];
-    const improvements: string[] = [];
-    let strength = "";
-    let improvementArea = "";
-
-    if (wordCount === 0) {
-      return {
-        score: 1,
-        feedback: ["Start writing to see your structure assessment!"],
-        improvements: ["Begin writing to analyze your story structure."],
-        strength: "",
-        improvementArea: ""
-      };
+  
+  static async executeOperation(
+    operation: AIOperation,
+    input: string,
+    context: ContextSummary,
+    textType: string
+  ): Promise<any> {
+    const baseUrl = '/netlify/functions/ai-operations';
+    
+    switch (operation.type) {
+      case 'question_analysis':
+        return await this.makeAPICall(baseUrl, {
+          action: 'analyzeQuestion',
+          question: input,
+          textType,
+          context
+        });
+        
+      case 'grammar_check':
+        return await this.makeAPICall(baseUrl, {
+          action: 'checkGrammarForEditor',
+          text: input,
+          includePositions: true
+        });
+        
+      case 'vocabulary_enhancement':
+        return await this.makeAPICall(baseUrl, {
+          action: 'enhanceVocabulary',
+          text: input,
+          level: context.studentLevel
+        });
+        
+      case 'structure_analysis':
+        return await this.makeAPICall(baseUrl, {
+          action: 'analyzeStructure',
+          text: input,
+          textType,
+          stage: context.currentStage
+        });
+        
+      case 'content_feedback':
+        return await this.makeAPICall(baseUrl, {
+          action: 'getNSWSelectiveFeedback',
+          content: input,
+          textType,
+          assistanceLevel: 'detailed',
+          context
+        });
+        
+      default:
+        return null;
     }
-
-    const paragraphs = content.split(/\n\n|\n/).filter(p => p.trim().length > 0);
-
-    // Clear opening
-    if (paragraphs.length > 0 && paragraphs[0].length > 30) {
-      score += 1;
-      feedback.push("You have a clear opening that sets the scene.");
-      strength = "Clear opening.";
-    } else {
-      improvements.push("Start with a strong opening that hooks the reader and introduces the setting/characters.");
-      improvementArea = "Strong opening.";
-    }
-
-    // Logical paragraph organization
-    if (paragraphs.length >= 3 && wordCount > 100) {
-      score += 1;
-      feedback.push("Good use of paragraphs to organize different ideas.");
-      if (!strength) strength = "Logical paragraphing.";
-    } else if (paragraphs.length >= 2) {
-      improvements.push("Ensure each paragraph focuses on a single main idea or event.");
-      if (!improvementArea) improvementArea = "Paragraph focus.";
-    } else {
-      improvements.push("Break your writing into paragraphs to organize your thoughts and make it easier to read.");
-      if (!improvementArea) improvementArea = "Using paragraphs.";
-    }
-
-    // Smooth transitions (basic check for transition words)
-    const transitionWords = ['however', 'therefore', 'meanwhile', 'subsequently', 'in addition', 'furthermore', 'consequently'];
-    if (transitionWords.some(word => content.toLowerCase().includes(word)) && paragraphs.length > 1) {
-      score += 1;
-      feedback.push("You\'re using some transition words to connect your ideas.");
-      if (!strength) strength = "Transition words.";
-    } else if (paragraphs.length > 1) {
-      improvements.push("Use transition words and phrases to create a smoother flow between sentences and paragraphs.");
-      if (!improvementArea) improvementArea = "Smooth transitions.";
-    }
-
-    // Satisfying conclusion (basic check for length and concluding phrases)
-    if (wordCount >= 200 && paragraphs.length > 3 && (content.toLowerCase().includes('in the end') || content.toLowerCase().includes('finally') || content.toLowerCase().includes('and so')) && paragraphs[paragraphs.length - 1].length > 50) {
-      score += 1;
-      feedback.push("Your story is building towards a satisfying conclusion.");
-      if (!strength) strength = "Developing conclusion.";
-    } else if (wordCount >= 150) {
-      improvements.push("Plan a clear and satisfying ending that wraps up your story.");
-      if (!improvementArea) improvementArea = "Clear conclusion.";
-    }
-
-    // Appropriate text type structure (narrative, persuasive, expository - simplified)
-    if (textType === 'narrative' && (content.toLowerCase().includes('story') || content.toLowerCase().includes('character'))) {
-      score += 1;
-      feedback.push("Your structure aligns with narrative writing.");
-      if (!strength) strength = "Appropriate narrative structure.";
-    } else if (textType === 'persuasive' && (content.toLowerCase().includes('should') || content.toLowerCase().includes('believe'))) {
-      score += 1;
-      feedback.push("Your structure aligns with persuasive writing.");
-      if (!strength) strength = "Appropriate persuasive structure.";
-    }
-
-    return {
-      score: Math.min(score, 5),
-      feedback,
-      improvements,
-      strength,
-      improvementArea
-    };
   }
-
-  static analyzeGrammarAndSpelling(content: string, wordCount: number, elapsedTime: number) {
-    let score = 1;
-    const feedback: string[] = [];
-    const improvements: string[] = [];
-    let strength = "";
-    let improvementArea = "";
-
-    if (wordCount === 0) {
-      return {
-        score: 1,
-        feedback: ["Start writing to see your grammar assessment!"],
-        improvements: ["Begin writing to analyze your grammar and spelling."],
-        strength: "",
-        improvementArea: ""
-      };
-    }
-
-    // Capital letters at sentence starts
-    const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 0);
-    const properCapitalization = sentences.every(sentence => {
-      const trimmed = sentence.trim();
-      return trimmed.length === 0 || /^[A-Z]/.test(trimmed);
+  
+  static async makeAPICall(url: string, data: any): Promise<any> {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
     });
-
-    if (properCapitalization && sentences.length > 0) {
-      score += 1;
-      feedback.push("Excellent capitalization at the start of sentences!");
-      strength = "Correct capitalization.";
-    } else if (sentences.length > 0) {
-      improvements.push("Remember to start each sentence with a capital letter.");
-      improvementArea = "Capitalization.";
+    
+    if (response.ok) {
+      const result = await response.json();
+      return { type: data.action, data: result };
     }
-
-    // Correct punctuation (periods, commas, quotes) - basic check
-    const hasPeriods = content.includes('.');
-    const hasCommas = content.includes(',');
-    if (hasPeriods && hasCommas) {
-      score += 1;
-      feedback.push("Good use of periods and commas.");
-      if (!strength) strength = "Punctuation.";
-    } else if (hasPeriods || hasCommas) {
-      improvements.push("Ensure you\'re using a variety of punctuation marks correctly.");
-      if (!improvementArea) improvementArea = "Varied punctuation.";
-    } else {
-      improvements.push("Don\'t forget to use punctuation marks like periods, commas, and question marks.");
-      if (!improvementArea) improvementArea = "Using punctuation.";
-    }
-
-    // Common spelling errors (example list)
-    const commonErrors = ['teh', 'adn', 'hte', 'recieve', 'seperate', 'wierd', 'beleive'];
-    const hasCommonErrors = commonErrors.some(error => content.toLowerCase().includes(error));
-
-    if (!hasCommonErrors && wordCount > 10) {
-      score += 1;
-      feedback.push("Great spelling accuracy!");
-      if (!strength) strength = "Accurate spelling.";
-    } else if (wordCount > 10) {
-      improvements.push("Double-check your spelling, especially for common words. A quick proofread helps!");
-      if (!improvementArea) improvementArea = "Spelling accuracy.";
-    }
-
-    // Sentence variety (based on average sentence length and complexity)
-    const avgSentenceLength = wordCount / sentences.length;
-    const fleschKincaidGrade = calculateFleschKincaid(content);
-
-    if (sentences.length > 3 && avgSentenceLength > 8 && avgSentenceLength < 25 && fleschKincaidGrade > 3 && fleschKincaidGrade < 9) {
-      score += 1;
-      feedback.push("You\'re using a good variety of sentence lengths and structures.");
-      if (!strength) strength = "Sentence variety.";
-    } else if (sentences.length > 1) {
-      improvements.push("Try varying your sentence lengths and structures to make your writing more engaging.");
-      if (!improvementArea) improvementArea = "Varying sentence structure.";
-    }
-
-    // Subject-verb agreement (very basic check, hard without full NLP)
-    // This would require a more advanced NLP library. For now, we\'ll assume basic correctness if other grammar is good.
-    if (score >= 3 && wordCount > 20) {
-      feedback.push("Your subject-verb agreement seems generally correct.");
-      if (!strength) strength = "Subject-verb agreement.";
-    }
-
-    return {
-      score: Math.max(1, Math.min(score, 5)),
-      feedback,
-      improvements,
-      strength,
-      improvementArea
-    };
+    
+    throw new Error(`API call failed: ${response.statusText}`);
   }
-}
-
-// Enhanced Coach Response Generator
-class EnhancedCoachResponseGenerator {
-  static generateResponse(content: string, textType: string, analysis: any, wordCount: number, elapsedTime: number, lastFeedbackType?: string, strugglingWriter: boolean = false, advancedWriter: boolean = false) {
-    const writingPhase = this.getWritingPhase(wordCount);
-    const timePhase = this.getTimePhase(elapsedTime);
-
-    // Prioritize struggling writers
-    if (strugglingWriter && writingPhase === 'stuck') {
-      return {
-        encouragement: "It looks like you\'re a bit stuck. Don\'t worry, it happens!",
-        nswFocus: "Getting Started",
-        suggestion: "If you\'re finding it hard to start, try writing down any ideas that come to mind, even if they\'re not perfect.",
-        example: "Try these sentence starters: 'The old key...', 'In the dusty attic...', 'Grandmother always said...', 'I never expected to find...'",
-        nextStep: "Pick one sentence starter and just keep writing for a minute or two."
-      };
+  
+  static combineResults(results: any[], context: ContextSummary): string {
+    if (results.length === 0) {
+      return "I'm here to help! Could you tell me more about what you're working on?";
     }
-
-    if (wordCount > 300 && elapsedTime < 15 * 60) {
-      return {
-        encouragement: "You\'re writing very quickly! That\'s great energy!",
-        nswFocus: "Sustaining Momentum",
-        suggestion: "Your pace is impressive. Make sure to periodically re-read your work to ensure clarity and coherence.",
-        example: "Take a moment to read the last paragraph aloud. Does it flow well?",
-        nextStep: "Continue with this momentum, but perhaps start thinking about how your current section will transition to the next."
-      };
+    
+    let response = "";
+    
+    // Add stage-appropriate greeting
+    if (context.currentStage === 'initial') {
+      response += "Great! Let's get started with your writing. ";
+    } else if (context.currentStage === 'planning') {
+      response += "I can see you're planning your writing. ";
+    } else if (context.currentStage === 'writing') {
+      response += `You're making good progress with ${context.wordCount} words! `;
+    } else if (context.currentStage === 'revising') {
+      response += "Excellent work! Let's polish your writing. ";
     }
-
-    // Generate a response based on a rotation of feedback types
-    const feedbackTypes = ['ideas', 'structure', 'language', 'grammar'];
-    let nextFeedbackType = 'ideas';
-
-    if (lastFeedbackType) {
-      const lastIndex = feedbackTypes.indexOf(lastFeedbackType);
-      nextFeedbackType = feedbackTypes[(lastIndex + 1) % feedbackTypes.length];
-    }
-
-    const focusArea = analysis[nextFeedbackType];
-
-    let encouragement = "You\'re making good progress. Keep it up!";
-    if (writingPhase === 'developing') encouragement = "Great start! The ideas are beginning to take shape.";
-    if (writingPhase === 'revising') encouragement = "You have a solid draft. Now, let\'s refine it.";
-
-    if (advancedWriter && focusArea.score > 3) {
-      return this.generateAdvancedChallenge(analysis, nextFeedbackType);
-    }
-
-    return {
-      encouragement,
-      nswFocus: this.mapFeedbackTypeToNSWFocus(nextFeedbackType),
-      suggestion: `Let\'s focus on ${nextFeedbackType}. ${focusArea.improvements.length > 0 ? focusArea.improvements[0] : 'Keep building on your strengths in this area.'} `,
-      example: this.getExampleForImprovement(nextFeedbackType, focusArea.improvementArea),
-      nextStep: `Try to apply this feedback to your next paragraph.`
-    };
-  }
-
-  static generateAdvancedChallenge(analysis: any, feedbackType: string) {
-    const challenges = {
-      ideas: {
-        suggestion: "Your ideas are strong. Let\'s elevate them by introducing a counterclaim or a surprising twist.",
-        example: "For instance, what if the key didn\'t open the chest, but something else entirely?",
-        nextStep: "Write a paragraph that explores this new, unexpected direction."
-      },
-      structure: {
-        suggestion: "Your structure is logical. Let\'s experiment with it. Try rearranging your paragraphs to see if it creates a more powerful impact.",
-        example: "What if you started with the conclusion and then explained how you got there? (in medias res)",
-        nextStep: "Copy your current draft and try reordering the paragraphs to see the effect."
-      },
-      language: {
-        suggestion: "Your language is effective. Let\'s make it more evocative by focusing on subtext and nuance.",
-        example: "Instead of saying a character is 'sad', describe their actions: 'He stared at the rain-streaked window, his coffee growing cold.'",
-        nextStep: "Find a sentence in your draft and rewrite it to show the emotion instead of telling it."
-      },
-      grammar: {
-        suggestion: "Your grammar is solid. Let\'s play with sentence structure to create a specific rhythm or pace.",
-        example: "Try using a series of short, punchy sentences for an action scene, followed by a long, complex sentence for reflection.",
-        nextStep: "Review a paragraph and intentionally vary the sentence structure to match the mood you want to create."
+    
+    // Process each result type
+    for (const result of results) {
+      switch (result.type) {
+        case 'analyzeQuestion':
+          if (result.data.guidance) {
+            response += `\n\n📝 **Writing Guidance:**\n${result.data.guidance}`;
+          }
+          if (result.data.structure) {
+            response += `\n\n🏗️ **Suggested Structure:**\n${result.data.structure}`;
+          }
+          break;
+          
+        case 'checkGrammarForEditor':
+          if (result.data.errors && result.data.errors.length > 0) {
+            response += `\n\n✏️ **Grammar & Spelling:**\nI found ${result.data.errors.length} areas to improve. Check the highlights in your text!`;
+          }
+          break;
+          
+        case 'enhanceVocabulary':
+          if (result.data.suggestions && result.data.suggestions.length > 0) {
+            response += `\n\n💡 **Vocabulary Enhancement:**\nI have some word suggestions to make your writing stronger!`;
+          }
+          break;
+          
+        case 'analyzeStructure':
+          if (result.data.feedback) {
+            response += `\n\n📊 **Structure Analysis:**\n${result.data.feedback}`;
+          }
+          break;
+          
+        case 'content_feedback':
+          if (result.data.feedbackItems) {
+            const strengths = result.data.feedbackItems.filter((item: any) => item.type === 'praise');
+            const improvements = result.data.feedbackItems.filter((item: any) => item.type === 'improvement');
+            
+            if (strengths.length > 0) {
+              response += `\n\n🌟 **Strengths:**\n${strengths.map((s: any) => `• ${s.text}`).join('\n')}`;
+            }
+            
+            if (improvements.length > 0) {
+              response += `\n\n🎯 **Areas to Improve:**\n${improvements.map((i: any) => `• ${i.text}`).join('\n')}`;
+            }
+          }
+          break;
       }
-    };
-
-    const challenge = challenges[feedbackType];
-
-    return {
-      encouragement: "Excellent work! You have a strong command of this area. Ready for a challenge?",
-      nswFocus: `Advanced ${this.mapFeedbackTypeToNSWFocus(feedbackType)}`,
-      ...challenge
-    };
-  }
-
-  static getExampleForImprovement(feedbackType: string, improvementArea: string) {
-    const examples = {
-      ideas: {
-        "Directly addressing the prompt.": "Re-read the prompt and highlight the key tasks. Your first paragraph should directly respond to it.",
-        "Expanding on ideas.": "Pick one idea and ask yourself 'why?' or 'how?'. Then, write a few sentences to explain it in more detail.",
-        "Adding originality.": "Think of a common cliche related to your topic, then write the opposite."
-      },
-      structure: {
-        "Strong opening.": "Try starting with a question, a surprising fact, or a vivid description to grab the reader.",
-        "Paragraph focus.": "Read a paragraph and summarize its main point in one sentence. If you can\'t, it may need more focus.",
-        "Smooth transitions.": "Use words like 'However', 'Therefore', or 'In contrast' to link ideas between sentences."
-      },
-      language: {
-        "Using varied vocabulary.": "Right-click on a common word (like 'good' or 'said') and find a more descriptive synonym.",
-        "Adding figurative language.": "Try completing this sentence: 'The [object] was like a [something else]'.",
-        "Adding sensory details.": "Close your eyes and imagine the scene. What do you smell? What do you hear?"
-      },
-      grammar: {
-        "Capitalization.": "Proofread your text, looking only for the first letter of each sentence.",
-        "Varying sentence structure.": "Find a paragraph with sentences of similar length and try to combine or shorten some.",
-        "Spelling accuracy.": "Read your text backwards. This helps you focus on individual words rather than the meaning."
-      }
-    };
-
-    return examples[feedbackType]?.[improvementArea] || "Keep up the great work!";
-  }
-
-  static getWritingPhase(wordCount: number): string {
-    if (wordCount < 20) return 'stuck';
-    if (wordCount < 150) return 'developing';
-    if (wordCount < 400) return 'drafting';
-    return 'revising';
-  }
-
-  static getTimePhase(elapsedTime: number): string {
-    if (elapsedTime < 60) return 'starting';
-    if (elapsedTime < 300) return 'warming_up';
-    if (elapsedTime < 900) return 'in_the_zone';
-    return 'wrapping_up';
-  }
-
-  static mapFeedbackTypeToNSWFocus(feedbackType: string): string {
-    const mapping = {
-      ideas: "Ideas & Content",
-      language: "Language & Vocabulary",
-      structure: "Structure & Organization",
-      grammar: "Grammar & Spelling"
-    };
-    return mapping[feedbackType] || "Writing Skills";
-  }
-}
-
-interface CoachResponse {
-  encouragement: string;
-  nswFocus: string;
-  suggestion: string;
-  example: string;
-  nextStep: string;
-}
-
-interface AnalysisResult {
-  score: number;
-  feedback: string[];
-  improvements: string[];
-  strength: string;
-  improvementArea: string;
-}
-
-interface FullAnalysis {
-  ideas: AnalysisResult;
-  language: AnalysisResult;
-  structure: AnalysisResult;
-  grammar: AnalysisResult;
-}
-
-const initialAnalysis: FullAnalysis = {
-  ideas: { score: 1, feedback: [], improvements: [], strength: "", improvementArea: "" },
-  language: { score: 1, feedback: [], improvements: [], strength: "", improvementArea: "" },
-  structure: { score: 1, feedback: [], improvements: [], strength: "", improvementArea: "" },
-  grammar: { score: 1, feedback: [], improvements: [], strength: "", improvementArea: "" },
-};
-
-const EnhancedCoachPanel = ({ content, textType, wordCount, elapsedTime, isVisible }) => {
-  const [analysis, setAnalysis] = useState<FullAnalysis>(initialAnalysis);
-  const [coachResponse, setCoachResponse] = useState<CoachResponse | null>(null);
-  const [lastFeedbackType, setLastFeedbackType] = useState<string | undefined>(undefined);
-  const [isStruggling, setIsStruggling] = useState(false);
-  const [isAdvanced, setIsAdvanced] = useState(false);
-
-  const analysisTimer = useRef<NodeJS.Timeout | null>(null);
-  const lastWordCount = useRef(wordCount);
-
-  const analyzeAndRespond = useCallback(() => {
-    const newAnalysis = NSWCriteriaAnalyzer.analyzeContent(content, textType, wordCount, elapsedTime);
-    setAnalysis(newAnalysis);
-
-    // Determine writer status
-    const timeSinceLastChange = Date.now() - (analysisTimer.current?.lastRun || 0);
-    const wordCountChange = wordCount - lastWordCount.current;
-    if (wordCount > 50 && wordCountChange < 5 && timeSinceLastChange > 30000) {
-      setIsStruggling(true);
+    }
+    
+    // Add encouraging closing
+    if (context.currentStage !== 'complete') {
+      response += `\n\nKeep up the great work! What would you like to focus on next?`;
     } else {
-      setIsStruggling(false);
+      response += `\n\nFantastic job completing your writing! 🎉`;
     }
+    
+    return response.trim();
+  }
+}
 
-    const overallScore = (newAnalysis.ideas.score + newAnalysis.language.score + newAnalysis.structure.score + newAnalysis.grammar.score) / 4;
-    if (overallScore > 3.5 && wordCount > 200) {
-      setIsAdvanced(true);
-    } else {
-      setIsAdvanced(false);
-    }
-
-    const newResponse = EnhancedCoachResponseGenerator.generateResponse(content, textType, newAnalysis, wordCount, elapsedTime, lastFeedbackType, isStruggling, isAdvanced);
-    setCoachResponse(newResponse);
-    setLastFeedbackType(newResponse.nswFocus.split(" ")[0].toLowerCase());
-
-    lastWordCount.current = wordCount;
-    if(analysisTimer.current) {
-      analysisTimer.current.lastRun = Date.now();
-    }
-
-  }, [content, textType, wordCount, elapsedTime, lastFeedbackType, isStruggling, isAdvanced]);
-
+// Main Enhanced Coach Panel Component
+export const EnhancedCoachPanel: React.FC<EnhancedCoachPanelProps> = ({
+  content,
+  textType,
+  onContentChange,
+  onFeedbackReceived,
+  className = ""
+}) => {
+  // State management
+  const [messages, setMessages] = useState<ConversationMessage[]>([]);
+  const [currentInput, setCurrentInput] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [contextSummary, setContextSummary] = useState<ContextSummary | null>(null);
+  
+  // Refs
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  
+  // Auto-scroll to bottom
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
+  
   useEffect(() => {
-    if (analysisTimer.current) clearTimeout(analysisTimer.current);
-    analysisTimer.current = setTimeout(analyzeAndRespond, 10000); // Analyze every 10 seconds
-
-    return () => {
-      if (analysisTimer.current) clearTimeout(analysisTimer.current);
+    scrollToBottom();
+  }, [messages, scrollToBottom]);
+  
+  // Update context summary when content or messages change
+  useEffect(() => {
+    const summary = ContextManager.createSummary(messages, content);
+    setContextSummary(summary);
+    
+    // Add summary message if conversation is getting long
+    if (ContextManager.shouldCreateSummary(messages) && 
+        !messages.some(m => m.type === 'system' && m.content.includes('Context Summary'))) {
+      const summaryMessage = ContextManager.createContextSummaryMessage(summary);
+      setMessages(prev => [...prev, summaryMessage]);
+    }
+  }, [messages, content]);
+  
+  // Send initial greeting
+  useEffect(() => {
+    if (messages.length === 0) {
+      const greetingMessage: ConversationMessage = {
+        id: `greeting_${Date.now()}`,
+        type: 'ai',
+        content: `Hello! I'm your writing coach. I'm here to help you with your ${textType} writing. What would you like to work on today?`,
+        timestamp: new Date(),
+        metadata: {
+          operations: ['greeting']
+        }
+      };
+      setMessages([greetingMessage]);
+    }
+  }, [messages.length, textType]);
+  
+  // Handle sending a message (user input or AI processing)
+  const handleSendMessage = useCallback(async () => {
+    if (!currentInput.trim() || isProcessing) return;
+    
+    const userMessage: ConversationMessage = {
+      id: `user_${Date.now()}`,
+      type: 'user',
+      content: currentInput,
+      timestamp: new Date(),
     };
-  }, [content, analyzeAndRespond]);
-
-  const getIconForFocus = (focus: string) => {
-    if (focus.includes("Ideas")) return <Lightbulb className="h-5 w-5" />;
-    if (focus.includes("Structure")) return <BarChart3 className="h-5 w-5" />;
-    if (focus.includes("Language")) return <Star className="h-5 w-5" />;
-    if (focus.includes("Grammar")) return <Award className="h-5 w-5" />;
-    return <MessageSquare className="h-5 w-5" />;
+    
+    setMessages(prev => [...prev, userMessage]);
+    setCurrentInput('');
+    setIsProcessing(true);
+    
+    try {
+      // Analyze input
+      const analysis = InputAnalyzer.analyzeInput(currentInput, {
+        writingStage: contextSummary?.currentStage || 'initial',
+        wordCount: contextSummary?.wordCount || 0,
+        conversationHistory: messages
+      });
+      
+      // Update user message with metadata
+      userMessage.metadata = {
+        inputType: analysis.type,
+        confidence: analysis.confidence,
+        writingStage: contextSummary?.currentStage as any,
+        wordCount: contextSummary?.wordCount
+      };
+      
+      // Process with AI service
+      const result = await EnhancedAIService.processMultipleOperations(
+        analysis.suggestedOperations,
+        currentInput,
+        contextSummary!,
+        textType
+      );
+      
+      // Create AI response message
+      const aiMessage: ConversationMessage = {
+        id: `ai_${Date.now()}`,
+        type: 'ai',
+        content: result.response,
+        timestamp: new Date(),
+        metadata: {
+          operations: result.operations,
+          writingStage: contextSummary?.currentStage as any
+        }
+      };
+      
+      setMessages(prev => [...prev, aiMessage]);
+      
+      // Pass feedback to parent component
+      if (result.feedback && onFeedbackReceived) {
+        onFeedbackReceived(result.feedback);
+      }
+      
+    } catch (error) {
+      console.error('Error processing message:', error);
+      
+      const errorMessage: ConversationMessage = {
+        id: `error_${Date.now()}`,
+        type: 'ai',
+        content: "I'm sorry, I encountered an error. Could you try rephrasing your question?",
+        timestamp: new Date(),
+        metadata: {
+          operations: ['error']
+        }
+      };
+      
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [currentInput, isProcessing, contextSummary, messages, textType, onFeedbackReceived]);
+  
+  // Handle key press
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
   };
-
-  const getOverallScore = () => {
-    const total = analysis.ideas.score + analysis.language.score + analysis.structure.score + analysis.grammar.score;
-    return Math.round((total / 20) * 100);
+  
+  // Format message content
+  const formatMessageContent = (content: string) => {
+    // Convert markdown-like formatting to JSX
+    return content.split('\n').map((line, index) => {
+      if (line.startsWith('**') && line.endsWith('**')) {
+        return <div key={index} className="font-semibold text-gray-800 mt-3 mb-1">{line.slice(2, -2)}</div>;
+      }
+      if (line.startsWith('• ')) {
+        return <div key={index} className="ml-4 text-gray-700">{line}</div>;
+      }
+      if (line.trim() === '') {
+        return <div key={index} className="h-2"></div>;
+      }
+      return <div key={index} className="text-gray-700">{line}</div>;
+    });
   };
-
-  if (!isVisible) return null;
-
+  
+  // Get message icon
+  const getMessageIcon = (message: ConversationMessage) => {
+    if (message.type === 'user') return <User className="h-4 w-4" />;
+    if (message.type === 'system') return <Brain className="h-4 w-4" />;
+    
+    const operations = message.metadata?.operations || [];
+    if (operations.includes('analyzeQuestion')) return <BookOpen className="h-4 w-4" />;
+    if (operations.includes('checkGrammarForEditor')) return <CheckCircle className="h-4 w-4" />;
+    if (operations.includes('getNSWSelectiveFeedback')) return <Target className="h-4 w-4" />;
+    
+    return <Bot className="h-4 w-4" />;
+  };
+  
   return (
-    <div className="bg-gray-50 rounded-lg p-6 shadow-lg h-full flex flex-col">
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">AI Writing Coach</h2>
-
-      {wordCount === 0 ? (
-        <div className="flex-grow flex items-center justify-center text-center text-gray-500">
-          <p>Start writing in the main editor to get feedback from your AI coach!</p>
+    <div className={`flex flex-col h-full bg-white rounded-lg border shadow-sm ${className}`}>
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 border-b bg-gray-50 rounded-t-lg">
+        <div className="flex items-center space-x-2">
+          <MessageCircle className="h-5 w-5 text-blue-600" />
+          <h3 className="font-semibold text-gray-800">Writing Coach</h3>
         </div>
-      ) : (
-        <>
-          {coachResponse && (
-            <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="flex items-center text-blue-800 mb-2">
-                {getIconForFocus(coachResponse.nswFocus)}
-                <h3 className="font-bold text-lg ml-2">{coachResponse.nswFocus}</h3>
-              </div>
-              <p className="text-sm text-blue-700 mb-2 italic">"{coachResponse.encouragement}"</p>
-              <p className="text-sm text-gray-800"><span className="font-semibold">Suggestion:</span> {coachResponse.suggestion}</p>
-              <p className="text-sm text-gray-600 mt-1"><span className="font-semibold">Example:</span> {coachResponse.example}</p>
-              <p className="text-sm text-gray-800 mt-2 font-semibold">Next Step: {coachResponse.nextStep}</p>
+        
+        {contextSummary && (
+          <div className="flex items-center space-x-4 text-sm text-gray-600">
+            <div className="flex items-center space-x-1">
+              <Clock className="h-4 w-4" />
+              <span>{contextSummary.currentStage}</span>
             </div>
-          )}
-
-          <div className="flex-grow">
-            <h3 className="text-lg font-semibold text-gray-700 mb-3">Writing Analysis</h3>
-            <div className="space-y-4">
-              {Object.entries(analysis).map(([key, value]) => (
-                <div key={key}>
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-sm font-medium text-gray-600 capitalize">{key}</span>
-                    <span className="text-sm font-bold text-indigo-600">{value.score}/5</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2.5">
-                    <div className="bg-indigo-500 h-2.5 rounded-full" style={{ width: `${(value.score / 5) * 100}%` }}></div>
-                  </div>
-                  {value.strength && <p className="text-xs text-green-600 mt-1">Strength: {value.strength}</p>}
-                  {value.improvementArea && <p className="text-xs text-orange-600 mt-1">To Improve: {value.improvementArea}</p>}
-                </div>
-              ))}
+            <div className="flex items-center space-x-1">
+              <TrendingUp className="h-4 w-4" />
+              <span>{contextSummary.wordCount} words</span>
             </div>
           </div>
-
-          <div className="mt-6 pt-4 border-t border-gray-200">
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium text-gray-600">Overall Score</span>
-              <span className="text-lg font-bold text-indigo-600">{getOverallScore()}%</span>
+        )}
+      </div>
+      
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        {messages.map((message) => (
+          <div
+            key={message.id}
+            className={`flex items-start space-x-3 ${
+              message.type === 'user' ? 'flex-row-reverse space-x-reverse' : ''
+            }`}
+          >
+            <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+              message.type === 'user' 
+                ? 'bg-blue-100 text-blue-600' 
+                : message.type === 'system'
+                ? 'bg-gray-100 text-gray-600'
+                : 'bg-green-100 text-green-600'
+            }`}>
+              {getMessageIcon(message)}
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-4 mt-2">
-              <div className="bg-gradient-to-r from-green-400 to-blue-500 h-4 rounded-full text-center text-white text-xs font-bold" style={{ width: `${getOverallScore()}%` }}>
-                {getOverallScore() > 10 ? `${getOverallScore()}%` : ''}
+            
+            <div className={`flex-1 max-w-xs lg:max-w-md ${
+              message.type === 'user' ? 'text-right' : ''
+            }`}>
+              <div className={`p-3 rounded-lg ${
+                message.type === 'user'
+                  ? 'bg-blue-600 text-white'
+                  : message.type === 'system'
+                  ? 'bg-gray-100 text-gray-700 text-sm'
+                  : 'bg-gray-100 text-gray-800'
+              }`}>
+                {message.type === 'user' ? (
+                  <div>{message.content}</div>
+                ) : (
+                  <div className="space-y-1">
+                    {formatMessageContent(message.content)}
+                  </div>
+                )}
+              </div>
+              
+              <div className={`text-xs text-gray-500 mt-1 ${
+                message.type === 'user' ? 'text-right' : ''
+              }`}>
+                {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                {message.metadata?.operations && (
+                  <span className="ml-2">
+                    • {message.metadata.operations.join(', ')}
+                  </span>
+                )}
               </div>
             </div>
           </div>
-        </>
-      )}
+        ))}
+        
+        {isProcessing && (
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
+              <Loader2 className="h-4 w-4 animate-spin" />
+            </div>
+            <div className="bg-gray-100 text-gray-600 p-3 rounded-lg">
+              <div className="flex items-center space-x-2">
+                <span>Analyzing your input...</span>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        <div ref={messagesEndRef} />
+      </div>
+      
+      {/* Input */}
+      <div className="p-4 border-t bg-gray-50 rounded-b-lg">
+        <div className="flex items-end space-x-2">
+          <div className="flex-1">
+            <textarea
+              ref={inputRef}
+              value={currentInput}
+              onChange={(e) => setCurrentInput(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Ask me anything about your writing..."
+              className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              rows={2}
+              disabled={isProcessing}
+            />
+          </div>
+          <button
+            onClick={handleSendMessage}
+            disabled={!currentInput.trim() || isProcessing}
+            className="p-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <Send className="h-4 w-4" />
+          </button>
+        </div>
+        
+        {contextSummary && (
+          <div className="mt-2 text-xs text-gray-500">
+            Stage: {contextSummary.currentStage} • Level: {contextSummary.studentLevel} • 
+            {contextSummary.keyTopics.length > 0 && ` Topics: ${contextSummary.keyTopics.slice(0, 3).join(', ')}`}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
