@@ -689,20 +689,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
         <div className={`border-t flex-shrink-0 ${
           darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
         }`}>
-          <div className="p-4 flex items-center justify-between">
-            {/* Info Section */}
-            <div className="flex items-center space-x-4">
-              <button
-                className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition-colors"
-                title="Help & Information"
-              >
-                <Info className="w-5 h-5 text-gray-600" />
-              </button>
-              <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                <span>Stage: writing • Level: beginner • Topics: your writing, hello</span>
-              </div>
-            </div>
-
+          <div className="p-4 flex items-center justify-center">
             {/* Submit Button */}
             <button
               onClick={handleSubmitForEvaluation}
