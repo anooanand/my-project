@@ -1,4 +1,4 @@
-// src/components/NSWEvaluationReportGenerator_fixed.tsx
+// src/components/NSWEvaluationReportGenerator_final_fix.tsx
 
 import { DetailedFeedback } from "../types/feedback";
 
@@ -39,6 +39,13 @@ export class NSWEvaluationReportGenerator {
     }
 
     const promptCheck = this.checkPromptRequirements(essayContent, prompt);
+    console.log('=== PROMPT CHECK RESULTS ===');
+    console.log('Score:', promptCheck.score);
+    console.log('Missing Elements:', promptCheck.missingElements);
+    console.log('Partial Elements:', promptCheck.partialElements);
+    console.log('Incomplete Essay:', promptCheck.incompleteEssay);
+    console.log('============================');
+
     const contentAndIdeasScore = this.scoreContentAndIdeas(essayContent, prompt, wordCount, targetWordCountMin, targetWordCountMax, promptCheck);
     const textStructureScore = this.scoreTextStructure(essayContent, promptCheck.incompleteEssay);
     const languageFeaturesScore = this.scoreLanguageFeatures(essayContent);
@@ -47,44 +54,44 @@ export class NSWEvaluationReportGenerator {
     const domains = {
       contentAndIdeas: {
         score: contentAndIdeasScore,
-        maxScore: 10,
-        percentage: Math.round((contentAndIdeasScore / 10) * 100),
+        maxScore: this.maxScorePerCriterion,
+        percentage: Math.round((contentAndIdeasScore / this.maxScorePerCriterion) * 100),
         band: this.getScoreBand(contentAndIdeasScore),
         weight: 40,
-        weightedScore: Math.round((contentAndIdeasScore / 10) * 40),
+        weightedScore: Math.round((contentAndIdeasScore / this.maxScorePerCriterion) * 40),
         feedback: NSWEvaluationReportGenerator.getFeedbackForContentAndIdeas(contentAndIdeasScore),
         specificExamples: this.getSpecificExamplesForContentAndIdeas(essayContent, contentAndIdeasScore),
         childFriendlyExplanation: this.getChildFriendlyExplanation("contentAndIdeas", contentAndIdeasScore)
       },
       textStructure: {
         score: textStructureScore,
-        maxScore: 10,
-        percentage: Math.round((textStructureScore / 10) * 100),
+        maxScore: this.maxScorePerCriterion,
+        percentage: Math.round((textStructureScore / this.maxScorePerCriterion) * 100),
         band: this.getScoreBand(textStructureScore),
         weight: 20,
-        weightedScore: Math.round((textStructureScore / 10) * 20),
+        weightedScore: Math.round((textStructureScore / this.maxScorePerCriterion) * 20),
         feedback: NSWEvaluationReportGenerator.getFeedbackForTextStructure(textStructureScore),
         specificExamples: this.getSpecificExamplesForTextStructure(essayContent, textStructureScore),
         childFriendlyExplanation: this.getChildFriendlyExplanation("textStructure", textStructureScore)
       },
       languageFeatures: {
         score: languageFeaturesScore,
-        maxScore: 10,
-        percentage: Math.round((languageFeaturesScore / 10) * 100),
+        maxScore: this.maxScorePerCriterion,
+        percentage: Math.round((languageFeaturesScore / this.maxScorePerCriterion) * 100),
         band: this.getScoreBand(languageFeaturesScore),
         weight: 25,
-        weightedScore: Math.round((languageFeaturesScore / 10) * 25),
+        weightedScore: Math.round((languageFeaturesScore / this.maxScorePerCriterion) * 25),
         feedback: NSWEvaluationReportGenerator.getFeedbackForLanguageFeatures(languageFeaturesScore),
         specificExamples: this.getSpecificExamplesForLanguageFeatures(essayContent, languageFeaturesScore),
         childFriendlyExplanation: this.getChildFriendlyExplanation("languageFeatures", languageFeaturesScore)
       },
       spellingAndGrammar: {
         score: spellingAndGrammarScore,
-        maxScore: 10,
-        percentage: Math.round((spellingAndGrammarScore / 10) * 100),
+        maxScore: this.maxScorePerCriterion,
+        percentage: Math.round((spellingAndGrammarScore / this.maxScorePerCriterion) * 100),
         band: this.getScoreBand(spellingAndGrammarScore),
         weight: 15,
-        weightedScore: Math.round((spellingAndGrammarScore / 10) * 15),
+        weightedScore: Math.round((spellingAndGrammarScore / this.maxScorePerCriterion) * 15),
         feedback: NSWEvaluationReportGenerator.getFeedbackForSpellingAndGrammar(spellingAndGrammarScore),
         specificExamples: this.getSpecificExamplesForSpellingAndGrammar(essayContent, spellingAndGrammarScore),
         childFriendlyExplanation: this.getChildFriendlyExplanation("spellingAndGrammar", spellingAndGrammarScore)
@@ -125,7 +132,7 @@ export class NSWEvaluationReportGenerator {
     const normalizedPrompt = prompt.trim().toLowerCase();
     
     if (normalizedEssay.length < 100) {
-      return true;
+      return false;
     }
     
     if (normalizedPrompt.length > 50 && normalizedEssay.includes(normalizedPrompt)) {
@@ -148,15 +155,15 @@ export class NSWEvaluationReportGenerator {
   private static extractQuestions(prompt: string): string[] {
     return prompt
       .split(/[.!]/)
-      .filter(s => s.includes('?'))
+      .filter(s => s.includes("?"))
       .map(q => q.trim());
   }
 
   private static extractActionVerbs(prompt: string): string[] {
-    const actionVerbs = ['describe', 'explain', 'tell', 'write', 'create', 
-                         'imagine', 'solve', 'meet', 'face', 'learn', 'discover'];
+    const actionVerbs = ["describe", "explain", "tell", "write", "create", 
+                         "imagine", "solve", "meet", "face", "learn", "discover"];
     return actionVerbs.filter(verb => 
-      new RegExp(`\\b${verb}\\b`, 'i').test(prompt)
+      new RegExp(`\\b${verb}\\b`, "i").test(prompt)
     );
   }
 
@@ -165,10 +172,10 @@ export class NSWEvaluationReportGenerator {
     const properNouns: string[] = [];
     
     for (let i = 0; i < words.length; i++) {
-      const word = words[i].replace(/[^a-zA-Z]/g, '');
+      const word = words[i].replace(/[^a-zA-Z]/g, "");
       if (word && word[0] === word[0].toUpperCase() && 
-          i > 0 && !['.', '!', '?'].includes(words[i-1].slice(-1))) {
-        if (!['The', 'A', 'An', 'And', 'But', 'Or', 'In', 'On', 'At'].includes(word)) {
+          i > 0 && ![".", "!", "?"].includes(words[i-1].slice(-1))) {
+        if (!["The", "A", "An", "And", "But", "Or", "In", "On", "At"].includes(word)) {
           properNouns.push(word);
         }
       }
@@ -178,8 +185,8 @@ export class NSWEvaluationReportGenerator {
   }
 
   private static extractKeywords(text: string): Set<string> {
-    const commonWords = new Set(['the', 'a', 'an', 'and', 'or', 'but', 'in', 
-                                 'on', 'at', 'to', 'for', 'of', 'with', 'by']);
+    const commonWords = new Set(["the", "a", "an", "and", "or", "but", "in", 
+                                 "on", "at", "to", "for", "of", "with", "by"]);
     return new Set(
       text
         .toLowerCase()
@@ -189,12 +196,13 @@ export class NSWEvaluationReportGenerator {
   }
 
   private static calculateKeywordOverlap(promptKeywords: Set<string>, essayKeywords: Set<string>): number {
+    if (promptKeywords.size === 0) return 1;
     const intersection = new Set([...promptKeywords].filter(k => essayKeywords.has(k)));
     return intersection.size / promptKeywords.size;
   }
 
   private static detectNarrativeResolution(essay: string): boolean {
-    const lastParagraph = essay.split(/\n\s*\n/).slice(-1)[0]?.toLowerCase() || '';
+    const lastParagraph = essay.split(/\n\s*\n/).slice(-1)[0]?.toLowerCase() || "";
     const resolutionIndicators = /finally|in the end|at last|eventually|ultimately|from that day|forever|always/i;
     
     const endsProperly = /[.!?]$/.test(essay.trim());
@@ -206,12 +214,11 @@ export class NSWEvaluationReportGenerator {
 
   private static analyzePromptStructure(prompt: string): PromptRequirements {
     const questions = this.extractQuestions(prompt);
-    const requiredActions = this.extractActionVerbs(prompt);
     
     const requiresCharacters = /who|meet|character|people/i.test(prompt);
-    const requiresChallenges = /challenge|problem|difficult|obstacle/i.test(prompt);
-    const requiresResolution = /solve|resolve|help|save|overcome/i.test(prompt);
-    const requiresReflection = /learn|discover|realize|understand/i.test(prompt);
+    const requiresChallenges = /challenge|problem|difficult|obstacle|riddle/i.test(prompt);
+    const requiresResolution = /solve|resolve|help|save|overcome|choose to stay|return home/i.test(prompt);
+    const requiresReflection = /learn|discover|realize|understand|treasures|friendships/i.test(prompt);
     
     return {
       totalQuestions: questions.length,
@@ -276,16 +283,16 @@ export class NSWEvaluationReportGenerator {
     }
     
     if (promptAnalysis.requiresChallenges) {
-      const hasChallengeWords = /challenge|difficult|problem|struggle|danger|obstacle|threat/i.test(essayLower);
+      const hasChallengeWords = /challenge|difficult|problem|struggle|danger|obstacle|threat|riddle/i.test(essayLower);
       const hasSolution = /overcome|solve|succeed|triumph|defeat|escape|resolve/i.test(essayLower);
       
       if (hasChallengeWords && hasSolution) {
         score += 2;
-      } else if (hasChallengeWords || hasSolution) {
+      } else if (hasChallengeWords) {
         score += 1;
-        partialElements.push("Challenges need clear resolution");
+        partialElements.push("Challenges are mentioned, but a clear resolution is needed.");
       } else {
-        missingElements.push("Describe challenges faced and how you overcame them");
+        missingElements.push("Describe challenges or riddles faced and how you overcame them");
       }
     }
     
@@ -294,16 +301,16 @@ export class NSWEvaluationReportGenerator {
       if (hasResolution) {
         score += 2;
       } else {
-        missingElements.push("Story needs clear resolution addressing the prompt's main question");
+        missingElements.push("Story needs a clear resolution addressing the prompt's main question (e.g., staying or returning home)");
       }
     }
     
     if (promptAnalysis.requiresReflection) {
-      const hasReflection = /learn|discover|realize|understand|teach|lesson/i.test(essayLower);
+      const hasReflection = /learn|discover|realize|understand|teach|lesson|treasure|friendship/i.test(essayLower);
       if (hasReflection) {
         score += 2;
       } else {
-        missingElements.push("Include reflection on what you learned or discovered");
+        missingElements.push("Include reflection on what you learned, discovered, or the treasures/friendships gained");
       }
     }
     
@@ -371,14 +378,14 @@ export class NSWEvaluationReportGenerator {
   private static analyzeShowingVsTelling(text: string): number {
     const lowerText = text.toLowerCase();
     
-    const showingWords = ['gasped', 'smiled', 'frowned', 'whispered', 'shouted', 
-                         'trembled', 'laughed', 'grinned', 'cried', 'nodded', 
-                         'shook', 'pointed', 'sighed', 'glanced', 'stared'];
-    const tellingPhrases = ['felt', 'was happy', 'was sad', 'became', 
-                           'i learned that', 'i realized that', 'teaching me'];
+    const showingWords = ["gasped", "smiled", "frowned", "whispered", "shouted", 
+                         "trembled", "laughed", "grinned", "cried", "nodded", 
+                         "shook", "pointed", "sighed", "glanced", "stared"];
+    const tellingPhrases = ["felt", "was happy", "was sad", "became", 
+                           "i learned that", "i realized that", "teaching me"];
     
-    const showingCount = showingWords.filter(w => new RegExp(`\\b${w}\\b`, 'i').test(lowerText)).length;
-    const tellingCount = tellingPhrases.filter(p => new RegExp(`\\b${p}\\b`, 'i').test(lowerText)).length;
+    const showingCount = showingWords.filter(w => new RegExp(`\\b${w}\\b`, "i").test(lowerText)).length;
+    const tellingCount = tellingPhrases.filter(p => new RegExp(`\\b${p}\\b`, "i").test(lowerText)).length;
     
     if (showingCount > tellingCount + 2) return 1;
     if (showingCount > tellingCount) return 0.5;
@@ -420,7 +427,7 @@ export class NSWEvaluationReportGenerator {
     }
     
     if (wordCount < targetWordCountMin) {
-      if (wordCount < targetWordCountMin * 0.75) {
+      if (wordCount < 300) {
         score -= 3;
       } else {
         score -= 1;
@@ -440,7 +447,7 @@ export class NSWEvaluationReportGenerator {
     const specificityScore = this.analyzeSpecificity(essayContent);
     score += specificityScore;
     
-    return Math.min(Math.max(0, Math.round(score * 2) / 2), 10);
+    return Math.min(Math.max(0, Math.round(score * 2) / 2), this.maxScorePerCriterion);
   }
 
   private static scoreTextStructure(essayContent: string, incompleteEssay: boolean): number {
@@ -473,13 +480,13 @@ export class NSWEvaluationReportGenerator {
       }
     }
     
-    const transitionWords = ['however', 'therefore', 'meanwhile', 'suddenly', 
-                             'finally', 'furthermore', 'moreover', 'consequently', 
-                             'nevertheless', 'although', 'firstly', 'secondly', 
-                             'then', 'next', 'later', 'eventually'];
+    const transitionWords = ["however", "therefore", "meanwhile", "suddenly", 
+                             "finally", "furthermore", "moreover", "consequently", 
+                             "nevertheless", "although", "firstly", "secondly", 
+                             "then", "next", "later", "eventually"];
     const lowerContent = essayContent.toLowerCase();
     const transitionsFound = transitionWords.filter(word => 
-      new RegExp(`\\b${word}\\b`, 'i').test(lowerContent)
+      new RegExp(`\\b${word}\\b`, "i").test(lowerContent)
     ).length;
     
     if (transitionsFound >= 3) score += 1;
@@ -487,11 +494,11 @@ export class NSWEvaluationReportGenerator {
     
     const sentenceStarters = sentences.map(s => s.trim().split(/\s+/)[0]);
     const uniqueStarters = new Set(sentenceStarters).size;
-    if (uniqueStarters / sentences.length > 0.5) {
+    if (sentences.length > 0 && uniqueStarters / sentences.length > 0.5) {
       score += 1;
     }
     
-    return Math.min(Math.max(0, Math.round(score * 2) / 2), 10);
+    return Math.min(Math.max(0, Math.round(score * 2) / 2), this.maxScorePerCriterion);
   }
 
   private static scoreSpellingAndGrammar(essayContent: string): number {
@@ -500,8 +507,8 @@ export class NSWEvaluationReportGenerator {
     const articleErrors = (essayContent.match(/\ba ([aeiouAEIOU]\w*)/gi) || []).length;
     errorCount += articleErrors;
     
-    const commonMisspellings = ['recieve', 'beleive', 'seperate', 'definately', 
-                                'occured', 'begining', 'untill', 'wierd'];
+    const commonMisspellings = ["recieve", "beleive", "seperate", "definately", 
+                                "occured", "begining", "untill", "wierd"];
     const lowerContent = essayContent.toLowerCase();
     commonMisspellings.forEach(word => {
       if (lowerContent.includes(word)) errorCount++;
@@ -528,19 +535,19 @@ export class NSWEvaluationReportGenerator {
     const words = essayContent.split(/\s+/);
     const uniqueWords = new Set(words).size;
     
-    if (uniqueWords / words.length > 0.6) score += 1;
+    if (words.length > 0 && uniqueWords / words.length > 0.6) score += 1;
     
-    const figurativeLanguage = [' like ', ' as ', 'metaphor', 'simile', 'personification', 'hyperbole'];
+    const figurativeLanguage = [" like ", " as ", "metaphor", "simile", "personification", "hyperbole"];
     const figurativeCount = figurativeLanguage.filter(phrase => lowerContent.includes(phrase)).length;
     if (figurativeCount >= 2) score += 2;
     else if (figurativeCount >= 1) score += 1;
     
-    const sensoryWords = ['see', 'hear', 'smell', 'taste', 'touch', 'feel'];
+    const sensoryWords = ["see", "hear", "smell", "taste", "touch", "feel"];
     const sensoryCount = sensoryWords.filter(word => lowerContent.includes(word)).length;
     if (sensoryCount >= 3) score += 2;
     else if (sensoryCount >= 1) score += 1;
     
-    const sophisticatedWords = ['ethereal', 'ephemeral', 'cacophony', 'sonorous', 'pulchritudinous'];
+    const sophisticatedWords = ["ethereal", "ephemeral", "cacophony", "sonorous", "pulchritudinous"];
     const sophisticatedCount = sophisticatedWords.filter(word => lowerContent.includes(word)).length;
     if (sophisticatedCount >= 2) score += 2;
     else if (sophisticatedCount >= 1) score += 1;
@@ -592,7 +599,7 @@ export class NSWEvaluationReportGenerator {
     }
 
     if (promptCheck.missingElements.length > 0) {
-      improvements.push(`🎯 Address all parts of the prompt. Missing: ${promptCheck.missingElements.join(', ')}`);
+      improvements.push(`🎯 Address all parts of the prompt. Missing: ${promptCheck.missingElements.join(", ")}`);
     }
 
     if (domains.contentAndIdeas.score < 6) {
