@@ -1,6 +1,61 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, MessageSquare, BarChart3, Lightbulb, Target, Star, TrendingUp, Award } from 'lucide-react';
 
+/**
+ * Generates time-appropriate coaching messages for 40-minute writing test
+ */
+function getTimeAwareMessage(seconds: number, wordCount: number) {
+  const minutes = Math.floor(seconds / 60);
+  const timeRemaining = Math.max(0, 40 - minutes);
+
+  // Calculate expected words (target: 250 words in 40 mins = 6.25 words/min)
+  const expectedWords = Math.floor((250 / 40) * minutes);
+  const wordsAheadBehind = wordCount - expectedWords;
+
+  // Determine pace
+  let paceEmoji = '✅';
+  let paceMessage = "You're on track!";
+
+  if (wordsAheadBehind > 50) {
+    paceEmoji = '🚀';
+    paceMessage = "Great pace! You're ahead of schedule.";
+  } else if (wordsAheadBehind < -50 && minutes > 10) {
+    paceEmoji = '⏰';
+    paceMessage = "Let's pick up the pace a bit!";
+  }
+
+  // Time-based messages
+  let timeMessage = '';
+  let urgency = 'low';
+
+  if (minutes < 10) {
+    timeMessage = "Great start! Focus on getting your ideas flowing.";
+  } else if (minutes < 20) {
+    timeMessage = "Good progress! Keep developing your ideas.";
+  } else if (minutes < 30) {
+    timeMessage = "You're doing well! Start thinking about your conclusion.";
+    urgency = 'medium';
+  } else if (minutes < 35) {
+    timeMessage = "Time to wrap up! Focus on a strong ending.";
+    urgency = 'medium';
+  } else if (minutes < 40) {
+    timeMessage = "Final minutes! Review and polish your work.";
+    urgency = 'high';
+  } else {
+    timeMessage = "Time's up! Great effort!";
+    urgency = 'complete';
+  }
+
+  return {
+    minutes,
+    timeRemaining,
+    timeMessage,
+    paceEmoji,
+    paceMessage,
+    urgency
+  };
+}
+
 // NSW Criteria Analysis Engine (preserved from original)
 class NSWCriteriaAnalyzer {
   static analyzeContent(content: string, textType: string) {
@@ -481,10 +536,36 @@ class EnhancedCoachResponseGenerator {
 interface EnhancedCoachPanelProps {
   content: string;
   textType: string;
-  onContentChange: (content: string) => void;
+  onContentChange?: (content: string) => void;
+  timeElapsed?: number;
+  wordCount?: number;
+  analysis?: any;
+  onAnalysisChange?: (analysis: any) => void;
+  onApplyFix?: (fix: any) => void;
+  assistanceLevel?: string;
+  onAssistanceLevelChange?: (level: string) => void;
+  user?: any;
+  openAIConnected?: boolean;
+  openAILoading?: boolean;
+  onSubmitForEvaluation?: () => void;
 }
 
-export function EnhancedCoachPanel({ content, textType, onContentChange }: EnhancedCoachPanelProps) {
+export function EnhancedCoachPanel({
+  content,
+  textType,
+  onContentChange,
+  timeElapsed = 0,
+  wordCount,
+  analysis,
+  onAnalysisChange,
+  onApplyFix,
+  assistanceLevel,
+  onAssistanceLevelChange,
+  user,
+  openAIConnected,
+  openAILoading,
+  onSubmitForEvaluation
+}: EnhancedCoachPanelProps) {
   const [messages, setMessages] = useState<any[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -495,12 +576,15 @@ export function EnhancedCoachPanel({ content, textType, onContentChange }: Enhan
   useEffect(() => {
     if (content.trim().length > 0) {
       setIsAnalyzing(true);
-      
+
       // Debounce the analysis
       const timer = setTimeout(() => {
+        const currentWordCount = content.trim().split(/\s+/).length;
+        const timeInfo = getTimeAwareMessage(timeElapsed, currentWordCount);
+
         const analysis = NSWCriteriaAnalyzer.analyzeContent(content, textType);
         const coachResponse = EnhancedCoachResponseGenerator.generateResponse(content, textType, analysis);
-        
+
         // Add or update the latest coaching message
         setMessages(prev => {
           const filtered = prev.filter(msg => msg.type !== 'auto-coach');
@@ -508,10 +592,11 @@ export function EnhancedCoachPanel({ content, textType, onContentChange }: Enhan
             type: 'auto-coach',
             content: coachResponse,
             timestamp: new Date(),
-            analysis: analysis
+            analysis: analysis,
+            timeInfo: timeInfo
           }];
         });
-        
+
         setIsAnalyzing(false);
       }, 1000);
 
@@ -531,7 +616,7 @@ export function EnhancedCoachPanel({ content, textType, onContentChange }: Enhan
         analysis: null
       }]);
     }
-  }, [content, textType]);
+  }, [content, textType, timeElapsed]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -697,7 +782,35 @@ export function EnhancedCoachPanel({ content, textType, onContentChange }: Enhan
                         </div>
                         <span className="font-semibold text-xs text-gray-800">{message.content.encouragement}</span>
                       </div>
-                      
+
+                      {/* TIME AWARENESS SECTION */}
+                      {message.timeInfo && (
+                        <div className={`mb-2 p-2 rounded text-xs ${
+                          message.timeInfo.urgency === 'high'
+                            ? 'bg-red-50 border border-red-200'
+                            : message.timeInfo.urgency === 'medium'
+                            ? 'bg-yellow-50 border border-yellow-200'
+                            : 'bg-blue-50 border border-blue-200'
+                        }`}>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-medium text-gray-700">
+                              ⏱️ {message.timeInfo.timeRemaining} mins left
+                            </span>
+                            <span className="font-medium">
+                              {message.timeInfo.paceEmoji} Pace
+                            </span>
+                          </div>
+                          <div className={`text-xs ${
+                            message.timeInfo.urgency === 'high' ? 'text-red-700 font-medium' : 'text-gray-600'
+                          }`}>
+                            {message.timeInfo.timeMessage}
+                          </div>
+                          <div className="text-xs text-gray-600 mt-1">
+                            {message.timeInfo.paceMessage}
+                          </div>
+                        </div>
+                      )}
+
                       {/* OPTIMIZED: Compact feedback sections */}
                       <div className="space-y-1 text-xs">
                         <div className="bg-blue-50 p-2 rounded border-l-2 border-blue-400">

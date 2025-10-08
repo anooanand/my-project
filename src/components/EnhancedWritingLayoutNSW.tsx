@@ -999,6 +999,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
           <EnhancedCoachPanel
             content={localContent}
             textType={textType}
+            timeElapsed={elapsedTime}
             wordCount={currentWordCount}
             analysis={analysis}
             onAnalysisChange={onAnalysisChange}
