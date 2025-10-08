@@ -144,6 +144,11 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Calculate word count first (needed by other metrics)
+  const currentWordCount = React.useMemo(() => {
+    return localContent.trim() ? localContent.trim().split(/\s+/).length : 0;
+  }, [localContent]);
+
   // Calculate grammar stats
   const grammarStats = React.useMemo(() => {
     const text = localContent;
@@ -380,9 +385,8 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
     };
   };
 
-  // Calculate word count and content status
+  // Calculate content status
   const hasContent = localContent.trim().length > 0;
-  const currentWordCount = localContent.trim() ? localContent.trim().split(/\s+/).length : 0;
   const showWordCountWarning = currentWordCount > 300;
 
   const handleSubmitForEvaluation = useCallback(async () => {
