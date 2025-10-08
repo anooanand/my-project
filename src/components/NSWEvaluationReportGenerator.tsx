@@ -93,7 +93,6 @@ export class NSWEvaluationReportGenerator {
     if (score === this.maxScorePerCriterion) return "Excellent";
     if (score >= 4) return "Very Good";
     if (score >= 3) return "Good";
-    if (score >= 2) return "Fair";
     return "Needs Improvement";
   }
 
