@@ -1,24 +1,28 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { 
-  MessageCircle, 
-  Send, 
-  Loader2, 
-  Brain, 
-  BookOpen, 
-  Target, 
+import {
+  MessageCircle,
+  Send,
+  Loader2,
+  Brain,
+  BookOpen,
+  Target,
   Lightbulb,
   CheckCircle,
   AlertCircle,
   TrendingUp,
   Clock,
   User,
-  Bot
+  Bot,
+  Award,
+  Zap,
+  Eye
 } from 'lucide-react';
+import { getTextTypeStructure } from './lib/textTypeStructures';
 
 // Types for enhanced coaching system
 interface ConversationMessage {
   id: string;
-  type: 'user' | 'ai' | 'system';
+  type: 'user' | 'ai' | 'system' | 'realtime';
   content: string;
   timestamp: Date;
   metadata?: {
@@ -27,6 +31,8 @@ interface ConversationMessage {
     wordCount?: number;
     confidence?: number;
     operations?: string[];
+    feedbackType?: 'encouragement' | 'guidance' | 'warning' | 'celebration' | 'tip';
+    isRealtime?: boolean;
   };
 }
 
@@ -52,6 +58,26 @@ interface EnhancedCoachPanelProps {
   onContentChange?: (content: string) => void;
   onFeedbackReceived?: (feedback: any) => void;
   className?: string;
+  startTime?: Date;
+}
+
+interface WritingAnalysis {
+  wordCount: number;
+  sentenceCount: number;
+  paragraphCount: number;
+  avgWordsPerSentence: number;
+  phase: 'opening' | 'development' | 'conclusion' | 'complete';
+  hasIntroduction: boolean;
+  hasConclusion: boolean;
+  recentAddition: string;
+  vocabularyLevel: 'simple' | 'moderate' | 'advanced';
+  sentenceVariety: 'limited' | 'moderate' | 'varied';
+}
+
+interface FeedbackHistory {
+  timestamp: Date;
+  type: string;
+  wordCount: number;
 }
 
 // Advanced input type detection
@@ -433,23 +459,272 @@ class EnhancedAIService {
   }
 }
 
+// Real-time Writing Analyzer
+class RealTimeWritingAnalyzer {
+  static analyzeWriting(content: string, textType: string): WritingAnalysis {
+    const words = content.trim().split(/\s+/).filter(w => w.length > 0);
+    const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    const paragraphs = content.split(/\n\n+/).filter(p => p.trim().length > 0);
+
+    const wordCount = words.length;
+    const sentenceCount = sentences.length || 1;
+    const paragraphCount = paragraphs.length;
+    const avgWordsPerSentence = wordCount / sentenceCount;
+
+    // Determine writing phase based on word count
+    let phase: 'opening' | 'development' | 'conclusion' | 'complete';
+    if (wordCount < 50) {
+      phase = 'opening';
+    } else if (wordCount < 200) {
+      phase = 'development';
+    } else if (wordCount < 300) {
+      phase = 'conclusion';
+    } else {
+      phase = 'complete';
+    }
+
+    // Check for introduction and conclusion markers
+    const lowerContent = content.toLowerCase();
+    const hasIntroduction = paragraphCount > 0 && wordCount > 20;
+    const conclusionWords = ['in conclusion', 'finally', 'to sum up', 'overall', 'in summary', 'therefore'];
+    const hasConclusion = conclusionWords.some(word => lowerContent.includes(word)) ||
+                          (wordCount > 250 && paragraphs.length > 2);
+
+    // Get recent addition (last 50 words)
+    const recentAddition = words.slice(-50).join(' ');
+
+    // Assess vocabulary level
+    const advancedWords = ['however', 'furthermore', 'consequently', 'nevertheless', 'substantial',
+                          'significant', 'demonstrate', 'illustrate', 'emphasize', 'extraordinary'];
+    const advancedWordCount = words.filter(w =>
+      advancedWords.includes(w.toLowerCase())
+    ).length;
+    const vocabularyLevel: 'simple' | 'moderate' | 'advanced' =
+      advancedWordCount > 5 ? 'advanced' : advancedWordCount > 2 ? 'moderate' : 'simple';
+
+    // Assess sentence variety
+    const sentenceLengths = sentences.map(s => s.trim().split(/\s+/).length);
+    const lengthVariance = this.calculateVariance(sentenceLengths);
+    const sentenceVariety: 'limited' | 'moderate' | 'varied' =
+      lengthVariance > 20 ? 'varied' : lengthVariance > 10 ? 'moderate' : 'limited';
+
+    return {
+      wordCount,
+      sentenceCount,
+      paragraphCount,
+      avgWordsPerSentence,
+      phase,
+      hasIntroduction,
+      hasConclusion,
+      recentAddition,
+      vocabularyLevel,
+      sentenceVariety
+    };
+  }
+
+  static calculateVariance(numbers: number[]): number {
+    if (numbers.length === 0) return 0;
+    const mean = numbers.reduce((sum, n) => sum + n, 0) / numbers.length;
+    const squareDiffs = numbers.map(n => Math.pow(n - mean, 2));
+    return squareDiffs.reduce((sum, n) => sum + n, 0) / numbers.length;
+  }
+}
+
+// Intelligent Feedback Generator
+class IntelligentFeedbackGenerator {
+  static generateRealtimeFeedback(
+    analysis: WritingAnalysis,
+    textType: string,
+    timeElapsed: number,
+    feedbackHistory: FeedbackHistory[],
+    previousContent: string
+  ): ConversationMessage | null {
+    const { wordCount, phase, paragraphCount, sentenceVariety, vocabularyLevel } = analysis;
+    const structure = getTextTypeStructure(textType);
+    const minutesElapsed = Math.floor(timeElapsed / 60000);
+
+    // Don't give feedback if content hasn't changed much
+    if (previousContent && this.contentSimilarity(previousContent, analysis.recentAddition) > 0.9) {
+      return null;
+    }
+
+    // Avoid repeating similar feedback too soon
+    const recentFeedback = feedbackHistory.filter(f =>
+      Date.now() - f.timestamp.getTime() < 60000
+    );
+    if (recentFeedback.length > 2) return null;
+
+    let content = '';
+    let feedbackType: 'encouragement' | 'guidance' | 'warning' | 'celebration' | 'tip' = 'guidance';
+
+    // Phase-specific feedback
+    if (phase === 'opening') {
+      content = this.getOpeningFeedback(analysis, structure, minutesElapsed);
+      feedbackType = 'guidance';
+    } else if (phase === 'development') {
+      content = this.getDevelopmentFeedback(analysis, structure, minutesElapsed);
+      feedbackType = 'encouragement';
+    } else if (phase === 'conclusion') {
+      content = this.getConclusionFeedback(analysis, structure, minutesElapsed);
+      feedbackType = 'tip';
+    } else {
+      content = this.getCompleteFeedback(analysis, minutesElapsed);
+      feedbackType = 'celebration';
+    }
+
+    // Time-based warnings (40-minute test simulation)
+    if (minutesElapsed >= 30 && wordCount < 150) {
+      content = `⏰ Time check! You have about 10 minutes left. Aim to reach at least 200 words. Focus on completing your main ideas and adding a strong conclusion.`;
+      feedbackType = 'warning';
+    } else if (minutesElapsed >= 35 && !analysis.hasConclusion) {
+      content = `⏰ Last 5 minutes! Make sure to write a conclusion that wraps up your ${textType} writing. A strong ending is important!`;
+      feedbackType = 'warning';
+    }
+
+    if (!content) return null;
+
+    return {
+      id: `realtime_${Date.now()}`,
+      type: 'realtime',
+      content,
+      timestamp: new Date(),
+      metadata: {
+        wordCount,
+        writingStage: this.phaseToStage(phase),
+        feedbackType,
+        isRealtime: true
+      }
+    };
+  }
+
+  static getOpeningFeedback(analysis: WritingAnalysis, structure: any, minutesElapsed: number): string {
+    const { wordCount, paragraphCount, sentenceCount } = analysis;
+    const currentPhase = structure.phases[0];
+
+    if (wordCount < 10) {
+      return `Great start! ${currentPhase.title} - Try using one of these sentence starters: "${currentPhase.sentenceStarters[0]}" to hook your reader's attention.`;
+    }
+
+    if (wordCount >= 10 && wordCount < 30) {
+      return `Nice beginning! You're setting the scene. Try adding sensory details - what does it look like, sound like, or feel like? For example: "${currentPhase.powerWords.slice(0, 3).join(', ')}..."`;
+    }
+
+    if (wordCount >= 30 && wordCount < 50) {
+      return `Excellent opening! You've written ${wordCount} words. Now start developing your main ideas. Move into the next section: ${structure.phases[1].title}.`;
+    }
+
+    return '';
+  }
+
+  static getDevelopmentFeedback(analysis: WritingAnalysis, structure: any, minutesElapsed: number): string {
+    const { wordCount, paragraphCount, sentenceVariety, vocabularyLevel, avgWordsPerSentence } = analysis;
+    const developmentPhase = structure.phases[1];
+
+    if (wordCount >= 50 && wordCount < 80) {
+      return `You're making great progress! (${wordCount} words) ${developmentPhase.title} - Remember to build your ideas with specific examples and details. Keep going!`;
+    }
+
+    if (wordCount >= 80 && wordCount < 120) {
+      if (paragraphCount < 2) {
+        return `Nice work! Quick tip: Break your writing into paragraphs - each new idea should start a new paragraph. This makes your writing easier to read.`;
+      }
+      if (sentenceVariety === 'limited') {
+        return `Good development! Try varying your sentence lengths - mix short, punchy sentences with longer, detailed ones. This keeps readers engaged!`;
+      }
+      return `Fantastic! ${wordCount} words so far. Your ideas are developing well. Keep adding specific details and examples to support your points.`;
+    }
+
+    if (wordCount >= 120 && wordCount < 180) {
+      if (vocabularyLevel === 'simple') {
+        const powerWords = developmentPhase.powerWords?.slice(0, 3) || [];
+        return `You're doing well! Try using stronger vocabulary like: ${powerWords.join(', ')}. These words will make your writing more impressive!`;
+      }
+      return `Excellent progress! (${wordCount} words) You're in the sweet spot. Continue developing your ideas, and start thinking about your conclusion soon.`;
+    }
+
+    if (wordCount >= 180 && wordCount < 200) {
+      return `Almost at 200 words - well done! Start transitioning to your conclusion. Wrap up your main ideas and leave your reader with a strong final thought.`;
+    }
+
+    return '';
+  }
+
+  static getConclusionFeedback(analysis: WritingAnalysis, structure: any, minutesElapsed: number): string {
+    const { wordCount, hasConclusion, paragraphCount } = analysis;
+    const conclusionPhase = structure.phases[structure.phases.length - 1];
+
+    if (wordCount >= 200 && wordCount < 220 && !hasConclusion) {
+      return `You've reached 200 words! Time to write your conclusion. Start with: "${conclusionPhase.sentenceStarters[0]}" to signal you're wrapping up.`;
+    }
+
+    if (wordCount >= 220 && wordCount < 260 && !hasConclusion) {
+      return `Strong writing so far! Make sure to add a conclusion that summarizes your main points and gives your reader something to think about.`;
+    }
+
+    if (hasConclusion && wordCount >= 250) {
+      return `Excellent! You've written ${wordCount} words with a complete structure. Review your work for any spelling or grammar errors, and make your writing shine!`;
+    }
+
+    return '';
+  }
+
+  static getCompleteFeedback(analysis: WritingAnalysis, minutesElapsed: number): string {
+    const { wordCount, paragraphCount, sentenceVariety, vocabularyLevel } = analysis;
+
+    if (wordCount >= 300) {
+      let feedback = `Amazing work! You've written ${wordCount} words - that's excellent for a test response! `;
+
+      if (minutesElapsed < 40) {
+        feedback += `You have time to review and polish your writing. Check for:`;
+        feedback += `\n\n• Spelling and punctuation`;
+        feedback += `\n• Varied sentence lengths`;
+        feedback += `\n• Strong vocabulary choices`;
+        feedback += `\n• Clear paragraphs with topic sentences`;
+      }
+
+      return feedback;
+    }
+
+    return '';
+  }
+
+  static contentSimilarity(str1: string, str2: string): number {
+    const words1 = new Set(str1.toLowerCase().split(/\s+/));
+    const words2 = new Set(str2.toLowerCase().split(/\s+/));
+    const intersection = new Set([...words1].filter(x => words2.has(x)));
+    return intersection.size / Math.max(words1.size, words2.size);
+  }
+
+  static phaseToStage(phase: string): 'initial' | 'planning' | 'writing' | 'revising' | 'complete' {
+    if (phase === 'opening') return 'planning';
+    if (phase === 'development') return 'writing';
+    if (phase === 'conclusion') return 'revising';
+    return 'complete';
+  }
+}
+
 // Main Enhanced Coach Panel Component
 export const EnhancedCoachPanel: React.FC<EnhancedCoachPanelProps> = ({
   content,
   textType,
   onContentChange,
   onFeedbackReceived,
-  className = ""
+  className = "",
+  startTime = new Date()
 }) => {
   // State management
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [currentInput, setCurrentInput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [contextSummary, setContextSummary] = useState<ContextSummary | null>(null);
+  const [previousContent, setPreviousContent] = useState('');
+  const [feedbackHistory, setFeedbackHistory] = useState<FeedbackHistory[]>([]);
+  const [lastAnalysis, setLastAnalysis] = useState<WritingAnalysis | null>(null);
   
   // Refs
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const realtimeFeedbackTimerRef = useRef<NodeJS.Timeout | null>(null);
   
   // Auto-scroll to bottom
   const scrollToBottom = useCallback(() => {
@@ -473,17 +748,74 @@ export const EnhancedCoachPanel: React.FC<EnhancedCoachPanelProps> = ({
     }
   }, [messages, content]);
   
+  // Real-time feedback system - analyzes writing every 10 seconds
+  useEffect(() => {
+    // Clear existing timer
+    if (realtimeFeedbackTimerRef.current) {
+      clearInterval(realtimeFeedbackTimerRef.current);
+    }
+
+    // Only provide real-time feedback if student is actively writing
+    if (content.trim().length === 0) {
+      return;
+    }
+
+    // Set up 10-second interval for intelligent feedback
+    realtimeFeedbackTimerRef.current = setInterval(() => {
+      const analysis = RealTimeWritingAnalyzer.analyzeWriting(content, textType);
+      setLastAnalysis(analysis);
+
+      const timeElapsed = Date.now() - startTime.getTime();
+      const feedbackMessage = IntelligentFeedbackGenerator.generateRealtimeFeedback(
+        analysis,
+        textType,
+        timeElapsed,
+        feedbackHistory,
+        previousContent
+      );
+
+      if (feedbackMessage) {
+        setMessages(prev => {
+          // Remove old realtime messages if we have too many
+          const filtered = prev.filter(m =>
+            m.type !== 'realtime' ||
+            Date.now() - m.timestamp.getTime() < 120000
+          );
+          return [...filtered, feedbackMessage];
+        });
+
+        setFeedbackHistory(prev => [
+          ...prev,
+          {
+            timestamp: new Date(),
+            type: feedbackMessage.metadata?.feedbackType || 'guidance',
+            wordCount: analysis.wordCount
+          }
+        ]);
+      }
+
+      setPreviousContent(content);
+    }, 10000); // Every 10 seconds
+
+    return () => {
+      if (realtimeFeedbackTimerRef.current) {
+        clearInterval(realtimeFeedbackTimerRef.current);
+      }
+    };
+  }, [content, textType, startTime, feedbackHistory, previousContent]);
+
   // Send initial greeting
   useEffect(() => {
     if (messages.length === 0) {
       const greetingMessage: ConversationMessage = {
         id: `greeting_${Date.now()}`,
         type: 'ai',
-        content: `Hello! I'm your writing coach. I'm here to help you with your ${textType} writing. What would you like to work on today?`,
+        content: `Hi! I'm your writing coach, and I'm excited to help you with your ${textType} writing today! \n\nI'll be watching your progress and giving you helpful tips as you write. You're aiming for 200-300 words in about 40 minutes. Ready to start? Just begin writing, and I'll guide you along the way!`,
         timestamp: new Date(),
         metadata: {
           writingStage: 'initial',
-          operations: ['greeting']
+          operations: ['greeting'],
+          feedbackType: 'encouragement'
         }
       };
       setMessages([greetingMessage]);
@@ -592,17 +924,44 @@ export const EnhancedCoachPanel: React.FC<EnhancedCoachPanelProps> = ({
     });
   };
   
-  // Get message icon
+  // Get message icon based on type and feedback
   const getMessageIcon = (message: ConversationMessage) => {
     if (message.type === 'user') return <User className="h-4 w-4" />;
     if (message.type === 'system') return <Brain className="h-4 w-4" />;
-    
+
+    // Real-time feedback gets special icons
+    if (message.type === 'realtime') {
+      const feedbackType = message.metadata?.feedbackType;
+      if (feedbackType === 'celebration') return <Award className="h-4 w-4" />;
+      if (feedbackType === 'warning') return <Clock className="h-4 w-4" />;
+      if (feedbackType === 'tip') return <Lightbulb className="h-4 w-4" />;
+      if (feedbackType === 'encouragement') return <TrendingUp className="h-4 w-4" />;
+      return <Eye className="h-4 w-4" />;
+    }
+
     const operations = message.metadata?.operations || [];
     if (operations.includes('analyzeQuestion')) return <BookOpen className="h-4 w-4" />;
     if (operations.includes('checkGrammarForEditor')) return <CheckCircle className="h-4 w-4" />;
     if (operations.includes('getNSWSelectiveFeedback')) return <Target className="h-4 w-4" />;
-    
+
     return <Bot className="h-4 w-4" />;
+  };
+
+  // Get message styling based on feedback type
+  const getMessageStyle = (message: ConversationMessage) => {
+    if (message.type === 'user') return 'bg-blue-600 text-white';
+    if (message.type === 'system') return 'bg-gray-100 text-gray-700 text-sm';
+
+    if (message.type === 'realtime') {
+      const feedbackType = message.metadata?.feedbackType;
+      if (feedbackType === 'celebration') return 'bg-green-50 text-green-800 border border-green-200';
+      if (feedbackType === 'warning') return 'bg-orange-50 text-orange-800 border border-orange-200';
+      if (feedbackType === 'tip') return 'bg-blue-50 text-blue-800 border border-blue-200';
+      if (feedbackType === 'encouragement') return 'bg-purple-50 text-purple-800 border border-purple-200';
+      return 'bg-gray-50 text-gray-800 border border-gray-200';
+    }
+
+    return 'bg-gray-100 text-gray-800';
   };
   
   return (
@@ -650,12 +1009,8 @@ export const EnhancedCoachPanel: React.FC<EnhancedCoachPanelProps> = ({
             <div className={`flex-1 max-w-xs lg:max-w-md ${
               message.type === 'user' ? 'text-right' : ''
             }`}>
-              <div className={`p-3 rounded-lg ${
-                message.type === 'user'
-                  ? 'bg-blue-600 text-white'
-                  : message.type === 'system'
-                  ? 'bg-gray-100 text-gray-700 text-sm'
-                  : 'bg-gray-100 text-gray-800'
+              <div className={`p-3 rounded-lg shadow-sm ${
+                getMessageStyle(message)
               }`}>
                 {message.type === 'user' ? (
                   <div>{message.content}</div>
@@ -720,10 +1075,27 @@ export const EnhancedCoachPanel: React.FC<EnhancedCoachPanelProps> = ({
           </button>
         </div>
         
-        {contextSummary && (
-          <div className="mt-2 text-xs text-gray-500">
-            Stage: {contextSummary.currentStage} • Level: {contextSummary.studentLevel} • 
-            {contextSummary.keyTopics.length > 0 && ` Topics: ${contextSummary.keyTopics.slice(0, 3).join(', ')}`}
+        {lastAnalysis && (
+          <div className="mt-2 flex items-center justify-between text-xs">
+            <div className="text-gray-500">
+              <span className="font-semibold">{lastAnalysis.wordCount}</span> words •
+              <span className="capitalize">{lastAnalysis.phase}</span> phase
+            </div>
+            {lastAnalysis.wordCount < 200 && (
+              <div className="text-blue-600 font-medium">
+                Target: 200-300 words
+              </div>
+            )}
+            {lastAnalysis.wordCount >= 200 && lastAnalysis.wordCount < 300 && (
+              <div className="text-green-600 font-medium flex items-center gap-1">
+                <CheckCircle className="h-3 w-3" /> On track!
+              </div>
+            )}
+            {lastAnalysis.wordCount >= 300 && (
+              <div className="text-green-600 font-medium flex items-center gap-1">
+                <Award className="h-3 w-3" /> Excellent!
+              </div>
+            )}
           </div>
         )}
       </div>
