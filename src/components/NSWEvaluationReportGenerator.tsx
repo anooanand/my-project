@@ -12,7 +12,7 @@ interface NSWEvaluationReportParams {
 }
 
 export class NSWEvaluationReportGenerator {
-  private static maxScorePerCriterion = 10; // Changed from 5 to 10
+  private static maxScorePerCriterion = 10;
 
   static generateReport(params: NSWEvaluationReportParams): any {
     const { essayContent, textType, prompt, wordCount, targetWordCountMin, targetWordCountMax } = params;
@@ -78,7 +78,7 @@ export class NSWEvaluationReportGenerator {
     const overallScore = this.calculateOverallScore(domains);
     const overallGrade = this.getOverallGrade(overallScore);
 
-    const strengths = this.getOverallStrengths(domains);
+    const strengths = this.getOverallStrengths(domains, essayContent);
     const areasForImprovement = this.getOverallAreasForImprovement(domains, essayContent, prompt, wordCount);
     const recommendations = this.getOverallRecommendations(overallScore, wordCount);
 
@@ -128,53 +128,113 @@ export class NSWEvaluationReportGenerator {
     return false;
   }
 
-  private static checkPromptRequirements(essayContent: string, prompt: string): { score: number, missingElements: string[] } {
+  private static checkPromptRequirements(essayContent: string, prompt: string): { 
+    score: number, 
+    missingElements: string[],
+    partialElements: string[]
+  } {
     const lowerContent = essayContent.toLowerCase();
+    const lowerPrompt = prompt.toLowerCase();
     const missingElements: string[] = [];
+    const partialElements: string[] = [];
     let score = 0;
 
-    // Check for "Hidden Doorway" specific requirements
-    if (prompt.toLowerCase().includes("hidden doorway")) {
-      // What they see through the doorway
-      if (!lowerContent.includes("see") && !lowerContent.includes("saw") && !lowerContent.includes("view") && !lowerContent.includes("look")) {
-        missingElements.push("What you see through the doorway");
-      } else {
+    // Check for "Hidden Doorway" or "Secret Library" specific requirements
+    if (lowerPrompt.includes("hidden doorway") || lowerPrompt.includes("secret library") || 
+        lowerPrompt.includes("portal") || lowerPrompt.includes("magical")) {
+      
+      // 1. What they see through the doorway
+      const hasVisualization = lowerContent.includes("see") || lowerContent.includes("saw") || 
+                               lowerContent.includes("emerge") || lowerContent.includes("view") ||
+                               lowerContent.includes("appear") || lowerContent.includes("behold");
+      if (hasVisualization) {
         score += 2;
+      } else {
+        missingElements.push("Description of what you see through the doorway");
       }
 
-      // Who they meet
-      if (!lowerContent.includes("meet") && !lowerContent.includes("met") && !lowerContent.includes("friend") && !lowerContent.includes("character") && !lowerContent.includes("person")) {
-        missingElements.push("Who you meet on your adventure");
-      } else {
+      // 2. Who they meet - must be specific characters with names or descriptions
+      const hasMeeting = (lowerContent.includes("meet") || lowerContent.includes("met")) ||
+                         (lowerContent.match(/named \w+/) !== null) ||
+                         (lowerContent.includes("character") || lowerContent.includes("friend"));
+      
+      const hasCharacterNames = essayContent.match(/named [A-Z]\w+/g);
+      
+      if (hasMeeting && hasCharacterNames && hasCharacterNames.length >= 1) {
         score += 2;
+      } else if (hasMeeting) {
+        score += 1;
+        partialElements.push("Characters mentioned but need more development");
+      } else {
+        missingElements.push("Who you meet in this world (specific characters with names)");
       }
 
-      // How the adventure changes them
-      if (!lowerContent.includes("learn") && !lowerContent.includes("change") && !lowerContent.includes("realize") && !lowerContent.includes("discover") && !lowerContent.includes("understand")) {
-        missingElements.push("How the adventure changes you");
+      // 3. How the adventure changes them - must show transformation, not just tell
+      const hasTransformation = (lowerContent.includes("learn") || lowerContent.includes("realize") || 
+                                 lowerContent.includes("understand") || lowerContent.includes("discover") ||
+                                 lowerContent.includes("change") || lowerContent.includes("grew"));
+      
+      // Check if it's SHOWN (actions/dialogue) vs TOLD (statements)
+      const hasTelling = lowerContent.includes("teaching me") || lowerContent.includes("i learned") ||
+                         lowerContent.includes("i realized") || lowerContent.includes("i understood") ||
+                         lowerContent.match(/teaching me that|learned that|realized that/);
+      
+      if (hasTransformation && !hasTelling) {
+        score += 2; // Shown transformation
+      } else if (hasTransformation && hasTelling) {
+        score += 1; // Told transformation
+        partialElements.push("Character change mentioned but needs to be shown through actions, not told");
       } else {
-        score += 2;
+        missingElements.push("How this adventure changes you or your understanding");
       }
 
-      // Challenges faced
-      if (!lowerContent.includes("challenge") && !lowerContent.includes("difficult") && !lowerContent.includes("problem") && !lowerContent.includes("struggle") && !lowerContent.includes("overcome")) {
-        missingElements.push("Challenges faced and how you overcome them");
-      } else {
+      // 4. Challenges faced - MUST include both problem AND solution
+      const hasChallengeWord = lowerContent.includes("challenge") || lowerContent.includes("difficult") || 
+                               lowerContent.includes("problem") || lowerContent.includes("struggle") ||
+                               lowerContent.includes("danger") || lowerContent.includes("fear") ||
+                               lowerContent.includes("obstacle") || lowerContent.includes("threat");
+      
+      const hasSolution = lowerContent.includes("overcome") || lowerContent.includes("solve") ||
+                          lowerContent.includes("succeed") || lowerContent.includes("triumph") ||
+                          lowerContent.includes("defeat") || lowerContent.includes("escape") ||
+                          lowerContent.includes("conquer") || lowerContent.includes("prevail");
+      
+      if (hasChallengeWord && hasSolution) {
         score += 2;
+      } else if (hasChallengeWord || hasSolution) {
+        score += 1;
+        partialElements.push("Challenges mentioned but need resolution, or resolution without clear challenge");
+      } else {
+        missingElements.push("Challenges you face and how you overcome them");
       }
 
-      // Notebook stories
-      if (!lowerContent.includes("notebook") && !lowerContent.includes("write") && !lowerContent.includes("story") && !lowerContent.includes("journal")) {
-        missingElements.push("What stories you write in your notebook");
-      } else {
+      // 5. Notebook/Journal stories - must explicitly mention writing
+      const hasNotebook = lowerContent.includes("notebook") || lowerContent.includes("journal") ||
+                          lowerContent.includes("diary") || lowerContent.includes("book");
+      const hasWriting = lowerContent.includes("write") || lowerContent.includes("wrote") ||
+                         lowerContent.includes("pen") || lowerContent.includes("record") ||
+                         lowerContent.includes("jot") || lowerContent.includes("scribble");
+      const hasStories = lowerContent.includes("stor") || lowerContent.includes("tale") ||
+                         lowerContent.includes("adventure") || lowerContent.includes("experience");
+      
+      if (hasNotebook && hasWriting && hasStories) {
         score += 2;
+      } else if ((hasNotebook && hasWriting) || (hasWriting && hasStories)) {
+        score += 1;
+        partialElements.push("Writing/stories mentioned but not clearly connected to notebook");
+      } else {
+        missingElements.push("What stories you write in your notebook about this adventure");
       }
     } else {
-      // Generic prompt checking
-      score = 8; // Default if not specific prompt
+      // Generic prompt checking - different prompts need different checks
+      score = 6; // Default if not specific prompt
     }
 
-    return { score: Math.min(score, 10), missingElements };
+    return { 
+      score: Math.min(score, 10), 
+      missingElements,
+      partialElements
+    };
   }
 
   private static calculateOverallScore(domains: any): number {
@@ -193,8 +253,9 @@ export class NSWEvaluationReportGenerator {
     if (score >= 80) return "A";
     if (score >= 70) return "B+";
     if (score >= 60) return "B";
-    if (score >= 50) return "C";
-    if (score >= 40) return "D";
+    if (score >= 50) return "C+";
+    if (score >= 40) return "C";
+    if (score >= 30) return "D";
     return "E";
   }
 
@@ -207,154 +268,190 @@ export class NSWEvaluationReportGenerator {
   }
 
   private static scoreContentAndIdeas(essayContent: string, prompt: string): number {
-    let score = 2; // Lowered base score from 4 to 2
+    let score = 2; // Lowered base score
     const lowerContent = essayContent.toLowerCase();
     const words = essayContent.split(/\s+/);
     
-    // Check prompt requirements
+    // Check prompt requirements - THIS IS THE KEY FIX
     const promptCheck = this.checkPromptRequirements(essayContent, prompt);
-    score += Math.floor(promptCheck.score / 2); // Add up to 5 points for addressing prompt
+    
+    // Use the prompt score (0-10) but weight it heavily
+    const promptPoints = Math.floor(promptCheck.score / 2); // Convert 0-10 to 0-5 points
+    score += promptPoints;
+    
+    // Deduct for missing elements
+    if (promptCheck.missingElements.length >= 3) {
+      score -= 2;
+    } else if (promptCheck.missingElements.length >= 2) {
+      score -= 1;
+    }
 
     // Reward substantial content
     if (words.length > 150) score += 1;
-    if (words.length > 250) score += 1;
+    if (words.length > 300) score += 1;
+    if (words.length > 450) score += 1;
     
     // Check for creativity
     const creativeWords = ["enchanted", "magical", "whisper", "shimmering", "kaleidoscope", 
                            "bioluminescent", "crystalline", "starlight", "mysterious", "ancient",
-                           "glowing", "sparkling", "twisted", "shadowy", "brilliant"];
+                           "glowing", "sparkling", "twisted", "shadowy", "brilliant", "ethereal",
+                           "luminous", "mystical", "cosmic", "celestial", "aurora", "twilight"];
     const creativeCount = creativeWords.filter(word => lowerContent.includes(word)).length;
-    if (creativeCount >= 2) score += 1;
+    if (creativeCount >= 3) score += 1;
+    if (creativeCount >= 5) score += 0.5;
     
     // Check for character development (SHOWN not told)
-    const showingWords = ["gasped", "smiled", "frowned", "whispered", "shouted", "trembled", "laughed"];
-    const tellingWords = ["felt", "was", "became", "learned", "realized"];
+    const showingWords = ["gasped", "smiled", "frowned", "whispered", "shouted", "trembled", 
+                          "laughed", "grinned", "cried", "nodded", "shook", "pointed", "sighed"];
+    const tellingWords = ["felt", "was happy", "was sad", "became", "learned that", "realized that"];
+    
     const showingCount = showingWords.filter(word => lowerContent.includes(word)).length;
-    const tellingCount = tellingWords.filter(word => lowerContent.includes(word)).length;
+    const tellingMatches = tellingWords.filter(word => lowerContent.includes(word)).length;
     
-    if (showingCount > tellingCount) score += 1;
+    if (showingCount > tellingMatches + 2) {
+      score += 1;
+    } else if (showingCount > tellingMatches) {
+      score += 0.5;
+    }
     
-    return Math.min(score, this.maxScorePerCriterion);
+    return Math.min(Math.round(score), this.maxScorePerCriterion);
   }
 
   private static scoreTextStructure(essayContent: string): number {
-    let score = 2; // Lowered base score from 4 to 2
+    let score = 2; // Lowered base score
     const paragraphs = essayContent.split(/\n\s*\n/).filter(p => p.trim().length > 0);
     const sentences = essayContent.split(/[.!?]+/).filter(s => s.trim().length > 0);
     
     // Check for clear introduction
     const firstSentence = sentences[0]?.toLowerCase() || "";
     if (firstSentence.includes("once") || firstSentence.includes("one day") || 
-        firstSentence.includes("imagine") || firstSentence.includes("suddenly")) {
+        firstSentence.includes("imagine") || firstSentence.includes("as the") ||
+        firstSentence.match(/^(in|on|at|from|during)/)) {
       score += 2;
     } else if (sentences.length > 0) {
-      score += 1; // Some introduction present
+      score += 1;
     }
     
-    // Paragraph structure
-    if (paragraphs.length >= 3) score += 2;
-    if (paragraphs.length >= 5) score += 1;
+    // Paragraph structure - STRICTER
+    if (paragraphs.length >= 5) score += 3;
+    else if (paragraphs.length >= 4) score += 2;
+    else if (paragraphs.length >= 3) score += 1;
+    else score += 0; // Only 1-2 paragraphs gets no points
     
     // Check for conclusion
     const lastSentence = sentences[sentences.length - 1]?.toLowerCase() || "";
-    if (lastSentence.includes("finally") || lastSentence.includes("end") || 
-        lastSentence.includes("forever") || lastSentence.includes("always")) {
+    if (lastSentence.includes("finally") || lastSentence.includes("in the end") || 
+        lastSentence.includes("forever") || lastSentence.includes("always") ||
+        lastSentence.includes("from that day")) {
       score += 2;
+    } else if (sentences.length >= 5) {
+      score += 1; // Has some conclusion
     }
     
     // Transition words
     const transitionWords = ['however', 'therefore', 'meanwhile', 'suddenly', 'finally', 
-                             'furthermore', 'moreover', 'consequently', 'nevertheless'];
+                             'furthermore', 'moreover', 'consequently', 'nevertheless', 'although'];
     const lowerContent = essayContent.toLowerCase();
     const transitionsFound = transitionWords.filter(word => lowerContent.includes(word)).length;
-    if (transitionsFound >= 2) score += 1;
+    if (transitionsFound >= 3) score += 1;
+    else if (transitionsFound >= 2) score += 0.5;
     
-    return Math.min(score, this.maxScorePerCriterion);
+    return Math.min(Math.round(score), this.maxScorePerCriterion);
   }
 
   private static scoreLanguageFeatures(essayContent: string): number {
-    let score = 2; // Lowered base score from 4 to 2
+    let score = 2; // Lowered base score
     const lowerContent = essayContent.toLowerCase();
     const words = lowerContent.split(/\s+/).filter(w => w.length > 0);
     
     // Vocabulary sophistication
     const longWords = words.filter(word => word.length >= 7).length;
     const sophisticationRatio = longWords / words.length;
-    if (sophisticationRatio > 0.12) score += 2;
-    if (sophisticationRatio > 0.20) score += 1;
+    if (sophisticationRatio > 0.18) score += 2;
+    else if (sophisticationRatio > 0.12) score += 1;
     
-    // Figurative language with specific examples
+    // Figurative language with specific detection
     let figurativeScore = 0;
-    if (lowerContent.includes("like a") || lowerContent.includes("like an")) figurativeScore += 1;
-    if (lowerContent.includes("as") && (lowerContent.includes("as bright") || lowerContent.includes("as dark"))) figurativeScore += 1;
-    if (lowerContent.match(/\b\w+ed\s+(through|across|around)/)) figurativeScore += 1; // Action verbs
     
-    score += Math.min(figurativeScore, 3);
+    // Similes
+    if (lowerContent.match(/like (a|an|the) \w+/g)) figurativeScore += 1;
+    if (lowerContent.match(/as \w+ as/g)) figurativeScore += 1;
     
-    // Sensory details
+    // Metaphors (basic detection)
+    if (lowerContent.match(/\w+ (is|was|are|were) (a|an|the) \w+/g)) figurativeScore += 0.5;
+    
+    // Personification indicators
+    if (lowerContent.match(/(wind|tree|river|sun|moon|star) (whisper|sing|dance|laugh|cry)/g)) {
+      figurativeScore += 1;
+    }
+    
+    score += Math.min(Math.round(figurativeScore), 3);
+    
+    // Sensory details - more comprehensive
     const sensoryWords = ['saw', 'heard', 'felt', 'smelled', 'tasted', 'touched',
                           'gleaming', 'echoed', 'rough', 'sweet', 'bitter', 'soft',
-                          'bright', 'dark', 'loud', 'quiet', 'warm', 'cold'];
+                          'bright', 'dark', 'loud', 'quiet', 'warm', 'cold', 'shimmer',
+                          'glow', 'sparkle', 'rumble', 'whisper', 'fragrant'];
     const sensoryCount = sensoryWords.filter(word => lowerContent.includes(word)).length;
-    if (sensoryCount >= 3) score += 2;
+    if (sensoryCount >= 5) score += 2;
+    else if (sensoryCount >= 3) score += 1;
     
     // Dialogue
     const hasDialogue = essayContent.includes('"') || essayContent.includes("'");
-    if (hasDialogue) score += 1;
+    if (hasDialogue) {
+      const dialogueCount = (essayContent.match(/"/g) || []).length / 2;
+      if (dialogueCount >= 2) score += 1;
+      else score += 0.5;
+    }
     
-    return Math.min(score, this.maxScorePerCriterion);
+    return Math.min(Math.round(score), this.maxScorePerCriterion);
   }
 
   private static scoreSpellingAndGrammar(essayContent: string): number {
     let score = 8; // Start high and deduct for errors
     const errors: string[] = [];
     
-    // Article errors (a/an)
-    const articleErrors = essayContent.match(/\ba [aeiou]/gi);
-    if (articleErrors) {
-      score -= articleErrors.length * 2;
-      errors.push(`Article errors: ${articleErrors.join(', ')}`);
+    // Article errors (a/an) - FIXED REGEX
+    const articleErrorMatches = essayContent.match(/\ba ([aeiouAEIOU])/g);
+    if (articleErrorMatches && articleErrorMatches.length > 0) {
+      score -= articleErrorMatches.length * 2;
+      errors.push(`Article errors found: ${articleErrorMatches.join(', ')}`);
     }
     
     // Common homophones
-    const homophoneErrors = [
-      { wrong: /\bthere\s+(?:is|are|was|were)\s+\w+\s+(?:house|car|book)/gi, correct: "their" },
-      { wrong: /\byour\s+(?:going|coming|leaving)/gi, correct: "you're" },
-      { wrong: /\bits\s+(?:tail|eyes|wings)/gi, correct: "its" }
-    ];
-    
-    homophoneErrors.forEach(error => {
-      const matches = essayContent.match(error.wrong);
-      if (matches) {
-        score -= matches.length;
-        errors.push(`Possible homophone error: check ${error.correct}`);
-      }
-    });
+    const lowerContent = essayContent.toLowerCase();
+    if (lowerContent.match(/\byour\s+(going|coming|leaving|doing)/)) {
+      score -= 1;
+      errors.push("Possible 'your' vs 'you're' error");
+    }
+    if (lowerContent.match(/\bthere\s+\w+\s+(car|house|dog|cat)/)) {
+      score -= 1;
+      errors.push("Possible 'there' vs 'their' error");
+    }
     
     // Missing dialogue punctuation
-    const dialogueLines = essayContent.match(/"[^"]*"/g);
+    const dialogueLines = essayContent.match(/"[^"]+"/g);
     if (dialogueLines) {
       dialogueLines.forEach(line => {
-        if (!line.match(/"[^"]*[.!?]"/)) {
-          score -= 1;
-          errors.push("Missing punctuation in dialogue");
+        if (!line.match(/[.!?]["']$/)) {
+          score -= 0.5;
         }
       });
     }
     
-    // Run-on sentences (very basic check)
-    const longSentences = essayContent.split(/[.!?]+/).filter(s => s.split(/\s+/).length > 25);
+    // Run-on sentences (basic check)
+    const sentences = essayContent.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    const longSentences = sentences.filter(s => s.split(/\s+/).length > 30);
     if (longSentences.length > 0) {
-      score -= longSentences.length;
-      errors.push("Possible run-on sentences");
+      score -= longSentences.length * 0.5;
     }
     
     // Basic spelling errors
-    const commonErrors = ["teh", "adn", "wrok", "becuase", "recieve", "seperate"];
-    const foundErrors = commonErrors.filter(error => essayContent.toLowerCase().includes(error));
+    const commonErrors = ["teh ", "adn ", "wrok ", "becuase ", "recieve ", "seperate "];
+    const foundErrors = commonErrors.filter(error => lowerContent.includes(error));
     score -= foundErrors.length * 2;
     
-    return Math.max(score, 0);
+    return Math.max(Math.round(score), 0);
   }
 
   private static getFeedbackForContentAndIdeas(score: number): string[] {
@@ -385,116 +482,172 @@ export class NSWEvaluationReportGenerator {
     return ["Multiple errors need attention. Focus on basic spelling and grammar rules."];
   }
 
-  private static getOverallStrengths(domains: any): string[] {
+  private static getOverallStrengths(domains: any, essayContent: string): string[] {
     const strengths: string[] = [];
     
-    if (domains.contentAndIdeas.score >= 8) strengths.push("Strong creative ideas and imagination");
-    if (domains.textStructure.score >= 8) strengths.push("Well-organized structure");
-    if (domains.languageFeatures.score >= 8) strengths.push("Effective use of descriptive language");
-    if (domains.spellingAndGrammar.score >= 8) strengths.push("Good technical accuracy");
+    // Look for specific strengths in the content
+    if (domains.contentAndIdeas.score >= 8) {
+      strengths.push("Strong creative ideas and imagination");
+    } else if (domains.contentAndIdeas.score >= 6) {
+      strengths.push("Shows creative potential");
+    }
+    
+    if (domains.textStructure.score >= 8) {
+      strengths.push("Well-organized structure");
+    } else if (domains.textStructure.score >= 6) {
+      strengths.push("Attempts good organization");
+    }
+    
+    if (domains.languageFeatures.score >= 8) {
+      strengths.push("Effective use of descriptive language");
+    } else if (domains.languageFeatures.score >= 6) {
+      strengths.push("Uses some descriptive language");
+    }
+    
+    if (domains.spellingAndGrammar.score >= 8) {
+      strengths.push("Good technical accuracy");
+    } else if (domains.spellingAndGrammar.score >= 6) {
+      strengths.push("Shows effort in writing mechanics");
+    }
+    
+    // Content-specific strengths
+    const lowerContent = essayContent.toLowerCase();
+    if (essayContent.includes('"') || essayContent.includes("'")) {
+      strengths.push("Uses dialogue effectively");
+    }
+    
+    const creativeWords = ["magical", "mysterious", "enchanted", "glowing", "shimmering"];
+    if (creativeWords.some(word => lowerContent.includes(word))) {
+      strengths.push("Creative vocabulary choices");
+    }
     
     // Always ensure at least one strength
     if (strengths.length === 0) {
-      const highestScore = Math.max(
-        domains.contentAndIdeas.score,
-        domains.textStructure.score,
-        domains.languageFeatures.score,
-        domains.spellingAndGrammar.score
-      );
-      
-      if (domains.contentAndIdeas.score === highestScore) strengths.push("Shows creative potential");
-      else if (domains.textStructure.score === highestScore) strengths.push("Attempts to organize ideas");
-      else if (domains.languageFeatures.score === highestScore) strengths.push("Uses some descriptive language");
-      else strengths.push("Shows effort in writing mechanics");
+      strengths.push("Shows effort and engagement with the task");
     }
     
     return strengths;
   }
 
-  private static getOverallAreasForImprovement(domains: any, essayContent: string, prompt: string, wordCount: number): string[] {
+  private static getOverallAreasForImprovement(
+    domains: any, 
+    essayContent: string, 
+    prompt: string, 
+    wordCount: number
+  ): string[] {
     const improvements: string[] = [];
     
-    // Check prompt requirements
+    // Check prompt requirements FIRST
     const promptCheck = this.checkPromptRequirements(essayContent, prompt);
+    
+    // Add missing prompt elements (HIGH PRIORITY)
     if (promptCheck.missingElements.length > 0) {
-      improvements.push(`Address missing prompt elements: ${promptCheck.missingElements.join(', ')}`);
+      promptCheck.missingElements.forEach(element => {
+        improvements.push(`❌ Missing prompt requirement: ${element}`);
+      });
     }
     
-    // Check for specific errors
-    if (essayContent.toLowerCase().includes("a a") || essayContent.toLowerCase().includes("a e") || 
-        essayContent.toLowerCase().includes("a i") || essayContent.toLowerCase().includes("a o") || 
-        essayContent.toLowerCase().includes("a u")) {
-      improvements.push("Fix article errors: use 'an' before vowel sounds (e.g., 'an acorn' not 'a acorn')");
+    // Add partial elements that need work
+    if (promptCheck.partialElements.length > 0) {
+      promptCheck.partialElements.forEach(element => {
+        improvements.push(`⚠️ ${element}`);
+      });
     }
     
-    // Word count feedback
+    // Check for specific grammar errors
+    const articleErrors = essayContent.match(/\ba ([aeiouAEIOU]\w*)/g);
+    if (articleErrors && articleErrors.length > 0) {
+      const examples = articleErrors.slice(0, 2);
+      const fixed = examples.map(err => err.replace(/\ba /i, 'an ')).join(', ');
+      const original = examples.join(', ');
+      improvements.push(`🔤 Fix article error(s): "${original}" should be "${fixed}"`);
+    }
+    
+    // Word count feedback (HIGH PRIORITY for selective exam)
     if (wordCount < 200) {
-      improvements.push("Expand your essay - aim for 400-500 words for selective exam preparation");
+      improvements.push(`📏 CRITICAL: Essay too short (${wordCount} words). Aim for 400-500 words for selective exam`);
     } else if (wordCount < 350) {
-      improvements.push("Good start, but expand to 400-500 words to meet selective exam expectations");
+      improvements.push(`📏 Expand your essay from ${wordCount} to 400-500 words for selective exam standards`);
+    } else if (wordCount > 600) {
+      improvements.push(`📏 Essay is lengthy (${wordCount} words). Practice being more concise while maintaining detail`);
     }
     
-    // Character development
-    if (essayContent.toLowerCase().includes("teaching me") || essayContent.toLowerCase().includes("i learned")) {
-      improvements.push("Show character transformation through actions and dialogue, don't just tell us about it");
+    // Check for "telling" vs "showing"
+    const lowerContent = essayContent.toLowerCase();
+    if (lowerContent.includes("teaching me") || lowerContent.includes("i learned that") ||
+        lowerContent.includes("i realized that")) {
+      improvements.push(`✍️ Show character transformation through actions/dialogue instead of telling ("teaching me that...")`);
     }
     
-    // Domain-specific improvements
+    // Domain-specific improvements (only if score is below 7)
     if (domains.contentAndIdeas.score < 7) {
-      improvements.push("Develop ideas with more specific details and examples");
+      improvements.push(`💡 Develop ideas with more specific details and answer ALL prompt questions`);
     }
+    
     if (domains.textStructure.score < 7) {
-      improvements.push("Strengthen paragraph structure with clear topic sentences");
+      const paragraphs = essayContent.split(/\n\s*\n/).filter(p => p.trim().length > 0);
+      if (paragraphs.length < 3) {
+        improvements.push(`🏗️ Add more paragraphs (currently ${paragraphs.length}, aim for 4-5) with clear structure`);
+      } else {
+        improvements.push(`🏗️ Strengthen paragraph transitions and topic sentences`);
+      }
     }
+    
     if (domains.languageFeatures.score < 7) {
-      improvements.push("Add more figurative language (similes, metaphors) and sensory details");
+      improvements.push(`🎨 Add more figurative language (similes, metaphors) and sensory details`);
     }
+    
     if (domains.spellingAndGrammar.score < 7) {
-      improvements.push("Proofread carefully for spelling, grammar, and punctuation errors");
+      improvements.push(`✅ Proofread carefully - check spelling, grammar, and punctuation before submitting`);
     }
     
-    // Ensure we always have improvements
+    // Even excellent essays should have something to work on
     if (improvements.length === 0) {
-      improvements.push("Experiment with more complex sentence structures");
-      improvements.push("Add dialogue to bring characters to life");
-      improvements.push("Include more sensory details to engage readers");
+      improvements.push(`🌟 Excellent work overall! Try advanced techniques like varying sentence openers or adding internal monologue`);
+      improvements.push(`📚 Challenge yourself with more complex vocabulary or literary devices`);
     }
     
-    return improvements.slice(0, 4); // Limit to 4 most important items
+    // Limit to top 5 most important improvements
+    return improvements.slice(0, 5);
   }
 
   private static getOverallRecommendations(overallScore: number, wordCount: number): string[] {
     const recommendations: string[] = [];
     
-    // Word count specific recommendations
+    // Word count specific recommendations (ALWAYS FIRST if applicable)
     if (wordCount < 200) {
-      recommendations.push("URGENT: Expand your essay to 400-500 words for selective exam readiness");
+      recommendations.push(`🚨 URGENT: Your essay is only ${wordCount} words. For NSW selective exams, aim for 400-500 words. Practice writing longer, more detailed responses.`);
     } else if (wordCount < 350) {
-      recommendations.push("Aim for 400-500 words to meet selective exam standards");
-    } else if (wordCount >= 350 && wordCount <= 500) {
-      recommendations.push("Good word count - maintain this length for selective exams");
+      recommendations.push(`📝 Expand your essay from ${wordCount} to 400-500 words. Add more details, examples, and address all prompt requirements fully.`);
+    } else if (wordCount >= 400 && wordCount <= 550) {
+      recommendations.push(`✅ Good word count (${wordCount} words) - this is appropriate for selective exams.`);
     } else if (wordCount > 600) {
-      recommendations.push("Consider being more concise - quality over quantity");
+      recommendations.push(`⚖️ Your essay is ${wordCount} words, which is lengthy. Practice being more concise while maintaining detail.`);
     }
     
     // Score-based recommendations
     if (overallScore >= 85) {
-      recommendations.push("Excellent work! Practice advanced techniques like flashbacks or multiple perspectives");
-      recommendations.push("Time yourself writing similar essays to build exam confidence");
+      recommendations.push(`🌟 Outstanding work! To push further, experiment with advanced narrative techniques like flashbacks, foreshadowing, or multiple perspectives.`);
+      recommendations.push(`⏱️ Practice timed writing: spend 5 mins planning, 25 mins writing, 5 mins editing.`);
+      recommendations.push(`📖 Analyze published works in your genre and notice how authors handle dialogue, pacing, and description.`);
     } else if (overallScore >= 70) {
-      recommendations.push("Good foundation! Focus on addressing ALL prompt requirements completely");
-      recommendations.push("Practice planning your response before writing to ensure full coverage");
+      recommendations.push(`👍 Strong foundation! Focus on addressing EVERY part of multi-question prompts completely.`);
+      recommendations.push(`📋 Before writing, list all prompt requirements and check them off as you address each one.`);
+      recommendations.push(`🎭 Add more sensory details and "show don't tell" - let readers experience the story through actions and dialogue.`);
     } else if (overallScore >= 55) {
-      recommendations.push("Work on essay structure: clear introduction, body paragraphs, strong conclusion");
-      recommendations.push("Build vocabulary by reading widely and keeping a word journal");
+      recommendations.push(`💪 Good effort! Work on essay structure: clear introduction with hook, body paragraphs with topic sentences, strong conclusion.`);
+      recommendations.push(`📚 Build vocabulary by keeping a word journal of interesting words you encounter while reading.`);
+      recommendations.push(`✍️ Practice the "5-paragraph essay" structure until it becomes natural, then experiment with variations.`);
     } else {
-      recommendations.push("Start with planning: list all prompt requirements before writing");
-      recommendations.push("Practice basic paragraph structure with topic sentences");
-      recommendations.push("Read your work aloud to catch errors and improve flow");
+      recommendations.push(`🎯 Start with planning: Before writing, spend 5 minutes listing all prompt requirements and brainstorming ideas for each.`);
+      recommendations.push(`📖 Read your work aloud to catch errors, awkward phrasing, and missing words.`);
+      recommendations.push(`🔍 Focus on one skill at a time: This week work on paragraph structure, next week on descriptive vocabulary.`);
+      recommendations.push(`👨‍🏫 Ask a teacher or parent to review your practice essays and discuss specific improvements.`);
     }
     
-    // NSW Selective exam specific advice
-    recommendations.push("For selective exams: spend 5 minutes planning, 20 minutes writing, 5 minutes checking");
+    // NSW Selective exam specific advice (ALWAYS include)
+    recommendations.push(`⏰ For selective exams: Spend 5 minutes planning, 20-25 minutes writing, 5 minutes proofreading. Practice this timing!`);
+    recommendations.push(`📝 Practice writing to different prompts weekly. The more you practice, the more confident you'll become.`);
     
     return recommendations;
   }
@@ -584,17 +737,34 @@ export class NSWEvaluationReportGenerator {
   }
 
   private static getSpecificExamplesForSpellingAndGrammar(essayContent: string, score: number): string[] {
-    const examples = [];
+    const examples: string[] = [];
+    
+    // Check for article errors
+    const articleErrors = essayContent.match(/\ba ([aeiouAEIOU]\w*)/g);
     
     if (score >= 8) {
-      examples.push("Excellent technical accuracy throughout");
-      examples.push("Very few or no errors in spelling, punctuation, or grammar");
+      examples.push("✅ Excellent technical accuracy throughout");
+      if (articleErrors && articleErrors.length > 0) {
+        examples.push(`Minor fix needed: "${articleErrors[0]}" should use 'an' instead of 'a'`);
+      } else {
+        examples.push("Very few or no errors in spelling, punctuation, or grammar");
+      }
     } else if (score >= 6) {
       examples.push("Generally good with some minor errors to fix");
+      if (articleErrors && articleErrors.length > 0) {
+        const example = articleErrors[0];
+        const fixed = example.replace(/\ba /i, 'an ');
+        examples.push(`Article error: "${example}" should be "${fixed}"`);
+      }
       examples.push("Double-check article usage (a/an) and common homophones");
     } else {
       examples.push("Several errors need attention - proofread carefully");
-      examples.push("Focus on: spelling, article usage (a acorn→an acorn), punctuation");
+      if (articleErrors && articleErrors.length > 0) {
+        const example = articleErrors[0];
+        const fixed = example.replace(/\ba /i, 'an ');
+        examples.push(`Fix: "${example}" → "${fixed}"`);
+      }
+      examples.push("Focus on: spelling, article usage, punctuation");
     }
     
     return examples;
