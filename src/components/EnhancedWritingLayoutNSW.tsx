@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { PlanningToolModal } from './PlanningToolModal';
 import { StructureGuideModal } from './StructureGuideModal';
 import { TipsModal } from './TipsModal';
-import { EnhancedCoachPanel } from './EnhancedCoachPanel'; // Corrected import
+import { EnhancedCoachPanel } from './EnhancedCoachPanel';
 import { NSWStandaloneSubmitSystem } from './NSWStandaloneSubmitSystem';
 import { ReportModal } from './ReportModal';
 import { PromptOptionsModal } from './PromptOptionsModal';
@@ -435,40 +435,35 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
                   : 'text-blue-700 hover:text-blue-900 hover:bg-blue-200'
               }`}
             >
-              {isPromptCollapsed ? (
-                <>
-                  <ChevronDown className="w-4 h-4" />
-                  <span>Show Prompt</span>
-                </>
-              ) : (
-                <>
-                  <ChevronUp className="w-4 h-4" />
-                  <span>Hide Prompt</span>
-                </>
-              )}
+              {isPromptCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+              <span>{isPromptCollapsed ? 'Show Prompt' : 'Hide Prompt'}</span>
             </button>
           </div>
-          {!isPromptCollapsed && (
-            <div className={`px-4 pb-4 text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-              <p className="whitespace-pre-wrap">**Prompt**: {effectivePrompt}</p>
+
+          {/* Prompt Content */}
+          {!isPromptCollapsed && effectivePrompt && (
+            <div className="px-4 pb-4">
+              <div className={`p-4 rounded-lg border ${
+                darkMode 
+                  ? 'bg-blue-900/20 border-blue-800/30 text-blue-100' 
+                  : 'bg-white border-blue-200 text-blue-900'
+              }`}>
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">{effectivePrompt}</p>
+              </div>
             </div>
           )}
         </div>
 
-        {/* Writing Tools Bar */}
-        <div className={`flex items-center justify-between p-4 border-b flex-shrink-0 ${
+        {/* Toolbar Section - Moved above writing area */}
+        <div className={`flex items-center justify-between px-4 py-3 border-b flex-shrink-0 ${
           darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
         }`}>
           <div className="flex items-center space-x-4">
-            {/* Planning Tool Button */}
+            {/* Plan Button */}
             <button
               onClick={() => setShowPlanningTool(true)}
               className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
-                showPlanningTool
-                  ? darkMode
-                    ? 'bg-blue-900 text-blue-200'
-                    : 'bg-blue-600 text-white'
-                  : darkMode
+                darkMode
                   ? 'text-gray-300 hover:bg-gray-700'
                   : 'text-gray-700 hover:bg-gray-100'
               }`}
@@ -478,21 +473,17 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
               <span className="text-sm font-medium">Plan</span>
             </button>
 
-            {/* Structure Guide Button */}
+            {/* Structure Button */}
             <button
               onClick={onToggleStructureGuide}
               className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
-                showStructureGuide
-                  ? darkMode
-                    ? 'bg-green-900 text-green-200'
-                    : 'bg-green-600 text-white'
-                  : darkMode
+                darkMode
                   ? 'text-gray-300 hover:bg-gray-700'
                   : 'text-gray-700 hover:bg-gray-100'
               }`}
               title="Structure Guide"
             >
-              <BarChart3 className="w-4 h-4" />
+              <BookOpen className="w-4 h-4" />
               <span className="text-sm font-medium">Structure</span>
             </button>
 
@@ -500,15 +491,11 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
             <button
               onClick={onToggleTips}
               className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
-                showTips
-                  ? darkMode
-                    ? 'bg-yellow-900 text-yellow-200'
-                    : 'bg-yellow-600 text-white'
-                  : darkMode
+                darkMode
                   ? 'text-gray-300 hover:bg-gray-700'
                   : 'text-gray-700 hover:bg-gray-100'
               }`}
-              title="Tips"
+              title="Writing Tips"
             >
               <LightbulbIcon className="w-4 h-4" />
               <span className="text-sm font-medium">Tips</span>
