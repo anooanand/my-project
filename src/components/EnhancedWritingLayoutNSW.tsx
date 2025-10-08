@@ -920,7 +920,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
                   <div className="flex items-start space-x-2 p-2 rounded bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-900/30">
                     <span className="text-yellow-600 dark:text-yellow-400">●</span>
                     <div>
-                      <span className="font-medium">Weak verbs:</span> Replace "is/are/was/were" with stronger action verbs. Example: "She was happy" → "She beamed with joy"
+                      <span className="font-medium">Weak verbs:</span> Replace "is/are/was/were" with stronger action verbs. Example: \"She was happy" → \"She beamed with joy"
                     </div>
                   </div>
                 )}
@@ -928,7 +928,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
                   <div className="flex items-start space-x-2 p-2 rounded bg-orange-50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-900/30">
                     <span className="text-orange-600 dark:text-orange-400">●</span>
                     <div>
-                      <span className="font-medium">Filler words:</span> Remove "very/really/just" - they often weaken your writing. Example: "very big" → "enormous"
+                      <span className="font-medium">Filler words:</span> Remove "very/really/just" - they often weaken your writing. Example: \"very big" → \"enormous"
                     </div>
                   </div>
                 )}
