@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Send, MessageSquare, BarChart3, Lightbulb, Target, Star, TrendingUp, Award } from 'lucide-react';
 
@@ -464,7 +463,7 @@ class EnhancedCoachResponseGenerator {
         encouragement: "It looks like you're a bit stuck. Don't worry, it happens!",
         nswFocus: "Getting Started",
         suggestion: "If you're finding it hard to start, try writing down any ideas that come to mind, even if they're not perfect.",
-        example: "Try these sentence starters: 'The old key...', 'In the dusty attic...', 'Grandmother always said...', 'I never expected to find...'
+        example: "Try these sentence starters: 'The old key...', 'In the dusty attic...', 'Grandmother always said...', 'I never expected to find...'"
         nextStep: "Pick one sentence starter and just keep writing for a minute or two."
       };
     }
