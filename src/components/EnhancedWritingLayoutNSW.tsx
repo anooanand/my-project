@@ -139,6 +139,8 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
   const [showPlanningTool, setShowPlanningTool] = useState(false);
   const [examMode, setExamMode] = useState(false);
   const [showGrammarHighlights, setShowGrammarHighlights] = useState(true);
+  const [expandedGrammarStats, setExpandedGrammarStats] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -154,6 +156,53 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
     return { weakVerbs, overused, passive, weakAdjectives };
   }, [localContent]);
+
+  // Calculate additional writing metrics
+  const writingMetrics = React.useMemo(() => {
+    const text = localContent.trim();
+    if (!text) return {
+      characters: 0,
+      charactersNoSpaces: 0,
+      sentences: 0,
+      paragraphs: 0,
+      readingTime: 0,
+      avgWordsPerSentence: 0
+    };
+
+    const characters = text.length;
+    const charactersNoSpaces = text.replace(/\s/g, '').length;
+    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0).length;
+    const paragraphs = text.split(/\n\n+/).filter(p => p.trim().length > 0).length;
+    const readingTime = Math.ceil(currentWordCount / 200); // 200 words per minute
+    const avgWordsPerSentence = sentences > 0 ? Math.round(currentWordCount / sentences) : 0;
+
+    return { characters, charactersNoSpaces, sentences, paragraphs, readingTime, avgWordsPerSentence };
+  }, [localContent, currentWordCount]);
+
+  // Calculate writing quality score
+  const qualityScore = React.useMemo(() => {
+    if (currentWordCount === 0) return 0;
+
+    let score = 100;
+
+    // Deduct points for issues
+    score -= grammarStats.weakVerbs * 2;
+    score -= grammarStats.overused * 3;
+    score -= grammarStats.passive * 2;
+    score -= grammarStats.weakAdjectives * 2;
+
+    // Deduct if outside word count range
+    if (currentWordCount < 200) score -= 10;
+    if (currentWordCount > 300) score -= 15;
+
+    // Deduct for short sentences (less than 8 words avg)
+    if (writingMetrics.avgWordsPerSentence < 8) score -= 5;
+
+    // Deduct for very long sentences (more than 25 words avg)
+    if (writingMetrics.avgWordsPerSentence > 25) score -= 5;
+
+    return Math.max(0, Math.min(100, score));
+  }, [currentWordCount, grammarStats, writingMetrics]);
 
   // Get effective prompt
   const effectivePrompt = generatedPrompt || customPromptInput || initialPrompt;
@@ -171,6 +220,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
     const timer = setTimeout(() => {
       if (localContent !== content && onChange) {
         onChange(localContent);
+        setLastSaved(new Date());
       }
     }, 500);
     return () => clearTimeout(timer);
@@ -585,7 +635,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
             </div>
 
             {/* Enhanced Word Count with Progress */}
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-4">
               <FileText className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />
               <div className="flex flex-col">
                 <div className="flex items-center space-x-2">
@@ -615,6 +665,28 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
                   />
                 </div>
               </div>
+
+              {/* Additional Metrics */}
+              {currentWordCount > 0 && (
+                <>
+                  <div className={`h-6 w-px ${darkMode ? 'bg-gray-700' : 'bg-gray-300'}`} />
+                  <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <span>{writingMetrics.sentences} sentences</span>
+                  </div>
+                  <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <span>{writingMetrics.readingTime} min read</span>
+                  </div>
+                  {lastSaved && (
+                    <>
+                      <div className={`h-6 w-px ${darkMode ? 'bg-gray-700' : 'bg-gray-300'}`} />
+                      <div className={`flex items-center space-x-1 text-xs ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
+                        <span className="animate-pulse">●</span>
+                        <span>Saved {new Date().getTime() - lastSaved.getTime() < 2000 ? 'just now' : 'recently'}</span>
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
             </div>
 
             {/* Settings Button */}
@@ -711,58 +783,173 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
         {/* Writing Area - Takes remaining space */}
         <div className="flex-1 overflow-y-auto p-4">
-          <textarea
-            ref={textareaRef}
-            value={localContent}
-            onChange={(e) => handleContentChange(e.target.value)}
-            className={`w-full h-full resize-none p-4 rounded-lg shadow-inner transition-colors duration-300 text-base leading-relaxed focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              darkMode
-                ? 'bg-gray-800 text-gray-200 placeholder-gray-500 border border-gray-700'
-                : 'bg-white text-gray-800 placeholder-gray-400 border border-gray-300'
-            }`}
-            style={{ fontFamily, fontSize: `${fontSize}px`, lineHeight }}
-            placeholder="Start writing here..."
-          />
+          <div className="relative h-full">
+            <textarea
+              ref={textareaRef}
+              value={localContent}
+              onChange={(e) => handleContentChange(e.target.value)}
+              className={`w-full h-full resize-none p-6 rounded-xl shadow-lg transition-all duration-300 text-base leading-relaxed focus:outline-none ${
+                darkMode
+                  ? 'bg-slate-900 text-gray-100 placeholder-gray-500 border-2 border-slate-700 focus:border-cyan-500 focus:shadow-cyan-500/20'
+                  : 'bg-white text-gray-800 placeholder-gray-400 border-2 border-gray-200 focus:border-blue-500 focus:shadow-blue-500/20'
+              }`}
+              style={{ fontFamily, fontSize: `${fontSize}px`, lineHeight }}
+              placeholder="Start writing here..."
+            />
+
+            {/* Writing Quality Score Badge */}
+            {currentWordCount > 20 && (
+              <div className={`absolute top-4 right-4 px-3 py-2 rounded-lg shadow-lg border backdrop-blur-sm ${
+                darkMode ? 'bg-slate-800/90 border-slate-700' : 'bg-white/90 border-gray-200'
+              }`}>
+                <div className="flex items-center space-x-2">
+                  <div className="flex flex-col items-end">
+                    <span className={`text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      Quality Score
+                    </span>
+                    <div className="flex items-center space-x-2">
+                      <span className={`text-2xl font-bold ${
+                        qualityScore >= 90 ? 'text-green-500' :
+                        qualityScore >= 70 ? 'text-blue-500' :
+                        qualityScore >= 50 ? 'text-yellow-500' :
+                        'text-red-500'
+                      }`}>
+                        {qualityScore}
+                      </span>
+                      <span className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>/ 100</span>
+                    </div>
+                  </div>
+                  <div className={`w-12 h-12 rounded-full border-4 flex items-center justify-center ${
+                    qualityScore >= 90 ? 'border-green-500 bg-green-500/10' :
+                    qualityScore >= 70 ? 'border-blue-500 bg-blue-500/10' :
+                    qualityScore >= 50 ? 'border-yellow-500 bg-yellow-500/10' :
+                    'border-red-500 bg-red-500/10'
+                  }`}>
+                    <span className="text-xl">
+                      {qualityScore >= 90 ? '🌟' :
+                       qualityScore >= 70 ? '👍' :
+                       qualityScore >= 50 ? '📝' :
+                       '💪'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Grammar Stats Bar - NEW */}
+        {/* Grammar Stats Bar - Enhanced */}
         {showGrammarHighlights && (grammarStats.weakVerbs > 0 || grammarStats.overused > 0 || grammarStats.passive > 0 || grammarStats.weakAdjectives > 0) && (
-          <div className={`px-4 py-2 border-t flex items-center justify-center space-x-4 text-xs ${
+          <div className={`border-t transition-all duration-300 ${
             darkMode ? 'bg-slate-900 border-gray-700' : 'bg-gray-50 border-gray-200'
           }`}>
-            <span className={darkMode ? 'text-gray-400' : 'text-gray-600'}>Writing Suggestions:</span>
-            {grammarStats.weakVerbs > 0 && (
-              <span className="flex items-center space-x-1 px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 rounded">
-                <span>{grammarStats.weakVerbs}</span>
-                <span>weak verbs</span>
-              </span>
+            <div className="px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center space-x-4 text-xs flex-1">
+                <div className="flex items-center space-x-2">
+                  <AlertCircle className={`w-4 h-4 ${darkMode ? 'text-yellow-400' : 'text-yellow-600'}`} />
+                  <span className={`font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    Writing Suggestions:
+                  </span>
+                </div>
+
+                <div className="flex items-center space-x-2 flex-wrap">
+                  {grammarStats.weakVerbs > 0 && (
+                    <button
+                      onClick={() => setExpandedGrammarStats(!expandedGrammarStats)}
+                      className="flex items-center space-x-1 px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 rounded hover:bg-yellow-200 dark:hover:bg-yellow-900/50 transition-colors"
+                    >
+                      <span className="font-semibold">{grammarStats.weakVerbs}</span>
+                      <span>weak verbs</span>
+                    </button>
+                  )}
+                  {grammarStats.overused > 0 && (
+                    <button
+                      onClick={() => setExpandedGrammarStats(!expandedGrammarStats)}
+                      className="flex items-center space-x-1 px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 rounded hover:bg-orange-200 dark:hover:bg-orange-900/50 transition-colors"
+                    >
+                      <span className="font-semibold">{grammarStats.overused}</span>
+                      <span>filler words</span>
+                    </button>
+                  )}
+                  {grammarStats.passive > 0 && (
+                    <button
+                      onClick={() => setExpandedGrammarStats(!expandedGrammarStats)}
+                      className="flex items-center space-x-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+                    >
+                      <span className="font-semibold">{grammarStats.passive}</span>
+                      <span>passive voice</span>
+                    </button>
+                  )}
+                  {grammarStats.weakAdjectives > 0 && (
+                    <button
+                      onClick={() => setExpandedGrammarStats(!expandedGrammarStats)}
+                      className="flex items-center space-x-1 px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 rounded hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors"
+                    >
+                      <span className="font-semibold">{grammarStats.weakAdjectives}</span>
+                      <span>weak adjectives</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setExpandedGrammarStats(!expandedGrammarStats)}
+                  className={`flex items-center space-x-1 text-xs px-2 py-1 rounded transition-colors ${
+                    darkMode ? 'text-gray-400 hover:text-gray-200 hover:bg-slate-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
+                  }`}
+                >
+                  {expandedGrammarStats ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                  <span>{expandedGrammarStats ? 'Less' : 'More'}</span>
+                </button>
+                <button
+                  onClick={() => setShowGrammarHighlights(false)}
+                  className={`text-xs px-2 py-1 rounded transition-colors ${
+                    darkMode ? 'text-gray-400 hover:text-gray-200 hover:bg-slate-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
+                  }`}
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            </div>
+
+            {/* Expanded Tips */}
+            {expandedGrammarStats && (
+              <div className={`px-4 pb-3 space-y-2 text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                {grammarStats.weakVerbs > 0 && (
+                  <div className="flex items-start space-x-2 p-2 rounded bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-900/30">
+                    <span className="text-yellow-600 dark:text-yellow-400">●</span>
+                    <div>
+                      <span className="font-medium">Weak verbs:</span> Replace "is/are/was/were" with stronger action verbs. Example: "She was happy" → "She beamed with joy"
+                    </div>
+                  </div>
+                )}
+                {grammarStats.overused > 0 && (
+                  <div className="flex items-start space-x-2 p-2 rounded bg-orange-50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-900/30">
+                    <span className="text-orange-600 dark:text-orange-400">●</span>
+                    <div>
+                      <span className="font-medium">Filler words:</span> Remove "very/really/just" - they often weaken your writing. Example: "very big" → "enormous"
+                    </div>
+                  </div>
+                )}
+                {grammarStats.passive > 0 && (
+                  <div className="flex items-start space-x-2 p-2 rounded bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-900/30">
+                    <span className="text-blue-600 dark:text-blue-400">●</span>
+                    <div>
+                      <span className="font-medium">Passive voice:</span> Use active voice for clarity. Example: "The ball was thrown" → "She threw the ball"
+                    </div>
+                  </div>
+                )}
+                {grammarStats.weakAdjectives > 0 && (
+                  <div className="flex items-start space-x-2 p-2 rounded bg-purple-50 dark:bg-purple-900/10 border border-purple-200 dark:border-purple-900/30">
+                    <span className="text-purple-600 dark:text-purple-400">●</span>
+                    <div>
+                      <span className="font-medium">Weak adjectives:</span> Use specific, vivid adjectives. Example: "good food" → "delicious feast"
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
-            {grammarStats.overused > 0 && (
-              <span className="flex items-center space-x-1 px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 rounded">
-                <span>{grammarStats.overused}</span>
-                <span>filler words</span>
-              </span>
-            )}
-            {grammarStats.passive > 0 && (
-              <span className="flex items-center space-x-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded">
-                <span>{grammarStats.passive}</span>
-                <span>passive voice</span>
-              </span>
-            )}
-            {grammarStats.weakAdjectives > 0 && (
-              <span className="flex items-center space-x-1 px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 rounded">
-                <span>{grammarStats.weakAdjectives}</span>
-                <span>weak adjectives</span>
-              </span>
-            )}
-            <button
-              onClick={() => setShowGrammarHighlights(!showGrammarHighlights)}
-              className={`ml-auto text-xs px-2 py-1 rounded transition-colors ${
-                darkMode ? 'text-gray-400 hover:text-gray-200 hover:bg-slate-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
-              }`}
-            >
-              Hide
-            </button>
           </div>
         )}
 
