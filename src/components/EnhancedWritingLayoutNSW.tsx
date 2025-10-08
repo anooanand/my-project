@@ -690,17 +690,17 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
           darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
         }`}>
           <div className="p-4 flex items-center justify-center">
-            {/* Submit Button */}
+            {/* Submit Button - Increased Width */}
             <button
               onClick={handleSubmitForEvaluation}
               disabled={!hasContent}
-              className={`flex items-center space-x-2 px-8 py-3 rounded-lg font-semibold text-white transition-all duration-200 shadow-lg ${
+              className={`flex items-center justify-center space-x-3 px-16 py-4 rounded-lg font-semibold text-lg text-white transition-all duration-200 shadow-lg min-w-[500px] ${
                 hasContent
                   ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 hover:shadow-xl transform hover:scale-105'
                   : 'bg-gray-400 cursor-not-allowed opacity-50'
               }`}
             >
-              <Target className="w-5 h-5" />
+              <Target className="w-6 h-6" />
               <span>Submit for NSW Evaluation</span>
             </button>
           </div>
