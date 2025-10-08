@@ -22,10 +22,7 @@ export class NSWEvaluationReportGenerator {
       throw new Error("Your submission appears to be the prompt itself or contains insufficient original content. Please write your own creative response to the prompt (minimum 50 original words required).");
     }
 
-    // Placeholder for actual AI evaluation logic
-    // In a real scenario, this would involve calling an AI model
-    // For this demo, we'll use deterministic scoring based on content length and some keywords
-
+    // Evaluate all criteria
     const contentAndIdeasScore = this.scoreContentAndIdeas(essayContent, prompt);
     const textStructureScore = this.scoreTextStructure(essayContent);
     const languageFeaturesScore = this.scoreLanguageFeatures(essayContent);
@@ -35,10 +32,10 @@ export class NSWEvaluationReportGenerator {
       contentAndIdeas: {
         score: contentAndIdeasScore,
         maxScore: 10,
-        percentage: (contentAndIdeasScore / 10) * 100,
+        percentage: Math.round((contentAndIdeasScore / 10) * 100),
         band: this.getScoreBand(contentAndIdeasScore),
         weight: 40,
-        weightedScore: (contentAndIdeasScore / 10) * 40,
+        weightedScore: Math.round((contentAndIdeasScore / 10) * 40),
         feedback: this.getFeedbackForContentAndIdeas(contentAndIdeasScore),
         specificExamples: this.getSpecificExamplesForContentAndIdeas(essayContent, contentAndIdeasScore),
         childFriendlyExplanation: this.getChildFriendlyExplanation('contentAndIdeas', contentAndIdeasScore)
@@ -46,10 +43,10 @@ export class NSWEvaluationReportGenerator {
       textStructure: {
         score: textStructureScore,
         maxScore: 10,
-        percentage: (textStructureScore / 10) * 100,
+        percentage: Math.round((textStructureScore / 10) * 100),
         band: this.getScoreBand(textStructureScore),
         weight: 20,
-        weightedScore: (textStructureScore / 10) * 20,
+        weightedScore: Math.round((textStructureScore / 10) * 20),
         feedback: this.getFeedbackForTextStructure(textStructureScore),
         specificExamples: this.getSpecificExamplesForTextStructure(essayContent, textStructureScore),
         childFriendlyExplanation: this.getChildFriendlyExplanation('textStructure', textStructureScore)
@@ -57,10 +54,10 @@ export class NSWEvaluationReportGenerator {
       languageFeatures: {
         score: languageFeaturesScore,
         maxScore: 10,
-        percentage: (languageFeaturesScore / 10) * 100,
+        percentage: Math.round((languageFeaturesScore / 10) * 100),
         band: this.getScoreBand(languageFeaturesScore),
         weight: 25,
-        weightedScore: (languageFeaturesScore / 10) * 25,
+        weightedScore: Math.round((languageFeaturesScore / 10) * 25),
         feedback: this.getFeedbackForLanguageFeatures(languageFeaturesScore),
         specificExamples: this.getSpecificExamplesForLanguageFeatures(essayContent, languageFeaturesScore),
         childFriendlyExplanation: this.getChildFriendlyExplanation('languageFeatures', languageFeaturesScore)
@@ -68,10 +65,10 @@ export class NSWEvaluationReportGenerator {
       spellingAndGrammar: {
         score: spellingAndGrammarScore,
         maxScore: 10,
-        percentage: (spellingAndGrammarScore / 10) * 100,
+        percentage: Math.round((spellingAndGrammarScore / 10) * 100),
         band: this.getScoreBand(spellingAndGrammarScore),
         weight: 15,
-        weightedScore: (spellingAndGrammarScore / 10) * 15,
+        weightedScore: Math.round((spellingAndGrammarScore / 10) * 15),
         feedback: this.getFeedbackForSpellingAndGrammar(spellingAndGrammarScore),
         specificExamples: this.getSpecificExamplesForSpellingAndGrammar(essayContent, spellingAndGrammarScore),
         childFriendlyExplanation: this.getChildFriendlyExplanation('spellingAndGrammar', spellingAndGrammarScore)
@@ -82,8 +79,8 @@ export class NSWEvaluationReportGenerator {
     const overallGrade = this.getOverallGrade(overallScore);
 
     const strengths = this.getOverallStrengths(domains);
-    const areasForImprovement = this.getOverallAreasForImprovement(domains);
-    const recommendations = this.getOverallRecommendations(overallScore);
+    const areasForImprovement = this.getOverallAreasForImprovement(domains, essayContent, prompt, wordCount);
+    const recommendations = this.getOverallRecommendations(overallScore, wordCount);
 
     return {
       overallScore,
@@ -100,39 +97,30 @@ export class NSWEvaluationReportGenerator {
       strengths,
       areasForImprovement,
       recommendations,
-      essayContent, // Include original essay content
+      essayContent,
       reportId: `nsw-${Date.now()}`,
       date: new Date().toLocaleDateString("en-AU"),
-      originalityReport: { score: 95, feedback: "Your essay shows strong originality." }, // Placeholder
+      originalityReport: { score: 95, feedback: "Your essay shows strong originality." },
     };
   }
 
   private static detectPromptCopying(essayContent: string, prompt: string): boolean {
-    // Normalize text
     const normalizedEssay = essayContent.trim().toLowerCase();
     const normalizedPrompt = prompt.trim().toLowerCase();
     
-    // If essay is empty or too short
     if (normalizedEssay.length < 100) {
-      return true; // Too short to be a real essay
+      return true;
     }
     
-    // Check if the ENTIRE prompt appears as a continuous block in the essay
-    // (Some overlap is OK, but not the full prompt verbatim)
     if (normalizedPrompt.length > 50 && normalizedEssay.includes(normalizedPrompt)) {
-      return true; // Exact copy of prompt found
+      return true;
     }
     
-    // Calculate word overlap more intelligently
     const essayWords = new Set(normalizedEssay.split(/\s+/).filter(w => w.length > 4));
     const promptWords = new Set(normalizedPrompt.split(/\s+/).filter(w => w.length > 4));
-    
-    // Remove common words that naturally appear in both
     const commonWords = new Set(['story', 'write', 'describe', 'character', 'about', 'that', 'this', 'they', 'their', 'what', 'when', 'where', 'how']);
-    
     const uniqueEssayWords = [...essayWords].filter(w => !commonWords.has(w) && !promptWords.has(w));
     
-    // Must have at least 30 unique words not in the prompt (excluding common words)
     if (uniqueEssayWords.length < 30) {
       return true;
     }
@@ -140,11 +128,53 @@ export class NSWEvaluationReportGenerator {
     return false;
   }
 
-  private static calculateSimilarity(str1: string, str2: string): number {
-    const words1 = str1.split(/\s+/);
-    const words2 = str2.split(/\s+/);
-    const commonWords = words1.filter(word => words2.includes(word));
-    return commonWords.length / Math.max(words1.length, words2.length);
+  private static checkPromptRequirements(essayContent: string, prompt: string): { score: number, missingElements: string[] } {
+    const lowerContent = essayContent.toLowerCase();
+    const missingElements: string[] = [];
+    let score = 0;
+
+    // Check for "Hidden Doorway" specific requirements
+    if (prompt.toLowerCase().includes("hidden doorway")) {
+      // What they see through the doorway
+      if (!lowerContent.includes("see") && !lowerContent.includes("saw") && !lowerContent.includes("view") && !lowerContent.includes("look")) {
+        missingElements.push("What you see through the doorway");
+      } else {
+        score += 2;
+      }
+
+      // Who they meet
+      if (!lowerContent.includes("meet") && !lowerContent.includes("met") && !lowerContent.includes("friend") && !lowerContent.includes("character") && !lowerContent.includes("person")) {
+        missingElements.push("Who you meet on your adventure");
+      } else {
+        score += 2;
+      }
+
+      // How the adventure changes them
+      if (!lowerContent.includes("learn") && !lowerContent.includes("change") && !lowerContent.includes("realize") && !lowerContent.includes("discover") && !lowerContent.includes("understand")) {
+        missingElements.push("How the adventure changes you");
+      } else {
+        score += 2;
+      }
+
+      // Challenges faced
+      if (!lowerContent.includes("challenge") && !lowerContent.includes("difficult") && !lowerContent.includes("problem") && !lowerContent.includes("struggle") && !lowerContent.includes("overcome")) {
+        missingElements.push("Challenges faced and how you overcome them");
+      } else {
+        score += 2;
+      }
+
+      // Notebook stories
+      if (!lowerContent.includes("notebook") && !lowerContent.includes("write") && !lowerContent.includes("story") && !lowerContent.includes("journal")) {
+        missingElements.push("What stories you write in your notebook");
+      } else {
+        score += 2;
+      }
+    } else {
+      // Generic prompt checking
+      score = 8; // Default if not specific prompt
+    }
+
+    return { score: Math.min(score, 10), missingElements };
   }
 
   private static calculateOverallScore(domains: any): number {
@@ -159,13 +189,13 @@ export class NSWEvaluationReportGenerator {
   }
 
   private static getOverallGrade(score: number): string {
-    if (score >= 90) return "A+";  // Changed from 85
-    if (score >= 80) return "A";   // Changed from 75
-    if (score >= 70) return "B+";  // NEW
-    if (score >= 60) return "B";   // Changed from 65
+    if (score >= 90) return "A+";
+    if (score >= 80) return "A";
+    if (score >= 70) return "B+";
+    if (score >= 60) return "B";
     if (score >= 50) return "C";
-    if (score >= 40) return "D";   // NEW
-    return "E";                     // Changed from D
+    if (score >= 40) return "D";
+    return "E";
   }
 
   private static getScoreBand(score: number): string {
@@ -177,102 +207,98 @@ export class NSWEvaluationReportGenerator {
   }
 
   private static scoreContentAndIdeas(essayContent: string, prompt: string): number {
-    let score = 4; // Base score changed from 6 to 4
+    let score = 2; // Lowered base score from 4 to 2
     const lowerContent = essayContent.toLowerCase();
     const words = essayContent.split(/\s+/);
     
+    // Check prompt requirements
+    const promptCheck = this.checkPromptRequirements(essayContent, prompt);
+    score += Math.floor(promptCheck.score / 2); // Add up to 5 points for addressing prompt
+
     // Reward substantial content
     if (words.length > 150) score += 1;
     if (words.length > 250) score += 1;
     
-    // Check for creativity (presence of vivid adjectives/adverbs)
+    // Check for creativity
     const creativeWords = ["enchanted", "magical", "whisper", "shimmering", "kaleidoscope", 
                            "bioluminescent", "crystalline", "starlight", "mysterious", "ancient",
                            "glowing", "sparkling", "twisted", "shadowy", "brilliant"];
     const creativeCount = creativeWords.filter(word => lowerContent.includes(word)).length;
     if (creativeCount >= 2) score += 1;
-    if (creativeCount >= 4) score += 1;
     
-    // Check for character development or plot progression
-    if (lowerContent.includes("realized") || lowerContent.includes("discovered") || 
-        lowerContent.includes("learned") || lowerContent.includes("understood")) {
-      score += 1;
-    }
+    // Check for character development (SHOWN not told)
+    const showingWords = ["gasped", "smiled", "frowned", "whispered", "shouted", "trembled", "laughed"];
+    const tellingWords = ["felt", "was", "became", "learned", "realized"];
+    const showingCount = showingWords.filter(word => lowerContent.includes(word)).length;
+    const tellingCount = tellingWords.filter(word => lowerContent.includes(word)).length;
     
-    // Check for emotional depth
-    const emotionWords = ["fear", "joy", "wonder", "surprise", "amazed", "worried", "excited", "nervous"];
-    if (emotionWords.some(word => lowerContent.includes(word))) {
-      score += 1;
-    }
+    if (showingCount > tellingCount) score += 1;
     
     return Math.min(score, this.maxScorePerCriterion);
   }
 
   private static scoreTextStructure(essayContent: string): number {
-    let score = 4;
+    let score = 2; // Lowered base score from 4 to 2
     const paragraphs = essayContent.split(/\n\s*\n/).filter(p => p.trim().length > 0);
     const sentences = essayContent.split(/[.!?]+/).filter(s => s.trim().length > 0);
     
-    // Paragraph structure
-    if (paragraphs.length >= 3) score += 1;
-    if (paragraphs.length >= 5) score += 1;
-    
-    // Check for varied paragraph lengths (sign of good structure)
-    if (paragraphs.length >= 3) {
-      const avgLength = paragraphs.reduce((sum, p) => sum + p.length, 0) / paragraphs.length;
-      const hasVariety = paragraphs.some(p => Math.abs(p.length - avgLength) > avgLength * 0.3);
-      if (hasVariety) score += 1;
+    // Check for clear introduction
+    const firstSentence = sentences[0]?.toLowerCase() || "";
+    if (firstSentence.includes("once") || firstSentence.includes("one day") || 
+        firstSentence.includes("imagine") || firstSentence.includes("suddenly")) {
+      score += 2;
+    } else if (sentences.length > 0) {
+      score += 1; // Some introduction present
     }
     
-    // Check for transition words (shows flow)
+    // Paragraph structure
+    if (paragraphs.length >= 3) score += 2;
+    if (paragraphs.length >= 5) score += 1;
+    
+    // Check for conclusion
+    const lastSentence = sentences[sentences.length - 1]?.toLowerCase() || "";
+    if (lastSentence.includes("finally") || lastSentence.includes("end") || 
+        lastSentence.includes("forever") || lastSentence.includes("always")) {
+      score += 2;
+    }
+    
+    // Transition words
     const transitionWords = ['however', 'therefore', 'meanwhile', 'suddenly', 'finally', 
                              'furthermore', 'moreover', 'consequently', 'nevertheless'];
     const lowerContent = essayContent.toLowerCase();
     const transitionsFound = transitionWords.filter(word => lowerContent.includes(word)).length;
     if (transitionsFound >= 2) score += 1;
     
-    // Check for narrative flow (beginning/middle/end indicators)
-    const hasOpening = sentences.length > 0 && (
-      lowerContent.startsWith('once') || lowerContent.startsWith('one day') || 
-      lowerContent.startsWith('long ago') || lowerContent.startsWith('in a')
-    );
-    const hasClosing = lowerContent.includes('finally') || lowerContent.includes('in the end') ||
-                       lowerContent.includes('from that day') || lowerContent.endsWith('home');
-    
-    if (hasOpening && hasClosing) score += 1;
-    
     return Math.min(score, this.maxScorePerCriterion);
   }
 
   private static scoreLanguageFeatures(essayContent: string): number {
-    let score = 4;
+    let score = 2; // Lowered base score from 4 to 2
     const lowerContent = essayContent.toLowerCase();
     const words = lowerContent.split(/\s+/).filter(w => w.length > 0);
     
     // Vocabulary sophistication
     const longWords = words.filter(word => word.length >= 7).length;
     const sophisticationRatio = longWords / words.length;
-    if (sophisticationRatio > 0.12) score += 1;
+    if (sophisticationRatio > 0.12) score += 2;
     if (sophisticationRatio > 0.20) score += 1;
     
-    // Figurative language
-    const figurativePatterns = [
-      /like a [a-z]+/,  // simile
-      /as [a-z]+ as/,   // simile
-      /[a-z]+ is a [a-z]+/,  // metaphor pattern
-    ];
-    const figurativeCount = figurativePatterns.filter(pattern => pattern.test(lowerContent)).length;
-    if (figurativeCount >= 1) score += 1;
-    if (figurativeCount >= 2) score += 1;
+    // Figurative language with specific examples
+    let figurativeScore = 0;
+    if (lowerContent.includes("like a") || lowerContent.includes("like an")) figurativeScore += 1;
+    if (lowerContent.includes("as") && (lowerContent.includes("as bright") || lowerContent.includes("as dark"))) figurativeScore += 1;
+    if (lowerContent.match(/\b\w+ed\s+(through|across|around)/)) figurativeScore += 1; // Action verbs
     
-    // Sensory details (show don't tell)
+    score += Math.min(figurativeScore, 3);
+    
+    // Sensory details
     const sensoryWords = ['saw', 'heard', 'felt', 'smelled', 'tasted', 'touched',
                           'gleaming', 'echoed', 'rough', 'sweet', 'bitter', 'soft',
                           'bright', 'dark', 'loud', 'quiet', 'warm', 'cold'];
     const sensoryCount = sensoryWords.filter(word => lowerContent.includes(word)).length;
-    if (sensoryCount >= 3) score += 1;
+    if (sensoryCount >= 3) score += 2;
     
-    // Dialogue (if present)
+    // Dialogue
     const hasDialogue = essayContent.includes('"') || essayContent.includes("'");
     if (hasDialogue) score += 1;
     
@@ -280,92 +306,195 @@ export class NSWEvaluationReportGenerator {
   }
 
   private static scoreSpellingAndGrammar(essayContent: string): number {
-    let score = 4; // Base score changed from 6 to 4
-    // Very basic error detection for demo purposes
-    const commonErrors = ["teh", "adn", "wrok", "becuase"];
-    const errorsFound = commonErrors.filter(error => essayContent.includes(error)).length;
-
-    if (errorsFound === 0) {
-      score += 4; // Changed from 2 to 4
-    } else if (errorsFound <= 1) {
-      score += 2; // Changed from 1 to 2
+    let score = 8; // Start high and deduct for errors
+    const errors: string[] = [];
+    
+    // Article errors (a/an)
+    const articleErrors = essayContent.match(/\ba [aeiou]/gi);
+    if (articleErrors) {
+      score -= articleErrors.length * 2;
+      errors.push(`Article errors: ${articleErrors.join(', ')}`);
     }
-    return Math.min(score, this.maxScorePerCriterion);
+    
+    // Common homophones
+    const homophoneErrors = [
+      { wrong: /\bthere\s+(?:is|are|was|were)\s+\w+\s+(?:house|car|book)/gi, correct: "their" },
+      { wrong: /\byour\s+(?:going|coming|leaving)/gi, correct: "you're" },
+      { wrong: /\bits\s+(?:tail|eyes|wings)/gi, correct: "its" }
+    ];
+    
+    homophoneErrors.forEach(error => {
+      const matches = essayContent.match(error.wrong);
+      if (matches) {
+        score -= matches.length;
+        errors.push(`Possible homophone error: check ${error.correct}`);
+      }
+    });
+    
+    // Missing dialogue punctuation
+    const dialogueLines = essayContent.match(/"[^"]*"/g);
+    if (dialogueLines) {
+      dialogueLines.forEach(line => {
+        if (!line.match(/"[^"]*[.!?]"/)) {
+          score -= 1;
+          errors.push("Missing punctuation in dialogue");
+        }
+      });
+    }
+    
+    // Run-on sentences (very basic check)
+    const longSentences = essayContent.split(/[.!?]+/).filter(s => s.split(/\s+/).length > 25);
+    if (longSentences.length > 0) {
+      score -= longSentences.length;
+      errors.push("Possible run-on sentences");
+    }
+    
+    // Basic spelling errors
+    const commonErrors = ["teh", "adn", "wrok", "becuase", "recieve", "seperate"];
+    const foundErrors = commonErrors.filter(error => essayContent.toLowerCase().includes(error));
+    score -= foundErrors.length * 2;
+    
+    return Math.max(score, 0);
   }
 
   private static getFeedbackForContentAndIdeas(score: number): string[] {
-    if (score === this.maxScorePerCriterion) return ["Wow! Your ideas are super creative and interesting, making your story really stand out! You have a wonderful imagination that brings your writing to life."];
-    if (score >= 8) return ["Your ideas are engaging and show good imagination. Keep developing them!"]; // Changed from 4 to 8
-    if (score >= 6) return ["You have some good ideas, but they could be developed further. Try adding more detail."]; // Changed from 3 to 6
-    return ["Focus on generating more creative and detailed ideas for your story."];
+    if (score >= 9) return ["Exceptional creativity and comprehensive response to all prompt requirements!"];
+    if (score >= 7) return ["Strong ideas with good development. Address any missing prompt elements."];
+    if (score >= 5) return ["Good foundation but needs more detail and complete prompt coverage."];
+    return ["Focus on addressing ALL parts of the prompt with creative, detailed responses."];
   }
 
   private static getFeedbackForTextStructure(score: number): string[] {
-    if (score === this.maxScorePerCriterion) return ["Your writing flows perfectly, like a well-told story, with a clear beginning, middle, and end! You've mastered the art of organization."];
-    if (score >= 8) return ["Your story has a clear structure that is easy to follow. Good job!"]; // Changed from 4 to 8
-    if (score >= 6) return ["Your story has a basic structure, but could benefit from clearer transitions between paragraphs."]; // Changed from 3 to 6
-    return ["Work on organizing your ideas into a clear beginning, middle, and end."];
+    if (score >= 9) return ["Excellent organization with clear introduction, body, and conclusion."];
+    if (score >= 7) return ["Good structure present. Strengthen transitions between paragraphs."];
+    if (score >= 5) return ["Basic structure evident. Add clear topic sentences and conclusion."];
+    return ["Work on organizing ideas with distinct introduction, body paragraphs, and conclusion."];
   }
 
   private static getFeedbackForLanguageFeatures(score: number): string[] {
-    if (score === this.maxScorePerCriterion) return ["You use amazing words and clever writing tricks that make your writing shine like a diamond! Your vocabulary is impressive."];
-    if (score >= 8) return ["You use a good range of vocabulary and some effective language features."]; // Changed from 4 to 8
-    if (score >= 6) return ["Your vocabulary is adequate, but try to incorporate more descriptive words and figurative language."]; // Changed from 3 to 6
-    return ["Focus on expanding your vocabulary and using more descriptive language."];
+    if (score >= 9) return ["Sophisticated vocabulary and excellent use of literary devices."];
+    if (score >= 7) return ["Good language variety. Add more figurative language and sensory details."];
+    if (score >= 5) return ["Adequate vocabulary. Try using similes, metaphors, and descriptive words."];
+    return ["Focus on expanding vocabulary and adding figurative language."];
   }
 
   private static getFeedbackForSpellingAndGrammar(score: number): string[] {
-    if (score === this.maxScorePerCriterion) return ["Your writing is almost perfect with spelling, punctuation, and grammar – fantastic work! You're a careful editor."];
-    if (score >= 8) return ["You make very few mistakes in spelling, punctuation, and grammar. Great job being careful with your writing!"]; // Changed from 4 to 8
-    if (score >= 6) return ["You have some errors in spelling, punctuation, or grammar. Proofread carefully."]; // Changed from 3 to 6
-    return ["Review basic spelling and grammar rules. Proofreading is essential!"];
+    if (score >= 9) return ["Excellent technical accuracy with minimal errors."];
+    if (score >= 7) return ["Good accuracy with minor errors. Proofread carefully."];
+    if (score >= 5) return ["Some errors present. Check article usage (a/an) and homophones."];
+    return ["Multiple errors need attention. Focus on basic spelling and grammar rules."];
   }
 
   private static getOverallStrengths(domains: any): string[] {
     const strengths: string[] = [];
     
-    // Perfect scores
-    if (domains.contentAndIdeas.score >= 9) strengths.push("Exceptional creativity and originality");
-    else if (domains.contentAndIdeas.score >= 7) strengths.push("Strong ideas and imagination");
+    if (domains.contentAndIdeas.score >= 8) strengths.push("Strong creative ideas and imagination");
+    if (domains.textStructure.score >= 8) strengths.push("Well-organized structure");
+    if (domains.languageFeatures.score >= 8) strengths.push("Effective use of descriptive language");
+    if (domains.spellingAndGrammar.score >= 8) strengths.push("Good technical accuracy");
     
-    if (domains.textStructure.score >= 9) strengths.push("Excellent organization and flow");
-    else if (domains.textStructure.score >= 7) strengths.push("Clear and logical structure");
-    
-    if (domains.languageFeatures.score >= 9) strengths.push("Sophisticated vocabulary and language use");
-    else if (domains.languageFeatures.score >= 7) strengths.push("Good variety in word choice");
-    
-    if (domains.spellingAndGrammar.score >= 9) strengths.push("Outstanding technical accuracy");
-    else if (domains.spellingAndGrammar.score >= 7) strengths.push("Strong grasp of conventions");
+    // Always ensure at least one strength
+    if (strengths.length === 0) {
+      const highestScore = Math.max(
+        domains.contentAndIdeas.score,
+        domains.textStructure.score,
+        domains.languageFeatures.score,
+        domains.spellingAndGrammar.score
+      );
+      
+      if (domains.contentAndIdeas.score === highestScore) strengths.push("Shows creative potential");
+      else if (domains.textStructure.score === highestScore) strengths.push("Attempts to organize ideas");
+      else if (domains.languageFeatures.score === highestScore) strengths.push("Uses some descriptive language");
+      else strengths.push("Shows effort in writing mechanics");
+    }
     
     return strengths;
   }
 
-  private static getOverallAreasForImprovement(domains: any): string[] {
+  private static getOverallAreasForImprovement(domains: any, essayContent: string, prompt: string, wordCount: number): string[] {
     const improvements: string[] = [];
-    if (domains.contentAndIdeas.score < 6) improvements.push("Idea Development"); // Changed from 3 to 6
-    if (domains.textStructure.score < 6) improvements.push("Structural Clarity"); // Changed from 3 to 6
-    if (domains.languageFeatures.score < 6) improvements.push("Language Sophistication"); // Changed from 3 to 6
-    if (domains.spellingAndGrammar.score < 6) improvements.push("Grammar and Punctuation"); // Changed from 3 to 6
-    return improvements;
+    
+    // Check prompt requirements
+    const promptCheck = this.checkPromptRequirements(essayContent, prompt);
+    if (promptCheck.missingElements.length > 0) {
+      improvements.push(`Address missing prompt elements: ${promptCheck.missingElements.join(', ')}`);
+    }
+    
+    // Check for specific errors
+    if (essayContent.toLowerCase().includes("a a") || essayContent.toLowerCase().includes("a e") || 
+        essayContent.toLowerCase().includes("a i") || essayContent.toLowerCase().includes("a o") || 
+        essayContent.toLowerCase().includes("a u")) {
+      improvements.push("Fix article errors: use 'an' before vowel sounds (e.g., 'an acorn' not 'a acorn')");
+    }
+    
+    // Word count feedback
+    if (wordCount < 200) {
+      improvements.push("Expand your essay - aim for 400-500 words for selective exam preparation");
+    } else if (wordCount < 350) {
+      improvements.push("Good start, but expand to 400-500 words to meet selective exam expectations");
+    }
+    
+    // Character development
+    if (essayContent.toLowerCase().includes("teaching me") || essayContent.toLowerCase().includes("i learned")) {
+      improvements.push("Show character transformation through actions and dialogue, don't just tell us about it");
+    }
+    
+    // Domain-specific improvements
+    if (domains.contentAndIdeas.score < 7) {
+      improvements.push("Develop ideas with more specific details and examples");
+    }
+    if (domains.textStructure.score < 7) {
+      improvements.push("Strengthen paragraph structure with clear topic sentences");
+    }
+    if (domains.languageFeatures.score < 7) {
+      improvements.push("Add more figurative language (similes, metaphors) and sensory details");
+    }
+    if (domains.spellingAndGrammar.score < 7) {
+      improvements.push("Proofread carefully for spelling, grammar, and punctuation errors");
+    }
+    
+    // Ensure we always have improvements
+    if (improvements.length === 0) {
+      improvements.push("Experiment with more complex sentence structures");
+      improvements.push("Add dialogue to bring characters to life");
+      improvements.push("Include more sensory details to engage readers");
+    }
+    
+    return improvements.slice(0, 4); // Limit to 4 most important items
   }
 
-  private static getOverallRecommendations(overallScore: number): string[] {
+  private static getOverallRecommendations(overallScore: number, wordCount: number): string[] {
     const recommendations: string[] = [];
     
-    if (overallScore >= 85) {
-      recommendations.push("Outstanding work! To push yourself further, try experimenting with more complex narrative techniques like flashbacks or multiple perspectives.");
-      recommendations.push("Read published works in your genre and analyze how professional authors structure their stories.");
-    } else if (overallScore >= 70) {
-      recommendations.push("Great job! Focus on adding more sensory details to help readers visualize your story.");
-      recommendations.push("Practice using varied sentence structures - mix short, punchy sentences with longer, flowing ones.");
-    } else if (overallScore >= 55) {
-      recommendations.push("Good effort! Work on organizing your ideas into clear paragraphs with topic sentences.");
-      recommendations.push("Expand your vocabulary by keeping a word journal of interesting words you encounter.");
-    } else {
-      recommendations.push("Keep practicing! Start by planning your story with a beginning, middle, and end before you write.");
-      recommendations.push("Read your work aloud to catch errors and awkward phrasing.");
-      recommendations.push("Focus on one skill at a time - this week work on paragraph structure, next week on descriptive words.");
+    // Word count specific recommendations
+    if (wordCount < 200) {
+      recommendations.push("URGENT: Expand your essay to 400-500 words for selective exam readiness");
+    } else if (wordCount < 350) {
+      recommendations.push("Aim for 400-500 words to meet selective exam standards");
+    } else if (wordCount >= 350 && wordCount <= 500) {
+      recommendations.push("Good word count - maintain this length for selective exams");
+    } else if (wordCount > 600) {
+      recommendations.push("Consider being more concise - quality over quantity");
     }
+    
+    // Score-based recommendations
+    if (overallScore >= 85) {
+      recommendations.push("Excellent work! Practice advanced techniques like flashbacks or multiple perspectives");
+      recommendations.push("Time yourself writing similar essays to build exam confidence");
+    } else if (overallScore >= 70) {
+      recommendations.push("Good foundation! Focus on addressing ALL prompt requirements completely");
+      recommendations.push("Practice planning your response before writing to ensure full coverage");
+    } else if (overallScore >= 55) {
+      recommendations.push("Work on essay structure: clear introduction, body paragraphs, strong conclusion");
+      recommendations.push("Build vocabulary by reading widely and keeping a word journal");
+    } else {
+      recommendations.push("Start with planning: list all prompt requirements before writing");
+      recommendations.push("Practice basic paragraph structure with topic sentences");
+      recommendations.push("Read your work aloud to catch errors and improve flow");
+    }
+    
+    // NSW Selective exam specific advice
+    recommendations.push("For selective exams: spend 5 minutes planning, 20 minutes writing, 5 minutes checking");
     
     return recommendations;
   }
@@ -373,24 +502,24 @@ export class NSWEvaluationReportGenerator {
   private static getChildFriendlyExplanation(domain: string, score: number): string {
     const explanations = {
       contentAndIdeas: {
-        high: "🌟 This means your ideas are creative, interesting, and really engage the reader!",
-        medium: "💡 This means you have good ideas, but they could be developed more with extra details.",
-        low: "🌱 This means you need to add more creative and detailed ideas to your writing."
+        high: "🌟 Your ideas are creative and you've addressed the prompt well!",
+        medium: "💡 Good ideas, but make sure to answer ALL parts of the prompt.",
+        low: "🌱 Focus on answering every part of the prompt with creative details."
       },
       textStructure: {
-        high: "🏗️ This means your writing is well-organized with a clear beginning, middle, and end!",
-        medium: "📝 This means your writing has structure, but the organization could be clearer.",
-        low: "🧩 This means you need to organize your ideas better with clear paragraphs."
+        high: "🏗️ Excellent organization with clear beginning, middle, and end!",
+        medium: "📝 Good structure, but strengthen your introduction and conclusion.",
+        low: "🧩 Work on organizing ideas into clear paragraphs with topic sentences."
       },
       languageFeatures: {
-        high: "🎨 This means you use wonderful vocabulary and writing techniques that make your work shine!",
-        medium: "✏️ This means you use good language, but could add more descriptive words.",
-        low: "📚 This means you should try using more interesting vocabulary and descriptive language."
+        high: "🎨 Wonderful vocabulary and great use of descriptive language!",
+        medium: "✏️ Good language use - try adding more similes and sensory details.",
+        low: "📚 Focus on using more interesting vocabulary and figurative language."
       },
       spellingAndGrammar: {
-        high: "🎯 This means your spelling, punctuation, and grammar are excellent!",
-        medium: "✅ This means you have good technical skills with just a few small errors.",
-        low: "🔍 This means you need to check your spelling, punctuation, and grammar more carefully."
+        high: "🎯 Excellent spelling, punctuation, and grammar!",
+        medium: "✅ Good technical skills with just a few small errors to fix.",
+        low: "🔍 Check your spelling and grammar carefully - watch for a/an errors."
       }
     };
     
@@ -400,17 +529,16 @@ export class NSWEvaluationReportGenerator {
 
   private static getSpecificExamplesForContentAndIdeas(essayContent: string, score: number): string[] {
     const examples = [];
-    const sentences = essayContent.split(/[.!?]+/).filter(s => s.trim().length > 10);
     
-    if (score >= 7 && sentences.length > 0) {
-      examples.push(`Strong opening that engages the reader`);
-      examples.push(`Ideas are well-developed with good detail`);
+    if (score >= 7) {
+      examples.push("Strong creative elements and good prompt coverage");
+      examples.push("Ideas are well-developed with specific details");
     } else if (score >= 5) {
-      examples.push("Good start, but add more specific details to develop your ideas");
-      examples.push("Consider: What makes your story unique and interesting?");
+      examples.push("Good creative foundation - ensure all prompt questions are answered");
+      examples.push("Add more specific details to develop your ideas fully");
     } else {
-      examples.push("Try adding more descriptive details to paint a vivid picture");
-      examples.push("Think about: What can you see, hear, smell, taste, or feel?");
+      examples.push("Address ALL prompt requirements systematically");
+      examples.push("Expand ideas with specific examples and sensory details");
     }
     
     return examples;
@@ -422,13 +550,13 @@ export class NSWEvaluationReportGenerator {
     
     if (score >= 7) {
       examples.push(`Well-organized with ${paragraphs.length} clear paragraphs`);
-      examples.push(`Good flow between beginning, middle, and end`);
+      examples.push("Good flow between beginning, middle, and end");
     } else if (score >= 5) {
-      examples.push("Structure is present but could be more developed");
-      examples.push("Try: Use topic sentences to start each paragraph");
+      examples.push("Basic structure present - strengthen introduction and conclusion");
+      examples.push("Use topic sentences to start each paragraph clearly");
     } else {
-      examples.push("Work on organizing ideas into distinct paragraphs");
-      examples.push("Remember: Introduction → Body → Conclusion");
+      examples.push("Create distinct paragraphs: introduction → body → conclusion");
+      examples.push("Start each paragraph with a clear topic sentence");
     }
     
     return examples;
@@ -440,16 +568,16 @@ export class NSWEvaluationReportGenerator {
     const longWords = words.filter(w => w.length >= 7);
     
     if (score >= 7) {
-      examples.push(`Good use of sophisticated vocabulary`);
-      if (longWords.length > 5) {
-        examples.push(`Examples: ${longWords.slice(0, 3).join(', ')}`);
+      examples.push("Good use of sophisticated vocabulary");
+      if (longWords.length > 3) {
+        examples.push(`Strong vocabulary examples: ${longWords.slice(0, 3).join(', ')}`);
       }
     } else if (score >= 5) {
-      examples.push("Vocabulary is adequate but could be more varied");
-      examples.push("Try: Use a thesaurus to find more interesting words");
+      examples.push("Adequate vocabulary - add more figurative language");
+      examples.push("Try: similes (like/as), metaphors, and sensory words");
     } else {
-      examples.push("Focus on using more descriptive and varied language");
-      examples.push("Instead of 'said', try: whispered, exclaimed, muttered");
+      examples.push("Use more descriptive and varied language");
+      examples.push("Replace simple words: said→whispered, big→enormous, nice→delightful");
     }
     
     return examples;
@@ -458,15 +586,15 @@ export class NSWEvaluationReportGenerator {
   private static getSpecificExamplesForSpellingAndGrammar(essayContent: string, score: number): string[] {
     const examples = [];
     
-    if (score >= 7) {
+    if (score >= 8) {
       examples.push("Excellent technical accuracy throughout");
       examples.push("Very few or no errors in spelling, punctuation, or grammar");
-    } else if (score >= 5) {
-      examples.push("Generally good with some minor errors");
-      examples.push("Tip: Read your work aloud to catch mistakes");
+    } else if (score >= 6) {
+      examples.push("Generally good with some minor errors to fix");
+      examples.push("Double-check article usage (a/an) and common homophones");
     } else {
-      examples.push("Several spelling or grammar errors need attention");
-      examples.push("Try: Use spell-check and proofread carefully before submitting");
+      examples.push("Several errors need attention - proofread carefully");
+      examples.push("Focus on: spelling, article usage (a acorn→an acorn), punctuation");
     }
     
     return examples;
