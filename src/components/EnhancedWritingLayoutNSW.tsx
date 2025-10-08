@@ -1,4 +1,4 @@
-// src/components/EnhancedWritingLayoutNSW.tsx - COMPLETE FIX WITH TEXTAREA
+// src/components/EnhancedWritingLayoutNSW.tsx - CORRECTED VERSION WITH ORIGINAL LAYOUT AND SCORING FIX
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { PlanningToolModal } from './PlanningToolModal';
@@ -230,7 +230,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
     }
   }, [content, isTimerRunning, elapsedTime, onStartTimer, textType]);
 
-  // Convert NSW report format to DetailedFeedback format
+  // Convert NSW report format to DetailedFeedback format - WITH SCORING FIX
   const convertNSWReportToDetailedFeedback = (report: any): any => {
     const maxScore = 5;
     return {
@@ -456,17 +456,17 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
           />
         </div>
 
-        {/* Bottom Bar */}
+        {/* Bottom Bar - Original Layout */}
         <div className={`flex-shrink-0 border-t p-2 flex items-center justify-between ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-100 border-gray-200'}`}>
           <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <button onClick={() => setShowPlanningTool(true)} className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-200'}`}><PenTool className="w-4 h-4" /><span>Plan</span></button>
-              <button onClick={onToggleStructureGuide} className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-200'}`}><BookOpen className="w-4 h-4" /><span>Structure</span></button>
-              <button onClick={onToggleTips} className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-200'}`}><LightbulbIcon className="w-4 h-4" /><span>Tips</span></button>
-              <button onClick={onToggleFocus} className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-200'}`}><Target className="w-4 h-4" /><span>Focus</span></button>
-            </div>
+            {/* Left-aligned buttons */}
+            <button onClick={() => setShowPlanningTool(true)} className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-200'}`}><PenTool className="w-4 h-4" /><span>Plan</span></button>
+            <button onClick={onToggleStructureGuide} className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-200'}`}><BookOpen className="w-4 h-4" /><span>Structure</span></button>
+            <button onClick={onToggleTips} className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-200'}`}><LightbulbIcon className="w-4 h-4" /><span>Tips</span></button>
+            <button onClick={onToggleFocus} className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-200'}`}><Target className="w-4 h-4" /><span>Focus</span></button>
           </div>
 
+          {/* Right-aligned elements: Timer, Word Count, Settings, Submit Button */}
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
               <Clock className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
@@ -486,6 +486,25 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
             </div>
             <div className={`h-6 w-px ${darkMode ? 'bg-gray-600' : 'bg-gray-300'}`}></div>
             <button onClick={() => setShowSettings(true)} className={`p-2 rounded-full transition-colors ${darkMode ? 'text-gray-400 hover:bg-gray-700' : 'text-gray-500 hover:bg-gray-200'}`}><Settings className="w-5 h-5" /></button>
+            
+            {/* Submit for NSW Evaluation Button */}
+            <button
+              onClick={() => handleSubmitForEvaluation()}
+              disabled={evaluationStatus === "loading" || !hasContent}
+              className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 disabled:from-gray-400 disabled:to-gray-500 text-white font-semibold py-2 px-4 rounded-lg transition-all duration-200 flex items-center space-x-2 disabled:cursor-not-allowed shadow-lg"
+            >
+              {evaluationStatus === "loading" ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span>Evaluating...</span>
+                </>
+              ) : (
+                <>
+                  <Target className="w-4 h-4" />
+                  <span>Submit for NSW Evaluation</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
       </div>
@@ -517,7 +536,11 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
       {showReportModal && nswReport && (
         <ReportModal
           isOpen={showReportModal}
-          onClose={() => setShowReportModal(false)}
+          onClose={() => {
+            setShowReportModal(false);
+            setNswReport(null);
+            if (onAnalysisChange) onAnalysisChange(null);
+          }}
           reportData={nswReport}
           essayContent={localContent}
         />
