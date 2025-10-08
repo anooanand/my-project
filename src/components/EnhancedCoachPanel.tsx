@@ -757,9 +757,6 @@ export function EnhancedCoachPanel({ content, textType, onContentChange }: Enhan
                   <Send className="w-3 h-3" />
                 </button>
               </div>
-              <div className="text-xs text-gray-500 mt-1">
-                Stage: writing • Level: beginner • Topics: your writing, hello
-              </div>
             </div>
           </>
         ) : (
