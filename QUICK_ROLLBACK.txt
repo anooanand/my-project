@@ -5,19 +5,26 @@
 IF YOU DON'T LIKE THE DARK MODE, FOLLOW THESE STEPS:
 
 STEP 1: Open this file in your code editor
-        → src/index.css
+        → src/contexts/ThemeContext.tsx
 
-STEP 2: Find line 5 (it looks like this):
-        @import './styles/dark-mode-professional.css';
+STEP 2: Find line 16 (it looks like this):
+        const [theme, setTheme] = useState<Theme>('dark');
 
-STEP 3: Comment it out by adding /* and */:
-        /* @import './styles/dark-mode-professional.css'; */
+STEP 3: Change 'dark' to 'light':
+        const [theme, setTheme] = useState<Theme>('light');
 
 STEP 4: Save the file
 
-STEP 5: Refresh your browser (or restart dev server)
+STEP 5: Clear browser localStorage (F12 → Application → Storage → Clear)
+        OR open an incognito/private window
+
+STEP 6: Refresh your browser (Ctrl+Shift+R / Cmd+Shift+R)
 
 ✅ DONE! Your app is back to the original light theme.
+
+OPTIONAL: To also remove dark mode CSS styling:
+  - Open: src/index.css
+  - Comment out line 5: /* @import './styles/dark-mode-professional.css'; */
 
 ═══════════════════════════════════════════════════════════════
 

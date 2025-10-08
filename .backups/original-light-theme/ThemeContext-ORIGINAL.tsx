@@ -13,17 +13,16 @@ const ThemeContext = React.createContext<ThemeContextType>({
 });
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setTheme] = useState<Theme>('dark'); // DEFAULT TO DARK MODE
+  const [theme, setTheme] = useState<Theme>('light');
 
   useEffect(() => {
     // Check for saved theme preference or use system preference
     const savedTheme = localStorage.getItem('theme') as Theme | null;
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
+    
     if (savedTheme) {
       setTheme(savedTheme);
-    } else {
-      // Default to dark mode for the new professional theme
+    } else if (prefersDark) {
       setTheme('dark');
     }
   }, []);
