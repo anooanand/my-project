@@ -56,6 +56,80 @@ function getTimeAwareMessage(seconds: number, wordCount: number) {
   };
 }
 
+/**
+ * Determines the current writing phase based on word count
+ * Helps students understand what they should focus on at each stage
+ */
+function getWritingPhase(wordCount: number) {
+  if (wordCount === 0) {
+    return {
+      phase: 'not-started',
+      name: 'Getting Started',
+      emoji: '🚀',
+      color: 'bg-gray-50 border-gray-200',
+      darkColor: 'dark:bg-gray-800 dark:border-gray-700',
+      textColor: 'text-gray-700',
+      darkTextColor: 'dark:text-gray-300',
+      focus: 'Begin writing your opening',
+      guidance: 'Hook your reader and set the scene'
+    };
+  }
+
+  if (wordCount < 50) {
+    return {
+      phase: 'opening',
+      name: 'Opening',
+      emoji: '📖',
+      color: 'bg-blue-50 border-blue-200',
+      darkColor: 'dark:bg-blue-900/20 dark:border-blue-800',
+      textColor: 'text-blue-700',
+      darkTextColor: 'dark:text-blue-300',
+      focus: 'Hook the reader and introduce your topic',
+      guidance: 'Set the scene, introduce character/topic, grab attention'
+    };
+  }
+
+  if (wordCount < 150) {
+    return {
+      phase: 'development',
+      name: 'Development',
+      emoji: '🌱',
+      color: 'bg-green-50 border-green-200',
+      darkColor: 'dark:bg-green-900/20 dark:border-green-800',
+      textColor: 'text-green-700',
+      darkTextColor: 'dark:text-green-300',
+      focus: 'Develop your ideas with details',
+      guidance: 'Add descriptions, examples, dialogue, or evidence'
+    };
+  }
+
+  if (wordCount < 250) {
+    return {
+      phase: 'rising-action',
+      name: 'Rising Action',
+      emoji: '⚡',
+      color: 'bg-purple-50 border-purple-200',
+      darkColor: 'dark:bg-purple-900/20 dark:border-purple-800',
+      textColor: 'text-purple-700',
+      darkTextColor: 'dark:text-purple-300',
+      focus: 'Build tension and complexity',
+      guidance: 'Deepen ideas, add complications, build to climax'
+    };
+  }
+
+  return {
+    phase: 'conclusion',
+    name: 'Conclusion',
+    emoji: '🎯',
+    color: 'bg-orange-50 border-orange-200',
+    darkColor: 'dark:bg-orange-900/20 dark:border-orange-800',
+    textColor: 'text-orange-700',
+    darkTextColor: 'dark:text-orange-300',
+    focus: 'Wrap up your writing',
+    guidance: 'Provide resolution, final thoughts, satisfying ending'
+  };
+}
+
 // NSW Criteria Analysis Engine (preserved from original)
 class NSWCriteriaAnalyzer {
   static analyzeContent(content: string, textType: string) {
@@ -581,6 +655,7 @@ export function EnhancedCoachPanel({
       const timer = setTimeout(() => {
         const currentWordCount = content.trim().split(/\s+/).length;
         const timeInfo = getTimeAwareMessage(timeElapsed, currentWordCount);
+        const phaseInfo = getWritingPhase(currentWordCount);
 
         const analysis = NSWCriteriaAnalyzer.analyzeContent(content, textType);
         const coachResponse = EnhancedCoachResponseGenerator.generateResponse(content, textType, analysis);
@@ -593,7 +668,8 @@ export function EnhancedCoachPanel({
             content: coachResponse,
             timestamp: new Date(),
             analysis: analysis,
-            timeInfo: timeInfo
+            timeInfo: timeInfo,
+            phaseInfo: phaseInfo
           }];
         });
 
@@ -783,31 +859,54 @@ export function EnhancedCoachPanel({
                         <span className="font-semibold text-xs text-gray-800">{message.content.encouragement}</span>
                       </div>
 
-                      {/* TIME AWARENESS SECTION */}
-                      {message.timeInfo && (
-                        <div className={`mb-2 p-2 rounded text-xs ${
-                          message.timeInfo.urgency === 'high'
-                            ? 'bg-red-50 border border-red-200'
-                            : message.timeInfo.urgency === 'medium'
-                            ? 'bg-yellow-50 border border-yellow-200'
-                            : 'bg-blue-50 border border-blue-200'
-                        }`}>
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="font-medium text-gray-700">
-                              ⏱️ {message.timeInfo.timeRemaining} mins left
-                            </span>
-                            <span className="font-medium">
-                              {message.timeInfo.paceEmoji} Pace
-                            </span>
-                          </div>
-                          <div className={`text-xs ${
-                            message.timeInfo.urgency === 'high' ? 'text-red-700 font-medium' : 'text-gray-600'
-                          }`}>
-                            {message.timeInfo.timeMessage}
-                          </div>
-                          <div className="text-xs text-gray-600 mt-1">
-                            {message.timeInfo.paceMessage}
-                          </div>
+                      {/* TIME AND PHASE AWARENESS SECTION */}
+                      {(message.timeInfo || message.phaseInfo) && (
+                        <div className="mb-2 space-y-1.5">
+                          {/* Time Info */}
+                          {message.timeInfo && (
+                            <div className={`p-2 rounded text-xs ${
+                              message.timeInfo.urgency === 'high'
+                                ? 'bg-red-50 border border-red-200'
+                                : message.timeInfo.urgency === 'medium'
+                                ? 'bg-yellow-50 border border-yellow-200'
+                                : 'bg-blue-50 border border-blue-200'
+                            }`}>
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="font-medium text-gray-700">
+                                  ⏱️ {message.timeInfo.timeRemaining} mins left
+                                </span>
+                                <span className="font-medium">
+                                  {message.timeInfo.paceEmoji} Pace
+                                </span>
+                              </div>
+                              <div className={`text-xs ${
+                                message.timeInfo.urgency === 'high' ? 'text-red-700 font-medium' : 'text-gray-600'
+                              }`}>
+                                {message.timeInfo.timeMessage}
+                              </div>
+                              <div className="text-xs text-gray-600 mt-1">
+                                {message.timeInfo.paceMessage}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* PHASE INFO */}
+                          {message.phaseInfo && (
+                            <div className={`p-2 rounded text-xs border ${message.phaseInfo.color} ${message.phaseInfo.darkColor}`}>
+                              <div className="flex items-center space-x-2 mb-1">
+                                <span className="text-base">{message.phaseInfo.emoji}</span>
+                                <span className={`font-semibold ${message.phaseInfo.textColor} ${message.phaseInfo.darkTextColor}`}>
+                                  {message.phaseInfo.name} Phase
+                                </span>
+                              </div>
+                              <div className={`text-xs ${message.phaseInfo.textColor} ${message.phaseInfo.darkTextColor} font-medium mb-0.5`}>
+                                🎯 Focus: {message.phaseInfo.focus}
+                              </div>
+                              <div className="text-xs text-gray-600 dark:text-gray-400">
+                                {message.phaseInfo.guidance}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
 
