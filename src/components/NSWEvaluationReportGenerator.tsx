@@ -1,4 +1,4 @@
-// src/components/NSWEvaluationReportGenerator_final_fix.tsx
+// src/components/NSWEvaluationReportGenerator_complete_fix.tsx
 
 import { DetailedFeedback } from "../types/feedback";
 
@@ -46,10 +46,18 @@ export class NSWEvaluationReportGenerator {
     console.log('Incomplete Essay:', promptCheck.incompleteEssay);
     console.log('============================');
 
-    const contentAndIdeasScore = this.scoreContentAndIdeas(essayContent, prompt, wordCount, targetWordCountMin, targetWordCountMax, promptCheck);
-    const textStructureScore = this.scoreTextStructure(essayContent, promptCheck.incompleteEssay);
-    const languageFeaturesScore = this.scoreLanguageFeatures(essayContent);
-    const spellingAndGrammarScore = this.scoreSpellingAndGrammar(essayContent);
+    let contentAndIdeasScore = this.scoreContentAndIdeas(essayContent, prompt, wordCount, targetWordCountMin, targetWordCountMax, promptCheck);
+    let textStructureScore = this.scoreTextStructure(essayContent, promptCheck.incompleteEssay);
+    let languageFeaturesScore = this.scoreLanguageFeatures(essayContent);
+    let spellingAndGrammarScore = this.scoreSpellingAndGrammar(essayContent);
+
+    // CRITICAL FIX: Prevent perfect scores for incomplete/problematic work
+    if (wordCount < targetWordCountMin || 
+        promptCheck.incompleteEssay || 
+        promptCheck.missingElements.length > 0) {
+      contentAndIdeasScore = Math.min(contentAndIdeasScore, 7);
+      textStructureScore = Math.min(textStructureScore, 6);
+    }
 
     const domains = {
       contentAndIdeas: {
@@ -104,6 +112,7 @@ export class NSWEvaluationReportGenerator {
     const strengths = this.getOverallStrengths(domains, essayContent);
     const areasForImprovement = this.getOverallAreasForImprovement(domains, essayContent, prompt, wordCount, targetWordCountMin, targetWordCountMax, promptCheck);
     const recommendations = this.getOverallRecommendations(overallScore, wordCount, targetWordCountMin, targetWordCountMax);
+    const criticalWarnings = this.getCriticalWarnings(wordCount, targetWordCountMin, promptCheck, essayContent);
 
     return {
       overallScore,
@@ -120,6 +129,7 @@ export class NSWEvaluationReportGenerator {
       strengths,
       areasForImprovement,
       recommendations,
+      criticalWarnings,
       essayContent,
       reportId: `nsw-${Date.now()}`,
       date: new Date().toLocaleDateString("en-AU"),
@@ -215,13 +225,13 @@ export class NSWEvaluationReportGenerator {
   private static analyzePromptStructure(prompt: string): PromptRequirements {
     const questions = this.extractQuestions(prompt);
     
-    const requiresCharacters = /who|meet|character|people/i.test(prompt);
-    const requiresChallenges = /challenge|problem|difficult|obstacle|riddle/i.test(prompt);
-    const requiresResolution = /solve|resolve|help|save|overcome|choose to stay|return home/i.test(prompt);
-    const requiresReflection = /learn|discover|realize|understand|treasures|friendships/i.test(prompt);
+    const requiresCharacters = /who|meet|character|people|friends/i.test(prompt);
+    const requiresChallenges = /challenge|problem|difficult|obstacle|riddle|guardian|outsmart/i.test(prompt);
+    const requiresResolution = /solve|resolve|help|save|overcome|choose|stay|return|home|venture|alone/i.test(prompt);
+    const requiresReflection = /learn|discover|realize|understand|treasures|friendships|emotions|feel|wonders/i.test(prompt);
     
     return {
-      totalQuestions: questions.length,
+      totalQuestions: Math.max(questions.length, 3), // Minimum 3 for narrative prompts
       requiresCharacters,
       requiresChallenges,
       requiresResolution,
@@ -234,15 +244,24 @@ export class NSWEvaluationReportGenerator {
     const sentences = essay.split(/[.!?]+/).filter(s => s.trim().length > 0);
     const lastSentence = sentences[sentences.length - 1]?.trim();
     
+    // Check if essay ends mid-sentence (no punctuation at end)
     if (lastSentence && !essay.trim().match(/[.!?]$/)) {
       return true;
     }
     
-    if (sentences.length < 8 && !this.detectNarrativeResolution(essay)) {
+    // Check minimum sentence count for narrative
+    if (sentences.length < 10) {
       return true;
     }
     
+    // Check if essay has proper resolution
     if (promptAnalysis.requiresResolution && !this.detectNarrativeResolution(essay)) {
+      return true;
+    }
+    
+    // Check for conclusion paragraph
+    const paragraphs = essay.split(/\n\s*\n/).filter(p => p.trim().length > 0);
+    if (paragraphs.length < 3) {
       return true;
     }
     
@@ -265,7 +284,7 @@ export class NSWEvaluationReportGenerator {
     if (thematicOverlap < 0.3) {
       missingElements.push("Essay doesn't clearly address the main prompt theme");
     } else {
-      score += 2;
+      score += 1;
     }
     
     if (promptAnalysis.requiresCharacters) {
@@ -283,48 +302,79 @@ export class NSWEvaluationReportGenerator {
     }
     
     if (promptAnalysis.requiresChallenges) {
-      const hasChallengeWords = /challenge|difficult|problem|struggle|danger|obstacle|threat|riddle/i.test(essayLower);
-      const hasSolution = /overcome|solve|succeed|triumph|defeat|escape|resolve/i.test(essayLower);
+      const hasChallengeWords = /challenge|difficult|problem|struggle|danger|obstacle|threat|riddle|guardian|outsmart/i.test(essayLower);
+      const hasSolution = /overcome|solve|succeed|triumph|defeat|escape|resolve|outsmart/i.test(essayLower);
       
       if (hasChallengeWords && hasSolution) {
         score += 2;
       } else if (hasChallengeWords) {
-        score += 1;
-        partialElements.push("Challenges are mentioned, but a clear resolution is needed.");
+        score += 0.5;
+        partialElements.push("Challenges mentioned but resolution needed");
       } else {
-        missingElements.push("Describe challenges or riddles faced and how you overcame them");
+        missingElements.push("Describe challenges/obstacles faced and how you overcame them");
       }
     }
     
     if (promptAnalysis.requiresResolution) {
       const hasResolution = this.detectNarrativeResolution(essayContent);
-      if (hasResolution) {
+      const hasDecision = /stay|return|home|choose|decide/i.test(essayLower);
+      
+      if (hasResolution && hasDecision) {
         score += 2;
+      } else if (hasResolution || hasDecision) {
+        score += 0.5;
+        partialElements.push("Story needs clearer resolution/decision");
       } else {
-        missingElements.push("Story needs a clear resolution addressing the prompt's main question (e.g., staying or returning home)");
+        missingElements.push("Story needs clear resolution addressing the main choice (stay vs return home)");
       }
     }
     
     if (promptAnalysis.requiresReflection) {
-      const hasReflection = /learn|discover|realize|understand|teach|lesson|treasure|friendship/i.test(essayLower);
+      const hasReflection = /learn|discover|realize|understand|teach|lesson|treasure|friendship|emotion|feel|wonder/i.test(essayLower);
       if (hasReflection) {
-        score += 2;
+        score += 1;
       } else {
-        missingElements.push("Include reflection on what you learned, discovered, or the treasures/friendships gained");
+        missingElements.push("Include reflection on emotions, discoveries, or lessons learned");
       }
     }
     
     const incompleteEssay = this.detectIncompleteEssay(essayContent, promptAnalysis);
     
-    const promptCoverage = (score / (promptAnalysis.totalQuestions * 2)) * 100;
+    const promptCoverage = (score / 8) * 100; // Out of 8 possible points
     
     return {
-      score: Math.min(score, 10),
+      score: Math.min(score, 8),
       missingElements,
       partialElements,
       incompleteEssay,
       promptCoverage
     };
+  }
+
+  private static getCriticalWarnings(wordCount: number, targetWordCountMin: number, promptCheck: PromptCheckResult, essayContent: string): string[] {
+    const warnings: string[] = [];
+    
+    if (promptCheck.incompleteEssay) {
+      warnings.push("⚠️ CRITICAL: Essay is incomplete (ends mid-sentence or lacks proper conclusion)");
+    }
+    
+    if (wordCount < 300) {
+      warnings.push(`⚠️ CRITICAL: Only ${wordCount} words - need at least ${targetWordCountMin} words for NSW Selective`);
+    } else if (wordCount < targetWordCountMin) {
+      warnings.push(`⚠️ WARNING: Essay is short (${wordCount} words) - aim for ${targetWordCountMin}-500 words`);
+    }
+    
+    if (promptCheck.missingElements.length >= 2) {
+      warnings.push("⚠️ CRITICAL: Missing answers to main prompt questions");
+    }
+    
+    // Check for article errors
+    const articleErrors = essayContent.match(/\ba ([aeiouAEIOU]\w*)/gi);
+    if (articleErrors && articleErrors.length > 0) {
+      warnings.push(`⚠️ Grammar Error: "${articleErrors[0]}" should be "an ${articleErrors[0].split(' ')[1]}"`);
+    }
+    
+    return warnings;
   }
 
   private static calculateOverallScore(domains: any): number {
@@ -416,25 +466,29 @@ export class NSWEvaluationReportGenerator {
     targetWordCountMax: number, 
     promptCheck: PromptCheckResult
   ): number {
-    let score = 3;
+    let score = 2; // Lower base score
     
-    score += promptCheck.score * 0.5;
+    // Prompt coverage (heavily weighted)
+    score += promptCheck.score * 0.6; // Increased weight
     
+    // Heavy penalties for missing elements
     if (promptCheck.missingElements.length >= 3) {
-      score -= 2;
+      score -= 4; // Increased penalty
     } else if (promptCheck.missingElements.length >= 2) {
+      score -= 2;
+    } else if (promptCheck.missingElements.length >= 1) {
       score -= 1;
     }
     
-    if (wordCount < targetWordCountMin) {
-      if (wordCount < 300) {
-        score -= 3;
-      } else {
-        score -= 1;
-      }
+    // Word count penalties (stricter)
+    if (wordCount < 300) {
+      score -= 4; // Very heavy penalty
+    } else if (wordCount < targetWordCountMin) {
+      score -= 2; // Heavy penalty
     }
     
-    if (wordCount > 350) score += 1;
+    // Rewards for good content
+    if (wordCount >= targetWordCountMin) score += 1;
     if (wordCount > 450) score += 0.5;
     
     const descriptiveWords = this.countDescriptiveLanguage(essayContent);
@@ -455,7 +509,8 @@ export class NSWEvaluationReportGenerator {
     const paragraphs = essayContent.split(/\n\s*\n/).filter(p => p.trim().length > 0);
     const sentences = essayContent.split(/[.!?]+/).filter(s => s.trim().length > 0);
     
-    if (sentences.length > 3) score += 2;
+    if (sentences.length > 5) score += 1;
+    if (sentences.length > 10) score += 1;
     
     const firstParagraph = paragraphs[0] || "";
     if (firstParagraph.length > 50) {
@@ -469,8 +524,9 @@ export class NSWEvaluationReportGenerator {
     else if (paragraphs.length >= 3) score += 1;
     else if (paragraphs.length >= 2) score += 0.5;
     
+    // Heavy penalty for incomplete essays
     if (incompleteEssay) {
-      score -= 3;
+      score -= 4; // Increased penalty
     } else {
       const lastParagraph = paragraphs[paragraphs.length - 1] || "";
       if (lastParagraph.length > 50) {
@@ -504,6 +560,7 @@ export class NSWEvaluationReportGenerator {
   private static scoreSpellingAndGrammar(essayContent: string): number {
     let errorCount = 0;
     
+    // Enhanced article error detection
     const articleErrors = (essayContent.match(/\ba ([aeiouAEIOU]\w*)/gi) || []).length;
     errorCount += articleErrors;
     
@@ -523,9 +580,10 @@ export class NSWEvaluationReportGenerator {
     
     if (errorCount === 0) return 10;
     if (errorCount <= 1) return 9;
+    if (errorCount <= 2) return 8;
     if (errorCount <= 3) return 7;
-    if (errorCount <= 6) return 5;
-    if (errorCount <= 10) return 3;
+    if (errorCount <= 5) return 5;
+    if (errorCount <= 8) return 3;
     return 1;
   }
 
@@ -570,7 +628,7 @@ export class NSWEvaluationReportGenerator {
       strengths.push("Creative and original ideas that address the prompt.");
     }
     if (strengths.length === 0) {
-      strengths.push("Good attempt, with a solid foundation to build upon.");
+      strengths.push("Shows creativity and imagination in writing.");
     }
     return strengths;
   }
@@ -586,42 +644,42 @@ export class NSWEvaluationReportGenerator {
   ): string[] {
     const improvements: string[] = [];
 
-    if (wordCount < targetWordCountMin) {
-      if (wordCount < 300) {
-        improvements.push(`📏 CRITICAL: Essay too short (${wordCount} words). Aim for 400-500 words`);
-      } else {
-        improvements.push(`📏 Essay is short (${wordCount} words). Aim for 400-500 words`);
-      }
+    // PRIORITY 1: Word count (always first if applicable)
+    if (wordCount < 300) {
+      improvements.push(`📏 CRITICAL: Essay too short (${wordCount} words). Must reach at least ${targetWordCountMin} words`);
+    } else if (wordCount < targetWordCountMin) {
+      improvements.push(`📏 Essay needs expansion (${wordCount} words). Aim for ${targetWordCountMin}-${targetWordCountMax} words`);
     }
 
+    // PRIORITY 2: Incomplete essay
     if (promptCheck.incompleteEssay) {
-      improvements.push("✍️ CRITICAL: Essay appears incomplete. Ensure you write a full response with a conclusion.");
+      improvements.push("✍️ CRITICAL: Complete your essay with a proper conclusion that resolves the story");
     }
 
+    // PRIORITY 3: Missing prompt requirements
     if (promptCheck.missingElements.length > 0) {
-      improvements.push(`🎯 Address all parts of the prompt. Missing: ${promptCheck.missingElements.join(", ")}`);
+      improvements.push(`🎯 Address missing prompt elements: ${promptCheck.missingElements.slice(0, 2).join(", ")}`);
     }
 
+    // PRIORITY 4: Grammar errors
+    const articleErrors = essayContent.match(/\ba ([aeiouAEIOU]\w*)/gi);
+    if (articleErrors && articleErrors.length > 0) {
+      const example = articleErrors[0];
+      const fixed = example.replace(/\ba /gi, "an ");
+      improvements.push(`🔤 Fix grammar: "${example}" → "${fixed}"`);
+    }
+
+    // PRIORITY 5: Domain-specific improvements
     if (domains.contentAndIdeas.score < 6) {
-      improvements.push("💡 Add more specific details and fully answer all prompt questions");
-    }
-
-    if (domains.spellingAndGrammar.score < 7) {
-      const articleErrors = essayContent.match(/\ba ([aeiouAEIOU]\w*)/gi);
-      if (articleErrors && articleErrors.length > 0) {
-        const example = articleErrors[0];
-        const fixed = example.replace(/\ba /gi, "an ");
-        improvements.push(`🔤 Fix: \"${example}\" → \"${fixed}\"`);
-      }
-      improvements.push("✅ Proofread for spelling, grammar, punctuation");
+      improvements.push("💡 Develop ideas more fully and answer all prompt questions");
     }
 
     if (domains.textStructure.score < 6) {
       const paragraphs = essayContent.split(/\n\s*\n/).filter(p => p.trim().length > 0);
       if (paragraphs.length < 3) {
-        improvements.push(`🏗️ Structure: Add more paragraphs (currently ${paragraphs.length}, aim for 4-5)`);
+        improvements.push(`🏗️ Add more paragraphs (currently ${paragraphs.length}, need 4-5)`);
       } else {
-        improvements.push("🏗️ Strengthen paragraph transitions");
+        improvements.push("🏗️ Strengthen paragraph transitions and conclusions");
       }
     }
 
@@ -629,8 +687,8 @@ export class NSWEvaluationReportGenerator {
       improvements.push("🎨 Use more figurative language (similes, metaphors, sensory details)");
     }
 
-    if (improvements.length === 0) {
-      improvements.push("🌟 Strong work! Try advanced techniques: varied sentence openers, internal monologue, foreshadowing");
+    if (domains.spellingAndGrammar.score < 8) {
+      improvements.push("✅ Proofread carefully for spelling and grammar errors");
     }
 
     return improvements.slice(0, 6);
@@ -678,13 +736,13 @@ export class NSWEvaluationReportGenerator {
     const explanations = {
       contentAndIdeas: {
         high: "🌟 Your ideas are creative and you've addressed the prompt well!",
-        medium: "💡 Good ideas, but make sure to answer ALL parts of the prompt.",
-        low: "🌱 Focus on answering every part of the prompt with creative details."
+        medium: "💡 Good ideas, but make sure to answer ALL parts of the prompt and write more.",
+        low: "🌱 Focus on answering every part of the prompt with more details and examples."
       },
       textStructure: {
         high: "🏗️ Excellent organization with clear beginning, middle, and end!",
-        medium: "📝 Good structure, but strengthen your introduction and conclusion.",
-        low: "🧩 Work on organizing ideas into clear paragraphs with topic sentences."
+        medium: "📝 Good start, but your essay needs a stronger conclusion.",
+        low: "🧩 Work on completing your essay with proper paragraphs and a conclusion."
       },
       languageFeatures: {
         high: "🎨 Wonderful vocabulary and great use of descriptive language!",
@@ -713,7 +771,7 @@ export class NSWEvaluationReportGenerator {
       examples.push("Add more specific details to develop your ideas fully");
     } else {
       examples.push("Address ALL prompt requirements systematically");
-      examples.push("Expand ideas with specific examples and sensory details");
+      examples.push("Expand ideas with specific examples and complete the story");
     }
     
     return examples;
@@ -727,11 +785,11 @@ export class NSWEvaluationReportGenerator {
       examples.push(`Well-organized with ${paragraphs.length} clear paragraphs`);
       examples.push("Good flow between beginning, middle, and end");
     } else if (score >= 5) {
-      examples.push("Basic structure present - strengthen introduction and conclusion");
+      examples.push("Basic structure present - needs stronger conclusion");
       examples.push("Use topic sentences to start each paragraph clearly");
     } else {
+      examples.push("Complete your essay with proper conclusion");
       examples.push("Create distinct paragraphs: introduction → body → conclusion");
-      examples.push("Start each paragraph with a clear topic sentence");
     }
     
     return examples;
@@ -848,14 +906,14 @@ export class NSWEvaluationReportGenerator {
     if (score >= 8) return ["Excellent, well-developed ideas that directly address the prompt."];
     if (score >= 6) return ["Good ideas, but could be more developed or consistently linked to the prompt."];
     if (score >= 4) return ["Ideas are present but may be generic or not fully address the prompt."];
-    return ["Ideas are unclear or do not address the prompt. Focus on understanding the question."];
+    return ["Ideas need development. Focus on understanding and fully answering the prompt."];
   }
 
   private static getFeedbackForTextStructure(score: number): string[] {
     if (score >= 8) return ["Clear and effective structure with a strong introduction, body, and conclusion."];
     if (score >= 6) return ["Good structure, but could be improved with clearer topic sentences or transitions."];
     if (score >= 4) return ["Some structure is present, but it may be inconsistent or confusing."];
-    return ["Lacks a clear structure. Focus on creating a clear beginning, middle, and end."];
+    return ["Lacks a clear structure. Focus on creating a complete essay with proper conclusion."];
   }
 
   private static getFeedbackForLanguageFeatures(score: number): string[] {
