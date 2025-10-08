@@ -15,6 +15,7 @@ interface EvaluationReport {
   strengths: string[];
   areasForImprovement: string[];
   essayContent: string;
+  criticalWarnings?: string[];
 }
 
 interface DomainScore {
@@ -230,6 +231,34 @@ export function NSWEvaluationReportDisplay({ report, essayText, onClose }: NSWEv
         )}
       </div>
 
+      {/* Critical Warnings Section */}
+      {report.criticalWarnings && report.criticalWarnings.length > 0 && (
+        <div className="bg-red-50 dark:bg-red-900/20 rounded-lg border-2 border-red-400 dark:border-red-600 p-6 mb-8">
+          <h3 className="text-xl font-bold text-red-800 dark:text-red-200 mb-4 flex items-center">
+            <AlertCircle className="w-6 h-6 mr-2" />
+            🚨 Critical Issues Requiring Immediate Attention
+          </h3>
+          <div className="space-y-3">
+            {report.criticalWarnings.map((warning, index) => (
+              <div key={index} className="flex items-start bg-white dark:bg-gray-800 rounded-lg p-4 border-2 border-red-300 dark:border-red-700 shadow-lg">
+                <div className="bg-red-500 dark:bg-red-700 rounded-full p-2 mr-4 flex-shrink-0">
+                  <span className="text-white font-bold text-lg">!</span>
+                </div>
+                <span className="text-red-800 dark:text-red-200 font-semibold leading-relaxed text-base">
+                  {warning}
+                </span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-400 dark:border-yellow-600 rounded-lg p-3">
+            <p className="text-yellow-800 dark:text-yellow-200 text-sm font-medium">
+              💡 <strong>Action Required:</strong> Please address these critical issues before your next practice essay.
+              These are the most important areas that will significantly impact your exam performance.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Domain Scores Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <DomainScoreCard 
@@ -256,10 +285,23 @@ export function NSWEvaluationReportDisplay({ report, essayText, onClose }: NSWEv
 
       {/* Student's Original Essay Section */}
       <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 p-6 mb-8">
-        <h3 className="text-xl font-bold text-blue-800 dark:text-blue-200 mb-4 flex items-center">
-          <FileText className="w-5 h-5 mr-2" />
-          Your Original Essay ({report.detailedFeedback.wordCount} words)
-        </h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-bold text-blue-800 dark:text-blue-200 flex items-center">
+            <FileText className="w-5 h-5 mr-2" />
+            Your Original Essay
+          </h3>
+          <div className={`px-4 py-2 rounded-full font-bold text-sm ${
+            report.detailedFeedback.wordCount < 300 ? 'bg-red-100 text-red-700 border-2 border-red-400' :
+            report.detailedFeedback.wordCount < 400 ? 'bg-yellow-100 text-yellow-700 border-2 border-yellow-400' :
+            report.detailedFeedback.wordCount <= 550 ? 'bg-green-100 text-green-700 border-2 border-green-400' :
+            'bg-orange-100 text-orange-700 border-2 border-orange-400'
+          }`}>
+            {report.detailedFeedback.wordCount} words
+            {report.detailedFeedback.wordCount < 400 && ' ⚠️ Too Short'}
+            {report.detailedFeedback.wordCount >= 400 && report.detailedFeedback.wordCount <= 550 && ' ✅ Good Length'}
+            {report.detailedFeedback.wordCount > 550 && ' ⚠️ Too Long'}
+          </div>
+        </div>
         <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border">
           <pre className="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300 font-sans leading-relaxed">
             {report.essayContent || essayText}
