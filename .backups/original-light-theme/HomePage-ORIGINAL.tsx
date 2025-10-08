@@ -24,11 +24,10 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
       {user && <ReferralBanner onNavigate={onNavigate} />}
 
       {/* Hero Section */}
-      <div className="hero-section max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 relative">
-        <div className="bg-grid absolute inset-0 opacity-30"></div>
-        <div className="text-center relative z-10">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-400">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-12">
+        <div className="text-center">
+          <h1 className="text-4xl md:text-5xl font-bold mb-6">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-orange-600">
               Boost Your Child's Selective Exam Score
             </span>
             <br />
@@ -36,21 +35,21 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
               with AI-Powered Writing Practice
             </span>
           </h1>
-          <p className="mt-6 text-xl md:text-2xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
+          <p className="mt-4 text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
             Master narrative, persuasive, and creative writing with personalized AI guidance. Join thousands of students preparing for NSW Selective exams.
           </p>
-          <div className="mt-10 flex flex-col sm:flex-row justify-center gap-4">
+          <div className="mt-8 flex justify-center gap-4">
             {!user && (
               <button
                 onClick={() => onNavigate('pricing')}
-                className="btn-primary px-10 py-5 text-lg font-semibold text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-700 hover:via-purple-700 hover:to-pink-700 dark:from-indigo-500 dark:via-purple-500 dark:to-pink-500 rounded-xl shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-1 glow-effect"
+                className="px-8 py-4 text-lg font-semibold text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 View Pricing
               </button>
             )}
             <a
               href="#how-it-works"
-              className="btn-secondary px-10 py-5 text-lg font-semibold text-indigo-600 dark:text-indigo-400 bg-white dark:bg-gray-800 border-2 border-indigo-600 dark:border-indigo-400 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
+              className="px-8 py-4 text-lg font-semibold text-indigo-600 dark:text-indigo-400 bg-white dark:bg-gray-800 border-2 border-indigo-600 dark:border-indigo-400 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300"
             >
               See How It Works
             </a>

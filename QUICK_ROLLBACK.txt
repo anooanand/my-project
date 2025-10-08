@@ -1,0 +1,55 @@
+╔═══════════════════════════════════════════════════════════════╗
+║           🔄 QUICK ROLLBACK TO ORIGINAL THEME                ║
+╚═══════════════════════════════════════════════════════════════╝
+
+IF YOU DON'T LIKE THE DARK MODE, FOLLOW THESE STEPS:
+
+STEP 1: Open this file in your code editor
+        → src/index.css
+
+STEP 2: Find line 5 (it looks like this):
+        @import './styles/dark-mode-professional.css';
+
+STEP 3: Comment it out by adding /* and */:
+        /* @import './styles/dark-mode-professional.css'; */
+
+STEP 4: Save the file
+
+STEP 5: Refresh your browser (or restart dev server)
+
+✅ DONE! Your app is back to the original light theme.
+
+═══════════════════════════════════════════════════════════════
+
+⏱️  TIME REQUIRED: 30 seconds
+
+📁 BACKUP LOCATION: .backups/original-light-theme/
+
+📖 FULL INSTRUCTIONS: .backups/RESTORATION_INSTRUCTIONS.md
+
+📊 IMPLEMENTATION DETAILS: .backups/IMPLEMENTATION_SUMMARY.md
+
+═══════════════════════════════════════════════════════════════
+
+ALTERNATIVE: Complete File Restoration
+
+If you prefer to restore all original files completely:
+
+1. Copy: .backups/original-light-theme/HomePage-ORIGINAL.tsx
+   To:   src/components/HomePage.tsx
+
+2. Copy: .backups/original-light-theme/index-ORIGINAL.css
+   To:   src/index.css
+
+3. Delete: src/styles/dark-mode-professional.css
+
+4. Run: npm run build
+
+═══════════════════════════════════════════════════════════════
+
+🎉 ALL ORIGINAL FILES ARE SAFELY BACKED UP!
+
+Don't worry - nothing is lost. You can switch back and forth
+between themes as many times as you want!
+
+═══════════════════════════════════════════════════════════════
