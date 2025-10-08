@@ -14,7 +14,7 @@ interface EvaluationReport {
   recommendations: string[];
   strengths: string[];
   areasForImprovement: string[];
-  essayContent: string; // ADDED: Include the student's actual essay in the report
+  essayContent: string;
 }
 
 interface DomainScore {
@@ -26,7 +26,7 @@ interface DomainScore {
   weightedScore: number;
   feedback: string[];
   specificExamples: string[];
-  childFriendlyExplanation: string; // ADDED: Child-friendly rubric explanations
+  childFriendlyExplanation: string;
 }
 
 interface DetailedFeedback {
@@ -65,6 +65,56 @@ interface NSWEvaluationReportDisplayProps {
   onClose?: () => void;
 }
 
+const DomainScoreCard: React.FC<{ domain: DomainScore; title: string; icon: string }> = ({ domain, title, icon }) => {
+  const getScoreColor = (score: number) => {
+    if (score >= 9) return 'text-green-600 bg-green-50 border-green-200';
+    if (score >= 7) return 'text-blue-600 bg-blue-50 border-blue-200';
+    if (score >= 5) return 'text-yellow-600 bg-yellow-50 border-yellow-200';
+    if (score >= 3) return 'text-orange-600 bg-orange-50 border-orange-200';
+    return 'text-red-600 bg-red-50 border-red-200';
+  };
+
+  return (
+    <div className={`border rounded-lg p-4 ${getScoreColor(domain.score)}`}>
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="font-semibold text-lg">{title}</h3>
+        <div className="flex items-center">
+          <span className="text-2xl font-bold mr-2">{domain.score}/{domain.maxScore}</span>
+          <span className="text-sm">({domain.weight}%)</span>
+        </div>
+      </div>
+      <div className="mb-2">
+        <div className="flex justify-between text-sm mb-1">
+          <span>Performance</span>
+          <span>{domain.percentage.toFixed(0)}%</span>
+        </div>
+        <div className="w-full bg-gray-200 rounded-full h-2">
+          <div 
+            className="bg-current h-2 rounded-full" 
+            style={{ width: `${domain.percentage}%` }}
+          ></div>
+        </div>
+      </div>
+      <div className="text-sm font-medium mb-2">
+        Band: {domain.band}
+      </div>
+      <div className="bg-white/50 rounded-lg p-3 mb-3">
+        <div className="flex items-start">
+          <Heart className="w-4 h-4 mr-2 mt-0.5 text-pink-500" />
+          <p className="text-sm font-medium text-gray-700">
+            {domain.childFriendlyExplanation}
+          </p>
+        </div>
+      </div>
+      <div className="text-sm space-y-1">
+        {domain.feedback.slice(0, 2).map((feedback, index) => (
+          <div key={index}>• {feedback}</div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 export function NSWEvaluationReportDisplay({ report, essayText, onClose }: NSWEvaluationReportDisplayProps) {
   const getScoreColor = (score: number) => {
     if (score >= 9) return 'text-green-600 bg-green-50 border-green-200';
@@ -93,6 +143,49 @@ export function NSWEvaluationReportDisplay({ report, essayText, onClose }: NSWEv
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  const generateReportText = (report: EvaluationReport, essayText: string): string => {
+    let text = `NSW Selective Writing Assessment Report\n\n`;
+    text += `Overall Grade: ${report.overallGrade} (Score: ${report.overallScore}/100)\n\n`;
+
+    text += `--- Domain Scores ---\n`;
+    for (const domainKey in report.domains) {
+      const domain = report.domains[domainKey as keyof typeof report.domains];
+      text += `${domainKey.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}: ${domain.score}/${domain.maxScore} (${domain.percentage.toFixed(0)}%) - Band: ${domain.band}\n`;
+      domain.feedback.forEach(f => text += `  - ${f}\n`);
+    }
+    text += `\n`;
+
+    text += `--- Key Strengths ---\n`;
+    if (report.strengths.length > 0) {
+      report.strengths.forEach(s => text += `- ${s}\n`);
+    } else {
+      text += `- No specific strengths identified. Keep working hard!\n`;
+    }
+    text += `\n`;
+
+    text += `--- Areas for Growth ---\n`;
+    if (report.areasForImprovement.length > 0) {
+      report.areasForImprovement.forEach(a => text += `- ${a}\n`);
+    } else {
+      text += `- Excellent work! Continue to challenge yourself with new writing techniques.\n`;
+    }
+    text += `\n`;
+
+    text += `--- Personalized Learning Recommendations ---\n`;
+    if (report.recommendations.length > 0) {
+      report.recommendations.forEach((r, i) => text += `${i + 1}. ${r}\n`);
+    } else {
+      text += `- Keep up the excellent work! Continue practicing to maintain your high standards.\n`;
+    }
+    text += `\n`;
+
+    text += `--- Your Original Essay (${report.detailedFeedback.wordCount} words) ---\n`;
+    text += essayText;
+    text += `\n\n`;
+
+    return text;
   };
 
   return (
@@ -139,175 +232,36 @@ export function NSWEvaluationReportDisplay({ report, essayText, onClose }: NSWEv
 
       {/* Domain Scores Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {/* Content & Ideas */}
-        <div className={`border rounded-lg p-4 ${getScoreColor(report.domains.contentAndIdeas.score)}`}>
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-lg">Content & Ideas</h3>
-            <div className="flex items-center">
-              <span className="text-2xl font-bold mr-2">{report.domains.contentAndIdeas.score}/10</span>
-              <span className="text-sm">({report.domains.contentAndIdeas.weight}%)</span>
-            </div>
-          </div>
-          <div className="mb-2">
-            <div className="flex justify-between text-sm mb-1">
-              <span>Performance</span>
-              <span>{report.domains.contentAndIdeas.percentage.toFixed(0)}%</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
-                className="bg-current h-2 rounded-full" 
-                style={{ width: `${report.domains.contentAndIdeas.percentage}%` }}
-              ></div>
-            </div>
-          </div>
-          <div className="text-sm font-medium mb-2">
-            Band: {report.domains.contentAndIdeas.band}
-          </div>
-          {/* ADDED: Child-friendly explanation */}
-          <div className="bg-white/50 rounded-lg p-3 mb-3">
-            <div className="flex items-start">
-              <Heart className="w-4 h-4 mr-2 mt-0.5 text-pink-500" />
-              <p className="text-sm font-medium text-gray-700">
-                {report.domains.contentAndIdeas.childFriendlyExplanation}
-              </p>
-            </div>
-          </div>
-          <div className="text-sm space-y-1">
-            {report.domains.contentAndIdeas.feedback.slice(0, 2).map((feedback, index) => (
-              <div key={index}>• {feedback}</div>
-            ))}
-          </div>
-        </div>
-
-        {/* Text Structure */}
-        <div className={`border rounded-lg p-4 ${getScoreColor(report.domains.textStructure.score)}`}>
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-lg">Text Structure</h3>
-            <div className="flex items-center">
-              <span className="text-2xl font-bold mr-2">{report.domains.textStructure.score}/10</span>
-              <span className="text-sm">({report.domains.textStructure.weight}%)</span>
-            </div>
-          </div>
-          <div className="mb-2">
-            <div className="flex justify-between text-sm mb-1">
-              <span>Performance</span>
-              <span>{report.domains.textStructure.percentage.toFixed(0)}%</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
-                className="bg-current h-2 rounded-full" 
-                style={{ width: `${report.domains.textStructure.percentage}%` }}
-              ></div>
-            </div>
-          </div>
-          <div className="text-sm font-medium mb-2">
-            Band: {report.domains.textStructure.band}
-          </div>
-          {/* ADDED: Child-friendly explanation */}
-          <div className="bg-white/50 rounded-lg p-3 mb-3">
-            <div className="flex items-start">
-              <Heart className="w-4 h-4 mr-2 mt-0.5 text-pink-500" />
-              <p className="text-sm font-medium text-gray-700">
-                {report.domains.textStructure.childFriendlyExplanation}
-              </p>
-            </div>
-          </div>
-          <div className="text-sm space-y-1">
-            {report.domains.textStructure.feedback.slice(0, 2).map((feedback, index) => (
-              <div key={index}>• {feedback}</div>
-            ))}
-          </div>
-        </div>
-
-        {/* Language Features */}
-        <div className={`border rounded-lg p-4 ${getScoreColor(report.domains.languageFeatures.score)}`}>
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-lg">Language Features</h3>
-            <div className="flex items-center">
-              <span className="text-2xl font-bold mr-2">{report.domains.languageFeatures.score}/10</span>
-              <span className="text-sm">({report.domains.languageFeatures.weight}%)</span>
-            </div>
-          </div>
-          <div className="mb-2">
-            <div className="flex justify-between text-sm mb-1">
-              <span>Performance</span>
-              <span>{report.domains.languageFeatures.percentage.toFixed(0)}%</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
-                className="bg-current h-2 rounded-full" 
-                style={{ width: `${report.domains.languageFeatures.percentage}%` }}
-              ></div>
-            </div>
-          </div>
-          <div className="text-sm font-medium mb-2">
-            Band: {report.domains.languageFeatures.band}
-          </div>
-          {/* ADDED: Child-friendly explanation */}
-          <div className="bg-white/50 rounded-lg p-3 mb-3">
-            <div className="flex items-start">
-              <Heart className="w-4 h-4 mr-2 mt-0.5 text-pink-500" />
-              <p className="text-sm font-medium text-gray-700">
-                {report.domains.languageFeatures.childFriendlyExplanation}
-              </p>
-            </div>
-          </div>
-          <div className="text-sm space-y-1">
-            {report.domains.languageFeatures.feedback.slice(0, 2).map((feedback, index) => (
-              <div key={index}>• {feedback}</div>
-            ))}
-          </div>
-        </div>
-
-        {/* Spelling & Grammar */}
-        <div className={`border rounded-lg p-4 ${getScoreColor(report.domains.spellingAndGrammar.score)}`}>
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-lg">Spelling & Grammar</h3>
-            <div className="flex items-center">
-              <span className="text-2xl font-bold mr-2">{report.domains.spellingAndGrammar.score}/10</span>
-              <span className="text-sm">({report.domains.spellingAndGrammar.weight}%)</span>
-            </div>
-          </div>
-          <div className="mb-2">
-            <div className="flex justify-between text-sm mb-1">
-              <span>Performance</span>
-              <span>{report.domains.spellingAndGrammar.percentage.toFixed(0)}%</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
-                className="bg-current h-2 rounded-full" 
-                style={{ width: `${report.domains.spellingAndGrammar.percentage}%` }}
-              ></div>
-            </div>
-          </div>
-          <div className="text-sm font-medium mb-2">
-            Band: {report.domains.spellingAndGrammar.band}
-          </div>
-          {/* ADDED: Child-friendly explanation */}
-          <div className="bg-white/50 rounded-lg p-3 mb-3">
-            <div className="flex items-start">
-              <Heart className="w-4 h-4 mr-2 mt-0.5 text-pink-500" />
-              <p className="text-sm font-medium text-gray-700">
-                {report.domains.spellingAndGrammar.childFriendlyExplanation}
-              </p>
-            </div>
-          </div>
-          <div className="text-sm space-y-1">
-            {report.domains.spellingAndGrammar.feedback.slice(0, 2).map((feedback, index) => (
-              <div key={index}>• {feedback}</div>
-            ))}
-          </div>
-        </div>
+        <DomainScoreCard 
+          domain={report.domains.contentAndIdeas}
+          title="Content & Ideas"
+          icon="💡"
+        />
+        <DomainScoreCard 
+          domain={report.domains.textStructure}
+          title="Text Structure"
+          icon="📝"
+        />
+        <DomainScoreCard 
+          domain={report.domains.languageFeatures}
+          title="Language Features"
+          icon="✨"
+        />
+        <DomainScoreCard 
+          domain={report.domains.spellingAndGrammar}
+          title="Spelling & Grammar"
+          icon="✅"
+        />
       </div>
 
-      {/* ADDED: Student's Original Essay Section */}
+      {/* Student's Original Essay Section */}
       <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 p-6 mb-8">
         <h3 className="text-xl font-bold text-blue-800 dark:text-blue-200 mb-4 flex items-center">
           <FileText className="w-5 h-5 mr-2" />
-          Your Original Essay
+          Your Original Essay ({report.detailedFeedback.wordCount} words)
         </h3>
         <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border">
-          <pre className="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300 font-mono leading-relaxed">
+          <pre className="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300 font-sans leading-relaxed">
             {report.essayContent || essayText}
           </pre>
         </div>
@@ -345,7 +299,13 @@ export function NSWEvaluationReportDisplay({ report, essayText, onClose }: NSWEv
             {report.areasForImprovement.length > 0 ? (
               report.areasForImprovement.map((area, index) => (
                 <div key={index} className="flex items-start">
-                  <AlertCircle className="w-5 h-5 text-orange-600 mr-3 mt-0.5 flex-shrink-0" />
+                  {area.startsWith('❌') ? <AlertCircle className="w-5 h-5 text-red-600 mr-3 mt-0.5 flex-shrink-0" /> : 
+                   area.startsWith('⚠️') ? <AlertCircle className="w-5 h-5 text-yellow-600 mr-3 mt-0.5 flex-shrink-0" /> : 
+                   area.startsWith('📏 CRITICAL') ? <AlertCircle className="w-5 h-5 text-red-600 mr-3 mt-0.5 flex-shrink-0" /> : 
+                   area.startsWith('📏') ? <AlertCircle className="w-5 h-5 text-orange-600 mr-3 mt-0.5 flex-shrink-0" /> : 
+                   area.startsWith('🔤') ? <AlertCircle className="w-5 h-5 text-orange-600 mr-3 mt-0.5 flex-shrink-0" /> : 
+                   area.startsWith('✍️') ? <AlertCircle className="w-5 h-5 text-orange-600 mr-3 mt-0.5 flex-shrink-0" /> : 
+                   <AlertCircle className="w-5 h-5 text-orange-600 mr-3 mt-0.5 flex-shrink-0" />}
                   <span className="text-orange-700 dark:text-orange-300">{area}</span>
                 </div>
               ))
@@ -356,7 +316,7 @@ export function NSWEvaluationReportDisplay({ report, essayText, onClose }: NSWEv
         </div>
       </div>
 
-      {/* UPDATED: Personalized Learning Recommendations */}
+      {/* Personalized Learning Recommendations */}
       <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800 p-6 mb-8">
         <h3 className="text-xl font-bold text-purple-800 dark:text-purple-200 mb-4 flex items-center">
           <Lightbulb className="w-5 h-5 mr-2" />
@@ -381,133 +341,61 @@ export function NSWEvaluationReportDisplay({ report, essayText, onClose }: NSWEv
       </div>
 
       {/* Technical Analysis */}
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-800 p-6">
         <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center">
           <BarChart3 className="w-5 h-5 mr-2" />
-          Technical Analysis
+          Detailed Technical Analysis
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {/* Word Count Analysis */}
-          <div className="bg-white dark:bg-gray-700 rounded-lg p-4 border">
-            <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3">Word Count</h4>
-            <div className="text-2xl font-bold text-blue-600 mb-2">{report.detailedFeedback.wordCount}</div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Total words in essay</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Word Count */}
+          <div className="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm">
+            <h4 className="font-semibold text-lg mb-2">Word Count</h4>
+            <p className="text-gray-700 dark:text-gray-300">Total words: <span className="font-bold">{report.detailedFeedback.wordCount}</span></p>
+            {report.detailedFeedback.wordCount < 400 && (
+              <p className="text-red-500 text-sm mt-1">Consider expanding your essay to meet the 400-500 word requirement.</p>
+            )}
           </div>
 
           {/* Sentence Variety */}
-          <div className="bg-white dark:bg-gray-700 rounded-lg p-4 border">
-            <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3">Sentence Variety</h4>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span>Simple:</span>
-                <span className="font-medium">{report.detailedFeedback.sentenceVariety.simple}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Compound:</span>
-                <span className="font-medium">{report.detailedFeedback.sentenceVariety.compound}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Complex:</span>
-                <span className="font-medium">{report.detailedFeedback.sentenceVariety.complex}</span>
-              </div>
-            </div>
+          <div className="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm">
+            <h4 className="font-semibold text-lg mb-2">Sentence Variety</h4>
+            <p className="text-gray-700 dark:text-gray-300">Simple: {report.detailedFeedback.sentenceVariety.simple}, Compound: {report.detailedFeedback.sentenceVariety.compound}, Complex: {report.detailedFeedback.sentenceVariety.complex}</p>
+            <p className="text-gray-700 dark:text-gray-300 mt-1">Analysis: {report.detailedFeedback.sentenceVariety.analysis}</p>
+          </div>
+
+          {/* Vocabulary Analysis */}
+          <div className="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm">
+            <h4 className="font-semibold text-lg mb-2">Vocabulary Analysis</h4>
+            <p className="text-gray-700 dark:text-gray-300">Sophisticated words: {report.detailedFeedback.vocabularyAnalysis.sophisticatedWords.join(', ') || 'N/A'}</p>
+            <p className="text-gray-700 dark:text-gray-300 mt-1">Repetitive words: {report.detailedFeedback.vocabularyAnalysis.repetitiveWords.join(', ') || 'N/A'}</p>
+            <p className="text-gray-700 dark:text-gray-300 mt-1">Suggestions: {report.detailedFeedback.vocabularyAnalysis.suggestions.join(', ') || 'N/A'}</p>
           </div>
 
           {/* Literary Devices */}
-          <div className="bg-white dark:bg-gray-700 rounded-lg p-4 border">
-            <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3">Literary Devices</h4>
-            <div className="space-y-2">
-              {report.detailedFeedback.literaryDevices.identified.length > 0 ? (
-                report.detailedFeedback.literaryDevices.identified.map((device, index) => (
-                  <div key={index} className="text-sm bg-green-100 dark:bg-green-800 text-green-800 dark:text-green-200 px-2 py-1 rounded">
-                    {device}
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-gray-500 dark:text-gray-400">None identified</p>
-              )}
-            </div>
+          <div className="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm">
+            <h4 className="font-semibold text-lg mb-2">Literary Devices</h4>
+            <p className="text-gray-700 dark:text-gray-300">Identified: {report.detailedFeedback.literaryDevices.identified.join(', ') || 'None'}</p>
+            <p className="text-gray-700 dark:text-gray-300 mt-1">Suggestions: {report.detailedFeedback.literaryDevices.suggestions.join(', ') || 'N/A'}</p>
+          </div>
+
+          {/* Structural Elements */}
+          <div className="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm">
+            <h4 className="font-semibold text-lg mb-2">Structural Elements</h4>
+            <p className="text-gray-700 dark:text-gray-300">Introduction: {report.detailedFeedback.structuralElements.hasIntroduction ? 'Yes' : 'No'}</p>
+            <p className="text-gray-700 dark:text-gray-300">Conclusion: {report.detailedFeedback.structuralElements.hasConclusion ? 'Yes' : 'No'}</p>
+            <p className="text-gray-700 dark:text-gray-300">Paragraphs: {report.detailedFeedback.structuralElements.paragraphCount}</p>
+            <p className="text-gray-700 dark:text-gray-300 mt-1">Coherence: {report.detailedFeedback.structuralElements.coherence}</p>
+          </div>
+
+          {/* Technical Accuracy */}
+          <div className="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm">
+            <h4 className="font-semibold text-lg mb-2">Technical Accuracy</h4>
+            <p className="text-gray-700 dark:text-gray-300">Spelling errors: {report.detailedFeedback.technicalAccuracy.spellingErrors}</p>
+            <p className="text-gray-700 dark:text-gray-300 mt-1">Grammar issues: {report.detailedFeedback.technicalAccuracy.grammarIssues.join(', ') || 'None'}</p>
+            <p className="text-gray-700 dark:text-gray-300 mt-1">Punctuation issues: {report.detailedFeedback.technicalAccuracy.punctuationIssues.join(', ') || 'None'}</p>
           </div>
         </div>
       </div>
     </div>
   );
-}
-
-function generateReportText(report: EvaluationReport, essayText: string): string {
-  const currentDate = new Date().toLocaleDateString();
-  const currentTime = new Date().toLocaleTimeString();
-  
-  return `
-NSW SELECTIVE WRITING ASSESSMENT REPORT
-=====================================
-
-Student: Student
-Date: ${currentDate}
-Assessment ID: nsw-${Date.now()}
-
-OVERALL SCORE: ${report.overallScore}/100 (Grade: ${report.overallGrade})
-
-CRITERIA BREAKDOWN:
-- Ideas & Content: ${report.domains.contentAndIdeas.score}/10 (${report.domains.contentAndIdeas.weight}%)
-- Structure & Organization: ${report.domains.textStructure.score}/10 (${report.domains.textStructure.weight}%)
-- Language & Vocabulary: ${report.domains.languageFeatures.score}/10 (${report.domains.languageFeatures.weight}%)
-- Spelling, Punctuation & Grammar: ${report.domains.spellingAndGrammar.score}/10 (${report.domains.spellingAndGrammar.weight}%)
-
-DETAILED FEEDBACK:
-
-IDEAS & CONTENT:
-Child-Friendly Explanation:
-${report.domains.contentAndIdeas.childFriendlyExplanation}
-
-Strengths:
-${report.domains.contentAndIdeas.feedback.map(f => `- ${f}`).join('\n')}
-
-Areas for Improvement:
-${report.domains.contentAndIdeas.specificExamples.map(e => `- ${e}`).join('\n')}
-
-STRUCTURE & ORGANIZATION:
-Child-Friendly Explanation:
-${report.domains.textStructure.childFriendlyExplanation}
-
-Strengths:
-${report.domains.textStructure.feedback.map(f => `- ${f}`).join('\n')}
-
-Areas for Improvement:
-${report.domains.textStructure.specificExamples.map(e => `- ${e}`).join('\n')}
-
-LANGUAGE & VOCABULARY:
-Child-Friendly Explanation:
-${report.domains.languageFeatures.childFriendlyExplanation}
-
-Strengths:
-${report.domains.languageFeatures.feedback.map(f => `- ${f}`).join('\n')}
-
-Areas for Improvement:
-${report.domains.languageFeatures.specificExamples.map(e => `- ${e}`).join('\n')}
-
-SPELLING, PUNCTUATION & GRAMMAR:
-Child-Friendly Explanation:
-${report.domains.spellingAndGrammar.childFriendlyExplanation}
-
-Strengths:
-${report.domains.spellingAndGrammar.feedback.map(f => `- ${f}`).join('\n')}
-
-Areas for Improvement:
-${report.domains.spellingAndGrammar.specificExamples.map(e => `- ${e}`).join('\n')}
-
-PERSONALIZED LEARNING RECOMMENDATIONS:
-${report.recommendations.map((rec, index) => `${index + 1}. ${rec}`).join('\n')}
-
-KEY STRENGTHS:
-${report.strengths.map(s => `- ${s}`).join('\n')}
-
-AREAS FOR GROWTH:
-${report.areasForImprovement.map(a => `- ${a}`).join('\n')}
-
-ORIGINAL ESSAY:
-${report.essayContent || essayText}
-
-Report generated on ${currentDate}, ${currentTime}
-    `.trim();
 }
