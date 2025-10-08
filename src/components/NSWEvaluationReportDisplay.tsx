@@ -117,6 +117,18 @@ const DomainScoreCard: React.FC<{ domain: DomainScore; title: string; icon: stri
 };
 
 export function NSWEvaluationReportDisplay({ report, essayText, onClose }: NSWEvaluationReportDisplayProps) {
+  // CRITICAL FIX: Ensure maxScore is always 10, not 5
+  // This fixes a bug where generator might return maxScore=5
+  const correctedReport: EvaluationReport = {
+    ...report,
+    domains: {
+      contentAndIdeas: { ...report.domains.contentAndIdeas, maxScore: 10 },
+      textStructure: { ...report.domains.textStructure, maxScore: 10 },
+      languageFeatures: { ...report.domains.languageFeatures, maxScore: 10 },
+      spellingAndGrammar: { ...report.domains.spellingAndGrammar, maxScore: 10 }
+    }
+  };
+
   const getScoreColor = (score: number) => {
     if (score >= 9) return 'text-green-600 bg-green-50 border-green-200';
     if (score >= 7) return 'text-blue-600 bg-blue-50 border-blue-200';
@@ -134,7 +146,7 @@ export function NSWEvaluationReportDisplay({ report, essayText, onClose }: NSWEv
   };
 
   const downloadReport = () => {
-    const reportContent = generateReportText(report, essayText);
+    const reportContent = generateReportText(correctedReport, essayText);
     const blob = new Blob([reportContent], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -261,23 +273,23 @@ export function NSWEvaluationReportDisplay({ report, essayText, onClose }: NSWEv
 
       {/* Domain Scores Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <DomainScoreCard 
-          domain={report.domains.contentAndIdeas}
+        <DomainScoreCard
+          domain={correctedReport.domains.contentAndIdeas}
           title="Content & Ideas"
           icon="💡"
         />
-        <DomainScoreCard 
-          domain={report.domains.textStructure}
+        <DomainScoreCard
+          domain={correctedReport.domains.textStructure}
           title="Text Structure"
           icon="📝"
         />
-        <DomainScoreCard 
-          domain={report.domains.languageFeatures}
+        <DomainScoreCard
+          domain={correctedReport.domains.languageFeatures}
           title="Language Features"
           icon="✨"
         />
-        <DomainScoreCard 
-          domain={report.domains.spellingAndGrammar}
+        <DomainScoreCard
+          domain={correctedReport.domains.spellingAndGrammar}
           title="Spelling & Grammar"
           icon="✅"
         />
