@@ -1,4 +1,4 @@
-// src/components/NSWEvaluationReportGenerator_complete_fix.tsx
+// src/components/NSWEvaluationReportGenerator_final_complete.tsx
 
 import { DetailedFeedback } from "../types/feedback";
 
@@ -57,6 +57,10 @@ export class NSWEvaluationReportGenerator {
         promptCheck.missingElements.length > 0) {
       contentAndIdeasScore = Math.min(contentAndIdeasScore, 7);
       textStructureScore = Math.min(textStructureScore, 6);
+      // FIXED: Don't give perfect scores when there are clear issues
+      if (spellingAndGrammarScore >= 9 && this.hasGrammarErrors(essayContent)) {
+        spellingAndGrammarScore = Math.min(spellingAndGrammarScore, 8);
+      }
     }
 
     const domains = {
@@ -156,6 +160,22 @@ export class NSWEvaluationReportGenerator {
     
     if (uniqueEssayWords.length < 30) {
       return true;
+    }
+    
+    return false;
+  }
+
+  private static hasGrammarErrors(essayContent: string): boolean {
+    // Check for article errors
+    const articleErrors = (essayContent.match(/\ba ([aeiouAEIOU]\w*)/gi) || []).length;
+    if (articleErrors > 0) return true;
+    
+    // Check for common misspellings
+    const commonMisspellings = ["recieve", "beleive", "seperate", "definately", 
+                                "occured", "begining", "untill", "wierd"];
+    const lowerContent = essayContent.toLowerCase();
+    for (const word of commonMisspellings) {
+      if (lowerContent.includes(word)) return true;
     }
     
     return false;
@@ -821,14 +841,14 @@ export class NSWEvaluationReportGenerator {
     
     const articleErrors = essayContent.match(/\ba ([aeiouAEIOU]\w*)/g);
     
-    if (score >= 8) {
+    if (score >= 9) {
       examples.push("✅ Excellent technical accuracy throughout");
       if (articleErrors && articleErrors.length > 0) {
         examples.push(`Minor fix needed: \"${articleErrors[0]}\" should use 'an' instead of 'a'`);
       } else {
         examples.push("Very few or no errors in spelling, punctuation, or grammar");
       }
-    } else if (score >= 6) {
+    } else if (score >= 7) {
       examples.push("Generally good with some minor errors to fix");
       if (articleErrors && articleErrors.length > 0) {
         const example = articleErrors[0];
