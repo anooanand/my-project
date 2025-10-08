@@ -440,24 +440,8 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
           )}
         </div>
 
-        {/* Main Writing Area */}
-        <div className="flex-1 flex flex-col p-4 overflow-y-auto">
-          <textarea
-            ref={textareaRef}
-            value={localContent}
-            onChange={(e) => handleContentChange(e.target.value)}
-            className={`w-full h-full resize-none p-4 rounded-lg shadow-inner transition-colors duration-300 text-base leading-relaxed focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-              darkMode
-                ? 'bg-gray-800 text-gray-200 placeholder-gray-500 border border-gray-700'
-                : 'bg-white text-gray-800 placeholder-gray-400 border border-gray-300'
-            }`}
-            style={{ fontFamily, fontSize: `${fontSize}px`, lineHeight }}
-            placeholder="Start writing here..."
-          />
-        </div>
-
-        {/* Bottom Bar - Original Layout */}
-        <div className={`flex-shrink-0 border-t p-2 flex items-center justify-between ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-100 border-gray-200'}`}>
+        {/* Enhanced Toolbar - Original Position (above textarea) */}
+        <div className={`flex-shrink-0 border-b p-2 flex items-center justify-between ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-100 border-gray-200'}`}>
           <div className="flex items-center space-x-4">
             {/* Left-aligned buttons */}
             <button onClick={() => setShowPlanningTool(true)} className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${darkMode ? 'text-gray-300 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-200'}`}><PenTool className="w-4 h-4" /><span>Plan</span></button>
@@ -507,10 +491,99 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
             </button>
           </div>
         </div>
+
+        {/* Settings Panel */}
+        {showSettings && (
+          <div className={`border-t px-4 py-3 transition-colors duration-300 mt-3 ${
+            darkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'
+          }`}>
+            <div className="flex items-center justify-between mb-3">
+              <h4 className={`font-medium text-base ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                ⚙️ Writing Settings
+              </h4>
+              <button
+                onClick={() => setShowSettings(false)}
+                className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
+                  darkMode
+                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+                title="Close Settings"
+              >
+                <X className="w-4 h-4" />
+                <span>Close</span>
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Font Family */}
+              <div className="space-y-2">
+                <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  📝 Font Family
+                </label>
+                <select
+                  value={fontFamily}
+                  onChange={(e) => onSettingsChange && onSettingsChange({ fontFamily: e.target.value })}
+                  className="w-full p-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                >
+                  <option value="Inter">Inter</option>
+                  <option value="Georgia">Georgia</option>
+                  <option value="Times New Roman">Times New Roman</option>
+                  <option value="Arial">Arial</option>
+                  <option value="Helvetica">Helvetica</option>
+                  <option value="Courier New">Courier New</option>
+                </select>
+              </div>
+              
+              {/* Font Size */}
+              <div className="space-y-2">
+                <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  📏 Font Size
+                </label>
+                <input
+                  type="number"
+                  value={fontSize}
+                  onChange={(e) => onSettingsChange && onSettingsChange({ fontSize: parseInt(e.target.value) })}
+                  className="w-full p-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+              </div>
+              
+              {/* Line Height */}
+              <div className="space-y-2">
+                <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  📐 Line Height
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={lineHeight}
+                  onChange={(e) => onSettingsChange && onSettingsChange({ lineHeight: parseFloat(e.target.value) })}
+                  className="w-full p-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Writing Area */}
+        <div className="flex-1 flex flex-col p-4 overflow-y-auto">
+          <textarea
+            ref={textareaRef}
+            value={localContent}
+            onChange={(e) => handleContentChange(e.target.value)}
+            className={`w-full h-full resize-none p-4 rounded-lg shadow-inner transition-colors duration-300 text-base leading-relaxed focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              darkMode
+                ? 'bg-gray-800 text-gray-200 placeholder-gray-500 border border-gray-700'
+                : 'bg-white text-gray-800 placeholder-gray-400 border border-gray-300'
+            }`}
+            style={{ fontFamily, fontSize: `${fontSize}px`, lineHeight }}
+            placeholder="Start writing here..."
+          />
+        </div>
       </div>
 
       {/* Right side - Coach Panel */}
-      {panelVisible && (
+      {!focusMode && (
         <div className="w-[380px] flex-shrink-0 border-l overflow-y-auto transition-all duration-300 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}">
           <EnhancedCoachPanel
             content={localContent}
@@ -536,14 +609,36 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
       {showReportModal && nswReport && (
         <ReportModal
           isOpen={showReportModal}
+          data={nswReport}
           onClose={() => {
             setShowReportModal(false);
             setNswReport(null);
             if (onAnalysisChange) onAnalysisChange(null);
           }}
-          reportData={nswReport}
-          essayContent={localContent}
+          onApplyFix={handleApplyFix}
+          studentName="Student"
+          essayText={localContent}
         />
+      )}
+      {showNSWEvaluation && evaluationStatus === "loading" && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white p-8 rounded-lg shadow-xl text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
+            <p className="text-lg font-semibold text-gray-800">Evaluating your writing...</p>
+            <p className="text-sm text-gray-600 mt-2">{evaluationProgress}</p>
+            {evaluationStatus === "error" && (
+              <button
+                onClick={() => {
+                  setShowNSWEvaluation(false);
+                  setEvaluationStatus("idle");
+                }}
+                className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+              >
+                Close
+              </button>
+            )}
+          </div>
+        </div>
       )}
       {showPromptOptionsModal && (
         <PromptOptionsModal
@@ -552,6 +647,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
           onGeneratePrompt={handleGenerateNewPrompt}
           onCustomPrompt={handleCustomPromptInput}
           textType={textType}
+          darkMode={darkMode}
         />
       )}
     </div>
