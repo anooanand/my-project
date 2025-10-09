@@ -413,20 +413,18 @@ Report generated on ${new Date().toLocaleString()}
     URL.revokeObjectURL(url);
   };
 
-  const ScoreBar = ({ label, score, maxScore = 5, weight }: { label: string; score: number; maxScore?: number; weight: number }) => {
-    const percentage = (score / maxScore) * 100;
-    const getColor = (score: number, max: number) => {
-      const ratio = score / max;
-      if (ratio >= 0.8) return 'bg-green-500';
-      if (ratio >= 0.6) return 'bg-yellow-500';
+    const ScoreBar = ({ label, score, maxScore = 5, weight }: { label: string; score: number; maxScore?: number; weight: number }) => {
+    const scorePercentage = (score / maxScore) * 100;
+    const getColor = (percentage: number) => {
+      if (percentage >= 80) return 'bg-green-500';
+      if (percentage >= 60) return 'bg-yellow-500';
       return 'bg-red-500';
     };
 
-    const getScoreDescription = (score: number, maxScore: number) => {
-      const ratio = score / maxScore;
-      if (ratio >= 0.8) return "Excellent";
-      if (ratio >= 0.6) return "Good";
-      if (ratio >= 0.4) return "Developing";
+    const getScoreDescription = (percentage: number) => {
+      if (percentage >= 80) return "Excellent";
+      if (percentage >= 60) return "Good";
+      if (percentage >= 40) return "Developing";
       return "Needs Practice";
     };
 
@@ -438,18 +436,18 @@ Report generated on ${new Date().toLocaleString()}
             <span className="text-lg font-bold">{score}/{maxScore}</span>
             <span className="text-sm text-gray-600">({weight}%)</span>
             <span className={`text-sm font-medium px-2 py-1 rounded ${
-              percentage >= 80 ? 'bg-green-100 text-green-800' :
-              percentage >= 60 ? 'bg-yellow-100 text-yellow-800' :
+              scorePercentage >= 80 ? 'bg-green-100 text-green-800' :
+              scorePercentage >= 60 ? 'bg-yellow-100 text-yellow-800' :
               'bg-red-100 text-red-800'
             }`}>
-              {getScoreDescription(score, maxScore)}
+              {getScoreDescription(scorePercentage)}
             </span>
           </div>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-4">
           <div
-            className={`h-4 rounded-full transition-all duration-500 ${getColor(score, maxScore)}`}
-            style={{ width: `${percentage}%` }}
+            className={`h-4 rounded-full transition-all duration-500 ${getColor(scorePercentage)}`}
+            style={{ width: `${scorePercentage}%` }}
           />
         </div>
       </div>
