@@ -542,9 +542,13 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
             <button
               onClick={() => setShowPlanningTool(true)}
               className={`flex items-center space-x-1 px-2 py-1 rounded transition-colors ${
-                darkMode
-                  ? 'bg-blue-700 text-white hover:bg-blue-600'
-                  : 'bg-blue-500 text-white hover:bg-blue-600'
+                showPlanningTool
+                  ? darkMode
+                    ? 'bg-blue-700 text-white hover:bg-blue-600'
+                    : 'bg-blue-500 text-white hover:bg-blue-600'
+                  : darkMode
+                  ? 'text-gray-300 hover:bg-gray-700'
+                  : 'text-gray-700 hover:bg-gray-100'
               }`}
               title="Planning Tool"
             >
@@ -556,9 +560,13 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
             <button
               onClick={onToggleStructureGuide}
               className={`flex items-center space-x-1 px-2 py-1 rounded transition-colors ${
-                darkMode
-                  ? 'bg-green-700 text-white hover:bg-green-600'
-                  : 'bg-green-500 text-white hover:bg-green-600'
+                showStructureGuide
+                  ? darkMode
+                    ? 'bg-green-700 text-white hover:bg-green-600'
+                    : 'bg-green-500 text-white hover:bg-green-600'
+                  : darkMode
+                  ? 'text-gray-300 hover:bg-gray-700'
+                  : 'text-gray-700 hover:bg-gray-100'
               }`}
               title="Structure Guide"
             >
@@ -570,9 +578,13 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
             <button
               onClick={onToggleTips}
               className={`flex items-center space-x-1 px-2 py-1 rounded transition-colors ${
-                darkMode
-                  ? 'bg-yellow-700 text-white hover:bg-yellow-600'
-                  : 'bg-yellow-500 text-white hover:bg-yellow-600'
+                showTips
+                  ? darkMode
+                    ? 'bg-orange-700 text-white hover:bg-orange-600'
+                    : 'bg-orange-500 text-white hover:bg-orange-600'
+                  : darkMode
+                  ? 'text-gray-300 hover:bg-gray-700'
+                  : 'text-gray-700 hover:bg-gray-100'
               }`}
               title="Writing Tips"
             >
@@ -589,8 +601,8 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
                     ? 'bg-purple-900 text-purple-200'
                     : 'bg-purple-600 text-white'
                   : darkMode
-                  ? 'bg-purple-500 text-white hover:bg-purple-600'
-                  : 'bg-purple-500 text-white hover:bg-purple-600'
+                  ? 'text-gray-300 hover:bg-gray-700'
+                  : 'text-gray-700 hover:bg-gray-100'
               }`}
               title="Exam Mode"
             >
@@ -604,11 +616,11 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
               className={`flex items-center space-x-1 px-2 py-1 rounded transition-colors ${
                 focusMode
                   ? darkMode
-                    ? 'bg-indigo-900 text-indigo-200'
-                    : 'bg-indigo-600 text-white'
-                  : darkMode
-                    ? 'bg-orange-500 text-white hover:bg-orange-600'
+                    ? 'bg-orange-700 text-white hover:bg-orange-600'
                     : 'bg-orange-500 text-white hover:bg-orange-600'
+                  : darkMode
+                  ? 'text-gray-300 hover:bg-gray-700'
+                  : 'text-gray-700 hover:bg-gray-100'
               }`}
               title="Focus Mode"
             >
