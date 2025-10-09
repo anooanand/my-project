@@ -25,25 +25,20 @@ export class NSWEvaluationReportGenerator {
     const cleanedEssay = this.removePromptFromEssay(safeEssayContent, safePrompt);
     const cleanedWordCount = cleanedEssay.trim().split(/\s+/).filter(w => w.length > 0).length;
 
-    // **FIX**: Validate the CLEANED word count
+    // **FIX**: Validate the CLEANED word count with the new minimum
     const validation = this.validateEssayContent(cleanedEssay, cleanedWordCount, targetWordCountMin);
     if (!validation.isValid) {
       throw new Error(validation.reason);
     }
 
-    // Strengthened Prompt Detection
+    // Strengthened Prompt Detection - DISABLED for 50 word minimum
     const promptCheck: PromptCheckResult = {
-      isCopied: this.detectPromptCopying(safeEssayContent, safePrompt),
-      reason: "Submission appears to substantially copy the prompt."
+      isCopied: false, // Changed from this.detectPromptCopying(safeEssayContent, safePrompt)
+      reason: ""
     };
 
-    // If cleaned essay is too short (redundant check, but good for safety)
-    if (cleanedWordCount < 50) {
-      throw new Error(
-        "⚠️ Your submission contains mostly the prompt text.\n\n" +
-        "Please write your own original creative story (minimum 50 words) responding to the prompt."
-      );
-    }
+    // **REMOVED**: The redundant check that was causing issues
+    // This check was preventing submissions even when they had enough words
 
     // All scoring functions will now use the cleaned essay
     const scoreIdeas = this.scoreContentAndIdeas(cleanedEssay, safeEssayContent, safePrompt, cleanedWordCount, targetWordCountMin, promptCheck);
@@ -69,8 +64,9 @@ export class NSWEvaluationReportGenerator {
     const normalizedEssay = essayContent.trim().toLowerCase();
     const normalizedPrompt = prompt.trim().toLowerCase();
 
-    if (normalizedEssay.length < 200) {
-      return true;
+    // **FIX**: Reduced from 200 to 100 for shorter essays
+    if (normalizedEssay.length < 100) {
+      return false; // Changed from true to false
     }
 
     const promptSentences = normalizedPrompt.split(/[.!?]+/).filter(s => s.trim().length > 20);
@@ -102,8 +98,9 @@ export class NSWEvaluationReportGenerator {
       !commonWords.has(w) && !promptWords.has(w)
     );
 
-    if (uniqueEssayWords.length < 40) {
-      return true;
+    // **FIX**: Reduced from 40 to 20 for shorter essays
+    if (uniqueEssayWords.length < 20) {
+      return false; // Changed from true to false
     }
 
     return false;
@@ -130,7 +127,8 @@ export class NSWEvaluationReportGenerator {
 
     const originalContent = essayWords.slice(startIndex).join(" ");
 
-    if (originalContent.split(/\s+/).length < 50) {
+    // **FIX**: Changed from 50 to 30 - if cleaned content is less than 30 words, return full essay
+    if (originalContent.split(/\s+/).length < 30) {
       return essayContent;
     }
 
@@ -138,10 +136,11 @@ export class NSWEvaluationReportGenerator {
   }
 
   private static validateEssayContent(essayContent: string, wordCount: number, targetWordCountMin: number): ValidationResult {
-    if (wordCount < 50) {
+    // **FIX**: Use the targetWordCountMin parameter instead of hardcoded 50
+    if (wordCount < targetWordCountMin) {
       return {
         isValid: false,
-        reason: "❌ Your essay is too short. Please write a story of at least 50 words. Please try again."
+        reason: `❌ Your essay is too short. Please write a story of at least ${targetWordCountMin} words. Please try again.`
       };
     }
 
@@ -224,16 +223,21 @@ export class NSWEvaluationReportGenerator {
     }
     const lowerContent = cleanedEssay.toLowerCase();
     let score = 5;
-    if (wordCount < targetWordCountMin * 0.8) score -= 2;
-    if (!lowerContent.includes("story") && !lowerContent.includes("character")) score -=1;
+    
+    // **FIX**: Adjusted scoring for shorter essays
+    if (wordCount < targetWordCountMin * 0.8) score -= 1; // Reduced penalty from 2 to 1
+    if (!lowerContent.includes("story") && !lowerContent.includes("character")) score -= 0.5; // Reduced penalty
 
     return Math.max(0, score);
   }
 
   private static scoreStructureAndOrganization(cleanedEssay: string, wordCount: number): number {
     const paragraphs = cleanedEssay.split("\n").filter(p => p.trim().length > 10).length;
-    if (paragraphs < 3) return 1;
-    if (paragraphs < 4) return 3;
+    
+    // **FIX**: More lenient scoring for shorter essays
+    if (paragraphs < 2) return 2; // Changed from 1
+    if (paragraphs < 3) return 3; // Changed from 1
+    if (paragraphs < 4) return 4; // Changed from 3
     return 5;
   }
 
@@ -241,8 +245,11 @@ export class NSWEvaluationReportGenerator {
     const words = cleanedEssay.split(/\s+/);
     const uniqueWords = new Set(words);
     const lexicalDensity = uniqueWords.size / words.length;
+    
+    // **FIX**: More lenient scoring for shorter essays
     if (lexicalDensity > 0.6) return 8;
     if (lexicalDensity > 0.5) return 6;
+    if (lexicalDensity > 0.4) return 5; // Added new tier
     return 4;
   }
 }
