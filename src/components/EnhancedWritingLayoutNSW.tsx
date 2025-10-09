@@ -100,9 +100,9 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
     onResetTimer,
     focusMode = false,
     onToggleFocus,
-    showStructureGuide: initialShowStructureGuide = false,
+    showStructureGuide = false,
     onToggleStructureGuide,
-    showTips: initialShowTips = false,
+    showTips = false,
     onToggleTips,
     analysis,
     onAnalysisChange,
@@ -137,8 +137,6 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
   
   // New states for missing functionality
   const [showPlanningTool, setShowPlanningTool] = useState(false);
-  const [showStructureGuide, setShowStructureGuide] = useState(initialShowStructureGuide);
-  const [showTips, setShowTips] = useState(initialShowTips);
   const [examMode, setExamMode] = useState(false);
   const [showGrammarHighlights, setShowGrammarHighlights] = useState(true);
   const [expandedGrammarStats, setExpandedGrammarStats] = useState(false);
@@ -317,10 +315,10 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
         ideasContent: {
           score: Math.min(report.domains?.contentAndIdeas?.score || 0, maxScore),
           weight: report.domains?.contentAndIdeas?.weight || 40,
-          strengths: (report.domains?.contentAndIdeas?.feedback || []).map((text: string) => ({
-            text,
-            start: 0,
-            end: 0
+          strengths: (report.domains?.contentAndIdeas?.feedback || []).map((text: string) => ({ 
+            text, 
+            start: 0, 
+            end: 0 
           })),
           improvements: (report.areasForImprovement || [])
             .filter((item: any) => item.toLowerCase().includes('idea') || item.toLowerCase().includes('content'))
@@ -333,10 +331,10 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
         structureOrganization: {
           score: Math.min(report.domains?.textStructure?.score || 0, maxScore),
           weight: report.domains?.textStructure?.weight || 20,
-          strengths: (report.domains?.textStructure?.feedback || []).map((text: string) => ({
-            text,
-            start: 0,
-            end: 0
+          strengths: (report.domains?.textStructure?.feedback || []).map((text: string) => ({ 
+            text, 
+            start: 0, 
+            end: 0 
           })),
           improvements: (report.areasForImprovement || [])
             .filter((item: any) => item.toLowerCase().includes('structure') || item.toLowerCase().includes('organization'))
@@ -349,10 +347,10 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
         languageVocab: {
           score: Math.min(report.domains?.languageFeatures?.score || 0, maxScore),
           weight: report.domains?.languageFeatures?.weight || 25,
-          strengths: (report.domains?.languageFeatures?.feedback || []).map((text: string) => ({
-            text,
-            start: 0,
-            end: 0
+          strengths: (report.domains?.languageFeatures?.feedback || []).map((text: string) => ({ 
+            text, 
+            start: 0, 
+            end: 0 
           })),
           improvements: (report.areasForImprovement || [])
             .filter((item: any) => item.toLowerCase().includes('language') || item.toLowerCase().includes('vocabulary'))
@@ -365,10 +363,10 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
         spellingPunctuationGrammar: {
           score: Math.min(report.domains?.spellingAndGrammar?.score || 0, maxScore),
           weight: report.domains?.spellingAndGrammar?.weight || 15,
-          strengths: (report.domains?.spellingAndGrammar?.feedback || []).map((text: string) => ({
-            text,
-            start: 0,
-            end: 0
+          strengths: (report.domains?.spellingAndGrammar?.feedback || []).map((text: string) => ({ 
+            text, 
+            start: 0, 
+            end: 0 
           })),
           improvements: (report.areasForImprovement || [])
             .filter((item: any) => item.toLowerCase().includes('spelling') || item.toLowerCase().includes('grammar'))
@@ -394,7 +392,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
   // Calculate content status
   const hasContent = localContent.trim().length > 0;
-  const showWordCountWarning = currentWordCount > 50;
+    const showWordCountWarning = currentWordCount > 50;
 
   const handleSubmitForEvaluation = useCallback(async () => {
     console.log('🎯 Submit button clicked!');
@@ -453,64 +451,54 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
   const handleApplyFix = useCallback((fix: LintFix) => {
     try {
       const { range, text } = fix;
-      const start = range[0];
-      const end = range[1];
-      const newContent = localContent.substring(0, start) + text + localContent.substring(end);
-      setLocalContent(newContent);
-      if (onChange) {
-        onChange(newContent);
-      }
+      const newContent = localContent.substring(0, range[0]) + text + localContent.substring(range[1]);
+      handleContentChange(newContent);
     } catch (error) {
       console.error("Error applying fix:", error);
     }
-  }, [localContent, onChange]);
-
-  const handleDismissFix = useCallback((fix: LintFix) => {
-    // For now, dismissing a fix does nothing. In a more advanced scenario,
-    // you might track dismissed fixes to avoid re-suggesting them.
-    console.log("Dismissing fix:", fix);
-  }, []);
-
-  const handleShowReport = useCallback(() => {
-    setShowReportModal(true);
-  }, []);
-
-  const handleCloseReport = useCallback(() => {
-    setShowReportModal(false);
-  }, []);
-
-  const handleTogglePanelVisibility = useCallback(() => {
-    if (setPanelVisible) {
-      setPanelVisible(!panelVisible);
-    }
-  }, [panelVisible, setPanelVisible]);
-
-  // Function to scroll to the bottom of the textarea
-  const scrollToBottom = () => {
-    if (textareaRef.current) {
-      textareaRef.current.scrollTop = textareaRef.current.scrollHeight;
-    }
-  };
-
-  // Scroll to bottom when content changes (e.g., prompt generation)
-  useEffect(() => {
-    scrollToBottom();
-  }, [generatedPrompt, customPromptInput]);
+  }, [localContent, handleContentChange]);
 
   return (
-    <div className={`flex flex-col h-full ${darkMode ? 'bg-slate-900 text-gray-100' : 'bg-gray-50 text-gray-900'}`}>
-      {/* Prompt Display Section */}
-      <div className={`flex flex-col flex-shrink-0 border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-        <div className={`flex items-center justify-between px-4 py-2 ${darkMode ? 'bg-slate-800' : 'bg-white'}`}>
-          <div className="flex items-center space-x-2">
-            <FileText className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />
-            <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Prompt:</span>
-            <div className="flex-1 overflow-hidden">
-              {!isPromptCollapsed && effectivePrompt && (
-                <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  {effectivePrompt}
-                </span>
-              )}
+    <div className={`flex h-screen transition-colors duration-300 ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
+      {/* Left side - Writing Area Content */}
+      <div className="flex-1 flex flex-col overflow-hidden"> 
+        
+        {/* Top Header Bar with Text Type and Home Button */}
+        <div className={`h-16 flex items-center justify-between px-6 border-b ${
+          darkMode ? 'bg-gradient-to-r from-slate-800 to-slate-900 border-gray-700' : 'bg-gradient-to-r from-blue-600 to-cyan-600 border-blue-700'
+        }`}>
+          <div className="flex items-center space-x-4">
+            <BookOpen className="w-6 h-6 text-white" />
+            <div className="flex items-center space-x-3">
+              <span className="text-white font-medium">Text Type:</span>
+              <span className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-white text-sm font-medium">
+                {textType}
+              </span>
+            </div>
+          </div>
+          <button
+            onClick={() => window.location.href = '/'}
+            className="flex items-center space-x-2 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-lg transition-colors text-white font-medium"
+          >
+            <span>🏠 Home</span>
+          </button>
+        </div>
+
+        {/* Compact Writing Prompt Section */}
+        <div className={`transition-all duration-300 border-b shadow-sm flex-shrink-0 ${
+          isPromptCollapsed ? 'h-10' : 'min-h-[120px]'
+        } ${darkMode ? 'bg-slate-800 border-gray-700' : 'bg-blue-50 border-blue-200'}`}>
+          <div className="flex items-center justify-between px-4 py-2">
+            <div className="flex items-center space-x-2 min-w-0 flex-1">
+              <LightbulbIcon className={`w-4 h-4 flex-shrink-0 ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`} />
+              <h3 className={`font-medium text-sm flex-shrink-0 ${darkMode ? 'text-gray-100' : 'text-blue-800'}`}>
+                Prompt
+              </h3>
+              <span className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${
+                darkMode ? 'bg-cyan-900/50 text-cyan-200 border border-cyan-700' : 'bg-blue-200 text-blue-800'
+              }`}>
+                {textType}
+              </span>
               {isPromptCollapsed && effectivePrompt && (
                 <span className={`text-xs italic truncate ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                   {effectivePrompt.substring(0, 80)}...
@@ -699,7 +687,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
                         ? 'bg-red-500'
                         : 'bg-blue-500'
                     }`}
-                    style={{ width: `${Math.min((currentWordCount / 50) * 100, 100)}%` }}
+                    style={{ width: `${Math.min((currentWordCount / 50) * 100, 100) }%` }}
                   />
                 </div>
               </div>
@@ -866,111 +854,242 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
                     <span className="text-xl">
                       {qualityScore >= 90 ? '🌟' :
                        qualityScore >= 70 ? '👍' :
-                       qualityScore >= 50 ? '✍️' :
-                       '🚨'}
+                       qualityScore >= 50 ? '📝' :
+                       '💪'}
                     </span>
                   </div>
                 </div>
               </div>
             )}
+          </div>
+        </div>
 
-            {/* Writing Suggestions */}
-            {analysis && analysis.grammarCorrections && analysis.grammarCorrections.length > 0 && (
-              <div className={`absolute bottom-4 left-4 right-4 p-3 rounded-lg shadow-lg backdrop-blur-sm ${
-                darkMode ? 'bg-slate-800/90 border border-slate-700' : 'bg-white/90 border border-gray-200'
-              }`}>
-                <h5 className={`text-sm font-semibold mb-2 ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>Writing Suggestions:</h5>
-                <div className="flex flex-wrap gap-2">
-                  {analysis.grammarCorrections.map((correction, index) => (
-                    <span key={index} className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      darkMode ? 'bg-blue-700 text-blue-100' : 'bg-blue-100 text-blue-800'
-                    }`}>
-                      {correction.issue}
-                    </span>
-                  ))}
+        {/* Grammar Stats Bar - Enhanced */}
+        {showGrammarHighlights && (grammarStats.weakVerbs > 0 || grammarStats.overused > 0 || grammarStats.passive > 0 || grammarStats.weakAdjectives > 0) && (
+          <div className={`border-t transition-all duration-300 ${
+            darkMode ? 'bg-slate-900 border-gray-700' : 'bg-gray-50 border-gray-200'
+          }`}>
+            <div className="px-4 py-2 flex items-center justify-between">
+              <div className="flex items-center space-x-4 text-xs flex-1">
+                <div className="flex items-center space-x-2">
+                  <AlertCircle className={`w-4 h-4 ${darkMode ? 'text-yellow-400' : 'text-yellow-600'}`} />
+                  <span className={`font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    Writing Suggestions:
+                  </span>
                 </div>
+
+                <div className="flex items-center space-x-2 flex-wrap">
+                  {grammarStats.weakVerbs > 0 && (
+                    <button
+                      onClick={() => setExpandedGrammarStats(!expandedGrammarStats)}
+                      className="flex items-center space-x-1 px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 rounded hover:bg-yellow-200 dark:hover:bg-yellow-900/50 transition-colors"
+                    >
+                      <span className="font-semibold">{grammarStats.weakVerbs}</span>
+                      <span>weak verbs</span>
+                    </button>
+                  )}
+                  {grammarStats.overused > 0 && (
+                    <button
+                      onClick={() => setExpandedGrammarStats(!expandedGrammarStats)}
+                      className="flex items-center space-x-1 px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 rounded hover:bg-orange-200 dark:hover:bg-orange-900/50 transition-colors"
+                    >
+                      <span className="font-semibold">{grammarStats.overused}</span>
+                      <span>filler words</span>
+                    </button>
+                  )}
+                  {grammarStats.passive > 0 && (
+                    <button
+                      onClick={() => setExpandedGrammarStats(!expandedGrammarStats)}
+                      className="flex items-center space-x-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+                    >
+                      <span className="font-semibold">{grammarStats.passive}</span>
+                      <span>passive voice</span>
+                    </button>
+                  )}
+                  {grammarStats.weakAdjectives > 0 && (
+                    <button
+                      onClick={() => setExpandedGrammarStats(!expandedGrammarStats)}
+                      className="flex items-center space-x-1 px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 rounded hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors"
+                    >
+                      <span className="font-semibold">{grammarStats.weakAdjectives}</span>
+                      <span>weak adjectives</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setExpandedGrammarStats(!expandedGrammarStats)}
+                  className={`flex items-center space-x-1 text-xs px-2 py-1 rounded transition-colors ${
+                    darkMode ? 'text-gray-400 hover:text-gray-200 hover:bg-slate-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
+                  }`}
+                >
+                  {expandedGrammarStats ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                  <span>{expandedGrammarStats ? 'Less' : 'More'}</span>
+                </button>
+                <button
+                  onClick={() => setShowGrammarHighlights(false)}
+                  className={`text-xs px-2 py-1 rounded transition-colors ${
+                    darkMode ? 'text-gray-400 hover:text-gray-200 hover:bg-slate-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
+                  }`}
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            </div>
+
+            {/* Expanded Tips */}
+            {expandedGrammarStats && (
+              <div className={`px-4 pb-2 space-y-1.5 text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                {grammarStats.weakVerbs > 0 && (
+                  <div className="flex items-start space-x-2 p-2 rounded bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-900/30">
+                    <span className="text-yellow-600 dark:text-yellow-400">●</span>
+                    <div>
+                      <span className="font-medium">Weak verbs:</span> Replace "is/are/was/were" with stronger action verbs. Example: \"She was happy" → \"She beamed with joy"
+                    </div>
+                  </div>
+                )}
+                {grammarStats.overused > 0 && (
+                  <div className="flex items-start space-x-2 p-2 rounded bg-orange-50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-900/30">
+                    <span className="text-orange-600 dark:text-orange-400">●</span>
+                    <div>
+                      <span className="font-medium">Filler words:</span> Remove "very/really/just" - they often weaken your writing. Example: \"very big" → \"enormous"
+                    </div>
+                  </div>
+                )}
+                {grammarStats.passive > 0 && (
+                  <div className="flex items-start space-x-2 p-2 rounded bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-900/30">
+                    <span className="text-blue-600 dark:text-blue-400">●</span>
+                    <div>
+                      <span className="font-medium">Passive voice:</span> Use active voice for clarity. Example: "The ball was thrown" → "She threw the ball"
+                    </div>
+                  </div>
+                )}
+                {grammarStats.weakAdjectives > 0 && (
+                  <div className="flex items-start space-x-2 p-2 rounded bg-purple-50 dark:bg-purple-900/10 border border-purple-200 dark:border-purple-900/30">
+                    <span className="text-purple-600 dark:text-purple-400">●</span>
+                    <div>
+                      <span className="font-medium">Weak adjectives:</span> Use specific, vivid adjectives. Example: "good food" → "delicious feast"
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
-        </div>
+        )}
 
-        {/* Bottom Submit Button */}
-        <div className={`flex-shrink-0 p-4 border-t ${darkMode ? 'bg-slate-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-          <div className="flex justify-end">
+        <div className={`border-t flex-shrink-0 ${
+          darkMode ? 'bg-slate-800 border-gray-700' : 'bg-white border-gray-200'
+        }`}>
+          <div className="p-4">
             <button
               onClick={handleSubmitForEvaluation}
-              className={`px-6 py-3 rounded-lg text-lg font-semibold transition-all duration-300 shadow-lg ${
+              disabled={!hasContent}
+              className={`w-full flex items-center justify-center space-x-2 px-6 py-3 rounded-lg font-medium text-base text-white transition-all duration-200 shadow-md ${
                 hasContent
                   ? darkMode
-                    ? 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-4 focus:ring-blue-500 focus:ring-opacity-50'
-                    : 'bg-blue-500 text-white hover:bg-blue-600 focus:ring-4 focus:ring-blue-300 focus:ring-opacity-50'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    ? 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 hover:shadow-lg'
+                    : 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 hover:shadow-lg'
+                  : 'bg-gray-400 cursor-not-allowed opacity-50'
               }`}
-              disabled={!hasContent || evaluationStatus === "loading"}
             >
-              {evaluationStatus === "loading" ? (
-                <span className="flex items-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Evaluating...
-                </span>
-               ) : (
-                "Submit for Evaluation"
-              )}
+              <Target className="w-5 h-5" />
+              <span>Submit for Evaluation</span>
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Right side - Coach Panel */}
+      {!focusMode && (
+        <div className={`w-[380px] flex-shrink-0 border-l overflow-y-auto transition-all duration-300 ${
+          darkMode ? 'bg-slate-800 border-gray-700' : 'bg-white border-gray-200'
+        }`}>
+          <EnhancedCoachPanel
+            content={localContent}
+            textType={textType}
+            timeElapsed={elapsedTime}
+            wordCount={currentWordCount}
+            analysis={analysis}
+            onAnalysisChange={onAnalysisChange}
+            onApplyFix={handleApplyFix}
+            assistanceLevel={assistanceLevel}
+            onAssistanceLevelChange={onAssistanceLevelChange}
+            user={user}
+            openAIConnected={openAIConnected}
+            openAILoading={openAILoading}
+            onSubmitForEvaluation={handleSubmitForEvaluation}
+          />
+        </div>
+      )}
 
       {/* Modals */}
-      <PlanningToolModal
-        isOpen={showPlanningTool}
-        onClose={() => setShowPlanningTool(false)}
-        darkMode={darkMode}
-      />
-      <StructureGuideModal
-        isOpen={showStructureGuide}
-        onClose={onToggleStructureGuide}
-        darkMode={darkMode}
-      />
-      <TipsModal
-        isOpen={showTips}
-        onClose={onToggleTips}
-        darkMode={darkMode}
-      />
-      <ReportModal
-        isOpen={showReportModal}
-        onClose={handleCloseReport}
-        report={nswReport}
-        darkMode={darkMode}
-      />
-      <PromptOptionsModal
-        isOpen={showPromptOptionsModal}
-        onClose={() => {
-          setShowPromptOptionsModal(false);
-          if (onPopupCompleted) onPopupCompleted();
-        }}
-        onGenerateNewPrompt={handleGenerateNewPrompt}
-        onUseMyOwnIdea={handleCustomPromptInput}
-        darkMode={darkMode}
-      />
-
-      {/* NSW Evaluation Progress Modal */}
-      {showNSWEvaluation && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className={`p-6 rounded-lg shadow-xl flex flex-col items-center space-y-4 ${
-            darkMode ? 'bg-slate-800 text-gray-100' : 'bg-white text-gray-800'
+      {showPlanningTool && <PlanningToolModal onClose={() => setShowPlanningTool(false)} textType={textType} />}
+      {showStructureGuide && <StructureGuideModal onClose={onToggleStructureGuide} textType={textType} />}
+      {showTips && <TipsModal onClose={onToggleTips} textType={textType} />}
+      {showReportModal && nswReport && (
+        <ReportModal
+          isOpen={showReportModal}
+          data={nswReport}
+          onClose={() => {
+            setShowReportModal(false);
+            setNswReport(null);
+            if (onAnalysisChange) onAnalysisChange(null);
+          }}
+          onApplyFix={handleApplyFix}
+          studentName="Student"
+          essayText={localContent}
+        />
+      )}
+      {showNSWEvaluation && evaluationStatus === "loading" && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className={`p-8 rounded-xl shadow-2xl text-center max-w-md ${
+            darkMode ? 'bg-slate-800 border border-slate-700' : 'bg-white'
           }`}>
-            <svg className="animate-spin h-10 w-10 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <p className="text-lg font-medium">{evaluationProgress}</p>
-            <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Please wait while we evaluate your writing...</p>
+            <div className="relative">
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-cyan-500 mx-auto mb-4"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Zap className="w-6 h-6 text-cyan-500 animate-pulse" />
+              </div>
+            </div>
+            <p className={`text-lg font-semibold mb-2 ${
+              darkMode ? 'text-gray-100' : 'text-gray-800'
+            }`}>Evaluating your writing...</p>
+            <p className={`text-sm mt-2 ${
+              darkMode ? 'text-gray-400' : 'text-gray-600'
+            }`}>{evaluationProgress}</p>
+            <div className="mt-4 flex justify-center space-x-1">
+              <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+              <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+              <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+            </div>
+            {evaluationStatus === "error" && (
+              <button
+                onClick={() => {
+                  setShowNSWEvaluation(false);
+                  setEvaluationStatus("idle");
+                }}
+                className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+              >
+                Close
+              </button>
+            )}
           </div>
         </div>
-       )}
+      )}
+      {showPromptOptionsModal && (
+        <PromptOptionsModal
+          isOpen={showPromptOptionsModal}
+          onClose={() => setShowPromptOptionsModal(false)}
+          onGeneratePrompt={handleGenerateNewPrompt}
+          onCustomPrompt={handleCustomPromptInput}
+          textType={textType}
+          darkMode={darkMode}
+        />
+      )}
     </div>
   );
 }
+
+export default EnhancedWritingLayoutNSW;
