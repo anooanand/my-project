@@ -9,6 +9,15 @@ interface ValidationResult {
   reason: string;
 }
 
+interface GenerateReportParams {
+  essayContent: string;
+  textType?: string;
+  prompt: string;
+  wordCount?: number;
+  targetWordCountMin?: number;
+  targetWordCountMax?: number;
+}
+
 // Main class for generating the NSW Selective Writing Assessment Report.
 export class NSWEvaluationReportGenerator {
 
@@ -16,7 +25,14 @@ export class NSWEvaluationReportGenerator {
    * Main function to generate the full report.
    * This function orchestrates the validation, scoring, and report assembly.
    */
-  public static generateReport(essayContent: string | null | undefined, prompt: string | null | undefined, targetWordCountMin: number = 50) {
+  public static generateReport(params: GenerateReportParams) {
+    const {
+      essayContent,
+      prompt,
+      targetWordCountMin = 50,
+      targetWordCountMax = 300
+    } = params;
+
     // Defensive checks: Ensure essayContent and prompt are always strings
     const safeEssayContent = (essayContent || "").toString();
     const safePrompt = (prompt || "").toString();
