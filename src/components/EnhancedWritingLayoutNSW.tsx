@@ -543,8 +543,8 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
               onClick={() => setShowPlanningTool(true)}
               className={`flex items-center space-x-1 px-2 py-1 rounded transition-colors ${
                 darkMode
-                  ? 'text-gray-300 hover:bg-gray-700'
-                  : 'text-gray-700 hover:bg-gray-100'
+                  ? 'bg-blue-700 text-white hover:bg-blue-600'
+                  : 'bg-blue-500 text-white hover:bg-blue-600'
               }`}
               title="Planning Tool"
             >
@@ -557,8 +557,8 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
               onClick={onToggleStructureGuide}
               className={`flex items-center space-x-1 px-2 py-1 rounded transition-colors ${
                 darkMode
-                  ? 'text-gray-300 hover:bg-gray-700'
-                  : 'text-gray-700 hover:bg-gray-100'
+                  ? 'bg-green-700 text-white hover:bg-green-600'
+                  : 'bg-green-500 text-white hover:bg-green-600'
               }`}
               title="Structure Guide"
             >
@@ -571,8 +571,8 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
               onClick={onToggleTips}
               className={`flex items-center space-x-1 px-2 py-1 rounded transition-colors ${
                 darkMode
-                  ? 'text-gray-300 hover:bg-gray-700'
-                  : 'text-gray-700 hover:bg-gray-100'
+                  ? 'bg-yellow-700 text-white hover:bg-yellow-600'
+                  : 'bg-yellow-500 text-white hover:bg-yellow-600'
               }`}
               title="Writing Tips"
             >
@@ -589,8 +589,8 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
                     ? 'bg-purple-900 text-purple-200'
                     : 'bg-purple-600 text-white'
                   : darkMode
-                  ? 'text-gray-300 hover:bg-gray-700'
-                  : 'text-gray-700 hover:bg-gray-100'
+                  ? 'bg-purple-500 text-white hover:bg-purple-600'
+                  : 'bg-purple-500 text-white hover:bg-purple-600'
               }`}
               title="Exam Mode"
             >
@@ -607,8 +607,8 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
                     ? 'bg-indigo-900 text-indigo-200'
                     : 'bg-indigo-600 text-white'
                   : darkMode
-                  ? 'text-gray-300 hover:bg-gray-700'
-                  : 'text-gray-700 hover:bg-gray-100'
+                    ? 'bg-orange-500 text-white hover:bg-orange-600'
+                    : 'bg-orange-500 text-white hover:bg-orange-600'
               }`}
               title="Focus Mode"
             >
