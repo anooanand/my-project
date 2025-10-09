@@ -307,7 +307,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
   // Convert NSW report format to DetailedFeedback format
   const convertNSWReportToDetailedFeedback = (report: any): any => {
-    const maxScore = 5;
+    const maxScore = 10;
     return {
       id: `nsw-${Date.now()}`,
       overallScore: report.overallScore || 0,
