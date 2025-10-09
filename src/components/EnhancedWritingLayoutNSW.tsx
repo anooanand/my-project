@@ -966,6 +966,8 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
             )}
           </div>
         )}
+// COMPLETE SUBMIT BUTTON SECTION FIX
+// Replace lines 969-992 in EnhancedWritingLayoutNSW.tsx with this exact code:
 
         {/* Bottom Submit Button Section - FIXED: Full width to match writing area */}
         <div className={`border-t flex-shrink-0 ${
@@ -989,6 +991,10 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
             </button>
           </div>
         </div>
+      </div>
+
+// IMPORTANT: Make sure you have the closing </div> tag for the main writing area container
+// The error suggests there are missing closing div tags, so ensure proper JSX structure
 
       {/* Right side - Coach Panel */}
       {!focusMode && (
