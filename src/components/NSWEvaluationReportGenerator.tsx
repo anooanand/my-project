@@ -16,23 +16,27 @@ export class NSWEvaluationReportGenerator { // Renamed and exported
    * Main function to generate the full report.
    * This function orchestrates the validation, scoring, and report assembly.
    */
-  public static generateReport(essayContent: string, prompt: string, targetWordCountMin: number = 400) {
-    const wordCount = essayContent.trim().split(/\s+/).filter(w => w.length > 0).length;
+  public static generateReport(essayContent: string | null | undefined, prompt: string | null | undefined, targetWordCountMin: number = 400) {
+    // Defensive checks: Ensure essayContent and prompt are always strings
+    const safeEssayContent = (essayContent || "").toString();
+    const safePrompt = (prompt || "").toString();
+
+    const wordCount = safeEssayContent.trim().split(/\s+/).filter(w => w.length > 0).length;
 
     // 1. Initial Validation
-    const validation = this.validateEssayContent(essayContent, wordCount, targetWordCountMin);
+    const validation = this.validateEssayContent(safeEssayContent, wordCount, targetWordCountMin);
     if (!validation.isValid) {
       throw new Error(validation.reason);
     }
 
     // 2. Strengthened Prompt Detection
     const promptCheck: PromptCheckResult = {
-      isCopied: this.detectPromptCopying(essayContent, prompt),
+      isCopied: this.detectPromptCopying(safeEssayContent, safePrompt),
       reason: "Submission appears to substantially copy the prompt."
     };
 
     // 3. SEPARATE PROMPT FROM ESSAY BEFORE SCORING
-    const cleanedEssay = this.removePromptFromEssay(essayContent, prompt);
+    const cleanedEssay = this.removePromptFromEssay(safeEssayContent, safePrompt);
     const cleanedWordCount = cleanedEssay.trim().split(/\s+/).filter(w => w.length > 0).length;
 
     console.log("Original essay length:", wordCount);
@@ -49,7 +53,7 @@ export class NSWEvaluationReportGenerator { // Renamed and exported
 
     // 4. UPDATE ALL SCORING FUNCTIONS to use cleanedEssay
     // The scores are calculated based on the cleaned content.
-    const scoreIdeas = this.scoreContentAndIdeas(cleanedEssay, essayContent, prompt, cleanedWordCount, targetWordCountMin, promptCheck);
+    const scoreIdeas = this.scoreContentAndIdeas(cleanedEssay, safeEssayContent, safePrompt, cleanedWordCount, targetWordCountMin, promptCheck);
     const scoreStructure = this.scoreStructureAndOrganization(cleanedEssay, cleanedWordCount);
     const scoreLanguage = this.scoreLanguageAndVocabulary(cleanedEssay);
     const scoreGrammar = this.scoreSpellingAndGrammar(cleanedEssay); // Use the fixed grammar scoring
@@ -64,7 +68,7 @@ export class NSWEvaluationReportGenerator { // Renamed and exported
         language: scoreLanguage,
         grammar: scoreGrammar,
       },
-      originalEssay: essayContent,
+      originalEssay: safeEssayContent,
       cleanedEssay: cleanedEssay,
       promptCheckResult: promptCheck,
     };
@@ -101,7 +105,7 @@ export class NSWEvaluationReportGenerator { // Renamed and exported
       }
     }
 
-    // If more than 60% of prompt sentences are found, it's likely copied.
+    // If more than 60% of prompt sentences are found, it\'s likely copied.
     if (promptSentences.length > 0 && matchedSentences / promptSentences.length > 0.6) {
       return true;
     }
@@ -153,7 +157,7 @@ export class NSWEvaluationReportGenerator { // Renamed and exported
     // Return only the original content that comes after the prompt
     const originalContent = essayWords.slice(startIndex).join(" ");
 
-    // If the extracted original content is too short, it implies the student didn't copy the prompt at the beginning.
+    // If the extracted original content is too short, it implies the student didn\'t copy the prompt at the beginning.
     // In this case, return the full essay to avoid penalizing them.
     if (originalContent.split(/\s+/).length < 50) {
       return essayContent;
