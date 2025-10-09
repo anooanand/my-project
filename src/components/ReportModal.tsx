@@ -39,28 +39,25 @@ export function ReportModal({ isOpen, onClose, data, onApplyFix, studentName = "
   const generateChildFriendlyExplanation = (domain: string, score: number): string => {
     switch (domain) {
       case "Ideas & Content":
-        if (score >= 4) return "🌟 Wow! Your ideas are super creative and interesting, making your story really stand out! You have a wonderful imagination that brings your writing to life.";
-        if (score >= 3) return "✨ You have some great, thoughtful ideas that make your writing engaging. Your creativity is shining through!";
-        if (score >= 2) return "💡 Your ideas are good, but you could add more unique thoughts and details to make them even more exciting and interesting.";
-        if (score >= 1) return "🌱 Your ideas are starting to form, but they need more imagination and details to truly come alive. Think about adding more descriptions or unexpected twists!";
+        if (score >= 8) return "🌟 Wow! Your ideas are super creative and interesting, making your story really stand out! You have a wonderful imagination that brings your writing to life.";
+        if (score >= 6) return "✨ You have some great, thoughtful ideas that make your writing engaging. Your creativity is shining through!";
+        if (score >= 4) return "💡 Your ideas are good, but you could add more unique thoughts and details to make them even more exciting and interesting.";
+        if (score >= 2) return "🌱 Your ideas are starting to form, but they need more imagination and details to truly come alive. Think about adding more descriptions or unexpected twists!";
         return "🎯 Your ideas are hard to find or don't quite fit the topic. Let's work together on making them clearer and more imaginative! Remember, every great writer started somewhere.";
-      case "Structure & Organization":
-        if (score >= 4) return "🏗️ Your writing flows perfectly, like a well-told story, with a clear beginning, middle, and end! You've mastered the art of organization.";
-        if (score >= 3) return "📚 Your writing is well-organized, making it easy for the reader to follow your ideas from start to finish.";
-        if (score >= 2) return "🔗 Your writing has a clear plan, but sometimes the parts don't connect as smoothly as they could. Try using more connecting words!";
-        if (score >= 1) return "🧩 Your writing is a bit jumbled, and it's hard to see how your ideas fit together. Let's practice organizing your thoughts step by step.";
+      case "Structure & Organizatio        if (score >= 8) return "🏗️ Your writing flows perfectly, like a well-told story, with a clear beginning, middle, and end! You\'ve mastered the art of organization.";
+        if (score >= 6) return "📚 Your writing is well-organized, making it easy for the reader to follow your ideas from start to finish.";
+        if (score >= 4) return "🔗 Your writing has a clear plan, but sometimes the parts don\'t connect as smoothly as they could. Try using more connecting words!";
+        if (score >= 2) return "🧩 Your writing is a bit jumbled, and it\'s hard to see how your ideas fit together. Let\'s practice organizing your thoughts step by step.";
         return "🗺️ Your writing is hard to follow because it doesn't have a clear order. Let's practice organizing your thoughts with a simple plan first!";
       case "Language & Vocabulary":
-        if (score >= 4) return "🎨 You use amazing words and clever writing tricks that make your writing shine like a diamond! Your vocabulary is impressive.";
-        if (score >= 3) return "📖 You use good words and some literary devices to make your writing interesting and engaging to read.";
-        if (score >= 2) return "🔤 You use appropriate words, but trying out new words and phrases could make your writing even more colorful and exciting.";
-        if (score >= 1) return "📝 Your words are simple, and you could try using more exciting language to express yourself. Let's explore some new vocabulary together!";
-        return "🌈 Your vocabulary is very basic, and you don't use many literary devices yet. Let's discover new words and fun ways to write together!";
-      case "Spelling, Punctuation & Grammar":
-        if (score >= 4) return "🎯 Your writing is almost perfect with spelling, punctuation, and grammar – fantastic work! You're a careful editor.";
-        if (score >= 3) return "✅ You make very few mistakes in spelling, punctuation, and grammar. Great job being careful with your writing!";
-        if (score >= 2) return "⚠️ You have some mistakes in spelling, punctuation, or grammar, but your writing is still easy to understand. A little more proofreading will help!";
-        if (score >= 1) return "🔍 You make several mistakes in spelling, punctuation, and grammar, which sometimes makes your writing hard to read. Let's focus on one area at a time.";
+        if (score >= 8) return "🎨 You use amazing words and clever writing tricks that make your writing shine like a diamond! Your vocabulary is impressive.";
+        if (score >= 6) return "📖 You use good words and some literary devices to make your writing interesting and engaging to read.";
+        if (score >= 4) return "🔤 You use appropriate words, but trying out new words and phrases could make your writing even more colorful and exciting.";
+        if (score >= 2) return "📝 Your words are simple, and you could try using more exciting language to express yourself. Let\"s explore some new vocabulary together!";     case "Spelling, Punctuation & Grammar":
+        if (score >= 8) return "🎯 Your writing is almost perfect with spelling, punctuation, and grammar – fantastic work! You're a careful editor.";
+        if (score >= 6) return "✅ You make very few mistakes in spelling, punctuation, and grammar. Great job being careful with your writing!";
+        if (score >= 4) return "⚠️ You have some mistakes in spelling, punctuation, or grammar, but your writing is still easy to understand. A little more proofreading will help!";
+        if (score >= 2) return "🔍 You make several mistakes in spelling, punctuation, and grammar, which sometimes makes your writing hard to read. Let's focus on one area at a time.";
         return "📚 You have many mistakes in spelling, punctuation, and grammar, making your writing difficult to understand. Let's start with the basics and build up your skills!";
       default:
         return "No specific explanation available for this domain.";
@@ -166,9 +163,9 @@ export function ReportModal({ isOpen, onClose, data, onApplyFix, studentName = "
 
     // Add personalized recommendations based on the lowest scoring domains
     for (const domain of domains) {
-      if (domain.score <= 3) { // Consider scores 3 and below as needing improvement (out of 5)
+      if (domain.score <= 6) { // Consider scores 6 and below as needing improvement (out of 10) 
         recommendations.push(domain.suggestions[0]);
-        if (domain.score <= 2) { // For very low scores, add more specific suggestions
+        if (domain.score <= 4) { // For very low scores, add more specific suggestions
           recommendations.push(domain.suggestions[1]);
         }
       }
@@ -201,7 +198,7 @@ export function ReportModal({ isOpen, onClose, data, onApplyFix, studentName = "
   const generateSpecificStrengths = (): Array<{area: string, description: string, example?: string}> => {
     const strengths: Array<{area: string, description: string, example?: string}> = [];
     
-    if (data.criteria.ideasContent.score >= 3) {
+    if (data.criteria.ideasContent.score >= 6) {
       const firstSentence = essayText.split(/[.!?]+/)[0]?.trim();
       strengths.push({
         area: "Creative Ideas",
@@ -210,7 +207,7 @@ export function ReportModal({ isOpen, onClose, data, onApplyFix, studentName = "
       });
     }
     
-    if (data.criteria.structureOrganization.score >= 3) {
+    if (data.criteria.structureOrganization.score >= 6) {
       const paragraphCount = essayText.split(/\n\s*\n/).filter(p => p.trim().length > 0).length;
       strengths.push({
         area: "Organization",
@@ -219,7 +216,7 @@ export function ReportModal({ isOpen, onClose, data, onApplyFix, studentName = "
       });
     }
     
-    if (data.criteria.languageVocab.score >= 3) {
+    if (data.criteria.languageVocab.score >= 6) {
       strengths.push({
         area: "Vocabulary",
         description: "You use interesting and appropriate words to express your ideas.",
@@ -227,7 +224,7 @@ export function ReportModal({ isOpen, onClose, data, onApplyFix, studentName = "
       });
     }
     
-    if (data.criteria.spellingPunctuationGrammar.score >= 3) {
+    if (data.criteria.spellingPunctuationGrammar.score >= 6) {
       strengths.push({
         area: "Technical Skills",
         description: "You show good control of spelling, punctuation, and grammar.",
@@ -242,7 +239,7 @@ export function ReportModal({ isOpen, onClose, data, onApplyFix, studentName = "
   const generateSpecificImprovements = (): Array<{area: string, issue: string, suggestion: string, example?: string}> => {
     const improvements: Array<{area: string, issue: string, suggestion: string, example?: string}> = [];
     
-    if (data.criteria.ideasContent.score < 3) {
+    if (data.criteria.ideasContent.score < 6) {
       improvements.push({
         area: "Ideas & Content",
         issue: "Your ideas need more development and detail.",
@@ -251,7 +248,7 @@ export function ReportModal({ isOpen, onClose, data, onApplyFix, studentName = "
       });
     }
     
-    if (data.criteria.structureOrganization.score < 3) {
+    if (data.criteria.structureOrganization.score < 6) {
       improvements.push({
         area: "Structure & Organization",
         issue: "Your writing could be better organized.",
@@ -260,7 +257,7 @@ export function ReportModal({ isOpen, onClose, data, onApplyFix, studentName = "
       });
     }
     
-    if (data.criteria.languageVocab.score < 3) {
+    if (data.criteria.languageVocab.score < 6) {
       improvements.push({
         area: "Language & Vocabulary",
         issue: "Your vocabulary could be more varied and interesting.",
@@ -269,7 +266,7 @@ export function ReportModal({ isOpen, onClose, data, onApplyFix, studentName = "
       });
     }
     
-    if (data.criteria.spellingPunctuationGrammar.score < 3) {
+    if (data.criteria.spellingPunctuationGrammar.score < 6) {
       // Look for specific issues in the text
       const hasCommaIssues = essayText.includes('afternoon you') || essayText.includes('However you') || essayText.includes('Finally you');
       const hasCapitalizationIssues = /\bi\s/.test(essayText);
@@ -537,19 +534,19 @@ Report generated on ${new Date().toLocaleString()}
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-white p-4 rounded-lg border border-pink-100">
-                  <h4 className="font-semibold text-purple-700 mb-2">Ideas & Content ({data.criteria.ideasContent.score}/5)</h4>
+                  <h4 className="font-semibold text-purple-700 mb-2">Ideas & Content ({data.criteria.ideasContent.score}/10) </h4>
                   <p className="text-sm text-gray-700">{generateChildFriendlyExplanation("Ideas & Content", data.criteria.ideasContent.score)}</p>
                 </div>
                 <div className="bg-white p-4 rounded-lg border border-pink-100">
-                  <h4 className="font-semibold text-purple-700 mb-2">Structure & Organization ({data.criteria.structureOrganization.score}/5)</h4>
+                  <h4 className="font-semibold text-purple-700 mb-2">Structure & Organization ({data.criteria.structureOrganization.score}/10) </h4>
                   <p className="text-sm text-gray-700">{generateChildFriendlyExplanation("Structure & Organization", data.criteria.structureOrganization.score)}</p>
                 </div>
                 <div className="bg-white p-4 rounded-lg border border-pink-100">
-                  <h4 className="font-semibold text-purple-700 mb-2">Language & Vocabulary ({data.criteria.languageVocab.score}/5)</h4>
+                  <h4 className="font-semibold text-purple-700 mb-2">Language & Vocabulary ({data.criteria.languageVocab.score}/10) </h4>
                   <p className="text-sm text-gray-700">{generateChildFriendlyExplanation("Language & Vocabulary", data.criteria.languageVocab.score)}</p>
                 </div>
                 <div className="bg-white p-4 rounded-lg border border-pink-100">
-                  <h4 className="font-semibold text-purple-700 mb-2">Spelling & Grammar ({data.criteria.spellingPunctuationGrammar.score}/5)</h4>
+                  <h4 className="font-semibold text-purple-700 mb-2">Spelling & Grammar ({data.criteria.spellingPunctuationGrammar.score}/10) </h4>
                   <p className="text-sm text-gray-700">{generateChildFriendlyExplanation("Spelling, Punctuation & Grammar", data.criteria.spellingPunctuationGrammar.score)}</p>
                 </div>
               </div>
