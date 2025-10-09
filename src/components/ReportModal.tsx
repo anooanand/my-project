@@ -306,8 +306,7 @@ export function ReportModal({ isOpen, onClose, data, onApplyFix, studentName = "
   const exportToPDF = async () => {
     setIsExporting(true);
     try {
-      // Create a printable version
-      const printContent = document.getElementById('report-content');
+      // Create a printable versio      const printContent = document.getElementById(\'report-content\');
       if (printContent) {
         const printWindow = window.open('', '_blank');
         if (printWindow) {
@@ -316,11 +315,68 @@ export function ReportModal({ isOpen, onClose, data, onApplyFix, studentName = "
               <head>
                 <title>NSW Selective Writing Assessment Report</title>
                 <style>
-                  body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+                  /* Basic Print Styles */
+                  body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; color: #333; }
+                  .modal-content { width: 100%; max-width: 800px; margin: 0 auto; padding: 0; }
                   .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #3b82f6; padding-bottom: 20px; }
-                  .score-section { margin: 20px 0; }
-                  .criterion { margin: 15px 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
-                  .score-bar { height: 20px; background: #f0f0f0; border-radius: 10px; margin: 5px 0; }
+                  .header h2 { color: #3b82f6; font-size: 2em; margin-bottom: 5px; }
+                  .header h3 { color: #666; font-size: 1.2em; margin-top: 0; }
+                  .score-display { display: flex; justify-content: space-between; align-items: center; background-color: #4a90e2; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+                  .score-display .overall-score-value { font-size: 3em; font-weight: bold; }
+                  .score-display .grade { font-size: 2em; font-weight: bold; padding: 5px 10px; background-color: rgba(255,255,255,0.2); border-radius: 5px; }
+                  .score-display .student-info { text-align: right; }
+                  .score-display .student-info p { margin: 0; }
+                  .section-title { font-size: 1.5em; font-weight: bold; color: #333; margin-top: 30px; margin-bottom: 15px; padding-bottom: 5px; border-bottom: 1px solid #eee; }
+                  .subsection-title { font-size: 1.2em; font-weight: bold; color: #555; margin-top: 20px; margin-bottom: 10px; }
+                  .explanation-card, .strength-card, .improvement-card, .recommendation-card, .essay-card { background-color: #f9f9f9; border: 1px solid #eee; border-radius: 8px; padding: 15px; margin-bottom: 15px; }
+                  .explanation-card p, .strength-card p, .improvement-card p, .recommendation-card p, .essay-card pre { font-size: 0.95em; color: #555; }
+                  .example-box { background-color: #f0f8ff; border-left: 4px solid #add8e6; padding: 10px; margin-top: 10px; }
+                  .example-box p { font-size: 0.9em; color: #444; }
+                  .essay-content { white-space: pre-wrap; word-wrap: break-word; }
+                  .footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; color: #777; font-size: 0.9em; }
+
+                  /* Hide elements not needed for print */
+                  .no-print { display: none !important; }
+
+                  /* Page breaks for better readability */
+                  .page-break { page-break-before: always; }
+
+                  @media print {
+                    body { margin: 0; }
+                    .modal-content { box-shadow: none; }
+                    /* Ensure background colors and images are printed */
+                    -webkit-print-color-adjust: exact;
+                    print-color-adjust: exact;
+                  }
+                </style>
+              </head>
+              <body>
+                <div class="modal-content">
+                  <div class="header">
+                    <h2>NSW Writing Assessment Report</h2>
+                    <h3>Your Personal Writing Journey Report</h3>
+                  </div>
+                  <div class="score-display">
+                    <div>
+                      <p>Overall Score</p>
+                      <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="overall-score-value">${data.overallScore}</span>
+                        <span>/100</span>
+                        <span class="grade" style="background-color: ${getGradeColor(data.overallScore).includes('green') ? '#22c55e' : getGradeColor(data.overallScore).includes('yellow') ? '#eab308' : '#ef4444'};">${getGrade(data.overallScore)}</span>
+                      </div>
+                    </div>
+                    <div class="student-info">
+                      <p>Student: ${studentName}</p>
+                      <p>Date: ${new Date().toLocaleDateString()}</p>
+                      <p>Report ID: ${data.id}</p>
+                    </div>
+                  </div>
+
+                  <h3 class="section-title">What Your Scores Mean</h3>
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="explanation-card">
+                      <h4 class="subsection-title">Ideas & Content (${data.criteria.ideasContent.score}/10)</h4>
+                      <p>${generateChildFriendlyExplanation(                .score-bar { height: 20px; background: #f0f0f0; border-radius: 10px; margin: 5px 0; }
                   .score-fill { height: 100%; border-radius: 10px; }
                   .green { background: #10b981; }
                   .yellow { background: #f59e0b; }
