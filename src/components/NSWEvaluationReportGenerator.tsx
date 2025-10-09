@@ -10,7 +10,7 @@ interface ValidationResult {
 }
 
 // Main class for generating the NSW Selective Writing Assessment Report.
-class NSWReportGenerator {
+export class NSWEvaluationReportGenerator { // Renamed and exported
 
   /**
    * Main function to generate the full report.
@@ -35,9 +35,9 @@ class NSWReportGenerator {
     const cleanedEssay = this.removePromptFromEssay(essayContent, prompt);
     const cleanedWordCount = cleanedEssay.trim().split(/\s+/).filter(w => w.length > 0).length;
 
-    console.log('Original essay length:', wordCount);
-    console.log('Cleaned essay length:', cleanedWordCount);
-    console.log('Cleaned essay (first 200 chars):', cleanedEssay.substring(0, 200));
+    console.log("Original essay length:", wordCount);
+    console.log("Cleaned essay length:", cleanedWordCount);
+    console.log("Cleaned essay (first 200 chars):", cleanedEssay.substring(0, 200));
 
     // If cleaned essay is too short, it indicates the student likely just copied the prompt.
     if (cleanedWordCount < 100) {
@@ -109,12 +109,12 @@ class NSWReportGenerator {
     // Check for unique original content
     const essayWords = new Set(normalizedEssay.split(/\s+/).filter(w => w.length > 4));
     const promptWords = new Set(normalizedPrompt.split(/\s+/).filter(w => w.length > 4));
-    const commonWords = new Set(['story', 'write', 'describe', 'character', 'about', 'that', 'this', 
-      'they', 'their', 'what', 'when', 'where', 'how', 'will', 'could', 
-      'would', 'your', 'inside', 'imagine'
+    const commonWords = new Set(["story", "write", "describe", "character", "about", "that", "this",
+      "they", "their", "what", "when", "where", "how", "will", "could",
+      "would", "your", "inside", "imagine"
     ]);
 
-    const uniqueEssayWords = [...essayWords].filter(w => 
+    const uniqueEssayWords = [...essayWords].filter(w =>
       !commonWords.has(w) && !promptWords.has(w)
     );
 
@@ -139,9 +139,9 @@ class NSWReportGenerator {
 
     // Find where original content starts (after prompt ends)
     for (let i = 0; i < Math.min(essayWords.length, promptWords.length * 2); i++) {
-      const essayWord = essayWords[i]?.toLowerCase().replace(/[^a-z]/g, '');
+      const essayWord = essayWords[i]?.toLowerCase().replace(/[^a-z]/g, "");
       const promptHasWord = promptWords.some(pw =>
-        pw.toLowerCase().replace(/[^a-z]/g, '') === essayWord
+        pw.toLowerCase().replace(/[^a-z]/g, "") === essayWord
       );
 
       if (!promptHasWord && essayWord.length > 3) {
@@ -149,9 +149,9 @@ class NSWReportGenerator {
         break;
       }
     }
-    
+
     // Return only the original content that comes after the prompt
-    const originalContent = essayWords.slice(startIndex).join(' ');
+    const originalContent = essayWords.slice(startIndex).join(" ");
 
     // If the extracted original content is too short, it implies the student didn't copy the prompt at the beginning.
     // In this case, return the full essay to avoid penalizing them.
@@ -177,7 +177,7 @@ class NSWReportGenerator {
     const words = essayContent.split(/\s+/).filter(w => w.length > 3);
     let nonsenseCount = 0;
     for (const word of words) {
-      const cleanWord = word.replace(/[^a-z]/gi, '');
+      const cleanWord = word.replace(/[^a-z]/gi, "");
       if (cleanWord.length > 3 && !/[aeiou]/i.test(cleanWord)) {
         nonsenseCount++;
       }
@@ -208,7 +208,7 @@ class NSWReportGenerator {
     const words = essayContent.split(/\s+/);
     let nonsenseWords = 0;
     for (const word of words) {
-      const cleanWord = word.replace(/[^a-z]/gi, '');
+      const cleanWord = word.replace(/[^a-z]/gi, "");
       if (cleanWord.length > 3) {
         // Check if word has no vowels (likely nonsense)
         if (!/[aeiou]/i.test(cleanWord)) {
@@ -229,7 +229,7 @@ class NSWReportGenerator {
     }
 
     // Common internet/text speak that should be penalized
-    const textSpeak = [' u ', ' ur ', ' r ', ' wnt ', ' wint ', ' da ', ' wen ', ' wuz ', ' cuz '];
+    const textSpeak = [" u ", " ur ", " r ", " wnt ", " wint ", " da ", " wen ", " wuz ", " cuz "];
     textSpeak.forEach(slang => {
       if (lowerContent.includes(slang)) {
         errorCount += 3;
@@ -280,7 +280,7 @@ class NSWReportGenerator {
   // Placeholder for other scoring functions - ensure they also use cleanedEssay
   private static scoreStructureAndOrganization(cleanedEssay: string, wordCount: number): number {
     // ... your logic here ...
-    const paragraphs = cleanedEssay.split('\n').filter(p => p.trim().length > 10).length;
+    const paragraphs = cleanedEssay.split("\n").filter(p => p.trim().length > 10).length;
     if (paragraphs < 3) return 1;
     if (paragraphs < 4) return 3;
     return 5; // Placeholder
