@@ -44,7 +44,8 @@ export function ReportModal({ isOpen, onClose, data, onApplyFix, studentName = "
         if (score >= 4) return "💡 Your ideas are good, but you could add more unique thoughts and details to make them even more exciting and interesting.";
         if (score >= 2) return "🌱 Your ideas are starting to form, but they need more imagination and details to truly come alive. Think about adding more descriptions or unexpected twists!";
         return "🎯 Your ideas are hard to find or don't quite fit the topic. Let's work together on making them clearer and more imaginative! Remember, every great writer started somewhere.";
-      case "Structure & Organizatio        if (score >= 8) return "🏗️ Your writing flows perfectly, like a well-told story, with a clear beginning, middle, and end! You\'ve mastered the art of organization.";
+      case "Structure & Organization":
+        if (score >= 8) return "🏗️ Your writing flows perfectly, like a well-told story, with a clear beginning, middle, and end! You\'ve mastered the art of organization.";
         if (score >= 6) return "📚 Your writing is well-organized, making it easy for the reader to follow your ideas from start to finish.";
         if (score >= 4) return "🔗 Your writing has a clear plan, but sometimes the parts don\'t connect as smoothly as they could. Try using more connecting words!";
         if (score >= 2) return "🧩 Your writing is a bit jumbled, and it\'s hard to see how your ideas fit together. Let\'s practice organizing your thoughts step by step.";
