@@ -21,30 +21,50 @@ export class NSWEvaluationReportGenerator {
     const safeEssayContent = (essayContent || "").toString();
     const safePrompt = (prompt || "").toString();
 
-    // **FIX**: Clean the essay BEFORE validation
+    // **FIX**: First validate the original essay content word count
+    const originalWordCount = safeEssayContent.trim().split(/\s+/).filter(w => w.length > 0).length;
+    
+    // **FIX**: If original content meets minimum, proceed with cleaning
+    if (originalWordCount < targetWordCountMin) {
+      throw new Error(`❌ Your essay is too short. Please write a story of at least ${targetWordCountMin} words. Please try again.`);
+    }
+
+    // Clean the essay AFTER validation
     const cleanedEssay = this.removePromptFromEssay(safeEssayContent, safePrompt);
     const cleanedWordCount = cleanedEssay.trim().split(/\s+/).filter(w => w.length > 0).length;
 
-    // **FIX**: Validate the CLEANED word count with the new minimum
-    const validation = this.validateEssayContent(cleanedEssay, cleanedWordCount, targetWordCountMin);
+    // **FIX**: Use a lower threshold for cleaned content validation
+    const minCleanedWords = Math.max(20, Math.floor(targetWordCountMin * 0.6));
+    const validation = this.validateEssayContent(cleanedEssay, cleanedWordCount, minCleanedWords);
     if (!validation.isValid) {
-      throw new Error(validation.reason);
+      // **FIX**: If cleaned content is too short, use original content
+      console.warn("Cleaned content too short, using original content for evaluation");
+      const originalValidation = this.validateEssayContent(safeEssayContent, originalWordCount, targetWordCountMin);
+      if (!originalValidation.isValid) {
+        throw new Error(originalValidation.reason);
+      }
+      // Use original content if cleaned is insufficient
+      const finalEssay = safeEssayContent;
+      const finalWordCount = originalWordCount;
+      
+      return this.generateScores(finalEssay, safeEssayContent, safePrompt, finalWordCount, targetWordCountMin);
     }
 
+    return this.generateScores(cleanedEssay, safeEssayContent, safePrompt, cleanedWordCount, targetWordCountMin);
+  }
+
+  private static generateScores(essayForScoring: string, originalEssay: string, prompt: string, wordCount: number, targetWordCountMin: number) {
     // Strengthened Prompt Detection - DISABLED for 50 word minimum
     const promptCheck: PromptCheckResult = {
       isCopied: false, // Changed from this.detectPromptCopying(safeEssayContent, safePrompt)
       reason: ""
     };
 
-    // **REMOVED**: The redundant check that was causing issues
-    // This check was preventing submissions even when they had enough words
-
-    // All scoring functions will now use the cleaned essay
-    const scoreIdeas = this.scoreContentAndIdeas(cleanedEssay, safeEssayContent, safePrompt, cleanedWordCount, targetWordCountMin, promptCheck);
-    const scoreStructure = this.scoreStructureAndOrganization(cleanedEssay, cleanedWordCount);
-    const scoreLanguage = this.scoreLanguageAndVocabulary(cleanedEssay);
-    const scoreGrammar = this.scoreSpellingAndGrammar(cleanedEssay);
+    // All scoring functions will now use the essay for scoring
+    const scoreIdeas = this.scoreContentAndIdeas(essayForScoring, originalEssay, prompt, wordCount, targetWordCountMin, promptCheck);
+    const scoreStructure = this.scoreStructureAndOrganization(essayForScoring, wordCount);
+    const scoreLanguage = this.scoreLanguageAndVocabulary(essayForScoring);
+    const scoreGrammar = this.scoreSpellingAndGrammar(essayForScoring);
 
     return {
       overallScore: (scoreIdeas * 0.4) + (scoreStructure * 0.2) + (scoreLanguage * 0.25) + (scoreGrammar * 0.15),
@@ -54,8 +74,8 @@ export class NSWEvaluationReportGenerator {
         language: scoreLanguage,
         grammar: scoreGrammar,
       },
-      originalEssay: safeEssayContent,
-      cleanedEssay: cleanedEssay,
+      originalEssay: originalEssay,
+      cleanedEssay: essayForScoring,
       promptCheckResult: promptCheck,
     };
   }
@@ -127,8 +147,8 @@ export class NSWEvaluationReportGenerator {
 
     const originalContent = essayWords.slice(startIndex).join(" ");
 
-    // **FIX**: Changed from 50 to 30 - if cleaned content is less than 30 words, return full essay
-    if (originalContent.split(/\s+/).length < 30) {
+    // **FIX**: Changed from 50 to 20 - if cleaned content is less than 20 words, return full essay
+    if (originalContent.split(/\s+/).filter(w => w.length > 0).length < 20) {
       return essayContent;
     }
 
