@@ -414,7 +414,9 @@ Report generated on ${new Date().toLocaleString()}
   };
 
     const ScoreBar = ({ label, score, maxScore = 5, weight }: { label: string; score: number; maxScore?: number; weight: number }) => {
-    const scorePercentage = (score / maxScore) * 100;
+    const actualScorePercentage = (score / maxScore) * 100;
+    const barWidthPercentage = Math.min(100, Math.max(0, actualScorePercentage)); // Ensure bar width is between 0 and 100%
+
     const getColor = (percentage: number) => {
       if (percentage >= 80) return 'bg-green-500';
       if (percentage >= 60) return 'bg-yellow-500';
@@ -436,18 +438,18 @@ Report generated on ${new Date().toLocaleString()}
             <span className="text-lg font-bold">{score}/{maxScore}</span>
             <span className="text-sm text-gray-600">({weight}%)</span>
             <span className={`text-sm font-medium px-2 py-1 rounded ${
-              scorePercentage >= 80 ? 'bg-green-100 text-green-800' :
-              scorePercentage >= 60 ? 'bg-yellow-100 text-yellow-800' :
+              actualScorePercentage >= 80 ? 'bg-green-100 text-green-800' :
+              actualScorePercentage >= 60 ? 'bg-yellow-100 text-yellow-800' :
               'bg-red-100 text-red-800'
             }`}>
-              {getScoreDescription(scorePercentage)}
+              {getScoreDescription(actualScorePercentage)}
             </span>
           </div>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-4">
           <div
-            className={`h-4 rounded-full transition-all duration-500 ${getColor(scorePercentage)}`}
-            style={{ width: `${scorePercentage}%` }}
+            className={`h-4 rounded-full transition-all duration-500 ${getColor(actualScorePercentage)}`}
+            style={{ width: `${barWidthPercentage}%` }}
           />
         </div>
       </div>
