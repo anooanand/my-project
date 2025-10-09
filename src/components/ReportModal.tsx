@@ -368,10 +368,10 @@ Assessment ID: ${data.id}
 OVERALL SCORE: ${data.overallScore}/100 (Grade: ${getGrade(data.overallScore)})
 
 CRITERIA BREAKDOWN:
-- Ideas & Content: ${data.criteria.ideasContent.score}/5 (${data.criteria.ideasContent.weight}%)
-- Structure & Organization: ${data.criteria.structureOrganization.score}/5 (${data.criteria.structureOrganization.weight}%)
-- Language & Vocabulary: ${data.criteria.languageVocab.score}/5 (${data.criteria.languageVocab.weight}%)
-- Spelling, Punctuation & Grammar: ${data.criteria.spellingPunctuationGrammar.score}/5 (${data.criteria.spellingPunctuationGrammar.weight}%)
+- Ideas & Content: ${data.criteria.ideasContent.score}/10 (${data.criteria.ideasContent.weight}%)
+- Structure & Organization: ${data.criteria.structureOrganization.score}/10 (${data.criteria.structureOrganization.weight}%)
+- Language & Vocabulary: ${data.criteria.languageVocab.score}/10 (${data.criteria.languageVocab.weight}%)
+- Spelling, Punctuation & Grammar: ${data.criteria.spellingPunctuationGrammar.score}/10 (${data.criteria.spellingPunctuationGrammar.weight}%)
 
 CHILD-FRIENDLY EXPLANATIONS:
 
@@ -413,7 +413,7 @@ Report generated on ${new Date().toLocaleString()}
     URL.revokeObjectURL(url);
   };
 
-    const ScoreBar = ({ label, score, maxScore = 5, weight }: { label: string; score: number; maxScore?: number; weight: number }) => {
+    const ScoreBar = ({ label, score, maxScore = 10, weight }: { label: string; score: number; maxScore?: number; weight: number }) => {
     const actualScorePercentage = (score / maxScore) * 100;
     const barWidthPercentage = Math.min(100, Math.max(0, actualScorePercentage)); // Ensure bar width is between 0 and 100%
 
