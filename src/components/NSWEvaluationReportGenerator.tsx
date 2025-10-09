@@ -16,7 +16,7 @@ export class NSWEvaluationReportGenerator {
    * Main function to generate the full report.
    * This function orchestrates the validation, scoring, and report assembly.
    */
-  public static generateReport(essayContent: string | null | undefined, prompt: string | null | undefined, targetWordCountMin: number = 400) {
+  public static generateReport(essayContent: string | null | undefined, prompt: string | null | undefined, targetWordCountMin: number = 50) {
     // Defensive checks: Ensure essayContent and prompt are always strings
     const safeEssayContent = (essayContent || "").toString();
     const safePrompt = (prompt || "").toString();
@@ -38,10 +38,10 @@ export class NSWEvaluationReportGenerator {
     };
 
     // If cleaned essay is too short (redundant check, but good for safety)
-    if (cleanedWordCount < 100) {
+    if (cleanedWordCount < 50) {
       throw new Error(
         "⚠️ Your submission contains mostly the prompt text.\n\n" +
-        "Please write your own original creative story (400-500 words) responding to the prompt."
+        "Please write your own original creative story (minimum 50 words) responding to the prompt."
       );
     }
 
@@ -141,7 +141,7 @@ export class NSWEvaluationReportGenerator {
     if (wordCount < 50) {
       return {
         isValid: false,
-        reason: "❌ Your essay is too short. Please write a story of 400-500 words."
+        reason: "❌ Your essay is too short. Please write a story of at least 50 words. Please try again."
       };
     }
 
