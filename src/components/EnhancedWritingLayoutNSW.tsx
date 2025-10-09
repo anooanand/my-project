@@ -141,7 +141,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
   const [showGrammarHighlights, setShowGrammarHighlights] = useState(true);
   const [expandedGrammarStats, setExpandedGrammarStats] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [hasStartedTyping, setHasStartedTyping] = useState(false); // **FIX**: Track if user has started typing
+  const [hasStartedTyping, setHasStartedTyping] = useState(false); // **FIX 1**: Track typing for timer
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -303,7 +303,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
   const handleContentChange = useCallback((newContent: string) => {
     setLocalContent(newContent);
     
-    // **FIX**: Improved timer auto-start logic
+    // **FIX 1**: Improved timer auto-start logic
     if (newContent.trim().length > 0 && !hasStartedTyping) {
       setHasStartedTyping(true);
       if (!isTimerRunning && onStartTimer) {
@@ -560,96 +560,96 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
         {/* Toolbar */}
         <div className="p-3">
           <div className="flex items-center justify-between">
-            {/* **FIX**: Improved button styling with better padding and visibility */}
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2">
+              {/* **FIX 3**: Improved button styling - only changed padding and text size */}
               {/* Plan Button */}
               <button
                 onClick={handleTogglePlanningTool}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors font-medium ${
+                className={`flex items-center space-x-1 px-3 py-2 rounded transition-colors ${
                   showPlanningTool
                     ? darkMode
-                      ? 'bg-blue-600 text-white hover:bg-blue-500 shadow-lg'
-                      : 'bg-blue-500 text-white hover:bg-blue-600 shadow-lg'
+                      ? 'bg-blue-700 text-white hover:bg-blue-600'
+                      : 'bg-blue-500 text-white hover:bg-blue-600'
                     : darkMode
-                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600 border border-gray-600'
-                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 shadow-sm'
+                    ? 'text-gray-300 hover:bg-gray-700'
+                    : 'text-gray-700 hover:bg-gray-100'
                 }`}
                 title="Planning Tool"
               >
-                <PenTool className="w-4 h-4" />
-                <span className="text-sm">Plan</span>
+                <PenTool className="w-3.5 h-3.5" />
+                <span className="text-sm font-medium">Plan</span>
               </button>
 
               {/* Structure Button */}
               <button
                 onClick={handleToggleStructureGuide}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors font-medium ${
+                className={`flex items-center space-x-1 px-3 py-2 rounded transition-colors ${
                   localShowStructureGuide
                     ? darkMode
-                      ? 'bg-green-600 text-white hover:bg-green-500 shadow-lg'
-                      : 'bg-green-500 text-white hover:bg-green-600 shadow-lg'
+                      ? 'bg-green-700 text-white hover:bg-green-600'
+                      : 'bg-green-500 text-white hover:bg-green-600'
                     : darkMode
-                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600 border border-gray-600'
-                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 shadow-sm'
+                    ? 'text-gray-300 hover:bg-gray-700'
+                    : 'text-gray-700 hover:bg-gray-100'
                 }`}
                 title="Structure Guide"
               >
-                <BookOpen className="w-4 h-4" />
-                <span className="text-sm">Structure</span>
+                <BookOpen className="w-3.5 h-3.5" />
+                <span className="text-sm font-medium">Structure</span>
               </button>
 
               {/* Tips Button */}
               <button
                 onClick={handleToggleTips}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors font-medium ${
+                className={`flex items-center space-x-1 px-3 py-2 rounded transition-colors ${
                   localShowTips
                     ? darkMode
-                      ? 'bg-orange-600 text-white hover:bg-orange-500 shadow-lg'
-                      : 'bg-orange-500 text-white hover:bg-orange-600 shadow-lg'
+                      ? 'bg-orange-700 text-white hover:bg-orange-600'
+                      : 'bg-orange-500 text-white hover:bg-orange-600'
                     : darkMode
-                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600 border border-gray-600'
-                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 shadow-sm'
+                    ? 'text-gray-300 hover:bg-gray-700'
+                    : 'text-gray-700 hover:bg-gray-100'
                 }`}
                 title="Writing Tips"
               >
-                <LightbulbIcon className="w-4 h-4" />
-                <span className="text-sm">Tips</span>
+                <LightbulbIcon className="w-3.5 h-3.5" />
+                <span className="text-sm font-medium">Tips</span>
               </button>
 
               {/* Exam Mode Button */}
               <button
                 onClick={() => setExamMode(!examMode)}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors font-medium ${
+                className={`flex items-center space-x-1 px-3 py-2 rounded transition-colors ${
                   examMode
                     ? darkMode
-                      ? 'bg-purple-600 text-white hover:bg-purple-500 shadow-lg'
-                      : 'bg-purple-600 text-white hover:bg-purple-700 shadow-lg'
+                      ? 'bg-purple-900 text-purple-200'
+                      : 'bg-purple-600 text-white'
                     : darkMode
-                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600 border border-gray-600'
-                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 shadow-sm'
+                    ? 'text-gray-300 hover:bg-gray-700'
+                    : 'text-gray-700 hover:bg-gray-100'
                 }`}
                 title="Exam Mode"
               >
-                <Target className="w-4 h-4" />
-                <span className="text-sm">Exam</span>
+                <Target className="w-3.5 h-3.5" />
+                <span className="text-sm font-medium">Exam</span>
               </button>
 
               {/* Focus Mode Button */}
               <button
                 onClick={onToggleFocus}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors font-medium ${
+                className={`flex items-center space-x-1 px-3 py-2 rounded transition-colors ${
                   focusMode
                     ? darkMode
-                      ? 'bg-orange-600 text-white hover:bg-orange-500 shadow-lg'
-                      : 'bg-orange-500 text-white hover:bg-orange-600 shadow-lg'
+                      ? 'bg-orange-700 text-white hover:bg-orange-600'
+                      : 'bg-orange-500 text-white hover:bg-orange-600'
                     : darkMode
-                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600 border border-gray-600'
-                    : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 shadow-sm'
+                    ? 'text-gray-300 hover:bg-gray-700'
+                    : 'text-gray-700 hover:bg-gray-100'
                 }`}
                 title="Focus Mode"
               >
-                {focusMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                <span className="text-sm">Focus</span>
+                {focusMode ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                <span className="text-sm font-medium">Focus</span>
               </button>
             </div>
 
@@ -831,45 +831,6 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
             </div>
           </div>
         )}
-
-        {/* **FIX**: Grammar Stats moved outside writing area to prevent overlap */}
-        {showGrammarHighlights && currentWordCount > 0 && (
-          <div className={`p-3 border-b ${darkMode ? 'bg-slate-800 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
-            <div className="flex items-center justify-between">
-              <h4 className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                📊 Grammar Stats
-              </h4>
-              <button 
-                onClick={() => setExpandedGrammarStats(!expandedGrammarStats)}
-                className={`p-1 rounded transition-colors ${
-                  darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-200'
-                }`}
-              >
-                {expandedGrammarStats ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-              </button>
-            </div>
-            {expandedGrammarStats && (
-              <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div className={`flex items-center space-x-2 ${darkMode ? 'text-red-400' : 'text-red-600'}`}>
-                  <span className="font-medium">Weak Verbs:</span>
-                  <span className="font-bold">{grammarStats.weakVerbs}</span>
-                </div>
-                <div className={`flex items-center space-x-2 ${darkMode ? 'text-yellow-400' : 'text-yellow-600'}`}>
-                  <span className="font-medium">Overused:</span>
-                  <span className="font-bold">{grammarStats.overused}</span>
-                </div>
-                <div className={`flex items-center space-x-2 ${darkMode ? 'text-purple-400' : 'text-purple-600'}`}>
-                  <span className="font-medium">Passive Voice:</span>
-                  <span className="font-bold">{grammarStats.passive}</span>
-                </div>
-                <div className={`flex items-center space-x-2 ${darkMode ? 'text-orange-400' : 'text-orange-600'}`}>
-                  <span className="font-medium">Weak Adjectives:</span>
-                  <span className="font-bold">{grammarStats.weakAdjectives}</span>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Writing Area - Takes remaining space */}
@@ -924,6 +885,30 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
                   </span>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* **FIX 2**: Grammar Stats repositioned to bottom-left to avoid blocking text */}
+          {showGrammarHighlights && currentWordCount > 0 && (
+            <div className={`absolute bottom-4 left-4 px-3 py-2 rounded-lg shadow-lg border backdrop-blur-sm ${
+              darkMode ? 'bg-slate-800/90 border-slate-700' : 'bg-white/90 border-gray-200'
+            }`}>
+              <div className="flex items-center justify-between">
+                <h4 className={`text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  Grammar Stats
+                </h4>
+                <button onClick={() => setExpandedGrammarStats(!expandedGrammarStats)}>
+                  {expandedGrammarStats ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </button>
+              </div>
+              {expandedGrammarStats && (
+                <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+                  <span className={`${darkMode ? 'text-red-400' : 'text-red-600'}`}>Weak Verbs: {grammarStats.weakVerbs}</span>
+                  <span className={`${darkMode ? 'text-yellow-400' : 'text-yellow-600'}`}>Overused: {grammarStats.overused}</span>
+                  <span className={`${darkMode ? 'text-purple-400' : 'text-purple-600'}`}>Passive Voice: {grammarStats.passive}</span>
+                  <span className={`${darkMode ? 'text-orange-400' : 'text-orange-600'}`}>Weak Adjectives: {grammarStats.weakAdjectives}</span>
+                </div>
+              )}
             </div>
           )}
         </div>
