@@ -987,6 +987,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
             </button>
           </div>
         </div>
+      </div>
 
       {/* Right side - Coach Panel */}
       {!focusMode && (
