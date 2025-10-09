@@ -75,6 +75,15 @@ const DomainScoreCard: React.FC<{ domain: DomainScore; title: string; icon: stri
     return 'text-red-600 bg-red-50 border-red-200';
   };
 
+  // FIXED: Get proper bar color based on score instead of using bg-current
+  const getBarColor = (score: number) => {
+    if (score >= 9) return 'bg-green-500';
+    if (score >= 7) return 'bg-blue-500';
+    if (score >= 5) return 'bg-yellow-500';
+    if (score >= 3) return 'bg-orange-500';
+    return 'bg-red-500';
+  };
+
   return (
     <div className={`border rounded-lg p-4 ${getScoreColor(domain.score)}`}>
       <div className="flex items-center justify-between mb-3">
@@ -91,7 +100,7 @@ const DomainScoreCard: React.FC<{ domain: DomainScore; title: string; icon: stri
         </div>
         <div className="w-full bg-gray-200 rounded-full h-2">
           <div 
-            className="bg-current h-2 rounded-full" 
+            className={`${getBarColor(domain.score)} h-2 rounded-full transition-all duration-300`}
             style={{ width: `${domain.percentage}%` }}
           ></div>
         </div>
@@ -208,17 +217,60 @@ export function NSWEvaluationReportDisplay({ report, essayText, onClose }: NSWEv
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold mb-2">NSW Writing Assessment Report</h1>
-            <p className="text-blue-100">Comprehensive evaluation based on NSW curriculum standards</p>
+            <p className="text-blue-100">Your Personal Writing Journey Report</p>
           </div>
           <div className="text-right">
-            <div className={`inline-flex items-center px-4 py-2 rounded-full text-lg font-bold ${getGradeColor(report.overallGrade)}`}>
-              <Award className="w-6 h-6 mr-2" />
-              Grade: {report.overallGrade}
-            </div>
-            <div className="text-2xl font-bold mt-2">
-              {report.overallScore}/100
+            <div className="flex items-center space-x-4">
+              <div>
+                <p className="text-blue-100 text-sm">Student: Student</p>
+                <p className="text-blue-100 text-sm">Date: 10/9/2025</p>
+                <p className="text-blue-100 text-xs">Report ID: nsw-1760000950368</p>
+              </div>
+              <div className="text-center">
+                <div className="text-6xl font-bold mb-2">{report.overallScore}</div>
+                <div className="text-sm text-blue-100">/100</div>
+                <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-bold mt-2 ${getGradeColor(report.overallGrade)}`}>
+                  {report.overallGrade}
+                </div>
+                <div className="flex items-center justify-center mt-2">
+                  <span className="text-yellow-300 text-2xl">⭐</span>
+                  <span className="text-white ml-2">Great Job!</span>
+                </div>
+              </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Your Writing Skills Breakdown Section */}
+      <div className="mb-8">
+        <div className="flex items-center mb-6">
+          <BarChart3 className="w-6 h-6 text-purple-600 mr-3" />
+          <h2 className="text-2xl font-bold text-purple-600">Your Writing Skills Breakdown</h2>
+        </div>
+
+        {/* Domain Scores with Individual Progress Bars */}
+        <div className="space-y-4">
+          <DomainScoreCard
+            domain={correctedReport.domains.contentAndIdeas}
+            title="Ideas & Content"
+            icon="💡"
+          />
+          <DomainScoreCard
+            domain={correctedReport.domains.textStructure}
+            title="Structure & Organization"
+            icon="📝"
+          />
+          <DomainScoreCard
+            domain={correctedReport.domains.languageFeatures}
+            title="Language & Vocabulary"
+            icon="✨"
+          />
+          <DomainScoreCard
+            domain={correctedReport.domains.spellingAndGrammar}
+            title="Spelling, Punctuation & Grammar"
+            icon="✅"
+          />
         </div>
       </div>
 
@@ -270,30 +322,6 @@ export function NSWEvaluationReportDisplay({ report, essayText, onClose }: NSWEv
           </div>
         </div>
       )}
-
-      {/* Domain Scores Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <DomainScoreCard
-          domain={correctedReport.domains.contentAndIdeas}
-          title="Content & Ideas"
-          icon="💡"
-        />
-        <DomainScoreCard
-          domain={correctedReport.domains.textStructure}
-          title="Text Structure"
-          icon="📝"
-        />
-        <DomainScoreCard
-          domain={correctedReport.domains.languageFeatures}
-          title="Language Features"
-          icon="✨"
-        />
-        <DomainScoreCard
-          domain={correctedReport.domains.spellingAndGrammar}
-          title="Spelling & Grammar"
-          icon="✅"
-        />
-      </div>
 
       {/* Student's Original Essay Section */}
       <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 p-6 mb-8">
@@ -385,7 +413,7 @@ export function NSWEvaluationReportDisplay({ report, essayText, onClose }: NSWEv
                     {index + 1}
                   </span>
                 </div>
-                <span className="text-purple-700 dark:text-purple-300 leading-relaxed">{recommendation}</span>
+                <span className="text-purple-700 dark:text-purple-300">{recommendation}</span>
               </div>
             ))
           ) : (
@@ -394,10 +422,10 @@ export function NSWEvaluationReportDisplay({ report, essayText, onClose }: NSWEv
         </div>
       </div>
 
-      {/* Technical Analysis */}
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-800 p-6">
+      {/* Detailed Technical Analysis */}
+      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
         <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center">
-          <BarChart3 className="w-5 h-5 mr-2" />
+          <TrendingUp className="w-5 h-5 mr-2" />
           Detailed Technical Analysis
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
