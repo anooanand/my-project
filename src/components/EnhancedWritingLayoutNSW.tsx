@@ -14,7 +14,7 @@ import { promptConfig } from '../config/prompts';
 import type { DetailedFeedback, LintFix } from '../types/feedback';
 import { eventBus } from '../lib/eventBus';
 import { detectNewParagraphs } from '../lib/paragraphDetection';
-import { NSWEvaluationReportGenerator } from './NSWEvaluationReportGenerator';
+import { NSWEvaluationReportGenerator } from './NSWEvaluationReportGenerator'; // Ensure this path is correct
 import {
   PenTool,
   Play,
