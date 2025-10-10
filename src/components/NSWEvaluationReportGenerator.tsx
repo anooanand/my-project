@@ -32,15 +32,14 @@ export class NSWEvaluationReportGenerator {
     const safePrompt = (prompt || "").toString();
 
     // STEP 1: Check for duplicates first
-    if (this.detectDuplicateContent(safeEssayContent)) {
+    if (NSWEvaluationReportGenerator.detectDuplicateContent(safeEssayContent)) {
       throw new Error("❌ Your essay contains repeated sections. Please write original content.");
     }
 
     // STEP 2: Clean the essay (remove prompt)
-    const cleanedEssay = this.removePromptFromEssay(safeEssayContent, safePrompt);
-    const cleanedWordCount = cleanedEssay.trim().split(/\s+/).filter(w => w.length > 0).length;
+    const cleanedEssay = NSWEvalconst cleanedEssay = NSWconst cleanedEssay = NSWEvaluationReportGenerator.removePromptFromEssay(safeEssayContent, safePrompt); const cleanedWordCount = cleanedEssay.trim().split(/\s+/).filter(w => w.length > 0).length;
 
-    console.log("=== VALIDATION DEBUG ===");
+    console.log("=== VALIDATION DEBUG ====");
     console.log("Original word count:", safeEssayContent.split(/\s+/).length);
     console.log("Cleaned word count:", cleanedWordCount);
     console.log("Target minimum:", targetWordCountMin);
@@ -56,33 +55,33 @@ export class NSWEvaluationReportGenerator {
     }
 
     // STEP 4: Check for prompt copying
-    const promptCheck = this.detectPromptCopying(safeEssayContent, safePrompt);
+    const promptCheck = NSWEvaluationReportGenerator.detectPromptCopying(safeEssayContent, safePrompt);
     if (promptCheck.isCopied) {
       throw new Error(promptCheck.reason);
     }
 
     // STEP 5: Validate content quality
-    const validation = this.validateEssayContent(cleanedEssay, cleanedWordCount, targetWordCountMin);
+    const validation = NSWEvaluationReportGenerator.validateEssayContent(cleanedEssay, cleanedWordCount, targetWordCountMin);
     if (!validation.isValid) {
       throw new Error(validation.reason);
     }
 
     // STEP 6: Generate scores
-    return this.generateScores(cleanedEssay, safeEssayContent, safePrompt, cleanedWordCount, targetWordCountMin);
+    return NSWEvaluationReportGenerator.generateScores(cleanedEssay, safeEssayContent, safePrompt, cleanedWordCount, targetWordCountMin);
   }
 
   private static generateScores(essayForScoring: string, originalEssay: string, prompt: string, wordCount: number, targetWordCountMin: number) {
     // Strengthened Prompt Detection - DISABLED for 50 word minimum
-    const promptCheck: PromptCheckResult = this.detectPromptCopying(originalEssay, prompt);
+    const promptCheck: PromptCheckResult = NSWEvaluationReportGenerator.detectPromptCopying(originalEssay, prompt);
     if (promptCheck.isCopied) {
       throw new Error(promptCheck.reason);
     }
 
     // All scoring functions will now use the essay for scoring
-    const scoreIdeas = this.scoreContentAndIdeas(essayForScoring, originalEssay, prompt, wordCount, targetWordCountMin, promptCheck);
-    const scoreStructure = this.scoreStructureAndOrganization(essayForScoring, wordCount);
-    const scoreLanguage = this.scoreLanguageAndVocabulary(essayForScoring);
-    const scoreGrammar = this.scoreSpellingAndGrammar(essayForScoring);
+    const scoreIdeas = NSWEvaluationReportGenerator.scoreContentAndIdeas(essayForScoring, originalEssay, prompt, wordCount, targetWordCountMin, promptCheck);
+    const scoreStructure = NSWEvaluationReportGenerator.scoreStructureAndOrganization(essayForScoring, wordCount);
+    const scoreLanguage = NSWEvaluationReportGenerator.scoreLanguageAndVocabulary(essayForScoring);
+    const scoreGrammar = NSWEvaluationReportGenerator.scoreSpellingAndGrammar(essayForScoring);
 
     return {
       overallScore: (scoreIdeas * 0.4) + (scoreStructure * 0.2) + (scoreLanguage * 0.25) + (scoreGrammar * 0.15),
@@ -120,7 +119,7 @@ export class NSWEvaluationReportGenerator {
       }
     }
 
-    // If more than 50% of prompt sentences found in essay, it's copied
+    // If more than 50% of prompt sentences found in essay, it\'s copied
     if (promptSentences.length > 0 && matchedSentences / promptSentences.length > 0.5) {
       return {
         isCopied: true,
@@ -155,6 +154,7 @@ export class NSWEvaluationReportGenerator {
       reason: ""
     };
   }
+
 
   private static removePromptFromEssay(essayContent: string, prompt: string): string {
     const normalizedPrompt = prompt.toLowerCase();
@@ -303,23 +303,3 @@ export class NSWEvaluationReportGenerator {
     return 4;
   }
 }
-
-  private static detectDuplicateContent(essayContent: string): boolean {
-    // Split into sentences
-    const sentences = essayContent.split(/[.!?]+/).filter(s => s.trim().length > 20);
-    
-    // Check for duplicate sentences (indicating copy-paste)
-    const sentenceSet = new Set();
-    let duplicates = 0;
-    
-    for (const sentence of sentences) {
-      const normalized = sentence.toLowerCase().trim();
-      if (sentenceSet.has(normalized)) {
-        duplicates++;
-      }
-      sentenceSet.add(normalized);
-    }
-    
-    // If more than 30% of sentences are duplicates, flag it
-    return duplicates / sentences.length > 0.3;
-  }
