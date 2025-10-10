@@ -485,20 +485,19 @@ function AppContent() {
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
 
-        {showAuthModal && (
-          <AuthModal
-            mode={authModalMode}
-            onClose={() => setShowAuthModal(false)}
-            onSignInSuccess={() => {
-              setShowAuthModal(false);
-              // navigate('/dashboard'); // Navigate to dashboard after successful sign-in
-            }}
-            onSignUpSuccess={() => {
-              setShowAuthModal(false);
-              // navigate('/dashboard'); // Navigate to dashboard after successful sign-up
-            }}
-          />
-        )}
+        <AuthModal
+          isOpen={showAuthModal}
+          mode={authModalMode}
+          onClose={() => {
+            console.log('AuthModal: onClose called');
+            setShowAuthModal(false);
+          }}
+          onAuthSuccess={(user) => {
+            console.log('AuthModal: onAuthSuccess called with user:', user?.email);
+            setShowAuthModal(false);
+            setHasSignedIn(true);
+          }}
+        />
 
         {shouldShowFooter() && <Footer />}
       </div>
