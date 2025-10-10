@@ -250,14 +250,26 @@ export function NavBar({
             ) : (
               <>
                 <button
-                  onClick={onSignInClick}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Sign In button clicked');
+                    onSignInClick();
+                  }}
                   className={getButtonClasses('secondary')}
+                  type="button"
                 >
                   Sign In
                 </button>
                 <button
-                  onClick={onSignUpClick}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Get Started button clicked');
+                    onSignUpClick();
+                  }}
                   className={getButtonClasses('primary')}
+                  type="button"
                 >
                   Get Started
                 </button>
@@ -387,20 +399,28 @@ export function NavBar({
               {!user && (
                 <div className="pt-2 border-t border-gray-200 space-y-2">
                   <button
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      console.log('Mobile Sign In button clicked');
                       onSignInClick();
                       setIsMenuOpen(false);
                     }}
                     className={`w-full ${getButtonClasses('secondary')} justify-center`}
+                    type="button"
                   >
                     Sign In
                   </button>
                   <button
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      console.log('Mobile Get Started button clicked');
                       onSignUpClick();
                       setIsMenuOpen(false);
                     }}
                     className={`w-full ${getButtonClasses('primary')} justify-center`}
+                    type="button"
                   >
                     Get Started
                   </button>

@@ -30,18 +30,19 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   // Reset form when mode changes
   useEffect(() => {
+    console.log('AuthModal: mode changed to', initialMode, 'isOpen:', isOpen);
     setMode(initialMode);
     setError('');
     setSuccess(false);
     setCurrentStep(1);
-    
+
     // Try to get email from localStorage
     const savedEmail = localStorage.getItem('userEmail');
     if (savedEmail) {
       setEmail(savedEmail);
       setConfirmationEmail(savedEmail);
     }
-  }, [initialMode]);
+  }, [initialMode, isOpen]);
 
   // Kid-friendly error messages
   const getKidFriendlyError = (error: string): string => {
@@ -236,8 +237,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   );
 
   if (!isOpen) {
+    console.log('AuthModal: Not rendering (isOpen is false)');
     return null;
   }
+
+  console.log('AuthModal: Rendering with mode:', mode, 'isOpen:', isOpen);
 
   if (mode === 'confirmation') {
     return (

@@ -334,12 +334,16 @@ function AppContent() {
                 onNavigate={handleNavigation}
                 user={user}
                 onSignInClick={() => {
+                  console.log('AppContent: onSignInClick called');
                   setAuthModalMode('signin');
                   setShowAuthModal(true);
+                  console.log('AppContent: Auth modal state set to open');
                 }}
                 onSignUpClick={() => {
+                  console.log('AppContent: onSignUpClick called');
                   setAuthModalMode('signup');
                   setShowAuthModal(true);
+                  console.log('AppContent: Auth modal state set to open');
                 }}
                 onForceSignOut={handleForceSignOut}
               />
@@ -357,12 +361,16 @@ function AppContent() {
                 onNavigate={handleNavigation}
                 user={user}
                 onSignInClick={() => {
+                  console.log('AppContent: onSignInClick called');
                   setAuthModalMode('signin');
                   setShowAuthModal(true);
+                  console.log('AppContent: Auth modal state set to open');
                 }}
                 onSignUpClick={() => {
+                  console.log('AppContent: onSignUpClick called');
                   setAuthModalMode('signup');
                   setShowAuthModal(true);
+                  console.log('AppContent: Auth modal state set to open');
                 }}
                 onForceSignOut={handleForceSignOut}
               />
@@ -380,12 +388,16 @@ function AppContent() {
                 onNavigate={handleNavigation}
                 user={user}
                 onSignInClick={() => {
+                  console.log('AppContent: onSignInClick called');
                   setAuthModalMode('signin');
                   setShowAuthModal(true);
+                  console.log('AppContent: Auth modal state set to open');
                 }}
                 onSignUpClick={() => {
+                  console.log('AppContent: onSignUpClick called');
                   setAuthModalMode('signup');
                   setShowAuthModal(true);
+                  console.log('AppContent: Auth modal state set to open');
                 }}
                 onForceSignOut={handleForceSignOut}
               />
