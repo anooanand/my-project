@@ -26,55 +26,57 @@ export class NSWEvaluationReportGenerator {
    * This function orchestrates the validation, scoring, and report assembly.
    */
   public static generateReport(params: GenerateReportParams) {
-    const {
-      essayContent,
-      prompt,
-      targetWordCountMin = 50,
-      targetWordCountMax = 300
-    } = params;
+    const { essayContent, prompt, targetWordCountMin = 50, targetWordCountMax = 300 } = params;
 
-    // Defensive checks: Ensure essayContent and prompt are always strings
     const safeEssayContent = (essayContent || "").toString();
     const safePrompt = (prompt || "").toString();
 
-    // **FIX**: First validate the original essay content word count
-    const originalWordCount = safeEssayContent.trim().split(/\s+/).filter(w => w.length > 0).length;
-    
-    // **FIX**: If original content meets minimum, proceed with cleaning
-    if (originalWordCount < targetWordCountMin) {
-      throw new Error(`❌ Your essay is too short. Please write a story of at least ${targetWordCountMin} words. Please try again.`);
+    // STEP 1: Check for duplicates first
+    if (this.detectDuplicateContent(safeEssayContent)) {
+      throw new Error("❌ Your essay contains repeated sections. Please write original content.");
     }
 
-    // Clean the essay AFTER validation
+    // STEP 2: Clean the essay (remove prompt)
     const cleanedEssay = this.removePromptFromEssay(safeEssayContent, safePrompt);
     const cleanedWordCount = cleanedEssay.trim().split(/\s+/).filter(w => w.length > 0).length;
 
-    // **FIX**: Use a lower threshold for cleaned content validation
-    const minCleanedWords = Math.max(20, Math.floor(targetWordCountMin * 0.6));
-    const validation = this.validateEssayContent(cleanedEssay, cleanedWordCount, minCleanedWords);
-    if (!validation.isValid) {
-      // **FIX**: If cleaned content is too short, use original content
-      console.warn("Cleaned content too short, using original content for evaluation");
-      const originalValidation = this.validateEssayContent(safeEssayContent, originalWordCount, targetWordCountMin);
-      if (!originalValidation.isValid) {
-        throw new Error(originalValidation.reason);
-      }
-      // Use original content if cleaned is insufficient
-      const finalEssay = safeEssayContent;
-      const finalWordCount = originalWordCount;
-      
-      return this.generateScores(finalEssay, safeEssayContent, safePrompt, finalWordCount, targetWordCountMin);
+    console.log("=== VALIDATION DEBUG ===");
+    console.log("Original word count:", safeEssayContent.split(/\s+/).length);
+    console.log("Cleaned word count:", cleanedWordCount);
+    console.log("Target minimum:", targetWordCountMin);
+    console.log("Cleaned content:", cleanedEssay.substring(0, 150) + "...");
+
+    // STEP 3: Validate cleaned content meets minimum
+    if (cleanedWordCount < targetWordCountMin) {
+      throw new Error(
+        `❌ Your original content is only ${cleanedWordCount} words.\n` +
+        `You need ${targetWordCountMin} words of YOUR OWN creative story.\n` +
+        `(The prompt text doesn\'t count toward your word count!)`
+      );
     }
 
+    // STEP 4: Check for prompt copying
+    const promptCheck = this.detectPromptCopying(safeEssayContent, safePrompt);
+    if (promptCheck.isCopied) {
+      throw new Error(promptCheck.reason);
+    }
+
+    // STEP 5: Validate content quality
+    const validation = this.validateEssayContent(cleanedEssay, cleanedWordCount, targetWordCountMin);
+    if (!validation.isValid) {
+      throw new Error(validation.reason);
+    }
+
+    // STEP 6: Generate scores
     return this.generateScores(cleanedEssay, safeEssayContent, safePrompt, cleanedWordCount, targetWordCountMin);
   }
 
   private static generateScores(essayForScoring: string, originalEssay: string, prompt: string, wordCount: number, targetWordCountMin: number) {
     // Strengthened Prompt Detection - DISABLED for 50 word minimum
-    const promptCheck: PromptCheckResult = {
-      isCopied: false, // Changed from this.detectPromptCopying(safeEssayContent, safePrompt)
-      reason: ""
-    };
+    const promptCheck: PromptCheckResult = this.detectPromptCopying(originalEssay, prompt);
+    if (promptCheck.isCopied) {
+      throw new Error(promptCheck.reason);
+    }
 
     // All scoring functions will now use the essay for scoring
     const scoreIdeas = this.scoreContentAndIdeas(essayForScoring, originalEssay, prompt, wordCount, targetWordCountMin, promptCheck);
@@ -96,21 +98,20 @@ export class NSWEvaluationReportGenerator {
     };
   }
 
-  private static detectPromptCopying(essayContent: string, prompt: string): boolean {
+  private static detectPromptCopying(essayContent: string, prompt: string): PromptCheckResult {
     const normalizedEssay = essayContent.trim().toLowerCase();
     const normalizedPrompt = prompt.trim().toLowerCase();
 
-    // **FIX**: Reduced from 200 to 100 for shorter essays
-    if (normalizedEssay.length < 100) {
-      return false; // Changed from true to false
-    }
-
+    // Split prompt into sentences
     const promptSentences = normalizedPrompt.split(/[.!?]+/).filter(s => s.trim().length > 20);
+    
+    // Check how many prompt sentences appear in essay
     let matchedSentences = 0;
     for (const promptSentence of promptSentences) {
       const words = promptSentence.trim().split(/\s+/).filter(w => w.length > 4);
       if (words.length < 5) continue;
 
+      // Check if 70%+ of words from this sentence appear in essay
       const matchedWords = words.filter(word => normalizedEssay.includes(word)).length;
       const matchRatio = matchedWords / words.length;
 
@@ -119,27 +120,40 @@ export class NSWEvaluationReportGenerator {
       }
     }
 
-    if (promptSentences.length > 0 && matchedSentences / promptSentences.length > 0.6) {
-      return true;
+    // If more than 50% of prompt sentences found in essay, it's copied
+    if (promptSentences.length > 0 && matchedSentences / promptSentences.length > 0.5) {
+      return {
+        isCopied: true,
+        reason: "❌ Your submission contains too much of the prompt text. Please write your own original story (at least 50 words) responding to the prompt."
+      };
     }
 
+    // Check for unique original content
     const essayWords = new Set(normalizedEssay.split(/\s+/).filter(w => w.length > 4));
     const promptWords = new Set(normalizedPrompt.split(/\s+/).filter(w => w.length > 4));
-    const commonWords = new Set(["story", "write", "describe", "character", "about", "that", "this",
-      "they", "their", "what", "when", "where", "how", "will", "could",
-      "would", "your", "inside", "imagine"
-    ]);
-
-    const uniqueEssayWords = [...essayWords].filter(w =>
+    const commonWords = new Set(["story", "write", "describe", "character", "about", "that", "this", 
+                                 "they", "their", "what", "when", "where", "how", "will", "could", 
+                                 "would", "your", "inside", "imagine", "find", "discover", "open"]);
+    
+    const uniqueEssayWords = [...essayWords].filter(w => 
       !commonWords.has(w) && !promptWords.has(w)
     );
-
-    // **FIX**: Reduced from 40 to 20 for shorter essays
-    if (uniqueEssayWords.length < 20) {
-      return false; // Changed from true to false
+    
+    // For 50-word essays, require at least 15 unique words
+    // For longer essays, require 30+
+    const requiredUniqueWords = essayContent.split(/\s+/).length < 100 ? 15 : 30;
+    
+    if (uniqueEssayWords.length < requiredUniqueWords) {
+      return {
+        isCopied: true,
+        reason: `❌ Your essay needs more original content. You have only ${uniqueEssayWords.length} unique words (need ${requiredUniqueWords}+). Please write your own creative story.`
+      };
     }
 
-    return false;
+    return {
+      isCopied: false,
+      reason: ""
+    };
   }
 
   private static removePromptFromEssay(essayContent: string, prompt: string): string {
@@ -289,3 +303,23 @@ export class NSWEvaluationReportGenerator {
     return 4;
   }
 }
+
+  private static detectDuplicateContent(essayContent: string): boolean {
+    // Split into sentences
+    const sentences = essayContent.split(/[.!?]+/).filter(s => s.trim().length > 20);
+    
+    // Check for duplicate sentences (indicating copy-paste)
+    const sentenceSet = new Set();
+    let duplicates = 0;
+    
+    for (const sentence of sentences) {
+      const normalized = sentence.toLowerCase().trim();
+      if (sentenceSet.has(normalized)) {
+        duplicates++;
+      }
+      sentenceSet.add(normalized);
+    }
+    
+    // If more than 30% of sentences are duplicates, flag it
+    return duplicates / sentences.length > 0.3;
+  }
