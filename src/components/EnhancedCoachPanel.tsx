@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, MessageSquare, BarChart3, Lightbulb, Target, Star, TrendingUp, Award } from 'lucide-react';
+import { Send, MessageSquare, BarChart3, Lightbulb, Target, Star, TrendingUp, Award, List } from 'lucide-react';
+import { StepByStepWritingBuilder } from './StepByStepWritingBuilder';
 
 /**
  * Generates time-appropriate coaching messages for 40-minute writing test
@@ -823,7 +824,19 @@ export function EnhancedCoachPanel({
             <MessageSquare className="w-3 h-3" />
             <span>AI Coach</span>
           </button>
-          
+
+          <button
+            onClick={() => setCurrentView('builder')}
+            className={`flex items-center space-x-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+              currentView === 'builder'
+                ? 'bg-white text-green-600'
+                : 'bg-green-500 text-white hover:bg-green-400'
+            }`}
+          >
+            <List className="w-3 h-3" />
+            <span>Step Guide</span>
+          </button>
+
           <button
             onClick={() => setCurrentView('nsw')}
             className={`flex items-center space-x-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
@@ -971,6 +984,13 @@ export function EnhancedCoachPanel({
               </div>
             </div>
           </>
+        ) : currentView === 'builder' ? (
+          <div className="h-full overflow-y-auto p-4">
+            <StepByStepWritingBuilder
+              textType={textType}
+              content={content}
+            />
+          </div>
         ) : (
           <div className="h-full overflow-y-auto">
             {renderNSWCriteria()}
