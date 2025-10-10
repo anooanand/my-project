@@ -49,17 +49,17 @@ export function ReportModal({ isOpen, onClose, data, onApplyFix, studentName = "
         if (score >= 6) return "📚 Your writing is well-organized, making it easy for the reader to follow your ideas from start to finish.";
         if (score >= 4) return "🔗 Your writing has a clear plan, but sometimes the parts don\'t connect as smoothly as they could. Try using more connecting words!";
         if (score >= 2) return "🧩 Your writing is a bit jumbled, and it\'s hard to see how your ideas fit together. Let\'s practice organizing your thoughts step by step.";
-        return "🗺️ Your writing is hard to follow because it doesn't have a clear order. Let's practice organizing your thoughts with a simple plan first!";
+        return "🗺️ Your writing is hard to follow because it doesn't have a clear order. Let\'s practice organizing your thoughts with a simple plan first!";
       case "Language & Vocabulary":
         if (score >= 8) return "🎨 You use amazing words and clever writing tricks that make your writing shine like a diamond! Your vocabulary is impressive.";
         if (score >= 6) return "📖 You use good words and some literary devices to make your writing interesting and engaging to read.";
         if (score >= 4) return "🔤 You use appropriate words, but trying out new words and phrases could make your writing even more colorful and exciting.";
         if (score >= 2) return "📝 Your words are simple, and you could try using more exciting language to express yourself. Let\"s explore some new vocabulary together!";     case "Spelling, Punctuation & Grammar":
-        if (score >= 8) return "🎯 Your writing is almost perfect with spelling, punctuation, and grammar – fantastic work! You're a careful editor.";
+        if (score >= 8) return "🎯 Your writing is almost perfect with spelling, punctuation, and grammar – fantastic work! You\'re a careful editor.";
         if (score >= 6) return "✅ You make very few mistakes in spelling, punctuation, and grammar. Great job being careful with your writing!";
         if (score >= 4) return "⚠️ You have some mistakes in spelling, punctuation, or grammar, but your writing is still easy to understand. A little more proofreading will help!";
-        if (score >= 2) return "🔍 You make several mistakes in spelling, punctuation, and grammar, which sometimes makes your writing hard to read. Let's focus on one area at a time.";
-        return "📚 You have many mistakes in spelling, punctuation, and grammar, making your writing difficult to understand. Let's start with the basics and build up your skills!";
+        if (score >= 2) return "🔍 You make several mistakes in spelling, punctuation, and grammar, which sometimes makes your writing hard to read. Let\'s focus on one area at a time.";
+        return "📚 You have many mistakes in spelling, punctuation, and grammar, making your writing difficult to understand. Let\'s start with the basics and build up your skills!";
       default:
         return "No specific explanation available for this domain.";
     }
@@ -75,17 +75,17 @@ export function ReportModal({ isOpen, onClose, data, onApplyFix, studentName = "
         suggestions: [
           {
             title: "Add More Creative Details",
-            description: "Make your ideas come alive by adding specific details that help readers picture what's happening.",
+            description: "Make your ideas come alive by adding specific details that help readers picture what\'s happening.",
             examples: [
-              "Instead of 'The door was old,' try 'The wooden door creaked and groaned, its rusty hinges protesting with every movement.'",
-              "Instead of 'I was scared,' try 'My heart pounded like a drum as goosebumps crawled up my arms.'"
+              "Instead of \'The door was old,\' try \'The wooden door creaked and groaned, its rusty hinges protesting with every movement.\'",
+              "Instead of \'I was scared,\' try \'My heart pounded like a drum as goosebumps crawled up my arms.\'"
             ]
           },
           {
             title: "Develop Your Ideas Further",
             description: "Take your good ideas and expand on them with more explanation and examples.",
             examples: [
-              "If you mention a character, tell us what they look like, how they act, and why they're important.",
+              "If you mention a character, tell us what they look like, how they act, and why they\'re important.",
               "If you describe a place, use your five senses: what do you see, hear, smell, feel, and taste?"
             ]
           }
@@ -99,8 +99,8 @@ export function ReportModal({ isOpen, onClose, data, onApplyFix, studentName = "
             title: "Improve Your Story Flow",
             description: "Help your readers follow your story by organizing your ideas in a logical order.",
             examples: [
-              "Start with an exciting opening that grabs attention: 'The mysterious package arrived on the rainiest day of the year.'",
-              "Use connecting words like 'First,' 'Then,' 'Meanwhile,' 'Finally' to link your ideas together."
+              "Start with an exciting opening that grabs attention: \'The mysterious package arrived on the rainiest day of the year.\'",
+              "Use connecting words like \'First,\' \'Then,\' \'Meanwhile,\' \'Finally\' to link your ideas together."
             ]
           },
           {
@@ -121,16 +121,16 @@ export function ReportModal({ isOpen, onClose, data, onApplyFix, studentName = "
             title: "Use More Exciting Words",
             description: "Replace simple words with more interesting ones to make your writing more engaging.",
             examples: [
-              "Instead of 'big,' try 'enormous,' 'gigantic,' or 'massive.'",
-              "Instead of 'said,' try 'whispered,' 'shouted,' 'mumbled,' or 'declared.'"
+              "Instead of \'big,\' try \'enormous,\' \'gigantic,\' or \'massive.\'",
+              "Instead of \'said,\' try \'whispered,\' \'shouted,\' \'mumbled,\' or \'declared.\'"
             ]
           },
           {
             title: "Add Literary Devices",
             description: "Use special writing techniques to make your writing more interesting and fun to read.",
             examples: [
-              "Similes: 'The cat moved like a shadow in the night.'",
-              "Personification: 'The wind whispered secrets through the trees.'"
+              "Similes: \'The cat moved like a shadow in the night.\'",
+              "Personification: \'The wind whispered secrets through the trees.\'"
             ]
           }
         ]
@@ -143,8 +143,8 @@ export function ReportModal({ isOpen, onClose, data, onApplyFix, studentName = "
             title: "Master Comma Usage",
             description: "Learn when and where to use commas to make your sentences clearer and easier to read.",
             examples: [
-              "After introductory phrases: 'After the storm passed, the sun came out.'",
-              "In lists: 'I packed sandwiches, apples, and cookies for the picnic.'"
+              "After introductory phrases: \'After the storm passed, the sun came out.\'",
+              "In lists: \'I packed sandwiches, apples, and cookies for the picnic.\'"
             ]
           },
           {
@@ -184,9 +184,9 @@ export function ReportModal({ isOpen, onClose, data, onApplyFix, studentName = "
       });
       recommendations.push({
         title: "Challenge Yourself",
-        description: "Since you're doing so well, try experimenting with new writing styles or more complex prompts.",
+        description: "Since you\'re doing so well, try experimenting with new writing styles or more complex prompts.",
         examples: [
-          "Write from a different character's point of view.",
+          "Write from a different character\'s point of view.",
           "Try writing a story that takes place in a completely different time period."
         ]
       });
@@ -212,8 +212,8 @@ export function ReportModal({ isOpen, onClose, data, onApplyFix, studentName = "
       const paragraphCount = essayText.split(/\n\s*\n/).filter(p => p.trim().length > 0).length;
       strengths.push({
         area: "Organization",
-        description: "Your writing has a clear structure that's easy to follow.",
-        example: paragraphCount > 1 ? `You've organized your ideas into ${paragraphCount} clear paragraphs.` : undefined
+        description: "Your writing has a clear structure that\'s easy to follow.",
+        example: paragraphCount > 1 ? `You\'ve organized your ideas into ${paragraphCount} clear paragraphs.` : undefined
       });
     }
     
@@ -221,7 +221,7 @@ export function ReportModal({ isOpen, onClose, data, onApplyFix, studentName = "
       strengths.push({
         area: "Vocabulary",
         description: "You use interesting and appropriate words to express your ideas.",
-        example: "Your word choices help create vivid pictures in the reader's mind."
+        example: "Your word choices help create vivid pictures in the reader\'s mind."
       });
     }
     
@@ -245,7 +245,7 @@ export function ReportModal({ isOpen, onClose, data, onApplyFix, studentName = "
         area: "Ideas & Content",
         issue: "Your ideas need more development and detail.",
         suggestion: "Add more specific descriptions and examples to bring your ideas to life.",
-        example: "Instead of saying 'The place was nice,' describe what made it special: the colors, sounds, or feelings it gave you."
+        example: "Instead of saying \'The place was nice,\' describe what made it special: the colors, sounds, or feelings it gave you."
       });
     }
     
@@ -263,7 +263,7 @@ export function ReportModal({ isOpen, onClose, data, onApplyFix, studentName = "
         area: "Language & Vocabulary",
         issue: "Your vocabulary could be more varied and interesting.",
         suggestion: "Try using more descriptive and exciting words instead of simple ones.",
-        example: "Instead of 'walked,' try 'strolled,' 'marched,' 'tiptoed,' or 'wandered' depending on how the character moved."
+        example: "Instead of \'walked,\' try \'strolled,\' \'marched,\' \'tiptoed,\' or \'wandered\' depending on how the character moved."
       });
     }
     
@@ -277,16 +277,16 @@ export function ReportModal({ isOpen, onClose, data, onApplyFix, studentName = "
           area: "Punctuation",
           issue: "Missing commas after introductory phrases.",
           suggestion: "Remember to use a comma after introductory words or phrases.",
-          example: "In the sentence 'One rainy afternoon you stumble upon...', add a comma after 'afternoon': 'One rainy afternoon, you stumble upon...'"
+          example: "In the sentence \'One rainy afternoon you stumble upon...\', add a comma after \'afternoon\': \'One rainy afternoon, you stumble upon...\'"
         });
       }
       
       if (hasCapitalizationIssues) {
         improvements.push({
           area: "Capitalization",
-          issue: "The word 'I' should always be capitalized.",
-          suggestion: "Always write 'I' as a capital letter, even in the middle of sentences.",
-          example: "Change 'i think' to 'I think' and 'when i saw' to 'when I saw.'"
+          issue: "The word \'I\' should always be capitalized.",
+          suggestion: "Always write \'I\' as a capital letter, even in the middle of sentences.",
+          example: "Change \'i think\' to \'I think\' and \'when i saw\' to \'when I saw.\'"
         });
       }
       
@@ -306,7 +306,8 @@ export function ReportModal({ isOpen, onClose, data, onApplyFix, studentName = "
   const exportToPDF = async () => {
     setIsExporting(true);
     try {
-      // Create a printable versio      const printContent = document.getElementById(\'report-content\');
+      // Create a printable version
+      const printContent = document.getElementById('report-content');
       if (printContent) {
         const printWindow = window.open('', '_blank');
         if (printWindow) {
@@ -319,77 +320,32 @@ export function ReportModal({ isOpen, onClose, data, onApplyFix, studentName = "
                   body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; color: #333; }
                   .modal-content { width: 100%; max-width: 800px; margin: 0 auto; padding: 0; }
                   .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #3b82f6; padding-bottom: 20px; }
-                  .header h2 { color: #3b82f6; font-size: 2em; margin-bottom: 5px; }
-                  .header h3 { color: #666; font-size: 1.2em; margin-top: 0; }
-                  .score-display { display: flex; justify-content: space-between; align-items: center; background-color: #4a90e2; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-                  .score-display .overall-score-value { font-size: 3em; font-weight: bold; }
-                  .score-display .grade { font-size: 2em; font-weight: bold; padding: 5px 10px; background-color: rgba(255,255,255,0.2); border-radius: 5px; }
-                  .score-display .student-info { text-align: right; }
-                  .score-display .student-info p { margin: 0; }
-                  .section-title { font-size: 1.5em; font-weight: bold; color: #333; margin-top: 30px; margin-bottom: 15px; padding-bottom: 5px; border-bottom: 1px solid #eee; }
-                  .subsection-title { font-size: 1.2em; font-weight: bold; color: #555; margin-top: 20px; margin-bottom: 10px; }
-                  .explanation-card, .strength-card, .improvement-card, .recommendation-card, .essay-card { background-color: #f9f9f9; border: 1px solid #eee; border-radius: 8px; padding: 15px; margin-bottom: 15px; }
-                  .explanation-card p, .strength-card p, .improvement-card p, .recommendation-card p, .essay-card pre { font-size: 0.95em; color: #555; }
-                  .example-box { background-color: #f0f8ff; border-left: 4px solid #add8e6; padding: 10px; margin-top: 10px; }
-                  .example-box p { font-size: 0.9em; color: #444; }
-                  .essay-content { white-space: pre-wrap; word-wrap: break-word; }
-                  .footer { text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; color: #777; font-size: 0.9em; }
-
-                  /* Hide elements not needed for print */
-                  .no-print { display: none !important; }
-
-                  /* Page breaks for better readability */
-                  .page-break { page-break-before: always; }
-
+                  .header h1 { color: #3b82f6; font-size: 2.5em; margin-bottom: 5px; }
+                  .header p { color: #6b7280; font-size: 0.9em; }
+                  .section-title { font-size: 1.8em; color: #1f2937; margin-top: 30px; margin-bottom: 15px; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px; }
+                  .subsection-title { font-size: 1.4em; color: #374151; margin-top: 20px; margin-bottom: 10px; }
+                  .score-card { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 15px; text-align: center; margin-bottom: 15px; }
+                  .score-card h3 { color: #1e40af; margin-bottom: 5px; }
+                  .score-card p { font-size: 0.9em; color: #4b5563; }
+                  .score-display { font-size: 2.5em; font-weight: bold; color: #3b82f6; margin-top: 10px; }
+                  .explanation-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px; margin-bottom: 15px; }
+                  .explanation-card p { font-size: 0.95em; line-height: 1.5; color: #4b5563; }
+                  .strengths, .improvements, .child-friendly, .recommendations { padding: 15px; margin: 10px 0; border-radius: 8px; }
+                  .strengths { background: #f0fdf4; border-left: 4px solid #10b981; }
+                  .improvements { background: #fef3c7; border-left: 4px solid #f59e0b; }
+                  .child-friendly { background: #fce7f3; border-left: 4px solid #ec4899; }
+                  .recommendations { background: #f3e8ff; border-left: 4px solid #8b5cf6; }
+                  .icon { display: inline-block; margin-right: 8px; vertical-align: middle; }
+                  .essay-content { background: #f8fafc; padding: 20px; margin: 15px 0; border: 1px solid #e2e8f0; border-radius: 8px; white-space: pre-wrap; word-wrap: break-word; }
+                  h1, h2, h3 { color: #1f2937; }
+                  .lint-fix-item { background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px; margin-bottom: 10px; display: flex; align-items: center; }
+                  .lint-fix-item .suggestion { flex-grow: 1; margin-right: 10px; }
+                  .lint-fix-item button { background: #3b82f6; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 0.9em; }
+                  .lint-fix-item button:hover { background: #2563eb; }
                   @media print {
                     body { margin: 0; }
-                    .modal-content { box-shadow: none; }
-                    /* Ensure background colors and images are printed */
-                    -webkit-print-color-adjust: exact;
-                    print-color-adjust: exact;
+                    .no-print { display: none; }
                   }
-                </style>
-              </head>
-              <body>
-                <div class="modal-content">
-                  <div class="header">
-                    <h2>NSW Writing Assessment Report</h2>
-                    <h3>Your Personal Writing Journey Report</h3>
-                  </div>
-                  <div class="score-display">
-                    <div>
-                      <p>Overall Score</p>
-                      <div style="display: flex; align-items: center; gap: 10px;">
-                        <span class="overall-score-value">${data.overallScore}</span>
-                        <span>/100</span>
-                        <span class="grade" style="background-color: ${getGradeColor(data.overallScore).includes('green') ? '#22c55e' : getGradeColor(data.overallScore).includes('yellow') ? '#eab308' : '#ef4444'};">${getGrade(data.overallScore)}</span>
-                      </div>
-                    </div>
-                    <div class="student-info">
-                      <p>Student: ${studentName}</p>
-                      <p>Date: ${new Date().toLocaleDateString()}</p>
-                      <p>Report ID: ${data.id}</p>
-                    </div>
-                  </div>
-
-                  <h3 class="section-title">What Your Scores Mean</h3>
-                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                    <div class="explanation-card">
-                      <h4 class="subsection-title">Ideas & Content (${data.criteria.ideasContent.score}/10)</h4>
-                      <p>${generateChildFriendlyExplanation(                .score-bar { height: 20px; background: #f0f0f0; border-radius: 10px; margin: 5px 0; }
-                  .score-fill { height: 100%; border-radius: 10px; }
-                  .green { background: #10b981; }
-                  .yellow { background: #f59e0b; }
-                  .red { background: #ef4444; }
-                  .strengths { background: #f0fdf4; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #10b981; }
-                  .improvements { background: #fef3c7; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #f59e0b; }
-                  .child-friendly { background: #fce7f3; padding: 15px; margin: 10px 0; border-left: 4px solid #ec4899; border-radius: 8px; }
-                  .essay-content { background: #f8fafc; padding: 20px; margin: 15px 0; border: 1px solid #e2e8f0; border-radius: 8px; }
-                  .recommendations { background: #f3e8ff; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #8b5cf6; }
-                  .icon { display: inline-block; margin-right: 8px; }
-                  h1, h2, h3 { color: #1f2937; }
-                  .score-display { font-size: 2em; font-weight: bold; color: #3b82f6; }
-                  @media print { body { margin: 0; } }
                 </style>
               </head>
               <body>
@@ -402,345 +358,179 @@ export function ReportModal({ isOpen, onClose, data, onApplyFix, studentName = "
         }
       }
     } catch (error) {
-      console.error('Export failed:', error);
+      console.error("Error exporting to PDF:", error);
+      alert("Failed to export report to PDF. Please try again.");
     } finally {
       setIsExporting(false);
     }
   };
 
-  const downloadAsText = () => {
-    const personalizedRecommendations = generatePersonalizedRecommendations();
-    const specificStrengths = generateSpecificStrengths();
-    const specificImprovements = generateSpecificImprovements();
-    
-    const reportText = `
-NSW SELECTIVE WRITING ASSESSMENT REPORT
-=====================================
+  const overallScore = Math.round(
+    (data.criteria.ideasContent.score +
+      data.criteria.structureOrganization.score +
+      data.criteria.languageVocab.score +
+      data.criteria.spellingPunctuationGrammar.score) / 4
+  );
 
-Student: ${studentName}
-Date: ${new Date().toLocaleDateString()}
-Assessment ID: ${data.id}
+  const overallGrade = getGrade(overallScore * 10);
+  const overallGradeColor = getGradeColor(overallScore * 10);
 
-OVERALL SCORE: ${data.overallScore}/100 (Grade: ${getGrade(data.overallScore)})
-
-CRITERIA BREAKDOWN:
-- Ideas & Content: ${data.criteria.ideasContent.score}/10 (${data.criteria.ideasContent.weight}%)
-- Structure & Organization: ${data.criteria.structureOrganization.score}/10 (${data.criteria.structureOrganization.weight}%)
-- Language & Vocabulary: ${data.criteria.languageVocab.score}/10 (${data.criteria.languageVocab.weight}%)
-- Spelling, Punctuation & Grammar: ${data.criteria.spellingPunctuationGrammar.score}/10 (${data.criteria.spellingPunctuationGrammar.weight}%)
-
-CHILD-FRIENDLY EXPLANATIONS:
-
-IDEAS & CONTENT:
-${generateChildFriendlyExplanation("Ideas & Content", data.criteria.ideasContent.score)}
-
-STRUCTURE & ORGANIZATION:
-${generateChildFriendlyExplanation("Structure & Organization", data.criteria.structureOrganization.score)}
-
-LANGUAGE & VOCABULARY:
-${generateChildFriendlyExplanation("Language & Vocabulary", data.criteria.languageVocab.score)}
-
-SPELLING, PUNCTUATION & GRAMMAR:
-${generateChildFriendlyExplanation("Spelling, Punctuation & Grammar", data.criteria.spellingPunctuationGrammar.score)}
-
-YOUR STRENGTHS:
-${specificStrengths.map((strength, index) => `${index + 1}. ${strength.area}: ${strength.description}${strength.example ? '\n   Example: ' + strength.example : ''}`).join('\n')}
-
-AREAS FOR IMPROVEMENT:
-${specificImprovements.map((improvement, index) => `${index + 1}. ${improvement.area}: ${improvement.issue}\n   Suggestion: ${improvement.suggestion}${improvement.example ? '\n   Example: ' + improvement.example : ''}`).join('\n')}
-
-YOUR NEXT STEPS FOR IMPROVEMENT:
-${personalizedRecommendations.map((rec, index) => `${index + 1}. ${rec.title}: ${rec.description}\n   Examples:\n   ${rec.examples.map(ex => `   • ${ex}`).join('\n')}`).join('\n')}
-
-ORIGINAL ESSAY:
-${essayText}
-
-Report generated on ${new Date().toLocaleString()}
-    `;
-
-    const blob = new Blob([reportText], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `NSW_Writing_Assessment_${studentName}_${new Date().toISOString().split('T')[0]}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-    const ScoreBar = ({ label, score, maxScore = 10, weight }: { label: string; score: number; maxScore?: number; weight: number }) => {
-    const actualScorePercentage = (score / maxScore) * 100;
-    const barWidthPercentage = Math.min(100, Math.max(0, actualScorePercentage)); // Ensure bar width is between 0 and 100%
-
-    const getColor = (percentage: number) => {
-      if (percentage >= 80) return 'bg-green-500';
-      if (percentage >= 60) return 'bg-yellow-500';
-      return 'bg-red-500';
-    };
-
-    const getScoreDescription = (percentage: number) => {
-      if (percentage >= 80) return "Excellent";
-      if (percentage >= 60) return "Good";
-      if (percentage >= 40) return "Developing";
-      return "Needs Practice";
-    };
-
-    return (
-      <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-        <div className="flex justify-between items-center mb-3">
-          <span className="font-medium text-lg">{label}</span>
-          <div className="flex items-center space-x-3">
-            <span className="text-lg font-bold">{score}/{maxScore}</span>
-            <span className="text-sm text-gray-600">({weight}%)</span>
-            <span className={`text-sm font-medium px-2 py-1 rounded ${
-              actualScorePercentage >= 80 ? 'bg-green-100 text-green-800' :
-              actualScorePercentage >= 60 ? 'bg-yellow-100 text-yellow-800' :
-              'bg-red-100 text-red-800'
-            }`}>
-              {getScoreDescription(actualScorePercentage)}
-            </span>
-          </div>
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-4">
-          <div
-            className={`h-4 rounded-full transition-all duration-500 ${getColor(actualScorePercentage)}`}
-            style={{ width: `${barWidthPercentage}%` }}
-          />
-        </div>
-      </div>
-    );
-  };
-
-  const personalizedRecommendations = generatePersonalizedRecommendations();
   const specificStrengths = generateSpecificStrengths();
   const specificImprovements = generateSpecificImprovements();
+  const personalizedRecommendations = generatePersonalizedRecommendations();
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-hidden">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
-          <div className="flex justify-between items-start">
-            <div>
-              <h1 className="text-3xl font-bold mb-2 flex items-center">
-                <Award className="w-8 h-8 mr-3" />
-                NSW Writing Assessment Report
-              </h1>
-              <p className="text-blue-100">Your Personal Writing Journey Report</p>
-            </div>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={exportToPDF}
-                disabled={isExporting}
-                className="bg-white/20 hover:bg-white/30 p-2 rounded-lg transition-colors"
-                title="Print Report"
-              >
-                <Printer className="w-5 h-5" />
-              </button>
-              <button
-                onClick={downloadAsText}
-                className="bg-white/20 hover:bg-white/30 p-2 rounded-lg transition-colors"
-                title="Download as Text"
-              >
-                <Download className="w-5 h-5" />
-              </button>
-              <button
-                onClick={onClose}
-                className="bg-white/20 hover:bg-white/30 p-2 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-          
-          <div className="mt-6 flex items-center justify-between">
-            <div className="flex items-center space-x-6">
-              <div>
-                <p className="text-blue-100 text-sm">Overall Score</p>
-                <div className="flex items-center space-x-3">
-                  <span className="text-5xl font-bold">{data.overallScore}</span>
-                  <span className="text-blue-200 text-2xl">/100</span>
-                  <span className={`text-4xl font-bold px-3 py-1 rounded-lg bg-white/20 ${getGradeColor(data.overallScore)}`}>
-                    {getGrade(data.overallScore)}
-                  </span>
-                </div>
-              </div>
-              <div className="text-center">
-                <Star className="w-12 h-12 mx-auto mb-2 text-yellow-300" />
-                <p className="text-blue-100 text-sm">Great Job!</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <p className="text-blue-100 text-lg font-medium">Student: {studentName}</p>
-              <p className="text-blue-100 text-sm">Date: {new Date().toLocaleDateString()}</p>
-              <p className="text-xs text-blue-200">Report ID: {data.id}</p>
-            </div>
+    <div className={`fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 ${isOpen ? '' : 'hidden'}`}>
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="flex justify-between items-center p-4 border-b border-gray-200 no-print">
+          <h2 className="text-2xl font-bold text-gray-800">Writing Assessment Report</h2>
+          <div className="flex space-x-2">
+            <button
+              onClick={exportToPDF}
+              className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+              disabled={isExporting}
+            >
+              {isExporting ? 'Exporting...' : <><Download className="mr-2 h-5 w-5" /> Export PDF</>}
+            </button>
+            <button
+              onClick={onClose}
+              className="p-2 rounded-full hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-300"
+            >
+              <X className="h-6 w-6 text-gray-600" />
+            </button>
           </div>
         </div>
 
-        {/* Content */}
-        <div className="overflow-y-auto max-h-[calc(90vh-200px)]" id="report-content">
-          <div className="p-6 space-y-8">
-            
-            {/* Child-Friendly Score Explanations */}
-            <div className="bg-gradient-to-r from-pink-50 to-purple-50 p-6 rounded-lg border border-pink-200">
-              <h3 className="font-bold mb-4 text-xl flex items-center text-purple-800">
-                <Heart className="w-6 h-6 mr-2" />
-                What Your Scores Mean
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-white p-4 rounded-lg border border-pink-100">
-                  <h4 className="font-semibold text-purple-700 mb-2">Ideas & Content ({data.criteria.ideasContent.score}/10) </h4>
-                  <p className="text-sm text-gray-700">{generateChildFriendlyExplanation("Ideas & Content", data.criteria.ideasContent.score)}</p>
-                </div>
-                <div className="bg-white p-4 rounded-lg border border-pink-100">
-                  <h4 className="font-semibold text-purple-700 mb-2">Structure & Organization ({data.criteria.structureOrganization.score}/10) </h4>
-                  <p className="text-sm text-gray-700">{generateChildFriendlyExplanation("Structure & Organization", data.criteria.structureOrganization.score)}</p>
-                </div>
-                <div className="bg-white p-4 rounded-lg border border-pink-100">
-                  <h4 className="font-semibold text-purple-700 mb-2">Language & Vocabulary ({data.criteria.languageVocab.score}/10) </h4>
-                  <p className="text-sm text-gray-700">{generateChildFriendlyExplanation("Language & Vocabulary", data.criteria.languageVocab.score)}</p>
-                </div>
-                <div className="bg-white p-4 rounded-lg border border-pink-100">
-                  <h4 className="font-semibold text-purple-700 mb-2">Spelling & Grammar ({data.criteria.spellingPunctuationGrammar.score}/10) </h4>
-                  <p className="text-sm text-gray-700">{generateChildFriendlyExplanation("Spelling, Punctuation & Grammar", data.criteria.spellingPunctuationGrammar.score)}</p>
-                </div>
+        <div id="report-content" className="flex-grow overflow-y-auto p-6 text-gray-700 leading-relaxed">
+          <div className="header mb-8 text-center">
+            <h1 className="text-4xl font-extrabold text-blue-700 mb-2">Writing Assessment Report</h1>
+            <p className="text-lg text-gray-600">For: <span className="font-semibold">{studentName}</span></p>
+            <p className="text-sm text-gray-500">Date: {new Date(data.timestamp).toLocaleDateString()}</p>
+          </div>
+
+          <div className="mb-8">
+            <h3 className="section-title flex items-center"><BarChart3 className="mr-2" /> Overall Performance</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="score-card bg-blue-50 border-blue-200">
+                <h3 className="text-blue-800">Overall Score</h3>
+                <p className="text-5xl font-extrabold text-blue-600 mt-2">{overallScore}<span className="text-3xl">/10</span></p>
+              </div>
+              <div className="score-card bg-green-50 border-green-200">
+                <h3 className="text-green-800">Overall Grade</h3>
+                <p className={`text-5xl font-extrabold ${overallGradeColor} mt-2`}>{overallGrade}</p>
               </div>
             </div>
+          </div>
 
-            {/* Criteria Overview with Enhanced Visuals */}
-            <div className="bg-gray-50 p-6 rounded-lg">
-              <h3 className="font-bold mb-6 text-xl flex items-center">
-                <BarChart3 className="w-6 h-6 mr-2 text-blue-600" />
-                Your Writing Skills Breakdown
-              </h3>
-              <ScoreBar 
-                label="Ideas & Content" 
-                score={data.criteria.ideasContent.score} 
-                weight={data.criteria.ideasContent.weight}
-              />
-              <ScoreBar 
-                label="Structure & Organization" 
-                score={data.criteria.structureOrganization.score}
-                weight={data.criteria.structureOrganization.weight}
-              />
-              <ScoreBar 
-                label="Language & Vocabulary" 
-                score={data.criteria.languageVocab.score}
-                weight={data.criteria.languageVocab.weight}
-              />
-              <ScoreBar 
-                label="Spelling, Punctuation & Grammar" 
-                score={data.criteria.spellingPunctuationGrammar.score}
-                weight={data.criteria.spellingPunctuationGrammar.weight}
-              />
+          <div className="mb-8">
+            <h3 className="section-title flex items-center"><FileText className="mr-2" /> Essay Content</h3>
+            <div className="essay-content">
+              <p>{essayText}</p>
             </div>
+          </div>
 
-            {/* Enhanced Strengths Section */}
-            {specificStrengths.length > 0 && (
-              <div className="bg-green-50 p-6 rounded-lg border border-green-200">
-                <h3 className="font-bold mb-4 text-xl flex items-center text-green-800">
-                  <CheckCircle className="w-6 h-6 mr-2" />
-                  Your Amazing Strengths! 🌟
-                </h3>
-                <div className="space-y-4">
-                  {specificStrengths.map((strength, index) => (
-                    <div key={index} className="bg-white p-4 rounded-lg border border-green-100">
-                      <h4 className="font-semibold text-green-700 mb-2">{strength.area}</h4>
-                      <p className="text-gray-700 mb-2">{strength.description}</p>
-                      {strength.example && (
-                        <p className="text-sm text-green-600 italic bg-green-50 p-2 rounded">
-                          💡 {strength.example}
-                        </p>
-                      )}
-                    </div>
-                  ))}
-                </div>
+          <div className="mb-8">
+            <h3 className="section-title flex items-center"><Award className="mr-2" /> Detailed Criteria Breakdown</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="explanation-card">
+                <h4 className="subsection-title flex items-center"><Lightbulb className="mr-2" /> Ideas & Content ({data.criteria.ideasContent.score}/10)</h4>
+                <p>{generateChildFriendlyExplanation("Ideas & Content", data.criteria.ideasContent.score)}</p>
+                <div className="score-bar"><div className={`score-fill ${getGradeColor(data.criteria.ideasContent.score * 10)}`} style={{ width: `${data.criteria.ideasContent.score * 10}%` }}></div></div>
               </div>
-            )}
-
-            {/* Enhanced Areas for Improvement Section */}
-            {specificImprovements.length > 0 && (
-              <div className="bg-yellow-50 p-6 rounded-lg border border-yellow-200">
-                <h3 className="font-bold mb-4 text-xl flex items-center text-yellow-800">
-                  <Target className="w-6 h-6 mr-2" />
-                  Areas to Make Even Better! 🎯
-                </h3>
-                <div className="space-y-4">
-                  {specificImprovements.map((improvement, index) => (
-                    <div key={index} className="bg-white p-4 rounded-lg border border-yellow-100">
-                      <h4 className="font-semibold text-yellow-700 mb-2">{improvement.area}</h4>
-                      <p className="text-gray-700 mb-2"><strong>What to work on:</strong> {improvement.issue}</p>
-                      <p className="text-gray-700 mb-2"><strong>How to improve:</strong> {improvement.suggestion}</p>
-                      {improvement.example && (
-                        <div className="bg-yellow-50 p-3 rounded border-l-4 border-yellow-400">
-                          <p className="text-sm text-yellow-700">
-                            <strong>Example:</strong> {improvement.example}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
+              <div className="explanation-card">
+                <h4 className="subsection-title flex items-center"><Target className="mr-2" /> Structure & Organization ({data.criteria.structureOrganization.score}/10)</h4>
+                <p>{generateChildFriendlyExplanation("Structure & Organization", data.criteria.structureOrganization.score)}</p>
+                <div className="score-bar"><div className={`score-fill ${getGradeColor(data.criteria.structureOrganization.score * 10)}`} style={{ width: `${data.criteria.structureOrganization.score * 10}%` }}></div></div>
               </div>
-            )}
+              <div className="explanation-card">
+                <h4 className="subsection-title flex items-center"><BookOpen className="mr-2" /> Language & Vocabulary ({data.criteria.languageVocab.score}/10)</h4>
+                <p>{generateChildFriendlyExplanation("Language & Vocabulary", data.criteria.languageVocab.score)}</p>
+                <div className="score-bar"><div className={`score-fill ${getGradeColor(data.criteria.languageVocab.score * 10)}`} style={{ width: `${data.criteria.languageVocab.score * 10}%` }}></div></div>
+              </div>
+              <div className="explanation-card">
+                <h4 className="subsection-title flex items-center"><CheckCircle className="mr-2" /> Spelling, Punctuation & Grammar ({data.criteria.spellingPunctuationGrammar.score}/10)</h4>
+                <p>{generateChildFriendlyExplanation("Spelling, Punctuation & Grammar", data.criteria.spellingPunctuationGrammar.score)}</p>
+                <div className="score-bar"><div className={`score-fill ${getGradeColor(data.criteria.spellingPunctuationGrammar.score * 10)}`} style={{ width: `${data.criteria.spellingPunctuationGrammar.score * 10}%` }}></div></div>
+              </div>
+            </div>
+          </div>
 
-            {/* Enhanced Personalized Recommendations Section */}
-            <div className="bg-purple-50 p-6 rounded-lg border border-purple-200">
-              <h3 className="font-bold mb-4 text-xl flex items-center text-purple-800">
-                <TrendingUp className="w-6 h-6 mr-2" />
-                Your Next Steps to Level Up! 🚀
-              </h3>
-              <p className="text-purple-700 mb-4">Here are some specific things you can practice to make your writing even more amazing:</p>
-              <div className="space-y-6">
-                {personalizedRecommendations.map((rec, index) => (
-                  <div key={index} className="bg-white p-5 rounded-lg border border-purple-100">
-                    <h4 className="font-semibold text-purple-700 mb-3 flex items-center">
-                      <span className="bg-purple-100 text-purple-800 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold mr-2">
-                        {index + 1}
-                      </span>
-                      {rec.title}
-                    </h4>
-                    <p className="text-gray-700 mb-3">{rec.description}</p>
-                    <div className="bg-purple-50 p-3 rounded">
-                      <p className="text-sm font-medium text-purple-700 mb-2">Try these examples:</p>
-                      <ul className="space-y-1">
+          <div className="mb-8">
+            <h3 className="section-title flex items-center"><Heart className="mr-2" /> Strengths</h3>
+            <div className="strengths">
+              {specificStrengths.length > 0 ? (
+                specificStrengths.map((strength, index) => (
+                  <div key={index} className="mb-4 last:mb-0">
+                    <h4 className="font-semibold text-green-800 flex items-center"><Star className="mr-2 h-5 w-5" />{strength.area}</h4>
+                    <p className="text-green-700 ml-7">{strength.description}</p>
+                    {strength.example && <p className="text-green-600 text-sm italic ml-7">Example: {strength.example}</p>}
+                  </div>
+                ))
+              ) : (
+                <p className="text-green-700">No specific strengths identified at this time, but keep up the great work!</p>
+              )}
+            </div>
+          </div>
+
+          <div className="mb-8">
+            <h3 className="section-title flex items-center"><AlertCircle className="mr-2" /> Areas for Improvement</h3>
+            <div className="improvements">
+              {specificImprovements.length > 0 ? (
+                specificImprovements.map((improvement, index) => (
+                  <div key={index} className="mb-4 last:mb-0">
+                    <h4 className="font-semibold text-yellow-800 flex items-center"><TrendingUp className="mr-2 h-5 w-5" />{improvement.area} - {improvement.issue}</h4>
+                    <p className="text-yellow-700 ml-7">Suggestion: {improvement.suggestion}</p>
+                    {improvement.example && <p className="text-yellow-600 text-sm italic ml-7">Example: {improvement.example}</p>}
+                  </div>
+                ))
+              ) : (
+                <p className="text-yellow-700">Great job! No major areas for improvement identified. Keep refining your skills!</p>
+              )}
+            </div>
+          </div>
+
+          <div className="mb-8">
+            <h3 className="section-title flex items-center"><Lightbulb className="mr-2" /> Personalized Recommendations</h3>
+            <div className="recommendations">
+              {personalizedRecommendations.length > 0 ? (
+                personalizedRecommendations.map((rec, index) => (
+                  <div key={index} className="mb-4 last:mb-0">
+                    <h4 className="font-semibold text-purple-800 flex items-center"><Star className="mr-2 h-5 w-5" />{rec.title}</h4>
+                    <p className="text-purple-700 ml-7">{rec.description}</p>
+                    {rec.examples && rec.examples.length > 0 && (
+                      <ul className="list-disc list-inside text-purple-600 text-sm italic ml-7">
                         {rec.examples.map((example, exIndex) => (
-                          <li key={exIndex} className="text-sm text-purple-600 flex items-start">
-                            <span className="mr-2">•</span>
-                            <span>{example}</span>
-                          </li>
+                          <li key={exIndex}>{example}</li>
                         ))}
                       </ul>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <p className="text-purple-700">No specific recommendations at this time. Keep exploring and practicing!</p>
+              )}
+            </div>
+          </div>
+
+          {data.lint_fixes && data.lint_fixes.length > 0 && (
+            <div className="mb-8 no-print">
+              <h3 className="section-title flex items-center"><X className="mr-2" /> Suggested Fixes</h3>
+              <p className="mb-4 text-gray-600">Here are some suggested fixes for common writing issues:</p>
+              <div className="space-y-4">
+                {data.lint_fixes.map((fix, index) => (
+                  <div key={index} className="lint-fix-item">
+                    <div className="suggestion">
+                      <p className="font-semibold text-gray-800">Issue: {fix.issue}</p>
+                      <p className="text-gray-600">Suggestion: {fix.suggestion}</p>
+                      {fix.example && <p className="text-gray-500 text-sm italic">Example: {fix.example}</p>}
                     </div>
+                    <button onClick={() => onApplyFix(fix)}>Apply Fix</button>
                   </div>
                 ))}
               </div>
             </div>
+          )}
 
-            {/* Original Essay Section - FIXED: Now shows actual essay */}
-            <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
-              <h3 className="font-bold mb-4 text-xl flex items-center text-blue-800">
-                <BookOpen className="w-6 h-6 mr-2" />
-                Your Original Essay
-              </h3>
-              <div className="bg-white p-4 rounded-lg border border-blue-100 max-h-96 overflow-y-auto">
-                <pre className="whitespace-pre-wrap text-gray-700 font-sans leading-relaxed">
-                  {essayText || "No essay content available."}
-                </pre>
-              </div>
-            </div>
-
-            {/* Encouragement Footer */}
-            <div className="bg-gradient-to-r from-green-50 to-blue-50 p-6 rounded-lg border border-green-200 text-center">
-              <h3 className="font-bold text-xl text-green-800 mb-2">Keep Writing and Growing! 🌱</h3>
-              <p className="text-green-700">
-                Remember, every great writer started as a beginner. You're on an amazing journey of discovery and creativity. 
-                Keep practicing, keep dreaming, and most importantly, keep writing! Your unique voice and imagination are what make your stories special.
-              </p>
-            </div>
-          </div>
         </div>
       </div>
     </div>
