@@ -536,3 +536,4 @@ export function ReportModal({ isOpen, onClose, data, onApplyFix, studentName = "
     </div>
   );
 }
+
