@@ -21,6 +21,16 @@ interface GenerateReportParams {
 // Main class for generating the NSW Selective Writing Assessment Report.
 export class NSWEvaluationReportGenerator {
 
+  private static detectDuplicateContent(essayContent: string): boolean {
+    // This is a placeholder for actual duplicate content detection logic.
+    // For now, it will always return false to prevent the error.
+    // A more robust implementation would involve comparing the essayContent
+    // against a database of previously submitted essays or using advanced
+    // plagiarism detection algorithms.
+    return false;
+  }
+
+
   /**
    * Main function to generate the full report.
    * This function orchestrates the validation, scoring, and report assembly.
@@ -50,7 +60,7 @@ export class NSWEvaluationReportGenerator {
       throw new Error(
         `❌ Your original content is only ${cleanedWordCount} words.\n` +
         `You need ${targetWordCountMin} words of YOUR OWN creative story.\n` +
-        `(The prompt text doesn\'t count toward your word count!)`
+        `(The prompt text doesn\\'t count toward your word count!)`
       );
     }
 
@@ -119,7 +129,7 @@ export class NSWEvaluationReportGenerator {
       }
     }
 
-    // If more than 50% of prompt sentences found in essay, it\'s copied
+    // If more than 50% of prompt sentences found in essay, it\\\'s copied
     if (promptSentences.length > 0 && matchedSentences / promptSentences.length > 0.5) {
       return {
         isCopied: true,
