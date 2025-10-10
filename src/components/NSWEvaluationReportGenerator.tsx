@@ -37,7 +37,7 @@ export class NSWEvaluationReportGenerator {
     }
 
     // STEP 2: Clean the essay (remove prompt)
-    const cleanedEssay = NSWEvalconst cleanedEssay = NSWconst cleanedEssay = NSWEvaluationReportGenerator.removePromptFromEssay(safeEssayContent, safePrompt); const cleanedWordCount = cleanedEssay.trim().split(/\s+/).filter(w => w.length > 0).length;
+   const cleanedEssay = NSWEvaluationReportGenerator.removePromptFromEssay(safeEssayContent, safePrompt); const cleanedWordCount = cleanedEssay.trim().split(/\s+/).filter(w => w.length > 0).length;
 
     console.log("=== VALIDATION DEBUG ====");
     console.log("Original word count:", safeEssayContent.split(/\s+/).length);
