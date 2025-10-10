@@ -663,39 +663,27 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
             {/* Enhanced Word Count with Progress */}
             <div className="flex items-center space-x-4">
               <FileText className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />
-                           <div className="flex flex-col">
+                                         <div className="flex flex-col">
                 <div className="flex items-center space-x-2">
                   <span className={`text-sm font-medium ${
-                    currentWordCount >= 300 && currentWordCount <= 300
+                    currentWordCount >= 300
                       ? 'text-green-500'
-                      : currentWordCount > 300
-                      ? 'text-red-500'
                       : darkMode ? 'text-gray-300' : 'text-gray-700'
                   }`}>
                     {currentWordCount} / 300 words
                   </span>
-                  {currentWordCount >= 300 && currentWordCount <= 300 && (
+                  {currentWordCount >= 300 && (
                     <span className="text-xs text-green-500">✓ Target reached</span>
                   )}
                 </div>
                 <div className="w-32 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mt-1">
                   <div
                     className={`h-full transition-all duration-300 ${
-                      currentWordCount >= 300 && currentWordCount <= 300
+                      currentWordCount >= 300
                         ? 'bg-green-500'
-                        : currentWordCount > 300
-                        ? 'bg-red-500'
                         : 'bg-blue-500'
                     }`}
                     style={{ width: `${Math.min((currentWordCount / 300) * 100, 100) }%` }}
-                  />
-                </div>
-              </div>
-                        : currentWordCount > 50
-                        ? 'bg-red-500'
-                        : 'bg-blue-500'
-                    }`}
-                    style={{ width: `${Math.min((currentWordCount / 50) * 100, 100) }%` }}
                   />
                 </div>
               </div>
