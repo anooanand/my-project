@@ -72,6 +72,11 @@ function AppContent() {
   const [openAIConnected, setOpenAIConnected] = useState<boolean | null>(null);
   const [openAILoading, setOpenAILoading] = useState<boolean>(true);
 
+  // New states for button functionality
+  const [showStructureGuide, setShowStructureGuide] = useState(false);
+  const [showTips, setShowTips] = useState(false);
+  const [focusMode, setFocusMode] = useState(false);
+
   // CRITICAL FIX: Load prompt from localStorage when component mounts or when navigating to writing page
   useEffect(() => {
     const loadPromptFromStorage = () => {
@@ -305,6 +310,27 @@ function AppContent() {
     }
   }, []);
 
+  // Toggle functions for the buttons
+  const handleTogglePlanningTool = useCallback(() => {
+    setShowPlanningTool(prev => !prev);
+  }, []);
+
+  const handleToggleStructureGuide = useCallback(() => {
+    setShowStructureGuide(prev => !prev);
+  }, []);
+
+  const handleToggleTips = useCallback(() => {
+    setShowTips(prev => !prev);
+  }, []);
+
+  const handleToggleExamMode = useCallback(() => {
+    setShowExamMode(prev => !prev);
+  }, []);
+
+  const handleToggleFocusMode = useCallback(() => {
+    setFocusMode(prev => !prev);
+  }, []);
+
   // NAVIGATION FIX: Improved footer visibility logic
   const shouldShowFooter = useCallback(() => {
     // Don't show footer on writing page or other specific pages
@@ -424,7 +450,24 @@ function AppContent() {
           } />
           <Route path="/exam" element={
             <WritingAccessCheck onNavigate={handleNavigation}>
-              <ExamSimulationMode onExit={() => navigate("/dashboard")}/>
+              <ExamSimulationMode
+                content={content}
+                onChange={setContent}
+                textType={textType}
+                initialPrompt={prompt || ''}
+                wordCount={content.split(/\s+/).filter(Boolean).length}
+                onWordCountChange={() => { /* handled internally */ }}
+                darkMode={false} // Assuming a default for exam mode
+                isTimerRunning={false}
+                elapsedTime={0}
+                onStartTimer={() => {}}
+                onPauseTimer={() => {}}
+                onResetTimer={() => {}}
+                onSubmit={handleSubmit}
+                user={user}
+                openAIConnected={openAIConnected}
+                openAILoading={openAILoading}
+              />
             </WritingAccessCheck>
           } />
           <Route path="/writing" element={
@@ -434,20 +477,21 @@ function AppContent() {
                 onChange={setContent}
                 textType={textType}
                 initialPrompt={prompt || ''}
-                wordCount={0} // This will be updated by the component itself
-                onWordCountChange={() => {}} // Placeholder, as the component manages it
+                wordCount={content.split(/\s+/).filter(Boolean).length}
+                onWordCountChange={() => { /* handled internally */ }}
+                darkMode={false} // Assuming a default for now
                 isTimerRunning={timerStarted}
-                elapsedTime={0} // Placeholder, as the component manages it
+                elapsedTime={0} // Placeholder, actual timer logic needs to be implemented
                 onStartTimer={() => setTimerStarted(true)}
                 onPauseTimer={() => setTimerStarted(false)}
-                onResetTimer={() => { /* reset logic */ }}
-                focusMode={false}
-                onToggleFocus={() => { /* toggle logic */ }}
-                showStructureGuide={false}
-                onToggleStructureGuide={() => { /* toggle logic */ }}
-                showTips={false}
-                onToggleTips={() => { /* toggle logic */ }}
-                analysis={null}
+                onResetTimer={() => { /* reset timer logic */ }}
+                focusMode={focusMode}
+                onToggleFocus={handleToggleFocusMode}
+                showStructureGuide={showStructureGuide}
+                onToggleStructureGuide={handleToggleStructureGuide}
+                showTips={showTips}
+                onToggleTips={handleToggleTips}
+                analysis={null} // Placeholder for actual analysis data
                 onAnalysisChange={() => { /* handle analysis change */ }}
                 setPrompt={setPrompt}
                 assistanceLevel={assistanceLevel}
@@ -465,39 +509,31 @@ function AppContent() {
               />
             </WritingAccessCheck>
           } />
-          <Route path="/learning" element={
-            <WritingAccessCheck onNavigate={handleNavigation}>
-              <LearningPage onNavigate={handleNavigation} />
-            </WritingAccessCheck>
-          } />
-          <Route path="/evaluation" element={
-            <WritingAccessCheck onNavigate={handleNavigation}>
-              <EvaluationPage onNavigate={handleNavigation} />
-            </WritingAccessCheck>
-          } />
+          <Route path="/learning" element={<LearningPage />} />
+          <Route path="/feedback/:essayId" element={<EssayFeedbackPage />} />
+          <Route path="/evaluation/:evaluationId" element={<EvaluationPage />} />
+          <Route path="/auth/callback" element={<EmailVerificationHandler />} />
           <Route path="/payment-success" element={
-            <PaymentSuccessPage 
-              planType={pendingPaymentPlan}
-              onNavigate={handleNavigation}
-              onClose={() => setShowPaymentSuccess(false)}
-            />
+            showPaymentSuccess ? (
+              <PaymentSuccessPage 
+                planType={pendingPaymentPlan}
+                onClose={() => setShowPaymentSuccess(false)}
+              />
+            ) : (
+              <Navigate to="/" />
+            )
           } />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
 
-        <AuthModal
-          isOpen={showAuthModal}
-          mode={authModalMode}
-          onClose={() => {
-            console.log('AuthModal: onClose called');
-            setShowAuthModal(false);
-          }}
-          onAuthSuccess={(user) => {
-            console.log('AuthModal: onAuthSuccess called with user:', user?.email);
-            setShowAuthModal(false);
-            setHasSignedIn(true);
-          }}
-        />
+        {showAuthModal && (
+          <AuthModal
+            isOpen={showAuthModal}
+            onClose={() => setShowAuthModal(false)}
+            mode={authModalMode}
+            onSwitchMode={(mode) => setAuthModalMode(mode)}
+          />
+        )}
 
         {shouldShowFooter() && <Footer />}
       </div>
