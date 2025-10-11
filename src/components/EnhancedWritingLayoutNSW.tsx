@@ -453,52 +453,34 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
       console.error("❌ NSW AI evaluation error:", error);
       setEvaluationStatus("error");
       setShowNSWEvaluation(false);
-      alert(`There was an error evaluating your writing: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`);
+      alert(`There was an error evaluating your writing: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
-  }, [localContent, textType, effectivePrompt, currentWordCount, onSubmit, hasContent]);
+  }, [localContent, textType, effectivePrompt, onSubmit, onAnalysisChange]);
 
   const handleApplyFix = useCallback((fix: LintFix) => {
-    try {
-      const { range, text } = fix;
-      const newContent = localContent.substring(0, range[0]) + text + localContent.substring(range[1]);
-      handleContentChange(newContent);
-    } catch (error) {
-      console.error("Error applying fix:", error);
-    }
-  }, [localContent, handleContentChange]);
+    setLocalContent((prevContent) => {
+      const start = fix.evidence.start;
+      const end = fix.evidence.end;
+      const newContent = prevContent.substring(0, start) + fix.replacement + prevContent.substring(end);
+      return newContent;
+    });
+  }, []);
+
+  const handleTogglePlanningTool = useCallback(() => {
+    setShowPlanningTool(prev => !prev);
+  }, []);
+
+  const handleToggleExamMode = useCallback(() => {
+    setExamMode(prev => !prev);
+  }, []);
 
   return (
-    <div className={`flex h-screen transition-colors duration-300 ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
-      {/* Left side - Writing Area Content */}
-      <div className="flex-1 flex flex-col overflow-hidden"> 
-        
-        {/* Top Header Bar with Text Type and Home Button */}
-        <div className={`h-16 flex items-center justify-between px-6 border-b ${
-          darkMode ? 'bg-gradient-to-r from-slate-800 to-slate-900 border-gray-700' : 'bg-gradient-to-r from-blue-600 to-cyan-600 border-blue-700'
-        }`}>
-          <div className="flex items-center space-x-4">
-            <BookOpen className="w-6 h-6 text-white" />
-            <div className="flex items-center space-x-3">
-              <span className="text-white font-medium">Text Type:</span>
-              <span className="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-white text-sm font-medium">
-                {textType}
-              </span>
-            </div>
-          </div>
-          <button
-            onClick={() => window.location.href = '/'}
-            className="flex items-center space-x-2 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-lg transition-colors text-white font-medium"
-          >
-            <span>🏠 Home</span>
-          </button>
-        </div>
-
-        {/* Modern Writing Prompt Section */}
-        <div className={`transition-all duration-300 flex-shrink-0 ${
-          isPromptCollapsed ? 'h-16' : 'min-h-[180px]'
-        } ${darkMode ? 'bg-slate-800' : 'bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50'}`}>
-          <div className="flex items-center justify-between px-4 py-2">
-            <div className="flex items-center space-x-2 min-w-0 flex-1">
+    <div className={`flex flex-col h-full w-full overflow-hidden ${darkMode ? 'bg-slate-900 text-gray-100' : 'bg-gray-50 text-gray-900'}`}>
+      {/* Prompt Display Section */}
+      <div className={`flex flex-col flex-shrink-0 ${darkMode ? 'bg-slate-800' : 'bg-white'}`}>
+        <div className={`flex items-center justify-between px-4 py-2 border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+          <div className="flex items-center space-x-2 flex-grow">
+            <div className="flex items-center space-x-2 flex-grow">
               <LightbulbIcon className={`w-4 h-4 flex-shrink-0 ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`} />
               <h3 className={`font-medium text-sm flex-shrink-0 ${darkMode ? 'text-gray-100' : 'text-blue-800'}`}>
                 Prompt
@@ -549,7 +531,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
           <div className="flex items-center space-x-2">
             {/* Plan Button */}
             <button
-              onClick={() => setShowPlanningTool(true)}
+              onClick={handleTogglePlanningTool}
               className={`flex items-center space-x-1 px-2 py-1 rounded transition-colors ${
                 showPlanningTool
                   ? darkMode
@@ -603,7 +585,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
             {/* Exam Mode Button */}
             <button
-              onClick={() => setExamMode(!examMode)}
+              onClick={handleToggleExamMode}
               className={`flex items-center space-x-1 px-2 py-1 rounded transition-colors ${
                 examMode
                   ? darkMode
@@ -712,7 +694,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
                       <div className={`h-6 w-px ${darkMode ? 'bg-gray-700' : 'bg-gray-300'}`} />
                       <div className={`flex items-center space-x-1 text-xs ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
                         <span className="animate-pulse">●</span>
-                        <span>Saved {new Date().getTime() - lastSaved.getTime() < 2000 ? 'just now' : 'recently'}</span>
+                        <span>Saved ${new Date().getTime() - lastSaved.getTime() < 2000 ? 'just now' : 'recently'}</span>
                       </div>
                     </>
                   )}
@@ -856,146 +838,90 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
                     qualityScore >= 50 ? 'border-yellow-500 bg-yellow-500/10' :
                     'border-red-500 bg-red-500/10'
                   }`}>
-                    <span className="text-xl">
-                      {qualityScore >= 90 ? '🌟' :
-                       qualityScore >= 70 ? '👍' :
-                       qualityScore >= 50 ? '📝' :
-                       '💪'}
-                    </span>
+                    <Zap className={`w-6 h-6 ${
+                      qualityScore >= 90 ? 'text-green-500' :
+                      qualityScore >= 70 ? 'text-blue-500' :
+                      qualityScore >= 50 ? 'text-yellow-500' :
+                      'text-red-500'
+                    }`} />
                   </div>
                 </div>
               </div>
             )}
-          </div>
-        </div>
 
-        {/* Grammar Stats Bar - Enhanced */}
-        {showGrammarHighlights && (grammarStats.weakVerbs > 0 || grammarStats.overused > 0 || grammarStats.passive > 0 || grammarStats.weakAdjectives > 0) && (
-          <div className={`border-t transition-all duration-300 ${
-            darkMode ? 'bg-slate-900 border-gray-700' : 'bg-gray-50 border-gray-200'
-          }`}>
-            <div className="px-4 py-2 flex items-center justify-between">
-              <div className="flex items-center space-x-4 text-xs flex-1">
-                <div className="flex items-center space-x-2">
-                  <AlertCircle className={`w-4 h-4 ${darkMode ? 'text-yellow-400' : 'text-yellow-600'}`} />
-                  <span className={`font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    Writing Suggestions:
+            {/* Grammar Stats Overlay */}
+            {showGrammarHighlights && currentWordCount > 0 && (
+              <div className={`absolute bottom-4 left-4 px-3 py-2 rounded-lg shadow-lg border backdrop-blur-sm ${
+                darkMode ? 'bg-slate-800/90 border-slate-700' : 'bg-white/90 border-gray-200'
+              }`}>
+                <div className="flex items-center justify-between">
+                  <h5 className={`text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Grammar Insights</h5>
+                  <button
+                    onClick={() => setExpandedGrammarStats(!expandedGrammarStats)}
+                    className={`p-1 rounded transition-colors ${
+                      darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-200'
+                    }`}
+                  >
+                    {expandedGrammarStats ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
+                  </button>
+                </div>
+                {expandedGrammarStats && (
+                  <div className="mt-2 text-xs space-y-1">
+                    <p className={darkMode ? 'text-gray-300' : 'text-gray-700'}>Weak Verbs: {grammarStats.weakVerbs}</p>
+                    <p className={darkMode ? 'text-gray-300' : 'text-gray-700'}>Overused Words: {grammarStats.overused}</p>
+                    <p className={darkMode ? 'text-gray-300' : 'text-gray-700'}>Passive Voice: {grammarStats.passive}</p>
+                    <p className={darkMode ? 'text-gray-300' : 'text-gray-700'}>Weak Adjectives: {grammarStats.weakAdjectives}</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Submit for Evaluation Button */}
+            <div className="absolute bottom-4 right-4">
+              <button
+                onClick={handleSubmitForEvaluation}
+                disabled={!hasContent || evaluationStatus === "loading"}
+                className={`px-6 py-3 rounded-full text-lg font-semibold shadow-lg transition-all duration-300
+                  ${!hasContent || evaluationStatus === "loading"
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 focus:outline-none focus:ring-4 focus:ring-purple-300'
+                  }`}
+              >
+                {evaluationStatus === "loading" ? (
+                  <span className="flex items-center">
+                    <span className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></span>
+                    Evaluating...
                   </span>
-                </div>
-
-                <div className="flex items-center space-x-2 flex-wrap">
-                  {grammarStats.weakVerbs > 0 && (
-                    <button
-                      onClick={() => setExpandedGrammarStats(!expandedGrammarStats)}
-                      className="flex items-center space-x-1 px-2 py-1 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 rounded hover:bg-yellow-200 dark:hover:bg-yellow-900/50 transition-colors"
-                    >
-                      <span className="font-semibold">{grammarStats.weakVerbs}</span>
-                      <span>weak verbs</span>
-                    </button>
-                  )}
-                  {grammarStats.overused > 0 && (
-                    <button
-                      onClick={() => setExpandedGrammarStats(!expandedGrammarStats)}
-                      className="flex items-center space-x-1 px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 rounded hover:bg-orange-200 dark:hover:bg-orange-900/50 transition-colors"
-                    >
-                      <span className="font-semibold">{grammarStats.overused}</span>
-                      <span>filler words</span>
-                    </button>
-                  )}
-                  {grammarStats.passive > 0 && (
-                    <button
-                      onClick={() => setExpandedGrammarStats(!expandedGrammarStats)}
-                      className="flex items-center space-x-1 px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
-                    >
-                      <span className="font-semibold">{grammarStats.passive}</span>
-                      <span>passive voice</span>
-                    </button>
-                  )}
-                  {grammarStats.weakAdjectives > 0 && (
-                    <button
-                      onClick={() => setExpandedGrammarStats(!expandedGrammarStats)}
-                      className="flex items-center space-x-1 px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 rounded hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors"
-                    >
-                      <span className="font-semibold">{grammarStats.weakAdjectives}</span>
-                      <span>weak adjectives</span>
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => setExpandedGrammarStats(!expandedGrammarStats)}
-                  className={`flex items-center space-x-1 text-xs px-2 py-1 rounded transition-colors ${
-                    darkMode ? 'text-gray-400 hover:text-gray-200 hover:bg-slate-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
-                  }`}
-                >
-                  {expandedGrammarStats ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-                  <span>{expandedGrammarStats ? 'Less' : 'More'}</span>
-                </button>
-                <button
-                  onClick={() => setShowGrammarHighlights(false)}
-                  className={`text-xs px-2 py-1 rounded transition-colors ${
-                    darkMode ? 'text-gray-400 hover:text-gray-200 hover:bg-slate-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-200'
-                  }`}
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </div>
+                ) : (
+                  "Submit for Evaluation"
+                )}
+              </button>
             </div>
 
-            {/* Expanded Tips */}
-            {expandedGrammarStats && (
-              <div className={`px-4 pb-2 space-y-1.5 text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                {grammarStats.weakVerbs > 0 && (
-                  <div className="flex items-start space-x-2 p-2 rounded bg-yellow-50 dark:bg-yellow-900/10 border border-yellow-200 dark:border-yellow-900/30">
-                    <span className="text-yellow-600 dark:text-yellow-400">●</span>
-                    <div>
-                      <span className="font-medium">Weak verbs:</span> Replace "is/are/was/were" with stronger action verbs. Example: \"She was happy" → \"She beamed with joy"
-                    </div>
-                  </div>
-                )}
-                {grammarStats.overused > 0 && (
-                  <div className="flex items-start space-x-2 p-2 rounded bg-orange-50 dark:bg-orange-900/10 border border-orange-200 dark:border-orange-900/30">
-                    <span className="text-orange-600 dark:text-orange-400">●</span>
-                    <div>
-                      <span className="font-medium">Filler words:</span> Remove "very/really/just" - they often weaken your writing. Example: \"very big" → \"enormous"
-                    </div>
-                  </div>
-                )}
-                {grammarStats.passive > 0 && (
-                  <div className="flex items-start space-x-2 p-2 rounded bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-900/30">
-                    <span className="text-blue-600 dark:text-blue-400">●</span>
-                    <div>
-                      <span className="font-medium">Passive voice:</span> Use active voice for clarity. Example: "The ball was thrown" → "She threw the ball"
-                    </div>
-                  </div>
-                )}
-                {grammarStats.weakAdjectives > 0 && (
-                  <div className="flex items-start space-x-2 p-2 rounded bg-purple-50 dark:bg-purple-900/10 border border-purple-200 dark:border-purple-900/30">
-                    <span className="text-purple-600 dark:text-purple-400">●</span>
-                    <div>
-                      <span className="font-medium">Weak adjectives:</span> Use specific, vivid adjectives. Example: "good food" → "delicious feast"
-                    </div>
-                  </div>
-                )}
-              </div>
+            {/* Inline Text Highlighter for Feedback */}
+            {analysis && analysis.grammarCorrections && (
+              <InlineTextHighlighter
+                text={localContent}
+                highlights={analysis.grammarCorrections.map(correction => ({
+                  start: correction.evidence.start,
+                  end: correction.evidence.end,
+                  color: 'yellow',
+                  tooltip: `Correction: ${correction.suggestion}`
+                }))}
+              />
+            )}
+            {analysis && analysis.vocabularyEnhancements && (
+              <InlineTextHighlighter
+                text={localContent}
+                highlights={analysis.vocabularyEnhancements.map(enhancement => ({
+                  start: enhancement.evidence.start,
+                  end: enhancement.evidence.end,
+                  color: 'orange',
+                  tooltip: `Enhancement: ${enhancement.suggestion}`
+                }))}
+              />
             )}
           </div>
-        )}
-
-        <div className="p-6 flex-shrink-0">
-          <button
-            onClick={handleSubmitForEvaluation}
-            disabled={!hasContent}
-            className={`w-full flex items-center justify-center space-x-2 px-6 py-4 rounded-xl font-semibold text-lg text-white transition-all duration-200 shadow-lg ${
-              hasContent
-                ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 hover:shadow-xl transform hover:scale-[1.02]'
-                : 'bg-gray-400 cursor-not-allowed opacity-50'
-            }`}
-          >
-            <span>Submit for Evaluation</span>
-          </button>
         </div>
       </div>
 
@@ -1023,7 +949,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
       )}
 
       {/* Modals */}
-      {showPlanningTool && <PlanningToolModal onClose={() => setShowPlanningTool(false)} textType={textType} />}
+      {showPlanningTool && <PlanningToolModal onClose={handleTogglePlanningTool} textType={textType} />}
       {showStructureGuide && <StructureGuideModal onClose={onToggleStructureGuide} textType={textType} />}
       {showTips && <TipsModal onClose={onToggleTips} textType={textType} />}
       {showAIReport && aiEvaluationReport && (
