@@ -1,0 +1,181 @@
+// netlify/functions/nsw-ai-evaluation.js
+// AI-POWERED NSW Selective School Writing Evaluation
+// Uses OpenAI GPT-4 for sophisticated, real-time feedback
+
+const { OpenAI } = require("openai");
+
+const SYSTEM_PROMPT = `You are an expert NSW Selective School writing assessor for students aged 9-11 preparing for placement tests.
+
+Your role is to provide sophisticated, actionable feedback that:
+1. Analyzes writing against official NSW marking criteria
+2. Identifies specific strengths and areas for improvement with text positions
+3. Provides before/after examples for improvements
+4. Categorizes feedback by color: green (strengths), amber (improvements), blue (suggestions)
+
+SCORING BANDS (1-6):
+- Band 6 (Outstanding): Sophisticated vocabulary, complex sentences, excellent structure, engaging content
+- Band 5 (High): Strong vocabulary, varied sentences, clear structure, interesting ideas
+- Band 4 (Sound): Good vocabulary, some variety, organized structure, clear ideas
+- Band 3 (Basic): Simple vocabulary, basic sentences, basic structure, simple ideas
+- Band 2 (Limited): Very basic vocabulary, repetitive sentences, weak structure
+- Band 1 (Minimal): Insufficient content or copied text
+
+RESPONSE FORMAT (JSON only):
+{
+  "overallBand": number (1-6),
+  "totalScore": number (0-30),
+  "bandDescription": "description of band level",
+  "criteriaScores": {
+    "ideasContent": {"score": number, "outOf": 10, "band": number},
+    "structureOrganization": {"score": number, "outOf": 8, "band": number},
+    "languageVocab": {"score": number, "outOf": 8, "band": number},
+    "spellingGrammar": {"score": number, "outOf": 4, "band": number}
+  },
+  "highlights": [
+    {
+      "type": "strength|improvement|suggestion",
+      "color": "green|amber|blue",
+      "text": "actual text from essay",
+      "startIndex": number,
+      "endIndex": number,
+      "title": "brief title",
+      "explanation": "detailed explanation",
+      "beforeAfter": {"before": "original text", "after": "improved version"}
+    }
+  ],
+  "detailedFeedback": {
+    "strengths": ["strength 1", "strength 2"],
+    "areasToImprove": ["area 1", "area 2"],
+    "nextSteps": ["step 1", "step 2"]
+  },
+  "narrativeStructure": {
+    "hasOrientation": boolean,
+    "hasComplication": boolean,
+    "hasClimax": boolean,
+    "hasResolution": boolean,
+    "structureNotes": "notes"
+  }
+}
+
+Be encouraging but honest. Provide specific, actionable feedback with exact text positions for highlighting.`;
+
+async function evaluateWithAI(essayText, textType, prompt) {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey || !apiKey.startsWith("sk-")) {
+    throw new Error("OpenAI API key not configured");
+  }
+
+  const openai = new OpenAI({ apiKey });
+
+  const userPrompt = `Evaluate this ${textType} writing for NSW Selective School assessment.
+
+PROMPT GIVEN TO STUDENT:
+"${prompt}"
+
+STUDENT'S WRITING:
+"""
+${essayText}
+"""
+
+Word Count: ${essayText.split(/\s+/).length}
+
+Provide comprehensive feedback with:
+1. Overall band score (1-6) and total score out of 30
+2. Scores for each criterion (Ideas/Content, Structure, Language/Vocab, Spelling/Grammar)
+3. Specific text highlights with positions for interactive display
+4. Before/after examples for key improvements
+5. Categorized feedback (strengths in green, improvements in amber, suggestions in blue)
+6. Narrative structure analysis (orientation, complication, climax, resolution)
+
+Return ONLY valid JSON matching the specified format.`;
+
+  const startTime = Date.now();
+
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4o-mini",
+    messages: [
+      { role: "system", content: SYSTEM_PROMPT },
+      { role: "user", content: userPrompt }
+    ],
+    temperature: 0.3,
+    max_tokens: 2500,
+    response_format: { type: "json_object" }
+  });
+
+  const latency = Date.now() - startTime;
+  const response = completion.choices[0].message.content;
+
+  try {
+    const feedback = JSON.parse(response);
+    feedback.timings = { modelLatencyMs: latency };
+    feedback.modelVersion = "gpt-4o-mini";
+    feedback.generatedAt = new Date().toISOString();
+    return feedback;
+  } catch (parseError) {
+    console.error("Failed to parse AI response:", response);
+    throw new Error("AI returned invalid JSON");
+  }
+}
+
+exports.handler = async (event) => {
+  // CORS headers
+  const headers = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Content-Type": "application/json"
+  };
+
+  // Handle preflight
+  if (event.httpMethod === "OPTIONS") {
+    return { statusCode: 200, headers, body: "" };
+  }
+
+  // Only allow POST
+  if (event.httpMethod !== "POST") {
+    return {
+      statusCode: 405,
+      headers,
+      body: JSON.stringify({ error: "Method not allowed" })
+    };
+  }
+
+  try {
+    const body = JSON.parse(event.body || "{}");
+    const { essayContent, textType = "narrative", prompt = "" } = body;
+
+    // Validation
+    if (!essayContent || essayContent.trim().length < 20) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({
+          error: "Essay content is too short (minimum 20 characters)"
+        })
+      };
+    }
+
+    // Call AI evaluation
+    console.log(`Evaluating ${textType} essay (${essayContent.length} chars)...`);
+    const feedback = await evaluateWithAI(essayContent, textType, prompt);
+
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify(feedback)
+    };
+
+  } catch (error) {
+    console.error("NSW AI Evaluation Error:", error);
+
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({
+        error: "Failed to evaluate essay",
+        message: error.message,
+        details: process.env.NODE_ENV === "development" ? error.stack : undefined
+      })
+    };
+  }
+};

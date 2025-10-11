@@ -7,6 +7,7 @@ import { TipsModal } from './TipsModal';
 import { EnhancedCoachPanel } from './EnhancedCoachPanel';
 import { NSWStandaloneSubmitSystem } from './NSWStandaloneSubmitSystem';
 import { ReportModal } from './ReportModal';
+import { AIEvaluationReportDisplay } from './AIEvaluationReportDisplay';
 import { PromptOptionsModal } from './PromptOptionsModal';
 import { InlineTextHighlighter } from './InlineTextHighlighter';
 import { generatePrompt } from '../lib/openai';
@@ -129,6 +130,8 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
   const [showNSWEvaluation, setShowNSWEvaluation] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
   const [nswReport, setNswReport] = useState<any>(null);
+  const [aiEvaluationReport, setAiEvaluationReport] = useState<any>(null);
+  const [showAIReport, setShowAIReport] = useState(false);
   const [evaluationStatus, setEvaluationStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [evaluationProgress, setEvaluationProgress] = useState("");
   const [showPromptOptionsModal, setShowPromptOptionsModal] = useState(false);
@@ -412,36 +415,42 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
     console.log('Starting NSW evaluation...');
     setEvaluationStatus("loading");
     setShowNSWEvaluation(true);
-    setEvaluationProgress("Analyzing your writing...");
+    setEvaluationProgress("Analyzing your writing with AI...");
 
     try {
       setTimeout(() => setEvaluationProgress("Checking grammar and structure..."), 1000);
       setTimeout(() => setEvaluationProgress("Evaluating content and ideas..."), 2000);
       setTimeout(() => setEvaluationProgress("Generating detailed feedback..."), 3000);
 
-      console.log('Calling NSWEvaluationReportGenerator.generateReport...');
-      const report = NSWEvaluationReportGenerator.generateReport({
-        essayContent: localContent,
-        textType: textType,
-        prompt: effectivePrompt || '',
-        wordCount: currentWordCount,
-        targetWordCountMin: 50,
-        targetWordCountMax: 50,
+      console.log('Calling AI NSW evaluation API...');
+
+      // Call AI evaluation backend
+      const response = await fetch("/.netlify/functions/nsw-ai-evaluation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          essayContent: localContent,
+          textType: textType,
+          prompt: effectivePrompt || ''
+        })
       });
-      
-      console.log('Report generated:', report);
-      
-      const convertedReport = convertNSWReportToDetailedFeedback(report);
-      console.log('Converted report:', convertedReport);
-      
-      setNswReport(convertedReport);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to evaluate essay");
+      }
+
+      const aiReport = await response.json();
+      console.log('AI Report received:', aiReport);
+
+      setAiEvaluationReport(aiReport);
       setShowNSWEvaluation(false);
-      setShowReportModal(true);
+      setShowAIReport(true);
       setEvaluationStatus("success");
-      
-      console.log('✅ Evaluation complete!');
+
+      console.log('✅ AI Evaluation complete!');
     } catch (error) {
-      console.error("❌ NSW evaluation error:", error);
+      console.error("❌ NSW AI evaluation error:", error);
       setEvaluationStatus("error");
       setShowNSWEvaluation(false);
       alert(`There was an error evaluating your writing: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`);
@@ -1017,6 +1026,17 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
       {showPlanningTool && <PlanningToolModal onClose={() => setShowPlanningTool(false)} textType={textType} />}
       {showStructureGuide && <StructureGuideModal onClose={onToggleStructureGuide} textType={textType} />}
       {showTips && <TipsModal onClose={onToggleTips} textType={textType} />}
+      {showAIReport && aiEvaluationReport && (
+        <AIEvaluationReportDisplay
+          report={aiEvaluationReport}
+          essayText={localContent}
+          onClose={() => {
+            setShowAIReport(false);
+            setAiEvaluationReport(null);
+            if (onAnalysisChange) onAnalysisChange(null);
+          }}
+        />
+      )}
       {showReportModal && nswReport && (
         <ReportModal
           isOpen={showReportModal}

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { NSWEvaluationReportGenerator } from './NSWEvaluationReportGenerator';
 
 interface NSWStandaloneSubmitSystemProps {
   content: string;
@@ -23,32 +22,33 @@ export function NSWStandaloneSubmitSystem({
       setError(null);
 
       try {
-        // Retrieve prompt and word count from localStorage or other sources if needed
+        // Retrieve prompt from localStorage
         const prompt = localStorage.getItem("generatedPrompt") || localStorage.getItem(`${textType.toLowerCase()}_prompt`) || "";
-        const essayData = JSON.parse(localStorage.getItem("currentEssayData") || "{}");
-        const wordCount = essayData.wordCount || content.trim().split(/\s+/).filter(word => word.length > 0).length;
-
-        // Define target word counts (these might come from props or a config)
-        const targetWordCountMin = 100; // Example value
-        const targetWordCountMax = 500; // Example value
 
         if (!content || content.trim().length === 0) {
           throw new Error("Essay content cannot be empty.");
         }
 
-        console.log("NSWStandaloneSubmitSystem: Generating report...");
-        
-        // OPTIMIZED: Generate report immediately without artificial delays
-        const report = NSWEvaluationReportGenerator.generateReport({
-          essayContent: content,
-          textType: textType,
-          prompt: prompt,
-          wordCount: wordCount,
-          targetWordCountMin: targetWordCountMin,
-          targetWordCountMax: targetWordCountMax,
+        console.log("NSWStandaloneSubmitSystem: Calling AI evaluation API...");
+
+        // Call AI evaluation backend
+        const response = await fetch("/.netlify/functions/nsw-ai-evaluation", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            essayContent: content,
+            textType: textType,
+            prompt: prompt
+          })
         });
 
-        console.log("NSWStandaloneSubmitSystem: Report generated successfully:", report);
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to evaluate essay");
+        }
+
+        const report = await response.json();
+        console.log("NSWStandaloneSubmitSystem: AI evaluation received:", report);
         onComplete(report);
       } catch (err: any) {
         console.error("NSWStandaloneSubmitSystem: Submission error:", err);
@@ -56,7 +56,6 @@ export function NSWStandaloneSubmitSystem({
         onComplete(null); // Indicate failure
       } finally {
         setIsSubmitting(false);
-        // onClose(); // Removed to allow report display
       }
     };
 
