@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Send, MessageSquare, BarChart3, Lightbulb, Target, Star, TrendingUp, Award, List } from 'lucide-react';
+import { Send, MessageSquare, BarChart3, Lightbulb, Target, Star, TrendingUp, Award, List, BookOpen } from 'lucide-react';
 import { StepByStepWritingBuilder } from './StepByStepWritingBuilder';
+import { ContextualAICoachPanel } from './ContextualAICoachPanel';
 
 /**
  * Generates time-appropriate coaching messages for 40-minute writing test
@@ -812,41 +813,53 @@ export function EnhancedCoachPanel({
         </div>
         
         {/* OPTIMIZED: Compact Toggle Buttons */}
-        <div className="flex space-x-1">
+        <div className="flex space-x-1 overflow-x-auto">
           <button
             onClick={() => setCurrentView('coach')}
-            className={`flex items-center space-x-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+            className={`flex items-center space-x-1 px-2 py-1 rounded text-xs font-medium transition-colors whitespace-nowrap ${
               currentView === 'coach'
                 ? 'bg-white text-blue-600'
                 : 'bg-blue-500 text-white hover:bg-blue-400'
             }`}
           >
             <MessageSquare className="w-3 h-3" />
-            <span>AI Coach</span>
+            <span>Chat</span>
           </button>
 
           <button
-            onClick={() => setCurrentView('builder')}
-            className={`flex items-center space-x-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
-              currentView === 'builder'
+            onClick={() => setCurrentView('examples')}
+            className={`flex items-center space-x-1 px-2 py-1 rounded text-xs font-medium transition-colors whitespace-nowrap ${
+              currentView === 'examples'
                 ? 'bg-white text-green-600'
                 : 'bg-green-500 text-white hover:bg-green-400'
             }`}
           >
+            <BookOpen className="w-3 h-3" />
+            <span>Examples</span>
+          </button>
+
+          <button
+            onClick={() => setCurrentView('builder')}
+            className={`flex items-center space-x-1 px-2 py-1 rounded text-xs font-medium transition-colors whitespace-nowrap ${
+              currentView === 'builder'
+                ? 'bg-white text-teal-600'
+                : 'bg-teal-500 text-white hover:bg-teal-400'
+            }`}
+          >
             <List className="w-3 h-3" />
-            <span>Step Guide</span>
+            <span>Steps</span>
           </button>
 
           <button
             onClick={() => setCurrentView('nsw')}
-            className={`flex items-center space-x-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+            className={`flex items-center space-x-1 px-2 py-1 rounded text-xs font-medium transition-colors whitespace-nowrap ${
               currentView === 'nsw'
                 ? 'bg-white text-purple-600'
                 : 'bg-purple-500 text-white hover:bg-purple-400'
             }`}
           >
             <BarChart3 className="w-3 h-3" />
-            <span>NSW Criteria</span>
+            <span>Criteria</span>
           </button>
         </div>
       </div>
@@ -984,6 +997,14 @@ export function EnhancedCoachPanel({
               </div>
             </div>
           </>
+        ) : currentView === 'examples' ? (
+          <div className="h-full overflow-hidden">
+            <ContextualAICoachPanel
+              content={content}
+              textType={textType}
+              prompt={undefined}
+            />
+          </div>
         ) : currentView === 'builder' ? (
           <div className="h-full overflow-y-auto p-4">
             <StepByStepWritingBuilder
