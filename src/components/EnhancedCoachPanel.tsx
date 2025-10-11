@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Send, MessageSquare, BarChart3, Lightbulb, Target, Star, TrendingUp, Award, List, BookOpen } from 'lucide-react';
 import { StepByStepWritingBuilder } from './StepByStepWritingBuilder';
 import { ContextualAICoachPanel } from './ContextualAICoachPanel';
+import { generateIntelligentResponse, type EnhancedCoachResponse } from '../lib/enhancedIntelligentResponseGenerator';
 
 /**
  * Generates time-appropriate coaching messages for 40-minute writing test
@@ -659,19 +660,23 @@ export function EnhancedCoachPanel({
         const timeInfo = getTimeAwareMessage(timeElapsed, currentWordCount);
         const phaseInfo = getWritingPhase(currentWordCount);
 
+        // Use enhanced intelligent response generator
+        const enhancedResponse = generateIntelligentResponse(content, textType);
+
+        // Also get legacy analysis for compatibility
         const analysis = NSWCriteriaAnalyzer.analyzeContent(content, textType);
-        const coachResponse = EnhancedCoachResponseGenerator.generateResponse(content, textType, analysis);
 
         // Add or update the latest coaching message
         setMessages(prev => {
           const filtered = prev.filter(msg => msg.type !== 'auto-coach');
           return [...filtered, {
             type: 'auto-coach',
-            content: coachResponse,
+            content: enhancedResponse,
             timestamp: new Date(),
             analysis: analysis,
             timeInfo: timeInfo,
-            phaseInfo: phaseInfo
+            phaseInfo: phaseInfo,
+            enhanced: true
           }];
         });
 
@@ -941,17 +946,66 @@ export function EnhancedCoachPanel({
                         <div className="bg-blue-50 p-2 rounded border-l-2 border-blue-400">
                           <div className="font-medium text-blue-800">🎯 {message.content.nswFocus}</div>
                         </div>
-                        
+
                         <div className="bg-green-50 p-2 rounded border-l-2 border-green-400">
                           <div className="font-medium text-green-800 mb-1">💡 Suggestion:</div>
-                          <div className="text-green-700">{message.content.suggestion}</div>
+                          <div className="text-green-700 whitespace-pre-line">{message.content.suggestion}</div>
                         </div>
-                        
+
                         <div className="bg-yellow-50 p-2 rounded border-l-2 border-yellow-400">
                           <div className="font-medium text-yellow-800 mb-1">📝 Example:</div>
-                          <div className="text-yellow-700 italic">{message.content.example}</div>
+                          <div className="text-yellow-700 whitespace-pre-line">{message.content.example}</div>
                         </div>
-                        
+
+                        {/* Contextual Examples (Enhanced) */}
+                        {message.content.contextualExamples && message.content.contextualExamples.length > 0 && (
+                          <div className="bg-teal-50 p-2 rounded border-l-2 border-teal-400">
+                            <div className="font-medium text-teal-800 mb-1">✨ {message.content.contextualExamples[0].title}</div>
+                            <div className="space-y-1">
+                              <div className="text-xs">
+                                <span className="font-semibold text-red-600">❌ Before: </span>
+                                <span className="text-red-700">{message.content.contextualExamples[0].before}</span>
+                              </div>
+                              <div className="text-xs">
+                                <span className="font-semibold text-green-600">✅ After: </span>
+                                <span className="text-green-700">{message.content.contextualExamples[0].after}</span>
+                              </div>
+                              <div className="text-xs text-teal-700 italic mt-1">
+                                💡 {message.content.contextualExamples[0].explanation}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Show Don't Tell (Enhanced) */}
+                        {message.content.showDontTell && (
+                          <div className="bg-orange-50 p-2 rounded border-l-2 border-orange-400">
+                            <div className="font-medium text-orange-800 mb-1">👁️ Show Don't Tell</div>
+                            <div className="text-xs text-orange-700 mb-1">{message.content.showDontTell.issue}</div>
+                            <div className="space-y-0.5">
+                              {message.content.showDontTell.alternatives.map((alt: string, idx: number) => (
+                                <div key={idx} className="text-xs text-orange-600">✓ {alt}</div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Rubric Guidance (Enhanced) */}
+                        {message.content.rubricGuidance && (
+                          <div className="bg-indigo-50 p-2 rounded border-l-2 border-indigo-400">
+                            <div className="font-medium text-indigo-800 mb-1">📊 {message.content.rubricGuidance.criterion}</div>
+                            <div className="text-xs text-indigo-700 mb-1">
+                              Current: <span className="font-semibold">{message.content.rubricGuidance.currentLevel}</span>
+                            </div>
+                            <div className="text-xs text-indigo-600">
+                              <div className="font-medium mb-0.5">Target Indicators:</div>
+                              {message.content.rubricGuidance.targetIndicators.slice(0, 3).map((indicator: string, idx: number) => (
+                                <div key={idx}>• {indicator}</div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
                         <div className="bg-purple-50 p-2 rounded border-l-2 border-purple-400">
                           <div className="font-medium text-purple-800 mb-1">⭐ Next Step:</div>
                           <div className="text-purple-700">{message.content.nextStep}</div>
