@@ -872,19 +872,6 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
               </div>
             )}
 
-            {/* Grammar Stats - Bottom Bar (Minimal) */}
-            {showGrammarHighlights && currentWordCount > 0 && (
-              <div className={`absolute bottom-0 left-0 right-0 px-4 py-2 text-xs backdrop-blur-sm ${
-                darkMode ? 'bg-slate-900/70 text-gray-400' : 'bg-white/70 text-gray-600 border-t border-gray-200'
-              }`}>
-                <div className="flex items-center space-x-4">
-                  <span className="font-medium">Grammar</span>
-                  <span>Weak: {grammarStats.weakVerbs}</span>
-                  <span>Adjectives: {grammarStats.weakAdjectives}</span>
-                  <span>Passive: {grammarStats.passive}</span>
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
