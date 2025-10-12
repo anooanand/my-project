@@ -557,203 +557,176 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
           )}
         </div>
 
-        {/* Toolbar Section - Compact */}
-        <div className={`flex items-center justify-between px-4 py-1.5 border-b flex-shrink-0 ${darkMode ? 'bg-slate-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-          <div className="flex items-center space-x-2">
+        {/* Toolbar Section - Clean & Minimal */}
+        <div className={`flex items-center justify-between px-6 py-3 border-b flex-shrink-0 ${darkMode ? 'bg-slate-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+          <div className="flex items-center space-x-3">
             {/* Plan Button */}
             <button
               onClick={() => setShowPlanningTool(true)}
-              className={`flex items-center space-x-1 px-2 py-1 rounded transition-colors ${
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                 showPlanningTool
-                  ? darkMode
-                    ? 'bg-blue-700 text-white hover:bg-blue-600'
-                    : 'bg-blue-500 text-white hover:bg-blue-600'
+                  ? 'bg-blue-500 text-white hover:bg-blue-600'
                   : darkMode
-                  ? 'text-gray-300 hover:bg-gray-700'
-                  : 'text-gray-700 hover:bg-gray-100'
+                  ? 'text-gray-300 hover:bg-gray-700 border border-gray-600'
+                  : 'text-gray-700 hover:bg-gray-100 border border-gray-300'
               }`}
               title="Planning Tool"
             >
-              <PenTool className="w-3.5 h-3.5" />
-              <span className="text-xs font-medium">Plan</span>
+              <PenTool className="w-4 h-4" />
+              <span>Plan</span>
             </button>
 
             {/* Structure Button */}
             <button
               onClick={onToggleStructureGuide}
-              className={`flex items-center space-x-1 px-2 py-1 rounded transition-colors ${
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                 showStructureGuide
-                  ? darkMode
-                    ? 'bg-green-700 text-white hover:bg-green-600'
-                    : 'bg-green-500 text-white hover:bg-green-600'
+                  ? 'bg-green-500 text-white hover:bg-green-600'
                   : darkMode
-                  ? 'text-gray-300 hover:bg-gray-700'
-                  : 'text-gray-700 hover:bg-gray-100'
+                  ? 'text-gray-300 hover:bg-gray-700 border border-gray-600'
+                  : 'text-gray-700 hover:bg-gray-100 border border-gray-300'
               }`}
               title="Structure Guide"
             >
-              <BookOpen className="w-3.5 h-3.5" />
-              <span className="text-xs font-medium">Structure</span>
+              <BookOpen className="w-4 h-4" />
+              <span>Structure</span>
             </button>
 
             {/* Tips Button */}
             <button
               onClick={onToggleTips}
-              className={`flex items-center space-x-1 px-2 py-1 rounded transition-colors ${
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                 showTips
-                  ? darkMode
-                    ? 'bg-orange-700 text-white hover:bg-orange-600'
-                    : 'bg-orange-500 text-white hover:bg-orange-600'
+                  ? 'bg-orange-500 text-white hover:bg-orange-600'
                   : darkMode
-                  ? 'text-gray-300 hover:bg-gray-700'
-                  : 'text-gray-700 hover:bg-gray-100'
+                  ? 'text-gray-300 hover:bg-gray-700 border border-gray-600'
+                  : 'text-gray-700 hover:bg-gray-100 border border-gray-300'
               }`}
               title="Writing Tips"
             >
-              <LightbulbIcon className="w-3.5 h-3.5" />
-              <span className="text-xs font-medium">Tips</span>
+              <LightbulbIcon className="w-4 h-4" />
+              <span>Tips</span>
             </button>
 
             {/* Exam Mode Button */}
             <button
               onClick={() => setExamMode(!examMode)}
-              className={`flex items-center space-x-1 px-2 py-1 rounded transition-colors ${
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                 examMode
-                  ? darkMode
-                    ? 'bg-purple-900 text-purple-200'
-                    : 'bg-purple-600 text-white'
+                  ? 'bg-red-500 text-white hover:bg-red-600'
                   : darkMode
-                  ? 'text-gray-300 hover:bg-gray-700'
-                  : 'text-gray-700 hover:bg-gray-100'
+                  ? 'text-gray-300 hover:bg-gray-700 border border-gray-600'
+                  : 'text-gray-700 hover:bg-gray-100 border border-gray-300'
               }`}
               title="Exam Mode"
             >
-              <Target className="w-3.5 h-3.5" />
-              <span className="text-xs font-medium">Exam</span>
+              <Target className="w-4 h-4" />
+              <span>Exam</span>
             </button>
 
             {/* Focus Mode Button */}
             <button
               onClick={onToggleFocus}
-              className={`flex items-center space-x-1 px-2 py-1 rounded transition-colors ${
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                 focusMode
-                  ? darkMode
-                    ? 'bg-orange-700 text-white hover:bg-orange-600'
-                    : 'bg-orange-500 text-white hover:bg-orange-600'
+                  ? 'bg-purple-500 text-white hover:bg-purple-600'
                   : darkMode
-                  ? 'text-gray-300 hover:bg-gray-700'
-                  : 'text-gray-700 hover:bg-gray-100'
+                  ? 'text-gray-300 hover:bg-gray-700 border border-gray-600'
+                  : 'text-gray-700 hover:bg-gray-100 border border-gray-300'
               }`}
               title="Focus Mode"
             >
-              {focusMode ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-              <span className="text-xs font-medium">Focus</span>
+              {focusMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              <span>Focus</span>
             </button>
 
             {/* Support Level Button */}
             <button
               onClick={() => setShowSupportLevelModal(true)}
-              className={`flex items-center space-x-1 px-2 py-1 rounded transition-colors ${
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                 darkMode
                   ? 'text-gray-300 hover:bg-gray-700 border border-gray-600'
                   : 'text-gray-700 hover:bg-gray-100 border border-gray-300'
               } ${WritingBuddyService.getSupportLevelColor(supportLevel)}`}
               title={`Current Support Level: ${supportLevel}`}
             >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span className="text-xs font-medium">{supportLevel.replace(' Support', '')}</span>
+              <Sparkles className="w-4 h-4" />
+              <span>{supportLevel.replace(' Support', '')}</span>
             </button>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-6">
             {/* Timer */}
             <div className="flex items-center space-x-2">
-              <Clock className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />
-              <span className={`text-sm font-mono ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                {formatTime(elapsedTime)}
+              <Clock className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+              <span className={`text-sm tabular-nums ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                {formatTime(elapsedTime)} / 40:00
               </span>
               <button
                 onClick={isTimerRunning ? onPauseTimer : onStartTimer}
-                className={`p-1 rounded transition-colors ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-200'}`}
+                className={`p-1 rounded transition-colors ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}
                 title={isTimerRunning ? "Pause Timer" : "Start Timer"}
               >
                 {isTimerRunning ? (
-                  <PauseCircle className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />
+                  <PauseCircle className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
                 ) : (
-                  <PlayCircle className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />
+                  <PlayCircle className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
                 )}
               </button>
               <button
                 onClick={onResetTimer}
-                className={`p-1 rounded transition-colors ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-200'}`}
+                className={`p-1 rounded transition-colors ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}
                 title="Reset Timer"
               >
-                <RotateCcw className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />
+                <RotateCcw className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
               </button>
             </div>
 
-            {/* Enhanced Word Count with Progress */}
-            <div className="flex items-center space-x-4">
-              <FileText className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />
-                                         <div className="flex flex-col">
-                <div className="flex items-center space-x-2">
-                  <span className={`text-sm font-medium ${
-                    currentWordCount >= 300
-                      ? 'text-green-500'
-                      : darkMode ? 'text-gray-300' : 'text-gray-700'
-                  }`}>
-                    {currentWordCount} / 300 words
-                  </span>
-                  {currentWordCount >= 300 && (
-                    <span className="text-xs text-green-500">✓ Target reached</span>
-                  )}
-                </div>
-                <div className="w-32 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mt-1">
-                  <div
-                    className={`h-full transition-all duration-300 ${
-                      currentWordCount >= 300
-                        ? 'bg-green-500'
-                        : 'bg-blue-500'
-                    }`}
-                    style={{ width: `${Math.min((currentWordCount / 300) * 100, 100) }%` }}
-                  />
-                </div>
+            {/* Progress: Word Count with Bar */}
+            <div className="flex items-center space-x-3">
+              <span className={`text-sm font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                Progress to 400 words
+              </span>
+              <div className="flex items-center space-x-2">
+                <span className={`text-sm font-bold tabular-nums ${
+                  currentWordCount >= 400 ? 'text-green-600' :
+                  currentWordCount >= 250 ? 'text-blue-600' :
+                  darkMode ? 'text-gray-300' : 'text-gray-700'
+                }`}>
+                  {currentWordCount} / 400 words
+                </span>
               </div>
+            </div>
 
-              {/* Additional Metrics */}
-              {currentWordCount > 0 && (
-                <>
-                  <div className={`h-6 w-px ${darkMode ? 'bg-gray-700' : 'bg-gray-300'}`} />
-                  <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                    <span>{writingMetrics.sentences} sentences</span>
-                  </div>
-                  <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                    <span>{writingMetrics.readingTime} min read</span>
-                  </div>
-                  {lastSaved && (
-                    <>
-                      <div className={`h-6 w-px ${darkMode ? 'bg-gray-700' : 'bg-gray-300'}`} />
-                      <div className={`flex items-center space-x-1 text-xs ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
-                        <span className="animate-pulse">●</span>
-                        <span>Saved ${new Date().getTime() - lastSaved.getTime() < 2000 ? 'just now' : 'recently'}</span>
-                      </div>
-                    </>
-                  )}
-                </>
-              )}
+            {/* Pacing Indicator */}
+            {currentWordCount > 0 && elapsedTime > 0 && (
+              <div className={`text-sm ${darkMode ? 'text-orange-400' : 'text-orange-600'}`}>
+                {currentWordCount < (elapsedTime / 60) * 6.25 ? (
+                  <span>Behind • Speed up a bit!</span>
+                ) : (
+                  <span>On track</span>
+                )}
+              </div>
+            )}
+
+            {/* Word Count Completion */}
+            <div className={`text-xs font-medium ${
+              currentWordCount === 0 ? darkMode ? 'text-gray-500' : 'text-gray-400' :
+              currentWordCount >= 400 ? 'text-green-600' :
+              darkMode ? 'text-gray-400' : 'text-gray-500'
+            }`}>
+              {currentWordCount === 0 ? '0% complete' :
+               currentWordCount >= 400 ? '100% complete' :
+               `${Math.floor((currentWordCount / 400) * 100)}% complete`}
             </div>
 
             {/* Settings Button */}
             <button
               onClick={() => setShowSettings(!showSettings)}
-              className={`p-2 rounded-lg transition-colors ${
+              className={`p-2 rounded-md transition-colors ${
                 showSettings
-                  ? darkMode
-                    ? 'bg-gray-700 text-gray-200'
-                    : 'bg-gray-200 text-gray-700'
-                  : darkMode
-                  ? 'text-gray-400 hover:bg-gray-700'
-                  : 'text-gray-600 hover:bg-gray-200'
+                  ? darkMode ? 'bg-gray-700 text-gray-200' : 'bg-gray-200 text-gray-700'
+                  : darkMode ? 'text-gray-400 hover:bg-gray-700' : 'text-gray-500 hover:bg-gray-100'
               }`}
               title="Settings"
             >
@@ -849,46 +822,25 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
               placeholder="Start writing your amazing story here! Let your creativity flow and bring your ideas to life..."
             />
 
-            {/* Writing Progress Message */}
-            {currentWordCount > 20 && (
-              <div className={`absolute top-4 right-4 px-4 py-2 rounded-lg shadow-lg border backdrop-blur-sm ${darkMode ? 'bg-slate-800/90 border-slate-700' : 'bg-white/90 border-gray-200'}`}>
-                <div className="flex items-center space-x-2">
-                  <Sparkles className={`w-5 h-5 ${
-                    currentWordCount >= 250 ? 'text-green-500' :
-                    currentWordCount >= 150 ? 'text-blue-500' :
-                    currentWordCount >= 50 ? 'text-purple-500' :
-                    darkMode ? 'text-gray-400' : 'text-gray-500'
-                  }`} />
-                  <div className="flex flex-col">
-                    <span className={`text-sm font-semibold ${
-                      currentWordCount >= 250 ? 'text-green-600 dark:text-green-400' :
-                      currentWordCount >= 150 ? 'text-blue-600 dark:text-blue-400' :
-                      currentWordCount >= 50 ? 'text-purple-600 dark:text-purple-400' :
-                      darkMode ? 'text-gray-300' : 'text-gray-700'
-                    }`}>
-                      {currentWordCount >= 250 ? '🎉 Ready to submit!' :
-                       currentWordCount >= 150 ? '💪 Great progress!' :
-                       currentWordCount >= 50 ? '✏️ Keep writing...' :
-                       '📝 Good start!'}
-                    </span>
-                    <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      {currentWordCount >= 50 ? 'Submit for AI evaluation when ready' : `${50 - currentWordCount} more words to submit`}
-                    </span>
-                  </div>
-                </div>
+            {/* Encouragement Message - Minimal */}
+            {currentWordCount >= 250 && currentWordCount < 300 && (
+              <div className={`absolute top-4 right-4 px-3 py-1.5 rounded-md text-xs font-medium backdrop-blur-sm ${
+                darkMode ? 'bg-blue-900/80 text-blue-200' : 'bg-blue-50/90 text-blue-700 border border-blue-200'
+              }`}>
+                🚀 Great progress! Keep going...
               </div>
             )}
 
-            {/* Grammar Stats Overlay */}
+            {/* Grammar Stats - Bottom Bar (Minimal) */}
             {showGrammarHighlights && currentWordCount > 0 && (
-              <div className={`absolute bottom-4 left-4 px-3 py-2 rounded-lg shadow-lg border backdrop-blur-sm ${darkMode ? 'bg-slate-800/90 border-slate-700' : 'bg-white/90 border-gray-200'}`}>
-                <div className="flex items-center space-x-3">
-                  <h5 className={`text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Grammar</h5>
-                  <div className="flex items-center space-x-3">
-                    <div className="text-xs">Weak: {grammarStats.weakVerbs}</div>
-                    <div className="text-xs">Adjectives: {grammarStats.weakAdjectives}</div>
-                    <div className="text-xs">Passive: {grammarStats.passive}</div>
-                  </div>
+              <div className={`absolute bottom-0 left-0 right-0 px-4 py-2 text-xs backdrop-blur-sm ${
+                darkMode ? 'bg-slate-900/70 text-gray-400' : 'bg-white/70 text-gray-600 border-t border-gray-200'
+              }`}>
+                <div className="flex items-center space-x-4">
+                  <span className="font-medium">Grammar</span>
+                  <span>Weak: {grammarStats.weakVerbs}</span>
+                  <span>Adjectives: {grammarStats.weakAdjectives}</span>
+                  <span>Passive: {grammarStats.passive}</span>
                 </div>
               </div>
             )}
