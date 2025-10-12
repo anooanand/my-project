@@ -158,7 +158,6 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
   const [showStructureModal, setShowStructureModal] = useState(false);
   const [showTipsModalLocal, setShowTipsModalLocal] = useState(false);
   const [examModeLocal, setExamModeLocal] = useState(false);
-  const [focusModeLocal, setFocusModeLocal] = useState(false);
   const [showGrammarHighlights, setShowGrammarHighlights] = useState(true);
   const [expandedGrammarStats, setExpandedGrammarStats] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -647,25 +646,6 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
               <Target className="w-4 h-4" />
               <span>Exam</span>
             </button>
-
-            {/* Focus Mode Button */}
-            <button
-              onClick={() => {
-                console.log('Focus button clicked');
-                setFocusModeLocal(!focusModeLocal);
-              }}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all shadow-sm ${
-                focusModeLocal
-                  ? 'bg-purple-600 text-white hover:bg-purple-700 shadow-md'
-                  : darkMode
-                  ? 'bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200'
-                  : 'bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200'
-              }`}
-              title="Focus Mode"
-            >
-              {focusModeLocal ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              <span>Focus</span>
-            </button>
           </div>
 
           <div className="flex items-center space-x-6">
@@ -873,8 +853,8 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
         </div>
       </div>
 
-      {/* AI Coach Panel - Conditional (hidden in focus mode) */}
-      {panelVisible && !focusModeLocal && (
+      {/* AI Coach Panel - Conditional */}
+      {panelVisible && (
         <div className={`w-[380px] flex-shrink-0 border-l overflow-y-auto transition-all duration-300 ${
           darkMode ? 'bg-slate-800 border-gray-700' : 'bg-white border-gray-200'
         }`}>
@@ -891,7 +871,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
             // Implement fix application logic here
           }}
           selectedText={selectedText}
-          isFocusMode={focusModeLocal}
+          isFocusMode={false}
           supportLevel={supportLevel}
           onSupportLevelChange={() => setShowSupportLevelModal(true)}
         />
@@ -899,9 +879,24 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
       )}
 
       {/* Modals */}
-      {showPlanningTool && <PlanningToolModal onClose={() => setShowPlanningTool(false)} textType={textType} />}
-      {showStructureModal && <StructureGuideModal onClose={() => setShowStructureModal(false)} textType={textType} />}
-      {showTipsModalLocal && <TipsModal onClose={() => setShowTipsModalLocal(false)} textType={textType} />}
+      <PlanningToolModal
+        isOpen={showPlanningTool}
+        onClose={() => setShowPlanningTool(false)}
+        textType={textType}
+        onSavePlan={(plan) => {
+          console.log('Plan saved:', plan);
+          setShowPlanningTool(false);
+        }}
+      />
+      <StructureGuideModal
+        isOpen={showStructureModal}
+        onClose={() => setShowStructureModal(false)}
+      />
+      <TipsModal
+        isOpen={showTipsModalLocal}
+        onClose={() => setShowTipsModalLocal(false)}
+        textType={textType}
+      />
       {showAIReport && aiEvaluationReport && (
         <AIEvaluationReportDisplay
           report={aiEvaluationReport}
