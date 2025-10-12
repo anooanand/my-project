@@ -155,6 +155,8 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
   
   // New states for missing functionality
   const [showPlanningTool, setShowPlanningTool] = useState(false);
+  const [showStructureModal, setShowStructureModal] = useState(false);
+  const [showTipsModalLocal, setShowTipsModalLocal] = useState(false);
   const [examMode, setExamMode] = useState(false);
   const [showGrammarHighlights, setShowGrammarHighlights] = useState(true);
   const [expandedGrammarStats, setExpandedGrammarStats] = useState(false);
@@ -195,10 +197,8 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
     setShowSupportLevelModal(false);
   };
 
-  // Start with prompt collapsed to maximize writing space
-  useEffect(() => {
-    setIsPromptCollapsed(true);
-  }, []);
+  // Prompt starts expanded - will auto-collapse after 5 minutes (handled by timer above)
+  // Removed auto-collapse on mount to show prompt initially
 
   // Calculate word count first (needed by other metrics)
   const currentWordCount = React.useMemo(() => {
@@ -589,9 +589,9 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
             {/* Structure Button */}
             <button
-              onClick={() => onToggleStructureGuide && onToggleStructureGuide()}
+              onClick={() => setShowStructureModal(!showStructureModal)}
               className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all shadow-sm ${
-                showStructureGuide
+                showStructureModal
                   ? 'bg-green-600 text-white hover:bg-green-700 shadow-md'
                   : darkMode
                   ? 'bg-green-50 text-green-700 hover:bg-green-100 border border-green-200'
@@ -605,9 +605,9 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
             {/* Tips Button */}
             <button
-              onClick={() => onToggleTips && onToggleTips()}
+              onClick={() => setShowTipsModalLocal(!showTipsModalLocal)}
               className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all shadow-sm ${
-                showTips
+                showTipsModalLocal
                   ? 'bg-orange-600 text-white hover:bg-orange-700 shadow-md'
                   : darkMode
                   ? 'bg-orange-50 text-orange-700 hover:bg-orange-100 border border-orange-200'
@@ -898,8 +898,8 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
       {/* Modals */}
       {showPlanningTool && <PlanningToolModal onClose={() => setShowPlanningTool(false)} textType={textType} />}
-      {showStructureGuide && <StructureGuideModal onClose={onToggleStructureGuide} textType={textType} />}
-      {showTips && <TipsModal onClose={onToggleTips} textType={textType} />}
+      {showStructureModal && <StructureGuideModal onClose={() => setShowStructureModal(false)} textType={textType} />}
+      {showTipsModalLocal && <TipsModal onClose={() => setShowTipsModalLocal(false)} textType={textType} />}
       {showAIReport && aiEvaluationReport && (
         <AIEvaluationReportDisplay
           report={aiEvaluationReport}

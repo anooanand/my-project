@@ -59,6 +59,7 @@ function AppContent() {
   const [textType, setTextType] = useState('');
   const [assistanceLevel, setAssistanceLevel] = useState('detailed');
   const [timerStarted, setTimerStarted] = useState(false);
+  const [elapsedTime, setElapsedTime] = useState(0);
   const [selectedText, setSelectedText] = useState('');
   const [showExamMode, setShowExamMode] = useState(false);
   const [showHelpCenter, setShowHelpCenter] = useState(false);
@@ -75,6 +76,21 @@ function AppContent() {
   // New states for button functionality
   const [showStructureGuide, setShowStructureGuide] = useState(false);
   const [showTips, setShowTips] = useState(false);
+
+  // Timer logic - increment elapsed time every second when timer is running
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout | null = null;
+
+    if (timerStarted) {
+      intervalId = setInterval(() => {
+        setElapsedTime(prev => prev + 1);
+      }, 1000);
+    }
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [timerStarted]);
   const [focusMode, setFocusMode] = useState(false);
 
   // CRITICAL FIX: Load prompt from localStorage when component mounts or when navigating to writing page
@@ -459,10 +475,10 @@ function AppContent() {
                 onWordCountChange={() => { /* handled internally */ }}
                 darkMode={false} // Assuming a default for exam mode
                 isTimerRunning={false}
-                elapsedTime={0}
-                onStartTimer={() => {}}
-                onPauseTimer={() => {}}
-                onResetTimer={() => {}}
+                elapsedTime={elapsedTime}
+                onStartTimer={() => setTimerStarted(true)}
+                onPauseTimer={() => setTimerStarted(false)}
+                onResetTimer={() => { setTimerStarted(false); setElapsedTime(0); }}
                 onSubmit={handleSubmit}
                 user={user}
                 openAIConnected={openAIConnected}
@@ -481,10 +497,10 @@ function AppContent() {
                 onWordCountChange={() => { /* handled internally */ }}
                 darkMode={false} // Assuming a default for now
                 isTimerRunning={timerStarted}
-                elapsedTime={0} // Placeholder, actual timer logic needs to be implemented
+                elapsedTime={elapsedTime}
                 onStartTimer={() => setTimerStarted(true)}
                 onPauseTimer={() => setTimerStarted(false)}
-                onResetTimer={() => { /* reset timer logic */ }}
+                onResetTimer={() => { setTimerStarted(false); setElapsedTime(0); }}
                 focusMode={focusMode}
                 onToggleFocus={handleToggleFocusMode}
                 showStructureGuide={showStructureGuide}
