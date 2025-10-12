@@ -1,3 +1,4 @@
+// src/components/EnhancedWritingLayoutNSW.tsx - MODIFIED VERSION WITH BOTTOM SUBMIT BUTTON
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { PlanningToolModal } from './PlanningToolModal';
@@ -14,7 +15,7 @@ import { promptConfig } from '../config/prompts';
 import type { DetailedFeedback, LintFix } from '../types/feedback';
 import { eventBus } from '../lib/eventBus';
 import { detectNewParagraphs } from '../lib/paragraphDetection';
-import { NSWEvaluationReportGenerator } from './NSWEvaluationReportGenerator';
+import { NSWEvaluationReportGenerator } from './NSWEvaluationReportGenerator'; // Ensure this path is correct
 import {
   PenTool,
   Play,
@@ -74,12 +75,13 @@ interface EnhancedWritingLayoutNSWProps {
   popupFlowCompleted?: boolean;
   user?: any;
   openAIConnected?: boolean;
-  openAILoaded?: boolean;
+  openAILoading?: boolean;
   panelVisible?: boolean;
   setPanelVisible?: (visible: boolean) => void;
 }
 
 export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
+  console.log("EnhancedWritingLayoutNSW Props:", props);
   const {
     content,
     onChange,
@@ -114,12 +116,13 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
     popupFlowCompleted,
     user,
     openAIConnected,
-    openAILoaded,
+    openAILoading,
     panelVisible = true,
     setPanelVisible,
     setPrompt,
   } = props;
 
+  // State management
   const [generatedPrompt, setGeneratedPrompt] = useState<string | null>(null);
   const [customPromptInput, setCustomPromptInput] = useState<string | null>(null);
   const [localContent, setLocalContent] = useState('');
@@ -134,6 +137,8 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
   const [showPromptOptionsModal, setShowPromptOptionsModal] = useState(false);
   const [hidePrompt, setHidePrompt] = useState(false);
   const [isPromptCollapsed, setIsPromptCollapsed] = useState(false);
+  
+  // New states for missing functionality
   const [showPlanningTool, setShowPlanningTool] = useState(false);
   const [examMode, setExamMode] = useState(false);
   const [showGrammarHighlights, setShowGrammarHighlights] = useState(true);
@@ -142,26 +147,17 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Start with prompt collapsed to maximize writing space
   useEffect(() => {
-    if (content !== undefined) {
-      setLocalContent(content);
-    }
-  }, [content]);
+    setIsPromptCollapsed(true);
+  }, []);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (localContent !== content && onChange) {
-        onChange(localContent);
-        setLastSaved(new Date());
-      }
-    }, 500);
-    return () => clearTimeout(timer);
-  }, [localContent, content, onChange]);
-
+  // Calculate word count first (needed by other metrics)
   const currentWordCount = React.useMemo(() => {
     return localContent.trim() ? localContent.trim().split(/\s+/).length : 0;
   }, [localContent]);
 
+  // Calculate grammar stats
   const grammarStats = React.useMemo(() => {
     const text = localContent;
     if (!text) return { weakVerbs: 0, overused: 0, passive: 0, weakAdjectives: 0 };
@@ -174,6 +170,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
     return { weakVerbs, overused, passive, weakAdjectives };
   }, [localContent]);
 
+  // Calculate additional writing metrics
   const writingMetrics = React.useMemo(() => {
     const text = localContent.trim();
     if (!text) return {
@@ -189,33 +186,69 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
     const charactersNoSpaces = text.replace(/\s/g, '').length;
     const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0).length;
     const paragraphs = text.split(/\n\n+/).filter(p => p.trim().length > 0).length;
-    const readingTime = Math.ceil(currentWordCount / 200);
+    const readingTime = Math.ceil(currentWordCount / 200); // 200 words per minute
     const avgWordsPerSentence = sentences > 0 ? Math.round(currentWordCount / sentences) : 0;
 
     return { characters, charactersNoSpaces, sentences, paragraphs, readingTime, avgWordsPerSentence };
   }, [localContent, currentWordCount]);
 
+  // Calculate writing quality score
   const qualityScore = React.useMemo(() => {
     if (currentWordCount === 0) return 0;
 
     let score = 100;
 
+    // Deduct points for issues
     score -= grammarStats.weakVerbs * 2;
     score -= grammarStats.overused * 3;
     score -= grammarStats.passive * 2;
     score -= grammarStats.weakAdjectives * 2;
 
+    // Deduct if outside word count range
     if (currentWordCount < 50) score -= 10;
     if (currentWordCount > 50) score -= 15;
 
+    // Deduct for short sentences (less than 8 words avg)
     if (writingMetrics.avgWordsPerSentence < 8) score -= 5;
+
+    // Deduct for very long sentences (more than 25 words avg)
     if (writingMetrics.avgWordsPerSentence > 25) score -= 5;
 
     return Math.max(0, Math.min(100, score));
   }, [currentWordCount, grammarStats, writingMetrics]);
 
+  // Get effective prompt
   const effectivePrompt = generatedPrompt || customPromptInput || initialPrompt;
+  console.log("EnhancedWritingLayoutNSW State:", { generatedPrompt, customPromptInput, localContent, effectivePrompt, showPromptOptionsModal, hidePrompt, popupFlowCompleted });
 
+  // Initialize content
+  useEffect(() => {
+    if (content !== undefined) {
+      setLocalContent(content);
+    }
+  }, [content]);
+
+  // Auto-save content changes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (localContent !== content && onChange) {
+        onChange(localContent);
+        setLastSaved(new Date());
+      }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [localContent, content, onChange]);
+
+  // Update word count
+  useEffect(() => {
+    const words = localContent.trim().split(/\s+/).filter(word => word.length > 0);
+    const newWordCount = words.length;
+    if (newWordCount !== wordCount && onWordCountChange) {
+      onWordCountChange(newWordCount);
+    }
+  }, [localContent, wordCount, onWordCountChange]);
+
+  // Show prompt modal if no prompt exists
   useEffect(() => {
     if (!effectivePrompt && !popupFlowCompleted) {
       setShowPromptOptionsModal(true);
@@ -275,6 +308,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
     }
   }, [content, isTimerRunning, elapsedTime, onStartTimer, textType]);
 
+  // Convert NSW report format to DetailedFeedback format
   const convertNSWReportToDetailedFeedback = (report: any): any => {
     const maxScore = 10;
     return {
@@ -359,19 +393,26 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
     };
   };
 
+  // Calculate content status
   const hasContent = localContent.trim().length > 0;
-  const showWordCountWarning = currentWordCount > 50;
+    const showWordCountWarning = currentWordCount > 50;
 
   const handleSubmitForEvaluation = useCallback(async () => {
+    console.log('🎯 Submit button clicked!');
+    console.log('Content length:', localContent.length);
+    console.log('Has content:', hasContent);
+    
     if (!localContent.trim()) {
       alert("Please write something before submitting for evaluation.");
       return;
     }
 
     if (onSubmit) {
+      console.log('Calling onSubmit prop...');
       onSubmit(localContent);
     }
 
+    console.log('Starting NSW evaluation...');
     setEvaluationStatus("loading");
     setShowNSWEvaluation(true);
     setEvaluationProgress("Analyzing your writing with AI...");
@@ -381,6 +422,9 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
       setTimeout(() => setEvaluationProgress("Evaluating content and ideas..."), 2000);
       setTimeout(() => setEvaluationProgress("Generating detailed feedback..."), 3000);
 
+      console.log('Calling AI NSW evaluation API...');
+
+      // Call AI evaluation backend
       const response = await fetch("/.netlify/functions/nsw-ai-evaluation", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -397,12 +441,14 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
       }
 
       const aiReport = await response.json();
+      console.log('AI Report received:', aiReport);
 
       setAiEvaluationReport(aiReport);
       setShowNSWEvaluation(false);
       setShowAIReport(true);
       setEvaluationStatus("success");
 
+      console.log('✅ AI Evaluation complete!');
     } catch (error) {
       console.error("❌ NSW AI evaluation error:", error);
       setEvaluationStatus("error");
@@ -411,208 +457,485 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
     }
   }, [localContent, onSubmit, textType, effectivePrompt]);
 
-  const handleTogglePlanningTool = useCallback(() => {
-    setShowPlanningTool(prev => !prev);
-  }, []);
-
-  const handleToggleExamMode = useCallback(() => {
-    setExamMode(prev => !prev);
-  }, []);
+  const handleApplyFix = useCallback((fix: LintFix) => {
+    if (textareaRef.current) {
+      const start = fix.evidence.start;
+      const end = fix.evidence.end;
+      const newContent = localContent.substring(0, start) + fix.replacement + localContent.substring(end);
+      setLocalContent(newContent);
+      if (onChange) {
+        onChange(newContent);
+      }
+    }
+  }, [localContent, onChange]);
 
   return (
     <div className={`flex h-screen w-full ${darkMode ? 'bg-slate-900 text-gray-100' : 'bg-gray-100 text-gray-900'}`}>
       <div className="flex flex-col flex-1">
         {/* Prompt Section */}
-        <div className={`flex-shrink-0 p-4 border-b ${darkMode ? 'bg-slate-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-          <div className="flex items-center justify-between mb-2">
+        <div className={`flex-shrink-0 border-b ${darkMode ? 'bg-slate-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+          {/* Prompt Header */}
+          <div className="flex items-center justify-between px-4 py-2">
             <div className="flex items-center space-x-2">
-              <Info className={`w-5 h-5 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
-              <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Your Writing Prompt</h3>
-              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${darkMode ? 'bg-blue-900 text-blue-300' : 'bg-blue-100 text-blue-800'}`}>{textType}</span>
+              <LightbulbIcon className={`w-4 h-4 flex-shrink-0 ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`} />
+              <h3 className={`font-medium text-sm flex-shrink-0 ${darkMode ? 'text-gray-100' : 'text-blue-800'}`}>
+                Prompt
+              </h3>
+              <span className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${
+                darkMode ? 'bg-cyan-900/50 text-cyan-200 border border-cyan-700' : 'bg-blue-200 text-blue-800'
+              }`}>
+                {textType}
+              </span>
+              {isPromptCollapsed && effectivePrompt && (
+                <span className={`text-xs italic truncate ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  {effectivePrompt.substring(0, 80)}...
+                </span>
+              )}
             </div>
+
             <button
-              onClick={() => setHidePrompt(prev => !prev)}
-              className={`text-sm font-medium ${darkMode ? 'text-gray-400 hover:text-gray-200' : 'text-gray-600 hover:text-gray-900'}`}
+              onClick={() => setIsPromptCollapsed(!isPromptCollapsed)}
+              className={`flex items-center space-x-1 px-2 py-1 rounded-md transition-colors text-xs font-medium flex-shrink-0 ${
+                darkMode
+                  ? 'text-cyan-300 hover:text-cyan-100 hover:bg-slate-700'
+                  : 'text-blue-700 hover:text-blue-900 hover:bg-blue-100'
+              }`}
             >
-              {hidePrompt ? 'Show Prompt' : 'Hide Prompt'}
+              {isPromptCollapsed ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
+              <span>{isPromptCollapsed ? 'Show' : 'Hide'}</span>
             </button>
           </div>
-          {!hidePrompt && (
-            <div className={`p-3 rounded-lg ${darkMode ? 'bg-slate-700 text-gray-200' : 'bg-gray-50 text-gray-800'}`}>
-              <p className="text-sm font-medium mb-2">Prompt: {effectivePrompt.split(':')[0]}</p>
-              <p className="text-sm">{effectivePrompt.split(':').slice(1).join(':').trim()}</p>
+
+          {/* Prompt Content */}
+          {!isPromptCollapsed && effectivePrompt && (
+            <div className="px-4 pb-3">
+              <div className={`p-3 rounded-lg border text-sm ${
+                darkMode
+                  ? 'bg-slate-900/50 border-slate-700 text-gray-100'
+                  : 'bg-white border-blue-200 text-blue-900'
+              }`}>
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">{effectivePrompt}</p>
+              </div>
             </div>
           )}
         </div>
 
-        {/* Action Buttons Section */}
-        <div className={`flex items-center px-4 py-2 border-b ${darkMode ? 'bg-slate-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+        {/* Toolbar Section - Compact */}
+        <div className={`flex items-center justify-between px-4 py-1.5 border-b flex-shrink-0 ${darkMode ? 'bg-slate-800 border-gray-700' : 'bg-white border-gray-200'}`}>
           <div className="flex items-center space-x-2">
+            {/* Plan Button */}
             <button
-              onClick={handleTogglePlanningTool}
-              className={`flex items-center space-x-1 px-3 py-1.5 rounded-full transition-colors ${
+              onClick={() => setShowPlanningTool(true)}
+              className={`flex items-center space-x-1 px-2 py-1 rounded transition-colors ${
                 showPlanningTool
-                  ? 'bg-blue-500 text-white' : darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  ? darkMode
+                    ? 'bg-blue-700 text-white hover:bg-blue-600'
+                    : 'bg-blue-500 text-white hover:bg-blue-600'
+                  : darkMode
+                  ? 'text-gray-300 hover:bg-gray-700'
+                  : 'text-gray-700 hover:bg-gray-100'
               }`}
+              title="Planning Tool"
             >
-              <PenTool className="w-4 h-4" />
-              <span className="text-sm font-medium">Planning</span>
+              <PenTool className="w-3.5 h-3.5" />
+              <span className="text-xs font-medium">Plan</span>
             </button>
+
+            {/* Structure Button */}
             <button
               onClick={onToggleStructureGuide}
-              className={`flex items-center space-x-1 px-3 py-1.5 rounded-full transition-colors ${
+              className={`flex items-center space-x-1 px-2 py-1 rounded transition-colors ${
                 showStructureGuide
-                  ? 'bg-green-500 text-white' : darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  ? darkMode
+                    ? 'bg-green-700 text-white hover:bg-green-600'
+                    : 'bg-green-500 text-white hover:bg-green-600'
+                  : darkMode
+                  ? 'text-gray-300 hover:bg-gray-700'
+                  : 'text-gray-700 hover:bg-gray-100'
               }`}
+              title="Structure Guide"
             >
-              <BookOpen className="w-4 h-4" />
-              <span className="text-sm font-medium">Structure</span>
+              <BookOpen className="w-3.5 h-3.5" />
+              <span className="text-xs font-medium">Structure</span>
             </button>
+
+            {/* Tips Button */}
             <button
               onClick={onToggleTips}
-              className={`flex items-center space-x-1 px-3 py-1.5 rounded-full transition-colors ${
+              className={`flex items-center space-x-1 px-2 py-1 rounded transition-colors ${
                 showTips
-                  ? 'bg-orange-500 text-white' : darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  ? darkMode
+                    ? 'bg-orange-700 text-white hover:bg-orange-600'
+                    : 'bg-orange-500 text-white hover:bg-orange-600'
+                  : darkMode
+                  ? 'text-gray-300 hover:bg-gray-700'
+                  : 'text-gray-700 hover:bg-gray-100'
               }`}
+              title="Writing Tips"
             >
-              <LightbulbIcon className="w-4 h-4" />
-              <span className="text-sm font-medium">Tips</span>
+              <LightbulbIcon className="w-3.5 h-3.5" />
+              <span className="text-xs font-medium">Tips</span>
             </button>
+
+            {/* Exam Mode Button */}
+            <button
+              onClick={() => setExamMode(!examMode)}
+              className={`flex items-center space-x-1 px-2 py-1 rounded transition-colors ${
+                examMode
+                  ? darkMode
+                    ? 'bg-purple-900 text-purple-200'
+                    : 'bg-purple-600 text-white'
+                  : darkMode
+                  ? 'text-gray-300 hover:bg-gray-700'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+              title="Exam Mode"
+            >
+              <Target className="w-3.5 h-3.5" />
+              <span className="text-xs font-medium">Exam</span>
+            </button>
+
+            {/* Focus Mode Button */}
             <button
               onClick={onToggleFocus}
-              className={`flex items-center space-x-1 px-3 py-1.5 rounded-full transition-colors ${
+              className={`flex items-center space-x-1 px-2 py-1 rounded transition-colors ${
                 focusMode
-                  ? 'bg-purple-500 text-white' : darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                  ? darkMode
+                    ? 'bg-orange-700 text-white hover:bg-orange-600'
+                    : 'bg-orange-500 text-white hover:bg-orange-600'
+                  : darkMode
+                  ? 'text-gray-300 hover:bg-gray-700'
+                  : 'text-gray-700 hover:bg-gray-100'
               }`}
+              title="Focus Mode"
             >
-              <Target className="w-4 h-4" />
-              <span className="text-sm font-medium">Focus</span>
+              {focusMode ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+              <span className="text-xs font-medium">Focus</span>
             </button>
           </div>
-        </div>
 
-        {/* Timer and Word Count Section */}
-        <div className={`flex items-center justify-between px-4 py-2 border-b ${darkMode ? 'bg-slate-800 border-gray-700' : 'bg-white border-gray-200'}`}>
           <div className="flex items-center space-x-4">
-            <Clock className={`w-5 h-5 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />
-            <span className={`text-base font-mono ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-              {formatTime(elapsedTime)}
-            </span>
-            <button
-              onClick={isTimerRunning ? onPauseTimer : onStartTimer}
-              className={`p-1 rounded-full transition-colors ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-200'}`}
-              title={isTimerRunning ? "Pause Timer" : "Start Timer"}
-            >
-              {isTimerRunning ? (
-                <PauseCircle className={`w-5 h-5 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />
-              ) : (
-                <PlayCircle className={`w-5 h-5 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />
+            {/* Timer */}
+            <div className="flex items-center space-x-2">
+              <Clock className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />
+              <span className={`text-sm font-mono ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                {formatTime(elapsedTime)}
+              </span>
+              <button
+                onClick={isTimerRunning ? onPauseTimer : onStartTimer}
+                className={`p-1 rounded transition-colors ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-200'}`}
+                title={isTimerRunning ? "Pause Timer" : "Start Timer"}
+              >
+                {isTimerRunning ? (
+                  <PauseCircle className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />
+                ) : (
+                  <PlayCircle className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />
+                )}
+              </button>
+              <button
+                onClick={onResetTimer}
+                className={`p-1 rounded transition-colors ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-200'}`}
+                title="Reset Timer"
+              >
+                <RotateCcw className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />
+              </button>
+            </div>
+
+            {/* Enhanced Word Count with Progress */}
+            <div className="flex items-center space-x-4">
+              <FileText className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />
+                                         <div className="flex flex-col">
+                <div className="flex items-center space-x-2">
+                  <span className={`text-sm font-medium ${
+                    currentWordCount >= 300
+                      ? 'text-green-500'
+                      : darkMode ? 'text-gray-300' : 'text-gray-700'
+                  }`}>
+                    {currentWordCount} / 300 words
+                  </span>
+                  {currentWordCount >= 300 && (
+                    <span className="text-xs text-green-500">✓ Target reached</span>
+                  )}
+                </div>
+                <div className="w-32 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden mt-1">
+                  <div
+                    className={`h-full transition-all duration-300 ${
+                      currentWordCount >= 300
+                        ? 'bg-green-500'
+                        : 'bg-blue-500'
+                    }`}
+                    style={{ width: `${Math.min((currentWordCount / 300) * 100, 100) }%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Additional Metrics */}
+              {currentWordCount > 0 && (
+                <>
+                  <div className={`h-6 w-px ${darkMode ? 'bg-gray-700' : 'bg-gray-300'}`} />
+                  <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <span>{writingMetrics.sentences} sentences</span>
+                  </div>
+                  <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    <span>{writingMetrics.readingTime} min read</span>
+                  </div>
+                  {lastSaved && (
+                    <>
+                      <div className={`h-6 w-px ${darkMode ? 'bg-gray-700' : 'bg-gray-300'}`} />
+                      <div className={`flex items-center space-x-1 text-xs ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
+                        <span className="animate-pulse">●</span>
+                        <span>Saved ${new Date().getTime() - lastSaved.getTime() < 2000 ? 'just now' : 'recently'}</span>
+                      </div>
+                    </>
+                  )}
+                </>
               )}
-            </button>
+            </div>
+
+            {/* Settings Button */}
             <button
-              onClick={onResetTimer}
-              className={`p-1 rounded-full transition-colors ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-200'}`}
-              title="Reset Timer"
+              onClick={() => setShowSettings(!showSettings)}
+              className={`p-2 rounded-lg transition-colors ${
+                showSettings
+                  ? darkMode
+                    ? 'bg-gray-700 text-gray-200'
+                    : 'bg-gray-200 text-gray-700'
+                  : darkMode
+                  ? 'text-gray-400 hover:bg-gray-700'
+                  : 'text-gray-600 hover:bg-gray-200'
+              }`}
+              title="Settings"
             >
-              <RotateCcw className={`w-5 h-5 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />
+              <Settings className="w-4 h-4" />
             </button>
           </div>
-          <div className="flex items-center space-x-2">
-            <FileText className={`w-5 h-5 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />
-            <span className={`text-base font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-              {currentWordCount} words
-            </span>
-            <div className="w-32 bg-gray-200 rounded-full h-2 dark:bg-gray-700">
-              <div
-                className="bg-blue-600 h-2 rounded-full"
-                style={{ width: `${Math.min((currentWordCount / 400) * 100, 100)}%` }}
-              ></div>
+        </div>
+
+        {/* Settings Panel */}
+        {showSettings && (
+          <div className={`p-4 border-b flex-shrink-0 ${darkMode ? 'bg-slate-800 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
+            <div className="flex items-center justify-between mb-4">
+              <h4 className={`font-medium text-base ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                ⚙️ Writing Settings
+              </h4>
+              <button
+                onClick={() => setShowSettings(false)}
+                className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
+                  darkMode
+                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+                title="Close Settings"
+              >
+                <X className="w-4 h-4" />
+                <span>Close</span>
+              </button>
             </div>
-            <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Progress to 400 words</span>
-            {currentWordCount < 400 && (
-              <span className="text-orange-500 text-sm font-semibold">Behind · Speed up a bit!</span>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Font Family */}
+              <div className="space-y-2">
+                <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  📝 Font Family
+                </label>
+                <select
+                  value={fontFamily}
+                  onChange={(e) => onSettingsChange && onSettingsChange({ fontFamily: e.target.value })}
+                  className="w-full p-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                >
+                  <option value="Inter">Inter</option>
+                  <option value="Georgia">Georgia</option>
+                  <option value="Times New Roman">Times New Roman</option>
+                  <option value="Arial">Arial</option>
+                  <option value="Helvetica">Helvetica</option>
+                  <option value="Courier New">Courier New</option>
+                </select>
+              </div>
+              
+              {/* Font Size */}
+              <div className="space-y-2">
+                <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  📏 Font Size
+                </label>
+                <input
+                  type="number"
+                  value={fontSize}
+                  onChange={(e) => onSettingsChange && onSettingsChange({ fontSize: parseInt(e.target.value) })}
+                  className="w-full p-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+              </div>
+              
+              {/* Line Height */}
+              <div className="space-y-2">
+                <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  📐 Line Height
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={lineHeight}
+                  onChange={(e) => onSettingsChange && onSettingsChange({ lineHeight: parseFloat(e.target.value) })}
+                  className="w-full p-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-border-transparent"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Writing Area - Takes remaining space */}
+        <div className="flex-1 overflow-y-auto p-4">
+          <div className="relative h-full">
+            <textarea
+              ref={textareaRef}
+              value={localContent}
+              onChange={(e) => handleContentChange(e.target.value)}
+              className={`w-full h-full resize-none p-6 rounded-xl shadow-lg transition-all duration-300 text-base leading-relaxed focus:outline-none ${
+                darkMode
+                  ? 'bg-slate-900 text-gray-100 placeholder-gray-500 border-2 border-slate-700 focus:border-cyan-500 focus:shadow-cyan-500/20'
+                  : 'bg-white text-gray-800 placeholder-gray-400 border-2 border-gray-200 focus:border-blue-500 focus:shadow-blue-500/20'
+              }`}
+              style={{ fontFamily, fontSize: `${fontSize}px`, lineHeight }}
+              placeholder="Start writing your amazing story here! Let your creativity flow and bring your ideas to life..."
+            />
+
+            {/* Writing Quality Score Badge */}
+            {currentWordCount > 20 && (
+              <div className={`absolute top-4 right-4 px-3 py-2 rounded-lg shadow-lg border backdrop-blur-sm ${darkMode ? 'bg-slate-800/90 border-slate-700' : 'bg-white/90 border-gray-200'}`}>
+                <div className="flex items-center space-x-2">
+                  <div className="flex flex-col items-end">
+                    <span className={`text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      Quality Score
+                    </span>
+                    <div className="flex items-center space-x-2">
+                      <span className={`text-2xl font-bold ${
+                        qualityScore >= 90 ? 'text-green-500' :
+                        qualityScore >= 70 ? 'text-blue-500' :
+                        qualityScore >= 50 ? 'text-yellow-500' :
+                        'text-red-500'
+                      }`}>
+                        {qualityScore}
+                      </span>
+                      <span className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>/ 100</span>
+                    </div>
+                  </div>
+                  <div className={`w-12 h-12 rounded-full border-4 flex items-center justify-center ${
+                    qualityScore >= 90 ? 'border-green-500 bg-green-500/10' :
+                    qualityScore >= 70 ? 'border-blue-500 bg-blue-500/10' :
+                    qualityScore >= 50 ? 'border-yellow-500 bg-yellow-500/10' :
+                    'border-red-500 bg-red-500/10'
+                  }`}>
+                    <Zap className={`w-6 h-6 ${
+                      qualityScore >= 90 ? 'text-green-500' :
+                      qualityScore >= 70 ? 'text-blue-500' :
+                      qualityScore >= 50 ? 'text-yellow-500' :
+                      'text-red-500'
+                    }`} />
+                  </div>
+                </div>
+              </div>
             )}
-            {currentWordCount >= 400 && (
-              <span className="text-green-500 text-sm font-semibold">✓ Target reached</span>
+
+            {/* Grammar Stats Overlay */}
+            {showGrammarHighlights && currentWordCount > 0 && (
+              <div className={`absolute bottom-4 left-4 px-3 py-2 rounded-lg shadow-lg border backdrop-blur-sm ${darkMode ? 'bg-slate-800/90 border-slate-700' : 'bg-white/90 border-gray-200'}`}>
+                <div className="flex items-center space-x-3">
+                  <h5 className={`text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>Grammar</h5>
+                  <div className="flex items-center space-x-3">
+                    <div className="text-xs">Weak: {grammarStats.weakVerbs}</div>
+                    <div className="text-xs">Adjectives: {grammarStats.weakAdjectives}</div>
+                    <div className="text-xs">Passive: {grammarStats.passive}</div>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         </div>
 
-        {/* Main Writing Area */}
-        <div className="flex-1 flex flex-col relative">
-          <textarea
-            ref={textareaRef}
-            value={localContent}
-            onChange={(e) => handleContentChange(e.target.value)}
-            className={`w-full flex-1 resize-none p-6 text-base leading-relaxed focus:outline-none ${
-              darkMode
-                ? 'bg-slate-900 text-gray-100 placeholder-gray-500' : 'bg-white text-gray-800 placeholder-gray-400'
-            }`}
-            style={{ fontFamily, fontSize: `${fontSize}px`, lineHeight }}
-            placeholder="Start writing your amazing story here! Let your creativity flow and bring your ideas to life..."
+        {/* Bottom Submit Area */}
+        <div className="flex-shrink-0 p-4 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700">
+          <NSWStandaloneSubmitSystem
+            content={localContent}
+            onSubmit={handleSubmitForEvaluation}
+            wordCount={currentWordCount}
+            isSubmitting={evaluationStatus === 'loading'}
           />
-
-          {/* Submit for Evaluation Button - Always visible at the bottom */}
-          <div className={`flex-shrink-0 p-4 ${darkMode ? 'bg-slate-900' : 'bg-white'} border-t border-gray-200 dark:border-slate-700`}>
-            <NSWStandaloneSubmitSystem
-              content={localContent}
-              onSubmit={handleSubmitForEvaluation}
-              wordCount={currentWordCount}
-              isSubmitting={evaluationStatus === 'loading'}
-            />
-          </div>
         </div>
       </div>
 
       {/* AI Coach Panel */}
-      {panelVisible && (
-        <div className={`w-[380px] h-full flex-shrink-0 bg-white dark:bg-slate-800 shadow-2xl z-10 ${darkMode ? 'border-l border-slate-700' : ''}`}>
+      {!focusMode && (
+        <div className={`w-[380px] flex-shrink-0 border-l overflow-y-auto transition-all duration-300 ${
+          darkMode ? 'bg-slate-800 border-gray-700' : 'bg-white border-gray-200'
+        }`}>
           <EnhancedCoachPanel
-            textType={textType}
             content={localContent}
+            textType={textType}
+            timeElapsed={elapsedTime}
             wordCount={currentWordCount}
+            analysis={analysis}
+            onAnalysisChange={onAnalysisChange}
+            onApplyFix={handleApplyFix}
+            assistanceLevel={assistanceLevel}
+            onAssistanceLevelChange={onAssistanceLevelChange}
             user={user}
-            darkMode={darkMode}
             openAIConnected={openAIConnected}
-            openAILoaded={openAILoaded}
-            onAnalysisUpdate={(newAnalysis) => onAnalysisChange && onAnalysisChange(newAnalysis)}
-            onApplyFix={(fix: LintFix) => {
-              // Implement fix application logic here
-            }}
-            selectedText={selectedText}
-            isFocusMode={focusMode}
+            openAILoading={openAILoading}
+            onSubmitForEvaluation={handleSubmitForEvaluation}
           />
         </div>
       )}
 
       {/* Modals */}
-      <StructureGuideModal
-        isOpen={showStructureGuide}
-        onClose={onToggleStructureGuide}
-        textType={textType}
-        darkMode={darkMode}
-      />
-      <TipsModal isOpen={showTips} onClose={onToggleTips} darkMode={darkMode} />
-      <PlanningToolModal isOpen={showPlanningTool} onClose={handleTogglePlanningTool} darkMode={darkMode} />
-
+      {showPlanningTool && <PlanningToolModal onClose={() => setShowPlanningTool(false)} textType={textType} />}
+      {showStructureGuide && <StructureGuideModal onClose={onToggleStructureGuide} textType={textType} />}
+      {showTips && <TipsModal onClose={onToggleTips} textType={textType} />}
       {showAIReport && aiEvaluationReport && (
         <AIEvaluationReportDisplay
           report={aiEvaluationReport}
-          onClose={() => setShowAIReport(false)}
-          darkMode={darkMode}
+          essayText={localContent}
+          onClose={() => {
+            setShowAIReport(false);
+            setAiEvaluationReport(null);
+            if (onAnalysisChange) onAnalysisChange(null);
+          }}
         />
       )}
-
-      {showNSWEvaluation && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-slate-800 p-8 rounded-lg shadow-2xl text-center max-w-md">
-            <h3 className={`text-2xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-              Evaluating Your Writing...
-            </h3>
-            <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-            <p className={`mt-4 text-base ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-              {evaluationProgress}
-            </p>
+      {showReportModal && nswReport && (
+        <ReportModal
+          isOpen={showReportModal}
+          data={nswReport}
+          onClose={() => {
+            setShowReportModal(false);
+            setNswReport(null);
+            if (onAnalysisChange) onAnalysisChange(null);
+          }}
+          onApplyFix={handleApplyFix}
+          studentName="Student"
+          essayText={localContent}
+        />
+      )}
+      {showNSWEvaluation && evaluationStatus === "loading" && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className={`p-8 rounded-xl shadow-2xl text-center max-w-md ${
+            darkMode ? 'bg-slate-800 border border-slate-700' : 'bg-white'
+          }`}>
+            <div className="relative">
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-cyan-500 mx-auto mb-4"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Zap className="w-6 h-6 text-cyan-500 animate-pulse" />
+              </div>
+            </div>
+            <p className={`text-lg font-semibold mb-2 ${
+              darkMode ? 'text-gray-100' : 'text-gray-800'
+            }`}>Evaluating your writing...</p>
+            <p className={`text-sm mt-2 ${
+              darkMode ? 'text-gray-400' : 'text-gray-600'
+            }`}>{evaluationProgress}</p>
+            <div className="mt-4 flex justify-center space-x-1">
+              <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+              <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+              <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+            </div>
             {evaluationStatus === "error" && (
               <button
                 onClick={() => {
