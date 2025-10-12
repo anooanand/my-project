@@ -9,7 +9,9 @@ import {
   Target,
   Zap,
   Eye,
-  PlusCircle
+  PlusCircle,
+  MessageCircle,
+  X
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { WritingTypeSelectionModal } from './WritingTypeSelectionModal';
@@ -19,7 +21,11 @@ import { getNSWSelectiveFeedback } from '../lib/openai';
 import { TextHighlighter } from './TextHighlighter';
 import { VocabularyBuilder } from './VocabularyBuilder';
 import { SentenceAnalyzer } from './SentenceAnalyzer';
-import { InteractiveTextEditor } from './InteractiveTextEditor'; // Updated import
+import { InteractiveTextEditor } from './InteractiveTextEditor';
+import { TieredFeedbackChat } from './TieredFeedbackChat';
+import { SupportLevelSelector } from './SupportLevelSelector';
+import { WritingBuddyProgressDashboard } from './WritingBuddyProgressDashboard';
+import { WritingBuddyService, SupportLevel } from '../lib/writingBuddyService';
 
 interface WritingStudioProps {
   onNavigate: (page: string) => void;
@@ -50,8 +56,35 @@ export const WritingStudio: React.FC<WritingStudioProps> = ({ onNavigate }) => {
   const [showPromptOptionsModal, setShowPromptOptionsModal] = useState<boolean>(false);
   const [selectedWritingType, setSelectedWritingType] = useState<string>('');
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [supportLevel, setSupportLevel] = useState<SupportLevel>('Medium Support');
+  const [activeTab, setActiveTab] = useState<'write' | 'chat' | 'progress' | 'settings'>('write');
+  const [showSupportLevelModal, setShowSupportLevelModal] = useState<boolean>(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (user) {
+      loadSupportLevel();
+    }
+  }, [user]);
+
+  const loadSupportLevel = async () => {
+    if (!user) return;
+
+    try {
+      const prefs = await WritingBuddyService.getUserPreferences(user.id);
+      if (prefs) {
+        setSupportLevel(prefs.support_level);
+      }
+    } catch (error) {
+      console.error('Error loading support level:', error);
+    }
+  };
+
+  const handleSupportLevelChange = (newLevel: SupportLevel) => {
+    setSupportLevel(newLevel);
+    setShowSupportLevelModal(false);
+  };
 
   const [stats, setStats] = useState<WritingStats>({
     wordCount: 0,
@@ -317,9 +350,58 @@ export const WritingStudio: React.FC<WritingStudioProps> = ({ onNavigate }) => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
+        {/* Header with Tabs */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-4">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                Writing Studio
+              </h1>
+              <div
+                className={`px-3 py-1 rounded-full text-xs font-medium ${WritingBuddyService.getSupportLevelColor(
+                  supportLevel
+                )}`}
+              >
+                {supportLevel}
+              </div>
+            </div>
+            <button
+              onClick={() => setShowSupportLevelModal(true)}
+              className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+            >
+              Change Support Level
+            </button>
+          </div>
+
+          {/* Tab Navigation */}
+          <div className="flex space-x-1 border-b border-gray-200 dark:border-gray-700">
+            {[
+              { id: 'write', label: 'Write', icon: FileText },
+              { id: 'chat', label: 'Chat', icon: MessageCircle },
+              { id: 'progress', label: 'Progress', icon: BarChart3 },
+            ].map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                onClick={() => setActiveTab(id as any)}
+                className={`flex items-center px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === id
+                    ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400'
+                    : 'border-transparent text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
+                }`}
+              >
+                <Icon className="w-4 h-4 mr-2" />
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Tab Content */}
+        {activeTab === 'write' && (
+          <>
+            {/* Header */}
+            <div className="mb-8">
+              <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-4">
               <input
                 type="text"
@@ -545,6 +627,29 @@ export const WritingStudio: React.FC<WritingStudioProps> = ({ onNavigate }) => {
         </div>
       </div>
 
+        </>
+        )}
+
+        {/* Chat Tab */}
+        {activeTab === 'chat' && (
+          <div className="max-w-4xl mx-auto">
+            <TieredFeedbackChat
+              textType={selectedWritingType}
+              currentContent={content}
+              wordCount={stats.wordCount}
+              className="h-[600px]"
+            />
+          </div>
+        )}
+
+        {/* Progress Tab */}
+        {activeTab === 'progress' && (
+          <div className="max-w-4xl mx-auto">
+            <WritingBuddyProgressDashboard />
+          </div>
+        )}
+      </div>
+
       {/* Modals */}
       {showWritingTypeModal && (
         <WritingTypeSelectionModal
@@ -559,6 +664,31 @@ export const WritingStudio: React.FC<WritingStudioProps> = ({ onNavigate }) => {
           onCustomPrompt={handleCustomPrompt}
           onClose={() => setShowPromptOptionsModal(false)}
         />
+      )}
+
+      {showSupportLevelModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-gray-900">
+                  Support Level Settings
+                </h2>
+                <button
+                  onClick={() => setShowSupportLevelModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              <SupportLevelSelector
+                currentLevel={supportLevel}
+                onLevelChange={handleSupportLevelChange}
+                showRecommendations={true}
+              />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

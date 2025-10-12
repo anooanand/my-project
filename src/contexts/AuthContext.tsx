@@ -10,6 +10,7 @@ interface AuthContextType {
   loading: boolean;
   emailVerified: boolean;
   paymentCompleted: boolean;
+  isPaidUser: boolean;
   authSignIn: (email: string, password: string) => Promise<{ data: any; error: any }>;
   authSignUp: (email: string, password: string) => Promise<{ data: any; error: any }>;
   authSignOut: () => Promise<void>;
@@ -364,6 +365,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loading,
     emailVerified,
     paymentCompleted,
+    isPaidUser: paymentCompleted, // isPaidUser is an alias for paymentCompleted
     authSignIn,
     authSignUp,
     authSignOut,
