@@ -1,8 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Send, MessageSquare, BarChart3, Lightbulb, Target, Star, TrendingUp, Award, List, BookOpen } from 'lucide-react';
 import { StepByStepWritingBuilder } from './StepByStepWritingBuilder';
 import { ContextualAICoachPanel } from './ContextualAICoachPanel';
+import { ComprehensiveFeedbackDisplay } from './ComprehensiveFeedbackDisplay';
 import { generateIntelligentResponse, type EnhancedCoachResponse } from '../lib/enhancedIntelligentResponseGenerator';
+import { ComprehensiveFeedbackAnalyzer } from '../lib/comprehensiveFeedbackAnalyzer';
+import type { SupportLevel } from '../lib/writingBuddyService';
 
 /**
  * Generates time-appropriate coaching messages for 40-minute writing test
@@ -648,8 +651,21 @@ export function EnhancedCoachPanel({
   const [messages, setMessages] = useState<any[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [currentView, setCurrentView] = useState<'coach' | 'nsw'>('coach');
+  const [currentView, setCurrentView] = useState<'coach' | 'nsw' | 'detailed'>('coach');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Generate comprehensive feedback
+  const comprehensiveFeedback = useMemo(() => {
+    if (!content || content.trim().length < 20) return null;
+
+    const currentWordCount = content.trim().split(/\s+/).length;
+    return ComprehensiveFeedbackAnalyzer.generateComprehensiveFeedback(
+      content,
+      currentWordCount,
+      textType || 'narrative',
+      (supportLevel as SupportLevel) || 'Medium Support'
+    );
+  }, [content, textType, supportLevel]);
 
   // Analyze content and generate coaching response
   useEffect(() => {
@@ -923,6 +939,18 @@ export function EnhancedCoachPanel({
             <BarChart3 className="w-3 h-3" />
             <span>Criteria</span>
           </button>
+
+          <button
+            onClick={() => setCurrentView('detailed')}
+            className={`flex items-center space-x-1 px-2 py-1 rounded text-xs font-medium transition-colors whitespace-nowrap ${
+              currentView === 'detailed'
+                ? 'bg-white text-red-600'
+                : 'bg-red-500 text-white hover:bg-red-400'
+            }`}
+          >
+            <Target className="w-3 h-3" />
+            <span>Detailed</span>
+          </button>
         </div>
       </div>
 
@@ -1122,6 +1150,20 @@ export function EnhancedCoachPanel({
               textType={textType}
               content={content}
             />
+          </div>
+        ) : currentView === 'detailed' ? (
+          <div className="h-full overflow-y-auto p-4">
+            {comprehensiveFeedback ? (
+              <ComprehensiveFeedbackDisplay
+                feedback={comprehensiveFeedback}
+                darkMode={false}
+              />
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <Target className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p>Write at least 20 words to see detailed feedback</p>
+              </div>
+            )}
           </div>
         ) : (
           <div className="h-full overflow-y-auto">
