@@ -38,7 +38,8 @@ import {
   AlertCircle,
   PlayCircle,
   PauseCircle,
-  X
+  X,
+  Sparkles
 } from 'lucide-react';
 
 interface EnhancedWritingLayoutNSWProps {
@@ -799,38 +800,31 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
               placeholder="Start writing your amazing story here! Let your creativity flow and bring your ideas to life..."
             />
 
-            {/* Writing Quality Score Badge */}
+            {/* Writing Progress Message */}
             {currentWordCount > 20 && (
-              <div className={`absolute top-4 right-4 px-3 py-2 rounded-lg shadow-lg border backdrop-blur-sm ${darkMode ? 'bg-slate-800/90 border-slate-700' : 'bg-white/90 border-gray-200'}`}>
+              <div className={`absolute top-4 right-4 px-4 py-2 rounded-lg shadow-lg border backdrop-blur-sm ${darkMode ? 'bg-slate-800/90 border-slate-700' : 'bg-white/90 border-gray-200'}`}>
                 <div className="flex items-center space-x-2">
-                  <div className="flex flex-col items-end">
-                    <span className={`text-xs font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                      Quality Score
+                  <Sparkles className={`w-5 h-5 ${
+                    currentWordCount >= 250 ? 'text-green-500' :
+                    currentWordCount >= 150 ? 'text-blue-500' :
+                    currentWordCount >= 50 ? 'text-purple-500' :
+                    darkMode ? 'text-gray-400' : 'text-gray-500'
+                  }`} />
+                  <div className="flex flex-col">
+                    <span className={`text-sm font-semibold ${
+                      currentWordCount >= 250 ? 'text-green-600 dark:text-green-400' :
+                      currentWordCount >= 150 ? 'text-blue-600 dark:text-blue-400' :
+                      currentWordCount >= 50 ? 'text-purple-600 dark:text-purple-400' :
+                      darkMode ? 'text-gray-300' : 'text-gray-700'
+                    }`}>
+                      {currentWordCount >= 250 ? '🎉 Ready to submit!' :
+                       currentWordCount >= 150 ? '💪 Great progress!' :
+                       currentWordCount >= 50 ? '✏️ Keep writing...' :
+                       '📝 Good start!'}
                     </span>
-                    <div className="flex items-center space-x-2">
-                      <span className={`text-2xl font-bold ${
-                        qualityScore >= 90 ? 'text-green-500' :
-                        qualityScore >= 70 ? 'text-blue-500' :
-                        qualityScore >= 50 ? 'text-yellow-500' :
-                        'text-red-500'
-                      }`}>
-                        {qualityScore}
-                      </span>
-                      <span className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>/ 100</span>
-                    </div>
-                  </div>
-                  <div className={`w-12 h-12 rounded-full border-4 flex items-center justify-center ${
-                    qualityScore >= 90 ? 'border-green-500 bg-green-500/10' :
-                    qualityScore >= 70 ? 'border-blue-500 bg-blue-500/10' :
-                    qualityScore >= 50 ? 'border-yellow-500 bg-yellow-500/10' :
-                    'border-red-500 bg-red-500/10'
-                  }`}>
-                    <Zap className={`w-6 h-6 ${
-                      qualityScore >= 90 ? 'text-green-500' :
-                      qualityScore >= 70 ? 'text-blue-500' :
-                      qualityScore >= 50 ? 'text-yellow-500' :
-                      'text-red-500'
-                    }`} />
+                    <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                      {currentWordCount >= 50 ? 'Submit for AI evaluation when ready' : `${50 - currentWordCount} more words to submit`}
+                    </span>
                   </div>
                 </div>
               </div>
