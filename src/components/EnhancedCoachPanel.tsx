@@ -140,7 +140,7 @@ function getWritingPhase(wordCount: number) {
 // NSW Criteria Analysis Engine (preserved from original)
 class NSWCriteriaAnalyzer {
   static analyzeContent(content: string, textType: string) {
-    const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
+    const wordCount = content && content.trim() ? content.trim().split(/\s+/).length : 0;
     
     return {
       ideas: this.analyzeIdeasAndContent(content, textType, wordCount),
@@ -263,8 +263,8 @@ class NSWCriteriaAnalyzer {
     }
 
     // Check for sentence variety (basic check)
-    const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 0);
-    const avgSentenceLength = words.length / sentences.length;
+    const sentences = content ? content.split(/[.!?]+/).filter(s => s.trim().length > 0) : [];
+    const avgSentenceLength = sentences.length > 0 ? words.length / sentences.length : 0;
 
     if (avgSentenceLength > 8 && avgSentenceLength < 20) {
       score += 1;
@@ -309,7 +309,7 @@ class NSWCriteriaAnalyzer {
     }
 
     // Check for paragraphs (basic structure)
-    const paragraphs = content.split('\n\n').filter(p => p.trim().length > 0);
+    const paragraphs = content ? content.split('\n\n').filter(p => p.trim().length > 0) : [];
     
     if (paragraphs.length >= 3) {
       score += 1;
@@ -354,7 +354,7 @@ class NSWCriteriaAnalyzer {
     let feedback = [];
     let improvements = [];
 
-    if (content.trim().length === 0) {
+    if (!content || content.trim().length === 0) {
       return {
         score: 1,
         feedback: ["Start writing to see your grammar assessment!"],
@@ -372,7 +372,7 @@ class NSWCriteriaAnalyzer {
     }
 
     // Check for capital letters at sentence beginnings
-    const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    const sentences = content ? content.split(/[.!?]+/).filter(s => s.trim().length > 0) : [];
     const properCapitalization = sentences.every(sentence => {
       const trimmed = sentence.trim();
       return trimmed.length === 0 || /^[A-Z]/.test(trimmed);
@@ -419,7 +419,7 @@ class NSWCriteriaAnalyzer {
 // Enhanced Coach Response Generator (preserved from original)
 class EnhancedCoachResponseGenerator {
   static generateResponse(content: string, textType: string, analysis: any) {
-    const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
+    const wordCount = content && content.trim() ? content.trim().split(/\s+/).length : 0;
     
     // Find the lowest scoring criterion to focus on
     const scores = {
@@ -672,7 +672,7 @@ export function EnhancedCoachPanel({
 
   // Analyze content and generate coaching response
   useEffect(() => {
-    if (content.trim().length > 0) {
+    if (content && content.trim().length > 0) {
       setIsAnalyzing(true);
 
       // Debounce the analysis
@@ -892,7 +892,7 @@ export function EnhancedCoachPanel({
             </button>
           </div>
           <div className="text-sm text-white opacity-90">
-            {content.trim() ? `${content.trim().split(/\s+/).length} words` : '0 words'}
+            {content && content.trim() ? `${content.trim().split(/\s+/).length} words` : '0 words'}
           </div>
         </div>
         
