@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { NSWEvaluationReportGenerator } from './NSWEvaluationReportGenerator'; // Re-add this import
+import React, { useState } from 'react';
 
 interface NSWStandaloneSubmitSystemProps {
   content: string;
@@ -17,40 +16,43 @@ export function NSWStandaloneSubmitSystem({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // The useEffect hook should not trigger submission automatically if a button is expected.
-  // Instead, the submission logic should be triggered by a user action (e.g., button click).
-  // For now, we'll keep the useEffect for demonstration, but a button would call this function.
+  // Expose submit function to parent via ref or callback
+  React.useImperativeHandle(React.useRef(), () => ({
+    submitEvaluation
+  }));
+
   const submitEvaluation = async () => {
     setIsSubmitting(true);
     setError(null);
 
     try {
-      // Retrieve prompt and word count from localStorage or other sources if needed
+      // Retrieve prompt from localStorage
       const prompt = localStorage.getItem("generatedPrompt") || localStorage.getItem(`${textType.toLowerCase()}_prompt`) || "";
-      const essayData = JSON.parse(localStorage.getItem("currentEssayData") || "{}");
-      const wordCount = essayData.wordCount || content.trim().split(/\s+/).filter(word => word.length > 0).length;
-
-      // Define target word counts (these might come from props or a config)
-      const targetWordCountMin = 100; // Example value
-      const targetWordCountMax = 500; // Example value
 
       if (!content || content.trim().length === 0) {
         throw new Error("Essay content cannot be empty.");
       }
 
-      console.log("NSWStandaloneSubmitSystem: Generating report...");
-      
-      // Revert to direct report generation using NSWEvaluationReportGenerator
-      const report = NSWEvaluationReportGenerator.generateReport({
-        essayContent: content,
-        textType: textType,
-        prompt: prompt,
-        wordCount: wordCount,
-        targetWordCountMin: targetWordCountMin,
-        targetWordCountMax: targetWordCountMax,
+      console.log("NSWStandaloneSubmitSystem: Calling AI evaluation API...");
+
+      // Call AI evaluation backend
+      const response = await fetch("/.netlify/functions/nsw-ai-evaluation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          essayContent: content,
+          textType: textType,
+          prompt: prompt
+        })
       });
 
-      console.log("NSWStandaloneSubmitSystem: Report generated successfully:", report);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to evaluate essay");
+      }
+
+      const report = await response.json();
+      console.log("NSWStandaloneSubmitSystem: AI evaluation received:", report);
       onComplete(report);
     } catch (err: any) {
       console.error("NSWStandaloneSubmitSystem: Submission error:", err);
@@ -61,12 +63,5 @@ export function NSWStandaloneSubmitSystem({
     }
   };
 
-  // This useEffect will still trigger the submission on mount/content change.
-  // If a button is desired, this useEffect should be removed, and submitEvaluation
-  // should be called by an onClick handler on a button in the parent component.
-  useEffect(() => {
-    submitEvaluation();
-  }, [content, textType]); // Removed onComplete, onClose from dependencies to prevent re-triggering
-
-  return null; // This component still doesn't render UI directly, it's a logic component.
+  return null; // This component no longer renders UI directly
 }

@@ -8,6 +8,7 @@ import { EnhancedCoachPanel } from './EnhancedCoachPanel';
 import { NSWStandaloneSubmitSystem } from './NSWStandaloneSubmitSystem';
 import { ReportModal } from './ReportModal';
 import { AIEvaluationReportDisplay } from './AIEvaluationReportDisplay';
+import { NSWSubmitButton } from './NSWSubmitButton';
 import { PromptOptionsModal } from './PromptOptionsModal';
 import { InlineTextHighlighter } from './InlineTextHighlighter';
 import { generatePrompt } from '../lib/openai';
@@ -853,11 +854,13 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
         {/* Bottom Submit Area */}
         <div className="flex-shrink-0 p-4 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700">
-          <NSWStandaloneSubmitSystem
+          <NSWSubmitButton
             content={localContent}
-            onSubmit={handleSubmitForEvaluation}
             wordCount={currentWordCount}
             isSubmitting={evaluationStatus === 'loading'}
+            onSubmit={handleSubmitForEvaluation}
+            darkMode={darkMode}
+            minWords={50}
           />
         </div>
       </div>
