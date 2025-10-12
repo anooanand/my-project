@@ -884,7 +884,12 @@ export function EnhancedCoachPanel({
       {/* OPTIMIZED: Single Header with Compact Toggle */}
       <div className="p-3 border-b bg-gradient-to-r from-blue-600 to-purple-600 text-white">
         <div className="flex items-center justify-between mb-2">
-          <h2 className="text-lg font-bold">Writing Coach</h2>
+          <div className="flex items-center space-x-3">
+            <h2 className="text-lg font-bold">Writing Coach</h2>
+            <div className="text-xs px-2 py-1 bg-white/20 rounded-md backdrop-blur-sm">
+              {supportLevel}
+            </div>
+          </div>
           <div className="text-sm opacity-90">
             {content.trim() ? `${content.trim().split(/\s+/).length} words` : '0 words'}
           </div>

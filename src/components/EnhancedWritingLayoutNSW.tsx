@@ -141,6 +141,17 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
   const [showPromptOptionsModal, setShowPromptOptionsModal] = useState(false);
   const [hidePrompt, setHidePrompt] = useState(false);
   const [isPromptCollapsed, setIsPromptCollapsed] = useState(false);
+
+  // Auto-hide prompt after 5 minutes
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!isPromptCollapsed) {
+        setIsPromptCollapsed(true);
+      }
+    }, 5 * 60 * 1000); // 5 minutes
+
+    return () => clearTimeout(timer);
+  }, [isPromptCollapsed]);
   
   // New states for missing functionality
   const [showPlanningTool, setShowPlanningTool] = useState(false);
@@ -149,8 +160,8 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
   const [expandedGrammarStats, setExpandedGrammarStats] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
-  // Tiered support system states
-  const [supportLevel, setSupportLevel] = useState<SupportLevel>('Medium Support');
+  // Tiered support system states - Default to High Support
+  const [supportLevel, setSupportLevel] = useState<SupportLevel>('High Support');
   const [showSupportLevelModal, setShowSupportLevelModal] = useState(false);
   const [supportLevelLoading, setSupportLevelLoading] = useState(true);
 
@@ -532,14 +543,14 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
             <button
               onClick={() => setIsPromptCollapsed(!isPromptCollapsed)}
-              className={`flex items-center space-x-1 px-2 py-1 rounded-md transition-colors text-xs font-medium flex-shrink-0 ${
+              className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-xs font-medium flex-shrink-0 border ${
                 darkMode
-                  ? 'text-cyan-300 hover:text-cyan-100 hover:bg-slate-700'
-                  : 'text-blue-700 hover:text-blue-900 hover:bg-blue-100'
+                  ? 'text-cyan-300 hover:text-cyan-100 hover:bg-slate-700 border-cyan-700'
+                  : 'text-blue-700 hover:text-blue-900 hover:bg-blue-50 border-blue-300'
               }`}
             >
               {isPromptCollapsed ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
-              <span>{isPromptCollapsed ? 'Show' : 'Hide'}</span>
+              <span>{isPromptCollapsed ? 'Show Prompt' : 'Hide Prompt'}</span>
             </button>
           </div>
 
@@ -562,13 +573,13 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
           <div className="flex items-center space-x-3">
             {/* Plan Button */}
             <button
-              onClick={() => setShowPlanningTool(true)}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              onClick={() => setShowPlanningTool(!showPlanningTool)}
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all shadow-sm ${
                 showPlanningTool
-                  ? 'bg-blue-500 text-white hover:bg-blue-600'
+                  ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-md'
                   : darkMode
-                  ? 'text-gray-300 hover:bg-gray-700 border border-gray-600'
-                  : 'text-gray-700 hover:bg-gray-100 border border-gray-300'
+                  ? 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200'
+                  : 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200'
               }`}
               title="Planning Tool"
             >
@@ -578,13 +589,13 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
             {/* Structure Button */}
             <button
-              onClick={onToggleStructureGuide}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              onClick={() => onToggleStructureGuide && onToggleStructureGuide()}
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all shadow-sm ${
                 showStructureGuide
-                  ? 'bg-green-500 text-white hover:bg-green-600'
+                  ? 'bg-green-600 text-white hover:bg-green-700 shadow-md'
                   : darkMode
-                  ? 'text-gray-300 hover:bg-gray-700 border border-gray-600'
-                  : 'text-gray-700 hover:bg-gray-100 border border-gray-300'
+                  ? 'bg-green-50 text-green-700 hover:bg-green-100 border border-green-200'
+                  : 'bg-green-50 text-green-700 hover:bg-green-100 border border-green-200'
               }`}
               title="Structure Guide"
             >
@@ -594,13 +605,13 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
             {/* Tips Button */}
             <button
-              onClick={onToggleTips}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              onClick={() => onToggleTips && onToggleTips()}
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all shadow-sm ${
                 showTips
-                  ? 'bg-orange-500 text-white hover:bg-orange-600'
+                  ? 'bg-orange-600 text-white hover:bg-orange-700 shadow-md'
                   : darkMode
-                  ? 'text-gray-300 hover:bg-gray-700 border border-gray-600'
-                  : 'text-gray-700 hover:bg-gray-100 border border-gray-300'
+                  ? 'bg-orange-50 text-orange-700 hover:bg-orange-100 border border-orange-200'
+                  : 'bg-orange-50 text-orange-700 hover:bg-orange-100 border border-orange-200'
               }`}
               title="Writing Tips"
             >
@@ -611,12 +622,12 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
             {/* Exam Mode Button */}
             <button
               onClick={() => setExamMode(!examMode)}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all shadow-sm ${
                 examMode
-                  ? 'bg-red-500 text-white hover:bg-red-600'
+                  ? 'bg-red-600 text-white hover:bg-red-700 shadow-md'
                   : darkMode
-                  ? 'text-gray-300 hover:bg-gray-700 border border-gray-600'
-                  : 'text-gray-700 hover:bg-gray-100 border border-gray-300'
+                  ? 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'
+                  : 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'
               }`}
               title="Exam Mode"
             >
@@ -626,32 +637,18 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
             {/* Focus Mode Button */}
             <button
-              onClick={onToggleFocus}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+              onClick={() => onToggleFocus && onToggleFocus()}
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all shadow-sm ${
                 focusMode
-                  ? 'bg-purple-500 text-white hover:bg-purple-600'
+                  ? 'bg-purple-600 text-white hover:bg-purple-700 shadow-md'
                   : darkMode
-                  ? 'text-gray-300 hover:bg-gray-700 border border-gray-600'
-                  : 'text-gray-700 hover:bg-gray-100 border border-gray-300'
+                  ? 'bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200'
+                  : 'bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200'
               }`}
               title="Focus Mode"
             >
               {focusMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               <span>Focus</span>
-            </button>
-
-            {/* Support Level Button */}
-            <button
-              onClick={() => setShowSupportLevelModal(true)}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                darkMode
-                  ? 'text-gray-300 hover:bg-gray-700 border border-gray-600'
-                  : 'text-gray-700 hover:bg-gray-100 border border-gray-300'
-              } ${WritingBuddyService.getSupportLevelColor(supportLevel)}`}
-              title={`Current Support Level: ${supportLevel}`}
-            >
-              <Sparkles className="w-4 h-4" />
-              <span>{supportLevel.replace(' Support', '')}</span>
             </button>
           </div>
 
@@ -663,7 +660,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
                 {formatTime(elapsedTime)} / 40:00
               </span>
               <button
-                onClick={isTimerRunning ? onPauseTimer : onStartTimer}
+                onClick={() => isTimerRunning ? (onPauseTimer && onPauseTimer()) : (onStartTimer && onStartTimer())}
                 className={`p-1 rounded transition-colors ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}
                 title={isTimerRunning ? "Pause Timer" : "Start Timer"}
               >
@@ -674,7 +671,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
                 )}
               </button>
               <button
-                onClick={onResetTimer}
+                onClick={() => onResetTimer && onResetTimer()}
                 className={`p-1 rounded transition-colors ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}
                 title="Reset Timer"
               >
