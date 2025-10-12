@@ -157,7 +157,8 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
   const [showPlanningTool, setShowPlanningTool] = useState(false);
   const [showStructureModal, setShowStructureModal] = useState(false);
   const [showTipsModalLocal, setShowTipsModalLocal] = useState(false);
-  const [examMode, setExamMode] = useState(false);
+  const [examModeLocal, setExamModeLocal] = useState(false);
+  const [focusModeLocal, setFocusModeLocal] = useState(false);
   const [showGrammarHighlights, setShowGrammarHighlights] = useState(true);
   const [expandedGrammarStats, setExpandedGrammarStats] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -573,7 +574,10 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
           <div className="flex items-center space-x-3">
             {/* Plan Button */}
             <button
-              onClick={() => setShowPlanningTool(!showPlanningTool)}
+              onClick={() => {
+                console.log('Plan button clicked');
+                setShowPlanningTool(!showPlanningTool);
+              }}
               className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all shadow-sm ${
                 showPlanningTool
                   ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-md'
@@ -589,7 +593,10 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
             {/* Structure Button */}
             <button
-              onClick={() => setShowStructureModal(!showStructureModal)}
+              onClick={() => {
+                console.log('Structure button clicked');
+                setShowStructureModal(!showStructureModal);
+              }}
               className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all shadow-sm ${
                 showStructureModal
                   ? 'bg-green-600 text-white hover:bg-green-700 shadow-md'
@@ -605,7 +612,10 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
             {/* Tips Button */}
             <button
-              onClick={() => setShowTipsModalLocal(!showTipsModalLocal)}
+              onClick={() => {
+                console.log('Tips button clicked');
+                setShowTipsModalLocal(!showTipsModalLocal);
+              }}
               className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all shadow-sm ${
                 showTipsModalLocal
                   ? 'bg-orange-600 text-white hover:bg-orange-700 shadow-md'
@@ -621,9 +631,12 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
             {/* Exam Mode Button */}
             <button
-              onClick={() => setExamMode(!examMode)}
+              onClick={() => {
+                console.log('Exam button clicked');
+                setExamModeLocal(!examModeLocal);
+              }}
               className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all shadow-sm ${
-                examMode
+                examModeLocal
                   ? 'bg-red-600 text-white hover:bg-red-700 shadow-md'
                   : darkMode
                   ? 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'
@@ -637,9 +650,12 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
             {/* Focus Mode Button */}
             <button
-              onClick={() => onToggleFocus && onToggleFocus()}
+              onClick={() => {
+                console.log('Focus button clicked');
+                setFocusModeLocal(!focusModeLocal);
+              }}
               className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all shadow-sm ${
-                focusMode
+                focusModeLocal
                   ? 'bg-purple-600 text-white hover:bg-purple-700 shadow-md'
                   : darkMode
                   ? 'bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200'
@@ -647,7 +663,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
               }`}
               title="Focus Mode"
             >
-              {focusMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              {focusModeLocal ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               <span>Focus</span>
             </button>
           </div>
@@ -656,8 +672,8 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
             {/* Timer */}
             <div className="flex items-center space-x-2">
               <Clock className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-              <span className={`text-sm tabular-nums ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                {formatTime(elapsedTime)} / 40:00
+              <span className={`text-sm tabular-nums font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                {formatTime(elapsedTime)}
               </span>
               <button
                 onClick={() => isTimerRunning ? (onPauseTimer && onPauseTimer()) : (onStartTimer && onStartTimer())}
@@ -679,20 +695,16 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
               </button>
             </div>
 
-            {/* Progress: Word Count with Bar */}
-            <div className="flex items-center space-x-3">
-              <span className={`text-sm font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                Progress to 400 words
+            {/* Word Count */}
+            <div className="flex items-center space-x-2">
+              <FileText className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
+              <span className={`text-sm font-bold tabular-nums ${
+                currentWordCount >= 400 ? 'text-green-600' :
+                currentWordCount >= 250 ? 'text-blue-600' :
+                darkMode ? 'text-gray-300' : 'text-gray-700'
+              }`}>
+                {currentWordCount} {currentWordCount === 1 ? 'word' : 'words'}
               </span>
-              <div className="flex items-center space-x-2">
-                <span className={`text-sm font-bold tabular-nums ${
-                  currentWordCount >= 400 ? 'text-green-600' :
-                  currentWordCount >= 250 ? 'text-blue-600' :
-                  darkMode ? 'text-gray-300' : 'text-gray-700'
-                }`}>
-                  {currentWordCount} / 400 words
-                </span>
-              </div>
             </div>
 
             {/* Pacing Indicator */}
@@ -706,16 +718,6 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
               </div>
             )}
 
-            {/* Word Count Completion */}
-            <div className={`text-xs font-medium ${
-              currentWordCount === 0 ? darkMode ? 'text-gray-500' : 'text-gray-400' :
-              currentWordCount >= 400 ? 'text-green-600' :
-              darkMode ? 'text-gray-400' : 'text-gray-500'
-            }`}>
-              {currentWordCount === 0 ? '0% complete' :
-               currentWordCount >= 400 ? '100% complete' :
-               `${Math.floor((currentWordCount / 400) * 100)}% complete`}
-            </div>
 
             {/* Toggle AI Coach Button */}
             <button
@@ -871,8 +873,8 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
         </div>
       </div>
 
-      {/* AI Coach Panel - Conditional */}
-      {panelVisible && (
+      {/* AI Coach Panel - Conditional (hidden in focus mode) */}
+      {panelVisible && !focusModeLocal && (
         <div className={`w-[380px] flex-shrink-0 border-l overflow-y-auto transition-all duration-300 ${
           darkMode ? 'bg-slate-800 border-gray-700' : 'bg-white border-gray-200'
         }`}>
@@ -889,7 +891,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
             // Implement fix application logic here
           }}
           selectedText={selectedText}
-          isFocusMode={focusMode}
+          isFocusMode={focusModeLocal}
           supportLevel={supportLevel}
           onSupportLevelChange={() => setShowSupportLevelModal(true)}
         />
