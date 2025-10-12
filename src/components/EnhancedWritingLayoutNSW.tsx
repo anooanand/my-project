@@ -863,27 +863,25 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
       </div>
 
       {/* AI Coach Panel */}
-      {!focusMode && (
-        <div className={`w-[380px] flex-shrink-0 border-l overflow-y-auto transition-all duration-300 ${
-          darkMode ? 'bg-slate-800 border-gray-700' : 'bg-white border-gray-200'
-        }`}>
-          <EnhancedCoachPanel
-            content={localContent}
-            textType={textType}
-            timeElapsed={elapsedTime}
-            wordCount={currentWordCount}
-            analysis={analysis}
-            onAnalysisChange={onAnalysisChange}
-            onApplyFix={handleApplyFix}
-            assistanceLevel={assistanceLevel}
-            onAssistanceLevelChange={onAssistanceLevelChange}
-            user={user}
-            openAIConnected={openAIConnected}
-            openAILoading={openAILoading}
-            onSubmitForEvaluation={handleSubmitForEvaluation}
-          />
-        </div>
-      )}
+      <div className={`w-[380px] flex-shrink-0 border-l overflow-y-auto transition-all duration-300 ${
+        darkMode ? 'bg-slate-800 border-gray-700' : 'bg-white border-gray-200'
+      }`}>
+        <EnhancedCoachPanel
+          textType={textType}
+          content={localContent}
+          wordCount={currentWordCount}
+          user={user}
+          darkMode={darkMode}
+          openAIConnected={openAIConnected}
+          openAILoading={openAILoading}
+          onAnalysisUpdate={(newAnalysis) => onAnalysisChange && onAnalysisChange(newAnalysis)}
+          onApplyFix={(fix: LintFix) => {
+            // Implement fix application logic here
+          }}
+          selectedText={selectedText}
+          isFocusMode={focusMode}
+        />
+      </div>
 
       {/* Modals */}
       {showPlanningTool && <PlanningToolModal onClose={() => setShowPlanningTool(false)} textType={textType} />}
