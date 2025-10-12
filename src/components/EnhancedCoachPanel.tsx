@@ -625,6 +625,7 @@ interface EnhancedCoachPanelProps {
   openAIConnected?: boolean;
   openAILoading?: boolean;
   onSubmitForEvaluation?: () => void;
+  supportLevel?: string;
 }
 
 export function EnhancedCoachPanel({
@@ -641,7 +642,8 @@ export function EnhancedCoachPanel({
   user,
   openAIConnected,
   openAILoading,
-  onSubmitForEvaluation
+  onSubmitForEvaluation,
+  supportLevel = 'Medium Support'
 }: EnhancedCoachPanelProps) {
   const [messages, setMessages] = useState<any[]>([]);
   const [inputValue, setInputValue] = useState('');
@@ -706,30 +708,85 @@ export function EnhancedCoachPanel({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSendMessage = () => {
-    if (inputValue.trim()) {
-      setMessages(prev => [...prev, {
-        type: 'user',
-        content: inputValue,
-        timestamp: new Date()
-      }]);
-      
-      // Generate a response based on the user's question
-      setTimeout(() => {
-        setMessages(prev => [...prev, {
+  const handleSendMessage = async () => {
+    if (!inputValue.trim()) return;
+
+    const userMessageContent = inputValue.trim();
+    setInputValue('');
+
+    // Add user message
+    setMessages(prev => [...prev, {
+      type: 'user',
+      content: userMessageContent,
+      timestamp: new Date()
+    }]);
+
+    // Add loading message
+    setMessages(prev => [...prev, {
+      type: 'loading',
+      content: 'Thinking...',
+      timestamp: new Date()
+    }]);
+
+    try {
+      const stage = (wordCount || 0) < 50 ? 'just starting' :
+                    (wordCount || 0) < 150 ? 'developing ideas' :
+                    'refining and expanding';
+
+      const response = await fetch('/.netlify/functions/chat-response', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userMessage: userMessageContent,
+          textType: textType || 'narrative',
+          currentContent: content || '',
+          wordCount: wordCount || 0,
+          supportLevel: supportLevel,
+          stage: stage,
+          sessionId: `session-${Date.now()}`
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get response');
+      }
+
+      const data = await response.json();
+
+      // Remove loading message and add AI response
+      setMessages(prev => {
+        const filtered = prev.filter(m => m.type !== 'loading');
+        return [...filtered, {
           type: 'response',
           content: {
-            encouragement: "Great question! 🤔",
-            nswFocus: "Writing Help",
-            suggestion: "I'm here to help with your writing. Keep working on your story and I'll provide specific feedback!",
-            example: "Try writing more of your story and I'll give you detailed suggestions.",
-            nextStep: "Continue writing and I'll analyze your progress!"
+            encouragement: "",
+            nswFocus: "AI Writing Buddy",
+            suggestion: data.response || "I'm here to help with your writing!",
+            example: "",
+            nextStep: ""
           },
           timestamp: new Date()
-        }]);
-      }, 500);
-      
-      setInputValue('');
+        }];
+      });
+
+    } catch (error) {
+      console.error('Error getting chat response:', error);
+
+      // Remove loading message and add error response
+      setMessages(prev => {
+        const filtered = prev.filter(m => m.type !== 'loading');
+        return [...filtered, {
+          type: 'response',
+          content: {
+            encouragement: "Oops!",
+            nswFocus: "Connection Issue",
+            suggestion: "I'm having trouble right now, but I'm here to help! Can you try asking your question again?",
+            example: "",
+            nextStep: "Try asking again in a moment"
+          },
+          timestamp: new Date()
+        }];
+      });
     }
   };
 

@@ -11,12 +11,14 @@ import { AIEvaluationReportDisplay } from './AIEvaluationReportDisplay';
 import { NSWSubmitButton } from './NSWSubmitButton';
 import { PromptOptionsModal } from './PromptOptionsModal';
 import { InlineTextHighlighter } from './InlineTextHighlighter';
+import { SupportLevelSelector } from './SupportLevelSelector';
 import { generatePrompt } from '../lib/openai';
 import { promptConfig } from '../config/prompts';
 import type { DetailedFeedback, LintFix } from '../types/feedback';
 import { eventBus } from '../lib/eventBus';
 import { detectNewParagraphs } from '../lib/paragraphDetection';
-import { NSWEvaluationReportGenerator } from './NSWEvaluationReportGenerator'; // Ensure this path is correct
+import { NSWEvaluationReportGenerator } from './NSWEvaluationReportGenerator';
+import { WritingBuddyService, SupportLevel } from '../lib/writingBuddyService';
 import {
   PenTool,
   Play,
@@ -147,7 +149,40 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
   const [expandedGrammarStats, setExpandedGrammarStats] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
+  // Tiered support system states
+  const [supportLevel, setSupportLevel] = useState<SupportLevel>('Medium Support');
+  const [showSupportLevelModal, setShowSupportLevelModal] = useState(false);
+  const [supportLevelLoading, setSupportLevelLoading] = useState(true);
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Load user's support level preference
+  useEffect(() => {
+    const loadSupportLevel = async () => {
+      if (!user?.id) {
+        setSupportLevelLoading(false);
+        return;
+      }
+
+      try {
+        const prefs = await WritingBuddyService.getUserPreferences(user.id);
+        if (prefs) {
+          setSupportLevel(prefs.support_level);
+        }
+      } catch (error) {
+        console.error('Error loading support level:', error);
+      } finally {
+        setSupportLevelLoading(false);
+      }
+    };
+
+    loadSupportLevel();
+  }, [user?.id]);
+
+  const handleSupportLevelChange = async (newLevel: SupportLevel) => {
+    setSupportLevel(newLevel);
+    setShowSupportLevelModal(false);
+  };
 
   // Start with prompt collapsed to maximize writing space
   useEffect(() => {
@@ -614,6 +649,20 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
               {focusMode ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
               <span className="text-xs font-medium">Focus</span>
             </button>
+
+            {/* Support Level Button */}
+            <button
+              onClick={() => setShowSupportLevelModal(true)}
+              className={`flex items-center space-x-1 px-2 py-1 rounded transition-colors ${
+                darkMode
+                  ? 'text-gray-300 hover:bg-gray-700 border border-gray-600'
+                  : 'text-gray-700 hover:bg-gray-100 border border-gray-300'
+              } ${WritingBuddyService.getSupportLevelColor(supportLevel)}`}
+              title={`Current Support Level: ${supportLevel}`}
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span className="text-xs font-medium">{supportLevel.replace(' Support', '')}</span>
+            </button>
           </div>
 
           <div className="flex items-center space-x-4">
@@ -877,6 +926,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
           }}
           selectedText={selectedText}
           isFocusMode={focusMode}
+          supportLevel={supportLevel}
         />
       </div>
 
@@ -954,6 +1004,30 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
           textType={textType}
           darkMode={darkMode}
         />
+      )}
+      {showSupportLevelModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className={`rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto ${darkMode ? 'bg-slate-800' : 'bg-white'}`}>
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  Writing Buddy Support Level
+                </h2>
+                <button
+                  onClick={() => setShowSupportLevelModal(false)}
+                  className={`${darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              <SupportLevelSelector
+                currentLevel={supportLevel}
+                onLevelChange={handleSupportLevelChange}
+                showRecommendations={true}
+              />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
