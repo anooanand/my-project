@@ -891,6 +891,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
           selectedText={selectedText}
           isFocusMode={focusMode}
           supportLevel={supportLevel}
+          onSupportLevelChange={() => setShowSupportLevelModal(true)}
         />
         </div>
       )}

@@ -629,6 +629,7 @@ interface EnhancedCoachPanelProps {
   openAILoading?: boolean;
   onSubmitForEvaluation?: () => void;
   supportLevel?: string;
+  onSupportLevelChange?: () => void;
 }
 
 export function EnhancedCoachPanel({
@@ -646,7 +647,8 @@ export function EnhancedCoachPanel({
   openAIConnected,
   openAILoading,
   onSubmitForEvaluation,
-  supportLevel = 'Medium Support'
+  supportLevel = 'Medium Support',
+  onSupportLevelChange,
 }: EnhancedCoachPanelProps) {
   const [messages, setMessages] = useState<any[]>([]);
   const [inputValue, setInputValue] = useState('');
@@ -887,7 +889,7 @@ export function EnhancedCoachPanel({
           <div className="flex items-center space-x-3">
             <h2 className="text-lg font-bold text-white">✨ Writing Buddy</h2>
             <button
-              onClick={onSupportLevelChange}
+              onClick={() => onSupportLevelChange?.()}
               className="flex items-center space-x-1 text-xs px-2 py-1 bg-white/20 rounded-md backdrop-blur-sm text-white font-medium hover:bg-white/30 transition-all cursor-pointer"
               title="Change Support Level"
             >
