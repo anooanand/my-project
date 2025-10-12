@@ -8,9 +8,6 @@ import { EnhancedCoachPanel } from './EnhancedCoachPanel';
 import { NSWStandaloneSubmitSystem } from './NSWStandaloneSubmitSystem';
 import { ReportModal } from './ReportModal';
 import { AIEvaluationReportDisplay } from './AIEvaluationReportDisplay';
-import { HighlightedTextArea } from './HighlightedTextArea';
-import { WritingIssuesPanel } from './WritingIssuesPanel';
-import { AnalysisStats } from '../lib/realtimeTextAnalyzer';
 import { NSWSubmitButton } from './NSWSubmitButton';
 import { PromptOptionsModal } from './PromptOptionsModal';
 import { InlineTextHighlighter } from './InlineTextHighlighter';
@@ -164,14 +161,6 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
   const [showGrammarHighlights, setShowGrammarHighlights] = useState(true);
   const [expandedGrammarStats, setExpandedGrammarStats] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [analysisStats, setAnalysisStats] = useState<AnalysisStats>({
-    grammar: 0,
-    weakWords: 0,
-    passiveVoice: 0,
-    excessiveAdjectives: 0,
-    sentenceIssues: 0,
-    spelling: 0
-  });
 
   // Tiered support system states - Default to High Support
   const [supportLevel, setSupportLevel] = useState<SupportLevel>('High Support');
@@ -859,22 +848,19 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
         )}
 
         {/* Writing Area - Takes remaining space */}
-        <div className="flex-1 overflow-hidden p-4">
-          <div className={`relative h-full rounded-xl shadow-lg border-2 overflow-hidden ${
-            darkMode
-              ? 'bg-slate-900 border-slate-700'
-              : 'bg-white border-gray-200'
-          }`}>
-            <HighlightedTextArea
+        <div className="flex-1 overflow-y-auto p-4">
+          <div className="relative h-full">
+            <textarea
+              ref={textareaRef}
               value={localContent}
-              onChange={handleContentChange}
-              onStatsUpdate={setAnalysisStats}
-              darkMode={darkMode}
-              fontSize={fontSize}
-              fontFamily={fontFamily}
-              lineHeight={lineHeight}
+              onChange={(e) => handleContentChange(e.target.value)}
+              className={`w-full h-full resize-none p-6 rounded-xl shadow-lg transition-all duration-300 text-base leading-relaxed focus:outline-none ${
+                darkMode
+                  ? 'bg-slate-900 text-gray-100 placeholder-gray-500 border-2 border-slate-700 focus:border-cyan-500 focus:shadow-cyan-500/20'
+                  : 'bg-white text-gray-800 placeholder-gray-400 border-2 border-gray-200 focus:border-blue-500 focus:shadow-blue-500/20'
+              }`}
+              style={{ fontFamily, fontSize: `${fontSize}px`, lineHeight }}
               placeholder="Start writing your amazing story here! Let your creativity flow and bring your ideas to life..."
-              minWords={50}
             />
 
             {/* Encouragement Message - Minimal */}
@@ -886,14 +872,17 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
               </div>
             )}
 
-            {/* Writing Issues Stats - Bottom Bar */}
+            {/* Grammar Stats - Bottom Bar (Minimal) */}
             {showGrammarHighlights && currentWordCount > 0 && (
-              <div className="absolute bottom-0 left-0 right-0">
-                <WritingIssuesPanel
-                  stats={analysisStats}
-                  darkMode={darkMode}
-                  compact={true}
-                />
+              <div className={`absolute bottom-0 left-0 right-0 px-4 py-2 text-xs backdrop-blur-sm ${
+                darkMode ? 'bg-slate-900/70 text-gray-400' : 'bg-white/70 text-gray-600 border-t border-gray-200'
+              }`}>
+                <div className="flex items-center space-x-4">
+                  <span className="font-medium">Grammar</span>
+                  <span>Weak: {grammarStats.weakVerbs}</span>
+                  <span>Adjectives: {grammarStats.weakAdjectives}</span>
+                  <span>Passive: {grammarStats.passive}</span>
+                </div>
               </div>
             )}
           </div>
@@ -917,15 +906,6 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
         <div className={`w-[380px] flex-shrink-0 border-l overflow-y-auto transition-all duration-300 ${
           darkMode ? 'bg-slate-800 border-gray-700' : 'bg-white border-gray-200'
         }`}>
-          {/* Writing Issues Detail Panel */}
-          <div className={`border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
-            <WritingIssuesPanel
-              stats={analysisStats}
-              darkMode={darkMode}
-              compact={false}
-            />
-          </div>
-
           <EnhancedCoachPanel
           textType={textType}
           content={localContent}
