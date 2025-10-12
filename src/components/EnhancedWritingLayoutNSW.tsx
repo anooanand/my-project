@@ -717,6 +717,20 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
                `${Math.floor((currentWordCount / 400) * 100)}% complete`}
             </div>
 
+            {/* Toggle AI Coach Button */}
+            <button
+              onClick={() => setPanelVisible && setPanelVisible(!panelVisible)}
+              className={`flex items-center space-x-1 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                panelVisible
+                  ? darkMode ? 'bg-blue-600 text-white' : 'bg-blue-600 text-white'
+                  : darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'
+              }`}
+              title={panelVisible ? "Hide Writing Buddy" : "Show Writing Buddy"}
+            >
+              {panelVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              <span>{panelVisible ? 'Hide Buddy' : 'Show Buddy'}</span>
+            </button>
+
             {/* Settings Button */}
             <button
               onClick={() => setShowSettings(!showSettings)}
@@ -857,11 +871,12 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
         </div>
       </div>
 
-      {/* AI Coach Panel */}
-      <div className={`w-[380px] flex-shrink-0 border-l overflow-y-auto transition-all duration-300 ${
-        darkMode ? 'bg-slate-800 border-gray-700' : 'bg-white border-gray-200'
-      }`}>
-        <EnhancedCoachPanel
+      {/* AI Coach Panel - Conditional */}
+      {panelVisible && (
+        <div className={`w-[380px] flex-shrink-0 border-l overflow-y-auto transition-all duration-300 ${
+          darkMode ? 'bg-slate-800 border-gray-700' : 'bg-white border-gray-200'
+        }`}>
+          <EnhancedCoachPanel
           textType={textType}
           content={localContent}
           wordCount={currentWordCount}
@@ -877,7 +892,8 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
           isFocusMode={focusMode}
           supportLevel={supportLevel}
         />
-      </div>
+        </div>
+      )}
 
       {/* Modals */}
       {showPlanningTool && <PlanningToolModal onClose={() => setShowPlanningTool(false)} textType={textType} />}

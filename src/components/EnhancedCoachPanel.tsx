@@ -882,15 +882,22 @@ export function EnhancedCoachPanel({
   return (
     <div className="flex flex-col h-full">
       {/* OPTIMIZED: Single Header with Compact Toggle */}
-      <div className="p-3 border-b bg-gradient-to-r from-blue-600 to-purple-600 text-white">
+      <div className="p-3 border-b bg-gradient-to-r from-blue-600 to-purple-600">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center space-x-3">
-            <h2 className="text-lg font-bold">Writing Coach</h2>
-            <div className="text-xs px-2 py-1 bg-white/20 rounded-md backdrop-blur-sm">
-              {supportLevel}
-            </div>
+            <h2 className="text-lg font-bold text-white">✨ Writing Buddy</h2>
+            <button
+              onClick={onSupportLevelChange}
+              className="flex items-center space-x-1 text-xs px-2 py-1 bg-white/20 rounded-md backdrop-blur-sm text-white font-medium hover:bg-white/30 transition-all cursor-pointer"
+              title="Change Support Level"
+            >
+              <span>{supportLevel}</span>
+              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
           </div>
-          <div className="text-sm opacity-90">
+          <div className="text-sm text-white opacity-90">
             {content.trim() ? `${content.trim().split(/\s+/).length} words` : '0 words'}
           </div>
         </div>
