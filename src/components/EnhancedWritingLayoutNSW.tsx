@@ -525,22 +525,29 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
           {/* Prompt Header */}
           <div className="flex items-center justify-between px-4 py-2">
             <div className="flex items-center space-x-2">
-              <LightbulbIcon className={`w-4 h-4 flex-shrink-0 ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`} />
-              <h3 className={`font-medium text-sm flex-shrink-0 ${darkMode ? 'text-gray-100' : 'text-blue-800'}`}>
-                Prompt
+              <LightbulbIcon className={`w-4 h-4 flex-shrink-0 ${
+                examModeLocal ? 'text-gray-600' : darkMode ? 'text-cyan-400' : 'text-blue-600'
+              }`} />
+              <h3 className={`font-medium text-sm flex-shrink-0 ${
+                examModeLocal ? 'text-gray-800' : darkMode ? 'text-gray-100' : 'text-blue-800'
+              }`}>
+                {examModeLocal ? 'NSW Selective Writing Exam' : 'Prompt'}
               </h3>
               <span className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${
-                darkMode ? 'bg-cyan-900/50 text-cyan-200 border border-cyan-700' : 'bg-blue-200 text-blue-800'
+                examModeLocal
+                  ? 'bg-gray-200 text-gray-700'
+                  : darkMode ? 'bg-cyan-900/50 text-cyan-200 border border-cyan-700' : 'bg-blue-200 text-blue-800'
               }`}>
                 {textType}
               </span>
-              {isPromptCollapsed && effectivePrompt && (
+              {!examModeLocal && isPromptCollapsed && effectivePrompt && (
                 <span className={`text-xs italic truncate ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                   {effectivePrompt.substring(0, 80)}...
                 </span>
               )}
             </div>
 
+            {!examModeLocal && (
             <button
               onClick={() => setIsPromptCollapsed(!isPromptCollapsed)}
               className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-xs font-medium flex-shrink-0 border ${
@@ -552,13 +559,25 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
               {isPromptCollapsed ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
               <span>{isPromptCollapsed ? 'Show Prompt' : 'Hide Prompt'}</span>
             </button>
+            )}
+            {examModeLocal && (
+              <button
+                onClick={() => setExamModeLocal(false)}
+                className="flex items-center space-x-1 px-3 py-1.5 rounded-md text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 border border-red-300 transition-colors"
+              >
+                <X className="w-3 h-3" />
+                <span>Exit Exam Mode</span>
+              </button>
+            )}
           </div>
 
-          {/* Prompt Content */}
-          {!isPromptCollapsed && effectivePrompt && (
+          {/* Prompt Content - Always visible in exam mode */}
+          {(examModeLocal || !isPromptCollapsed) && effectivePrompt && (
             <div className="px-4 pb-3">
               <div className={`p-3 rounded-lg border text-sm ${
-                darkMode
+                examModeLocal
+                  ? 'bg-white border-gray-300 text-gray-800'
+                  : darkMode
                   ? 'bg-slate-900/50 border-slate-700 text-gray-100'
                   : 'bg-white border-blue-200 text-blue-900'
               }`}>
@@ -568,7 +587,8 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
           )}
         </div>
 
-        {/* Toolbar Section - Clean & Minimal */}
+        {/* Toolbar Section - Clean & Minimal (hidden in exam mode) */}
+        {!examModeLocal && (
         <div className={`flex items-center justify-between px-6 py-3 border-b flex-shrink-0 ${darkMode ? 'bg-slate-800 border-gray-700' : 'bg-white border-gray-200'}`}>
           <div className="flex items-center space-x-3">
             {/* Plan Button */}
@@ -727,6 +747,34 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
             </button>
           </div>
         </div>
+        )}
+
+        {/* Exam Mode Status Bar */}
+        {examModeLocal && (
+        <div className="flex items-center justify-center px-6 py-3 border-b flex-shrink-0 bg-gray-100 border-gray-300">
+          <div className="flex items-center space-x-6">
+            {/* Timer */}
+            <div className="flex items-center space-x-2">
+              <Clock className="w-4 h-4 text-gray-600" />
+              <span className="text-sm tabular-nums font-medium text-gray-800">
+                {formatTime(elapsedTime)}
+              </span>
+            </div>
+
+            {/* Word Count */}
+            <div className="flex items-center space-x-2">
+              <FileText className="w-4 h-4 text-gray-600" />
+              <span className={`text-sm font-bold tabular-nums ${
+                currentWordCount >= 400 ? 'text-green-600' :
+                currentWordCount >= 250 ? 'text-blue-600' :
+                'text-gray-700'
+              }`}>
+                {currentWordCount} {currentWordCount === 1 ? 'word' : 'words'}
+              </span>
+            </div>
+          </div>
+        </div>
+        )}
 
         {/* Settings Panel */}
         {showSettings && (
