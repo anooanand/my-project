@@ -249,7 +249,7 @@ export class ComprehensiveFeedbackAnalyzer {
 
   static analyzeSentenceStructure(text: string): SentenceStructureIssue[] {
     const issues: SentenceStructureIssue[] = [];
-    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    const sentences = text ? text.split(/[.!?]+/).filter(s => s.trim().length > 0) : [];
 
     // Check for repetitive sentence starts
     const starts = sentences.map(s => s.trim().split(/\s+/)[0]?.toLowerCase());
@@ -408,7 +408,7 @@ export class ComprehensiveFeedbackAnalyzer {
   }
 
   static analyzePacing(text: string, wordCount: number): PacingFeedback {
-    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    const sentences = text ? text.split(/[.!?]+/).filter(s => s.trim().length > 0) : [];
     const avgWordsPerSentence = wordCount / sentences.length;
 
     let overall: PacingFeedback['overall'] = 'good';
@@ -446,8 +446,8 @@ export class ComprehensiveFeedbackAnalyzer {
 
   static analyzeNSWCriteria(text: string, wordCount: number): NSWCriteriaFeedback {
     // Ideas & Content (Originality, development, creativity)
-    const hasCreativeElements = /\b(suddenly|wondered|imagined|realized|mysterious|unexpected)\b/i.test(text);
-    const hasDetailedDescription = text.split('.').some(s => s.split(',').length > 2);
+    const hasCreativeElements = text ? /\b(suddenly|wondered|imagined|realized|mysterious|unexpected)\b/i.test(text) : false;
+    const hasDetailedDescription = text ? text.split('.').some(s => s.split(',').length > 2) : false;
     const ideasScore = Math.min(5, Math.floor(
       (hasCreativeElements ? 2 : 0) +
       (hasDetailedDescription ? 2 : 0) +
@@ -455,7 +455,7 @@ export class ComprehensiveFeedbackAnalyzer {
     ));
 
     // Structure & Organization
-    const paragraphs = text.split(/\n\n+/).length;
+    const paragraphs = text ? text.split(/\n\n+/).length : 0;
     const hasLogicalFlow = wordCount > 100;
     const structureScore = Math.min(5, Math.floor(
       (paragraphs > 1 ? 2 : 0) +
