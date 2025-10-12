@@ -6,6 +6,7 @@ import { ComprehensiveFeedbackDisplay } from './ComprehensiveFeedbackDisplay';
 import { generateIntelligentResponse, type EnhancedCoachResponse } from '../lib/enhancedIntelligentResponseGenerator';
 import { ComprehensiveFeedbackAnalyzer } from '../lib/comprehensiveFeedbackAnalyzer';
 import type { SupportLevel } from '../lib/writingBuddyService';
+import { apiClient } from '../lib/apiClient';
 
 /**
  * Generates time-appropriate coaching messages for 40-minute writing test
@@ -746,55 +747,21 @@ export function EnhancedCoachPanel({
       timestamp: new Date()
     }]);
 
-    // Skip API call in development - use local feedback instead
-    const isDevelopment = window.location.hostname === 'localhost' ||
-                          window.location.hostname.includes('webcontainer');
-
-    if (isDevelopment) {
-      // Remove loading and add local response
-      setTimeout(() => {
-        setMessages(prev => {
-          const filtered = prev.filter(m => m.type !== 'loading');
-          return [...filtered, {
-            type: 'response',
-            content: {
-              encouragement: "Great question!",
-              nswFocus: "Writing Tip",
-              suggestion: "I see you're asking: '" + userMessageContent + "'. Use the automatic feedback above for real-time tips!",
-              example: "",
-              nextStep: "Keep writing and watch for suggestions in the panels"
-            },
-            timestamp: new Date()
-          }];
-        });
-      }, 500);
-      return;
-    }
-
     try {
       const stage = (wordCount || 0) < 50 ? 'just starting' :
                     (wordCount || 0) < 150 ? 'developing ideas' :
                     'refining and expanding';
 
-      const response = await fetch('/.netlify/functions/chat-response', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userMessage: userMessageContent,
-          textType: textType || 'narrative',
-          currentContent: content || '',
-          wordCount: wordCount || 0,
-          supportLevel: supportLevel,
-          stage: stage,
-          sessionId: `session-${Date.now()}`
-        }),
+      // Use the new API client with retry logic
+      const data = await apiClient.sendChatMessage({
+        userMessage: userMessageContent,
+        textType: textType || 'narrative',
+        currentContent: content || '',
+        wordCount: wordCount || 0,
+        supportLevel: supportLevel,
+        stage: stage,
+        sessionId: `session-${Date.now()}`
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to get response');
-      }
-
-      const data = await response.json();
 
       // Remove loading message and add AI response
       setMessages(prev => {
@@ -813,7 +780,8 @@ export function EnhancedCoachPanel({
       });
 
     } catch (error) {
-      // Silently handle the error - chat function not available in dev mode
+      console.error('Failed to get AI response:', error);
+      
       // Remove loading message and add fallback response
       setMessages(prev => {
         const filtered = prev.filter(m => m.type !== 'loading');
