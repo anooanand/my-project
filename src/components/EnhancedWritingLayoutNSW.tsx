@@ -573,8 +573,8 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
           {/* Prompt Content - Always visible in exam mode */}
           {(examModeLocal || !isPromptCollapsed) && effectivePrompt && (
-            <div className="px-4 pb-3">
-              <div className={`p-3 rounded-lg border text-sm ${
+            <div className="px-3 pb-2">
+              <div className={`p-2 rounded-lg border text-sm ${
                 examModeLocal
                   ? 'bg-white border-gray-300 text-gray-800'
                   : darkMode
@@ -778,9 +778,9 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
         {/* Settings Panel */}
         {showSettings && (
-          <div className={`p-4 border-b flex-shrink-0 ${darkMode ? 'bg-slate-800 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
-            <div className="flex items-center justify-between mb-4">
-              <h4 className={`font-medium text-base ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+          <div className={`p-3 border-b flex-shrink-0 ${darkMode ? 'bg-slate-800 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
+            <div className="flex items-center justify-between mb-3">
+              <h4 className={`font-medium text-sm ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
                 ⚙️ Writing Settings
               </h4>
               <button
@@ -797,7 +797,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
               </button>
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               {/* Font Family */}
               <div className="space-y-2">
                 <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -848,13 +848,13 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
         )}
 
         {/* Writing Area - Takes remaining space */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-3">
           <div className="relative h-full">
             <textarea
               ref={textareaRef}
               value={localContent}
               onChange={(e) => handleContentChange(e.target.value)}
-              className={`w-full h-full resize-none p-6 rounded-xl shadow-lg transition-all duration-300 text-base leading-relaxed focus:outline-none ${
+              className={`w-full h-full resize-none p-4 rounded-xl shadow-lg transition-all duration-300 text-base leading-relaxed focus:outline-none ${
                 darkMode
                   ? 'bg-slate-900 text-gray-100 placeholder-gray-500 border-2 border-slate-700 focus:border-cyan-500 focus:shadow-cyan-500/20'
                   : 'bg-white text-gray-800 placeholder-gray-400 border-2 border-gray-200 focus:border-blue-500 focus:shadow-blue-500/20'
@@ -876,7 +876,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
         </div>
 
         {/* Bottom Submit Area */}
-        <div className="flex-shrink-0 p-4 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700">
+        <div className="flex-shrink-0 p-3 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700">
           <NSWSubmitButton
             content={localContent}
             wordCount={currentWordCount}
@@ -890,7 +890,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
       {/* AI Coach Panel - Conditional */}
       {panelVisible && (
-        <div className={`w-[380px] flex-shrink-0 border-l overflow-y-auto transition-all duration-300 ${
+        <div className={`w-[340px] flex-shrink-0 border-l overflow-y-auto transition-all duration-300 ${
           darkMode ? 'bg-slate-800 border-gray-700' : 'bg-white border-gray-200'
         }`}>
           <EnhancedCoachPanel

@@ -246,18 +246,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   if (mode === 'confirmation') {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={onClose}>
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-md w-full text-center shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl" onClick={e => e.stopPropagation()}>
           <ProgressIndicator step={currentStep} />
           
-          <div className="w-20 h-20 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Mail className="w-10 h-10 text-white" />
+          <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Mail className="w-8 h-8 text-white" />
           </div>
           
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3 flex items-center justify-center">
-            Check Your Email! <Heart className="w-6 h-6 text-red-500 ml-2" />
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2 flex items-center justify-center">
+            Check Your Email! <Heart className="w-5 h-5 text-red-500 ml-2" />
           </h2>
-          
-          <p className="text-lg text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+
+          <p className="text-base text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
             We sent a special magic link to <br />
             <strong className="text-blue-600">{confirmationEmail}</strong>
             <br />
@@ -286,16 +286,16 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <button
               onClick={handleVerificationCheck}
               disabled={verificationChecking}
-              className="w-full py-4 px-6 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white text-lg font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-all duration-200 transform hover:scale-105 shadow-lg"
+              className="w-full py-3 px-4 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white text-base font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-all duration-200 transform hover:scale-105 shadow-lg"
             >
               {verificationChecking ? (
                 <>
-                  <Loader className="animate-spin -ml-1 mr-3 h-6 w-6" />
+                  <Loader className="animate-spin -ml-1 mr-2 h-5 w-5" />
                   Checking Magic...
                 </>
               ) : (
                 <>
-                  <Star className="mr-2 h-5 w-5" />
+                  <Star className="mr-2 h-4 w-4" />
                   I Clicked the Magic Link!
                 </>
               )}
@@ -303,25 +303,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             
             <button
               onClick={handleContinueAnyway}
-              className="w-full py-4 px-6 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-lg font-bold rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg"
+              className="w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-base font-bold rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg"
             >
-              <Heart className="mr-2 h-5 w-5" />
+              <Heart className="mr-2 h-4 w-4" />
               Continue (If Already Done)
             </button>
             
             <button
               onClick={handleResendConfirmation}
               disabled={loading}
-              className="w-full py-4 px-6 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white text-lg font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-all duration-200 transform hover:scale-105 shadow-lg"
+              className="w-full py-3 px-4 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white text-base font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-all duration-200 transform hover:scale-105 shadow-lg"
             >
               {loading ? (
                 <>
-                  <Loader className="animate-spin -ml-1 mr-3 h-6 w-6" />
+                  <Loader className="animate-spin -ml-1 mr-2 h-5 w-5" />
                   Sending Magic...
                 </>
               ) : (
                 <>
-                  <Mail className="mr-2 h-5 w-5" />
+                  <Mail className="mr-2 h-4 w-4" />
                   Send Another Magic Link
                 </>
               )}
@@ -329,7 +329,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             
             <button
               onClick={() => setMode('signin')}
-              className="w-full py-3 px-6 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-base font-medium rounded-xl hover:bg-gray-300 dark:hover:bg-gray-600 transition-all duration-200"
+              className="w-full py-2 px-4 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 text-sm font-medium rounded-xl hover:bg-gray-300 dark:hover:bg-gray-600 transition-all duration-200"
             >
               ← Back to Sign In
             </button>
@@ -342,14 +342,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   if (success && mode === 'signin') {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={onClose}>
-        <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 max-w-md w-full text-center shadow-2xl">
-          <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle className="w-10 h-10 text-white" />
+        <div className="bg-white dark:bg-gray-800 rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl">
+          <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+            <CheckCircle className="w-8 h-8 text-white" />
           </div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-3 flex items-center justify-center">
-            Welcome Back! <Star className="w-6 h-6 text-yellow-500 ml-2" />
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2 flex items-center justify-center">
+            Welcome Back! <Star className="w-5 h-5 text-yellow-500 ml-2" />
           </h2>
-          <p className="text-lg text-gray-600 dark:text-gray-300 mb-6">
+          <p className="text-base text-gray-600 dark:text-gray-300 mb-4">
             You're all set! Taking you to your writing space... ✨
           </p>
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-200 border-t-blue-600 mx-auto"></div>
@@ -360,18 +360,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-sm w-full" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center">
             {mode === 'signin' ? (
               <>
-                <Smile className="mr-2 h-6 w-6 text-blue-500" />
+                <Smile className="mr-2 h-5 w-5 text-blue-500" />
                 Welcome Back!
               </>
             ) : (
               <>
-                <Star className="mr-2 h-6 w-6 text-purple-500" />
+                <Star className="mr-2 h-5 w-5 text-purple-500" />
                 Join the Fun!
               </>
             )}
@@ -382,39 +382,39 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             type="button"
             aria-label="Close"
           >
-            <X className="w-6 h-6" />
+            <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Progress Indicator */}
-        <div className="px-6 pt-4">
+        <div className="px-4 pt-3">
           <ProgressIndicator step={currentStep} />
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 pt-2">
+        <form onSubmit={handleSubmit} className="p-4 pt-2">
           {error && (
-            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/30 border-2 border-red-200 dark:border-red-700 rounded-xl">
+            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/30 border-2 border-red-200 dark:border-red-700 rounded-xl">
               <div className="flex items-center">
-                <Smile className="h-6 w-6 text-red-500 mr-3 flex-shrink-0" />
-                <p className="text-base font-medium text-red-700 dark:text-red-300">{error}</p>
+                <Smile className="h-5 w-5 text-red-500 mr-2 flex-shrink-0" />
+                <p className="text-sm font-medium text-red-700 dark:text-red-300">{error}</p>
               </div>
             </div>
           )}
 
           {/* Email Field */}
-          <div className="mb-6">
-            <label htmlFor="email" className="block text-lg font-bold text-gray-700 dark:text-gray-300 mb-3">
+          <div className="mb-4">
+            <label htmlFor="email" className="block text-base font-bold text-gray-700 dark:text-gray-300 mb-2">
               📧 Your Email Address
             </label>
             <div className="relative">
-              <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-6 h-6" />
+              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
                 type="email"
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-14 pr-4 py-4 text-lg border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
+                className="w-full pl-10 pr-3 py-3 text-base border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
                 placeholder="your.email@example.com"
                 required
               />
@@ -422,49 +422,49 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </div>
 
           {/* Password Field */}
-          <div className="mb-6">
-            <label htmlFor="password" className="block text-lg font-bold text-gray-700 dark:text-gray-300 mb-3">
+          <div className="mb-4">
+            <label htmlFor="password" className="block text-base font-bold text-gray-700 dark:text-gray-300 mb-2">
               🔐 Your Secret Password
             </label>
             <div className="relative">
-              <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-6 h-6" />
+              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <input
                 type={showPassword ? 'text' : 'password'}
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-14 pr-14 py-4 text-lg border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
+                className="w-full pl-10 pr-10 py-3 text-base border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
                 placeholder="••••••••"
                 required
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
-                {showPassword ? <EyeOff className="w-6 h-6" /> : <Eye className="w-6 h-6" />}
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
           </div>
 
           {/* Confirm Password Field (Sign Up only) */}
           {mode === 'signup' && (
-            <div className="mb-8">
+            <div className="mb-4">
               <label
                 htmlFor="confirmPassword"
-                className="block text-lg font-bold text-gray-700 dark:text-gray-300 mb-3"
+                className="block text-base font-bold text-gray-700 dark:text-gray-300 mb-2"
               >
                 🗝️ Confirm Your Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-6 h-6" />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   id="confirmPassword"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full pl-14 pr-14 py-4 text-lg border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
+                  className="w-full pl-10 pr-10 py-3 text-base border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
                   placeholder="••••••••"
                   required
                 />
@@ -473,15 +473,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           )}
 
           {/* Submit Button */}
-          <div className="mb-6">
+          <div className="mb-4">
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 px-6 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white text-xl font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-all duration-200 transform hover:scale-105 shadow-lg"
+              className="w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white text-base font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-all duration-200 transform hover:scale-105 shadow-lg"
             >
               {loading ? (
                 <>
-                  <Loader className="animate-spin -ml-1 mr-3 h-6 w-6" />
+                  <Loader className="animate-spin -ml-1 mr-2 h-5 w-5" />
                   {mode === 'signin' ? 'Signing In...' : 'Creating Account...'}
                 </>
               ) : (
@@ -494,7 +494,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
           {/* Toggle Mode */}
           <div className="text-center">
-            <p className="text-lg text-gray-600 dark:text-gray-300">
+            <p className="text-sm text-gray-600 dark:text-gray-300">
               {mode === 'signin' ? "Don't have an account yet? " : 'Already have an account? '}
               <button
                 type="button"
@@ -504,7 +504,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                   setSuccess(false);
                   setCurrentStep(1);
                 }}
-                className="text-blue-600 dark:text-blue-400 hover:underline font-bold text-lg transition-all duration-200 hover:text-blue-700"
+                className="text-blue-600 dark:text-blue-400 hover:underline font-bold text-sm transition-all duration-200 hover:text-blue-700"
               >
                 {mode === 'signin' ? '🌟 Join the fun!' : '👋 Welcome back!'}
               </button>
