@@ -231,60 +231,62 @@ export const SupportLevelSelector: React.FC<SupportLevelSelectorProps> = ({
   }
 
   return (
-    <div className={`p-6 bg-white rounded-lg shadow-sm ${className}`}>
-      <div className="mb-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-2 flex items-center">
-          <Info className="w-5 h-5 mr-2 text-blue-600" />
+    <div className={`p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-xl ${className}`}>
+      {/* Header */}
+      <div className="mb-8 text-center">
+        <h2 className="heading-3 text-gray-900 dark:text-white mb-3 flex items-center justify-center">
+          <Info className="w-6 h-6 mr-2 text-blue-600 dark:text-blue-400" />
           Choose Your Support Level
         </h2>
-        <p className="text-sm text-gray-600">
-          Select the level of guidance that works best for you. You can change
-          this anytime!
+        <p className="text-body-sm text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+          Select the level of guidance that works best for you. You can change this anytime!
         </p>
       </div>
 
+      {/* Alerts */}
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start">
-          <X className="w-5 h-5 text-red-600 mr-2 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-red-800">{error}</p>
+        <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl flex items-start">
+          <X className="w-5 h-5 text-red-600 dark:text-red-400 mr-3 flex-shrink-0 mt-0.5" />
+          <p className="text-body-sm text-red-800 dark:text-red-200">{error}</p>
         </div>
       )}
 
       {success && (
-        <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-start">
-          <Check className="w-5 h-5 text-green-600 mr-2 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-green-800">{success}</p>
+        <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-800 rounded-xl flex items-start animate-in fade-in duration-300">
+          <Check className="w-5 h-5 text-green-600 dark:text-green-400 mr-3 flex-shrink-0 mt-0.5" />
+          <p className="text-body-sm text-green-800 dark:text-green-200">{success}</p>
         </div>
       )}
 
+      {/* AI Recommendations */}
       {showRecommendations && recommendations.length > 0 && (
-        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <h3 className="font-semibold text-blue-900 mb-2 flex items-center">
-            <Sparkles className="w-4 h-4 mr-2" />
-            Recommendation for You
+        <div className="mb-8 p-6 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-2xl shadow-sm">
+          <h3 className="heading-5 text-blue-900 dark:text-blue-100 mb-4 flex items-center">
+            <Sparkles className="w-5 h-5 mr-2" />
+            AI Recommendation for You
           </h3>
           {recommendations.map((rec) => (
-            <div key={rec.id} className="mb-3 last:mb-0">
-              <p className="text-sm text-blue-800 mb-2">{rec.recommendation_reason}</p>
-              <p className="text-xs text-blue-700 mb-3">
+            <div key={rec.id} className="space-y-4">
+              <p className="text-body-sm text-blue-800 dark:text-blue-200 font-medium">{rec.recommendation_reason}</p>
+              <p className="text-caption text-blue-700 dark:text-blue-300">
                 Based on {rec.based_on_essay_count} essays with an average score of{' '}
                 {rec.based_on_average_score.toFixed(1)}%
               </p>
-              <div className="flex space-x-2">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={() => handleAcceptRecommendation(rec)}
                   disabled={isSaving}
-                  className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50 flex items-center"
+                  className="btn-primary-sm btn-with-icon"
                 >
-                  <Check className="w-4 h-4 mr-1" />
+                  <Check className="w-4 h-4" />
                   Switch to {rec.recommended_level}
                 </button>
                 <button
                   onClick={() => handleRejectRecommendation(rec.id)}
                   disabled={isSaving}
-                  className="px-3 py-1 bg-white text-blue-600 text-sm rounded border border-blue-300 hover:bg-blue-50 disabled:opacity-50 flex items-center"
+                  className="btn-secondary-sm btn-with-icon"
                 >
-                  <X className="w-4 h-4 mr-1" />
+                  <X className="w-4 h-4" />
                   Keep Current Level
                 </button>
               </div>
@@ -293,73 +295,95 @@ export const SupportLevelSelector: React.FC<SupportLevelSelectorProps> = ({
         </div>
       )}
 
-      <div className="space-y-3">
+      {/* Support Level Options */}
+      <div className="space-y-4">
         {supportLevels.map(({ level, icon: Icon, title, description, color, features }) => {
           const isSelected = selectedLevel === level;
           const colorClasses = {
             green: {
-              border: 'border-green-500',
-              bg: 'bg-green-50',
-              text: 'text-green-900',
-              button: 'bg-green-600 hover:bg-green-700',
-              icon: 'text-green-600',
+              border: 'border-green-500 dark:border-green-400',
+              bg: 'bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/30 dark:to-emerald-900/30',
+              text: 'text-green-900 dark:text-green-100',
+              button: 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700',
+              icon: 'text-green-600 dark:text-green-400',
+              shadow: 'shadow-green-100 dark:shadow-green-900/50',
             },
             blue: {
-              border: 'border-blue-500',
-              bg: 'bg-blue-50',
-              text: 'text-blue-900',
-              button: 'bg-blue-600 hover:bg-blue-700',
-              icon: 'text-blue-600',
+              border: 'border-blue-500 dark:border-blue-400',
+              bg: 'bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/30',
+              text: 'text-blue-900 dark:text-blue-100',
+              button: 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700',
+              icon: 'text-blue-600 dark:text-blue-400',
+              shadow: 'shadow-blue-100 dark:shadow-blue-900/50',
             },
             purple: {
-              border: 'border-purple-500',
-              bg: 'bg-purple-50',
-              text: 'text-purple-900',
-              button: 'bg-purple-600 hover:bg-purple-700',
-              icon: 'text-purple-600',
+              border: 'border-purple-500 dark:border-purple-400',
+              bg: 'bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30',
+              text: 'text-purple-900 dark:text-purple-100',
+              button: 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700',
+              icon: 'text-purple-600 dark:text-purple-400',
+              shadow: 'shadow-purple-100 dark:shadow-purple-900/50',
             },
           }[color];
 
           return (
-            <div
+            <button
               key={level}
-              className={`border-2 rounded-lg p-4 transition-all ${
+              onClick={() => !isSelected && handleLevelChange(level)}
+              disabled={isSaving || isSelected}
+              className={`w-full border-3 rounded-2xl p-6 transition-all duration-200 text-left ${
                 isSelected
-                  ? `${colorClasses.border} ${colorClasses.bg}`
-                  : 'border-gray-200 hover:border-gray-300'
-              }`}
+                  ? `${colorClasses.border} ${colorClasses.bg} shadow-lg ${colorClasses.shadow} scale-[1.02]`
+                  : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 hover:shadow-md bg-white dark:bg-gray-800'
+              } ${!isSelected && !isSaving ? 'cursor-pointer' : ''}`}
             >
-              <div className="flex items-start justify-between">
+              <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
-                  <div className="flex items-center mb-2">
-                    <Icon
-                      className={`w-5 h-5 mr-2 ${
-                        isSelected ? colorClasses.icon : 'text-gray-400'
-                      }`}
-                    />
+                  <div className="flex items-center mb-3">
+                    <div className={`p-2 rounded-xl ${
+                      isSelected ? colorClasses.bg : 'bg-gray-100 dark:bg-gray-700'
+                    }`}>
+                      <Icon
+                        className={`w-6 h-6 ${
+                          isSelected ? colorClasses.icon : 'text-gray-400 dark:text-gray-500'
+                        }`}
+                      />
+                    </div>
                     <h3
-                      className={`font-semibold ${
-                        isSelected ? colorClasses.text : 'text-gray-900'
+                      className={`heading-5 ml-3 mb-0 ${
+                        isSelected ? colorClasses.text : 'text-gray-900 dark:text-white'
                       }`}
                     >
                       {title}
                     </h3>
                     {isSelected && (
-                      <Check className={`w-5 h-5 ml-2 ${colorClasses.icon}`} />
+                      <div className={`ml-auto p-2 rounded-full ${colorClasses.bg}`}>
+                        <Check className={`w-5 h-5 ${colorClasses.icon}`} />
+                      </div>
                     )}
                   </div>
-                  <p className="text-sm text-gray-600 mb-3">{description}</p>
+                  <p className={`text-body-sm mb-4 ${
+                    isSelected
+                      ? 'text-gray-700 dark:text-gray-300 font-medium'
+                      : 'text-gray-600 dark:text-gray-400'
+                  }`}>{description}</p>
 
                   {showDetails && (
-                    <div className="mb-3">
-                      <p className="text-xs font-medium text-gray-700 mb-1">
+                    <div className="mt-4 pt-4 border-t ${
+                      isSelected
+                        ? 'border-gray-300 dark:border-gray-600'
+                        : 'border-gray-200 dark:border-gray-700'
+                    }">
+                      <p className="text-label-sm text-gray-700 dark:text-gray-300 mb-3">
                         Features:
                       </p>
-                      <ul className="text-xs text-gray-600 space-y-1">
+                      <ul className="space-y-2">
                         {features.map((feature, idx) => (
-                          <li key={idx} className="flex items-start">
-                            <span className="mr-2">•</span>
-                            <span>{feature}</span>
+                          <li key={idx} className="flex items-start text-caption">
+                            <Check className={`w-4 h-4 mr-2 mt-0.5 flex-shrink-0 ${
+                              isSelected ? colorClasses.icon : 'text-gray-400 dark:text-gray-500'
+                            }`} />
+                            <span className={isSelected ? colorClasses.text : 'text-gray-600 dark:text-gray-400'}>{feature}</span>
                           </li>
                         ))}
                       </ul>
@@ -368,43 +392,52 @@ export const SupportLevelSelector: React.FC<SupportLevelSelectorProps> = ({
                 </div>
 
                 {!isSelected && (
-                  <button
-                    onClick={() => handleLevelChange(level)}
-                    disabled={isSaving}
-                    className={`ml-4 px-4 py-2 ${colorClasses.button} text-white text-sm rounded transition-colors disabled:opacity-50`}
-                  >
-                    Select
-                  </button>
+                  <div className="flex-shrink-0">
+                    <div className={`px-6 py-3 ${colorClasses.button} text-white rounded-xl font-semibold shadow-lg transition-all hover:shadow-xl transform hover:-translate-y-0.5`}>
+                      Select
+                    </div>
+                  </div>
                 )}
               </div>
-            </div>
+            </button>
           );
         })}
       </div>
 
-      <button
-        onClick={() => setShowDetails(!showDetails)}
-        className="mt-4 text-sm text-blue-600 hover:text-blue-700 flex items-center mx-auto"
-      >
-        {showDetails ? (
-          <>
-            <ChevronUp className="w-4 h-4 mr-1" />
-            Hide Details
-          </>
-        ) : (
-          <>
-            <ChevronDown className="w-4 h-4 mr-1" />
-            Show More Details
-          </>
-        )}
-      </button>
+      {/* Toggle Details Button */}
+      <div className="mt-6 text-center">
+        <button
+          onClick={() => setShowDetails(!showDetails)}
+          className="btn-ghost-sm btn-with-icon-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+        >
+          {showDetails ? (
+            <>
+              <ChevronUp className="w-4 h-4" />
+              Hide Details
+            </>
+          ) : (
+            <>
+              <ChevronDown className="w-4 h-4" />
+              Show More Details
+            </>
+          )}
+        </button>
+      </div>
 
+      {/* User Stats */}
       {preferences && (
-        <div className="mt-6 pt-6 border-t border-gray-200">
-          <p className="text-xs text-gray-500 text-center">
-            You've completed {preferences.total_essays_completed} essays with an
-            average score of {preferences.average_essay_score.toFixed(1)}%
-          </p>
+        <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-center gap-8 text-center">
+            <div>
+              <p className="heading-4 text-gray-900 dark:text-white mb-1">{preferences.total_essays_completed}</p>
+              <p className="text-caption text-gray-600 dark:text-gray-400">Essays Completed</p>
+            </div>
+            <div className="w-px h-12 bg-gray-200 dark:bg-gray-700"></div>
+            <div>
+              <p className="heading-4 text-gray-900 dark:text-white mb-1">{preferences.average_essay_score.toFixed(1)}%</p>
+              <p className="text-caption text-gray-600 dark:text-gray-400">Average Score</p>
+            </div>
+          </div>
         </div>
       )}
     </div>
