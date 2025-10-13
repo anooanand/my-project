@@ -909,9 +909,17 @@ export function EnhancedCoachPanel({
     <div className="flex flex-col h-full">
       {/* OPTIMIZED: Single Header with Compact Toggle */}
       <div className="p-3 border-b bg-gradient-to-r from-blue-600 to-purple-600">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center space-x-3">
-            <h2 className="text-lg font-bold text-white">✨ Writing Buddy</h2>
+        <div className="flex flex-col space-y-2">
+          {/* Top Row: Title and Word Count */}
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-bold text-white">✨ Writing Buddy</h2>
+            <div className="text-xs text-white opacity-90 font-medium">
+              {content.trim() ? `${content.trim().split(/\s+/).length} words` : '0 words'}
+            </div>
+          </div>
+
+          {/* Middle Row: Support Level Selector */}
+          <div className="flex items-center">
             <button
               onClick={() => onSupportLevelChange?.()}
               className="flex items-center space-x-1 text-xs px-2 py-1 bg-white/20 rounded-md backdrop-blur-sm text-white font-medium hover:bg-white/30 transition-all cursor-pointer"
@@ -923,19 +931,16 @@ export function EnhancedCoachPanel({
               </svg>
             </button>
           </div>
-          <div className="text-sm text-white opacity-90">
-            {content.trim() ? `${content.trim().split(/\s+/).length} words` : '0 words'}
-          </div>
         </div>
-        
-        {/* OPTIMIZED: Compact Toggle Buttons */}
-        <div className="flex space-x-1 overflow-x-auto">
+
+        {/* Tab Buttons Row */}
+        <div className="flex space-x-1 overflow-x-auto mt-3 pb-1">
           <button
             onClick={() => setCurrentView('coach')}
-            className={`flex items-center space-x-1 px-2 py-1 rounded text-xs font-medium transition-colors whitespace-nowrap ${
+            className={`flex items-center justify-center space-x-1 px-2.5 py-1.5 rounded text-xs font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
               currentView === 'coach'
-                ? 'bg-white text-blue-600'
-                : 'bg-blue-500 text-white hover:bg-blue-400'
+                ? 'bg-white text-blue-600 shadow-sm'
+                : 'bg-white/20 text-white hover:bg-white/30'
             }`}
           >
             <MessageSquare className="w-3 h-3" />
@@ -944,10 +949,10 @@ export function EnhancedCoachPanel({
 
           <button
             onClick={() => setCurrentView('examples')}
-            className={`flex items-center space-x-1 px-2 py-1 rounded text-xs font-medium transition-colors whitespace-nowrap ${
+            className={`flex items-center justify-center space-x-1 px-2.5 py-1.5 rounded text-xs font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
               currentView === 'examples'
-                ? 'bg-white text-green-600'
-                : 'bg-green-500 text-white hover:bg-green-400'
+                ? 'bg-white text-green-600 shadow-sm'
+                : 'bg-white/20 text-white hover:bg-white/30'
             }`}
           >
             <BookOpen className="w-3 h-3" />
@@ -956,10 +961,10 @@ export function EnhancedCoachPanel({
 
           <button
             onClick={() => setCurrentView('builder')}
-            className={`flex items-center space-x-1 px-2 py-1 rounded text-xs font-medium transition-colors whitespace-nowrap ${
+            className={`flex items-center justify-center space-x-1 px-2.5 py-1.5 rounded text-xs font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
               currentView === 'builder'
-                ? 'bg-white text-teal-600'
-                : 'bg-teal-500 text-white hover:bg-teal-400'
+                ? 'bg-white text-teal-600 shadow-sm'
+                : 'bg-white/20 text-white hover:bg-white/30'
             }`}
           >
             <List className="w-3 h-3" />
@@ -968,10 +973,10 @@ export function EnhancedCoachPanel({
 
           <button
             onClick={() => setCurrentView('nsw')}
-            className={`flex items-center space-x-1 px-2 py-1 rounded text-xs font-medium transition-colors whitespace-nowrap ${
+            className={`flex items-center justify-center space-x-1 px-2.5 py-1.5 rounded text-xs font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
               currentView === 'nsw'
-                ? 'bg-white text-purple-600'
-                : 'bg-purple-500 text-white hover:bg-purple-400'
+                ? 'bg-white text-purple-600 shadow-sm'
+                : 'bg-white/20 text-white hover:bg-white/30'
             }`}
           >
             <BarChart3 className="w-3 h-3" />
@@ -980,10 +985,10 @@ export function EnhancedCoachPanel({
 
           <button
             onClick={() => setCurrentView('detailed')}
-            className={`flex items-center space-x-1 px-2.5 py-1 rounded text-xs font-medium transition-colors whitespace-nowrap ${
+            className={`flex items-center justify-center space-x-1 px-2.5 py-1.5 rounded text-xs font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
               currentView === 'detailed'
-                ? 'bg-white text-red-600'
-                : 'bg-red-500 text-white hover:bg-red-400'
+                ? 'bg-white text-red-600 shadow-sm'
+                : 'bg-white/20 text-white hover:bg-white/30'
             }`}
           >
             <Target className="w-3 h-3" />
