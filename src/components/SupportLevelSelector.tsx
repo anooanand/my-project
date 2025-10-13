@@ -90,6 +90,8 @@ export const SupportLevelSelector: React.FC<SupportLevelSelectorProps> = ({
       return;
     }
 
+    console.log('[SupportLevelSelector] Attempting to change level:', { userId: user.id, level });
+
     setIsSaving(true);
     setError(null);
     setSuccess(null);
@@ -100,6 +102,8 @@ export const SupportLevelSelector: React.FC<SupportLevelSelectorProps> = ({
         level
       );
 
+      console.log('[SupportLevelSelector] Update result:', success);
+
       if (success) {
         setSelectedLevel(level);
         setSuccess(`Support level changed to ${level}!`);
@@ -109,11 +113,11 @@ export const SupportLevelSelector: React.FC<SupportLevelSelectorProps> = ({
         await loadPreferences();
         setTimeout(() => setSuccess(null), 3000);
       } else {
-        setError('Failed to update support level. Please try again.');
+        setError('Failed to update support level. Check browser console for details.');
       }
     } catch (err) {
-      console.error('Error updating support level:', err);
-      setError('An error occurred. Please try again.');
+      console.error('[SupportLevelSelector] Error updating support level:', err);
+      setError(`Error: ${err instanceof Error ? err.message : 'Unknown error'}`);
     } finally {
       setIsSaving(false);
     }

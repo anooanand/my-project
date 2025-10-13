@@ -115,6 +115,8 @@ export class WritingBuddyService {
     newLevel: SupportLevel
   ): Promise<boolean> {
     try {
+      console.log('[WritingBuddyService] Updating support level:', { userId, newLevel });
+
       // First, check if preferences exist
       const { data: existingPrefs, error: checkError } = await supabase
         .from('writing_buddy_preferences')
@@ -122,14 +124,17 @@ export class WritingBuddyService {
         .eq('user_id', userId)
         .maybeSingle();
 
+      console.log('[WritingBuddyService] Check result:', { existingPrefs, checkError });
+
       if (checkError) {
-        console.error('Error checking preferences:', checkError);
-        return false;
+        console.error('[WritingBuddyService] Error checking preferences:', checkError);
+        throw new Error(`Database check failed: ${checkError.message}`);
       }
 
       if (!existingPrefs) {
+        console.log('[WritingBuddyService] Creating new preferences...');
         // Create new preferences with the selected level
-        const { error: insertError } = await supabase
+        const { data: insertData, error: insertError } = await supabase
           .from('writing_buddy_preferences')
           .insert({
             user_id: userId,
@@ -137,34 +142,45 @@ export class WritingBuddyService {
             auto_adjust_enabled: true,
             emoji_enabled: true,
             preferred_feedback_style: 'balanced',
-          });
+          })
+          .select()
+          .single();
+
+        console.log('[WritingBuddyService] Insert result:', { insertData, insertError });
 
         if (insertError) {
-          console.error('Error creating preferences:', insertError);
-          return false;
+          console.error('[WritingBuddyService] Error creating preferences:', insertError);
+          throw new Error(`Failed to create preferences: ${insertError.message}`);
         }
 
+        console.log('[WritingBuddyService] Successfully created preferences');
         return true;
       }
 
       // Update existing preferences
-      const { error: updateError } = await supabase
+      console.log('[WritingBuddyService] Updating existing preferences...');
+      const { data: updateData, error: updateError } = await supabase
         .from('writing_buddy_preferences')
         .update({
           previous_support_level: existingPrefs.support_level,
           support_level: newLevel,
           updated_at: new Date().toISOString(),
         })
-        .eq('user_id', userId);
+        .eq('user_id', userId)
+        .select()
+        .single();
+
+      console.log('[WritingBuddyService] Update result:', { updateData, updateError });
 
       if (updateError) {
-        console.error('Error updating preferences:', updateError);
-        return false;
+        console.error('[WritingBuddyService] Error updating preferences:', updateError);
+        throw new Error(`Failed to update preferences: ${updateError.message}`);
       }
 
+      console.log('[WritingBuddyService] Successfully updated preferences');
       return true;
     } catch (error) {
-      console.error('Error in updateSupportLevel:', error);
+      console.error('[WritingBuddyService] Error in updateSupportLevel:', error);
       return false;
     }
   }
