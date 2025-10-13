@@ -411,7 +411,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
                 <Sparkles className="h-8 w-8 text-white" />
               </div>
               
-              <h2 className="text-2xl font-bold text-slate-900 mb-4">
+              <h2 className="heading-3 text-slate-900 mb-4">
                 Welcome, {getUserName()}! 🎉
               </h2>
               
@@ -446,7 +446,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
                 <div className="w-20 h-20 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Lightbulb className="h-10 w-10 text-white" />
                 </div>
-                <h2 className="text-3xl font-bold text-slate-900 mb-2">Quick Start Guide</h2>
+                <h2 className="heading-2 text-slate-900 mb-2">Quick Start Guide</h2>
                 <p className="text-slate-600">Follow these simple steps to begin writing</p>
               </div>
               
@@ -566,7 +566,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
                 <ArrowRight className="h-6 w-6 text-white/70 group-hover:text-white group-hover:translate-x-1 transition-all duration-300" />
               </div>
               
-              <h2 className="text-3xl font-bold text-white mb-3">Start Writing</h2>
+              <h2 className="heading-2 text-white mb-3">Start Writing</h2>
               <p className="text-blue-100 text-lg mb-6 leading-relaxed">
                 Begin a new writing session with AI-powered guidance and real-time feedback
               </p>
@@ -603,7 +603,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
                 <ArrowRight className="h-6 w-6 text-white/70 group-hover:text-white group-hover:translate-x-1 transition-all duration-300" />
               </div>
               
-              <h2 className="text-3xl font-bold text-white mb-3">Practice Exam</h2>
+              <h2 className="heading-2 text-white mb-3">Practice Exam</h2>
               <p className="text-emerald-100 text-lg mb-6 leading-relaxed">
                 Test your skills with timed practice sessions under real exam conditions
               </p>
@@ -631,7 +631,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
           {/* Progress Overview */}
           <div className="lg:col-span-2 bg-white/80 backdrop-blur-sm rounded-2xl p-8 border border-slate-200 shadow-sm">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-bold text-slate-900">Your Progress</h3>
+              <h3 className="heading-3 text-slate-900">Your Progress</h3>
               <button className="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center space-x-1">
                 <span>View All</span>
                 <ChevronRight className="h-4 w-4" />
@@ -711,7 +711,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
 
         {/* Quick Actions */}
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 border border-slate-200 shadow-sm">
-          <h3 className="text-2xl font-bold text-slate-900 mb-6">Quick Actions</h3>
+          <h3 className="heading-3 text-slate-900 mb-6">Quick Actions</h3>
           
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <button className="flex flex-col items-center p-4 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors group">

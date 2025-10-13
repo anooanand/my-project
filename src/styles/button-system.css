@@ -1,0 +1,205 @@
+/*
+  Unified Button Design System
+
+  This file establishes consistent button styles across the application.
+  All buttons follow a clear hierarchy: Primary → Secondary → Tertiary → Ghost
+*/
+
+/* ===== BASE BUTTON STYLES ===== */
+.btn-base {
+  @apply inline-flex items-center justify-center;
+  @apply font-semibold rounded-lg;
+  @apply transition-all duration-200;
+  @apply focus:outline-none focus:ring-2 focus:ring-offset-2;
+  @apply disabled:opacity-50 disabled:cursor-not-allowed;
+  @apply transform hover:-translate-y-0.5 active:translate-y-0;
+}
+
+/* ===== SIZE VARIANTS ===== */
+.btn-xs {
+  @apply px-2 py-1 text-xs;
+  @apply gap-1;
+}
+
+.btn-sm {
+  @apply px-3 py-1.5 text-sm;
+  @apply gap-1.5;
+}
+
+.btn-md {
+  @apply px-4 py-2 text-base;
+  @apply gap-2;
+}
+
+.btn-lg {
+  @apply px-6 py-3 text-lg;
+  @apply gap-2;
+}
+
+.btn-xl {
+  @apply px-8 py-4 text-xl;
+  @apply gap-3;
+}
+
+/* ===== PRIMARY BUTTONS (Main Actions) ===== */
+.btn-primary {
+  @apply btn-base btn-md;
+  @apply bg-gradient-to-r from-blue-600 to-purple-600;
+  @apply text-white shadow-lg hover:shadow-xl;
+  @apply hover:from-blue-700 hover:to-purple-700;
+  @apply focus:ring-blue-500;
+  @apply dark:from-blue-500 dark:to-purple-500;
+  @apply dark:hover:from-blue-600 dark:hover:to-purple-600;
+}
+
+.btn-primary-xs { @apply btn-primary btn-xs; }
+.btn-primary-sm { @apply btn-primary btn-sm; }
+.btn-primary-lg { @apply btn-primary btn-lg; }
+.btn-primary-xl { @apply btn-primary btn-xl; }
+
+/* ===== SECONDARY BUTTONS (Important but not primary) ===== */
+.btn-secondary {
+  @apply btn-base btn-md;
+  @apply bg-white text-blue-600;
+  @apply border-2 border-blue-600;
+  @apply shadow-md hover:shadow-lg;
+  @apply hover:bg-blue-50;
+  @apply focus:ring-blue-500;
+  @apply dark:bg-gray-800 dark:text-blue-400;
+  @apply dark:border-blue-400 dark:hover:bg-gray-700;
+}
+
+.btn-secondary-xs { @apply btn-secondary btn-xs; }
+.btn-secondary-sm { @apply btn-secondary btn-sm; }
+.btn-secondary-lg { @apply btn-secondary btn-lg; }
+.btn-secondary-xl { @apply btn-secondary btn-xl; }
+
+/* ===== TERTIARY BUTTONS (Subtle actions) ===== */
+.btn-tertiary {
+  @apply btn-base btn-md;
+  @apply bg-gray-100 text-gray-700;
+  @apply hover:bg-gray-200;
+  @apply focus:ring-gray-400;
+  @apply dark:bg-gray-700 dark:text-gray-300;
+  @apply dark:hover:bg-gray-600;
+}
+
+.btn-tertiary-xs { @apply btn-tertiary btn-xs; }
+.btn-tertiary-sm { @apply btn-tertiary btn-sm; }
+.btn-tertiary-lg { @apply btn-tertiary btn-lg; }
+.btn-tertiary-xl { @apply btn-tertiary btn-xl; }
+
+/* ===== GHOST BUTTONS (Minimal style) ===== */
+.btn-ghost {
+  @apply btn-base btn-md;
+  @apply bg-transparent text-gray-700;
+  @apply hover:bg-gray-100;
+  @apply focus:ring-gray-400;
+  @apply dark:text-gray-300 dark:hover:bg-gray-700;
+  @apply shadow-none;
+}
+
+.btn-ghost-xs { @apply btn-ghost btn-xs; }
+.btn-ghost-sm { @apply btn-ghost btn-sm; }
+.btn-ghost-lg { @apply btn-ghost btn-lg; }
+.btn-ghost-xl { @apply btn-ghost btn-xl; }
+
+/* ===== SUCCESS BUTTONS ===== */
+.btn-success {
+  @apply btn-base btn-md;
+  @apply bg-gradient-to-r from-green-600 to-emerald-600;
+  @apply text-white shadow-lg hover:shadow-xl;
+  @apply hover:from-green-700 hover:to-emerald-700;
+  @apply focus:ring-green-500;
+}
+
+.btn-success-sm { @apply btn-success btn-sm; }
+.btn-success-lg { @apply btn-success btn-lg; }
+
+/* ===== WARNING BUTTONS ===== */
+.btn-warning {
+  @apply btn-base btn-md;
+  @apply bg-gradient-to-r from-orange-500 to-amber-500;
+  @apply text-white shadow-lg hover:shadow-xl;
+  @apply hover:from-orange-600 hover:to-amber-600;
+  @apply focus:ring-orange-500;
+}
+
+.btn-warning-sm { @apply btn-warning btn-sm; }
+.btn-warning-lg { @apply btn-warning btn-lg; }
+
+/* ===== DANGER BUTTONS ===== */
+.btn-danger {
+  @apply btn-base btn-md;
+  @apply bg-gradient-to-r from-red-600 to-rose-600;
+  @apply text-white shadow-lg hover:shadow-xl;
+  @apply hover:from-red-700 hover:to-rose-700;
+  @apply focus:ring-red-500;
+}
+
+.btn-danger-sm { @apply btn-danger btn-sm; }
+.btn-danger-lg { @apply btn-danger btn-lg; }
+
+/* ===== ICON BUTTONS (Square buttons for icons only) ===== */
+.btn-icon {
+  @apply btn-base;
+  @apply aspect-square p-2;
+  @apply bg-gray-100 text-gray-700;
+  @apply hover:bg-gray-200;
+  @apply dark:bg-gray-700 dark:text-gray-300;
+  @apply dark:hover:bg-gray-600;
+}
+
+.btn-icon-sm { @apply btn-icon text-sm p-1.5; }
+.btn-icon-lg { @apply btn-icon text-lg p-3; }
+
+/* ===== ICON + TEXT HELPER ===== */
+.btn-with-icon {
+  @apply flex items-center justify-center gap-2;
+}
+
+.btn-with-icon-sm {
+  @apply flex items-center justify-center gap-1.5;
+}
+
+/* ===== FULL WIDTH BUTTONS ===== */
+.btn-block {
+  @apply w-full;
+}
+
+/* ===== LOADING STATE ===== */
+.btn-loading {
+  @apply relative cursor-wait;
+}
+
+.btn-loading::after {
+  content: '';
+  @apply absolute inset-0 bg-white/20 rounded-lg;
+  animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* ===== ACTIVE/SELECTED STATE ===== */
+.btn-active {
+  @apply ring-2 ring-offset-2;
+}
+
+/* ===== BUTTON GROUP ===== */
+.btn-group {
+  @apply inline-flex rounded-lg shadow-sm;
+}
+
+.btn-group > button:not(:first-child):not(:last-child) {
+  @apply rounded-none;
+}
+
+.btn-group > button:first-child {
+  @apply rounded-r-none;
+}
+
+.btn-group > button:last-child {
+  @apply rounded-l-none;
+}
+
+.btn-group > button:not(:last-child) {
+  @apply border-r-0;
+}

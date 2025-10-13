@@ -23,35 +23,35 @@ export function HeroSection({ onGetStarted }: HeroSectionProps) {
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="text-center max-w-4xl mx-auto">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-6 leading-tight font-display">
-            <span className="bg-gradient-to-r from-blue-700 via-purple-700 to-pink-700 text-transparent bg-clip-text">Become a Super Writer </span>
+          <h1 className="heading-display font-display">
+            <span className="text-gradient">Become a Super Writer </span>
             <span className="relative">
-              <span className="bg-gradient-to-r from-pink-700 to-orange-600 text-transparent bg-clip-text">Today!</span>
+              <span className="text-gradient">Today!</span>
               <span className="absolute -top-6 -right-6 text-3xl animate-bounce">✨</span>
             </span>
             <br />
             <span className="text-gray-900 dark:text-white">with Your AI Writing Buddy</span>
           </h1>
 
-          <p className="text-xl md:text-2xl text-gray-800 dark:text-gray-200 mb-10 max-w-3xl mx-auto leading-relaxed font-medium">
+          <p className="text-body-xl max-w-3xl mx-auto mb-10 font-medium text-gray-800 dark:text-gray-200">
             Create amazing stories, learn cool writing tricks, and have fun with your AI writing buddy! Perfect for NSW Selective exam practice.
           </p>
 
           <div className="flex flex-col sm:flex-row justify-center gap-6 sm:gap-8">
-            <button 
+            <button
               onClick={onGetStarted}
-              className="btn btn-primary btn-xl"
+              className="btn-primary-xl btn-with-icon"
             >
               Start Your Adventure!
-              <ArrowRight className="ml-3 w-6 h-6" />
+              <ArrowRight className="w-6 h-6" />
             </button>
-            
-            <button 
+
+            <button
               onClick={handleTryDemo}
-              className="btn btn-success btn-xl"
+              className="btn-success-lg btn-with-icon"
             >
               Try It For Free!
-              <Zap className="ml-3 w-6 h-6" />
+              <Zap className="w-6 h-6" />
             </button>
           </div>
           

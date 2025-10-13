@@ -3,6 +3,8 @@
 @import './styles/improved-theme.css';
 @import './styles/consistent-design.css';
 @import './styles/dark-mode-professional.css'; /* COMMENT THIS LINE TO REVERT TO LIGHT MODE */
+@import './styles/button-system.css';
+@import './styles/typography.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

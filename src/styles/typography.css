@@ -1,0 +1,244 @@
+/*
+  Typography System
+
+  Establishes consistent text sizing and spacing for clear visual hierarchy.
+  Based on a modular scale for harmonious proportions.
+*/
+
+/* ===== DISPLAY HEADINGS (Hero sections) ===== */
+.heading-display {
+  @apply text-5xl md:text-7xl font-bold;
+  @apply leading-tight tracking-tight;
+  @apply mb-6;
+  @apply text-gray-900 dark:text-white;
+}
+
+.heading-display-sm {
+  @apply text-4xl md:text-5xl font-bold;
+  @apply leading-tight tracking-tight;
+  @apply mb-5;
+  @apply text-gray-900 dark:text-white;
+}
+
+/* ===== PAGE HEADINGS ===== */
+.heading-1 {
+  @apply text-4xl md:text-5xl font-bold;
+  @apply leading-tight tracking-tight;
+  @apply mb-6;
+  @apply text-gray-900 dark:text-white;
+}
+
+.heading-2 {
+  @apply text-3xl md:text-4xl font-bold;
+  @apply leading-snug tracking-tight;
+  @apply mb-5;
+  @apply text-gray-900 dark:text-white;
+}
+
+.heading-3 {
+  @apply text-2xl md:text-3xl font-bold;
+  @apply leading-snug;
+  @apply mb-4;
+  @apply text-gray-900 dark:text-white;
+}
+
+.heading-4 {
+  @apply text-xl md:text-2xl font-semibold;
+  @apply leading-snug;
+  @apply mb-3;
+  @apply text-gray-900 dark:text-white;
+}
+
+.heading-5 {
+  @apply text-lg md:text-xl font-semibold;
+  @apply leading-normal;
+  @apply mb-3;
+  @apply text-gray-900 dark:text-white;
+}
+
+.heading-6 {
+  @apply text-base md:text-lg font-semibold;
+  @apply leading-normal;
+  @apply mb-2;
+  @apply text-gray-900 dark:text-white;
+}
+
+/* ===== BODY TEXT ===== */
+.text-body-xl {
+  @apply text-xl leading-relaxed;
+  @apply text-gray-700 dark:text-gray-300;
+  @apply mb-4;
+}
+
+.text-body-lg {
+  @apply text-lg leading-relaxed;
+  @apply text-gray-700 dark:text-gray-300;
+  @apply mb-4;
+}
+
+.text-body {
+  @apply text-base leading-relaxed;
+  @apply text-gray-700 dark:text-gray-300;
+  @apply mb-4;
+}
+
+.text-body-sm {
+  @apply text-sm leading-relaxed;
+  @apply text-gray-600 dark:text-gray-400;
+  @apply mb-3;
+}
+
+.text-body-xs {
+  @apply text-xs leading-normal;
+  @apply text-gray-600 dark:text-gray-400;
+  @apply mb-2;
+}
+
+/* ===== CAPTION/HELPER TEXT ===== */
+.text-caption {
+  @apply text-sm leading-normal;
+  @apply text-gray-500 dark:text-gray-400;
+}
+
+.text-caption-xs {
+  @apply text-xs leading-normal;
+  @apply text-gray-500 dark:text-gray-400;
+}
+
+/* ===== LABELS ===== */
+.text-label {
+  @apply text-sm font-medium leading-normal;
+  @apply text-gray-700 dark:text-gray-300;
+  @apply mb-2;
+}
+
+.text-label-sm {
+  @apply text-xs font-medium leading-normal;
+  @apply text-gray-700 dark:text-gray-300;
+  @apply mb-1.5;
+}
+
+/* ===== EMPHASIS STYLES ===== */
+.text-emphasis {
+  @apply font-semibold text-gray-900 dark:text-white;
+}
+
+.text-subtle {
+  @apply text-gray-500 dark:text-gray-400;
+}
+
+.text-muted {
+  @apply text-gray-400 dark:text-gray-500;
+}
+
+/* ===== LINK STYLES ===== */
+.text-link {
+  @apply text-blue-600 dark:text-blue-400;
+  @apply hover:text-blue-700 dark:hover:text-blue-300;
+  @apply underline underline-offset-2;
+  @apply transition-colors duration-200;
+}
+
+.text-link-subtle {
+  @apply text-blue-600 dark:text-blue-400;
+  @apply hover:text-blue-700 dark:hover:text-blue-300;
+  @apply hover:underline underline-offset-2;
+  @apply transition-colors duration-200;
+}
+
+/* ===== SPECIAL TEXT STYLES ===== */
+.text-gradient {
+  @apply text-transparent bg-clip-text;
+  @apply bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600;
+  @apply dark:from-blue-400 dark:via-purple-400 dark:to-pink-400;
+}
+
+.text-gradient-subtle {
+  @apply text-transparent bg-clip-text;
+  @apply bg-gradient-to-r from-blue-500 to-purple-500;
+  @apply dark:from-blue-400 dark:to-purple-400;
+}
+
+/* ===== SECTION SPACING ===== */
+.section-padding {
+  @apply py-16 md:py-24;
+}
+
+.section-padding-sm {
+  @apply py-12 md:py-16;
+}
+
+.section-padding-lg {
+  @apply py-20 md:py-32;
+}
+
+/* ===== CONTENT CONTAINERS ===== */
+.content-container {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+.content-container-sm {
+  @apply max-w-4xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+.content-container-xs {
+  @apply max-w-2xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+/* ===== PROSE (Rich text content) ===== */
+.prose-custom {
+  @apply text-base leading-relaxed text-gray-700 dark:text-gray-300;
+}
+
+.prose-custom h1 {
+  @apply heading-1;
+}
+
+.prose-custom h2 {
+  @apply heading-2;
+}
+
+.prose-custom h3 {
+  @apply heading-3;
+}
+
+.prose-custom h4 {
+  @apply heading-4;
+}
+
+.prose-custom p {
+  @apply text-body;
+}
+
+.prose-custom ul,
+.prose-custom ol {
+  @apply mb-4 ml-6;
+}
+
+.prose-custom li {
+  @apply mb-2;
+}
+
+.prose-custom a {
+  @apply text-link;
+}
+
+/* ===== RESPONSIVE ADJUSTMENTS ===== */
+@media (max-width: 640px) {
+  /* Reduce heading sizes on mobile */
+  .heading-display {
+    @apply text-4xl;
+  }
+
+  .heading-1 {
+    @apply text-3xl;
+  }
+
+  .heading-2 {
+    @apply text-2xl;
+  }
+
+  .heading-3 {
+    @apply text-xl;
+  }
+}
