@@ -115,17 +115,54 @@ export class WritingBuddyService {
     newLevel: SupportLevel
   ): Promise<boolean> {
     try {
-      const { data, error } = await supabase.rpc('update_support_level', {
-        p_user_id: userId,
-        p_new_level: newLevel,
-      });
+      // First, check if preferences exist
+      const { data: existingPrefs, error: checkError } = await supabase
+        .from('writing_buddy_preferences')
+        .select('id, support_level')
+        .eq('user_id', userId)
+        .maybeSingle();
 
-      if (error) {
-        console.error('Error updating support level:', error);
+      if (checkError) {
+        console.error('Error checking preferences:', checkError);
         return false;
       }
 
-      return data === true;
+      if (!existingPrefs) {
+        // Create new preferences with the selected level
+        const { error: insertError } = await supabase
+          .from('writing_buddy_preferences')
+          .insert({
+            user_id: userId,
+            support_level: newLevel,
+            auto_adjust_enabled: true,
+            emoji_enabled: true,
+            preferred_feedback_style: 'balanced',
+          });
+
+        if (insertError) {
+          console.error('Error creating preferences:', insertError);
+          return false;
+        }
+
+        return true;
+      }
+
+      // Update existing preferences
+      const { error: updateError } = await supabase
+        .from('writing_buddy_preferences')
+        .update({
+          previous_support_level: existingPrefs.support_level,
+          support_level: newLevel,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('user_id', userId);
+
+      if (updateError) {
+        console.error('Error updating preferences:', updateError);
+        return false;
+      }
+
+      return true;
     } catch (error) {
       console.error('Error in updateSupportLevel:', error);
       return false;
