@@ -980,14 +980,14 @@ export function EnhancedCoachPanel({
 
           <button
             onClick={() => setCurrentView('detailed')}
-            className={`flex items-center space-x-1 px-2 py-1 rounded text-xs font-medium transition-colors whitespace-nowrap ${
+            className={`flex items-center space-x-1 px-2.5 py-1 rounded text-xs font-medium transition-colors whitespace-nowrap ${
               currentView === 'detailed'
                 ? 'bg-white text-red-600'
                 : 'bg-red-500 text-white hover:bg-red-400'
             }`}
           >
             <Target className="w-3 h-3" />
-            <span>Detailed</span>
+            <span>Detail</span>
           </button>
         </div>
       </div>
