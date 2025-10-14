@@ -715,28 +715,28 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
           
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <button className="flex flex-col items-center p-4 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors group">
-              <div className="w-12 h-12 bg-blue-100 group-hover:bg-blue-200 rounded-xl flex items-center justify-center mb-3 transition-colors">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 group-hover:from-blue-200 group-hover:to-blue-300 rounded-xl flex items-center justify-center mb-3 transition-all">
                 <BookMarked className="h-6 w-6 text-blue-600" />
               </div>
               <span className="text-sm font-medium text-slate-700">View Essays</span>
             </button>
-            
+
             <button className="flex flex-col items-center p-4 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors group">
-              <div className="w-12 h-12 bg-emerald-100 group-hover:bg-emerald-200 rounded-xl flex items-center justify-center mb-3 transition-colors">
+              <div className="w-12 h-12 bg-gradient-to-br from-emerald-100 to-emerald-200 group-hover:from-emerald-200 group-hover:to-emerald-300 rounded-xl flex items-center justify-center mb-3 transition-all">
                 <BarChart3 className="h-6 w-6 text-emerald-600" />
               </div>
               <span className="text-sm font-medium text-slate-700">Progress</span>
             </button>
-            
+
             <button className="flex flex-col items-center p-4 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors group">
-              <div className="w-12 h-12 bg-purple-100 group-hover:bg-purple-200 rounded-xl flex items-center justify-center mb-3 transition-colors">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-purple-200 group-hover:from-purple-200 group-hover:to-purple-300 rounded-xl flex items-center justify-center mb-3 transition-all">
                 <Settings className="h-6 w-6 text-purple-600" />
               </div>
               <span className="text-sm font-medium text-slate-700">Settings</span>
             </button>
-            
+
             <button className="flex flex-col items-center p-4 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors group">
-              <div className="w-12 h-12 bg-orange-100 group-hover:bg-orange-200 rounded-xl flex items-center justify-center mb-3 transition-colors">
+              <div className="w-12 h-12 bg-gradient-to-br from-orange-100 to-orange-200 group-hover:from-orange-200 group-hover:to-orange-300 rounded-xl flex items-center justify-center mb-3 transition-all">
                 <HelpCircle className="h-6 w-6 text-orange-600" />
               </div>
               <span className="text-sm font-medium text-slate-700">Help</span>
