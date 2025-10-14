@@ -513,7 +513,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
             <div className="mb-6 lg:mb-0">
               <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 mb-3">
-                Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">{getUserName()}</span>! 👋
+                Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-purple-700">{getUserName()}</span>! 👋
               </h1>
               <p className="text-xl text-slate-600 font-medium">
                 Ready to create something amazing today?

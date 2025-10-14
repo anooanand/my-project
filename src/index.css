@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@300;400;700&family=Fredoka+One:wght@400&family=Inter:wght@300;400;500;600;700&display=swap');
+@import './styles/unified-design-system.css'; /* NEW: Unified Design System */
 @import './improved-layout.css';
 @import './styles/improved-theme.css';
 @import './styles/consistent-design.css';
@@ -10,32 +11,34 @@
 @tailwind utilities;
 
 :root {
-  /* Kid-Friendly Color Palette */
-  --primary-gradient: linear-gradient(135deg, #4A00E0 0%, #8E2DE2 100%);
-  --secondary-gradient: linear-gradient(135deg, #00C6FF 0%, #0072FF 100%);
-  --accent-gradient: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-  --success-gradient: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+  /* Unified Color Palette - UPDATED */
+  --primary-gradient: linear-gradient(135deg, #3B82F6 0%, #7C3AED 100%);
+  --secondary-gradient: linear-gradient(135deg, #06B6D4 0%, #10B981 100%);
+  --accent-gradient: linear-gradient(135deg, #7C3AED 0%, #EC4899 100%);
+  --success-gradient: linear-gradient(135deg, #06B6D4 0%, #10B981 100%);
   --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
-  --fun-gradient: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%);
-  
-  /* Kid-Friendly Spacing */
-  --spacing-xs: 0.5rem;
-  --spacing-sm: 0.75rem;
-  --spacing-md: 1rem;
-  --spacing-lg: 1.5rem;
-  --spacing-xl: 2rem;
-  --spacing-2xl: 3rem;
-  
-  /* Kid-Friendly Border Radius */
-  --radius-sm: 0.75rem;
-  --radius-md: 1rem;
-  --radius-lg: 1.5rem;
-  --radius-xl: 2rem;
-  
-  /* Kid-Friendly Shadows */
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
-  --shadow-md: 0 4px 15px rgba(0, 0, 0, 0.15);
-  --shadow-lg: 0 8px 25px rgba(0, 0, 0, 0.2);
+  --fun-gradient: linear-gradient(135deg, #3B82F6 0%, #7C3AED 50%, #EC4899 100%);
+
+  /* Unified Spacing (8px base) */
+  --spacing-xs: 0.5rem;  /* 8px */
+  --spacing-sm: 0.75rem;  /* 12px */
+  --spacing-md: 1rem;  /* 16px */
+  --spacing-lg: 1.5rem;  /* 24px */
+  --spacing-xl: 2rem;  /* 32px */
+  --spacing-2xl: 3rem;  /* 48px */
+
+  /* Unified Border Radius */
+  --radius-sm: 0.5rem;  /* 8px */
+  --radius-md: 0.75rem;  /* 12px */
+  --radius-lg: 1rem;  /* 16px */
+  --radius-xl: 1.25rem;  /* 20px */
+  --radius-2xl: 1.5rem;  /* 24px */
+
+  /* Unified Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1);
   --shadow-colored: 0 8px 25px rgba(99, 102, 241, 0.3);
 }
 
