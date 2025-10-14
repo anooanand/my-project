@@ -16,86 +16,134 @@ export interface DynamicExample {
 function extractPromptElements(prompt: string): {
   subject: string;
   keywords: string[];
-  setting?: string;
-  character?: string;
-  action?: string;
+  objects: string[];
+  settings: string[];
+  characters: string[];
+  actions: string[];
+  emotions: string[];
 } {
   const lowerPrompt = prompt.toLowerCase();
 
-  // Common narrative keywords
-  const narrativeKeywords = ['story', 'key', 'chest', 'attic', 'grandmother', 'mysterious', 'secret', 'door', 'adventure', 'discovery'];
-  const persuasiveKeywords = ['should', 'must', 'argue', 'convince', 'believe', 'important', 'better'];
-  const expositoryKeywords = ['explain', 'describe', 'how', 'what', 'why', 'inform', 'teach'];
-  const reflectiveKeywords = ['think', 'feel', 'remember', 'learned', 'experience', 'changed'];
+  // Object keywords
+  const objectKeywords = ['key', 'chest', 'door', 'book', 'letter', 'box', 'treasure', 'map', 'photograph', 'diary', 'ring', 'necklace'];
+  const settingKeywords = ['attic', 'library', 'school', 'forest', 'beach', 'house', 'garden', 'cave', 'mountain', 'city', 'village', 'room'];
+  const characterKeywords = ['grandmother', 'grandfather', 'mother', 'father', 'friend', 'teacher', 'stranger', 'child', 'person'];
+  const actionKeywords = ['found', 'discover', 'explore', 'open', 'unlock', 'search', 'investigate', 'notice', 'reveal', 'uncover'];
+  const emotionKeywords = ['mysterious', 'scary', 'exciting', 'surprising', 'magical', 'ancient', 'strange', 'hidden', 'secret', 'forgotten'];
 
-  // Extract keywords found in prompt
-  const foundKeywords: string[] = [];
-  [...narrativeKeywords, ...persuasiveKeywords, ...expositoryKeywords, ...reflectiveKeywords].forEach(keyword => {
-    if (lowerPrompt.includes(keyword)) {
-      foundKeywords.push(keyword);
-    }
-  });
+  // Extract all relevant elements
+  const objects = objectKeywords.filter(keyword => lowerPrompt.includes(keyword));
+  const settings = settingKeywords.filter(keyword => lowerPrompt.includes(keyword));
+  const characters = characterKeywords.filter(keyword => lowerPrompt.includes(keyword));
+  const actions = actionKeywords.filter(keyword => lowerPrompt.includes(keyword));
+  const emotions = emotionKeywords.filter(keyword => lowerPrompt.includes(keyword));
 
   return {
-    subject: prompt.slice(0, 100),
-    keywords: foundKeywords,
-    setting: lowerPrompt.includes('attic') ? 'attic' :
-             lowerPrompt.includes('school') ? 'school' :
-             lowerPrompt.includes('library') ? 'library' : undefined,
-    character: lowerPrompt.includes('grandmother') ? 'grandmother' : undefined,
-    action: lowerPrompt.includes('found') || lowerPrompt.includes('discover') ? 'discovery' : undefined
+    subject: prompt.slice(0, 150),
+    keywords: [...objects, ...settings, ...characters, ...actions, ...emotions],
+    objects,
+    settings,
+    characters,
+    actions,
+    emotions
   };
 }
 
 /**
- * Generate narrative examples
+ * Generate narrative examples with deep prompt analysis
  */
 function generateNarrativeExamples(prompt: string, wordCount: number): DynamicExample[] {
   const elements = extractPromptElements(prompt);
   const examples: DynamicExample[] = [];
 
+  // Get primary elements
+  const mainObject = elements.objects[0];
+  const mainSetting = elements.settings[0];
+  const mainCharacter = elements.characters[0];
+  const mainEmotion = elements.emotions[0];
+
   if (wordCount === 0) {
-    // Opening sentence examples
-    if (elements.keywords.includes('key') || elements.keywords.includes('attic')) {
+    // Opening sentence examples - highly specific to prompt
+    if (mainSetting && mainObject) {
+      // Setting + Object combination
       examples.push({
-        text: "Dust motes danced in the single shaft of light that pierced the attic's gloom, illuminating something metallic beneath the old trunk.",
-        description: "Set the atmosphere with sensory details"
+        text: `The ${mainSetting} was silent except for the creaking floorboards as I noticed the ${mainObject} gleaming in a shaft of dusty light.`,
+        description: "Combine setting and object discovery"
       });
+    }
+
+    if (mainObject && mainEmotion) {
+      // Object + Emotion combination
       examples.push({
-        text: "The key felt surprisingly warm in my hand, as if it held secrets waiting to be discovered.",
-        description: "Begin with character interaction"
+        text: `The ${mainEmotion} ${mainObject} seemed to pulse with an energy I couldn't explain, drawing me closer despite my hesitation.`,
+        description: "Build intrigue with sensory details"
       });
-    } else if (elements.keywords.includes('door') || elements.keywords.includes('library')) {
+    }
+
+    if (mainCharacter && mainObject) {
+      // Character + Object combination
       examples.push({
-        text: "The library had always been my favorite place, but I'd never noticed the strange symbol carved into the oak door.",
-        description: "Establish setting and introduce mystery"
+        text: `"Never touch that ${mainObject}," my ${mainCharacter} had warned me countless times, but now I understood why.`,
+        description: "Create backstory and tension"
       });
-    } else {
-      // Generic narrative opening
+    }
+
+    // Fallback examples if no specific elements
+    if (examples.length === 0) {
       examples.push({
-        text: "Everything changed the moment I stepped through that doorway.",
-        description: "Create intrigue with a compelling hook"
+        text: `Everything changed the moment I discovered what had been hidden all these years.`,
+        description: "Hook readers with mystery"
       });
     }
   } else if (wordCount < 100) {
-    // Development examples
+    // Development examples - build on prompt elements
+    if (mainObject && elements.actions[0]) {
+      examples.push({
+        text: `My fingers traced the edge of the ${mainObject}, and suddenly I understood what I had to do next.`,
+        description: "Show character interaction and progression"
+      });
+    }
+
+    if (mainSetting) {
+      examples.push({
+        text: `The ${mainSetting} seemed different now—shadows moved in corners I'd never noticed before, and the air hummed with possibility.`,
+        description: "Develop atmosphere as story progresses"
+      });
+    }
+
     examples.push({
-      text: "Show emotions through action: 'My hands trembled as I reached for the lock, heart pounding against my ribs.'",
-      description: "Add physical reactions to build tension"
+      text: `My heart hammered as I reached forward, knowing that once I took this step, there would be no going back.`,
+      description: "Build tension through physical reactions"
     });
+  } else if (wordCount < 200) {
+    // Climax examples
+    if (mainObject) {
+      examples.push({
+        text: `The ${mainObject} revealed its true purpose in a flash of understanding that took my breath away.`,
+        description: "Create the revelation moment"
+      });
+    }
+
     examples.push({
-      text: "Use vivid descriptions: 'The chest's surface was covered in intricate carvings that seemed to shimmer in the dim light.'",
-      description: "Enhance imagery with specific details"
+      text: `Time seemed to slow as everything I'd discovered came together in one stunning moment of clarity.`,
+      description: "Heighten the climactic moment"
     });
   } else {
     // Conclusion examples
+    if (mainCharacter) {
+      examples.push({
+        text: `As I left the ${mainSetting || 'room'}, I carried with me not just the ${mainObject || 'discovery'}, but a new understanding of my ${mainCharacter}'s legacy.`,
+        description: "Tie together discovery and personal growth"
+      });
+    }
+
     examples.push({
-      text: "As I closed the chest, I realized this discovery had changed everything I thought I knew about my family's past.",
-      description: "Reflect on the significance of events"
+      text: `Some secrets, I realized, are meant to be found—they're just waiting for the right person at the right time.`,
+      description: "Reflect on the deeper meaning"
     });
   }
 
-  return examples;
+  return examples.slice(0, 3); // Return up to 3 examples
 }
 
 /**
@@ -104,25 +152,47 @@ function generateNarrativeExamples(prompt: string, wordCount: number): DynamicEx
 function generatePersuasiveExamples(prompt: string, wordCount: number): DynamicExample[] {
   const elements = extractPromptElements(prompt);
   const examples: DynamicExample[] = [];
+  const promptLower = prompt.toLowerCase();
+
+  // Extract topic from prompt
+  let topic = 'this change';
+  if (promptLower.includes('school')) topic = 'schools';
+  if (promptLower.includes('environment')) topic = 'our environment';
+  if (promptLower.includes('technology')) topic = 'technology';
+  if (promptLower.includes('uniform')) topic = 'school uniforms';
+  if (promptLower.includes('homework')) topic = 'homework policies';
+  if (promptLower.includes('sport')) topic = 'sports programs';
 
   if (wordCount === 0) {
     examples.push({
-      text: "Imagine a world where every student has the opportunity to reach their full potential—this is why we must act now.",
-      description: "Open with a powerful statement"
+      text: `Imagine the impact we could make if we took action on ${topic} today—the benefits would transform our community for generations to come.`,
+      description: "Open with a powerful vision statement"
+    });
+    examples.push({
+      text: `The question isn't whether we should address ${topic}, but rather how quickly we can begin making a difference.`,
+      description: "Frame the issue as urgent and necessary"
     });
   } else if (wordCount < 100) {
     examples.push({
-      text: "Studies show that students who engage with creative activities demonstrate 30% higher problem-solving abilities.",
-      description: "Support your argument with evidence"
+      text: `Research consistently demonstrates that communities investing in ${topic} see measurable improvements in both short-term results and long-term outcomes.`,
+      description: "Support with evidence and data"
+    });
+    examples.push({
+      text: `Consider the alternative: if we ignore ${topic}, we risk falling behind while others move forward with innovation and progress.`,
+      description: "Highlight consequences of inaction"
     });
   } else {
     examples.push({
-      text: "The choice is clear: we can either embrace this change and thrive, or resist and fall behind.",
-      description: "Close with a compelling call to action"
+      text: `The path forward is clear: by embracing ${topic} now, we position ourselves to lead rather than follow, to innovate rather than imitate.`,
+      description: "Build to a strong conclusion"
+    });
+    examples.push({
+      text: `The time for debate has passed—now is the moment for action, and together we can make ${topic} a reality that benefits everyone.`,
+      description: "End with a compelling call to action"
     });
   }
 
-  return examples;
+  return examples.slice(0, 3);
 }
 
 /**
@@ -130,25 +200,54 @@ function generatePersuasiveExamples(prompt: string, wordCount: number): DynamicE
  */
 function generateExpositoryExamples(prompt: string, wordCount: number): DynamicExample[] {
   const examples: DynamicExample[] = [];
+  const promptLower = prompt.toLowerCase();
+
+  // Identify the topic
+  let topic = 'this process';
+  let verb = 'works';
+  if (promptLower.includes('how')) {
+    topic = 'the process';
+    verb = 'functions';
+  }
+  if (promptLower.includes('why')) {
+    topic = 'this phenomenon';
+    verb = 'occurs';
+  }
+  if (promptLower.includes('explain')) {
+    topic = 'this concept';
+    verb = 'operates';
+  }
 
   if (wordCount === 0) {
     examples.push({
-      text: "Understanding this process requires examining three key components: the cause, the mechanism, and the effect.",
-      description: "Introduce your topic with clear structure"
+      text: `To fully understand ${topic}, we must examine its key components, their relationships, and how they interact to create the overall effect.`,
+      description: "Introduce topic with clear roadmap"
+    });
+    examples.push({
+      text: `${topic.charAt(0).toUpperCase() + topic.slice(1)} ${verb} through a series of interconnected steps, each building upon the previous one.`,
+      description: "Establish the process or mechanism"
     });
   } else if (wordCount < 100) {
     examples.push({
-      text: "For example, when water freezes, its molecules slow down and arrange themselves into a crystalline structure.",
-      description: "Use concrete examples to explain concepts"
+      text: `For instance, consider how each element contributes to the whole: first by establishing the foundation, then by adding layers of complexity, and finally by creating the complete system.`,
+      description: "Use specific examples to illustrate"
+    });
+    examples.push({
+      text: `The relationship between these components becomes clear when we examine them individually and then observe how they work together in practice.`,
+      description: "Explain connections and relationships"
     });
   } else {
     examples.push({
-      text: "In conclusion, these interconnected factors work together to create the phenomenon we observe.",
-      description: "Summarize key points clearly"
+      text: `In summary, ${topic} represents a complex interplay of factors that, when understood together, reveal a clear and logical pattern.`,
+      description: "Synthesize information clearly"
+    });
+    examples.push({
+      text: `Understanding ${topic} not only explains what we observe but also helps us predict and potentially influence future outcomes.`,
+      description: "Connect to broader implications"
     });
   }
 
-  return examples;
+  return examples.slice(0, 3);
 }
 
 /**
@@ -156,25 +255,45 @@ function generateExpositoryExamples(prompt: string, wordCount: number): DynamicE
  */
 function generateReflectiveExamples(prompt: string, wordCount: number): DynamicExample[] {
   const examples: DynamicExample[] = [];
+  const elements = extractPromptElements(prompt);
+  const promptLower = prompt.toLowerCase();
+
+  // Identify the type of experience
+  let experience = 'that experience';
+  if (elements.settings[0]) experience = `my time in the ${elements.settings[0]}`;
+  if (promptLower.includes('learned')) experience = 'that lesson';
+  if (promptLower.includes('changed')) experience = 'that transformation';
 
   if (wordCount === 0) {
     examples.push({
-      text: "Looking back on that day, I realize how much that single moment shaped who I am today.",
-      description: "Begin with personal reflection"
+      text: `Looking back on ${experience}, I can now see how profoundly it shaped my understanding of myself and the world around me.`,
+      description: "Open with reflective perspective"
+    });
+    examples.push({
+      text: `At the time, I didn't realize how significant ${experience} would become, but now the lessons seem crystal clear.`,
+      description: "Contrast past and present understanding"
     });
   } else if (wordCount < 100) {
     examples.push({
-      text: "I felt a mixture of excitement and fear—emotions that would become familiar companions on my journey.",
-      description: "Explore your feelings and reactions"
+      text: `The emotions I felt then—confusion, excitement, uncertainty—taught me more about resilience than any book ever could.`,
+      description: "Explore emotional journey and growth"
+    });
+    examples.push({
+      text: `What surprised me most wasn't the experience itself, but rather how I responded to it and what that revealed about my character.`,
+      description: "Reflect on personal discovery"
     });
   } else {
     examples.push({
-      text: "This experience taught me that growth often comes from the most unexpected challenges.",
-      description: "Share the lesson learned"
+      text: `Now I understand that ${experience} wasn't just about what happened, but about who I became in the process of living through it.`,
+      description: "Synthesize learning and growth"
+    });
+    examples.push({
+      text: `If I could go back, I wouldn't change a thing—every challenge was necessary for the growth that followed, shaping me into who I am today.`,
+      description: "Express mature perspective on experience"
     });
   }
 
-  return examples;
+  return examples.slice(0, 3);
 }
 
 /**
@@ -182,25 +301,50 @@ function generateReflectiveExamples(prompt: string, wordCount: number): DynamicE
  */
 function generateRecountExamples(prompt: string, wordCount: number): DynamicExample[] {
   const examples: DynamicExample[] = [];
+  const elements = extractPromptElements(prompt);
+  const promptLower = prompt.toLowerCase();
+
+  // Identify the event type
+  let event = 'the event';
+  let location = 'there';
+  if (elements.settings[0]) {
+    location = `the ${elements.settings[0]}`;
+    event = `our visit to the ${elements.settings[0]}`;
+  }
+  if (promptLower.includes('excursion')) event = 'the excursion';
+  if (promptLower.includes('trip')) event = 'the trip';
+  if (promptLower.includes('day')) event = 'that memorable day';
 
   if (wordCount === 0) {
     examples.push({
-      text: "Last Tuesday morning, our class embarked on an adventure that none of us would forget.",
-      description: "Orient the reader with when and where"
+      text: `It was early morning when ${event} began, and none of us could have predicted how extraordinary it would turn out to be.`,
+      description: "Set the scene with time and context"
+    });
+    examples.push({
+      text: `As we arrived at ${location}, the excitement was palpable—everyone eager to see what awaited us.`,
+      description: "Orient reader and establish atmosphere"
     });
   } else if (wordCount < 100) {
     examples.push({
-      text: "After that, we moved to the next exhibit, where an ancient artifact caught everyone's attention.",
-      description: "Use time connectives to sequence events"
+      text: `Shortly after that, we discovered something unexpected that changed the entire direction of our visit.`,
+      description: "Use temporal connectives to sequence"
+    });
+    examples.push({
+      text: `Following the initial discovery, we moved through a series of experiences, each more fascinating than the last.`,
+      description: "Build chronological progression"
     });
   } else {
     examples.push({
-      text: "By the end of the day, we had learned more than we ever expected and created memories to last a lifetime.",
-      description: "Conclude by reflecting on the experience"
+      text: `As ${event} drew to a close, we realized we had gained far more than we'd anticipated—not just knowledge, but lasting memories.`,
+      description: "Conclude with reflection on significance"
+    });
+    examples.push({
+      text: `Looking back on ${event}, every moment stands out as part of an unforgettable experience that we'll carry with us always.`,
+      description: "End with personal reflection"
     });
   }
 
-  return examples;
+  return examples.slice(0, 3);
 }
 
 /**
