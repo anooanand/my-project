@@ -547,7 +547,11 @@ function AppContent() {
             isOpen={showAuthModal}
             onClose={() => setShowAuthModal(false)}
             mode={authModalMode}
-            onSwitchMode={(mode) => setAuthModalMode(mode)}
+            onAuthSuccess={(user) => {
+              console.log('Auth success callback received, closing modal');
+              setShowAuthModal(false);
+              setHasSignedIn(true);
+            }}
           />
         )}
 

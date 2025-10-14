@@ -113,11 +113,14 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           localStorage.setItem('userEmail', email);
           
           const emailVerified = isEmailVerified(data.user);
-          
+
           if (emailVerified) {
             setSuccess(true);
             setCurrentStep(3);
-            onAuthSuccess(data.user);
+            // Call onAuthSuccess to close modal after showing success message
+            setTimeout(() => {
+              onAuthSuccess(data.user);
+            }, 1500);
           } else {
             setConfirmationEmail(email);
             setMode('confirmation');
