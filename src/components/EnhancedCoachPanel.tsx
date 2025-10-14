@@ -656,7 +656,7 @@ export function EnhancedCoachPanel({
   const [messages, setMessages] = useState<any[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [currentView, setCurrentView] = useState<'coach' | 'nsw' | 'detailed'>('coach');
+  const [currentView, setCurrentView] = useState<'coach' | 'examples' | 'builder' | 'detailed'>('coach');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Generate comprehensive feedback
@@ -835,78 +835,6 @@ export function EnhancedCoachPanel({
     }
   };
 
-  const renderNSWCriteria = () => {
-    if (!messages.length || !messages[messages.length - 1].analysis) {
-      return (
-        <div className="p-4 text-center text-gray-500">
-          <BarChart3 className="w-12 h-12 mx-auto mb-2 opacity-50" />
-          <p>Start writing to see your NSW criteria scores!</p>
-        </div>
-      );
-    }
-
-    const analysis = messages[messages.length - 1].analysis;
-    const criteria = [
-      { name: 'Ideas & Content', key: 'ideas', icon: '💡', color: 'from-yellow-400 to-orange-500' },
-      { name: 'Language & Vocabulary', key: 'language', icon: '📚', color: 'from-blue-400 to-blue-600' },
-      { name: 'Structure & Organization', key: 'structure', icon: '🏗️', color: 'from-green-400 to-green-600' },
-      { name: 'Spelling & Grammar', key: 'grammar', icon: '✏️', color: 'from-purple-400 to-purple-600' }
-    ];
-
-    const overallScore = Math.round((analysis.ideas.score + analysis.language.score + analysis.structure.score + analysis.grammar.score) / 4 * 20);
-
-    return (
-      <div className="p-4 space-y-4">
-        {/* Overall Score */}
-        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-4 rounded-lg text-center">
-          <h3 className="font-bold text-lg">Overall NSW Score</h3>
-          <div className="text-3xl font-bold">{overallScore}%</div>
-          <div className="text-sm opacity-90">
-            {overallScore >= 80 ? 'Excellent!' : overallScore >= 60 ? 'Good Progress!' : 'Keep Improving!'}
-          </div>
-        </div>
-
-        {/* Individual Criteria */}
-        <div className="space-y-3">
-          {criteria.map(criterion => {
-            const criterionData = analysis[criterion.key];
-            const score = criterionData.score;
-            
-            return (
-              <div key={criterion.key} className={`bg-gradient-to-r ${criterion.color} text-white p-3 rounded-lg`}>
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center space-x-2">
-                    <span className="text-lg">{criterion.icon}</span>
-                    <span className="font-semibold text-sm">{criterion.name}</span>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    {[1, 2, 3, 4, 5].map(star => (
-                      <Star
-                        key={star}
-                        className={`w-4 h-4 ${star <= score ? 'fill-current' : 'fill-current opacity-30'}`}
-                      />
-                    ))}
-                  </div>
-                </div>
-                
-                {criterionData.feedback.length > 0 && (
-                  <div className="text-xs opacity-90 mb-1">
-                    ✅ {criterionData.feedback[0]}
-                  </div>
-                )}
-                
-                {criterionData.improvements.length > 0 && (
-                  <div className="text-xs opacity-90">
-                    💡 {criterionData.improvements[0]}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  };
 
   return (
     <div className="flex flex-col h-full">
@@ -972,18 +900,6 @@ export function EnhancedCoachPanel({
           >
             <List className="w-3 h-3" />
             <span>Steps</span>
-          </button>
-
-          <button
-            onClick={() => setCurrentView('nsw')}
-            className={`flex items-center justify-center space-x-1 px-2.5 py-1.5 rounded text-xs font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
-              currentView === 'nsw'
-                ? 'bg-white text-purple-600 shadow-sm'
-                : 'bg-white/20 text-white hover:bg-white/30'
-            }`}
-          >
-            <BarChart3 className="w-3 h-3" />
-            <span>Criteria</span>
           </button>
 
           <button
@@ -1211,11 +1127,7 @@ export function EnhancedCoachPanel({
               </div>
             )}
           </div>
-        ) : (
-          <div className="h-full overflow-y-auto">
-            {renderNSWCriteria()}
-          </div>
-        )}
+        ) : null}
       </div>
     </div>
   );
