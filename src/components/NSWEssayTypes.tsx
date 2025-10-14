@@ -19,7 +19,7 @@ export function NSWEssayTypes({ onNavigate }: NSWEssayTypesProps) {
     <div className="py-12 bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-orange-600">
+          <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-purple-700">
             Master Every Writing Style for Selective Success
           </h2>
           <p className="mt-4 text-lg text-gray-600 dark:text-gray-300">
@@ -29,7 +29,7 @@ export function NSWEssayTypes({ onNavigate }: NSWEssayTypesProps) {
 
         {/* Add Exam Practice Pad section at the top */}
         <div className="mb-12">
-          <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-lg shadow-lg overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-purple-700 rounded-lg shadow-lg overflow-hidden">
             <div className="p-8 text-white">
               <div className="flex items-center justify-between">
                 <div>

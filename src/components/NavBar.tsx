@@ -82,10 +82,10 @@ export function NavBar({
     const baseClasses = "px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center space-x-2 text-sm";
 
     if (isActive) {
-      return `${baseClasses} bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg transform scale-105`;
+      return `${baseClasses} bg-gradient-to-r from-blue-600 to-purple-700 text-white shadow-lg transform scale-105`;
     }
 
-    return `${baseClasses} text-gray-700 hover:text-indigo-600 hover:bg-indigo-50 hover:shadow-md hover:transform hover:scale-102 border border-transparent hover:border-indigo-200`;
+    return `${baseClasses} text-gray-700 hover:text-purple-700 hover:bg-purple-50 hover:shadow-md hover:transform hover:scale-102 border border-transparent hover:border-purple-200`;
   };
 
   // Helper function to get button classes with consistent styling
@@ -93,10 +93,10 @@ export function NavBar({
     const baseClasses = "px-4 py-2 rounded-lg font-medium transition-all duration-300 flex items-center space-x-2 text-sm";
 
     if (variant === 'primary') {
-      return `${baseClasses} bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg hover:shadow-xl hover:transform hover:scale-105`;
+      return `${baseClasses} bg-gradient-to-r from-blue-600 to-purple-700 text-white shadow-lg hover:shadow-xl hover:transform hover:scale-105`;
     }
 
-    return `${baseClasses} bg-white text-indigo-600 border border-indigo-200 hover:bg-indigo-50 hover:shadow-md hover:transform hover:scale-102`;
+    return `${baseClasses} bg-white text-purple-700 border border-purple-200 hover:bg-purple-50 hover:shadow-md hover:transform hover:scale-102`;
   };
 
   // Helper function for user avatar
@@ -105,7 +105,7 @@ export function NavBar({
 
     const initial = user.email.charAt(0).toUpperCase();
     return (
-      <div className="w-8 h-8 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium text-sm">
+      <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-700 rounded-full flex items-center justify-center text-white font-medium text-sm">
         {initial}
       </div>
     );
@@ -119,9 +119,9 @@ export function NavBar({
           <div className="flex items-center">
             <button
               onClick={() => onNavigate('home')}
-              className="flex items-center space-x-2 text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent hover:scale-105 transition-transform duration-300"
+              className="flex items-center space-x-2 text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-700 bg-clip-text text-transparent hover:scale-105 transition-transform duration-300"
             >
-              <div className="w-8 h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-700 rounded-lg flex items-center justify-center text-white font-bold text-sm">
                 AI
               </div>
               <span>InstaChat AI</span>
