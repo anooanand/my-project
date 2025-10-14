@@ -128,41 +128,6 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
             </div>
           </div>
 
-          {/* Appearance Settings */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div className="flex items-center mb-6">
-              <div className="flex items-center mr-3">
-                {theme === 'dark' ? (
-                  <Moon className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
-                ) : (
-                  <Sun className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
-                )}
-              </div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Appearance</h2>
-            </div>
-            
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-medium text-gray-900 dark:text-white">Dark Mode</h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Toggle between light and dark themes
-                </p>
-              </div>
-              <button
-                onClick={toggleTheme}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                  theme === 'dark' ? 'bg-indigo-600' : 'bg-gray-200'
-                }`}
-              >
-                <span
-                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                    theme === 'dark' ? 'translate-x-6' : 'translate-x-1'
-                  }`}
-                />
-              </button>
-            </div>
-          </div>
-
           {/* Notification Settings */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <div className="flex items-center mb-6">

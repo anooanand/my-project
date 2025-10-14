@@ -4,7 +4,7 @@ import { useLearning } from '../contexts/LearningContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { Link } from 'react-router-dom';
-import { LogOut, Menu, X, ChevronDown, Home, Sparkles, Users, HelpCircle, BookOpen, Star, Brain, Target, Moon, Sun } from 'lucide-react';
+import { LogOut, Menu, X, ChevronDown, Home, Sparkles, Users, HelpCircle, BookOpen, Star, Brain, Target } from 'lucide-react';
 
 interface NavBarProps {
   activePage: string;
@@ -27,7 +27,7 @@ export function NavBar({
   const [isLearningMenuOpen, setIsLearningMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const { progress } = useLearning();
-  const { theme, toggleTheme } = useTheme();
+  // Dark mode removed
 
   // Use ref to prevent multiple simultaneous sign out attempts
   const isSigningOut = useRef(false);
@@ -198,19 +198,6 @@ export function NavBar({
 
           {/* Auth Buttons */}
           <div className="hidden md:flex items-center space-x-3">
-            {/* Theme Toggle */}
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-indigo-50 dark:hover:bg-gray-800 transition-all duration-200 border border-gray-200 dark:border-gray-700"
-              aria-label="Toggle theme"
-            >
-              {theme === 'dark' ? (
-                <Sun className="w-5 h-5 text-yellow-500" />
-              ) : (
-                <Moon className="w-5 h-5 text-indigo-600" />
-              )}
-            </button>
-
             {user ? (
               <div className="relative">
                 <button
@@ -292,29 +279,6 @@ export function NavBar({
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t border-gray-200 dark:border-gray-700 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md">
             <div className="space-y-2">
-              {/* Theme Toggle for Mobile */}
-              <button
-                onClick={toggleTheme}
-                className="w-full px-4 py-3 text-left hover:bg-indigo-50 dark:hover:bg-gray-800 flex items-center space-x-3 transition-colors duration-200 border-b border-gray-200 dark:border-gray-700"
-              >
-                {theme === 'dark' ? (
-                  <>
-                    <Sun className="w-5 h-5 text-yellow-500" />
-                    <div>
-                      <div className="font-medium text-gray-900 dark:text-gray-100">Light Mode</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">Switch to light theme</div>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <Moon className="w-5 h-5 text-indigo-600" />
-                    <div>
-                      <div className="font-medium text-gray-900 dark:text-gray-100">Dark Mode</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">Switch to dark theme</div>
-                    </div>
-                  </>
-                )}
-              </button>
 
               {navigationItems.map((item) => {
                 const Icon = item.icon;
