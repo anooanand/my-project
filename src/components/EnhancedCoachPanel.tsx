@@ -6,6 +6,7 @@ import { ComprehensiveFeedbackDisplay } from './ComprehensiveFeedbackDisplay';
 import { generateIntelligentResponse, type EnhancedCoachResponse } from '../lib/enhancedIntelligentResponseGenerator';
 import { ComprehensiveFeedbackAnalyzer } from '../lib/comprehensiveFeedbackAnalyzer';
 import type { SupportLevel } from '../lib/writingBuddyService';
+import { generateDynamicExamples, formatExamplesForDisplay } from '../lib/dynamicExampleGenerator';
 
 /**
  * Generates time-appropriate coaching messages for 40-minute writing test
@@ -616,6 +617,7 @@ class EnhancedCoachResponseGenerator {
 interface EnhancedCoachPanelProps {
   content: string;
   textType: string;
+  writingPrompt?: string;
   onContentChange?: (content: string) => void;
   timeElapsed?: number;
   wordCount?: number;
@@ -635,6 +637,7 @@ interface EnhancedCoachPanelProps {
 export function EnhancedCoachPanel({
   content,
   textType,
+  writingPrompt,
   onContentChange,
   timeElapsed = 0,
   wordCount,
@@ -1184,7 +1187,7 @@ export function EnhancedCoachPanel({
             <ContextualAICoachPanel
               content={content}
               textType={textType}
-              prompt={undefined}
+              prompt={writingPrompt}
             />
           </div>
         ) : currentView === 'builder' ? (

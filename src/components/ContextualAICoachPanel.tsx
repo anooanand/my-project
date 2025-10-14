@@ -6,10 +6,11 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Lightbulb, BookOpen, Target, TrendingUp, AlertCircle, CheckCircle, Eye } from 'lucide-react';
+import { Lightbulb, BookOpen, Target, TrendingUp, AlertCircle, CheckCircle, Eye, Sparkles } from 'lucide-react';
 import { generateCoachFeedback, type ContextualExample } from '../lib/contextualAICoach';
 import { generateShowDontTellFeedback } from '../lib/showDontTellAnalyzer';
 import { getRubricForType } from '../lib/nswRubricCriteria';
+import { generateDynamicExamples, type DynamicExample } from '../lib/dynamicExampleGenerator';
 
 interface ContextualAICoachPanelProps {
   content: string;
@@ -22,6 +23,7 @@ export function ContextualAICoachPanel({ content, textType, prompt }: Contextual
   const [showDontTellAnalysis, setShowDontTellAnalysis] = useState<any>(null);
   const [selectedExample, setSelectedExample] = useState<ContextualExample | null>(null);
   const [activeTab, setActiveTab] = useState<'examples' | 'rubric' | 'show-tell'>('examples');
+  const [dynamicExamples, setDynamicExamples] = useState<DynamicExample[]>([]);
 
   // Generate feedback when content changes (debounced)
   useEffect(() => {
@@ -36,12 +38,19 @@ export function ContextualAICoachPanel({ content, textType, prompt }: Contextual
           setShowDontTellAnalysis(showTellFeedback);
         }
       }
+
+      // Generate dynamic examples based on prompt and progress
+      if (prompt) {
+        const wordCount = content.trim().split(/\s+/).filter(w => w.length > 0).length;
+        const examples = generateDynamicExamples(prompt, textType, wordCount);
+        setDynamicExamples(examples);
+      }
     }, 1000);
 
     return () => clearTimeout(timer);
   }, [content, textType, prompt]);
 
-  if (!feedback) {
+  if (!feedback && dynamicExamples.length === 0) {
     return (
       <div className="p-6 text-center text-gray-500">
         <Lightbulb className="w-12 h-12 mx-auto mb-3 opacity-50" />
@@ -113,19 +122,52 @@ export function ContextualAICoachPanel({ content, textType, prompt }: Contextual
         {/* Tab Content */}
         {activeTab === 'examples' && (
           <div className="space-y-3">
+            {/* Dynamic Examples Based on Prompt */}
+            {dynamicExamples.length > 0 && (
+              <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4 mb-4">
+                <div className="flex items-start mb-3">
+                  <Sparkles className="w-5 h-5 text-purple-600 dark:text-purple-400 mr-2 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <h4 className="font-semibold text-purple-900 dark:text-purple-100 mb-1">
+                      {content.trim().length === 0 ? 'Ideas to Get Started' : 'Build on Your Progress'}
+                    </h4>
+                    <p className="text-xs text-purple-700 dark:text-purple-300 mb-3">
+                      Here are some ideas inspired by your prompt!
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  {dynamicExamples.map((example, index) => (
+                    <div key={index} className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-purple-200 dark:border-purple-700">
+                      <p className="text-sm text-gray-800 dark:text-gray-200 italic mb-2">
+                        "{example.text}"
+                      </p>
+                      {example.description && (
+                        <p className="text-xs text-purple-600 dark:text-purple-400 flex items-center">
+                          <Lightbulb className="w-3 h-3 mr-1" />
+                          {example.description}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <h4 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center">
               <BookOpen className="w-4 h-4 mr-2" />
               Contextual Examples for Your Writing
             </h4>
 
-            {feedback.contextualExamples.length === 0 ? (
+            {feedback && feedback.contextualExamples.length === 0 ? (
               <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
                 <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 inline mr-2" />
                 <span className="text-sm text-green-800 dark:text-green-200">
                   Great! Your writing includes all key {textType} elements.
                 </span>
               </div>
-            ) : (
+            ) : feedback && feedback.contextualExamples ? (
               feedback.contextualExamples.map((example: ContextualExample, index: number) => (
                 <div
                   key={index}
@@ -175,7 +217,7 @@ export function ContextualAICoachPanel({ content, textType, prompt }: Contextual
                   )}
                 </div>
               ))
-            )}
+            ) : null}
           </div>
         )}
 

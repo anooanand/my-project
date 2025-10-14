@@ -896,6 +896,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
           <EnhancedCoachPanel
           textType={textType}
           content={localContent}
+          writingPrompt={initialPrompt}
           wordCount={currentWordCount}
           user={user}
           darkMode={darkMode}
