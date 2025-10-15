@@ -6,48 +6,7 @@ import { WritingTypeSelectionModal } from './WritingTypeSelectionModal';
 import { PromptOptionsModal } from './PromptOptionsModal';
 import { CustomPromptModal } from './CustomPromptModal';
 import { generatePrompt } from '../lib/openai';
-import {
-  Mail,
-  CheckCircle,
-  Clock,
-  FileText,
-  PenTool,
-  BarChart3,
-  Settings,
-  X,
-  Star,
-  BookOpen,
-  Zap,
-  Heart,
-  Trophy,
-  Sparkles,
-  Smile,
-  Target,
-  Gift,
-  Flame,
-  TrendingUp,
-  Award,
-  Rocket,
-  Crown,
-  Gem,
-  Wand2,
-  Palette,
-  Music,
-  Camera,
-  Gamepad2,
-  HelpCircle,
-  ArrowRight,
-  Play,
-  Calendar,
-  Users,
-  ChevronRight,
-  Activity,
-  BookMarked,
-  Edit3,
-  Timer,
-  Brain,
-  Lightbulb
-} from 'lucide-react';
+import { Mail, CheckCircle, Clock, FileText, PenTool, BarChart3, Settings, X, Star, BookOpen, Zap, Heart, Trophy, Sparkles, Smile, Target, Gift, Flame, TrendingUp, Award, Rocket, Crown, Gem, Wand2, Palette, Music, Camera, Gamepad2, HelpCircle, ArrowRight, Play, Calendar, Users, ChevronRight, Activity, BookMarked, CreditCard as Edit3, Timer, Brain, Lightbulb } from 'lucide-react';
 
 interface DashboardProps {
   user?: any;
