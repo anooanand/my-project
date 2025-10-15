@@ -345,14 +345,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-30">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `radial-gradient(circle at 25% 25%, rgba(59, 130, 246, 0.1) 0%, transparent 50%), 
-                           radial-gradient(circle at 75% 75%, rgba(99, 102, 241, 0.1) 0%, transparent 50%)`
-        }}></div>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 relative">
 
       {/* Welcome Message Modal - Modern Design */}
       {showWelcomeMessage && (
@@ -469,42 +462,13 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header Section */}
         <div className="mb-12">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-            <div className="mb-6 lg:mb-0">
-              <h1 className="text-4xl lg:text-5xl font-bold text-slate-900 mb-3">
-                Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-purple-700">{getUserName()}</span>! 👋
-              </h1>
-              <p className="text-xl text-slate-600 font-medium">
-                Ready to create something amazing today?
-              </p>
-            </div>
-            
-            {/* Quick Stats */}
-            <div className="flex space-x-4">
-              <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-slate-200 shadow-sm">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                    <Trophy className="h-5 w-5 text-emerald-600" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-slate-900">12</p>
-                    <p className="text-sm text-slate-600">Essays Written</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-slate-200 shadow-sm">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <TrendingUp className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-slate-900">85%</p>
-                    <p className="text-sm text-slate-600">Avg Score</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div>
+            <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-3">
+              Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-700">{getUserName()}</span>! 👋
+            </h1>
+            <p className="text-xl text-gray-600">
+              Ready to create something amazing today?
+            </p>
           </div>
         </div>
 
@@ -525,12 +489,12 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
                 <ArrowRight className="h-6 w-6 text-white/70 group-hover:text-white group-hover:translate-x-1 transition-all duration-300" />
               </div>
               
-              <h2 className="heading-2 text-white mb-3">Start Writing</h2>
-              <p className="text-blue-100 text-lg mb-6 leading-relaxed">
+              <h2 className="text-2xl font-bold text-white mb-3">Start Writing</h2>
+              <p className="text-white text-lg mb-6 leading-relaxed">
                 Begin a new writing session with AI-powered guidance and real-time feedback
               </p>
-              
-              <div className="flex items-center space-x-4 text-blue-100">
+
+              <div className="flex items-center space-x-4 text-white">
                 <div className="flex items-center space-x-2">
                   <Brain className="h-4 w-4" />
                   <span className="text-sm">AI Assistance</span>
@@ -562,12 +526,12 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
                 <ArrowRight className="h-6 w-6 text-white/70 group-hover:text-white group-hover:translate-x-1 transition-all duration-300" />
               </div>
               
-              <h2 className="heading-2 text-white mb-3">Practice Exam</h2>
-              <p className="text-emerald-100 text-lg mb-6 leading-relaxed">
+              <h2 className="text-2xl font-bold text-white mb-3">Practice Exam</h2>
+              <p className="text-white text-lg mb-6 leading-relaxed">
                 Test your skills with timed practice sessions under real exam conditions
               </p>
-              
-              <div className="flex items-center space-x-4 text-emerald-100">
+
+              <div className="flex items-center space-x-4 text-white">
                 <div className="flex items-center space-x-2">
                   <Clock className="h-4 w-4" />
                   <span className="text-sm">Timed Sessions</span>
@@ -585,83 +549,73 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
           </div>
         </div>
 
-        {/* Progress & Activities Section */}
+        {/* Tools & Tips Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-          {/* Progress Overview */}
-          <div className="lg:col-span-2 bg-white/80 backdrop-blur-sm rounded-2xl p-8 border border-slate-200 shadow-sm">
+          {/* Writing Tools Overview */}
+          <div className="lg:col-span-2 bg-white/80 backdrop-blur-sm rounded-2xl p-8 border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="heading-3 text-slate-900">Your Progress</h3>
-              <button className="text-blue-600 hover:text-blue-700 font-medium text-sm flex items-center space-x-1">
-                <span>View All</span>
-                <ChevronRight className="h-4 w-4" />
-              </button>
+              <h3 className="text-2xl font-bold text-gray-900">Your Writing Tools</h3>
             </div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-              <div className="text-center">
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              <div className="text-center p-6 bg-blue-50 rounded-xl">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
                   <FileText className="h-8 w-8 text-white" />
                 </div>
-                <p className="text-3xl font-bold text-slate-900 mb-1">12</p>
-                <p className="text-slate-600 text-sm">Essays Completed</p>
+                <p className="text-gray-900 font-semibold mb-1">Multiple Text Types</p>
+                <p className="text-gray-600 text-sm">Narrative, Persuasive & More</p>
               </div>
-              
-              <div className="text-center">
-                <div className="w-20 h-20 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Award className="h-8 w-8 text-white" />
+
+              <div className="text-center p-6 bg-purple-50 rounded-xl">
+                <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Brain className="h-8 w-8 text-white" />
                 </div>
-                <p className="text-3xl font-bold text-slate-900 mb-1">85%</p>
-                <p className="text-slate-600 text-sm">Average Score</p>
+                <p className="text-gray-900 font-semibold mb-1">AI Feedback</p>
+                <p className="text-gray-600 text-sm">Real-time guidance</p>
               </div>
-              
-              <div className="text-center">
-                <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Flame className="h-8 w-8 text-white" />
+
+              <div className="text-center p-6 bg-green-50 rounded-xl">
+                <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Target className="h-8 w-8 text-white" />
                 </div>
-                <p className="text-3xl font-bold text-slate-900 mb-1">7</p>
-                <p className="text-slate-600 text-sm">Day Streak</p>
+                <p className="text-gray-900 font-semibold mb-1">NSW Aligned</p>
+                <p className="text-gray-600 text-sm">Curriculum specific</p>
               </div>
             </div>
-            
-            {/* Progress Bar */}
-            <div className="bg-slate-100 rounded-full h-3 mb-3">
-              <div className="bg-gradient-to-r from-blue-500 to-indigo-600 h-3 rounded-full" style={{ width: '68%' }}></div>
-            </div>
-            <p className="text-sm text-slate-600">68% towards your monthly goal of 20 essays</p>
           </div>
 
-          {/* Recent Activity */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-slate-200 shadow-sm">
-            <h3 className="text-xl font-bold text-slate-900 mb-6">Recent Activity</h3>
-            
+          {/* Quick Tips */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200 shadow-sm">
+            <h3 className="text-xl font-bold text-gray-900 mb-6">Writing Tips</h3>
+
             <div className="space-y-4">
               <div className="flex items-start space-x-3">
                 <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <BookOpen className="h-4 w-4 text-blue-600" />
+                  <Lightbulb className="h-4 w-4 text-blue-600" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-900">Completed Narrative Essay</p>
-                  <p className="text-xs text-slate-600">Score: 92% • 2 hours ago</p>
+                  <p className="text-sm font-medium text-gray-900">Show, Don't Tell</p>
+                  <p className="text-xs text-gray-600">Use vivid descriptions</p>
                 </div>
               </div>
-              
-              <div className="flex items-start space-x-3">
-                <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Trophy className="h-4 w-4 text-emerald-600" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-900">Achievement Unlocked</p>
-                  <p className="text-xs text-slate-600">"Writing Streak" • Yesterday</p>
-                </div>
-              </div>
-              
+
               <div className="flex items-start space-x-3">
                 <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Star className="h-4 w-4 text-purple-600" />
+                  <Brain className="h-4 w-4 text-purple-600" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-900">Practice Exam</p>
-                  <p className="text-xs text-slate-600">Score: 88% • 2 days ago</p>
+                  <p className="text-sm font-medium text-gray-900">Plan First</p>
+                  <p className="text-xs text-gray-600">Structure your ideas</p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3">
+                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900">Edit & Revise</p>
+                  <p className="text-xs text-gray-600">Polish your work</p>
                 </div>
               </div>
             </div>
@@ -669,36 +623,36 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 border border-slate-200 shadow-sm">
-          <h3 className="heading-3 text-slate-900 mb-6">Quick Actions</h3>
-          
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 border border-gray-200 shadow-sm">
+          <h3 className="text-2xl font-bold text-gray-900 mb-6">Quick Actions</h3>
+
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <button className="flex flex-col items-center p-4 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors group">
+            <button className="flex flex-col items-center p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors group">
               <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 group-hover:from-blue-200 group-hover:to-blue-300 rounded-xl flex items-center justify-center mb-3 transition-all">
                 <BookMarked className="h-6 w-6 text-blue-600" />
               </div>
-              <span className="text-sm font-medium text-slate-700">View Essays</span>
+              <span className="text-sm font-medium text-gray-700">View Essays</span>
             </button>
 
-            <button className="flex flex-col items-center p-4 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors group">
-              <div className="w-12 h-12 bg-gradient-to-br from-emerald-100 to-emerald-200 group-hover:from-emerald-200 group-hover:to-emerald-300 rounded-xl flex items-center justify-center mb-3 transition-all">
-                <BarChart3 className="h-6 w-6 text-emerald-600" />
+            <button className="flex flex-col items-center p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors group">
+              <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-green-200 group-hover:from-green-200 group-hover:to-green-300 rounded-xl flex items-center justify-center mb-3 transition-all">
+                <BarChart3 className="h-6 w-6 text-green-600" />
               </div>
-              <span className="text-sm font-medium text-slate-700">Progress</span>
+              <span className="text-sm font-medium text-gray-700">Progress</span>
             </button>
 
-            <button className="flex flex-col items-center p-4 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors group">
+            <button className="flex flex-col items-center p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors group">
               <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-purple-200 group-hover:from-purple-200 group-hover:to-purple-300 rounded-xl flex items-center justify-center mb-3 transition-all">
                 <Settings className="h-6 w-6 text-purple-600" />
               </div>
-              <span className="text-sm font-medium text-slate-700">Settings</span>
+              <span className="text-sm font-medium text-gray-700">Settings</span>
             </button>
 
-            <button className="flex flex-col items-center p-4 rounded-xl bg-slate-50 hover:bg-slate-100 transition-colors group">
+            <button className="flex flex-col items-center p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors group">
               <div className="w-12 h-12 bg-gradient-to-br from-orange-100 to-orange-200 group-hover:from-orange-200 group-hover:to-orange-300 rounded-xl flex items-center justify-center mb-3 transition-all">
                 <HelpCircle className="h-6 w-6 text-orange-600" />
               </div>
-              <span className="text-sm font-medium text-slate-700">Help</span>
+              <span className="text-sm font-medium text-gray-700">Help</span>
             </button>
           </div>
         </div>
