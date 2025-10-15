@@ -10,6 +10,7 @@ import { EnhancedWritingLayoutNSW } from './EnhancedWritingLayoutNSW';
 import { LearningPage } from './LearningPage';
 
 import { NavBar } from './NavBar';
+import { HomePage } from './HomePage';
 import { HeroSection } from './HeroSection';
 import { FeaturesSection } from './FeaturesSection';
 import { ToolsSection } from './ToolsSection';
@@ -371,7 +372,7 @@ function AppContent() {
         <Routes>
           <Route path="/" element={
             <>
-              <NavBar 
+              <NavBar
                 activePage={activePage}
                 onNavigate={handleNavigation}
                 user={user}
@@ -390,15 +391,13 @@ function AppContent() {
                 onForceSignOut={handleForceSignOut}
               />
               <div className="main-route-content">
-                <HeroSection onGetStarted={handleGetStarted} />
-                <FeaturesSection />
-                <EnhancedSuccessSection />
+                <HomePage onNavigate={handleNavigation} />
               </div>
             </>
           } />
           <Route path="/home" element={
             <>
-              <NavBar 
+              <NavBar
                 activePage={activePage}
                 onNavigate={handleNavigation}
                 user={user}
@@ -417,9 +416,7 @@ function AppContent() {
                 onForceSignOut={handleForceSignOut}
               />
               <div className="main-route-content">
-                <HeroSection onGetStarted={handleGetStarted} />
-                <FeaturesSection />
-                <EnhancedSuccessSection />
+                <HomePage onNavigate={handleNavigation} />
               </div>
             </>
           } />
