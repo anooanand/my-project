@@ -97,65 +97,93 @@ export function ExamSimulationMode({ onExit }: ExamSimulationModeProps) {
 
   if (isSubmitted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 p-4">
-        <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-8 text-center">
-          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Exam Submitted Successfully!</h1>
-          <p className="text-gray-600 mb-2">Word count: {wordCount} words</p>
-          <p className="text-gray-600 mb-6">Time used: {formatTime(30 * 60 - timeRemaining)}</p>
-          <button
-            onClick={onExit}
-            className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-          >
-            Return to Dashboard
-          </button>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
+        <div className="max-w-2xl w-full bg-white rounded-3xl shadow-2xl border border-gray-200 overflow-hidden">
+          <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-8 text-center">
+            <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-12 h-12 text-green-500" />
+            </div>
+            <h1 className="text-3xl font-bold text-white mb-2">Essay Submitted Successfully!</h1>
+            <p className="text-green-100 text-lg">Your practice exam has been completed</p>
+          </div>
+          <div className="p-8">
+            <div className="grid grid-cols-2 gap-4 mb-8">
+              <div className="bg-blue-50 rounded-xl p-4 text-center">
+                <p className="text-sm text-gray-600 mb-1">Word Count</p>
+                <p className="text-3xl font-bold text-gray-900">{wordCount}</p>
+                <p className="text-xs text-gray-500">words</p>
+              </div>
+              <div className="bg-purple-50 rounded-xl p-4 text-center">
+                <p className="text-sm text-gray-600 mb-1">Time Used</p>
+                <p className="text-3xl font-bold text-gray-900">{formatTime(30 * 60 - timeRemaining)}</p>
+                <p className="text-xs text-gray-500">minutes</p>
+              </div>
+            </div>
+            <button
+              onClick={onExit}
+              className="w-full px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all transform hover:scale-105 shadow-lg"
+            >
+              Return to Dashboard
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-6xl mx-auto px-4 py-3">
+      <div className="bg-white/80 backdrop-blur-md shadow-lg border-b border-gray-200 sticky top-0 z-10">
+        <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex justify-between items-center">
-            <div className="flex items-center">
-              <FileText className="w-6 h-6 text-blue-600 mr-2" />
-              <h1 className="text-xl font-bold text-gray-900">NSW Selective Writing Test - Practice Exam</h1>
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                <FileText className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-gray-900">NSW Selective Writing Test</h1>
+                <p className="text-sm text-gray-600">Practice Exam Mode</p>
+              </div>
             </div>
             <button
               onClick={onExit}
-              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              className="p-2.5 hover:bg-gray-100 rounded-xl transition-all duration-200 group"
               aria-label="Exit exam mode"
             >
-              <X className="w-5 h-5 text-gray-500" />
+              <X className="w-5 h-5 text-gray-400 group-hover:text-gray-600" />
             </button>
           </div>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto p-4">
+      <div className="max-w-6xl mx-auto p-6">
         {/* Timer and Controls */}
-        <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center">
-                <Clock className="w-5 h-5 text-gray-500 mr-2" />
-                <span className="text-gray-700 font-medium">Time Remaining:</span>
-                <span className={`text-2xl font-bold ml-2 ${getTimeColor()}`}>
-                  {formatTime(timeRemaining)}
-                </span>
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200 p-6 mb-6">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center space-y-4 md:space-y-0">
+            <div className="flex items-center space-x-6">
+              <div className="flex items-center space-x-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl flex items-center justify-center">
+                  <Clock className="w-6 h-6 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Time Remaining</p>
+                  <p className={`text-3xl font-bold ${getTimeColor()}`}>
+                    {formatTime(timeRemaining)}
+                  </p>
+                </div>
               </div>
-              <div className="text-sm text-gray-600">
-                Words: {wordCount}
+              <div className="h-12 w-px bg-gray-300"></div>
+              <div>
+                <p className="text-sm text-gray-600">Word Count</p>
+                <p className="text-3xl font-bold text-gray-900">{wordCount}</p>
               </div>
             </div>
-            <div className="flex space-x-2">
+            <div className="flex space-x-3">
               {!isActive && timeRemaining > 0 && !isSubmitted && (
                 <button
                   onClick={handleStartExam}
-                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                  className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 transition-all transform hover:scale-105 shadow-lg"
                 >
                   {timeRemaining === 30 * 60 ? 'Start Exam' : 'Resume'}
                 </button>
@@ -163,7 +191,7 @@ export function ExamSimulationMode({ onExit }: ExamSimulationModeProps) {
               {isActive && (
                 <button
                   onClick={handlePauseExam}
-                  className="px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 transition-colors"
+                  className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-semibold hover:from-amber-600 hover:to-orange-600 transition-all transform hover:scale-105 shadow-lg"
                 >
                   Pause
                 </button>
@@ -171,7 +199,7 @@ export function ExamSimulationMode({ onExit }: ExamSimulationModeProps) {
               {content.trim().length > 0 && !isSubmitted && (
                 <button
                   onClick={handleSubmit}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all transform hover:scale-105 shadow-lg"
                 >
                   Submit Essay
                 </button>
@@ -181,69 +209,104 @@ export function ExamSimulationMode({ onExit }: ExamSimulationModeProps) {
         </div>
 
         {/* Writing Prompt */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-4">
-          <h2 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">
-            <AlertCircle className="w-5 h-5 text-blue-600 mr-2" />
-            Writing Prompt
-          </h2>
-          <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200 p-6 mb-6">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl flex items-center justify-center">
+              <AlertCircle className="w-6 h-6 text-blue-600" />
+            </div>
+            <h2 className="text-xl font-bold text-gray-900">Writing Prompt</h2>
+          </div>
+          <div className="bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-blue-200 rounded-xl p-6">
             <p className="text-gray-800 leading-relaxed">
-              <strong>Persuasive Writing Task:</strong><br />
-              "Should schools replace traditional textbooks with digital devices like tablets and laptops?"
+              <strong className="text-lg text-blue-900">Persuasive Writing Task:</strong><br /><br />
+              <span className="text-base font-medium">"Should schools replace traditional textbooks with digital devices like tablets and laptops?"</span>
               <br /><br />
-              In your response, you should:
+              <strong className="text-gray-900">In your response, you should:</strong>
               <br />• Present a clear position on this issue
               <br />• Support your argument with relevant examples and evidence
               <br />• Consider and address opposing viewpoints
               <br />• Use persuasive language techniques effectively
               <br />• Organize your ideas in a logical structure
               <br /><br />
-              <em>Aim for 300-500 words. You have 30 minutes to complete this task.</em>
+              <em className="text-sm text-gray-600">Target: 300-500 words | Time: 30 minutes</em>
             </p>
           </div>
         </div>
 
         {/* Writing Area */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-3">Your Response</h3>
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xl font-bold text-gray-900">Your Response</h3>
+            <span className="text-sm text-gray-500">{!isActive && timeRemaining > 0 ? "Ready to start" : isActive ? "Writing in progress" : "Completed"}</span>
+          </div>
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            className="w-full h-96 p-4 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-            placeholder="Start writing your persuasive essay here..."
+            className="w-full h-96 p-6 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-base leading-relaxed transition-all"
+            placeholder="Click 'Start Exam' above to begin writing your persuasive essay..."
             disabled={!isActive && timeRemaining > 0}
           />
-          <div className="mt-2 text-sm text-gray-500">
-            {!isActive && timeRemaining > 0 && "Click 'Start Exam' to begin writing"}
-            {isActive && "Exam in progress - keep writing!"}
-            {timeRemaining === 0 && "Time's up! Your essay has been automatically submitted."}
+          <div className="mt-4 flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              {!isActive && timeRemaining > 0 && (
+                <div className="flex items-center space-x-2 text-blue-600">
+                  <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                  <span className="text-sm font-medium">Click 'Start Exam' to begin</span>
+                </div>
+              )}
+              {isActive && (
+                <div className="flex items-center space-x-2 text-green-600">
+                  <div className="w-2 h-2 bg-green-600 rounded-full animate-pulse"></div>
+                  <span className="text-sm font-medium">Exam in progress</span>
+                </div>
+              )}
+              {timeRemaining === 0 && (
+                <div className="flex items-center space-x-2 text-orange-600">
+                  <div className="w-2 h-2 bg-orange-600 rounded-full"></div>
+                  <span className="text-sm font-medium">Time's up - submitted automatically</span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Submit Confirmation Modal */}
       {showSubmitConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Confirm Submission</h3>
-            <p className="text-gray-600 mb-6">
-              Are you sure you want to submit your essay? You have {formatTime(timeRemaining)} remaining.
-              <br /><br />
-              Word count: {wordCount} words
-            </p>
-            <div className="flex space-x-3">
-              <button
-                onClick={cancelSubmit}
-                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
-              >
-                Continue Writing
-              </button>
-              <button
-                onClick={confirmSubmit}
-                className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-              >
-                Submit Essay
-              </button>
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full border border-gray-200 overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6">
+              <h3 className="text-2xl font-bold text-white mb-2">Confirm Submission</h3>
+              <p className="text-blue-100">Ready to submit your essay?</p>
+            </div>
+            <div className="p-6">
+              <div className="bg-blue-50 rounded-xl p-4 mb-6">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-gray-600">Time Remaining</span>
+                  <span className="text-lg font-bold text-gray-900">{formatTime(timeRemaining)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Word Count</span>
+                  <span className="text-lg font-bold text-gray-900">{wordCount} words</span>
+                </div>
+              </div>
+              <p className="text-gray-600 text-sm mb-6">
+                Once submitted, you won't be able to make any changes. Make sure you're happy with your essay before proceeding.
+              </p>
+              <div className="flex space-x-3">
+                <button
+                  onClick={cancelSubmit}
+                  className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
+                >
+                  Keep Writing
+                </button>
+                <button
+                  onClick={confirmSubmit}
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all transform hover:scale-105 shadow-lg"
+                >
+                  Submit
+                </button>
+              </div>
             </div>
           </div>
         </div>

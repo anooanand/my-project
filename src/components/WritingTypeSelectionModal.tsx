@@ -132,97 +132,85 @@ export function WritingTypeSelectionModal({ isOpen, onClose, onSelect }: Writing
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[85vh] overflow-hidden">
-        
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-3xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden border border-gray-200">
+
         {/* Header */}
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-700 dark:to-gray-800">
-          <div className="flex items-center justify-between">
+        <div className="px-8 py-6 border-b border-gray-200 bg-gradient-to-br from-blue-50 to-purple-50">
+          <div className="flex items-start justify-between">
             <div>
-              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-1">
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">
                 Choose Your Writing Type
               </h2>
-              <p className="text-gray-600 dark:text-gray-300 text-xs">
-                What kind of writing do you want to do today?
+              <p className="text-gray-600 text-base">
+                Select the type of writing you'd like to practice today
               </p>
             </div>
             <button
               onClick={onClose}
-              className="p-1.5 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full transition-colors"
+              className="p-2 hover:bg-white rounded-full transition-all duration-200 group"
+              aria-label="Close modal"
             >
-              <X className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+              <X className="h-6 w-6 text-gray-400 group-hover:text-gray-600" />
             </button>
           </div>
         </div>
 
         {/* Content */}
-        <div className="p-4 overflow-y-auto max-h-[calc(85vh-110px)]">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="p-8 overflow-y-auto max-h-[calc(90vh-180px)]">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {writingTypes.map((type) => (
-              <div
+              <button
                 key={type.id}
                 onClick={() => onSelect(type.id)}
-                className="relative p-3 cursor-pointer hover:shadow-lg transition-all duration-300 transform hover:scale-102 border-2 border-transparent hover:border-blue-300 bg-white dark:bg-gray-800 rounded-lg shadow-sm"
+                className="group relative p-6 text-left cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border-2 border-gray-200 hover:border-blue-400 bg-white rounded-xl"
               >
                 {/* Popular Badge */}
                 {type.isPopular && (
-                  <div className="absolute -top-1 -right-1 bg-yellow-400 text-yellow-900 px-1.5 py-0.5 rounded-full text-xs font-bold shadow-md flex items-center gap-0.5">
-                    <Star className="h-2 w-2 fill-yellow-900" />
+                  <div className="absolute -top-2 -right-2 bg-amber-400 text-amber-900 px-3 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
+                    <Star className="h-3 w-3 fill-amber-900" />
                     Popular
                   </div>
                 )}
 
-                {/* Header with Icon and Title */}
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center flex-1">
-                    <div className={`p-1.5 rounded-lg bg-gradient-to-r ${type.color} text-white shadow-sm mr-2`}>
-                      {type.icon}
-                    </div>
-                    <h3 className="text-sm font-bold text-gray-900 dark:text-white leading-tight">
-                      {type.name}
-                    </h3>
-                  </div>
-
-                  {/* Help Button */}
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowHelp(showHelp === type.id ? null : type.id);
-                    }}
-                    className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors flex-shrink-0"
-                  >
-                    <HelpCircle className="h-3 w-3 text-gray-400" />
-                  </button>
+                {/* Icon */}
+                <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${type.color} text-white shadow-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
+                  {React.cloneElement(type.icon as React.ReactElement, { className: "h-7 w-7" })}
                 </div>
 
+                {/* Title */}
+                <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                  {type.name}
+                </h3>
+
                 {/* Description */}
-                <p className="text-gray-600 dark:text-gray-300 text-xs mb-2 leading-snug">
+                <p className="text-gray-600 text-sm leading-relaxed">
                   {type.description}
                 </p>
 
-                {/* Action Button */}
-                <button className="w-full py-1.5 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-md font-semibold hover:from-blue-600 hover:to-purple-600 transition-all transform hover:scale-105 shadow-sm text-xs">
-                  Choose This Type
-                </button>
-              </div>
+                {/* Hover Arrow */}
+                <div className="mt-4 flex items-center text-blue-600 font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                  <span>Select</span>
+                  <svg className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </div>
+              </button>
             ))}
           </div>
         </div>
 
         {/* Footer */}
-        <div className="p-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center text-xs text-gray-600 dark:text-gray-400">
-              <HelpCircle className="h-3 w-3 mr-1" />
-              Click ? for details
-            </div>
-            <button
-              onClick={onClose}
-              className="px-3 py-1 bg-gray-200 text-gray-800 rounded-full font-semibold text-xs shadow-sm hover:bg-gray-300 transition-colors"
-            >
-              Cancel
-            </button>
-          </div>
+        <div className="px-8 py-5 border-t border-gray-200 bg-gray-50 flex items-center justify-between">
+          <p className="text-sm text-gray-500">
+            Need help deciding? Try one of the popular options!
+          </p>
+          <button
+            onClick={onClose}
+            className="px-6 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+          >
+            Cancel
+          </button>
         </div>
       </div>
     </div>
