@@ -202,7 +202,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
   // Calculate word count first (needed by other metrics)
   const currentWordCount = React.useMemo(() => {
-    return localContent?.trim() ? localContent.trim().split(/\s+/).length : 0;
+    return localContent.trim() ? localContent.trim().split(/\s+/).length : 0;
   }, [localContent]);
 
   // Calculate grammar stats
@@ -220,7 +220,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
   // Calculate additional writing metrics
   const writingMetrics = React.useMemo(() => {
-    const text = localContent?.trim();
+    const text = localContent.trim();
     if (!text) return {
       characters: 0,
       charactersNoSpaces: 0,
@@ -232,8 +232,8 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
     const characters = text.length;
     const charactersNoSpaces = text.replace(/\s/g, '').length;
-    const sentences = text?.split(/[.!?]+/).filter(s => s?.trim().length > 0).length;
-    const paragraphs = text?.split(/\n\n+/).filter(p => p?.trim().length > 0).length;
+    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0).length;
+    const paragraphs = text.split(/\n\n+/).filter(p => p.trim().length > 0).length;
     const readingTime = Math.ceil(currentWordCount / 200); // 200 words per minute
     const avgWordsPerSentence = sentences > 0 ? Math.round(currentWordCount / sentences) : 0;
 
@@ -289,156 +289,304 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
   // Update word count
   useEffect(() => {
-    const words = localContent?.trim().split(/\s+/).filter(word => word.length > 0);
+    const words = localContent.trim().split(/\s+/).filter(word => word.length > 0);
     const newWordCount = words.length;
     if (newWordCount !== wordCount && onWordCountChange) {
       onWordCountChange(newWordCount);
     }
   }, [localContent, wordCount, onWordCountChange]);
 
-  // Handle prompt generation
+  // Show prompt modal if no prompt exists
   useEffect(() => {
-    const fetchPrompt = async () => {
-      if (initialPrompt && !generatedPrompt && !customPromptInput) {
-        setGeneratedPrompt(initialPrompt);
-      } else if (!initialPrompt && !generatedPrompt && !customPromptInput && textType) {
-        try {
-          const response = await generatePrompt(textType);
-          setGeneratedPrompt(response);
-        } catch (error) {
-          console.error('Error generating prompt:', error);
-          setGeneratedPrompt('Failed to generate prompt. Please try again.');
-        }
-      }
-    };
-    fetchPrompt();
-  }, [initialPrompt, generatedPrompt, customPromptInput, textType]);
-
-  // Effect to handle external changes to prompt (e.g., from PromptOptionsModal)
-  useEffect(() => {
-    if (setPrompt && effectivePrompt) {
-      setPrompt(effectivePrompt);
+    if (!effectivePrompt && !popupFlowCompleted) {
+      setShowPromptOptionsModal(true);
     }
-  }, [effectivePrompt, setPrompt]);
+  }, [effectivePrompt, popupFlowCompleted]);
 
-  // Effect to handle popup flow completion
-  useEffect(() => {
-    if (popupFlowCompleted && onPopupCompleted) {
-      onPopupCompleted();
-    }
-  }, [popupFlowCompleted, onPopupCompleted]);
-
-  // Function to format elapsed time
   const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Handle content change from textarea
-  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setLocalContent(e.target.value);
-  };
+  const handleGenerateNewPrompt = useCallback(async () => {
+    try {
+      const newPrompt = await generatePrompt(textType, promptConfig.systemPrompts.promptGenerator);
+      setGeneratedPrompt(newPrompt);
+      setLocalContent(newPrompt);
+      if (setPrompt) {
+        setPrompt(newPrompt);
+      }
+      if (onChange) {
+        onChange(newPrompt);
+      }
+      setShowPromptOptionsModal(false);
+      if (onPopupCompleted) onPopupCompleted();
+    } catch (error) {
+      console.error("Error generating prompt:", error);
+      alert("Failed to generate a prompt. Please try again.");
+    }
+  }, [textType, setPrompt, onChange, onPopupCompleted]);
 
-  // Handle custom prompt input
-  const handleCustomPromptInput = (prompt: string) => {
-    setCustomPromptInput(prompt);
-    setGeneratedPrompt(null); // Clear generated prompt if custom is used
-  };
-
-  // Handle prompt selection from options
-  const handlePromptSelected = (prompt: string) => {
-    setGeneratedPrompt(prompt);
-    setCustomPromptInput(null); // Clear custom prompt if generated is used
+  const handleCustomPromptInput = useCallback((promptText: string) => {
+    setCustomPromptInput(promptText);
+    setLocalContent(promptText);
+    if (setPrompt) {
+      setPrompt(promptText);
+    }
+    if (onChange) {
+      onChange(promptText);
+    }
     setShowPromptOptionsModal(false);
+    if (onPopupCompleted) onPopupCompleted();
+  }, [setPrompt, onChange, onPopupCompleted]);
+
+  const handleContentChange = useCallback((newContent: string) => {
+    setLocalContent(newContent);
+    
+    if (newContent.trim().length > 0 && !isTimerRunning && elapsedTime === 0 && onStartTimer) {
+      onStartTimer();
+    }
+    
+    if (eventBus && detectNewParagraphs) {
+      const newParagraphs = detectNewParagraphs(content, newContent);
+      if (newParagraphs.length > 0) {
+        eventBus.emit('newParagraphsDetected', { paragraphs: newParagraphs, textType });
+      }
+    }
+  }, [content, isTimerRunning, elapsedTime, onStartTimer, textType]);
+
+  // Convert NSW report format to DetailedFeedback format
+  const convertNSWReportToDetailedFeedback = (report: any): any => {
+    const maxScore = 10;
+    return {
+      id: `nsw-${Date.now()}`,
+      overallScore: report.overallScore || 0,
+      criteria: {
+        ideasContent: {
+          score: Math.min(report.domains?.contentAndIdeas?.score || 0, maxScore),
+          weight: report.domains?.contentAndIdeas?.weight || 40,
+          strengths: (report.domains?.contentAndIdeas?.feedback || []).map((text: string) => ({ 
+            text, 
+            start: 0, 
+            end: 0 
+          })),
+          improvements: (report.areasForImprovement || [])
+            .filter((item: any) => item.toLowerCase().includes('idea') || item.toLowerCase().includes('content'))
+            .map((text: string) => ({
+              issue: text,
+              evidence: { text: '', start: 0, end: 0 },
+              suggestion: 'Consider developing this area further'
+            }))
+        },
+        structureOrganization: {
+          score: Math.min(report.domains?.textStructure?.score || 0, maxScore),
+          weight: report.domains?.textStructure?.weight || 20,
+          strengths: (report.domains?.textStructure?.feedback || []).map((text: string) => ({ 
+            text, 
+            start: 0, 
+            end: 0 
+          })),
+          improvements: (report.areasForImprovement || [])
+            .filter((item: any) => item.toLowerCase().includes('structure') || item.toLowerCase().includes('organization'))
+            .map((text: any) => ({
+              issue: text,
+              evidence: { text: '', start: 0, end: 0 },
+              suggestion: 'Work on improving your structure'
+            }))
+        },
+        languageVocab: {
+          score: Math.min(report.domains?.languageFeatures?.score || 0, maxScore),
+          weight: report.domains?.languageFeatures?.weight || 25,
+          strengths: (report.domains?.languageFeatures?.feedback || []).map((text: string) => ({ 
+            text, 
+            start: 0, 
+            end: 0 
+          })),
+          improvements: (report.areasForImprovement || [])
+            .filter((item: any) => item.toLowerCase().includes('language') || item.toLowerCase().includes('vocabulary'))
+            .map((text: string) => ({
+              issue: text,
+              evidence: { text: '', start: 0, end: 0 },
+              suggestion: 'Enhance your vocabulary'
+            }))
+        },
+        spellingPunctuationGrammar: {
+          score: Math.min(report.domains?.spellingAndGrammar?.score || 0, maxScore),
+          weight: report.domains?.spellingAndGrammar?.weight || 15,
+          strengths: (report.domains?.spellingAndGrammar?.feedback || []).map((text: string) => ({ 
+            text, 
+            start: 0, 
+            end: 0 
+          })),
+          improvements: (report.areasForImprovement || [])
+            .filter((item: any) => item.toLowerCase().includes('spelling') || item.toLowerCase().includes('grammar'))
+            .map((text: string) => ({
+              issue: text,
+              evidence: { text: '', start: 0, end: 0 },
+              suggestion: 'Review spelling and grammar rules'
+            }))
+        }
+      },
+      grammarCorrections: [],
+      vocabularyEnhancements: [],
+      overallGrade: report.overallGrade,
+      domains: report.domains,
+      detailedFeedback: report.detailedFeedback,
+      recommendations: report.recommendations,
+      strengths: report.strengths,
+      areasForImprovement: report.areasForImprovement,
+      essayContent: report.essayContent,
+      originalityReport: report.originalityReport
+    };
   };
 
-  // Function to toggle prompt visibility
-  const togglePromptVisibility = () => {
-    setHidePrompt(!hidePrompt);
-  };
+  // Calculate content status
+  const hasContent = localContent.trim().length > 0;
+    const showWordCountWarning = currentWordCount > 50;
 
-  // Function to handle AI evaluation
-  const handleAIEvaluation = useCallback(async () => {
-    if (!onSubmit) {
-      alert("Submit functionality is not available.");
-      return;
-    }
-    if (!localContent?.trim()) {
-      alert("Please write some content before submitting for evaluation.");
+  const handleSubmitForEvaluation = useCallback(async () => {
+    console.log('🎯 Submit button clicked!');
+    console.log('Content length:', localContent.length);
+    console.log('Has content:', hasContent);
+    
+    if (!localContent.trim()) {
+      alert("Please write something before submitting for evaluation.");
       return;
     }
 
-    setEvaluationProgress("Preparing for evaluation...");
-    setShowNSWEvaluation(true); // Show the modal immediately
+    if (onSubmit) {
+      console.log('Calling onSubmit prop...');
+      onSubmit(localContent);
+    }
+
+    console.log('Starting NSW evaluation...');
+    setEvaluationStatus("loading");
+    setShowNSWEvaluation(true);
+    setEvaluationProgress("Analyzing your writing with AI...");
 
     try {
-      onSubmit(localContent);
+      setTimeout(() => setEvaluationProgress("Checking grammar and structure..."), 1000);
+      setTimeout(() => setEvaluationProgress("Evaluating content and ideas..."), 2000);
+      setTimeout(() => setEvaluationProgress("Generating detailed feedback..."), 3000);
+
+      console.log('Calling AI NSW evaluation API...');
+
+      // Call AI evaluation backend
+      const response = await fetch("/.netlify/functions/nsw-ai-evaluation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          essayContent: localContent,
+          textType: textType,
+          prompt: effectivePrompt || ''
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to evaluate essay");
+      }
+
+      const aiReport = await response.json();
+      console.log('AI Report received:', aiReport);
+
+      setAiEvaluationReport(aiReport);
+      setShowNSWEvaluation(false);
+      setShowAIReport(true);
+      setEvaluationStatus("success");
+
+      console.log('✅ AI Evaluation complete!');
     } catch (error) {
-      console.error("Error during submission:", error);
+      console.error("❌ NSW AI evaluation error:", error);
       setEvaluationStatus("error");
-      setEvaluationProgress("An error occurred. Please try again.");
+      setShowNSWEvaluation(false);
+      alert(`There was an error during evaluation: ${error instanceof Error ? error.message : String(error)}. Please try again.`);
     }
   }, [localContent, onSubmit, textType, effectivePrompt]);
 
-  // Handle applying fixes from analysis
   const handleApplyFix = useCallback((fix: LintFix) => {
-    const { startIndex, endIndex, newText } = fix;
-    const newContent = localContent.substring(0, startIndex) + newText + localContent.substring(endIndex);
-    setLocalContent(newContent);
-    if (onChange) {
-      onChange(newContent);
+    if (textareaRef.current) {
+      const start = fix.evidence.start;
+      const end = fix.evidence.end;
+      const newContent = localContent.substring(0, start) + fix.replacement + localContent.substring(end);
+      setLocalContent(newContent);
+      if (onChange) {
+        onChange(newContent);
+      }
     }
   }, [localContent, onChange]);
 
   return (
-    <div className={`flex flex-col h-full ${darkMode ? 'bg-slate-900' : 'bg-gray-100'}`}>
-      {/* Prompt Section - Collapsible */}
-      {!hidePrompt && (
-        <div className={`border-b transition-all duration-300 ${isPromptCollapsed ? 'max-h-12' : 'max-h-96'} overflow-hidden ${darkMode ? 'bg-slate-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-          <div className="flex items-center justify-between px-6 py-2">
+    <div className={`flex h-screen w-full ${darkMode ? 'bg-slate-900 text-gray-100' : 'bg-gray-100 text-gray-900'}`}>
+      <div className="flex flex-col flex-1">
+        {/* Prompt Section */}
+        <div className={`flex-shrink-0 border-b ${darkMode ? 'bg-slate-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+          {/* Prompt Header */}
+          <div className="flex items-center justify-between px-4 py-2">
             <div className="flex items-center space-x-2">
-              <Target className={`w-5 h-5 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
-              <h2 className={`text-lg font-semibold ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>
-                Writing Prompt
-              </h2>
+              <LightbulbIcon className={`w-4 h-4 flex-shrink-0 ${
+                examModeLocal ? 'text-gray-600' : darkMode ? 'text-cyan-400' : 'text-blue-600'
+              }`} />
+              <h3 className={`font-medium text-sm flex-shrink-0 ${
+                examModeLocal ? 'text-gray-800' : darkMode ? 'text-gray-100' : 'text-blue-800'
+              }`}>
+                {examModeLocal ? 'NSW Selective Writing Exam' : 'Prompt'}
+              </h3>
+              <span className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${
+                examModeLocal
+                  ? 'bg-gray-200 text-gray-700'
+                  : darkMode ? 'bg-cyan-900/50 text-cyan-200 border border-cyan-700' : 'bg-blue-200 text-blue-800'
+              }`}>
+                {textType}
+              </span>
+              {!examModeLocal && isPromptCollapsed && effectivePrompt && (
+                <span className={`text-xs italic truncate ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                  {effectivePrompt.substring(0, 80)}...
+                </span>
+              )}
             </div>
-            <div className="flex items-center space-x-2">
+
+            {!examModeLocal && (
+            <button
+              onClick={() => setIsPromptCollapsed(!isPromptCollapsed)}
+              className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-xs font-medium flex-shrink-0 border ${
+                darkMode
+                  ? 'text-cyan-300 hover:text-cyan-100 hover:bg-slate-700 border-cyan-700'
+                  : 'text-blue-700 hover:text-blue-900 hover:bg-blue-50 border-blue-300'
+              }`}
+            >
+              {isPromptCollapsed ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
+              <span>{isPromptCollapsed ? 'Show Prompt' : 'Hide Prompt'}</span>
+            </button>
+            )}
+            {examModeLocal && (
               <button
-                onClick={() => setIsPromptCollapsed(!isPromptCollapsed)}
-                className={`p-1 rounded-full transition-colors ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-200'}`}
-                title={isPromptCollapsed ? "Expand Prompt" : "Collapse Prompt"}
+                onClick={() => setExamModeLocal(false)}
+                className="flex items-center space-x-1 px-3 py-1.5 rounded-md text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 border border-red-300 transition-colors"
               >
-                {isPromptCollapsed ? <ChevronDown className="w-5 h-5" /> : <ChevronUp className="w-5 h-5" />}
+                <X className="w-3 h-3" />
+                <span>Exit Exam Mode</span>
               </button>
-              <button
-                onClick={togglePromptVisibility}
-                className={`p-1 rounded-full transition-colors ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-200'}`}
-                title="Hide Prompt"
-              >
-                <EyeOff className="w-5 h-5" />
-              </button>
-            </div>
+            )}
           </div>
-          {!isPromptCollapsed && (
-            <div className="px-6 pb-4">
-              <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                {effectivePrompt || 'No prompt selected. Choose one below or start writing.'}
-              </p>
-              <div className="mt-3 flex space-x-2">
-                <button
-                  onClick={() => setShowPromptOptionsModal(true)}
-                  className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${darkMode ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-blue-100 text-blue-800 hover:bg-blue-200'}`}
-                >
-                  Change Prompt
-                </button>
+
+          {/* Prompt Content - Always visible in exam mode */}
+          {(examModeLocal || !isPromptCollapsed) && effectivePrompt && (
+            <div className="px-3 pb-2">
+              <div className={`p-2 rounded-lg border text-sm ${
+                examModeLocal
+                  ? 'bg-white border-gray-300 text-gray-800'
+                  : darkMode
+                  ? 'bg-slate-900/50 border-slate-700 text-gray-100'
+                  : 'bg-white border-blue-200 text-blue-900'
+              }`}>
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">{effectivePrompt}</p>
               </div>
             </div>
           )}
         </div>
-      )}
 
-      <div className="flex-1 flex flex-col overflow-hidden">
         {/* Toolbar Section - Clean & Minimal (hidden in exam mode) */}
         {!examModeLocal && (
         <div className={`flex items-center justify-between px-6 py-3 border-b flex-shrink-0 ${darkMode ? 'bg-slate-800 border-gray-700' : 'bg-white border-gray-200'}`}>
@@ -577,297 +725,311 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
               className={`flex items-center space-x-1 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
                 panelVisible
                   ? darkMode ? 'bg-blue-600 text-white' : 'bg-blue-600 text-white'
-                  : darkMode ? 'bg-slate-700 text-gray-300 hover:bg-slate-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  : darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'
               }`}
-              title={panelVisible ? "Hide AI Coach" : "Show AI Coach"}
+              title={panelVisible ? "Hide Writing Buddy" : "Show Writing Buddy"}
             >
-              <Sparkles className="w-3 h-3" />
-              <span>AI Coach</span>
+              {panelVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              <span>{panelVisible ? 'Hide Buddy' : 'Show Buddy'}</span>
             </button>
 
             {/* Settings Button */}
             <button
               onClick={() => setShowSettings(!showSettings)}
-              className={`flex items-center space-x-1 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+              className={`p-2 rounded-md transition-colors ${
                 showSettings
-                  ? darkMode ? 'bg-purple-600 text-white' : 'bg-purple-600 text-white'
-                  : darkMode ? 'bg-slate-700 text-gray-300 hover:bg-slate-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  ? darkMode ? 'bg-gray-700 text-gray-200' : 'bg-gray-200 text-gray-700'
+                  : darkMode ? 'text-gray-400 hover:bg-gray-700' : 'text-gray-500 hover:bg-gray-100'
               }`}
               title="Settings"
             >
-              <Settings className="w-3 h-3" />
-              <span>Settings</span>
+              <Settings className="w-4 h-4" />
             </button>
           </div>
         </div>
         )}
 
-        {/* Main Writing Area and Coach Panel */}
-        <div className="flex flex-1 overflow-hidden">
-          {/* Writing Area */}
-          <div className="flex-1 relative flex flex-col">
-            {/* Textarea with dynamic styling */}
-            <textarea
-              ref={textareaRef}
-              className={`flex-1 p-6 resize-none focus:outline-none ${darkMode ? 'bg-slate-900 text-gray-100' : 'bg-gray-100 text-gray-900'}`}
-              style={{
-                fontFamily: fontFamily,
-                fontSize: `${fontSize}px`,
-                lineHeight: lineHeight,
-                tabSize: 2,
-                MozTabSize: 2,
-              }}
-              value={localContent}
-              onChange={handleContentChange}
-              placeholder="Start writing your essay here..."
-            />
+        {/* Exam Mode Status Bar */}
+        {examModeLocal && (
+        <div className="flex items-center justify-center px-6 py-3 border-b flex-shrink-0 bg-gray-100 border-gray-300">
+          <div className="flex items-center space-x-6">
+            {/* Timer */}
+            <div className="flex items-center space-x-2">
+              <Clock className="w-4 h-4 text-gray-600" />
+              <span className="text-sm tabular-nums font-medium text-gray-800">
+                {formatTime(elapsedTime)}
+              </span>
+            </div>
 
-            {/* Inline Text Highlighter */}
-            {analysis && showGrammarHighlights && (
-              <InlineTextHighlighter
-                text={localContent}
-                analysis={analysis}
-                onApplyFix={handleApplyFix}
-                darkMode={darkMode}
-              />
-            )}
-
-            {/* Bottom Bar for Word Count, Timer, etc. (in exam mode) */}
-            {examModeLocal && (
-              <div className={`flex items-center justify-between px-6 py-3 border-t flex-shrink-0 ${darkMode ? 'bg-slate-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-                <div className="flex items-center space-x-6">
-                  {/* Timer */}
-                  <div className="flex items-center space-x-2">
-                    <Clock className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-                    <span className={`text-sm tabular-nums font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                      {formatTime(elapsedTime)}
-                    </span>
-                    <button
-                      onClick={() => isTimerRunning ? (onPauseTimer && onPauseTimer()) : (onStartTimer && onStartTimer())}
-                      className={`p-1 rounded transition-colors ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}
-                      title={isTimerRunning ? "Pause Timer" : "Start Timer"}
-                    >
-                      {isTimerRunning ? (
-                        <PauseCircle className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-                      ) : (
-                        <PlayCircle className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-                      )}
-                    </button>
-                    <button
-                      onClick={() => onResetTimer && onResetTimer()}
-                      className={`p-1 rounded transition-colors ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-100'}`}
-                      title="Reset Timer"
-                    >
-                      <RotateCcw className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-                    </button>
-                  </div>
-
-                  {/* Word Count */}
-                  <div className="flex items-center space-x-2">
-                    <FileText className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`} />
-                    <span className={`text-sm font-bold tabular-nums ${
-                      currentWordCount >= 400 ? 'text-green-600' :
-                      currentWordCount >= 250 ? 'text-blue-600' :
-                      darkMode ? 'text-gray-300' : 'text-gray-700'
-                    }`}>
-                      {currentWordCount} {currentWordCount === 1 ? 'word' : 'words'}
-                    </span>
-                  </div>
-
-                  {/* Pacing Indicator */}
-                  {currentWordCount > 0 && elapsedTime > 0 && (
-                    <div className={`text-sm ${darkMode ? 'text-orange-400' : 'text-orange-600'}`}>
-                      {currentWordCount < (elapsedTime / 60) * 6.25 ? (
-                        <span>Behind • Speed up a bit!</span>
-                      ) : (
-                        <span>On track</span>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                {/* Submit Button for Exam Mode */}
-                <NSWSubmitButton
-                  onSubmit={handleAIEvaluation}
-                  evaluationStatus={evaluationStatus}
-                  darkMode={darkMode}
-                />
-              </div>
-            )}
-
-            {/* Submit Button (outside exam mode, at the bottom) */}
-            {!examModeLocal && (
-              <div className={`flex justify-end p-4 border-t ${darkMode ? 'bg-slate-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-                <NSWSubmitButton
-                  onSubmit={handleAIEvaluation}
-                  evaluationStatus={evaluationStatus}
-                  darkMode={darkMode}
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Coach Panel */}
-          {panelVisible && (
-            <EnhancedCoachPanel
-              analysis={analysis}
-              onAnalysisChange={onAnalysisChange}
-              content={localContent}
-              textType={textType}
-              effectivePrompt={effectivePrompt}
-              darkMode={darkMode}
-              openAIConnected={openAIConnected}
-              openAILoading={openAILoading}
-              onApplyFix={handleApplyFix}
-              grammarStats={grammarStats}
-              writingMetrics={writingMetrics}
-              qualityScore={qualityScore}
-              showGrammarHighlights={showGrammarHighlights}
-              setShowGrammarHighlights={setShowGrammarHighlights}
-              expandedGrammarStats={expandedGrammarStats}
-              setExpandedGrammarStats={setExpandedGrammarStats}
-              lastSaved={lastSaved}
-              supportLevel={supportLevel}
-              setShowSupportLevelModal={setShowSupportLevelModal}
-            />
-          )}
-        </div>
-      </div>
-
-      {/* Modals */}
-      {showPlanningTool && (
-        <PlanningToolModal
-          onClose={() => setShowPlanningTool(false)}
-          textType={textType}
-          prompt={effectivePrompt}
-        />
-      )}
-      {showStructureModal && (
-        <StructureGuideModal
-          onClose={() => setShowStructureModal(false)}
-          darkMode={darkMode}
-          textType={textType}
-        />
-      )}
-      {showTipsModalLocal && (
-        <TipsModal
-          onClose={() => setShowTipsModalLocal(false)}
-          darkMode={darkMode}
-          textType={textType}
-        />
-      )}
-      {showSettings && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className={`rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto ${darkMode ? 'bg-slate-800' : 'bg-white'}`}>
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                  Writing Settings
-                </h2>
-                <button
-                  onClick={() => setShowSettings(false)}
-                  className={`${darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Font Family</label>
-                  <select
-                    value={fontFamily}
-                    onChange={(e) => onSettingsChange && onSettingsChange({ fontFamily: e.target.value })}
-                    className={`w-full p-2 border rounded-md ${darkMode ? 'bg-slate-700 border-slate-600 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`}
-                  >
-                    <option value="Inter">Inter</option>
-                    <option value="Roboto">Roboto</option>
-                    <option value="Open Sans">Open Sans</option>
-                    <option value="Lato">Lato</option>
-                    <option value="Montserrat">Montserrat</option>
-                    <option value="Source Code Pro">Source Code Pro</option>
-                  </select>
-                </div>
-                <div>
-                  <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Font Size</label>
-                  <input
-                    type="number"
-                    value={fontSize}
-                    onChange={(e) => onSettingsChange && onSettingsChange({ fontSize: parseInt(e.target.value) })}
-                    className={`w-full p-2 border rounded-md ${darkMode ? 'bg-slate-700 border-slate-600 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`}
-                    min="10"
-                    max="24"
-                  />
-                </div>
-                <div>
-                  <label className={`block text-sm font-medium mb-1 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Line Height</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={lineHeight}
-                    onChange={(e) => onSettingsChange && onSettingsChange({ lineHeight: parseFloat(e.target.value) })}
-                    className={`w-full p-2 border rounded-md ${darkMode ? 'bg-slate-700 border-slate-600 text-white' : 'bg-gray-50 border-gray-300 text-gray-900'}`}
-                    min="1.0"
-                    max="2.5"
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Dark Mode</label>
-                  <input
-                    type="checkbox"
-                    checked={darkMode}
-                    onChange={(e) => onSettingsChange && onSettingsChange({ darkMode: e.target.checked })}
-                    className="form-checkbox h-5 w-5 text-blue-600"
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Show Grammar Highlights</label>
-                  <input
-                    type="checkbox"
-                    checked={showGrammarHighlights}
-                    onChange={(e) => setShowGrammarHighlights(e.target.checked)}
-                    className="form-checkbox h-5 w-5 text-blue-600"
-                  />
-                </div>
-              </div>
+            {/* Word Count */}
+            <div className="flex items-center space-x-2">
+              <FileText className="w-4 h-4 text-gray-600" />
+              <span className={`text-sm font-bold tabular-nums ${
+                currentWordCount >= 400 ? 'text-green-600' :
+                currentWordCount >= 250 ? 'text-blue-600' :
+                'text-gray-700'
+              }`}>
+                {currentWordCount} {currentWordCount === 1 ? 'word' : 'words'}
+              </span>
             </div>
           </div>
         </div>
-      )}
-      {showNSWEvaluation && (
-        <NSWEvaluationReportGenerator
-          onClose={() => setShowNSWEvaluation(false)}
-          report={nswReport}
-          status={evaluationStatus}
-          progress={evaluationProgress}
+        )}
+
+        {/* Settings Panel */}
+        {showSettings && (
+          <div className={`p-3 border-b flex-shrink-0 ${darkMode ? 'bg-slate-800 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
+            <div className="flex items-center justify-between mb-3">
+              <h4 className={`font-medium text-sm ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                ⚙️ Writing Settings
+              </h4>
+              <button
+                onClick={() => setShowSettings(false)}
+                className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
+                  darkMode
+                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+                title="Close Settings"
+              >
+                <X className="w-4 h-4" />
+                <span>Close</span>
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {/* Font Family */}
+              <div className="space-y-2">
+                <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  📝 Font Family
+                </label>
+                <select
+                  value={fontFamily}
+                  onChange={(e) => onSettingsChange && onSettingsChange({ fontFamily: e.target.value })}
+                  className="w-full p-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                >
+                  <option value="Inter">Inter</option>
+                  <option value="Georgia">Georgia</option>
+                  <option value="Times New Roman">Times New Roman</option>
+                  <option value="Arial">Arial</option>
+                  <option value="Helvetica">Helvetica</option>
+                  <option value="Courier New">Courier New</option>
+                </select>
+              </div>
+              
+              {/* Font Size */}
+              <div className="space-y-2">
+                <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  📏 Font Size
+                </label>
+                <input
+                  type="number"
+                  value={fontSize}
+                  onChange={(e) => onSettingsChange && onSettingsChange({ fontSize: parseInt(e.target.value) })}
+                  className="w-full p-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+              </div>
+              
+              {/* Line Height */}
+              <div className="space-y-2">
+                <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  📐 Line Height
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={lineHeight}
+                  onChange={(e) => onSettingsChange && onSettingsChange({ lineHeight: parseFloat(e.target.value) })}
+                  className="w-full p-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-border-transparent"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Writing Area - Takes remaining space */}
+        <div className="flex-1 overflow-y-auto p-3">
+          <div className="relative h-full">
+            <textarea
+              ref={textareaRef}
+              value={localContent}
+              onChange={(e) => handleContentChange(e.target.value)}
+              className={`w-full h-full resize-none p-4 rounded-xl shadow-lg transition-all duration-300 text-base leading-relaxed focus:outline-none ${
+                darkMode
+                  ? 'bg-slate-900 text-gray-100 placeholder-gray-500 border-2 border-slate-700 focus:border-cyan-500 focus:shadow-cyan-500/20'
+                  : 'bg-white text-gray-800 placeholder-gray-400 border-2 border-gray-200 focus:border-blue-500 focus:shadow-blue-500/20'
+              }`}
+              style={{ fontFamily, fontSize: `${fontSize}px`, lineHeight }}
+              placeholder="Start writing your amazing story here! Let your creativity flow and bring your ideas to life..."
+            />
+
+            {/* Encouragement Message - Minimal */}
+            {currentWordCount >= 250 && currentWordCount < 300 && (
+              <div className={`absolute top-4 right-4 px-3 py-1.5 rounded-md text-xs font-medium backdrop-blur-sm ${
+                darkMode ? 'bg-blue-900/80 text-blue-200' : 'bg-blue-50/90 text-blue-700 border border-blue-200'
+              }`}>
+                🚀 Great progress! Keep going...
+              </div>
+            )}
+
+          </div>
+        </div>
+
+        {/* Bottom Submit Area */}
+        <div className="flex-shrink-0 p-3 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700">
+          <NSWSubmitButton
+            content={localContent}
+            wordCount={currentWordCount}
+            isSubmitting={evaluationStatus === 'loading'}
+            onSubmit={handleSubmitForEvaluation}
+            darkMode={darkMode}
+            minWords={50}
+          />
+        </div>
+      </div>
+
+      {/* AI Coach Panel - Conditional */}
+      {panelVisible && (
+        <div className={`w-[340px] flex-shrink-0 border-l overflow-y-auto transition-all duration-300 ${
+          darkMode ? 'bg-slate-800 border-gray-700' : 'bg-white border-gray-200'
+        }`}>
+          <EnhancedCoachPanel
+          textType={textType}
+          content={localContent}
+          writingPrompt={initialPrompt}
+          wordCount={currentWordCount}
+          user={user}
           darkMode={darkMode}
+          openAIConnected={openAIConnected}
+          openAILoading={openAILoading}
+          onAnalysisUpdate={(newAnalysis) => onAnalysisChange && onAnalysisChange(newAnalysis)}
+          onApplyFix={(fix: LintFix) => {
+            // Implement fix application logic here
+          }}
+          selectedText={selectedText}
+          isFocusMode={false}
+          supportLevel={supportLevel}
+          onSupportLevelChange={() => setShowSupportLevelModal(true)}
         />
+        </div>
       )}
+
+      {/* Modals */}
+      <PlanningToolModal
+        isOpen={showPlanningTool}
+        onClose={() => setShowPlanningTool(false)}
+        textType={textType}
+        onSavePlan={(plan) => {
+          console.log('Plan saved:', plan);
+          setShowPlanningTool(false);
+        }}
+      />
+      <StructureGuideModal
+        isOpen={showStructureModal}
+        onClose={() => setShowStructureModal(false)}
+      />
+      <TipsModal
+        isOpen={showTipsModalLocal}
+        onClose={() => setShowTipsModalLocal(false)}
+        textType={textType}
+      />
       {showAIReport && aiEvaluationReport && (
-        <ReportModal
-          onClose={() => setShowAIReport(false)}
+        <AIEvaluationReportDisplay
           report={aiEvaluationReport}
-          darkMode={darkMode}
+          essayText={localContent}
+          onClose={() => {
+            setShowAIReport(false);
+            setAiEvaluationReport(null);
+            if (onAnalysisChange) onAnalysisChange(null);
+          }}
         />
+      )}
+      {showReportModal && nswReport && (
+        <ReportModal
+          isOpen={showReportModal}
+          data={nswReport}
+          onClose={() => {
+            setShowReportModal(false);
+            setNswReport(null);
+            if (onAnalysisChange) onAnalysisChange(null);
+          }}
+          onApplyFix={handleApplyFix}
+          studentName="Student"
+          essayText={localContent}
+        />
+      )}
+      {showNSWEvaluation && evaluationStatus === "loading" && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className={`p-8 rounded-xl shadow-2xl text-center max-w-md ${
+            darkMode ? 'bg-slate-800 border border-slate-700' : 'bg-white'
+          }`}>
+            <div className="relative">
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-cyan-500 mx-auto mb-4"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Zap className="w-6 h-6 text-cyan-500 animate-pulse" />
+              </div>
+            </div>
+            <p className={`text-lg font-semibold mb-2 ${
+              darkMode ? 'text-gray-100' : 'text-gray-800'
+            }`}>Evaluating your writing...</p>
+            <p className={`text-sm mt-2 ${
+              darkMode ? 'text-gray-400' : 'text-gray-600'
+            }`}>{evaluationProgress}</p>
+            <div className="mt-4 flex justify-center space-x-1">
+              <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+              <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+              <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+            </div>
+            {evaluationStatus === "error" && (
+              <button
+                onClick={() => {
+                  setShowNSWEvaluation(false);
+                  setEvaluationStatus("idle");
+                }}
+                className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+              >
+                Close
+              </button>
+            )}
+          </div>
+        </div>
       )}
       {showPromptOptionsModal && (
         <PromptOptionsModal
           isOpen={showPromptOptionsModal}
           onClose={() => setShowPromptOptionsModal(false)}
-          onPromptSelected={handlePromptSelected}
-          onCustomSubmit={handleCustomPromptInput}
+          onGeneratePrompt={handleGenerateNewPrompt}
+          onCustomPrompt={handleCustomPromptInput}
           textType={textType}
           darkMode={darkMode}
         />
       )}
       {showSupportLevelModal && (
-        <SupportLevelSelector
-          isOpen={showSupportLevelModal}
-          onClose={() => setShowSupportLevelModal(false)}
-          currentLevel={supportLevel}
-          onSelectLevel={handleSupportLevelChange}
-          loading={supportLevelLoading}
-        />
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className={`rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto ${darkMode ? 'bg-slate-800' : 'bg-white'}`}>
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  Writing Buddy Support Level
+                </h2>
+                <button
+                  onClick={() => setShowSupportLevelModal(false)}
+                  className={`${darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              <SupportLevelSelector
+                currentLevel={supportLevel}
+                onLevelChange={handleSupportLevelChange}
+                showRecommendations={true}
+              />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
 }
+
+export default EnhancedWritingLayoutNSW;
