@@ -202,7 +202,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
   // Calculate word count first (needed by other metrics)
   const currentWordCount = React.useMemo(() => {
-    return localContent.trim() ? localContent.trim().split(/\s+/).length : 0;
+    return localContent?.trim() ? localContent.trim().split(/\s+/).length : 0;
   }, [localContent]);
 
   // Calculate grammar stats
@@ -220,7 +220,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
   // Calculate additional writing metrics
   const writingMetrics = React.useMemo(() => {
-    const text = localContent.trim();
+    const text = localContent?.trim();
     if (!text) return {
       characters: 0,
       charactersNoSpaces: 0,
@@ -232,8 +232,8 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
     const characters = text.length;
     const charactersNoSpaces = text.replace(/\s/g, '').length;
-    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0).length;
-    const paragraphs = text.split(/\n\n+/).filter(p => p.trim().length > 0).length;
+    const sentences = text?.split(/[.!?]+/).filter(s => s?.trim().length > 0).length;
+    const paragraphs = text?.split(/\n\n+/).filter(p => p?.trim().length > 0).length;
     const readingTime = Math.ceil(currentWordCount / 200); // 200 words per minute
     const avgWordsPerSentence = sentences > 0 ? Math.round(currentWordCount / sentences) : 0;
 
@@ -289,7 +289,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
   // Update word count
   useEffect(() => {
-    const words = localContent.trim().split(/\s+/).filter(word => word.length > 0);
+    const words = localContent?.trim().split(/\s+/).filter(word => word.length > 0);
     const newWordCount = words.length;
     if (newWordCount !== wordCount && onWordCountChange) {
       onWordCountChange(newWordCount);
@@ -344,7 +344,6 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
   const handleCustomPromptInput = (prompt: string) => {
     setCustomPromptInput(prompt);
     setGeneratedPrompt(null); // Clear generated prompt if custom is used
-    setShowPromptOptionsModal(false);
   };
 
   // Handle prompt selection from options
@@ -365,140 +364,81 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
       alert("Submit functionality is not available.");
       return;
     }
-    if (!localContent.trim()) {
+    if (!localContent?.trim()) {
       alert("Please write some content before submitting for evaluation.");
       return;
     }
 
-    setEvaluationStatus("loading");
     setEvaluationProgress("Preparing for evaluation...");
     setShowNSWEvaluation(true); // Show the modal immediately
 
     try {
-      // Simulate progress for demonstration
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setEvaluationProgress("Analyzing content structure...");
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setEvaluationProgress("Assessing language and grammar...");
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setEvaluationProgress("Generating comprehensive report...");
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Call the onSubmit prop which should trigger the actual evaluation
       onSubmit(localContent);
-
-      // Assuming onSubmit eventually sets the analysis prop or triggers a report generation
-      // For now, we'll simulate a report being generated
-      const simulatedReport = {
-        overallScore: qualityScore,
-        feedbackSummary: "This is a simulated feedback summary based on your writing. Keep up the good work!",
-        grammarIssues: [
-          { type: "Weak Verbs", count: grammarStats.weakVerbs, example: "is, are" },
-          { type: "Overused Words", count: grammarStats.overused, example: "very, really" },
-          { type: "Passive Voice", count: grammarStats.passive, example: "was done" },
-          { type: "Weak Adjectives", count: grammarStats.weakAdjectives, example: "good, bad" },
-        ],
-        writingMetrics: writingMetrics,
-        suggestions: [
-          "Vary your sentence structure for better flow.",
-          "Use stronger verbs to make your writing more impactful.",
-          "Expand on your ideas with more specific details."
-        ]
-      };
-      setNswReport(simulatedReport);
-      setAiEvaluationReport(simulatedReport); // Use the same for AI report for now
-      setEvaluationStatus("success");
-      setShowAIReport(true); // Show the AI report after generation
     } catch (error) {
-      console.error("AI Evaluation Error:", error);
+      console.error("Error during submission:", error);
       setEvaluationStatus("error");
-      setShowNSWEvaluation(false);
-      alert(`There was an error during evaluation: ${error instanceof Error ? error.message : String(error)}. Please try again.`);
+      setEvaluationProgress("An error occurred. Please try again.");
     }
-  }, [localContent, onSubmit, textType, effectivePrompt, qualityScore, grammarStats, writingMetrics]);
+  }, [localContent, onSubmit, textType, effectivePrompt]);
 
+  // Handle applying fixes from analysis
   const handleApplyFix = useCallback((fix: LintFix) => {
-    if (textareaRef.current) {
-      const start = fix.evidence.start;
-      const end = fix.evidence.end;
-      const newContent = localContent.substring(0, start) + fix.replacement + localContent.substring(end);
-      setLocalContent(newContent);
-      if (onChange) {
-        onChange(newContent);
-      }
+    const { startIndex, endIndex, newText } = fix;
+    const newContent = localContent.substring(0, startIndex) + newText + localContent.substring(endIndex);
+    setLocalContent(newContent);
+    if (onChange) {
+      onChange(newContent);
     }
   }, [localContent, onChange]);
 
   return (
-    <div className={`flex h-screen w-full ${darkMode ? 'bg-slate-900 text-gray-100' : 'bg-gray-100 text-gray-900'}`}>
-      <div className="flex flex-col flex-1">
-        {/* Prompt Section */}
-        <div className={`flex-shrink-0 border-b ${darkMode ? 'bg-slate-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-          {/* Prompt Header */}
-          <div className="flex items-center justify-between px-4 py-2">
+    <div className={`flex flex-col h-full ${darkMode ? 'bg-slate-900' : 'bg-gray-100'}`}>
+      {/* Prompt Section - Collapsible */}
+      {!hidePrompt && (
+        <div className={`border-b transition-all duration-300 ${isPromptCollapsed ? 'max-h-12' : 'max-h-96'} overflow-hidden ${darkMode ? 'bg-slate-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+          <div className="flex items-center justify-between px-6 py-2">
             <div className="flex items-center space-x-2">
-              <LightbulbIcon className={`w-4 h-4 flex-shrink-0 ${
-                examModeLocal ? 'text-gray-600' : darkMode ? 'text-cyan-400' : 'text-blue-600'
-              }`} />
-              <h3 className={`font-medium text-sm flex-shrink-0 ${
-                examModeLocal ? 'text-gray-800' : darkMode ? 'text-gray-100' : 'text-blue-800'
-              }`}>
-                {examModeLocal ? 'NSW Selective Writing Exam' : 'Prompt'}
-              </h3>
-              <span className={`text-xs px-2 py-0.5 rounded-full flex-shrink-0 ${
-                examModeLocal
-                  ? 'bg-gray-200 text-gray-700'
-                  : darkMode ? 'bg-cyan-900/50 text-cyan-200 border border-cyan-700' : 'bg-blue-200 text-blue-800'
-              }`}>
-                {textType}
-              </span>
-              {!examModeLocal && isPromptCollapsed && effectivePrompt && (
-                <span className={`text-xs italic truncate ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                  {effectivePrompt.substring(0, 80)}...
-                </span>
-              )}
+              <Target className={`w-5 h-5 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
+              <h2 className={`text-lg font-semibold ${darkMode ? 'text-gray-100' : 'text-gray-800'}`}>
+                Writing Prompt
+              </h2>
             </div>
-
-            {!examModeLocal && (
-            <button
-              onClick={() => setIsPromptCollapsed(!isPromptCollapsed)}
-              className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-xs font-medium flex-shrink-0 border ${
-                darkMode
-                  ? 'text-cyan-300 hover:text-cyan-100 hover:bg-slate-700 border-cyan-700'
-                  : 'text-blue-700 hover:text-blue-900 hover:bg-blue-50 border-blue-300'
-              }`}
-            >
-              {isPromptCollapsed ? <ChevronDown className="w-3 h-3" /> : <ChevronUp className="w-3 h-3" />}
-              <span>{isPromptCollapsed ? 'Show Prompt' : 'Hide Prompt'}</span>
-            </button>
-            )}
-            {examModeLocal && (
+            <div className="flex items-center space-x-2">
               <button
-                onClick={() => setExamModeLocal(false)}
-                className="flex items-center space-x-1 px-3 py-1.5 rounded-md text-xs font-medium bg-red-100 text-red-700 hover:bg-red-200 border border-red-300 transition-colors"
+                onClick={() => setIsPromptCollapsed(!isPromptCollapsed)}
+                className={`p-1 rounded-full transition-colors ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-200'}`}
+                title={isPromptCollapsed ? "Expand Prompt" : "Collapse Prompt"}
               >
-                <X className="w-3 h-3" />
-                <span>Exit Exam Mode</span>
+                {isPromptCollapsed ? <ChevronDown className="w-5 h-5" /> : <ChevronUp className="w-5 h-5" />}
               </button>
-            )}
+              <button
+                onClick={togglePromptVisibility}
+                className={`p-1 rounded-full transition-colors ${darkMode ? 'hover:bg-gray-700' : 'hover:bg-gray-200'}`}
+                title="Hide Prompt"
+              >
+                <EyeOff className="w-5 h-5" />
+              </button>
+            </div>
           </div>
-
-          {/* Prompt Content - Always visible in exam mode */}
-          {(examModeLocal || !isPromptCollapsed) && effectivePrompt && (
-            <div className="px-3 pb-2">
-              <div className={`p-2 rounded-lg border text-sm ${
-                examModeLocal
-                  ? 'bg-white border-gray-300 text-gray-800'
-                  : darkMode
-                  ? 'bg-slate-900/50 border-slate-700 text-gray-100'
-                  : 'bg-white border-blue-200 text-blue-900'
-              }`}>
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">{effectivePrompt}</p>
+          {!isPromptCollapsed && (
+            <div className="px-6 pb-4">
+              <p className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                {effectivePrompt || 'No prompt selected. Choose one below or start writing.'}
+              </p>
+              <div className="mt-3 flex space-x-2">
+                <button
+                  onClick={() => setShowPromptOptionsModal(true)}
+                  className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${darkMode ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-blue-100 text-blue-800 hover:bg-blue-200'}`}
+                >
+                  Change Prompt
+                </button>
               </div>
             </div>
           )}
         </div>
+      )}
 
+      <div className="flex-1 flex flex-col overflow-hidden">
         {/* Toolbar Section - Clean & Minimal (hidden in exam mode) */}
         {!examModeLocal && (
         <div className={`flex items-center justify-between px-6 py-3 border-b flex-shrink-0 ${darkMode ? 'bg-slate-800 border-gray-700' : 'bg-white border-gray-200'}`}>
@@ -798,7 +738,6 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
       {showPlanningTool && (
         <PlanningToolModal
           onClose={() => setShowPlanningTool(false)}
-          darkMode={darkMode}
           textType={textType}
           prompt={effectivePrompt}
         />
@@ -912,39 +851,23 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
       )}
       {showPromptOptionsModal && (
         <PromptOptionsModal
+          isOpen={showPromptOptionsModal}
           onClose={() => setShowPromptOptionsModal(false)}
           onPromptSelected={handlePromptSelected}
-          onCustomPrompt={handleCustomPromptInput}
+          onCustomSubmit={handleCustomPromptInput}
           textType={textType}
           darkMode={darkMode}
         />
       )}
       {showSupportLevelModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className={`rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto ${darkMode ? 'bg-slate-800' : 'bg-white'}`}>
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                  Writing Buddy Support Level
-                </h2>
-                <button
-                  onClick={() => setShowSupportLevelModal(false)}
-                  className={`${darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-              <SupportLevelSelector
-                currentLevel={supportLevel}
-                onLevelChange={handleSupportLevelChange}
-                showRecommendations={true}
-              />
-            </div>
-          </div>
-        </div>
+        <SupportLevelSelector
+          isOpen={showSupportLevelModal}
+          onClose={() => setShowSupportLevelModal(false)}
+          currentLevel={supportLevel}
+          onSelectLevel={handleSupportLevelChange}
+          loading={supportLevelLoading}
+        />
       )}
     </div>
   );
 }
-
-export default EnhancedWritingLayoutNSW;
