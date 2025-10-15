@@ -23,14 +23,19 @@ export function SignInForm({ onSuccess, onSignUpClick }: SignInFormProps) {
 
     try {
       const { error: signInError, user } = await signIn(email, password);
-      
+
       if (signInError) {
-        setError(signInError.message);
+        // Provide a more helpful error message
+        if (signInError.message.includes('Invalid login credentials')) {
+          setError('The email or password you entered is incorrect. Please try again or use "Forgot your password?" to reset it.');
+        } else {
+          setError(signInError.message);
+        }
       } else if (user) {
         onSuccess(user);
       }
-    } catch (err) {
-      setError('An unexpected error occurred. Please try again.');
+    } catch (err: any) {
+      setError(err?.message || 'An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
     }
