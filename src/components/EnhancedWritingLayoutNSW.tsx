@@ -294,64 +294,95 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
             end: 0 
           })),
           improvements: (report.areasForImprovement || [])
-            .filter((item: any) => item.toLowerCase().includes('spelling') || item.toLowerCase().includes('grammar') || item.toLowerCase().includes('punctuation'))
+            .filter((item: any) => item.toLowerCase().includes('spelling') || item.toLowerCase().includes('grammar'))
             .map((text: string) => ({
               issue: text,
               evidence: { text: '', start: 0, end: 0 },
-              suggestion: 'Check your spelling, punctuation, and grammar'
+              suggestion: 'Review spelling and grammar rules'
             }))
         }
       },
-      feedback: report.overallFeedback || 'No overall feedback provided.',
-      suggestions: report.areasForImprovement || [],
-      lint: [],
-      timestamp: new Date().toISOString(),
+      grammarCorrections: [],
+      vocabularyEnhancements: [],
+      overallGrade: report.overallGrade,
+      domains: report.domains,
+      detailedFeedback: report.detailedFeedback,
+      recommendations: report.recommendations,
+      strengths: report.strengths,
+      areasForImprovement: report.areasForImprovement,
+      essayContent: report.essayContent,
+      originalityReport: report.originalityReport
     };
   };
 
-  const handleSubmitForEvaluation = async () => {
-    if (onSubmit) {
-      onSubmit(localContent);
+  // Calculate word count and content status
+  const hasContent = localContent.trim().length > 0;
+  const currentWordCount = localContent.trim() ? localContent.trim().split(/\s+/).length : 0;
+  const showWordCountWarning = currentWordCount > 300;
+
+  const handleSubmitForEvaluation = useCallback(async () => {
+    console.log('🎯 Submit button clicked!');
+    console.log('Content length:', localContent.length);
+    console.log('Has content:', hasContent);
+    
+    if (!localContent.trim()) {
+      alert("Please write something before submitting for evaluation.");
       return;
     }
 
+    if (onSubmit) {
+      console.log('Calling onSubmit prop...');
+      onSubmit(localContent);
+    }
+
+    console.log('Starting NSW evaluation...');
     setEvaluationStatus("loading");
     setShowNSWEvaluation(true);
-    setEvaluationProgress("Generating NSW Evaluation Report...");
+    setEvaluationProgress("Analyzing your writing...");
 
     try {
-      const generator = new NSWEvaluationReportGenerator();
-      const report = await generator.generateReport(localContent, textType, (progress) => {
-        setEvaluationProgress(progress);
+      setTimeout(() => setEvaluationProgress("Checking grammar and structure..."), 1000);
+      setTimeout(() => setEvaluationProgress("Evaluating content and ideas..."), 2000);
+      setTimeout(() => setEvaluationProgress("Generating detailed feedback..."), 3000);
+
+      console.log('Calling NSWEvaluationReportGenerator.generateReport...');
+      const report = NSWEvaluationReportGenerator.generateReport({
+        essayContent: localContent,
+        textType: textType,
+        prompt: effectivePrompt || '',
+        wordCount: currentWordCount,
+        targetWordCountMin: 200,
+        targetWordCountMax: 300,
       });
       
-      setNswReport(report);
-      setEvaluationStatus("success");
-      setShowReportModal(true);
+      console.log('Report generated:', report);
       
-      if (onAnalysisChange) {
-        const detailedFeedback = convertNSWReportToDetailedFeedback(report);
-        onAnalysisChange(detailedFeedback);
-      }
-
-    } catch (error) {
-      console.error("Error during NSW evaluation:", error);
-      setEvaluationStatus("error");
-      setEvaluationProgress("An error occurred during evaluation.");
-    } finally {
+      const convertedReport = convertNSWReportToDetailedFeedback(report);
+      console.log('Converted report:', convertedReport);
+      
+      setNswReport(convertedReport);
       setShowNSWEvaluation(false);
+      setShowReportModal(true);
+      setEvaluationStatus("success");
+      
+      console.log('✅ Evaluation complete!');
+    } catch (error) {
+      console.error("❌ NSW evaluation error:", error);
+      setEvaluationStatus("error");
+      setShowNSWEvaluation(false);
+      alert(`There was an error evaluating your writing: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`);
     }
-  };
+  }, [localContent, textType, effectivePrompt, currentWordCount, onSubmit, hasContent]);
 
-  const handleApplyFix = (fix: LintFix) => {
-    const { start, end, suggestion } = fix;
-    const newContent = localContent.substring(0, start) + suggestion + localContent.substring(end);
-    handleContentChange(newContent);
-  };
-
-  const currentWordCount = localContent.trim() ? localContent.trim().split(/\s+/).length : 0;
-  const showWordCountWarning = currentWordCount > 800;
-  const hasContent = currentWordCount > 0;
+  const handleApplyFix = useCallback((fix: LintFix) => {
+    try {
+      const { range, text } = fix;
+      const newContent = localContent.substring(0, range[0]) + text + localContent.substring(range[1]);
+      handleContentChange(newContent);
+    } catch (error) {
+      console.error("Error applying fix:", error);
+    }
+  }, [localContent, handleContentChange]);
 
   return (
     <div className={`flex h-screen transition-colors duration-300 ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
@@ -386,99 +417,87 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
         {/* Enhanced Writing Prompt Section */}
         <div className={`transition-all duration-300 border-b shadow-sm flex-shrink-0 ${
           isPromptCollapsed ? 'h-16' : 'min-h-[140px]'
-        } ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
-          <div className="p-4 h-full flex flex-col">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center space-x-3">
-                <Target className={`w-5 h-5 ${darkMode ? 'text-purple-400' : 'text-purple-600'}`} />
-                <h3 className={`font-semibold text-lg ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
-                  Writing Prompt
-                </h3>
-              </div>
-              <div className="flex items-center space-x-2">
-                <button
-                  onClick={() => setHidePrompt(!hidePrompt)}
-                  className={`p-2 rounded-lg transition-colors ${
-                    hidePrompt
-                      ? darkMode ? 'bg-gray-700 text-gray-200' : 'bg-gray-200 text-gray-700'
-                      : darkMode ? 'text-gray-400 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-200'
-                  }`}
-                  title={hidePrompt ? "Show Prompt" : "Hide Prompt"}
-                >
-                  {hidePrompt ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                </button>
-                <button
-                  onClick={() => setIsPromptCollapsed(!isPromptCollapsed)}
-                  className={`p-2 rounded-lg transition-colors ${
-                    darkMode ? 'text-gray-400 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-200'
-                  }`}
-                  title={isPromptCollapsed ? "Expand Prompt" : "Collapse Prompt"}
-                >
-                  {isPromptCollapsed ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
-                </button>
-              </div>
+        } ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-blue-50 border-blue-200'}`}>
+          <div className="flex items-center justify-between p-4">
+            <div className="flex items-center">
+              <LightbulbIcon className={`w-5 h-5 mr-2 ${darkMode ? 'text-blue-400' : 'text-blue-600'}`} />
+              <h3 className={`font-semibold text-base ${darkMode ? 'text-blue-200' : 'text-blue-800'}`}>
+                Your Writing Prompt
+              </h3>
+              <span className={`ml-3 text-xs px-2 py-1 rounded-full ${
+                darkMode ? 'bg-blue-800/50 text-blue-200' : 'bg-blue-200 text-blue-800'
+              }`}>
+                {textType}
+              </span>
             </div>
-            {!isPromptCollapsed && (
-              <div className={`flex-1 overflow-y-auto pr-2 text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                <p className={hidePrompt ? 'blur-sm' : ''}>
-                  {effectivePrompt || 'No prompt loaded. Generate or enter one.'}
-                </p>
-              </div>
-            )}
+            
+            <button
+              onClick={() => setIsPromptCollapsed(!isPromptCollapsed)}
+              className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
+                darkMode
+                  ? 'text-blue-300 hover:text-blue-100 hover:bg-blue-800/30'
+                  : 'text-blue-700 hover:text-blue-900 hover:bg-blue-200'
+              }`}
+            >
+              {isPromptCollapsed ? (
+                <><ChevronDown className="w-4 h-4" /><span>Show Prompt</span></>
+              ) : (
+                <><ChevronUp className="w-4 h-4" /><span>Hide Prompt</span></>
+              )}
+            </button>
           </div>
+          {!isPromptCollapsed && (
+            <div className={`px-4 pb-4 text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+              <p className="whitespace-pre-wrap">{effectivePrompt}</p>
+            </div>
+          )}
         </div>
 
-        {/* Toolbar Section */}
-        <div className={`flex-shrink-0 border-b p-2 flex items-center justify-between ${
+        {/* Writing Controls Bar */}
+        <div className={`flex items-center justify-between p-3 border-b flex-shrink-0 ${
           darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
         }`}>
           <div className="flex items-center space-x-4">
-            {/* Planning & Structure Tools */}
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setShowPlanningTool(true)}
-                className={`flex items-center space-x-2 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
-                  darkMode
-                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-                title="Open Planning Tool"
-              >
-                <PenTool className="w-4 h-4" />
-                <span>Plan</span>
-              </button>
-              <button
-                onClick={onToggleStructureGuide}
-                className={`flex items-center space-x-2 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
-                  darkMode
-                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-                title="Show Structure Guide"
-              >
-                <Type className="w-4 h-4" />
-                <span>Structure</span>
-              </button>
-              <button
-                onClick={onToggleTips}
-                className={`flex items-center space-x-2 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
-                  darkMode
-                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-                title="Show Writing Tips"
-              >
-                <LightbulbIcon className="w-4 h-4" />
-                <span>Tips</span>
-              </button>
-            </div>
+            {/* Exam Mode Button */}
+            <button
+              onClick={() => setExamMode(!examMode)}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
+                examMode
+                  ? darkMode
+                    ? 'bg-purple-900 text-purple-200'
+                    : 'bg-purple-600 text-white'
+                  : darkMode
+                  ? 'text-gray-300 hover:bg-gray-700'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+              title="Exam Mode"
+            >
+              <Target className="w-4 h-4" />
+              <span className="text-sm font-medium">Exam Mode</span>
+            </button>
+
+            {/* Focus Mode Button */}
+            <button
+              onClick={onToggleFocus}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-lg transition-colors ${
+                focusMode
+                  ? darkMode
+                    ? 'bg-indigo-900 text-indigo-200'
+                    : 'bg-indigo-600 text-white'
+                  : darkMode
+                  ? 'text-gray-300 hover:bg-gray-700'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+              title="Focus Mode"
+            >
+              {focusMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              <span className="text-sm font-medium">Focus</span>
+            </button>
           </div>
 
           <div className="flex items-center space-x-4">
             {/* Timer */}
-            <div className={`flex items-center space-x-2 p-1.5 rounded-lg ${
-              darkMode ? 'bg-gray-700' : 'bg-gray-200'
-            }`}>
+            <div className="flex items-center space-x-2">
               <Clock className={`w-4 h-4 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`} />
               <span className={`text-sm font-mono ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                 {formatTime(elapsedTime)}
