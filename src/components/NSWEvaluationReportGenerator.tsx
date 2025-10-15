@@ -94,7 +94,7 @@ export class NSWEvaluationReportGenerator {
     const scoreGrammar = NSWEvaluationReportGenerator.scoreSpellingAndGrammar(essayForScoring);
 
     return {
-      overallScore: (scoreIdeas * 0.4) + (scoreStructure * 0.2) + (scoreLanguage * 0.25) + (scoreGrammar * 0.15),
+            overallScore: (scoreIdeas * 0.4) + (scoreStructure * 0.2) + (scoreLanguage * 0.25) + (scoreGrammar * 0.15), // Scores are now out of 10, this formula remains valid for weighted average
       criteria: {
         ideas: scoreIdeas,
         structure: scoreStructure,
@@ -282,12 +282,11 @@ export class NSWEvaluationReportGenerator {
       return 0;
     }
     const lowerContent = cleanedEssay.toLowerCase();
-    let score = 5;
+    let score = 10;
     
     // **FIX**: Adjusted scoring for shorter essays
-    if (wordCount < targetWordCountMin * 0.8) score -= 1; // Reduced penalty from 2 to 1
-    if (!lowerContent.includes("story") && !lowerContent.includes("character")) score -= 0.5; // Reduced penalty
-
+    if (wordCount < targetWordCountMin * 0.8) score -= 2; // Scaled penalty
+    if (!lowerContent.includes("story") && !lowerContent.includes("character")) score -= 1; // Scaled penalty
     return Math.max(0, score);
   }
 
@@ -295,10 +294,10 @@ export class NSWEvaluationReportGenerator {
     const paragraphs = cleanedEssay.split("\n").filter(p => p.trim().length > 10).length;
     
     // **FIX**: More lenient scoring for shorter essays
-    if (paragraphs < 2) return 2; // Changed from 1
-    if (paragraphs < 3) return 3; // Changed from 1
-    if (paragraphs < 4) return 4; // Changed from 3
-    return 5;
+    if (paragraphs < 2) return 4; // Changed from 1
+    if (paragraphs < 3) return 6; // Changed from 1
+    if (paragraphs < 4) return 8; // Changed from 3
+    return 10;
   }
 
   private static scoreLanguageAndVocabulary(cleanedEssay: string): number {
@@ -307,9 +306,9 @@ export class NSWEvaluationReportGenerator {
     const lexicalDensity = uniqueWords.size / words.length;
     
     // **FIX**: More lenient scoring for shorter essays
-    if (lexicalDensity > 0.6) return 8;
-    if (lexicalDensity > 0.5) return 6;
-    if (lexicalDensity > 0.4) return 5; // Added new tier
+        if (lexicalDensity > 0.6) return 10;
+        if (lexicalDensity > 0.5) return 8;
+        if (lexicalDensity > 0.4) return 6; // Scaled from 5 to 10
     return 4;
   }
 }
