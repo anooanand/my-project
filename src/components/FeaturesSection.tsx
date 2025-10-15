@@ -93,17 +93,17 @@ export function FeaturesSection() {
   };
 
   return (
-    <section className="py-20 relative overflow-hidden" id="features">
-      <div className="absolute inset-0 bg-gradient-to-b from-indigo-50/50 to-white dark:from-gray-800/50 dark:to-gray-900"></div>
-      <div className="absolute inset-0 bg-grid opacity-30"></div>
-      
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900 dark:text-white">
-            Powerful Writing Tools
+    <section className="py-24 bg-white" id="features">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-gray-900">
+            Everything You Need to
+            <span className="block mt-2 bg-gradient-to-r from-blue-600 to-purple-700 bg-clip-text text-transparent">
+              Master Writing
+            </span>
           </h2>
-          <p className="text-lg text-gray-700 dark:text-gray-200 max-w-3xl mx-auto">
-            Everything you need to master essay writing for NSW selective exams and academic success in one place.
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Comprehensive AI-powered tools designed specifically for NSW Selective Exam success.
           </p>
         </div>
 
@@ -122,12 +122,12 @@ export function FeaturesSection() {
         </div>
 
         <div className="mt-16 text-center">
-          <button 
+          <button
             onClick={() => handleFeatureClick('pricing')}
-            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-700 hover:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200"
+            className="inline-flex items-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-700 rounded-xl hover:shadow-xl transform hover:scale-105 transition-all duration-200"
           >
-            Get Started
-            <ArrowRight className="ml-2 -mr-1 h-5 w-5" />
+            Get Started Today
+            <ArrowRight className="ml-2 w-5 h-5" />
           </button>
         </div>
       </div>

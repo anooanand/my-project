@@ -124,17 +124,15 @@ export function HowItWorksSection() {
   };
 
   return (
-    <section className="py-20 relative overflow-hidden bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-gray-800">
-      <div className="absolute inset-0 bg-grid opacity-30"></div>
-      
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+    <section className="py-24 bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900 dark:text-white">
-            🚀 How InstaChat AI Works
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-gray-900">
+            How It Works
           </h2>
-          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-            Our step-by-step approach helps students master writing skills through interactive guidance, practice, and personalized feedback.
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Our proven step-by-step system helps students master writing skills and excel in NSW Selective exams.
           </p>
         </div>
 
