@@ -6,7 +6,6 @@ import { HowItWorksSection } from './HowItWorksSection';
 import { StudentSuccessSection } from './StudentSuccessSection';
 import { PricingPage } from './PricingPage';
 import { WritingTypesSection } from './WritingTypesSection';
-import { Footer } from './Footer';
 import { ArrowRight, CheckCircle, Star, Users, Zap, BookOpen, Award, Target } from 'lucide-react';
 
 interface HomePageProps {
@@ -27,7 +26,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
             {/* Trust Badge */}
             <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-50 to-purple-50 rounded-full mb-8 border border-blue-100">
               <Star className="w-4 h-4 text-yellow-500 fill-current mr-2" />
-              <span className="text-sm font-semibold text-gray-700">Trusted by 10,000+ NSW students</span>
+              <span className="text-sm font-semibold text-gray-700">AI-Powered Writing Coach for NSW Students</span>
             </div>
 
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight">
@@ -58,19 +57,22 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
               </button>
             </div>
 
-            {/* Social Proof Stats */}
+            {/* Key Features */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-3xl mx-auto">
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-100 shadow-sm">
-                <div className="text-3xl font-bold text-gray-900 mb-1">10,000+</div>
-                <div className="text-sm text-gray-600">Students Helped</div>
+                <Zap className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+                <div className="text-sm font-semibold text-gray-900 mb-1">Instant Feedback</div>
+                <div className="text-xs text-gray-600">Real-time AI analysis</div>
               </div>
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-100 shadow-sm">
-                <div className="text-3xl font-bold text-gray-900 mb-1">95%</div>
-                <div className="text-sm text-gray-600">Improvement Rate</div>
+                <BookOpen className="w-8 h-8 text-purple-600 mx-auto mb-2" />
+                <div className="text-sm font-semibold text-gray-900 mb-1">NSW Aligned</div>
+                <div className="text-xs text-gray-600">Curriculum specific</div>
               </div>
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-100 shadow-sm">
-                <div className="text-3xl font-bold text-gray-900 mb-1">4.9/5</div>
-                <div className="text-sm text-gray-600">Student Rating</div>
+                <Target className="w-8 h-8 text-green-600 mx-auto mb-2" />
+                <div className="text-sm font-semibold text-gray-900 mb-1">Personalized</div>
+                <div className="text-xs text-gray-600">Adapts to your level</div>
               </div>
             </div>
           </div>
@@ -116,11 +118,11 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
           </div>
 
           {/* Solution Highlight */}
-          <div className="bg-gradient-to-r from-blue-600 to-purple-700 rounded-3xl p-12 text-white text-center">
-            <h3 className="text-3xl md:text-4xl font-bold mb-4">
+          <div className="bg-gradient-to-r from-blue-600 to-purple-700 rounded-3xl p-12 text-center">
+            <h3 className="text-3xl md:text-4xl font-bold mb-4 text-white">
               Get Unlimited AI Coaching for Less Than One Tutoring Session
             </h3>
-            <p className="text-xl opacity-90 mb-8 max-w-2xl mx-auto">
+            <p className="text-xl text-white mb-8 max-w-2xl mx-auto">
               Instant feedback • Available 24/7 • Personalized to your needs • NSW curriculum aligned
             </p>
             <button
@@ -155,7 +157,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
             Ready to Excel in Your Writing Exam?
           </h2>
           <p className="text-xl text-gray-600 mb-10">
-            Join thousands of students who've improved their writing scores with AI-powered coaching.
+            Start improving your writing skills today with personalized AI-powered coaching.
           </p>
 
           <div className="flex flex-col sm:flex-row justify-center gap-4 mb-8">
@@ -173,9 +175,6 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
           </p>
         </div>
       </section>
-
-      {/* Footer */}
-      <Footer onNavigate={onNavigate} />
     </div>
   );
 };

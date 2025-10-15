@@ -2,10 +2,10 @@ import React from 'react';
 
 export const AboutPage: React.FC = () => {
   return (
-    <div className="bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+    <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50 min-h-screen py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold text-center mb-8 bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400">
-          About InstaChat AI Writing Mate
+        <h1 className="text-4xl md:text-5xl font-bold text-center mb-8">
+          About <span className="bg-gradient-to-r from-blue-600 to-purple-700 bg-clip-text text-transparent">InstaChat AI</span>
         </h1>
         
         <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6 mb-8">
@@ -25,22 +25,22 @@ export const AboutPage: React.FC = () => {
           </p>
           
           <div className="mb-6">
-            <h3 className="text-xl font-medium mb-2 text-indigo-600 dark:text-indigo-400">Step-by-Step Guidance</h3>
-            <p className="text-gray-700 dark:text-gray-300 pl-4 border-l-2 border-indigo-200 dark:border-indigo-800">
+            <h3 className="text-xl font-medium mb-2 text-blue-600">Step-by-Step Guidance</h3>
+            <p className="text-gray-700 pl-4 border-l-2 border-blue-200">
               Our AI coach guides students through each section of their writing using an interactive, structured approach based on NSW syllabus expectations.
             </p>
           </div>
-          
+
           <div className="mb-6">
-            <h3 className="text-xl font-medium mb-2 text-indigo-600 dark:text-indigo-400">Adaptive Learning</h3>
-            <p className="text-gray-700 dark:text-gray-300 pl-4 border-l-2 border-indigo-200 dark:border-indigo-800">
+            <h3 className="text-xl font-medium mb-2 text-purple-600">Adaptive Learning</h3>
+            <p className="text-gray-700 pl-4 border-l-2 border-purple-200">
               The platform continuously analyzes writing patterns and progress to provide personalized recommendations and challenges appropriate for each student's skill level.
             </p>
           </div>
-          
+
           <div className="mb-6">
-            <h3 className="text-xl font-medium mb-2 text-indigo-600 dark:text-indigo-400">NSW Curriculum Alignment</h3>
-            <p className="text-gray-700 dark:text-gray-300 pl-4 border-l-2 border-indigo-200 dark:border-indigo-800">
+            <h3 className="text-xl font-medium mb-2 text-blue-600">NSW Curriculum Alignment</h3>
+            <p className="text-gray-700 pl-4 border-l-2 border-blue-200">
               All writing types, feedback, and assessment criteria are specifically designed to align with NSW Selective School exam requirements.
             </p>
           </div>
@@ -53,24 +53,24 @@ export const AboutPage: React.FC = () => {
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div className="bg-indigo-50 dark:bg-indigo-900/30 rounded-lg p-4 text-center">
-              <div className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 mb-2">82%</div>
-              <div className="text-gray-700 dark:text-gray-300">Writing Score Improvement</div>
+            <div className="bg-blue-50 rounded-lg p-4 text-center">
+              <div className="text-3xl font-bold text-blue-600 mb-2">Proven</div>
+              <div className="text-gray-700">Teaching Methods</div>
             </div>
-            <div className="bg-indigo-50 dark:bg-indigo-900/30 rounded-lg p-4 text-center">
-              <div className="text-3xl font-bold text-indigo-600 dark:text-indigo-400 mb-2">94%</div>
-              <div className="text-gray-700 dark:text-gray-300">Student Confidence</div>
+            <div className="bg-purple-50 rounded-lg p-4 text-center">
+              <div className="text-3xl font-bold text-purple-600 mb-2">Expert</div>
+              <div className="text-gray-700">AI Guidance</div>
             </div>
           </div>
         </div>
         
         <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6">
           <h2 className="text-2xl font-semibold mb-4 text-gray-800 dark:text-white">Join Our Community</h2>
-          <p className="text-gray-700 dark:text-gray-300 mb-6">
-            Join thousands of students who are already using InstaChat AI Writing Mate to prepare for NSW Selective School exams. Our platform provides the guidance, practice, and feedback needed to develop strong writing skills that last a lifetime.
+          <p className="text-gray-700 mb-6">
+            Our platform provides the guidance, practice, and feedback needed to develop strong writing skills for NSW Selective School exams and beyond.
           </p>
           <div className="text-center">
-            <a href="#" className="inline-block px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-medium rounded-md shadow-md transition duration-300 ease-in-out transform hover:-translate-y-1">
+            <a href="#" className="inline-block px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-700 hover:shadow-xl text-white font-medium rounded-lg transition duration-300 ease-in-out transform hover:scale-105">
               Start Your Writing Journey
             </a>
           </div>

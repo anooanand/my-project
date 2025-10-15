@@ -16,7 +16,7 @@ const FAQItem: React.FC<FAQItemProps> = ({ question, answer }) => {
       >
         <span className="text-lg font-medium text-gray-800 dark:text-white">{question}</span>
         <svg
-          className={`w-5 h-5 text-indigo-600 dark:text-indigo-400 transition-transform duration-300 ${
+          className={`w-5 h-5 text-blue-600 transition-transform duration-300 ${
             isOpen ? 'transform rotate-180' : ''
           }`}
           fill="none"
@@ -39,12 +39,12 @@ const FAQItem: React.FC<FAQItemProps> = ({ question, answer }) => {
 
 export const FAQPage: React.FC = () => {
   return (
-    <div className="bg-gradient-to-b from-white to-gray-50 dark:from-gray-900 dark:to-gray-800 min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+    <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50 min-h-screen py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold text-center mb-8 bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400">
-          Frequently Asked Questions
+        <h1 className="text-4xl md:text-5xl font-bold text-center mb-4">
+          <span className="bg-gradient-to-r from-blue-600 to-purple-700 bg-clip-text text-transparent">FAQ</span>
         </h1>
-        <p className="text-center text-lg text-gray-700 dark:text-gray-300 mb-12">
+        <p className="text-center text-xl text-gray-600 mb-12">
           Learn about NSW Selective exams and how our AI-powered writing assistant helps students excel
         </p>
         

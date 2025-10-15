@@ -131,15 +131,15 @@ export function PricingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 py-12">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
-            Choose Your Plan
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+            Choose Your <span className="bg-gradient-to-r from-blue-600 to-purple-700 bg-clip-text text-transparent">Plan</span>
           </h1>
-          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-            Unlock your writing potential with our comprehensive writing preparation tools
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Unlock your writing potential with comprehensive AI-powered writing tools
           </p>
         </div>
 
