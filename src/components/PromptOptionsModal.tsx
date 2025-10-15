@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Sparkles, Edit3, Wand, Star, Zap } from 'lucide-react';
+import { X, Sparkles, Edit3, Wand, Star, Zap, RotateCw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface PromptOptionsModalProps {
@@ -7,6 +7,7 @@ interface PromptOptionsModalProps {
   onClose: () => void;
   onGeneratePrompt: () => void;
   onCustomPrompt: () => void;
+  isLoading: boolean;
   textType: string;
 }
 
@@ -15,7 +16,8 @@ export function PromptOptionsModal({
   onClose,
   onGeneratePrompt,
   onCustomPrompt,
-  textType
+  textType,
+  isLoading
 }: PromptOptionsModalProps) {
   const navigate = useNavigate();
 
@@ -77,6 +79,7 @@ export function PromptOptionsModal({
           <div className="space-y-6">
             <button
               onClick={handleGeneratePrompt}
+              disabled={isLoading}
               className="w-full flex items-center p-6 border-4 border-purple-200 dark:border-purple-800 rounded-2xl hover:border-purple-400 dark:hover:border-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-all duration-300 text-left group transform hover:scale-105 hover:shadow-xl"
             >
               <div className="flex-shrink-0 mr-6">
@@ -85,17 +88,29 @@ export function PromptOptionsModal({
                 </div>
               </div>
               <div className="flex-1">
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                  Magic Prompt Generator ✨
-                </h3>
-                <p className="text-base text-gray-700 dark:text-gray-300">
-                  Let our AI create an awesome {textType} prompt just for you! Perfect for getting started quickly.
-                </p>
+                {isLoading ? (
+                  <div className="flex items-center">
+                    <RotateCw className="w-5 h-5 mr-3 animate-spin text-purple-600 dark:text-purple-400" />
+                    <h3 className="text-xl font-bold text-purple-600 dark:text-purple-400">
+                      Generating prompt...
+                    </h3>
+                  </div>
+                ) : (
+                  <>
+                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                      Magic Prompt Generator ✨
+                    </h3>
+                    <p className="text-base text-gray-700 dark:text-gray-300">
+                      Let our AI create an awesome {textType} prompt just for you! Perfect for getting started quickly.
+                    </p>
+                  </>
+                )}
               </div>
             </button>
 
             <button
               onClick={handleCustomPrompt}
+              disabled={isLoading}
               className="w-full flex items-center p-6 border-4 border-blue-200 dark:border-blue-800 rounded-2xl hover:border-blue-400 dark:hover:border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all duration-300 text-left group transform hover:scale-105 hover:shadow-xl"
             >
               <div className="flex-shrink-0 mr-6">
