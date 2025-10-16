@@ -1,11 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, X, FileText, AlertCircle, CheckCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { evaluateEssay } from '../lib/openai';
 
 interface ExamSimulationModeProps {
+  textType: string;
+  prompt: string;
   onExit: () => void;
 }
 
-export function ExamSimulationMode({ onExit }: ExamSimulationModeProps) {
+export function ExamSimulationMode({ onExit, textType, prompt }: ExamSimulationModeProps) {
+  const navigate = useNavigate();
   const [timeRemaining, setTimeRemaining] = useState(30 * 60); // 30 minutes in seconds
   const [isActive, setIsActive] = useState(false);
   const [content, setContent] = useState('');
@@ -61,7 +66,7 @@ export function ExamSimulationMode({ onExit }: ExamSimulationModeProps) {
     setShowSubmitConfirm(true);
   };
 
-  const confirmSubmit = () => {
+  const confirmSubmit = async () => {
     setIsSubmitted(true);
     setIsActive(false);
     setShowSubmitConfirm(false);
@@ -69,7 +74,19 @@ export function ExamSimulationMode({ onExit }: ExamSimulationModeProps) {
     // Store the essay for evaluation
     localStorage.setItem('examEssay', content);
     localStorage.setItem('examSubmissionTime', new Date().toISOString());
-    localStorage.setItem('examTimeUsed', (30 * 60 - timeRemaining).toString());
+    localStorage.setItem("examTimeUsed", (30 * 60 - timeRemaining).toString());
+
+    // Call evaluateEssay with isPractice flag
+    try {
+      const feedbackReport = await evaluateEssay(content, textType, true);
+      console.log("Practice Exam Feedback Report:", feedbackReport);
+      // Navigate to a feedback display page, passing the report
+      navigate("/feedback", { state: { feedback: feedbackReport, essayContent: content, textType: textType } });
+    } catch (error) {
+      console.error("Error generating practice exam feedback:", error);
+      // Handle error, maybe navigate to an error page or show a message
+      alert("Failed to generate evaluation report. Please try again.");
+    }
     
     console.log('Exam essay submitted:', {
       content,
@@ -78,11 +95,21 @@ export function ExamSimulationMode({ onExit }: ExamSimulationModeProps) {
     });
   };
 
-  const handleAutoSubmit = () => {
+  const handleAutoSubmit = async () => {
     setIsSubmitted(true);
     localStorage.setItem('examEssay', content);
     localStorage.setItem('examSubmissionTime', new Date().toISOString());
-    localStorage.setItem('examTimeUsed', (30 * 60).toString());
+    localStorage.setItem("examTimeUsed", (30 * 60).toString());
+
+    // Call evaluateEssay with isPractice flag for auto-submit
+    try {
+      const feedbackReport = await evaluateEssay(content, textType, true);
+      console.log("Practice Exam Auto-Submit Feedback Report:", feedbackReport);
+      navigate("/feedback", { state: { feedback: feedbackReport, essayContent: content, textType: textType } });
+    } catch (error) {
+      console.error("Error generating practice exam auto-submit feedback:", error);
+      alert("Failed to generate evaluation report on auto-submit. Please try again.");
+    }
   };
 
   const cancelSubmit = () => {
@@ -218,16 +245,27 @@ export function ExamSimulationMode({ onExit }: ExamSimulationModeProps) {
           </div>
           <div className="bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-blue-200 rounded-xl p-6">
             <p className="text-gray-800 leading-relaxed">
-              <strong className="text-lg text-blue-900">Persuasive Writing Task:</strong><br /><br />
+              <strong className="text-lg text-blue-900">Persuasive Writing Task:</strong>  
+  
+
               <span className="text-base font-medium">"Should schools replace traditional textbooks with digital devices like tablets and laptops?"</span>
-              <br /><br />
+                
+  
+
               <strong className="text-gray-900">In your response, you should:</strong>
-              <br />• Present a clear position on this issue
-              <br />• Support your argument with relevant examples and evidence
-              <br />• Consider and address opposing viewpoints
-              <br />• Use persuasive language techniques effectively
-              <br />• Organize your ideas in a logical structure
-              <br /><br />
+                
+• Present a clear position on this issue
+                
+• Support your argument with relevant examples and evidence
+                
+• Consider and address opposing viewpoints
+                
+• Use persuasive language techniques effectively
+                
+• Organize your ideas in a logical structure
+                
+  
+
               <em className="text-sm text-gray-600">Target: 300-500 words | Time: 30 minutes</em>
             </p>
           </div>
@@ -263,50 +301,39 @@ export function ExamSimulationMode({ onExit }: ExamSimulationModeProps) {
               {timeRemaining === 0 && (
                 <div className="flex items-center space-x-2 text-orange-600">
                   <div className="w-2 h-2 bg-orange-600 rounded-full"></div>
-                  <span className="text-sm font-medium">Time's up - submitted automatically</span>
+                  <span className="text-sm font-medium">Time's up! Essay auto-submitted.</span>
                 </div>
               )}
             </div>
+            <button
+              onClick={onExit}
+              className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              Exit Practice Mode
+            </button>
           </div>
         </div>
       </div>
 
       {/* Submit Confirmation Modal */}
       {showSubmitConfirm && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full border border-gray-200 overflow-hidden">
-            <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6">
-              <h3 className="text-2xl font-bold text-white mb-2">Confirm Submission</h3>
-              <p className="text-blue-100">Ready to submit your essay?</p>
-            </div>
-            <div className="p-6">
-              <div className="bg-blue-50 rounded-xl p-4 mb-6">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-gray-600">Time Remaining</span>
-                  <span className="text-lg font-bold text-gray-900">{formatTime(timeRemaining)}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Word Count</span>
-                  <span className="text-lg font-bold text-gray-900">{wordCount} words</span>
-                </div>
-              </div>
-              <p className="text-gray-600 text-sm mb-6">
-                Once submitted, you won't be able to make any changes. Make sure you're happy with your essay before proceeding.
-              </p>
-              <div className="flex space-x-3">
-                <button
-                  onClick={cancelSubmit}
-                  className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
-                >
-                  Keep Writing
-                </button>
-                <button
-                  onClick={confirmSubmit}
-                  className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all transform hover:scale-105 shadow-lg"
-                >
-                  Submit
-                </button>
-              </div>
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-8 shadow-xl max-w-sm mx-auto">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Confirm Submission</h3>
+            <p className="text-gray-700 mb-6">Are you sure you want to submit your essay? You will not be able to make further changes.</p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={cancelSubmit}
+                className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmSubmit}
+                className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+              >
+                Submit
+              </button>
             </div>
           </div>
         </div>
