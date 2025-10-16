@@ -1,32 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { evaluateEssay } from '../lib/openai';
+import { useLocation } from 'react-router-dom';
 import { Loader2, ArrowLeft, Award, Target, CheckCircle, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface EssayFeedbackPageProps {
-  content?: string;
-  textType?: string;
   onBack?: () => void;
 }
 
 interface FeedbackData {
   overallScore: number;
-  strengths: string[];
-  areasForImprovement: string[];
-  specificFeedback: {
-    structure: string;
-    language: string;
-    ideas: string;
-    mechanics: string;
+  criteriaScores: {
+    ideasAndContent: number;
+    textStructureAndOrganization: number;
+    languageFeaturesAndVocabulary: number;
+    spellingPunctuationAndGrammar: number;
   };
-  nextSteps: string[];
+  feedbackCategories: any[];
+  grammarCorrections: any[];
+  vocabularyEnhancements: any[];
 }
 
-export function EssayFeedbackPage({ content = '', textType = 'narrative', onBack }: EssayFeedbackPageProps) {
-  const [isLoading, setIsLoading] = useState(true);
-  const [feedback, setFeedback] = useState<FeedbackData | null>(null);
-  const [error, setError] = useState<string | null>(null);
+export function EssayFeedbackPage({ onBack }: EssayFeedbackPageProps) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { feedback: navFeedback, essayContent: navEssayContent, textType: navTextType } = location.state || {};
+
+  const [content, setContent] = useState(navEssayContent || "");
+  const [textType, setTextType] = useState(navTextType || "narrative");
+  const [isLoading, setIsLoading] = useState(!navFeedback);
+  const [feedback, setFeedback] = useState<FeedbackData | null>(navFeedback || null);
+  const [error, setError] = useState<string | null>(null);
 
   // Sample content for demo purposes if no content is provided
   const sampleContent = `The old lighthouse stood sentinel on the jagged cliff edge, its weathered stone exterior bearing the scars of a century's worth of storms. Paint peeled from its once-pristine white surface like old skin, revealing patches of gray stone underneath that seemed to tell stories of bygone eras.
@@ -35,27 +39,27 @@ As I approached along the winding cliff path, the salty breeze intensified, carr
 
 The heavy oak door at the lighthouse base groaned in protest as I pushed it open, releasing a waft of cool, musty air that spoke of abandonment and neglect. Dust motes danced in the shaft of sunlight that pierced the gloom, illuminating a narrow spiral staircase that twisted upward.`;
 
-  const effectiveContent = content || sampleContent;
-  const effectiveTextType = textType || 'narrative';
-
   useEffect(() => {
-    const getFeedback = async () => {
-      try {
-        const result = await evaluateEssay(effectiveContent, effectiveTextType);
-        if (result) {
-          setFeedback(result);
-        } else {
-          setError('Unable to generate feedback. Please try again.');
+    if (!navFeedback && content) {
+      const getFeedback = async () => {
+        try {
+          const result = await evaluateEssay(content, textType);
+          if (result) {
+            setFeedback(result);
+          } else {
+            setError('Unable to generate feedback. Please try again.');
+          }
+        } catch (err) {
+          setError('An error occurred while evaluating your essay.');
+        } finally {
+          setIsLoading(false);
         }
-      } catch (err) {
-        setError('An error occurred while evaluating your essay.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    getFeedback();
-  }, [effectiveContent, effectiveTextType]);
+      };
+      getFeedback();
+    } else if (navFeedback) {
+      setIsLoading(false);
+    }
+  }, [navFeedback, content, textType]);
 
   const handleBack = () => {
     if (onBack) {
@@ -129,36 +133,13 @@ The heavy oak door at the lighthouse base groaned in protest as I pushed it open
               </div>
             </div>
             
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-green-50 p-4 rounded-lg">
-                <h3 className="font-medium text-green-800 mb-2 flex items-center">
-                  <CheckCircle className="h-5 w-5 mr-2" />
-                  Strengths
-                </h3>
-                <ul className="space-y-1">
-                  {feedback.strengths.map((strength, index) => (
-                    <li key={index} className="text-green-700 flex items-start">
-                      <span className="mr-2">•</span>
-                      {strength}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              <div className="bg-amber-50 p-4 rounded-lg">
-                <h3 className="font-medium text-amber-800 mb-2 flex items-center">
-                  <Target className="h-5 w-5 mr-2" />
-                  Areas for Improvement
-                </h3>
-                <ul className="space-y-1">
-                  {feedback.areasForImprovement.map((area, index) => (
-                    <li key={index} className="text-amber-700 flex items-start">
-                      <span className="mr-2">•</span>
-                      {area}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+              {Object.entries(feedback.criteriaScores).map(([criterion, score]) => (
+                <div key={criterion} className="bg-gray-50 p-4 rounded-lg text-center">
+                  <p className="text-sm text-gray-600 mb-1">{criterion.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</p>
+                  <p className="text-2xl font-bold text-blue-600">{score}/5</p>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -166,38 +147,41 @@ The heavy oak door at the lighthouse base groaned in protest as I pushed it open
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Detailed Feedback</h2>
             
             <div className="space-y-6">
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-medium text-gray-900 mb-2">Structure</h3>
-                <p className="text-gray-700">{feedback.specificFeedback.structure}</p>
-              </div>
+              {feedback.feedbackCategories && feedback.feedbackCategories.length > 0 && (
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-medium text-gray-900 mb-2">General Feedback</h3>
+                  <ul className="list-disc list-inside space-y-1 text-gray-700">
+                    {feedback.feedbackCategories.map((category: any, index: number) => (
+                      <li key={index}><strong>{category.category}:</strong> {category.feedback}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-medium text-gray-900 mb-2">Language Use</h3>
-                <p className="text-gray-700">{feedback.specificFeedback.language}</p>
-              </div>
+              {feedback.grammarCorrections && feedback.grammarCorrections.length > 0 && (
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-medium text-gray-900 mb-2">Grammar Corrections</h3>
+                  <ul className="list-disc list-inside space-y-1 text-gray-700">
+                    {feedback.grammarCorrections.map((correction: any, index: number) => (
+                      <li key={index}>Original: "{correction.original}" - Suggestion: "{correction.suggestion}"</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-medium text-gray-900 mb-2">Ideas and Content</h3>
-                <p className="text-gray-700">{feedback.specificFeedback.ideas}</p>
-              </div>
-
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-medium text-gray-900 mb-2">Grammar and Mechanics</h3>
-                <p className="text-gray-700">{feedback.specificFeedback.mechanics}</p>
-              </div>
+              {feedback.vocabularyEnhancements && feedback.vocabularyEnhancements.length > 0 && (
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-medium text-gray-900 mb-2">Vocabulary Enhancements</h3>
+                  <ul className="list-disc list-inside space-y-1 text-gray-700">
+                    {feedback.vocabularyEnhancements.map((enhancement: any, index: number) => (
+                      <li key={index}>Original: "{enhancement.original}" - Suggestion: "{enhancement.suggestion}"</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
 
-            <div className="mt-8 bg-blue-50 p-4 rounded-lg">
-              <h3 className="font-medium text-blue-900 mb-2">Next Steps</h3>
-              <ul className="space-y-2">
-                {feedback.nextSteps.map((step, index) => (
-                  <li key={index} className="text-blue-800 flex items-start">
-                    <span className="mr-2">{index + 1}.</span>
-                    {step}
-                  </li>
-                ))}
-              </ul>
-            </div>
+
           </div>
         </div>
       </div>
