@@ -226,23 +226,25 @@ function getFallbackPrompt(textType: string, topic?: string): string {
 }
 
 // Evaluate essay content via backend
-export async function evaluateEssay(content: string, textType: string): Promise<string> {
+export async function evaluateEssay(content: string, textType: string, isPractice: boolean = false): Promise<any> {
   if (!content.trim()) {
     return "Please write some content first, then I can provide you with detailed feedback!";
   }
 
   try {
-    const res = await fetch("/.netlify/functions/ai-feedback", {
+    const apiEndpoint = isPractice ? "/.netlify/functions/nsw-ai-evaluation" : "/.netlify/functions/ai-feedback";
+    const res = await fetch(apiEndpoint, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ content, textType })
+      body: JSON.stringify(isPractice ? { essayContent: content, textType, prompt: localStorage.getItem("generatedPrompt") || "" } : { content, textType })
     });
 
     if (res.ok) {
       const result = await res.json();
-      return result.feedback || "Feedback generated successfully!";
+      return result.feedback || result || "Feedback generated successfully!";
     } else {
-      throw new Error(`HTTP ${res.status}`);
+      const errorData = await res.json();
+      throw new Error(`HTTP ${res.status}: ${errorData.error || res.statusText}`);
     }
   } catch (error) {
     console.error('Error evaluating essay:', error);
