@@ -232,8 +232,8 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
     const characters = text.length;
     const charactersNoSpaces = text.replace(/\s/g, '').length;
-    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0).length;
-    const paragraphs = text.split(/\n\n+/).filter(p => p.trim().length > 0).length;
+    const sentences = text.split(/[.!?]+/).filter(s => typeof s === 'string' && s.trim().length > 0).length;
+    const paragraphs = text.split(/\n\n+/).filter(p => typeof p === 'string' && p.trim().length > 0).length;
     const readingTime = Math.ceil(currentWordCount / 200); // 200 words per minute
     const avgWordsPerSentence = sentences > 0 ? Math.round(currentWordCount / sentences) : 0;
 
@@ -307,96 +307,61 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
         }
       } else if (!initialPrompt && !generatedPrompt && !customPromptInput && !popupFlowCompleted) {
         // Only generate a prompt if no initialPrompt, generatedPrompt, customPrompt, or popup flow is completed
-        try {
-          const promptKey = textType as keyof typeof promptConfig;
-          if (promptConfig[promptKey]) {
-            const response = await generatePrompt(promptConfig[promptKey]);
-            setGeneratedPrompt(response);
-            if (setPrompt) {
-              setPrompt(response);
-            }
-          }
-        } catch (error) {
-          console.error("Error generating prompt:", error);
-          setGeneratedPrompt("Failed to generate prompt. Please try again or enter a custom prompt.");
-        }
+        setShowPromptOptionsModal(true);
       }
     };
+
     fetchPrompt();
-  }, [initialPrompt, textType, generatedPrompt, customPromptInput, popupFlowCompleted, setPrompt]);
+  }, [initialPrompt, generatedPrompt, customPromptInput, popupFlowCompleted, setPrompt]);
 
-  // Handle custom prompt input from modal
-  const handleCustomPromptInput = useCallback((prompt: string) => {
-    setCustomPromptInput(prompt);
-    setGeneratedPrompt(null); // Clear generated prompt if custom is used
-    if (setPrompt) {
-      setPrompt(prompt);
-    }
-    setShowPromptOptionsModal(false);
-  }, [setPrompt]);
-
-  const handlePromptOptionSelect = useCallback((option: string) => {
-    if (option === 'regenerate') {
-      setGeneratedPrompt(null); // Clear to trigger re-generation
-      setCustomPromptInput(null); // Clear custom input
-      // Re-trigger useEffect for prompt generation
-    } else if (option === 'custom') {
-      // Open modal for custom prompt input
-      // This is handled by showPromptOptionsModal state
-    }
-    setShowPromptOptionsModal(false);
-  }, []);
-
-  const formatTime = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+  // Handle content changes
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setLocalContent(e.target.value);
   };
 
-  const handleEvaluate = useCallback(async () => {
-    if (!onSubmit) return;
+  // Handle prompt generation from modal
+  const handleGeneratePrompt = async (type: string, custom?: string) => {
+    if (custom) {
+      setCustomPromptInput(custom);
+      setGeneratedPrompt(null);
+      if (setPrompt) setPrompt(custom);
+    } else {
+      const newPrompt = await generatePrompt(promptConfig[type]);
+      setGeneratedPrompt(newPrompt);
+      setCustomPromptInput(null);
+      if (setPrompt) setPrompt(newPrompt);
+    }
+    setShowPromptOptionsModal(false);
+    if (onPopupCompleted) onPopupCompleted();
+  };
+
+  // Format time utility
+  const formatTime = (seconds: number) => {
+    const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
+    const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+    const s = (seconds % 60).toString().padStart(2, '0');
+    return `${h}:${m}:${s}`;
+  };
+
+  // Handle evaluation
+  const handleEvaluate = async () => {
     setEvaluationStatus("loading");
     setEvaluationProgress("Starting evaluation...");
 
     try {
-      const writingBuddy = new WritingBuddyService(user?.id);
-      const evaluationResult = await writingBuddy.evaluateWriting(
-        localContent,
-        textType,
-        effectivePrompt || "",
-        supportLevel,
-        (progress: string) => setEvaluationProgress(progress)
-      );
+      const generator = new NSWEvaluationReportGenerator();
+      const report = await generator.generate(localContent, effectivePrompt, (update) => {
+        setEvaluationProgress(update);
+      });
 
-      setAiEvaluationReport(evaluationResult.aiEvaluation);
-      setNswReport(evaluationResult.nswEvaluation);
-      
-      // Call the onSubmit prop which handles the actual submission and potentially further actions
-      onSubmit(localContent);
-
-      setEvaluationStatus("success");
-      setShowAIReport(true);
+      setNswReport(report);
       setShowNSWEvaluation(true);
-
+      setEvaluationStatus("success");
     } catch (error) {
       console.error("Evaluation failed:", error);
       setEvaluationStatus("error");
-      setShowNSWEvaluation(false);
-      alert(`There was an error during evaluation: ${error instanceof Error ? error.message : String(error)}. Please try again.`);
     }
-  }, [localContent, onSubmit, textType, effectivePrompt, supportLevel, user?.id]);
-
-  const handleApplyFix = useCallback((fix: LintFix) => {
-    if (textareaRef.current) {
-      const start = fix.evidence.start;
-      const end = fix.evidence.end;
-      const newContent = localContent.substring(0, start) + fix.replacement + localContent.substring(end);
-      setLocalContent(newContent);
-      if (onChange) {
-        onChange(newContent);
-      }
-    }
-  }, [localContent, onChange]);
+  };
 
   return (
     <div className={`flex h-screen w-full ${darkMode ? 'bg-slate-900 text-gray-100' : 'bg-gray-100 text-gray-900'}`}>
@@ -640,138 +605,69 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
             )}
             <textarea
               ref={textareaRef}
-              className={`flex-1 w-full h-full p-4 resize-none focus:outline-none rounded-lg shadow-inner transition-colors duration-200 ${
-                darkMode
-                  ? 'bg-slate-800 text-gray-100 placeholder-gray-500 border border-slate-700'
-                  : 'bg-white text-gray-900 placeholder-gray-400 border border-gray-300'
-              }`}
               value={localContent}
-              onChange={(e) => setLocalContent(e.target.value)}
-              placeholder={examModeLocal ? "Start writing your NSW Selective Writing Exam response here..." : "Start writing here..."}
-              style={{ fontFamily: fontFamily, fontSize: `${fontSize}px`, lineHeight: lineHeight }}
+              onChange={handleContentChange}
+              className={`flex-1 w-full resize-none focus:outline-none p-4 rounded-lg leading-relaxed transition-colors duration-300 ${
+                darkMode ? 'bg-slate-800 text-gray-100 placeholder-gray-500' : 'bg-white text-gray-900 placeholder-gray-400'
+              }`}
+              placeholder="Start writing here..."
               disabled={focusMode}
             />
-
-            {/* NSW Submit Button at the bottom of the writing area */}
-            {!examModeLocal && (
-              <div className="mt-4 flex justify-end">
-                <NSWSubmitButton
-                  onSubmit={handleEvaluate}
-                  isLoading={evaluationStatus === "loading"}
-                  progress={evaluationProgress}
-                  darkMode={darkMode}
-                />
-              </div>
-            )}
+            <div className="flex-shrink-0 pt-4">
+              <NSWSubmitButton content={localContent} prompt={effectivePrompt} textType={textType} />
+            </div>
           </div>
 
-          {/* Coach Panel */}
-          {panelVisible && (
+          {/* AI Coach Panel */}
+          {panelVisible && !examModeLocal && (
             <EnhancedCoachPanel
-              analysis={analysis}
-              onAnalysisChange={onAnalysisChange}
-              darkMode={darkMode}
-              onApplyFix={handleApplyFix}
+              content={localContent}
               wordCount={currentWordCount}
               grammarStats={grammarStats}
               writingMetrics={writingMetrics}
               qualityScore={qualityScore}
-              showGrammarHighlights={showGrammarHighlights}
-              setShowGrammarHighlights={setShowGrammarHighlights}
-              expandedGrammarStats={expandedGrammarStats}
-              setExpandedGrammarStats={setExpandedGrammarStats}
-              lastSaved={lastSaved}
-              user={user}
-              openAIConnected={openAIConnected}
-              openAILoading={openAILoading}
-              textType={textType}
-              effectivePrompt={effectivePrompt}
               supportLevel={supportLevel}
-              setShowSupportLevelModal={setShowSupportLevelModal}
+              onSupportLevelChange={handleSupportLevelChange}
+              lastSaved={lastSaved}
+              onFix={handleApplyFix}
             />
           )}
         </div>
       </div>
 
       {/* Modals */}
-      {showPlanningTool && (
-        <PlanningToolModal
-          onClose={() => setShowPlanningTool(false)}
-          darkMode={darkMode}
-          content={localContent}
-          onContentChange={setLocalContent}
-        />
-      )}
-      {showStructureModal && (
-        <StructureGuideModal
-          onClose={() => setShowStructureModal(false)}
-          darkMode={darkMode}
-          textType={textType}
-        />
-      )}
-      {showTipsModalLocal && (
-        <TipsModal
-          onClose={() => setShowTipsModalLocal(false)}
-          darkMode={darkMode}
-          textType={textType}
-        />
-      )}
-      {showReportModal && nswReport && (
-        <ReportModal
-          onClose={() => setShowReportModal(false)}
-          reportData={nswReport}
-          darkMode={darkMode}
-        />
-      )}
-      {showAIReport && aiEvaluationReport && (
-        <AIEvaluationReportDisplay
-          report={aiEvaluationReport}
-          onClose={() => setShowAIReport(false)}
-          darkMode={darkMode}
-        />
-      )}
-      {showNSWEvaluation && nswReport && (
-        <NSWEvaluationReportGenerator
-          report={nswReport}
-          onClose={() => setShowNSWEvaluation(false)}
-          darkMode={darkMode}
-        />
-      )}
+      {showPlanningTool && <PlanningToolModal textType={textType} onClose={() => setShowPlanningTool(false)} />}
+      {showStructureModal && <StructureGuideModal textType={textType} onClose={() => setShowStructureModal(false)} />}
+      {showTipsModalLocal && <TipsModal textType={textType} onClose={() => setShowTipsModalLocal(false)} />}
       {showPromptOptionsModal && (
         <PromptOptionsModal
           onClose={() => setShowPromptOptionsModal(false)}
-          onSelectOption={handlePromptOptionSelect}
-          onCustomPrompt={handleCustomPromptInput}
+          onGenerate={handleGeneratePrompt}
           textType={textType}
-          darkMode={darkMode}
+          openAIConnected={openAIConnected}
+          loading={openAILoading}
         />
       )}
-      {showSupportLevelModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className={`rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto ${darkMode ? 'bg-slate-800' : 'bg-white'}`}>
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                  Writing Buddy Support Level
-                </h2>
-                <button
-                  onClick={() => setShowSupportLevelModal(false)}
-                  className={`${darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-              <SupportLevelSelector
-                currentLevel={supportLevel}
-                onLevelChange={handleSupportLevelChange}
-                showRecommendations={true}
-              />
-            </div>
-          </div>
-        </div>
+      {showNSWEvaluation && nswReport && (
+        <ReportModal onClose={() => setShowNSWEvaluation(false)}>
+          <AIEvaluationReportDisplay report={nswReport} />
+        </ReportModal>
       )}
     </div>
   );
 }
 
-export default EnhancedWritingLayoutNSW;
+// Helper function to apply fixes from the coach panel
+function applyFix(content: string, fix: LintFix): string {
+  // This is a simplified implementation. A more robust solution would handle
+  // overlapping fixes and more complex transformations.
+  const lines = content.split('\n');
+  if (fix.line > lines.length) return content;
+
+  const line = lines[fix.line - 1];
+  const before = line.substring(0, fix.column - 1);
+  const after = line.substring(fix.column - 1 + fix.text.length);
+
+  lines[fix.line - 1] = before + fix.fix + after;
+  return lines.join('\n');
+}
