@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { X, Sparkles, Edit3, Wand, Star, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 interface PromptOptionsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onGeneratePrompt: () => Promise<void>;
+  onGeneratePrompt: () => void;
   onCustomPrompt: () => void;
   textType: string;
 }
@@ -18,13 +18,11 @@ export function PromptOptionsModal({
   textType
 }: PromptOptionsModalProps) {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
 
   if (!isOpen) return null;
 
   // FIXED: Let parent component handle the flow instead of navigating directly
-  const handleGeneratePrompt = async () => {
-    setIsLoading(true);
+  const handleGeneratePrompt = () => {
     console.log('🎯 PromptOptionsModal: Generate prompt clicked for:', textType);
 
     // Store the choice for the parent component to handle
@@ -32,8 +30,7 @@ export function PromptOptionsModal({
     localStorage.setItem('selectedWritingType', textType);
 
     // Call the parent's callback to handle prompt generation
-    await onGeneratePrompt();
-    setIsLoading(false);
+    onGeneratePrompt();
   };
 
   const handleCustomPrompt = () => {
@@ -80,21 +77,16 @@ export function PromptOptionsModal({
           <div className="space-y-6">
             <button
               onClick={handleGeneratePrompt}
-              disabled={isLoading}
               className="w-full flex items-center p-6 border-4 border-purple-200 dark:border-purple-800 rounded-2xl hover:border-purple-400 dark:hover:border-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-all duration-300 text-left group transform hover:scale-105 hover:shadow-xl"
             >
               <div className="flex-shrink-0 mr-6">
                 <div className="p-4 bg-gradient-to-r from-purple-400 to-pink-400 rounded-2xl group-hover:from-purple-500 group-hover:to-pink-500 transition-colors shadow-md">
-                  {isLoading ? (
-                    <Zap className="w-8 h-8 text-white animate-spin" />
-                  ) : (
-                    <Sparkles className="w-8 h-8 text-white" />
-                  )}
+                  <Sparkles className="w-8 h-8 text-white" />
                 </div>
               </div>
               <div className="flex-1">
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                  {isLoading ? 'Generating Prompt...' : 'Magic Prompt Generator ✨'}
+                  Magic Prompt Generator ✨
                 </h3>
                 <p className="text-base text-gray-700 dark:text-gray-300">
                   Let our AI create an awesome {textType} prompt just for you! Perfect for getting started quickly.
