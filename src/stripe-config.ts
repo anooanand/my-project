@@ -24,6 +24,7 @@ export const products = [
     features: [
       'Unlimited AI feedback',
       'All text type templates',
+      'Unlimited Practice Essays',
       'Advanced writing analysis',
       'Practice exam simulations',
       'Priority support',
@@ -58,4 +59,3 @@ function getProductByPriceId(priceId: string) {
 function getProductById(id: string) {
   return products.find(product => product.id === id);
 }
-
