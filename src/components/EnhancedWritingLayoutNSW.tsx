@@ -202,7 +202,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
   // Calculate word count first (needed by other metrics)
   const currentWordCount = React.useMemo(() => {
-    return typeof localContent === 'string' && localContent.trim() ? localContent.trim().split(/\s+/).length : 0;
+    return localContent.trim() ? localContent.trim().split(/\s+/).length : 0;
   }, [localContent]);
 
   // Calculate grammar stats
@@ -220,7 +220,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
   // Calculate additional writing metrics
   const writingMetrics = React.useMemo(() => {
-    const text = typeof localContent === 'string' ? localContent.trim() : '';
+    const text = localContent.trim();
     if (!text) return {
       characters: 0,
       charactersNoSpaces: 0,
@@ -232,8 +232,8 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
     const characters = text.length;
     const charactersNoSpaces = text.replace(/\s/g, '').length;
-    const sentences = text.split(/[.!?]+/).filter(s => typeof s === 'string' && s.trim().length > 0).length;
-    const paragraphs = text.split(/\n\n+/).filter(p => typeof p === 'string' && p.trim().length > 0).length;
+    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0).length;
+    const paragraphs = text.split(/\n\n+/).filter(p => p.trim().length > 0).length;
     const readingTime = Math.ceil(currentWordCount / 200); // 200 words per minute
     const avgWordsPerSentence = sentences > 0 ? Math.round(currentWordCount / sentences) : 0;
 
@@ -289,79 +289,233 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
   // Update word count
   useEffect(() => {
-    const words = typeof localContent === 'string' ? localContent.trim().split(/\s+/).filter(word => word.length > 0) : [];
+    const words = localContent.trim().split(/\s+/).filter(word => word.length > 0);
     const newWordCount = words.length;
     if (newWordCount !== wordCount && onWordCountChange) {
       onWordCountChange(newWordCount);
     }
   }, [localContent, wordCount, onWordCountChange]);
 
-  // Handle prompt generation
+  // Show prompt modal if no prompt exists
   useEffect(() => {
-    const fetchPrompt = async () => {
-      if (initialPrompt && !generatedPrompt && !customPromptInput && !popupFlowCompleted) {
-        // If initialPrompt is provided, use it directly as the generatedPrompt
-        setGeneratedPrompt(initialPrompt);
-        if (setPrompt) {
-          setPrompt(initialPrompt);
-        }
-      } else if (!initialPrompt && !generatedPrompt && !customPromptInput && !popupFlowCompleted) {
-        // Only generate a prompt if no initialPrompt, generatedPrompt, customPrompt, or popup flow is completed
-        setShowPromptOptionsModal(true);
-      }
-    };
+    if (!effectivePrompt && !popupFlowCompleted) {
+      setShowPromptOptionsModal(true);
+    }
+  }, [effectivePrompt, popupFlowCompleted]);
 
-    fetchPrompt();
-  }, [initialPrompt, generatedPrompt, customPromptInput, popupFlowCompleted, setPrompt]);
-
-  // Handle content changes
-  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setLocalContent(e.target.value);
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Handle prompt generation from modal
-  const handleGeneratePrompt = async (type: string, custom?: string) => {
-    if (custom) {
-      setCustomPromptInput(custom);
-      setGeneratedPrompt(null);
-      if (setPrompt) setPrompt(custom);
-    } else {
-      const newPrompt = await generatePrompt(promptConfig[type]);
+  const handleGenerateNewPrompt = useCallback(async () => {
+    try {
+      const newPrompt = await generatePrompt(textType, promptConfig.systemPrompts.promptGenerator);
       setGeneratedPrompt(newPrompt);
-      setCustomPromptInput(null);
-      if (setPrompt) setPrompt(newPrompt);
+      setLocalContent(newPrompt);
+      if (setPrompt) {
+        setPrompt(newPrompt);
+      }
+      if (onChange) {
+        onChange(newPrompt);
+      }
+      setShowPromptOptionsModal(false);
+      if (onPopupCompleted) onPopupCompleted();
+    } catch (error) {
+      console.error("Error generating prompt:", error);
+      alert("Failed to generate a prompt. Please try again.");
+    }
+  }, [textType, setPrompt, onChange, onPopupCompleted]);
+
+  const handleCustomPromptInput = useCallback((promptText: string) => {
+    setCustomPromptInput(promptText);
+    setLocalContent(promptText);
+    if (setPrompt) {
+      setPrompt(promptText);
+    }
+    if (onChange) {
+      onChange(promptText);
     }
     setShowPromptOptionsModal(false);
     if (onPopupCompleted) onPopupCompleted();
+  }, [setPrompt, onChange, onPopupCompleted]);
+
+  const handleContentChange = useCallback((newContent: string) => {
+    setLocalContent(newContent);
+    
+    if (newContent.trim().length > 0 && !isTimerRunning && elapsedTime === 0 && onStartTimer) {
+      onStartTimer();
+    }
+    
+    if (eventBus && detectNewParagraphs) {
+      const newParagraphs = detectNewParagraphs(content, newContent);
+      if (newParagraphs.length > 0) {
+        eventBus.emit('newParagraphsDetected', { paragraphs: newParagraphs, textType });
+      }
+    }
+  }, [content, isTimerRunning, elapsedTime, onStartTimer, textType]);
+
+  // Convert NSW report format to DetailedFeedback format
+  const convertNSWReportToDetailedFeedback = (report: any): any => {
+    const maxScore = 10;
+    return {
+      id: `nsw-${Date.now()}`,
+      overallScore: report.overallScore || 0,
+      criteria: {
+        ideasContent: {
+          score: Math.min(report.domains?.contentAndIdeas?.score || 0, maxScore),
+          weight: report.domains?.contentAndIdeas?.weight || 40,
+          strengths: (report.domains?.contentAndIdeas?.feedback || []).map((text: string) => ({ 
+            text, 
+            start: 0, 
+            end: 0 
+          })),
+          improvements: (report.areasForImprovement || [])
+            .filter((item: any) => item.toLowerCase().includes('idea') || item.toLowerCase().includes('content'))
+            .map((text: string) => ({
+              issue: text,
+              evidence: { text: '', start: 0, end: 0 },
+              suggestion: 'Consider developing this area further'
+            }))
+        },
+        structureOrganization: {
+          score: Math.min(report.domains?.textStructure?.score || 0, maxScore),
+          weight: report.domains?.textStructure?.weight || 20,
+          strengths: (report.domains?.textStructure?.feedback || []).map((text: string) => ({ 
+            text, 
+            start: 0, 
+            end: 0 
+          })),
+          improvements: (report.areasForImprovement || [])
+            .filter((item: any) => item.toLowerCase().includes('structure') || item.toLowerCase().includes('organization'))
+            .map((text: any) => ({
+              issue: text,
+              evidence: { text: '', start: 0, end: 0 },
+              suggestion: 'Work on improving your structure'
+            }))
+        },
+        languageVocab: {
+          score: Math.min(report.domains?.languageFeatures?.score || 0, maxScore),
+          weight: report.domains?.languageFeatures?.weight || 25,
+          strengths: (report.domains?.languageFeatures?.feedback || []).map((text: string) => ({ 
+            text, 
+            start: 0, 
+            end: 0 
+          })),
+          improvements: (report.areasForImprovement || [])
+            .filter((item: any) => item.toLowerCase().includes('language') || item.toLowerCase().includes('vocabulary'))
+            .map((text: string) => ({
+              issue: text,
+              evidence: { text: '', start: 0, end: 0 },
+              suggestion: 'Enhance your vocabulary'
+            }))
+        },
+        spellingPunctuationGrammar: {
+          score: Math.min(report.domains?.spellingAndGrammar?.score || 0, maxScore),
+          weight: report.domains?.spellingAndGrammar?.weight || 15,
+          strengths: (report.domains?.spellingAndGrammar?.feedback || []).map((text: string) => ({ 
+            text, 
+            start: 0, 
+            end: 0 
+          })),
+          improvements: (report.areasForImprovement || [])
+            .filter((item: any) => item.toLowerCase().includes('spelling') || item.toLowerCase().includes('grammar'))
+            .map((text: string) => ({
+              issue: text,
+              evidence: { text: '', start: 0, end: 0 },
+              suggestion: 'Review spelling and grammar rules'
+            }))
+        }
+      },
+      grammarCorrections: [],
+      vocabularyEnhancements: [],
+      overallGrade: report.overallGrade,
+      domains: report.domains,
+      detailedFeedback: report.detailedFeedback,
+      recommendations: report.recommendations,
+      strengths: report.strengths,
+      areasForImprovement: report.areasForImprovement,
+      essayContent: report.essayContent,
+      originalityReport: report.originalityReport
+    };
   };
 
-  // Format time utility
-  const formatTime = (seconds: number) => {
-    const h = Math.floor(seconds / 3600).toString().padStart(2, '0');
-    const m = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
-    const s = (seconds % 60).toString().padStart(2, '0');
-    return `${h}:${m}:${s}`;
-  };
+  // Calculate content status
+  const hasContent = localContent.trim().length > 0;
+    const showWordCountWarning = currentWordCount > 50;
 
-  // Handle evaluation
-  const handleEvaluate = async () => {
+  const handleSubmitForEvaluation = useCallback(async () => {
+    console.log('🎯 Submit button clicked!');
+    console.log('Content length:', localContent.length);
+    console.log('Has content:', hasContent);
+    
+    if (!localContent.trim()) {
+      alert("Please write something before submitting for evaluation.");
+      return;
+    }
+
+    if (onSubmit) {
+      console.log('Calling onSubmit prop...');
+      onSubmit(localContent);
+    }
+
+    console.log('Starting NSW evaluation...');
     setEvaluationStatus("loading");
-    setEvaluationProgress("Starting evaluation...");
+    setShowNSWEvaluation(true);
+    setEvaluationProgress("Analyzing your writing with AI...");
 
     try {
-      const generator = new NSWEvaluationReportGenerator();
-      const report = await generator.generate(localContent, effectivePrompt, (update) => {
-        setEvaluationProgress(update);
+      setTimeout(() => setEvaluationProgress("Checking grammar and structure..."), 1000);
+      setTimeout(() => setEvaluationProgress("Evaluating content and ideas..."), 2000);
+      setTimeout(() => setEvaluationProgress("Generating detailed feedback..."), 3000);
+
+      console.log('Calling AI NSW evaluation API...');
+
+      // Call AI evaluation backend
+      const response = await fetch("/.netlify/functions/nsw-ai-evaluation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          essayContent: localContent,
+          textType: textType,
+          prompt: effectivePrompt || ''
+        })
       });
 
-      setNswReport(report);
-      setShowNSWEvaluation(true);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to evaluate essay");
+      }
+
+      const aiReport = await response.json();
+      console.log('AI Report received:', aiReport);
+
+      setAiEvaluationReport(aiReport);
+      setShowNSWEvaluation(false);
+      setShowAIReport(true);
       setEvaluationStatus("success");
+
+      console.log('✅ AI Evaluation complete!');
     } catch (error) {
-      console.error("Evaluation failed:", error);
+      console.error("❌ NSW AI evaluation error:", error);
       setEvaluationStatus("error");
+      setShowNSWEvaluation(false);
+      alert(`There was an error during evaluation: ${error instanceof Error ? error.message : String(error)}. Please try again.`);
     }
-  };
+  }, [localContent, onSubmit, textType, effectivePrompt]);
+
+  const handleApplyFix = useCallback((fix: LintFix) => {
+    if (textareaRef.current) {
+      const start = fix.evidence.start;
+      const end = fix.evidence.end;
+      const newContent = localContent.substring(0, start) + fix.replacement + localContent.substring(end);
+      setLocalContent(newContent);
+      if (onChange) {
+        onChange(newContent);
+      }
+    }
+  }, [localContent, onChange]);
 
   return (
     <div className={`flex h-screen w-full ${darkMode ? 'bg-slate-900 text-gray-100' : 'bg-gray-100 text-gray-900'}`}>
@@ -571,18 +725,21 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
               className={`flex items-center space-x-1 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
                 panelVisible
                   ? darkMode ? 'bg-blue-600 text-white' : 'bg-blue-600 text-white'
-                  : darkMode ? 'text-gray-300 hover:text-gray-100 hover:bg-slate-700 border border-gray-700' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-100 border border-gray-300'
+                  : darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'
               }`}
+              title={panelVisible ? "Hide Writing Buddy" : "Show Writing Buddy"}
             >
-              {panelVisible ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-              <span>AI Coach {panelVisible ? 'Off' : 'On'}</span>
+              {panelVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              <span>{panelVisible ? 'Hide Buddy' : 'Show Buddy'}</span>
             </button>
 
             {/* Settings Button */}
             <button
               onClick={() => setShowSettings(!showSettings)}
-              className={`p-1.5 rounded-md transition-colors ${
-                darkMode ? 'text-gray-400 hover:bg-gray-700' : 'text-gray-500 hover:bg-gray-100'
+              className={`p-2 rounded-md transition-colors ${
+                showSettings
+                  ? darkMode ? 'bg-gray-700 text-gray-200' : 'bg-gray-200 text-gray-700'
+                  : darkMode ? 'text-gray-400 hover:bg-gray-700' : 'text-gray-500 hover:bg-gray-100'
               }`}
               title="Settings"
             >
@@ -592,82 +749,287 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
         </div>
         )}
 
-        {/* Main Content Area */}
-        <div className="flex flex-1 overflow-hidden">
-          {/* Text Editor */}
-          <div className="relative flex-1 flex flex-col p-6 overflow-y-auto" style={{ fontFamily: fontFamily, fontSize: `${fontSize}px`, lineHeight: lineHeight }}>
-            {focusMode && (
-              <div className={`absolute inset-0 bg-opacity-75 flex items-center justify-center z-10 ${
-                darkMode ? 'bg-slate-900' : 'bg-gray-100'
+        {/* Exam Mode Status Bar */}
+        {examModeLocal && (
+        <div className="flex items-center justify-center px-6 py-3 border-b flex-shrink-0 bg-gray-100 border-gray-300">
+          <div className="flex items-center space-x-6">
+            {/* Timer */}
+            <div className="flex items-center space-x-2">
+              <Clock className="w-4 h-4 text-gray-600" />
+              <span className="text-sm tabular-nums font-medium text-gray-800">
+                {formatTime(elapsedTime)}
+              </span>
+            </div>
+
+            {/* Word Count */}
+            <div className="flex items-center space-x-2">
+              <FileText className="w-4 h-4 text-gray-600" />
+              <span className={`text-sm font-bold tabular-nums ${
+                currentWordCount >= 400 ? 'text-green-600' :
+                currentWordCount >= 250 ? 'text-blue-600' :
+                'text-gray-700'
               }`}>
-                <span className={`text-xl font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Focus Mode Active</span>
+                {currentWordCount} {currentWordCount === 1 ? 'word' : 'words'}
+              </span>
+            </div>
+          </div>
+        </div>
+        )}
+
+        {/* Settings Panel */}
+        {showSettings && (
+          <div className={`p-3 border-b flex-shrink-0 ${darkMode ? 'bg-slate-800 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
+            <div className="flex items-center justify-between mb-3">
+              <h4 className={`font-medium text-sm ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>
+                ⚙️ Writing Settings
+              </h4>
+              <button
+                onClick={() => setShowSettings(false)}
+                className={`flex items-center space-x-1 px-3 py-1.5 rounded-md transition-colors text-sm font-medium ${
+                  darkMode
+                    ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+                title="Close Settings"
+              >
+                <X className="w-4 h-4" />
+                <span>Close</span>
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {/* Font Family */}
+              <div className="space-y-2">
+                <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  📝 Font Family
+                </label>
+                <select
+                  value={fontFamily}
+                  onChange={(e) => onSettingsChange && onSettingsChange({ fontFamily: e.target.value })}
+                  className="w-full p-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                >
+                  <option value="Inter">Inter</option>
+                  <option value="Georgia">Georgia</option>
+                  <option value="Times New Roman">Times New Roman</option>
+                  <option value="Arial">Arial</option>
+                  <option value="Helvetica">Helvetica</option>
+                  <option value="Courier New">Courier New</option>
+                </select>
               </div>
-            )}
+              
+              {/* Font Size */}
+              <div className="space-y-2">
+                <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  📏 Font Size
+                </label>
+                <input
+                  type="number"
+                  value={fontSize}
+                  onChange={(e) => onSettingsChange && onSettingsChange({ fontSize: parseInt(e.target.value) })}
+                  className="w-full p-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                />
+              </div>
+              
+              {/* Line Height */}
+              <div className="space-y-2">
+                <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  📐 Line Height
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={lineHeight}
+                  onChange={(e) => onSettingsChange && onSettingsChange({ lineHeight: parseFloat(e.target.value) })}
+                  className="w-full p-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-border-transparent"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Writing Area - Takes remaining space */}
+        <div className="flex-1 overflow-y-auto p-3">
+          <div className="relative h-full">
             <textarea
               ref={textareaRef}
               value={localContent}
-              onChange={handleContentChange}
-              className={`flex-1 w-full resize-none focus:outline-none p-4 rounded-lg leading-relaxed transition-colors duration-300 ${
-                darkMode ? 'bg-slate-800 text-gray-100 placeholder-gray-500' : 'bg-white text-gray-900 placeholder-gray-400'
+              onChange={(e) => handleContentChange(e.target.value)}
+              className={`w-full h-full resize-none p-4 rounded-xl shadow-lg transition-all duration-300 text-base leading-relaxed focus:outline-none ${
+                darkMode
+                  ? 'bg-slate-900 text-gray-100 placeholder-gray-500 border-2 border-slate-700 focus:border-cyan-500 focus:shadow-cyan-500/20'
+                  : 'bg-white text-gray-800 placeholder-gray-400 border-2 border-gray-200 focus:border-blue-500 focus:shadow-blue-500/20'
               }`}
-              placeholder="Start writing here..."
-              disabled={focusMode}
+              style={{ fontFamily, fontSize: `${fontSize}px`, lineHeight }}
+              placeholder="Start writing your amazing story here! Let your creativity flow and bring your ideas to life..."
             />
-            <div className="flex-shrink-0 pt-4">
-              <NSWSubmitButton content={localContent} prompt={effectivePrompt} textType={textType} />
-            </div>
-          </div>
 
-          {/* AI Coach Panel */}
-          {panelVisible && !examModeLocal && (
-            <EnhancedCoachPanel
-              content={localContent}
-              wordCount={currentWordCount}
-              grammarStats={grammarStats}
-              writingMetrics={writingMetrics}
-              qualityScore={qualityScore}
-              supportLevel={supportLevel}
-              onSupportLevelChange={handleSupportLevelChange}
-              lastSaved={lastSaved}
-              onFix={handleApplyFix}
-            />
-          )}
+            {/* Encouragement Message - Minimal */}
+            {currentWordCount >= 250 && currentWordCount < 300 && (
+              <div className={`absolute top-4 right-4 px-3 py-1.5 rounded-md text-xs font-medium backdrop-blur-sm ${
+                darkMode ? 'bg-blue-900/80 text-blue-200' : 'bg-blue-50/90 text-blue-700 border border-blue-200'
+              }`}>
+                🚀 Great progress! Keep going...
+              </div>
+            )}
+
+          </div>
+        </div>
+
+        {/* Bottom Submit Area */}
+        <div className="flex-shrink-0 p-3 bg-white dark:bg-slate-800 border-t border-gray-200 dark:border-slate-700">
+          <NSWSubmitButton
+            content={localContent}
+            wordCount={currentWordCount}
+            isSubmitting={evaluationStatus === 'loading'}
+            onSubmit={handleSubmitForEvaluation}
+            darkMode={darkMode}
+            minWords={50}
+          />
         </div>
       </div>
 
-      {/* Modals */}
-      {showPlanningTool && <PlanningToolModal textType={textType} onClose={() => setShowPlanningTool(false)} />}
-      {showStructureModal && <StructureGuideModal textType={textType} onClose={() => setShowStructureModal(false)} />}
-      {showTipsModalLocal && <TipsModal textType={textType} onClose={() => setShowTipsModalLocal(false)} />}
-      {showPromptOptionsModal && (
-        <PromptOptionsModal
-          onClose={() => setShowPromptOptionsModal(false)}
-          onGenerate={handleGeneratePrompt}
+      {/* AI Coach Panel - Conditional */}
+      {panelVisible && (
+        <div className={`w-[340px] flex-shrink-0 border-l overflow-y-auto transition-all duration-300 ${
+          darkMode ? 'bg-slate-800 border-gray-700' : 'bg-white border-gray-200'
+        }`}>
+          <EnhancedCoachPanel
           textType={textType}
+          content={localContent}
+          writingPrompt={initialPrompt}
+          wordCount={currentWordCount}
+          user={user}
+          darkMode={darkMode}
           openAIConnected={openAIConnected}
-          loading={openAILoading}
+          openAILoading={openAILoading}
+          onAnalysisUpdate={(newAnalysis) => onAnalysisChange && onAnalysisChange(newAnalysis)}
+          onApplyFix={(fix: LintFix) => {
+            // Implement fix application logic here
+          }}
+          selectedText={selectedText}
+          isFocusMode={false}
+          supportLevel={supportLevel}
+          onSupportLevelChange={() => setShowSupportLevelModal(true)}
+        />
+        </div>
+      )}
+
+      {/* Modals */}
+      <PlanningToolModal
+        isOpen={showPlanningTool}
+        onClose={() => setShowPlanningTool(false)}
+        textType={textType}
+        onSavePlan={(plan) => {
+          console.log('Plan saved:', plan);
+          setShowPlanningTool(false);
+        }}
+      />
+      <StructureGuideModal
+        isOpen={showStructureModal}
+        onClose={() => setShowStructureModal(false)}
+      />
+      <TipsModal
+        isOpen={showTipsModalLocal}
+        onClose={() => setShowTipsModalLocal(false)}
+        textType={textType}
+      />
+      {showAIReport && aiEvaluationReport && (
+        <AIEvaluationReportDisplay
+          report={aiEvaluationReport}
+          essayText={localContent}
+          onClose={() => {
+            setShowAIReport(false);
+            setAiEvaluationReport(null);
+            if (onAnalysisChange) onAnalysisChange(null);
+          }}
         />
       )}
-      {showNSWEvaluation && nswReport && (
-        <ReportModal onClose={() => setShowNSWEvaluation(false)}>
-          <AIEvaluationReportDisplay report={nswReport} />
-        </ReportModal>
+      {showReportModal && nswReport && (
+        <ReportModal
+          isOpen={showReportModal}
+          data={nswReport}
+          onClose={() => {
+            setShowReportModal(false);
+            setNswReport(null);
+            if (onAnalysisChange) onAnalysisChange(null);
+          }}
+          onApplyFix={handleApplyFix}
+          studentName="Student"
+          essayText={localContent}
+        />
+      )}
+      {showNSWEvaluation && evaluationStatus === "loading" && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 backdrop-blur-sm">
+          <div className={`p-8 rounded-xl shadow-2xl text-center max-w-md ${
+            darkMode ? 'bg-slate-800 border border-slate-700' : 'bg-white'
+          }`}>
+            <div className="relative">
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-cyan-500 mx-auto mb-4"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <Zap className="w-6 h-6 text-cyan-500 animate-pulse" />
+              </div>
+            </div>
+            <p className={`text-lg font-semibold mb-2 ${
+              darkMode ? 'text-gray-100' : 'text-gray-800'
+            }`}>Evaluating your writing...</p>
+            <p className={`text-sm mt-2 ${
+              darkMode ? 'text-gray-400' : 'text-gray-600'
+            }`}>{evaluationProgress}</p>
+            <div className="mt-4 flex justify-center space-x-1">
+              <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+              <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+              <div className="w-2 h-2 bg-cyan-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+            </div>
+            {evaluationStatus === "error" && (
+              <button
+                onClick={() => {
+                  setShowNSWEvaluation(false);
+                  setEvaluationStatus("idle");
+                }}
+                className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+              >
+                Close
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+      {showPromptOptionsModal && (
+        <PromptOptionsModal
+          isOpen={showPromptOptionsModal}
+          onClose={() => setShowPromptOptionsModal(false)}
+          onGeneratePrompt={handleGenerateNewPrompt}
+          onCustomPrompt={handleCustomPromptInput}
+          textType={textType}
+          darkMode={darkMode}
+        />
+      )}
+      {showSupportLevelModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className={`rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto ${darkMode ? 'bg-slate-800' : 'bg-white'}`}>
+            <div className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  Writing Buddy Support Level
+                </h2>
+                <button
+                  onClick={() => setShowSupportLevelModal(false)}
+                  className={`${darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'}`}
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+              <SupportLevelSelector
+                currentLevel={supportLevel}
+                onLevelChange={handleSupportLevelChange}
+                showRecommendations={true}
+              />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
 }
 
-// Helper function to apply fixes from the coach panel
-function applyFix(content: string, fix: LintFix): string {
-  // This is a simplified implementation. A more robust solution would handle
-  // overlapping fixes and more complex transformations.
-  const lines = content.split('\n');
-  if (fix.line > lines.length) return content;
-
-  const line = lines[fix.line - 1];
-  const before = line.substring(0, fix.column - 1);
-  const after = line.substring(fix.column - 1 + fix.text.length);
-
-  lines[fix.line - 1] = before + fix.fix + after;
-  return lines.join('\n');
-}
+export default EnhancedWritingLayoutNSW;
