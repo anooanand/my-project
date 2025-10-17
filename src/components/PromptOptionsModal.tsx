@@ -8,14 +8,15 @@ interface PromptOptionsModalProps {
   onGeneratePrompt: () => void;
   onCustomPrompt: () => void;
   textType: string;
+  loading: boolean;
 }
 
 export function PromptOptionsModal({
   isOpen,
   onClose,
   onGeneratePrompt,
-  onCustomPrompt,
-  textType
+  onCustomPrompt,  textType,
+  loading
 }: PromptOptionsModalProps) {
   const navigate = useNavigate();
 
@@ -77,6 +78,7 @@ export function PromptOptionsModal({
           <div className="space-y-6">
             <button
               onClick={handleGeneratePrompt}
+              disabled={loading}
               className="w-full flex items-center p-6 border-4 border-purple-200 dark:border-purple-800 rounded-2xl hover:border-purple-400 dark:hover:border-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-all duration-300 text-left group transform hover:scale-105 hover:shadow-xl"
             >
               <div className="flex-shrink-0 mr-6">
@@ -86,7 +88,17 @@ export function PromptOptionsModal({
               </div>
               <div className="flex-1">
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                  Magic Prompt Generator ✨
+                  {loading ? (
+                    <span className="flex items-center">
+                      Generating Prompt...
+                      <svg className="animate-spin ml-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    </span>
+                  ) : (
+                    "Magic Prompt Generator ✨"
+                  )}
                 </h3>
                 <p className="text-base text-gray-700 dark:text-gray-300">
                   Let our AI create an awesome {textType} prompt just for you! Perfect for getting started quickly.
@@ -96,6 +108,7 @@ export function PromptOptionsModal({
 
             <button
               onClick={handleCustomPrompt}
+              disabled={loading}
               className="w-full flex items-center p-6 border-4 border-blue-200 dark:border-blue-800 rounded-2xl hover:border-blue-400 dark:hover:border-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all duration-300 text-left group transform hover:scale-105 hover:shadow-xl"
             >
               <div className="flex-shrink-0 mr-6">
