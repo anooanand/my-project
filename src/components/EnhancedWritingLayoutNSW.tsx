@@ -312,6 +312,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
   const handleGenerateNewPrompt = useCallback(async () => {
     setIsLoadingPrompt(true);
+    setIsLoadingPrompt(true);
     try {
       const newPrompt = await generatePrompt(textType, promptConfig.systemPrompts.promptGenerator);
       setGeneratedPrompt(newPrompt);
@@ -324,6 +325,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
       }
       setShowPromptOptionsModal(false);
       if (onPopupCompleted) onPopupCompleted();
+    setIsLoadingPrompt(false);
     } catch (error) {
       console.error("Error generating prompt:", error);
       alert("Failed to generate a prompt. Please try again.");
@@ -333,6 +335,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
   }, [textType, setPrompt, onChange, onPopupCompleted]);
 
   const handleCustomPromptInput = useCallback((promptText: string) => {
+    setIsLoadingPrompt(true);
     setCustomPromptInput(promptText);
     setLocalContent(promptText);
     if (setPrompt) {
@@ -343,6 +346,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
     }
     setShowPromptOptionsModal(false);
     if (onPopupCompleted) onPopupCompleted();
+    setIsLoadingPrompt(false);
   }, [setPrompt, onChange, onPopupCompleted]);
 
   const handleContentChange = useCallback((newContent: string) => {
