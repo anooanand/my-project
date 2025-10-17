@@ -202,7 +202,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
   // Calculate word count first (needed by other metrics)
   const currentWordCount = React.useMemo(() => {
-    return localContent.trim() ? localContent.trim().split(/\s+/).length : 0;
+    return typeof localContent === 'string' && localContent.trim() ? localContent.trim().split(/\s+/).length : 0;
   }, [localContent]);
 
   // Calculate grammar stats
@@ -220,7 +220,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
   // Calculate additional writing metrics
   const writingMetrics = React.useMemo(() => {
-    const text = localContent.trim();
+    const text = typeof localContent === 'string' ? localContent.trim() : '';
     if (!text) return {
       characters: 0,
       charactersNoSpaces: 0,
@@ -289,7 +289,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
 
   // Update word count
   useEffect(() => {
-    const words = localContent.trim().split(/\s+/).filter(word => word.length > 0);
+    const words = typeof localContent === 'string' ? localContent.trim().split(/\s+/).filter(word => word.length > 0) : [];
     const newWordCount = words.length;
     if (newWordCount !== wordCount && onWordCountChange) {
       onWordCountChange(newWordCount);
