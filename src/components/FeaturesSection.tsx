@@ -17,7 +17,7 @@ const features: Feature[] = [
     id: 'ai-feedback',
     title: 'AI-Powered Feedback',
     description: 'Receive instant, detailed feedback on your writing with specific suggestions to improve content, structure, and style.',
-    details: 'Our advanced AI system analyzes your writing across multiple dimensions including grammar, vocabulary, sentence structure, coherence, and NSW selective exam criteria. Get personalized suggestions for improvement with explanations of why changes are recommended. The feedback is tailored specifically for students aged 9-11 preparing for selective school entrance exams.',
+    details: 'Our advanced AI system analyzes your writing across multiple dimensions including grammar, vocabulary, sentence structure, coherence, and NSW selective exam criteria. Get personalized suggestions for improvement with explanations of why changes are recommended. The feedback is tailored specifically for students aged 9-11 preparing for selective school entrance exams, explicitly aligned with the official NSW Department of Education rubric.',
     icon: <Brain className="w-6 h-6 text-indigo-700 dark:text-indigo-300" />,
     tag: 'Instant Analysis',
     color: 'indigo'
@@ -26,7 +26,7 @@ const features: Feature[] = [
     id: 'templates',
     title: 'Text Type Templates',
     description: 'Access templates for all text types with clear structures, examples, and guided prompts for better writing.',
-    details: 'Comprehensive templates for all 11 text types commonly found in NSW selective exams: narrative, persuasive, informative, descriptive, and more. Each template includes structure guidelines, vocabulary suggestions, example paragraphs, and step-by-step writing prompts to help students understand and master different writing formats.',
+    details: 'Comprehensive templates for all 11 text types commonly found in NSW selective exams: narrative, persuasive, informative, descriptive, and more. Each template includes structure guidelines, vocabulary suggestions, example paragraphs, and step-by-step writing prompts to help students understand and master different writing formats, explicitly aligned with the official NSW Department of Education rubric.',
     icon: <BookOpen className="w-6 h-6 text-purple-700 dark:text-purple-300" />,
     tag: '11 Types',
     color: 'purple'
@@ -35,7 +35,7 @@ const features: Feature[] = [
     id: 'practice',
     title: 'Timed Practice Mode',
     description: 'Practice under real exam conditions with our timer and realistic practice prompts based on past exams.',
-    details: 'Simulate actual exam conditions with authentic prompts from past NSW selective tests. Features include customizable timers, distraction-free writing environment, automatic saving, and post-practice analysis. Students can practice with different time limits to build confidence and improve time management skills.',
+    details: 'Simulate actual exam conditions with 30-minute timed sessions and typed responses—exactly like the actual NSW Selective Placement Test. Features include customizable timers, distraction-free writing environment, automatic saving, and post-practice analysis. Students can practice with different time limits to build confidence and improve time management skills.',
     icon: <Clock className="w-6 h-6 text-amber-700 dark:text-amber-300" />,
     tag: 'Exam Mode',
     color: 'amber'
