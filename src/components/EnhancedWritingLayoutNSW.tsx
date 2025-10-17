@@ -139,6 +139,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
   const [evaluationStatus, setEvaluationStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [evaluationProgress, setEvaluationProgress] = useState("");
   const [showPromptOptionsModal, setShowPromptOptionsModal] = useState(false);
+  const [isLoadingPrompt, setIsLoadingPrompt] = useState(false);
   const [hidePrompt, setHidePrompt] = useState(false);
   const [isPromptCollapsed, setIsPromptCollapsed] = useState(false);
 
@@ -310,6 +311,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
   };
 
   const handleGenerateNewPrompt = useCallback(async () => {
+    setIsLoadingPrompt(true);
     try {
       const newPrompt = await generatePrompt(textType, promptConfig.systemPrompts.promptGenerator);
       setGeneratedPrompt(newPrompt);
@@ -325,6 +327,8 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
     } catch (error) {
       console.error("Error generating prompt:", error);
       alert("Failed to generate a prompt. Please try again.");
+    } finally {
+      setIsLoadingPrompt(false);
     }
   }, [textType, setPrompt, onChange, onPopupCompleted]);
 
@@ -998,6 +1002,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
         <PromptOptionsModal
           isOpen={showPromptOptionsModal}
           onClose={() => setShowPromptOptionsModal(false)}
+          loading={isLoadingPrompt}
           onGeneratePrompt={handleGenerateNewPrompt}
           onCustomPrompt={handleCustomPromptInput}
           textType={textType}
