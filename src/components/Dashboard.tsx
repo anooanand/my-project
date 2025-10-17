@@ -674,7 +674,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
           onGeneratePrompt={handleGeneratePrompt}
           onCustomPrompt={handleCustomPrompt}
           selectedWritingType={selectedWritingType}
-          isGenerating={isGeneratingPrompt}
+          loading={isGeneratingPrompt}
         />
       )}
 
