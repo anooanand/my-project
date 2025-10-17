@@ -6,7 +6,7 @@ import { WritingTypeSelectionModal } from './WritingTypeSelectionModal';
 import { PromptOptionsModal } from './PromptOptionsModal';
 import { CustomPromptModal } from './CustomPromptModal';
 import { generatePrompt } from '../lib/openai';
-import { Mail, CheckCircle, Clock, FileText, PenTool, BarChart3, Settings, X, Star, BookOpen, Zap, Heart, Trophy, Sparkles, Smile, Target, Gift, Flame, TrendingUp, Award, Rocket, Crown, Gem, Wand2, Palette, Music, Camera, Gamepad2, HelpCircle, ArrowRight, Play, Calendar, Users, ChevronRight, Activity, BookMarked, CreditCard, Timer, Brain, Lightbulb } from 'lucide-react';
+import { Mail, CheckCircle, Clock, FileText, PenTool, BarChart3, Settings, X, Star, BookOpen, Zap, Heart, Trophy, Sparkles, Smile, Target, Gift, Flame, TrendingUp, Award, Rocket, Crown, Gem, Wand2, Palette, Music, Camera, Gamepad2, HelpCircle, ArrowRight, Play, Calendar, Users, ChevronRight, Activity, BookMarked, CreditCard, Edit3, Timer, Brain, Lightbulb } from 'lucide-react';
 
 interface DashboardProps {
   user?: any;
@@ -218,79 +218,99 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
         expository: "Select a topic you know well and write an informative essay that teaches others about it. Use clear explanations, relevant examples, and organize your information in a logical sequence. Include an engaging introduction that hooks your reader, body paragraphs that explore different aspects of your topic, and a strong conclusion that summarizes your main points.",
         reflective: "Think about a meaningful experience in your life and write a reflective piece exploring what you learned from it. Show your thoughts and feelings, and explain how this experience changed or influenced you. Be honest and thoughtful in your reflection, using specific details to help your reader understand the significance of this experience.",
         descriptive: "Choose a place, person, or object that is special to you and write a descriptive piece that brings it to life for your reader. Use sensory details (sight, sound, smell, touch, taste) and figurative language like metaphors and similes to create vivid imagery. Paint a picture with words that allows your reader to experience what you're describing.",
-        // Add more fallback prompts for other text types as needed
+        recount: "Write about an important event or experience in your life, telling what happened in the order it occurred. Include details about who was involved, where it happened, when it took place, and why it was significant to you. Use descriptive language to help your reader visualize the events and understand their importance."
       };
 
       const fallbackPrompt = fallbackPrompts[selectedWritingType as keyof typeof fallbackPrompts] || fallbackPrompts.narrative;
 
-      console.log('⚠️ Using fallback prompt:', fallbackPrompt);
+      console.log('🔄 Using fallback prompt:', fallbackPrompt);
 
-      // Save fallback prompt with timestamp
-      localStorage.removeItem("customPrompt");
-      localStorage.removeItem("customPromptTimestamp");
-      localStorage.setItem("generatedPrompt", fallbackPrompt);
-      localStorage.setItem("generatedPromptTimestamp", new Date().toISOString());
+      // Save fallback prompt
+      localStorage.setItem(`${selectedWritingType}_prompt`, fallbackPrompt);
+      localStorage.setItem('generatedPrompt', fallbackPrompt);
       localStorage.setItem('selectedWritingType', selectedWritingType);
-      localStorage.setItem("promptType", "generated");
+      localStorage.setItem('promptType', 'generated');
 
-      // Dispatch event with fallback prompt
-      window.dispatchEvent(new CustomEvent('promptGenerated', {
-        detail: { prompt: fallbackPrompt, textType: selectedWritingType, timestamp: new Date().toISOString() }
-      }));
-
-      // Small delay to ensure localStorage is written
-      await new Promise(resolve => setTimeout(resolve, 200));
-
-      // Navigate to writing area
-      navigate("/writing");
+      // Close prompt options modal
       setShowPromptOptionsModal(false);
-      console.log('✅ Dashboard: Navigation to /writing initiated with fallback prompt');
+
+      // Navigate to writing area with fallback prompt
+      await new Promise(resolve => setTimeout(resolve, 200));
+      navigate('/writing');
 
     } finally {
       setIsGeneratingPrompt(false);
     }
   };
 
-  // FIXED: Step 4 - Handle custom prompt selection
+  // FIXED: Step 3 - Handle custom prompt with timestamp, then navigate to writing area
   const handleCustomPrompt = () => {
-    console.log('✏️ Dashboard: User selected custom prompt option');
+    console.log('✏️ Dashboard: Using custom prompt for:', selectedWritingType);
+
+    // Store the prompt type
+    localStorage.setItem('promptType', 'custom');
+    localStorage.setItem('selectedWritingType', selectedWritingType);
+
+    // Close prompt options modal and show custom prompt modal
     setShowPromptOptionsModal(false);
     setShowCustomPromptModal(true);
   };
 
-  // FIXED: Step 5 - Handle custom prompt submission
-  const handleCustomPromptSubmit = (customPrompt: string) => {
-    console.log('📝 Dashboard: Custom prompt submitted:', customPrompt);
+  // Handle custom prompt submission and navigate to writing area
+  const handleCustomPromptSubmit = (prompt: string) => {
+    console.log('✏️ Dashboard: Custom prompt submitted:', prompt.substring(0, 50) + '...');
 
-    // CRITICAL: Clear generated prompt and save custom prompt with timestamp
+    // FIXED: Clear generated prompt and save custom prompt with timestamp
     localStorage.removeItem("generatedPrompt");
     localStorage.removeItem("generatedPromptTimestamp");
-    localStorage.setItem("customPrompt", customPrompt);
+    localStorage.setItem("customPrompt", prompt);
     localStorage.setItem("customPromptTimestamp", new Date().toISOString());
-    localStorage.setItem('selectedWritingType', selectedWritingType);
-    localStorage.setItem("promptType", "custom");
 
     console.log('✅ Custom prompt saved to localStorage with timestamp');
 
     // Dispatch custom event to notify other components
-    window.dispatchEvent(new CustomEvent('customPromptSubmitted', {
-      detail: { prompt: customPrompt, textType: selectedWritingType, timestamp: new Date().toISOString() }
+    window.dispatchEvent(new CustomEvent('promptGenerated', {
+      detail: { prompt, textType: 'custom', timestamp: new Date().toISOString() }
     }));
 
-    // Close modal and navigate to writing area
+    // Close custom prompt modal
     setShowCustomPromptModal(false);
-    navigate("/writing");
-    console.log('✅ Dashboard: Navigation to /writing initiated with custom prompt');
+
+    // Navigate to writing page (Step 4 - Writing Area)
+    console.log('📍 Dashboard: Navigating to writing area with custom prompt...');
+
+    // FIXED: Use React Router navigate directly for consistent navigation
+    try {
+      navigate('/writing');
+    } catch (error) {
+      console.error('❌ Dashboard: Navigation error:', error);
+      // Fallback to onNavigate if available
+      if (onNavigate) {
+        console.log('📍 Dashboard: Using onNavigate fallback');
+        onNavigate('writing');
+      } else {
+        console.log('📍 Dashboard: Using window.location fallback');
+        window.location.href = '/writing';
+      }
+    }
   };
 
-  const getFormattedDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  const handlePracticeExam = () => {
+    console.log('🚀 Dashboard: Navigating to practice exam...');
+    try {
+      navigate('/exam');
+    } catch (error) {
+      console.error('❌ Dashboard: Exam navigation error:', error);
+      if (onNavigate) {
+        onNavigate('exam');
+      } else {
+        window.location.href = '/exam';
+      }
+    }
+  };
+
+  const formatDateTime = (dateString: string) => {
+    return new Date(dateString).toLocaleString();
   };
 
   const getTimeRemaining = (dateString: string) => {
@@ -300,333 +320,346 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
 
     if (diff <= 0) return 'Expired';
 
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
-    if (days > 0) {
-      return `${days} day${days !== 1 ? 's' : ''} ${hours} hour${hours !== 1 ? 's' : ''} remaining`;
+    if (hours > 0) {
+      return `${hours}h ${minutes}m remaining`;
     } else {
-      return `${hours} hour${hours !== 1 ? 's' : ''} remaining`;
+      return `${minutes}m remaining`;
     }
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-600 dark:border-indigo-400 mb-4"></div>
-          <p className="text-xl font-semibold text-gray-700 dark:text-gray-300">Loading your dashboard...</p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="relative">
+            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
+            <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-r-indigo-400 rounded-full animate-spin mx-auto" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+          </div>
+          <div className="space-y-2">
+            <p className="text-slate-700 text-lg font-medium">Loading your dashboard...</p>
+            <p className="text-slate-500 text-sm">Preparing your writing journey</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      {/* Welcome Message */}
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 relative">
+
+      {/* Welcome Message Modal - Modern Design */}
       {showWelcomeMessage && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full p-8 relative animate-scale-in">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full relative border border-slate-200">
             <button
               onClick={handleDismissWelcome}
-              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors bg-slate-100 hover:bg-slate-200 p-2 rounded-full"
             >
-              <X className="w-6 h-6" />
+              <X className="h-5 w-5" />
             </button>
             
-            <div className="text-center mb-6">
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-green-400 to-blue-500 rounded-full mb-4">
-                <Trophy className="w-10 h-10 text-white" />
+            <div className="p-8 text-center">
+              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Sparkles className="h-8 w-8 text-white" />
               </div>
-              <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                🎉 Welcome to Writing Buddy!
+              
+              <h2 className="heading-3 text-slate-900 mb-4">
+                Welcome, {getUserName()}! 🎉
               </h2>
-              <p className="text-lg text-gray-600 dark:text-gray-300">
-                You're all set, {getUserName()}! Your account is verified and ready to go.
+              
+              <p className="text-slate-600 mb-6 leading-relaxed">
+                You're all set to start your writing journey! Your AI writing buddy is ready to help you create amazing stories and essays.
               </p>
-            </div>
-
-            <div className="bg-gradient-to-r from-green-50 to-blue-50 dark:from-green-900/20 dark:to-blue-900/20 rounded-xl p-6 mb-6">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3 flex items-center">
-                <Sparkles className="w-6 h-6 mr-2 text-yellow-500" />
-                What You Can Do Now:
-              </h3>
-              <ul className="space-y-2 text-gray-700 dark:text-gray-300">
-                <li className="flex items-start">
-                  <CheckCircle className="w-5 h-5 mr-2 text-green-500 flex-shrink-0 mt-0.5" />
-                  <span>Start writing with AI-powered assistance</span>
-                </li>
-                <li className="flex items-start">
-                  <CheckCircle className="w-5 h-5 mr-2 text-green-500 flex-shrink-0 mt-0.5" />
-                  <span>Track your progress and achievements</span>
-                </li>
-                <li className="flex items-start">
-                  <CheckCircle className="w-5 h-5 mr-2 text-green-500 flex-shrink-0 mt-0.5" />
-                  <span>Access writing guides and resources</span>
-                </li>
-                <li className="flex items-start">
-                  <CheckCircle className="w-5 h-5 mr-2 text-green-500 flex-shrink-0 mt-0.5" />
-                  <span>Generate creative writing prompts</span>
-                </li>
-              </ul>
-            </div>
-
-            <button
-              onClick={handleDismissWelcome}
-              className="w-full bg-gradient-to-r from-green-500 to-blue-600 text-white font-semibold py-3 px-6 rounded-xl hover:from-green-600 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl"
-            >
-              Let's Get Started! 🚀
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Start Here Guide */}
-      {showStartHereGuide && !showWelcomeMessage && (
-        <div className="fixed bottom-8 right-8 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-md p-6 z-40 animate-slide-in-right border-2 border-indigo-500">
-          <button
-            onClick={handleDismissGuide}
-            className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-          
-          <div className="flex items-start mb-4">
-            <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center mr-4">
-              <Lightbulb className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                👋 Start Here!
-              </h3>
-              <p className="text-gray-600 dark:text-gray-300 text-sm mb-3">
-                Click the <strong>"Start Writing"</strong> button below to begin your first writing session!
-              </p>
-              <div className="flex items-center text-indigo-600 dark:text-indigo-400 text-sm font-medium">
-                <ArrowRight className="w-4 h-4 mr-1 animate-bounce-horizontal" />
-                Look for the purple button
-              </div>
-            </div>
-          </div>
-          
-          <button
-            onClick={handleDismissGuide}
-            className="w-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 font-medium py-2 px-4 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm"
-          >
-            Got it!
-          </button>
-        </div>
-      )}
-
-      {/* Header */}
-      <header className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md shadow-lg sticky top-0 z-30 border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                  <PenTool className="w-6 h-6 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">
-                    Writing Buddy
-                  </h1>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">Your AI Writing Assistant</p>
-                </div>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="hidden sm:flex items-center space-x-2 bg-gray-100 dark:bg-gray-700 px-4 py-2 rounded-full">
-                <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">{getUserName().charAt(0).toUpperCase()}</span>
-                </div>
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {getUserName()}
-                </span>
-              </div>
+              
               <button
-                onClick={onSignOut}
-                className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+                onClick={handleDismissWelcome}
+                className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-semibold transition-all duration-200 transform hover:scale-105"
               >
-                <Settings className="w-6 h-6" />
+                Let's Get Started!
               </button>
             </div>
           </div>
         </div>
-      </header>
+      )}
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Hero Section */}
-        <section className="text-center mb-12">
-          <h2 className="text-5xl font-extrabold text-gray-900 dark:text-white mb-4">
-            Welcome Back, <span className="bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">{getUserName()}</span>! 👋
-          </h2>
-          <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">
-            Ready to create something amazing today?
-          </p>
-          <button
-            onClick={handleStartWriting}
-            className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold text-lg rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-200 transform hover:scale-105"
-          >
-            <Play className="w-6 h-6 mr-2" />
-            Start Writing
-          </button>
-        </section>
-
-        {/* Quick Stats */}
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-200 dark:border-gray-700 hover:shadow-2xl transition-shadow duration-200">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
-                <FileText className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-3xl font-bold text-gray-900 dark:text-white">0</span>
-            </div>
-            <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">Essays Written</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Start your first essay today!</p>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-200 dark:border-gray-700 hover:shadow-2xl transition-shadow duration-200">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
-                <Trophy className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-3xl font-bold text-gray-900 dark:text-white">0</span>
-            </div>
-            <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">Achievements</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Unlock badges as you write!</p>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-200 dark:border-gray-700 hover:shadow-2xl transition-shadow duration-200">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center">
-                <Flame className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-3xl font-bold text-gray-900 dark:text-white">0</span>
-            </div>
-            <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300">Day Streak</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Write daily to build your streak!</p>
-          </div>
-        </section>
-
-        {/* Features Grid */}
-        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-200 dark:border-gray-700 hover:shadow-2xl transition-all duration-200 hover:-translate-y-1">
-            <div className="flex items-center mb-4">
-              <Brain className="w-8 h-8 text-purple-500 mr-3" />
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">AI Writing Coach</h3>
-            </div>
-            <p className="text-gray-700 dark:text-gray-300 mb-5">
-              Get real-time feedback and suggestions to improve your writing skills.
-            </p>
+      {/* Start Here Guide Modal */}
+      {showStartHereGuide && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full relative border border-slate-200">
             <button
-              onClick={handleStartWriting}
-              className="text-purple-600 dark:text-purple-400 font-semibold flex items-center group"
+              onClick={handleDismissGuide}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors bg-slate-100 hover:bg-slate-200 p-2 rounded-full"
             >
-              Start Writing <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              <X className="h-5 w-5" />
             </button>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-200 dark:border-gray-700 hover:shadow-2xl transition-all duration-200 hover:-translate-y-1">
-            <div className="flex items-center mb-4">
-              <BarChart3 className="w-8 h-8 text-blue-500 mr-3" />
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Progress Tracking</h3>
-            </div>
-            <p className="text-gray-700 dark:text-gray-300 mb-5">
-              Monitor your improvement and celebrate your achievements along the way.
-            </p>
-            <button
-              onClick={() => navigate('/progress')}
-              className="text-blue-600 dark:text-blue-400 font-semibold flex items-center group"
-            >
-              View Progress <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </button>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 border border-gray-200 dark:border-gray-700 hover:shadow-2xl transition-all duration-200 hover:-translate-y-1">
-            <div className="flex items-center mb-4">
-              <Wand2 className="w-8 h-8 text-green-500 mr-3" />
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white">Prompt Generator</h3>
-            </div>
-            <p className="text-gray-700 dark:text-gray-300 mb-5">
-              Spark your creativity with unique and engaging writing prompts tailored to your needs.
-            </p>
-            <button
-              onClick={handleStartWriting}
-              className="text-green-600 dark:text-green-400 font-semibold flex items-center group"
-            >
-              Generate Prompt <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </button>
-          </div>
-        </section>
-
-        {/* Access Status Section */}
-        <section className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 mb-12 border border-gray-200 dark:border-gray-700">
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
-            <CreditCard className="w-7 h-7 mr-3 text-indigo-500" /> Your Access Status
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="flex items-center bg-gray-50 dark:bg-gray-700 p-4 rounded-lg shadow-sm">
-              <CheckCircle className={`w-6 h-6 mr-3 ${isVerified ? 'text-green-500' : 'text-red-500'}`} />
-              <div>
-                <p className="text-lg font-medium text-gray-800 dark:text-gray-200">Email Verification:</p>
-                <p className={`text-md ${isVerified ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                  {isVerified ? 'Verified' : 'Not Verified'}              </p>
+            
+            <div className="p-8">
+              <div className="text-center mb-8">
+                <div className="w-20 h-20 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Lightbulb className="h-10 w-10 text-white" />
+                </div>
+                <h2 className="heading-2 text-slate-900 mb-2">Quick Start Guide</h2>
+                <p className="text-slate-600">Follow these simple steps to begin writing</p>
               </div>
-            </div>
-            <div className="flex items-center bg-gray-50 dark:bg-gray-700 p-4 rounded-lg shadow-sm">
-              <Zap className={`w-6 h-6 mr-3 ${paymentCompleted ? 'text-green-500' : 'text-yellow-500'}`} />
-              <div>
-                <p className="text-lg font-medium text-gray-800 dark:text-gray-200">Subscription Status:</p>
-                <p className={`text-md ${paymentCompleted ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}`}>
-                  {paymentCompleted ? 'Active' : 'Free Tier / Expired'}
-                </p>
-              </div>
-            </div>
-            {accessType === 'temporary' && tempAccessUntil && (
-              <div className="flex items-center bg-yellow-50 dark:bg-yellow-900/30 p-4 rounded-lg shadow-sm col-span-full">
-                <Clock className="w-6 h-6 mr-3 text-yellow-600 dark:text-yellow-400" />
-                <div>
-                  <p className="text-lg font-medium text-yellow-800 dark:text-yellow-200">Temporary Access:</p>
-                  <p className="text-md text-yellow-700 dark:text-yellow-300">
-                    You have temporary access until {getFormattedDate(tempAccessUntil)} ({getTimeRemaining(tempAccessUntil)}).
-                  </p>
+              
+              <div className="space-y-4 mb-8">
+                <div className="flex items-start space-x-4 p-4 bg-blue-50 rounded-xl">
+                  <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">1</div>
+                  <div>
+                    <h3 className="font-semibold text-slate-900 mb-1">Start Writing</h3>
+                    <p className="text-slate-600 text-sm">Click the "Start Writing" button to begin your writing session</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-4 p-4 bg-purple-50 rounded-xl">
+                  <div className="w-8 h-8 bg-purple-500 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">2</div>
+                  <div>
+                    <h3 className="font-semibold text-slate-900 mb-1">Choose Writing Type</h3>
+                    <p className="text-slate-600 text-sm">Select from narrative, persuasive, descriptive, and more</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-4 p-4 bg-emerald-50 rounded-xl">
+                  <div className="w-8 h-8 bg-emerald-500 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">3</div>
+                  <div>
+                    <h3 className="font-semibold text-slate-900 mb-1">Get Your Prompt</h3>
+                    <p className="text-slate-600 text-sm">Receive an AI-generated prompt or create your own</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-4 p-4 bg-orange-50 rounded-xl">
+                  <div className="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">4</div>
+                  <div>
+                    <h3 className="font-semibold text-slate-900 mb-1">Write & Get Feedback</h3>
+                    <p className="text-slate-600 text-sm">Start writing and receive real-time AI feedback to improve</p>
+                  </div>
                 </div>
               </div>
-            )}
+              
+              <div className="flex space-x-3">
+                <button
+                  onClick={handleDismissGuide}
+                  className="flex-1 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-semibold transition-colors"
+                >
+                  Skip for Now
+                </button>
+                <button
+                  onClick={() => {
+                    handleDismissGuide();
+                    handleStartWriting();
+                  }}
+                  className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-semibold transition-all duration-200 transform hover:scale-105"
+                >
+                  Start Writing Now
+                </button>
+              </div>
+            </div>
           </div>
-          <div className="mt-6 text-center">
-            <button
-              onClick={handleManualRefresh}
-              className="text-indigo-600 dark:text-indigo-400 font-semibold hover:underline flex items-center justify-center mx-auto"
-            >
-              <Activity className="w-5 h-5 mr-2" /> Refresh Status
+        </div>
+      )}
+
+      {/* Main Content */}
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header Section */}
+        <div className="mb-12">
+          <div>
+            <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-3">
+              Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-700">{getUserName()}</span>! 👋
+            </h1>
+            <p className="text-xl text-gray-600">
+              Ready to create something amazing today?
+            </p>
+          </div>
+        </div>
+
+        {/* Main Action Cards */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+          {/* Start Writing Card */}
+          <div
+            onClick={handleStartWriting}
+            className="group relative bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 rounded-2xl p-8 cursor-pointer overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-6">
+                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                  <Edit3 className="h-8 w-8 text-white" />
+                </div>
+                <ArrowRight className="h-6 w-6 text-white/70 group-hover:text-white group-hover:translate-x-1 transition-all duration-300" />
+              </div>
+              
+              <h2 className="text-2xl font-bold text-white mb-3">Start Writing</h2>
+              <p className="text-white text-lg mb-6 leading-relaxed">
+                Begin a new writing session with AI-powered guidance and real-time feedback
+              </p>
+
+              <div className="flex items-center space-x-4 text-white">
+                <div className="flex items-center space-x-2">
+                  <Brain className="h-4 w-4" />
+                  <span className="text-sm">AI Assistance</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Zap className="h-4 w-4" />
+                  <span className="text-sm">Real-time Feedback</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Decorative Elements */}
+            <div className="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
+            <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-indigo-400/20 rounded-full blur-xl"></div>
+          </div>
+
+          {/* Practice Exam Card */}
+          <div
+            onClick={handlePracticeExam}
+            className="group relative bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800 rounded-2xl p-8 cursor-pointer overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-6">
+                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                  <Timer className="h-8 w-8 text-white" />
+                </div>
+                <ArrowRight className="h-6 w-6 text-white/70 group-hover:text-white group-hover:translate-x-1 transition-all duration-300" />
+              </div>
+              
+              <h2 className="text-2xl font-bold text-white mb-3">Practice Exam</h2>
+              <p className="text-white text-lg mb-6 leading-relaxed">
+                Test your skills with timed practice sessions under real exam conditions
+              </p>
+
+              <div className="flex items-center space-x-4 text-white">
+                <div className="flex items-center space-x-2">
+                  <Clock className="h-4 w-4" />
+                  <span className="text-sm">Timed Sessions</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Target className="h-4 w-4" />
+                  <span className="text-sm">NSW Aligned</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Decorative Elements */}
+            <div className="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
+            <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-teal-400/20 rounded-full blur-xl"></div>
+          </div>
+        </div>
+
+        {/* Tools & Tips Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+          {/* Writing Tools Overview */}
+          <div className="lg:col-span-2 bg-white/80 backdrop-blur-sm rounded-2xl p-8 border border-gray-200 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold text-gray-900">Your Writing Tools</h3>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              <div className="text-center p-6 bg-blue-50 rounded-xl">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <FileText className="h-8 w-8 text-white" />
+                </div>
+                <p className="text-gray-900 font-semibold mb-1">Multiple Text Types</p>
+                <p className="text-gray-600 text-sm">Narrative, Persuasive & More</p>
+              </div>
+
+              <div className="text-center p-6 bg-purple-50 rounded-xl">
+                <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Brain className="h-8 w-8 text-white" />
+                </div>
+                <p className="text-gray-900 font-semibold mb-1">AI Feedback</p>
+                <p className="text-gray-600 text-sm">Real-time guidance</p>
+              </div>
+
+              <div className="text-center p-6 bg-green-50 rounded-xl">
+                <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Target className="h-8 w-8 text-white" />
+                </div>
+                <p className="text-gray-900 font-semibold mb-1">NSW Aligned</p>
+                <p className="text-gray-600 text-sm">Curriculum specific</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Tips */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200 shadow-sm">
+            <h3 className="text-xl font-bold text-gray-900 mb-6">Writing Tips</h3>
+
+            <div className="space-y-4">
+              <div className="flex items-start space-x-3">
+                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Lightbulb className="h-4 w-4 text-blue-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900">Show, Don't Tell</p>
+                  <p className="text-xs text-gray-600">Use vivid descriptions</p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3">
+                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Brain className="h-4 w-4 text-purple-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900">Plan First</p>
+                  <p className="text-xs text-gray-600">Structure your ideas</p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3">
+                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <CheckCircle className="h-4 w-4 text-green-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900">Edit & Revise</p>
+                  <p className="text-xs text-gray-600">Polish your work</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 border border-gray-200 shadow-sm">
+          <h3 className="text-2xl font-bold text-gray-900 mb-6">Quick Actions</h3>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <button className="flex flex-col items-center p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors group">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 group-hover:from-blue-200 group-hover:to-blue-300 rounded-xl flex items-center justify-center mb-3 transition-all">
+                <BookMarked className="h-6 w-6 text-blue-600" />
+              </div>
+              <span className="text-sm font-medium text-gray-700">View Essays</span>
+            </button>
+
+            <button className="flex flex-col items-center p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors group">
+              <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-green-200 group-hover:from-green-200 group-hover:to-green-300 rounded-xl flex items-center justify-center mb-3 transition-all">
+                <BarChart3 className="h-6 w-6 text-green-600" />
+              </div>
+              <span className="text-sm font-medium text-gray-700">Progress</span>
+            </button>
+
+            <button className="flex flex-col items-center p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors group">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-purple-200 group-hover:from-purple-200 group-hover:to-purple-300 rounded-xl flex items-center justify-center mb-3 transition-all">
+                <Settings className="h-6 w-6 text-purple-600" />
+              </div>
+              <span className="text-sm font-medium text-gray-700">Settings</span>
+            </button>
+
+            <button className="flex flex-col items-center p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors group">
+              <div className="w-12 h-12 bg-gradient-to-br from-orange-100 to-orange-200 group-hover:from-orange-200 group-hover:to-orange-300 rounded-xl flex items-center justify-center mb-3 transition-all">
+                <HelpCircle className="h-6 w-6 text-orange-600" />
+              </div>
+              <span className="text-sm font-medium text-gray-700">Help</span>
             </button>
           </div>
-        </section>
-
-        {/* Quick Links / Resources */}
-        <section className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-200 dark:border-gray-700">
-          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
-            <BookMarked className="w-7 h-7 mr-3 text-teal-500" /> Quick Links & Resources
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <a href="#" className="flex items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg shadow-sm hover:bg-gray-100 dark:hover:bg-gray-600 transition duration-200 group">
-              <FileText className="w-6 h-6 mr-3 text-teal-500 group-hover:text-teal-600" />
-              <span className="text-lg font-medium text-gray-800 dark:text-gray-200 group-hover:text-gray-900 dark:group-hover:text-white">Writing Guides</span>
-            </a>
-            <a href="#" className="flex items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg shadow-sm hover:bg-gray-100 dark:hover:bg-gray-600 transition duration-200 group">
-              <Users className="w-6 h-6 mr-3 text-teal-500 group-hover:text-teal-600" />
-              <span className="text-lg font-medium text-gray-800 dark:text-gray-200 group-hover:text-gray-900 dark:group-hover:text-white">Community Forum</span>
-            </a>
-            <a href="#" className="flex items-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg shadow-sm hover:bg-gray-100 dark:hover:bg-gray-600 transition duration-200 group">
-              <HelpCircle className="w-6 h-6 mr-3 text-teal-500 group-hover:text-teal-600" />
-              <span className="text-lg font-medium text-gray-800 dark:text-gray-200 group-hover:text-gray-900 dark:group-hover:text-white">Support & FAQ</span>
-            </a>
-          </div>
-        </section>
-      </main>
+        </div>
+      </div>
 
       {/* Modals */}
       {showWritingTypeModal && (
@@ -644,7 +677,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
           onGeneratePrompt={handleGeneratePrompt}
           onCustomPrompt={handleCustomPrompt}
           selectedWritingType={selectedWritingType}
-          loading={isGeneratingPrompt}
+          isGenerating={isGeneratingPrompt}
         />
       )}
 
