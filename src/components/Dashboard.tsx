@@ -434,7 +434,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
 
       {/* Main Dashboard Content */}
       <header className="relative bg-gradient-to-r from-blue-600 to-purple-700 text-white py-16 px-4 sm:px-6 lg:px-8 shadow-xl overflow-hidden">
-        <div className="absolute inset-0 w-full h-full" style={{ backgroundImage: 'url("https://assets.website-files.com/645b2067215383a887009e46/645b206721538340d0009e86_Group%201736.svg" )' , backgroundPosition: 'center', backgroundSize: 'cover', opacity: 0.1 }}></div>
+        <div className="absolute inset-0 w-full h-full" style={{ backgroundImage: 'url("https://assets.website-files.com/645b2067215383a887009e46/645b206721538340d0009e86_Group%201736.svg")' , backgroundPosition: 'center', backgroundSize: 'cover', opacity: 0.1 }}></div>
         <div className="max-w-7xl mx-auto relative z-10">
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold mb-4 leading-tight">
             Hello, {getUserName()}!
@@ -516,7 +516,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
         {/* Access Status Section */}
         <section className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 mb-12 border border-gray-200 dark:border-gray-700">
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
-            <CreditCard className="w-7 h-7 mr-3 text-indigo-500" /> Your Access Status
+            <Edit3 className="w-7 h-7 mr-3 text-indigo-500" /> Your Access Status
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="flex items-center bg-gray-50 dark:bg-gray-700 p-4 rounded-lg shadow-sm">
