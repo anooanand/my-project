@@ -524,8 +524,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
               <div>
                 <p className="text-lg font-medium text-gray-800 dark:text-gray-200">Email Verification:</p>
                 <p className={`text-md ${isVerified ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                  {emailVerified ? 'Verified' : 'Not Verified'}
-                </p>
+                  {isVerified ? 'Verified' : 'Not Verified'}              </p>
               </div>
             </div>
             <div className="flex items-center bg-gray-50 dark:bg-gray-700 p-4 rounded-lg shadow-sm">
