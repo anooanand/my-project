@@ -142,6 +142,34 @@ export const FAQPage: React.FC = () => {
               </div>
             }
           />
+
+          <FAQItem
+            question="How does the AI provide personalized feedback?"
+            answer={
+              <p>
+                Our AI utilizes advanced machine learning algorithms to analyze your writing style, grammar, vocabulary, and adherence to NSW Selective marking criteria. It identifies your strengths and areas for improvement, then offers tailored suggestions and exercises. This personalized approach ensures that the feedback is always relevant to your individual learning needs, helping you progress more efficiently than generic tools.
+              </p>
+            }
+          />
+
+          <FAQItem
+            question="Can I track my progress and improvement over time?"
+            answer={
+              <p>
+                Yes, our platform includes a comprehensive progress tracking system. You can monitor your performance across different writing types, see your scores improve, and view detailed analytics on specific areas like vocabulary expansion, grammatical accuracy, and structural coherence. This allows you to visualize your growth and focus on areas that require more attention.
+              </p>
+            }
+          />
+
+          <FAQItem
+            question="What kind of writing prompts does the AI use?"
+            answer={
+              <p>
+                Our AI generates a wide variety of writing prompts specifically designed to mirror those found in the NSW Selective School exams. These prompts cover all relevant text types, including narrative, persuasive, imaginative, and discursive writing. They are regularly updated to reflect current exam trends and ensure you are practicing with the most realistic scenarios.
+              </p>
+            }
+          />
+
         </div>
         
         <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6 mb-8">
@@ -230,6 +258,34 @@ export const FAQPage: React.FC = () => {
               </div>
             }
           />
+
+          <FAQItem
+            question="How does the platform help with time management during the exam?"
+            answer={
+              <p>
+                Our timed practice mode is specifically designed to help students master time management. It replicates the 30-minute time limit of the actual NSW Selective Writing Test, allowing you to practice writing under pressure. The platform provides real-time word count and time remaining, helping you pace yourself and complete your essays within the allocated time.
+              </p>
+            }
+          />
+
+          <FAQItem
+            question="Are there resources for understanding the NSW Selective marking criteria in detail?"
+            answer={
+              <p>
+                Absolutely. Our platform provides detailed explanations of the official NSW Selective School marking criteria, breaking down each component (e.g., content, structure, language, mechanics). You'll receive feedback directly aligned with these criteria, helping you understand how your writing is assessed and what specific elements you need to improve to achieve higher scores.
+              </p>
+            }
+          />
+
+          <FAQItem
+            question="Does the platform offer support for different year levels?"
+            answer={
+              <p>
+                While our primary focus is on students preparing for the NSW Selective School exam (typically Year 6 for Year 7 entry, and Year 8 for Year 9 entry), the foundational writing skills and feedback provided are beneficial for students across various primary and early high school years. The AI adapts to the user's proficiency, making it a valuable tool for anyone looking to enhance their writing.
+              </p>
+            }
+          />
+
         </div>
         
         <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6 mb-8">
@@ -251,94 +307,41 @@ export const FAQPage: React.FC = () => {
           />
           
           <FAQItem
-            question="How does the step-by-step writing guidance work?"
-            answer={
-              <div>
-                <p className="mb-2">
-                  Our AI provides structured guidance through each stage of the writing process:
-                </p>
-                <ol className="list-decimal pl-5 space-y-1">
-                  <li>Understanding the prompt - Analyzing what the question asks</li>
-                  <li>Planning - Organizing your ideas and creating an outline</li>
-                  <li>Introduction - Crafting an engaging opening</li>
-                  <li>Body paragraphs - Developing your arguments or narrative</li>
-                  <li>Conclusion - Creating an effective ending</li>
-                  <li>Revision - Improving your work based on feedback</li>
-                </ol>
-                <p className="mt-2">
-                  The AI adapts its guidance based on your writing type and skill level, providing appropriate scaffolding and examples.
-                </p>
-              </div>
-            }
-          />
-          
-          <FAQItem
-            question="Can I save my work and continue later?"
+            question="What are the technical requirements to use the platform?"
             answer={
               <p>
-                Yes, the platform automatically saves your work as you write. You can leave and return to continue working on your essays at any time. Your progress, feedback, and writing history are all preserved in your account.
+                Our platform is web-based, so you only need a modern web browser (Chrome, Firefox, Safari, Edge) and a stable internet connection. It's compatible with desktops, laptops, and tablets. No special software installations are required.
               </p>
             }
           />
-          
+
           <FAQItem
-            question="Is there a word limit for essays?"
+            question="Can I use the platform on multiple devices?"
             answer={
               <p>
-                The platform supports essays of any length, but we recommend following NSW Selective exam guidelines, which typically suggest 350-500 words depending on the writing type. The word counter feature helps you track your progress and stay within recommended limits.
+                Yes, your account is accessible from any device with a web browser and internet connection. Your progress and data are synced across all devices, allowing you to seamlessly switch between them.
               </p>
             }
           />
-        </div>
-        
-        <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6">
-          <h2 className="text-2xl font-semibold mb-4 text-gray-800 dark:text-white">Technical Questions</h2>
-          
+
           <FAQItem
-            question="Is my child's writing data secure?"
+            question="Is my child's writing data private and secure?"
             answer={
               <p>
                 Yes, we take data security seriously. All writing data is encrypted and stored securely. We do not share student writing with third parties, and all data is used solely for providing feedback and improving the platform's educational capabilities.
               </p>
             }
           />
-          
-          <FAQItem
-            question="Can I access InstaChat AI Writing Mate on mobile devices?"
-            answer={
-              <p>
-                Yes, InstaChat AI Writing Mate is fully responsive and works on smartphones, tablets, and computers. Students can practice their writing skills on any device with an internet connection.
-              </p>
-            }
-          />
-          
-          <FAQItem
-            question="Do I need to install any software?"
-            answer={
-              <p>
-                No, InstaChat AI Writing Mate is a web-based platform that runs in your browser. There's no need to install any software or apps – simply sign in and start writing.
-              </p>
-            }
-          />
-          
-          <FAQItem
-            question="What subscription plans are available?"
-            answer={
-              <p>
-                We offer flexible subscription plans to meet different needs, including monthly and annual options. Please visit our Pricing page for the most current information on available plans and features.
-              </p>
-            }
-          />
-          
+
           <FAQItem
             question="Is there a free trial available?"
             answer={
               <p>
-                Yes, we offer a limited free trial so you can experience the platform before subscribing. The free trial gives access to basic features and allows you to see how the AI coaching works.
+                Yes, we offer a free trial that allows you to experience the core features of InstaChat AI Writing Mate, including access to a limited number of practice essays and basic AI feedback. This is a great way to see how our platform can benefit your child's writing skills before committing to a subscription.
               </p>
             }
           />
-          
+
           <FAQItem
             question="How can I get help if I have questions?"
             answer={
@@ -347,9 +350,37 @@ export const FAQPage: React.FC = () => {
               </p>
             }
           />
+
+          <FAQItem
+            question="What are the benefits of a premium subscription?"
+            answer={
+              <p>
+                A premium subscription unlocks unlimited access to all features, including unlimited practice essays, advanced AI feedback, all text type templates, full exam simulation mode, comprehensive progress tracking, and priority customer support. It provides the most complete and effective preparation for the NSW Selective Writing Test, ensuring consistent practice and personalized guidance without limitations.
+              </p>
+            }
+          />
+
+          <FAQItem
+            question="How can parents monitor their child's progress?"
+            answer={
+              <p>
+                Parents can access a dedicated dashboard that provides an overview of their child's writing progress. This includes performance trends, scores on practice essays, areas of strength and weakness, and the amount of time spent practicing. This transparency allows parents to stay informed and support their child's learning journey effectively.
+              </p>
+            }
+          />
+
+          <FAQItem
+            question="Is technical support available if I encounter issues?"
+            answer={
+              <p>
+                Yes, our dedicated support team is available to assist you with any technical issues or questions you may have. You can reach us through the Help Center within the platform or via email. We are committed to ensuring a smooth and effective learning experience for all our users.
+              </p>
+            }
+          />
+
+
         </div>
       </div>
     </div>
   );
 };
-
