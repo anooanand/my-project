@@ -340,7 +340,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
           </div>
           <div className="space-y-2">
             <p className="text-slate-700 text-lg font-medium">Loading your dashboard...</p>
-            <p className="text-slate-500 text-sm">Preparing your writing journey</p>
+            <p className="text-slate-500 text-base">Preparing your writing journey</p>
           </div>
         </div>
       </div>
@@ -407,34 +407,34 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
               
               <div className="space-y-4 mb-8">
                 <div className="flex items-start space-x-4 p-4 bg-blue-50 rounded-xl">
-                  <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">1</div>
+                  <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-base flex-shrink-0">1</div>
                   <div>
                     <h3 className="font-semibold text-slate-900 mb-1">Start Writing</h3>
-                    <p className="text-slate-600 text-sm">Click the "Start Writing" button to begin your writing session</p>
+                    <p className="text-slate-600 text-base">Click the "Start Writing" button to begin your writing session</p>
                   </div>
                 </div>
                 
                 <div className="flex items-start space-x-4 p-4 bg-purple-50 rounded-xl">
-                  <div className="w-8 h-8 bg-purple-500 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">2</div>
+                  <div className="w-8 h-8 bg-purple-500 text-white rounded-full flex items-center justify-center font-bold text-base flex-shrink-0">2</div>
                   <div>
                     <h3 className="font-semibold text-slate-900 mb-1">Choose Writing Type</h3>
-                    <p className="text-slate-600 text-sm">Select from narrative, persuasive, descriptive, and more</p>
+                    <p className="text-slate-600 text-base">Select from narrative, persuasive, descriptive, and more</p>
                   </div>
                 </div>
                 
                 <div className="flex items-start space-x-4 p-4 bg-emerald-50 rounded-xl">
-                  <div className="w-8 h-8 bg-emerald-500 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">3</div>
+                  <div className="w-8 h-8 bg-emerald-500 text-white rounded-full flex items-center justify-center font-bold text-base flex-shrink-0">3</div>
                   <div>
                     <h3 className="font-semibold text-slate-900 mb-1">Get Your Prompt</h3>
-                    <p className="text-slate-600 text-sm">Receive an AI-generated prompt or create your own</p>
+                    <p className="text-slate-600 text-base">Receive an AI-generated prompt or create your own</p>
                   </div>
                 </div>
                 
                 <div className="flex items-start space-x-4 p-4 bg-orange-50 rounded-xl">
-                  <div className="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">4</div>
+                  <div className="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold text-base flex-shrink-0">4</div>
                   <div>
                     <h3 className="font-semibold text-slate-900 mb-1">Write & Get Feedback</h3>
-                    <p className="text-slate-600 text-sm">Start writing and receive real-time AI feedback to improve</p>
+                    <p className="text-slate-600 text-base">Start writing and receive real-time AI feedback to improve</p>
                   </div>
                 </div>
               </div>
@@ -480,31 +480,31 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
           {/* Start Writing Card */}
           <div
             onClick={handleStartWriting}
-            className="group relative bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 rounded-2xl p-8 cursor-pointer overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+            className="group relativebg-gradient-to-br from-blue-500 via-blue-600 to-blue-700rounded-2xl p-8 cursor-pointer overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-2xl transform-gpu"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-6">
-                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                <div className="w-20 h-20 bg-white/30 backdrop-blur-sm rounded-2xl flex items-center justify-center">
                   <Edit3 className="h-8 w-8 text-white" />
                 </div>
                 <ArrowRight className="h-6 w-6 text-white/70 group-hover:text-white group-hover:translate-x-1 transition-all duration-300" />
               </div>
               
-              <h2 className="text-2xl font-bold text-white mb-3">Start Writing</h2>
-              <p className="text-white text-lg mb-6 leading-relaxed">
+              <h2 className="text-3xl font-extrabold text-white mb-4">Start Writing</h2>
+              <p className="text-white text-xl mb-6 leading-relaxed">
                 Begin a new writing session with AI-powered guidance and real-time feedback
               </p>
 
-              <div className="flex items-center space-x-4 text-white">
+              <div className="flex items-center space-x-4 text-white/90">
                 <div className="flex items-center space-x-2">
-                  <Brain className="h-4 w-4" />
-                  <span className="text-sm">AI Assistance</span>
+                  <Brain className="h-5 w-5" />
+                  <span className="text-base">AI Assistance</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Zap className="h-4 w-4" />
-                  <span className="text-sm">Real-time Feedback</span>
+                  <Zap className="h-5 w-5" />
+                  <span className="text-base">Real-time Feedback</span>
                 </div>
               </div>
             </div>
@@ -517,31 +517,31 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
           {/* Practice Exam Card */}
           <div
             onClick={handlePracticeExam}
-            className="group relative bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800 rounded-2xl p-8 cursor-pointer overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+            className="group relative bg-gradient-to-br from-green-500 via-green-600 to-green-700 rounded-2xl p-8 cursor-pointer overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-2xl transform-gpu"
           >
             <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
             
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-6">
-                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                  <Timer className="h-8 w-8 text-white" />
+                <div className="w-20 h-20 bg-white/30 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                  <Timer className="h-10 w-10 text-white" />
                 </div>
                 <ArrowRight className="h-6 w-6 text-white/70 group-hover:text-white group-hover:translate-x-1 transition-all duration-300" />
               </div>
               
-              <h2 className="text-2xl font-bold text-white mb-3">Practice Exam</h2>
-              <p className="text-white text-lg mb-6 leading-relaxed">
+              <h2 className="text-3xl font-extrabold text-white mb-4">Practice Exam</h2>
+              <p className="text-white text-xl mb-6 leading-relaxed">
                 Test your skills with timed practice sessions under real exam conditions
               </p>
 
-              <div className="flex items-center space-x-4 text-white">
+              <div className="flex items-center space-x-4 text-white/90">
                 <div className="flex items-center space-x-2">
-                  <Clock className="h-4 w-4" />
-                  <span className="text-sm">Timed Sessions</span>
+                  <Clock className="h-5 w-5" />
+                  <span className="text-base">Timed Sessions</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <Target className="h-4 w-4" />
-                  <span className="text-sm">NSW Aligned</span>
+                  <Target className="h-5 w-5" />
+                  <span className="text-base">NSW Aligned</span>
                 </div>
               </div>
             </div>
@@ -563,10 +563,10 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               <div className="text-center p-6 bg-blue-50 rounded-xl">
                 <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <FileText className="h-8 w-8 text-white" />
+                  <FiPenTool className="h-10 w-10 text-white"/>
                 </div>
                 <p className="text-gray-900 font-semibold mb-1">Multiple Text Types</p>
-                <p className="text-gray-600 text-sm">Narrative, Persuasive & More</p>
+                <p className="text-gray-600 text-base">Narrative, Persuasive & More</p>
               </div>
 
               <div className="text-center p-6 bg-purple-50 rounded-xl">
@@ -574,7 +574,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
                   <Brain className="h-8 w-8 text-white" />
                 </div>
                 <p className="text-gray-900 font-semibold mb-1">AI Feedback</p>
-                <p className="text-gray-600 text-sm">Real-time guidance</p>
+                <p className="text-gray-600 text-base">Real-time guidance</p>
               </div>
 
               <div className="text-center p-6 bg-green-50 rounded-xl">
@@ -582,7 +582,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
                   <Target className="h-8 w-8 text-white" />
                 </div>
                 <p className="text-gray-900 font-semibold mb-1">NSW Aligned</p>
-                <p className="text-gray-600 text-sm">Curriculum specific</p>
+                <p className="text-gray-600 text-base">Curriculum specific</p>
               </div>
             </div>
           </div>
@@ -594,30 +594,30 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
             <div className="space-y-4">
               <div className="flex items-start space-x-3">
                 <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Lightbulb className="h-4 w-4 text-blue-600" />
+                  <Lightbulb className="h-5 w-5 text-blue-600" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900">Show, Don't Tell</p>
+                  <p className="text-base font-medium text-gray-900">Show, Don't Tell</p>
                   <p className="text-xs text-gray-600">Use vivid descriptions</p>
                 </div>
               </div>
 
               <div className="flex items-start space-x-3">
                 <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <Brain className="h-4 w-4 text-purple-600" />
+                  <Brain className="h-5 w-5 text-purple-600" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900">Plan First</p>
+                  <p className="text-base font-medium text-gray-900">Plan First</p>
                   <p className="text-xs text-gray-600">Structure your ideas</p>
                 </div>
               </div>
 
               <div className="flex items-start space-x-3">
                 <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
+                  <CheckCircle className="h-5 w-5 text-green-600" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900">Edit & Revise</p>
+                  <p className="text-base font-medium text-gray-900">Edit & Revise</p>
                   <p className="text-xs text-gray-600">Polish your work</p>
                 </div>
               </div>
@@ -634,28 +634,28 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
               <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 group-hover:from-blue-200 group-hover:to-blue-300 rounded-xl flex items-center justify-center mb-3 transition-all">
                 <BookMarked className="h-6 w-6 text-blue-600" />
               </div>
-              <span className="text-sm font-medium text-gray-700">View Essays</span>
+              <span className="text-base font-medium text-gray-700">View Essays</span>
             </button>
 
             <button className="flex flex-col items-center p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors group">
               <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-green-200 group-hover:from-green-200 group-hover:to-green-300 rounded-xl flex items-center justify-center mb-3 transition-all">
                 <BarChart3 className="h-6 w-6 text-green-600" />
               </div>
-              <span className="text-sm font-medium text-gray-700">Progress</span>
+              <span className="text-base font-medium text-gray-700">Progress</span>
             </button>
 
             <button className="flex flex-col items-center p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors group">
               <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-purple-200 group-hover:from-purple-200 group-hover:to-purple-300 rounded-xl flex items-center justify-center mb-3 transition-all">
                 <Settings className="h-6 w-6 text-purple-600" />
               </div>
-              <span className="text-sm font-medium text-gray-700">Settings</span>
+              <span className="text-base font-medium text-gray-700">Settings</span>
             </button>
 
             <button className="flex flex-col items-center p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors group">
               <div className="w-12 h-12 bg-gradient-to-br from-orange-100 to-orange-200 group-hover:from-orange-200 group-hover:to-orange-300 rounded-xl flex items-center justify-center mb-3 transition-all">
                 <HelpCircle className="h-6 w-6 text-orange-600" />
               </div>
-              <span className="text-sm font-medium text-gray-700">Help</span>
+              <span className="text-base font-medium text-gray-700">Help</span>
             </button>
           </div>
         </div>
