@@ -6,7 +6,7 @@ import { WritingTypeSelectionModal } from './WritingTypeSelectionModal';
 import { PromptOptionsModal } from './PromptOptionsModal';
 import { CustomPromptModal } from './CustomPromptModal';
 import { generatePrompt } from '../lib/openai';
-import { Mail, CheckCircle, Clock, FileText, PenTool, BarChart3, Settings, X, Star, BookOpen, Zap, Heart, Trophy, Sparkles, Smile, Target, Gift, Flame, TrendingUp, Award, Rocket, Crown, Gem, Wand2, Palette, Music, Camera, Gamepad2, HelpCircle, ArrowRight, Play, Calendar, Users, ChevronRight, Activity, BookMarked, CreditCard, Edit3, Timer, Brain, Lightbulb } from 'lucide-react';
+import { Mail, CheckCircle, Clock, FileText, PenTool, BarChart3, Settings, X, Star, BookOpen, Zap, Heart, Trophy, Sparkles, Smile, Target, Gift, Flame, TrendingUp, Award, Rocket, Crown, Gem, Wand2, Palette, Music, Camera, Gamepad2, HelpCircle, ArrowRight, Play, Calendar, Users, ChevronRight, Activity, BookMarked, CreditCard, Edit3, Timer, Brain, Lightbulb, Quote } from 'lucide-react';
 
 interface DashboardProps {
   user?: any;
@@ -217,345 +217,478 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
         persuasive: "Choose a topic you feel strongly about and write a persuasive essay to convince others of your viewpoint. Use strong evidence, logical reasoning, and persuasive techniques like rhetorical questions and emotional appeals. Structure your argument clearly with an introduction that states your position, body paragraphs that support your argument with evidence, and a conclusion that reinforces your main point.",
         expository: "Select a topic you know well and write an informative essay that teaches others about it. Use clear explanations, relevant examples, and organize your information in a logical sequence. Include an engaging introduction that hooks your reader, body paragraphs that explore different aspects of your topic, and a strong conclusion that summarizes your main points.",
         reflective: "Think about a meaningful experience in your life and write a reflective piece exploring what you learned from it. Show your thoughts and feelings, and explain how this experience changed or influenced you. Be honest and thoughtful in your reflection, using specific details to help your reader understand the significance of this experience.",
-        descriptive: "Describe a place, object, or person in vivid detail, using sensory language to create a strong impression on the reader. Focus on showing, not telling, and use figurative language to make your descriptions more engaging. Aim to transport your reader to the scene you are describing.",
-        argumentative: "Take a clear stance on a controversial issue and construct a well-reasoned argument to support your position. Anticipate counterarguments and address them effectively. Use credible evidence and logical reasoning to persuade your audience.",
-        analytical: "Choose a piece of literature, a historical event, or a scientific concept and analyze its various components. Break down the subject into smaller parts, examine their relationships, and explain their significance. Provide a clear thesis and support it with textual evidence or factual information.",
-        informational: "Explain a complex process, concept, or event in a clear and concise manner. Assume your audience has little to no prior knowledge of the topic. Use headings, bullet points, and examples to make the information accessible and easy to understand.",
-        comparecontrast: "Select two subjects and compare and contrast them based on specific criteria. Highlight both their similarities and differences, and provide a clear purpose for your comparison. Organize your essay using either a point-by-point or subject-by-subject approach.",
-        causeeffect: "Analyze the causes and/or effects of a particular event, decision, or phenomenon. Clearly identify the causal relationships and support your claims with evidence. Consider both immediate and long-term consequences.",
-        processanalysis: "Explain how to do something or how something works, step-by-step. Ensure each step is clear, logical, and easy to follow. Use transitional words and phrases to guide the reader through the process.",
-        definition: "Provide a comprehensive definition of a complex term or concept. Go beyond a simple dictionary definition by exploring its nuances, historical context, and various interpretations. Use examples to illustrate your points.",
-        literaryanalysis: "Analyze a specific literary element (e.g., theme, character, symbolism) in a given text. Develop a thesis statement and support it with textual evidence, explaining how the element contributes to the overall meaning or effect of the work.",
-        research: "Formulate a research question on a topic of interest and conduct thorough research using credible sources. Present your findings in a clear, organized manner, citing all sources properly. Focus on synthesizing information and drawing informed conclusions.",
-        journalistic: "Write a news report on a recent event, adhering to journalistic principles of objectivity, accuracy, and conciseness. Include a compelling headline, lead paragraph, and body paragraphs that provide essential details (who, what, when, where, why, how)."
+        descriptive: "Choose a place, person, or object that is special to you and write a descriptive piece that brings it to life for your reader. Use sensory details (sight, sound, smell, touch, taste) and figurative language like metaphors and similes to create vivid imagery. Paint a picture with words that allows your reader to experience what you're describing.",
+        recount: "Write about an important event or experience in your life, telling what happened in the order it occurred. Include details about who was involved, where it happened, when it took place, and why it was significant to you. Use descriptive language to help your reader visualize the events and understand their importance."
       };
 
-      const fallbackPrompt = fallbackPrompts[selectedWritingType as keyof typeof fallbackPrompts] || "Write a compelling piece on a topic of your choice.";
-      localStorage.setItem("generatedPrompt", fallbackPrompt);
-      localStorage.setItem("generatedPromptTimestamp", new Date().toISOString());
+      const fallbackPrompt = fallbackPrompts[selectedWritingType as keyof typeof fallbackPrompts] || fallbackPrompts.narrative;
+
+      console.log('🔄 Using fallback prompt:', fallbackPrompt);
+
+      // Save fallback prompt
+      localStorage.setItem(`${selectedWritingType}_prompt`, fallbackPrompt);
+      localStorage.setItem('generatedPrompt', fallbackPrompt);
       localStorage.setItem('selectedWritingType', selectedWritingType);
-      localStorage.setItem("promptType", "generated");
-      navigate("/writing");
+      localStorage.setItem('promptType', 'generated');
+
+      // Close prompt options modal
       setShowPromptOptionsModal(false);
-      console.log('✅ Dashboard: Fallback prompt used and navigation to /writing initiated');
+
+      // Navigate to writing area with fallback prompt
+      await new Promise(resolve => setTimeout(resolve, 200));
+      navigate('/writing');
+
     } finally {
       setIsGeneratingPrompt(false);
     }
   };
 
-  // FIXED: Step 3 - Handle custom prompt submission
-  const handleCustomPromptSubmit = (customPromptText: string) => {
-    console.log('✍️ Dashboard: Custom prompt submitted:', customPromptText);
+  // FIXED: Step 3 - Handle custom prompt with timestamp, then navigate to writing area
+  const handleCustomPrompt = () => {
+    console.log('✏️ Dashboard: Using custom prompt for:', selectedWritingType);
 
-    // CRITICAL: Clear generated prompt and save custom prompt with timestamp
+    // Store the prompt type
+    localStorage.setItem('promptType', 'custom');
+    localStorage.setItem('selectedWritingType', selectedWritingType);
+
+    // Close prompt options modal and show custom prompt modal
+    setShowPromptOptionsModal(false);
+    setShowCustomPromptModal(true);
+  };
+
+  // Handle custom prompt submission and navigate to writing area
+  const handleCustomPromptSubmit = (prompt: string) => {
+    console.log('✏️ Dashboard: Custom prompt submitted:', prompt.substring(0, 50) + '...');
+
+    // FIXED: Clear generated prompt and save custom prompt with timestamp
     localStorage.removeItem("generatedPrompt");
     localStorage.removeItem("generatedPromptTimestamp");
-    localStorage.setItem("customPrompt", customPromptText);
+    localStorage.setItem("customPrompt", prompt);
     localStorage.setItem("customPromptTimestamp", new Date().toISOString());
-    localStorage.setItem('selectedWritingType', selectedWritingType); // Keep selected writing type
-    localStorage.setItem("promptType", "custom");
 
     console.log('✅ Custom prompt saved to localStorage with timestamp');
 
     // Dispatch custom event to notify other components
     window.dispatchEvent(new CustomEvent('promptGenerated', {
-      detail: { prompt: customPromptText, textType: selectedWritingType, timestamp: new Date().toISOString() }
+      detail: { prompt, textType: 'custom', timestamp: new Date().toISOString() }
     }));
 
-    // Navigate to writing area
-    navigate("/writing");
+    // Close custom prompt modal
     setShowCustomPromptModal(false);
-    setShowPromptOptionsModal(false);
-    console.log('✅ Dashboard: Navigation to /writing initiated with custom prompt');
-  };
 
+    // Navigate to writing page (Step 4 - Writing Area)
+    console.log('📍 Dashboard: Navigating to writing area with custom prompt...');
 
-  const handleOpenCustomPromptModal = () => {
-    setShowPromptOptionsModal(false); // Close prompt options modal
-    setShowCustomPromptModal(true); // Open custom prompt modal
-  };
-
-  const handleCloseCustomPromptModal = () => {
-    setShowCustomPromptModal(false);
-    setShowPromptOptionsModal(true); // Re-open prompt options modal if needed
-  };
-
-  const handleClosePromptOptionsModal = () => {
-    setShowPromptOptionsModal(false);
-    setShowWritingTypeModal(true); // Go back to writing type selection if user closes prompt options
-  };
-
-  const handleCloseWritingTypeModal = () => {
-    setShowWritingTypeModal(false);
-    // Optionally, navigate back to dashboard or do nothing if user cancels
-  };
-
-  // Check if user is logged in, if not, redirect to auth page
-  useEffect(() => {
-    if (!currentUser && !propUser) {
-      console.log('🚫 Dashboard: No current user, redirecting to auth.');
-      navigate('/auth');
+    // FIXED: Use React Router navigate directly for consistent navigation
+    try {
+      navigate('/writing');
+    } catch (error) {
+      console.error('❌ Dashboard: Navigation error:', error);
+      // Fallback to onNavigate if available
+      if (onNavigate) {
+        console.log('📍 Dashboard: Using onNavigate fallback');
+        onNavigate('writing');
+      } else {
+        console.log('📍 Dashboard: Using window.location fallback');
+        window.location.href = '/writing';
+      }
     }
-  }, [currentUser, propUser, navigate]);
+  };
+
+  const handlePracticeExam = () => {
+    console.log('🚀 Dashboard: Navigating to practice exam...');
+    try {
+      navigate('/exam');
+    } catch (error) {
+      console.error('❌ Dashboard: Exam navigation error:', error);
+      if (onNavigate) {
+        onNavigate('exam');
+      } else {
+        window.location.href = '/exam';
+      }
+    }
+  };
+
+  const formatDateTime = (dateString: string) => {
+    return new Date(dateString).toLocaleString();
+  };
+
+  const getTimeRemaining = (dateString: string) => {
+    const now = new Date();
+    const target = new Date(dateString);
+    const diff = target.getTime() - now.getTime();
+
+    if (diff <= 0) return 'Expired';
+
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+    if (hours > 0) {
+      return `${hours}h ${minutes}m remaining`;
+    } else {
+      return `${minutes}m remaining`;
+    }
+  };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-purple-500 mx-auto mb-4"></div>
-          <p className="text-slate-700 dark:text-slate-300 text-lg font-medium">Loading your dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isVerified) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 p-4">
-        <div className="bg-white dark:bg-gray-800 shadow-lg rounded-xl p-8 max-w-md w-full text-center">
-          <div className="flex justify-center mb-6">
-            <Mail className="h-16 w-16 text-blue-500" />
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="relative">
+            <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
+            <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-r-indigo-400 rounded-full animate-spin mx-auto" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
           </div>
-          <h2 className="text-3xl font-bold mb-4">Verify Your Email</h2>
-          <p className="text-lg mb-6">To unlock all features, please verify your email address. A verification link has been sent to <strong>{currentUser?.email}</strong>.</p>
-          <p className="text-md mb-8">If you don't see it, please check your spam folder or click the button below to resend.</p>
-          <button
-            onClick={handleManualRefresh}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-          >
-            Resend Verification Email / Refresh Status
-          </button>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">Having trouble? Contact support.</p>
+          <div className="space-y-2">
+            <p className="text-slate-700 text-lg font-medium">Loading your dashboard...</p>
+            <p className="text-slate-500 text-base">Preparing your writing journey</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex flex-col items-center p-4 sm:p-6 lg:p-8 relative">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 relative">
+
+      {/* Welcome Message Modal - Modern Design */}
       {showWelcomeMessage && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 max-w-lg w-full text-center relative animate-fade-in-up">
-            <button onClick={handleDismissWelcome} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition"><X size={24} /></button>
-            <Sparkles className="h-16 w-16 text-yellow-400 mx-auto mb-4" />
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">Welcome, {getUserName()}!</h2>
-            <p className="text-lg text-gray-700 dark:text-gray-300 mb-6">We're thrilled to have you join the AI Writing Coach community. Get ready to elevate your writing!</p>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full relative border border-slate-200">
             <button
-              onClick={() => { handleDismissWelcome(); setShowStartHereGuide(true); }}
-              className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-3 px-6 rounded-full text-lg transition duration-300 ease-in-out transform hover:scale-105 shadow-lg"
+              onClick={handleDismissWelcome}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors bg-slate-100 hover:bg-slate-200 p-2 rounded-full"
             >
-              Start Your First Writing Session <ArrowRight className="inline-block ml-2" size={20} />
+              <X className="h-5 w-5" />
             </button>
-          </div>
-        </div>
-      )}
-
-      {showStartHereGuide && !showWelcomeMessage && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-8 max-w-lg w-full text-center relative animate-fade-in-up">
-            <button onClick={handleDismissGuide} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition"><X size={24} /></button>
-            <BookOpen className="h-16 w-16 text-green-500 mx-auto mb-4" />
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">Ready to Begin?</h2>
-            <p className="text-lg text-gray-700 dark:text-gray-300 mb-6">Follow these simple steps to start your writing journey:</p>
-            <ul className="text-left text-gray-700 dark:text-gray-300 mb-8 space-y-3 text-base mx-auto max-w-xs">
-              <li className="flex items-center"><CheckCircle className="text-green-500 mr-2" size={20} /> Choose your writing type</li>
-              <li className="flex items-center"><CheckCircle className="text-green-500 mr-2" size={20} /> Generate or create a prompt</li>
-              <li className="flex items-center"><CheckCircle className="text-green-500 mr-2" size={20} /> Start writing and get instant feedback!</li>
-            </ul>
-            <button
-              onClick={() => { handleDismissGuide(); handleStartWriting(); }}
-              className="bg-gradient-to-r from-green-500 to-teal-600 hover:from-green-600 hover:to-teal-700 text-white font-bold py-3 px-6 rounded-full text-lg transition duration-300 ease-in-out transform hover:scale-105 shadow-lg"
-            >
-              Let's Write! <Play className="inline-block ml-2" size={20} />
-            </button>
-          </div>
-        </div>
-      )}
-
-      <div className="w-full max-w-6xl">
-        <h1 className="text-4xl font-extrabold text-gray-900 dark:text-white mb-8 text-center">Your Creative Hub</h1>
-
-        {/* Quick Actions Section */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">Quick Actions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div
-              onClick={handleStartWriting}
-              className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-            >
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-4">
-                <PenTool className="h-8 w-8 text-white" />
+            
+            <div className="p-8 text-center">
+              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Sparkles className="h-8 w-8 text-white" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Start New Writing</h3>
-              <p className="text-gray-600 dark:text-gray-400">Begin a new essay or story with AI guidance.</p>
-            </div>
-
-            <div
-              onClick={() => navigate('/writing-studio')}
-              className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-            >
-              <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-teal-600 rounded-full flex items-center justify-center mb-4">
-                <FileText className="h-8 w-8 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">My Writing Studio</h3>
-              <p className="text-gray-600 dark:text-gray-400">Access all your saved drafts and projects.</p>
-            </div>
-
-            <div
-              onClick={() => navigate('/progress')}
-              className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col items-center justify-center text-center cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1"
-            >
-              <div className="w-16 h-16 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-full flex items-center justify-center mb-4">
-                <BarChart3 className="h-8 w-8 text-white" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">View Progress</h3>
-              <p className="text-gray-600 dark:text-gray-400">Track your improvement and skill development.</p>
-            </div>
-          </div>
-        </section>
-
-        {/* Features Overview Section */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">Unlock Your Potential</h2>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
-            {/* Feature 1 */}
-            <div className="flex items-start p-4 rounded-lg bg-gray-50 dark:bg-gray-700">
-              <div className="flex-shrink-0 w-12 h-12 bg-purple-100 dark:bg-purple-800 rounded-full flex items-center justify-center mr-4">
-                <Brain className="h-6 w-6 text-purple-600 dark:text-purple-300" />
-              </div>
-              <div>
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">AI-Powered Feedback</h3>
-                <p className="text-gray-700 dark:text-gray-300">Receive instant, intelligent suggestions to refine your writing style, grammar, and structure.</p>
-              </div>
-            </div>
-
-            {/* Feature 2 */}
-            <div className="flex items-start p-4 rounded-lg bg-gray-50 dark:bg-gray-700">
-              <div className="flex-shrink-0 w-12 h-12 bg-blue-100 dark:bg-blue-800 rounded-full flex items-center justify-center mr-4">
-                <Lightbulb className="h-6 w-6 text-blue-600 dark:text-blue-300" />
-              </div>
-              <div>
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">Dynamic Prompt Generation</h3>
-                <p className="text-gray-700 dark:text-gray-300">Never face writer's block again with prompts tailored to your chosen writing type.</p>
-              </div>
-            </div>
-
-            {/* Feature 3 */}
-            <div className="flex items-start p-4 rounded-lg bg-gray-50 dark:bg-gray-700">
-              <div className="flex-shrink-0 w-12 h-12 bg-green-100 dark:bg-green-800 rounded-full flex items-center justify-center mr-4">
-                <TrendingUp className="h-6 w-6 text-green-600 dark:text-green-300" />
-              </div>
-              <div>
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">Progress Tracking</h3>
-                <p className="text-gray-700 dark:text-gray-300">Monitor your improvement over time with detailed analytics and insights into your writing skills.</p>
-              </div>
-            </div>
-
-            {/* Feature 4 */}
-            <div className="flex items-start p-4 rounded-lg bg-gray-50 dark:bg-gray-700">
-              <div className="flex-shrink-0 w-12 h-12 bg-red-100 dark:bg-red-800 rounded-full flex items-center justify-center mr-4">
-                <BookMarked className="h-6 w-6 text-red-600 dark:text-red-300" />
-              </div>
-              <div>
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-1">Learning Hub</h3>
-                <p className="text-gray-700 dark:text-gray-300">Access a rich library of writing guides, tutorials, and exercises to hone your craft.</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* User Stats/Achievements (Placeholder) */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">Your Journey So Far</h2>
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 text-center">
-            <p className="text-gray-700 dark:text-gray-300 text-lg">No stats available yet. Start writing to see your progress here!</p>
-            {/* Future: Add charts, badges, and summaries here */}
-          </div>
-        </section>
-
-        {/* Testimonials or Call to Action (Placeholder) */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">What Our Users Say</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 relative">
-              <Quote className="absolute top-4 left-4 h-8 w-8 text-gray-200 dark:text-gray-700" />
-              <p className="text-gray-700 dark:text-gray-300 italic mb-4">"The AI feedback is incredibly insightful. My writing has improved dramatically!"</p>
-              <p className="font-semibold text-gray-900 dark:text-white">- Happy Writer</p>
-            </div>
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 relative">
-              <Quote className="absolute top-4 left-4 h-8 w-8 text-gray-200 dark:text-gray-700" />
-              <p className="text-gray-700 dark:text-gray-300 italic mb-4">"No more writer's block! The prompts are fantastic and always spark my creativity."</p>
-              <p className="font-semibold text-gray-900 dark:text-white">- Creative User</p>
-            </div>
-          </div>
-        </section>
-
-        {/* Call to Action for Advanced Features (Placeholder) */}
-        {accessType === 'temporary' && (
-          <section className="mb-12 text-center">
-            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-200 rounded-xl p-6 shadow-md">
-              <h2 className="text-2xl font-bold mb-3">Temporary Access Active</h2>
-              <p className="text-lg mb-4">You currently have temporary access until {tempAccessUntil ? new Date(tempAccessUntil).toLocaleDateString() : 'an unknown date'}.</p>
-              <p className="mb-6">Upgrade to a permanent plan to unlock unlimited access and all premium features!</p>
+              
+              <h2 className="heading-3 text-slate-900 mb-4">
+                Welcome, {getUserName()}! 🎉
+              </h2>
+              
+              <p className="text-slate-600 mb-6 leading-relaxed">
+                You're all set to start your writing journey! Your AI writing buddy is ready to help you create amazing stories and essays.
+              </p>
+              
               <button
-                onClick={() => navigate('/pricing')}
-                className="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-6 rounded-full text-lg transition duration-300 ease-in-out transform hover:scale-105 shadow-lg"
+                onClick={handleDismissWelcome}
+                className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-semibold transition-all duration-200 transform hover:scale-105"
               >
-                Upgrade Now <CreditCard className="inline-block ml-2" size={20} />
+                Let's Get Started!
               </button>
             </div>
-          </section>
-        )}
+          </div>
+        </div>
+      )}
 
-        {/* Support Section */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">Need Help?</h2>
-          <div className="flex flex-col md:flex-row justify-center gap-6">
-            <div
-              onClick={() => navigate('/help')}
-              className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col items-center text-center cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex-1"
+      {/* Start Here Guide Modal */}
+      {showStartHereGuide && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full relative border border-slate-200">
+            <button
+              onClick={handleDismissGuide}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors bg-slate-100 hover:bg-slate-200 p-2 rounded-full"
             >
-              <div className="w-16 h-16 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-full flex items-center justify-center mb-4">
-                <HelpCircle className="h-8 w-8 text-white" />
+              <X className="h-5 w-5" />
+            </button>
+            
+            <div className="p-8">
+              <div className="text-center mb-8">
+                <div className="w-20 h-20 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Lightbulb className="h-10 w-10 text-white" />
+                </div>
+                <h2 className="heading-2 text-slate-900 mb-2">Quick Start Guide</h2>
+                <p className="text-slate-600">Follow these simple steps to begin writing</p>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Visit Help Center</h3>
-              <p className="text-gray-600 dark:text-gray-400">Find answers to common questions and tutorials.</p>
-            </div>
-            <div
-              onClick={() => navigate('/settings')}
-              className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 flex flex-col items-center text-center cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex-1"
-            >
-              <div className="w-16 h-16 bg-gradient-to-br from-rose-500 to-pink-600 rounded-full flex items-center justify-center mb-4">
-                <Settings className="h-8 w-8 text-white" />
+              
+              <div className="space-y-4 mb-8">
+                <div className="flex items-start space-x-4 p-4 bg-blue-50 rounded-xl">
+                  <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-base flex-shrink-0">1</div>
+                  <div>
+                    <h3 className="font-semibold text-slate-900 mb-1">Start Writing</h3>
+                    <p className="text-slate-600 text-base">Click the "Start Writing" button to begin your writing session</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-4 p-4 bg-purple-50 rounded-xl">
+                  <div className="w-8 h-8 bg-purple-500 text-white rounded-full flex items-center justify-center font-bold text-base flex-shrink-0">2</div>
+                  <div>
+                    <h3 className="font-semibold text-slate-900 mb-1">Choose Writing Type</h3>
+                    <p className="text-slate-600 text-base">Select from narrative, persuasive, descriptive, and more</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-4 p-4 bg-emerald-50 rounded-xl">
+                  <div className="w-8 h-8 bg-emerald-500 text-white rounded-full flex items-center justify-center font-bold text-base flex-shrink-0">3</div>
+                  <div>
+                    <h3 className="font-semibold text-slate-900 mb-1">Get Your Prompt</h3>
+                    <p className="text-slate-600 text-base">Receive an AI-generated prompt or create your own</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-4 p-4 bg-orange-50 rounded-xl">
+                  <div className="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold text-base flex-shrink-0">4</div>
+                  <div>
+                    <h3 className="font-semibold text-slate-900 mb-1">Write & Get Feedback</h3>
+                    <p className="text-slate-600 text-base">Start writing and receive real-time AI feedback to improve</p>
+                  </div>
+                </div>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Account Settings</h3>
-              <p className="text-gray-600 dark:text-gray-400">Manage your profile, subscription, and preferences.</p>
+              
+              <div className="flex space-x-3">
+                <button
+                  onClick={handleDismissGuide}
+                  className="flex-1 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-semibold transition-colors"
+                >
+                  Skip for Now
+                </button>
+                <button
+                  onClick={() => {
+                    handleDismissGuide();
+                    handleStartWriting();
+                  }}
+                  className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-semibold transition-all duration-200 transform hover:scale-105"
+                >
+                  Start Writing Now
+                </button>
+              </div>
             </div>
           </div>
-        </section>
+        </div>
+      )}
 
-        {/* Modals */}
+      {/* Main Content */}
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header Section */}
+        <div className="mb-12">
+          <div>
+            <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-3">
+              Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-700">{getUserName()}</span>! 👋
+            </h1>
+            <p className="text-xl text-gray-600">
+              Ready to create something amazing today?
+            </p>
+          </div>
+        </div>
+
+        {/* Main Action Cards */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+          {/* Start Writing Card */}
+          <div
+            onClick={handleStartWriting}
+            className="group relativebg-gradient-to-br from-blue-500 via-blue-600 to-blue-700rounded-2xl p-8 cursor-pointer overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-2xl transform-gpu"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-6">
+                <div className="w-20 h-20 bg-white/30 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                  <Edit3 className="h-8 w-8 text-white" />
+                </div>
+                <ArrowRight className="h-6 w-6 text-white/70 group-hover:text-white group-hover:translate-x-1 transition-all duration-300" />
+              </div>
+              
+              <h2 className="text-3xl font-extrabold text-white mb-4">Start Writing</h2>
+              <p className="text-white text-xl mb-6 leading-relaxed">
+                Begin a new writing session with AI-powered guidance and real-time feedback
+              </p>
+
+              <div className="flex items-center space-x-4 text-white/90">
+                <div className="flex items-center space-x-2">
+                  <Brain className="h-5 w-5" />
+                  <span className="text-base">AI Assistance</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Zap className="h-5 w-5" />
+                  <span className="text-base">Real-time Feedback</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Decorative Elements */}
+            <div className="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
+            <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-indigo-400/20 rounded-full blur-xl"></div>
+          </div>
+
+          {/* Practice Exam Card */}
+          <div
+            onClick={handlePracticeExam}
+            className="group relative bg-gradient-to-br from-green-500 via-green-600 to-green-700 rounded-2xl p-8 cursor-pointer overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-2xl transform-gpu"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-6">
+                <div className="w-20 h-20 bg-white/30 backdrop-blur-sm rounded-2xl flex items-center justify-center">
+                  <Timer className="h-10 w-10 text-white" />
+                </div>
+                <ArrowRight className="h-6 w-6 text-white/70 group-hover:text-white group-hover:translate-x-1 transition-all duration-300" />
+              </div>
+              
+              <h2 className="text-3xl font-extrabold text-white mb-4">Practice Exam</h2>
+              <p className="text-white text-xl mb-6 leading-relaxed">
+                Test your skills with timed practice sessions under real exam conditions
+              </p>
+
+              <div className="flex items-center space-x-4 text-white/90">
+                <div className="flex items-center space-x-2">
+                  <Clock className="h-5 w-5" />
+                  <span className="text-base">Timed Sessions</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Target className="h-5 w-5" />
+                  <span className="text-base">NSW Aligned</span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Decorative Elements */}
+            <div className="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
+            <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-teal-400/20 rounded-full blur-xl"></div>
+          </div>
+        </div>
+
+        {/* Tools & Tips Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+          {/* Writing Tools Overview */}
+          <div className="lg:col-span-2 bg-white/80 backdrop-blur-sm rounded-2xl p-8 border border-gray-200 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-bold text-gray-900">Your Writing Tools</h3>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              <div className="text-center p-6 bg-blue-50 rounded-xl">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <PenTool className="h-10 w-10 text-white"/>
+                </div>
+                <p className="text-gray-900 font-semibold mb-1">Multiple Text Types</p>
+                <p className="text-gray-600 text-base">Narrative, Persuasive & More</p>
+              </div>
+
+              <div className="text-center p-6 bg-purple-50 rounded-xl">
+                <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Brain className="h-8 w-8 text-white" />
+                </div>
+                <p className="text-gray-900 font-semibold mb-1">AI Feedback</p>
+                <p className="text-gray-600 text-base">Real-time guidance</p>
+              </div>
+
+              <div className="text-center p-6 bg-green-50 rounded-xl">
+                <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <Target className="h-8 w-8 text-white" />
+                </div>
+                <p className="text-gray-900 font-semibold mb-1">NSW Aligned</p>
+                <p className="text-gray-600 text-base">Curriculum specific</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Tips */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200 shadow-sm">
+            <h3 className="text-xl font-bold text-gray-900 mb-6">Writing Tips</h3>
+
+            <div className="space-y-4">
+              <div className="flex items-start space-x-3">
+                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Lightbulb className="h-5 w-5 text-blue-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-base font-medium text-gray-900">Show, Don't Tell</p>
+                  <p className="text-xs text-gray-600">Use vivid descriptions</p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3">
+                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <Brain className="h-5 w-5 text-purple-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-base font-medium text-gray-900">Plan First</p>
+                  <p className="text-xs text-gray-600">Structure your ideas</p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3">
+                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-base font-medium text-gray-900">Edit & Revise</p>
+                  <p className="text-xs text-gray-600">Polish your work</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 border border-gray-200 shadow-sm">
+          <h3 className="text-2xl font-bold text-gray-900 mb-6">Quick Actions</h3>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <button className="flex flex-col items-center p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors group">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 group-hover:from-blue-200 group-hover:to-blue-300 rounded-xl flex items-center justify-center mb-3 transition-all">
+                <BookMarked className="h-6 w-6 text-blue-600" />
+              </div>
+              <span className="text-base font-medium text-gray-700">View Essays</span>
+            </button>
+
+            <button className="flex flex-col items-center p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors group">
+              <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-green-200 group-hover:from-green-200 group-hover:to-green-300 rounded-xl flex items-center justify-center mb-3 transition-all">
+                <BarChart3 className="h-6 w-6 text-green-600" />
+              </div>
+              <span className="text-base font-medium text-gray-700">Progress</span>
+            </button>
+
+            <button className="flex flex-col items-center p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors group">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-purple-200 group-hover:from-purple-200 group-hover:to-purple-300 rounded-xl flex items-center justify-center mb-3 transition-all">
+                <Settings className="h-6 w-6 text-purple-600" />
+              </div>
+              <span className="text-base font-medium text-gray-700">Settings</span>
+            </button>
+
+            <button className="flex flex-col items-center p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors group">
+              <div className="w-12 h-12 bg-gradient-to-br from-orange-100 to-orange-200 group-hover:from-orange-200 group-hover:to-orange-300 rounded-xl flex items-center justify-center mb-3 transition-all">
+                <HelpCircle className="h-6 w-6 text-orange-600" />
+              </div>
+              <span className="text-base font-medium text-gray-700">Help</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Modals */}
+      {showWritingTypeModal && (
         <WritingTypeSelectionModal
           isOpen={showWritingTypeModal}
-          onClose={handleCloseWritingTypeModal}
-          onSelectWritingType={handleWritingTypeSelect}
+          onClose={() => setShowWritingTypeModal(false)}
+          onSelect={handleWritingTypeSelect}
         />
+      )}
 
+      {showPromptOptionsModal && (
         <PromptOptionsModal
           isOpen={showPromptOptionsModal}
-          onClose={handleClosePromptOptionsModal}
+          onClose={() => setShowPromptOptionsModal(false)}
           onGeneratePrompt={handleGeneratePrompt}
-          onOpenCustomPrompt={handleOpenCustomPromptModal}
-          isGeneratingPrompt={isGeneratingPrompt}
+          onCustomPrompt={handleCustomPrompt}
+          selectedWritingType={selectedWritingType}
+          isGenerating={isGeneratingPrompt}
         />
+      )}
 
+      {showCustomPromptModal && (
         <CustomPromptModal
           isOpen={showCustomPromptModal}
-          onClose={handleCloseCustomPromptModal}
-          onSubmitCustomPrompt={handleCustomPromptSubmit}
+          onClose={() => setShowCustomPromptModal(false)}
+          onSubmit={handleCustomPromptSubmit}
+          writingType={selectedWritingType}
         />
-
-      </div>
+      )}
     </div>
   );
 }
