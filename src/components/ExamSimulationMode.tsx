@@ -67,6 +67,12 @@ export function ExamSimulationMode({ onExit, textType, prompt }: ExamSimulationM
   };
 
   const confirmSubmit = async () => {
+    if (!content.trim() || content.trim().length < 20) {
+      alert("Please write at least 20 characters before submitting for evaluation.");
+      setShowSubmitConfirm(false);
+      return;
+    }
+
     setIsSubmitted(true);
     setIsActive(false);
     setShowSubmitConfirm(false);
@@ -97,6 +103,12 @@ export function ExamSimulationMode({ onExit, textType, prompt }: ExamSimulationM
 
   const handleAutoSubmit = async () => {
     setIsSubmitted(true);
+
+    if (!content.trim() || content.trim().length < 20) {
+      console.warn("Auto-submit with essay too short. Skipping evaluation.");
+      return;
+    }
+
     localStorage.setItem('examEssay', content);
     localStorage.setItem('examSubmissionTime', new Date().toISOString());
     localStorage.setItem("examTimeUsed", (30 * 60).toString());
@@ -273,66 +285,34 @@ export function ExamSimulationMode({ onExit, textType, prompt }: ExamSimulationM
 
         {/* Writing Area */}
         <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xl font-bold text-gray-900">Your Response</h3>
-            <span className="text-sm text-gray-500">{!isActive && timeRemaining > 0 ? "Ready to start" : isActive ? "Writing in progress" : "Completed"}</span>
-          </div>
           <textarea
+            disabled={!isActive}
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            className="w-full h-96 p-6 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none text-base leading-relaxed transition-all"
-            placeholder="Click 'Start Exam' above to begin writing your persuasive essay..."
-            disabled={!isActive && timeRemaining > 0}
+            className="w-full h-96 p-6 bg-gray-50/50 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none text-lg leading-relaxed text-gray-800 placeholder-gray-400"
+            placeholder={isActive ? "Start writing your response here..." : "Click Start Exam to begin"}
           />
-          <div className="mt-4 flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              {!isActive && timeRemaining > 0 && (
-                <div className="flex items-center space-x-2 text-blue-600">
-                  <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                  <span className="text-sm font-medium">Click 'Start Exam' to begin</span>
-                </div>
-              )}
-              {isActive && (
-                <div className="flex items-center space-x-2 text-green-600">
-                  <div className="w-2 h-2 bg-green-600 rounded-full animate-pulse"></div>
-                  <span className="text-sm font-medium">Exam in progress</span>
-                </div>
-              )}
-              {timeRemaining === 0 && (
-                <div className="flex items-center space-x-2 text-orange-600">
-                  <div className="w-2 h-2 bg-orange-600 rounded-full"></div>
-                  <span className="text-sm font-medium">Time's up! Essay auto-submitted.</span>
-                </div>
-              )}
-            </div>
-            <button
-              onClick={onExit}
-              className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
-            >
-              Exit Practice Mode
-            </button>
-          </div>
         </div>
       </div>
 
-      {/* Submit Confirmation Modal */}
       {showSubmitConfirm && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 shadow-xl max-w-sm mx-auto">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Confirm Submission</h3>
-            <p className="text-gray-700 mb-6">Are you sure you want to submit your essay? You will not be able to make further changes.</p>
-            <div className="flex justify-end space-x-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
+          <div className="max-w-md w-full bg-white rounded-3xl shadow-2xl border border-gray-200 p-8 text-center">
+            <AlertCircle className="w-16 h-16 text-amber-500 mx-auto mb-6" />
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Are you sure?</h2>
+            <p className="text-gray-600 mb-8">You are about to submit your essay. This action cannot be undone.</p>
+            <div className="flex justify-center space-x-4">
               <button
                 onClick={cancelSubmit}
-                className="px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50"
+                className="px-8 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-all"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmSubmit}
-                className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+                className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg"
               >
-                Submit
+                Confirm & Submit
               </button>
             </div>
           </div>
