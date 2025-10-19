@@ -913,7 +913,7 @@ export function EnhancedCoachPanel({
             <Target className="w-3 h-3" />
             <span>Detail</span>
             {/* Grammar issues badge */}
-            {comprehensiveFeedback && comprehensiveFeedback.grammarIssues.length > 0 && (
+            {comprehensiveFeedback && comprehensiveFeedback.grammarIssues && comprehensiveFeedback.grammarIssues.length > 0 && (
               <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold">
                 {comprehensiveFeedback.grammarIssues.length}
               </span>
@@ -929,7 +929,7 @@ export function EnhancedCoachPanel({
             {/* Messages Area - OPTIMIZED: More space, less padding */}
             <div className="flex-1 overflow-y-auto p-3 space-y-3" style={{ height: 'calc(100% - 70px)' }}>
               {/* Grammar Issues Summary - Always visible if there are issues */}
-              {comprehensiveFeedback && comprehensiveFeedback.grammarIssues.length > 0 && (
+              {comprehensiveFeedback && comprehensiveFeedback.grammarIssues && comprehensiveFeedback.grammarIssues.length > 0 && (
                 <div className="sticky top-0 z-10 mb-3">
                   <div className="bg-red-50 border-l-4 border-red-500 p-3 rounded shadow-sm">
                     <div className="flex items-center justify-between mb-2">
@@ -979,7 +979,7 @@ export function EnhancedCoachPanel({
               )}
 
               {/* Show, Don't Tell Teaching - Explicit guidance */}
-              {comprehensiveFeedback && comprehensiveFeedback.showDontTellExamples.length > 0 && (
+              {comprehensiveFeedback && comprehensiveFeedback.showDontTellExamples && comprehensiveFeedback.showDontTellExamples.length > 0 && (
                 <div className="mb-3">
                   <div className="bg-yellow-50 border-l-4 border-yellow-500 p-3 rounded shadow-sm">
                     <div className="flex items-center justify-between mb-2">
@@ -1029,7 +1029,7 @@ export function EnhancedCoachPanel({
               )}
 
               {/* Story Arc/Plot Development Feedback */}
-              {comprehensiveFeedback && wordCount >= 50 && (
+              {comprehensiveFeedback && comprehensiveFeedback.storyArc && wordCount >= 50 && (
                 <div className="mb-3">
                   <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded shadow-sm">
                     <div className="flex items-center justify-between mb-2">
@@ -1052,7 +1052,7 @@ export function EnhancedCoachPanel({
                     </div>
 
                     {/* Strengths */}
-                    {comprehensiveFeedback.storyArc.strengths.length > 0 && (
+                    {comprehensiveFeedback.storyArc.strengths && comprehensiveFeedback.storyArc.strengths.length > 0 && (
                       <div className="bg-white p-2 rounded border border-green-200 mb-2">
                         <p className="text-xs font-semibold text-green-700 mb-1">✅ Strengths:</p>
                         {comprehensiveFeedback.storyArc.strengths.slice(0, 2).map((strength, idx) => (
@@ -1062,7 +1062,7 @@ export function EnhancedCoachPanel({
                     )}
 
                     {/* Next Steps */}
-                    {comprehensiveFeedback.storyArc.nextSteps.length > 0 && (
+                    {comprehensiveFeedback.storyArc.nextSteps && comprehensiveFeedback.storyArc.nextSteps.length > 0 && (
                       <div className="bg-white p-2 rounded border border-blue-200">
                         <p className="text-xs font-semibold text-blue-700 mb-1">🎯 Next Steps:</p>
                         {comprehensiveFeedback.storyArc.nextSteps.slice(0, 2).map((step, idx) => (
@@ -1075,7 +1075,7 @@ export function EnhancedCoachPanel({
               )}
 
               {/* Engagement and Pacing Feedback */}
-              {comprehensiveFeedback && wordCount >= 30 && (
+              {comprehensiveFeedback && comprehensiveFeedback.pacing && wordCount >= 30 && (
                 <div className="mb-3">
                   <div className="bg-purple-50 border-l-4 border-purple-500 p-3 rounded shadow-sm">
                     <div className="flex items-center justify-between mb-2">
@@ -1098,7 +1098,7 @@ export function EnhancedCoachPanel({
                     </div>
 
                     {/* Pacing Sections */}
-                    {comprehensiveFeedback.pacing.sections.length > 0 && (
+                    {comprehensiveFeedback.pacing.sections && comprehensiveFeedback.pacing.sections.length > 0 && (
                       <div className="space-y-2">
                         {comprehensiveFeedback.pacing.sections.slice(0, 2).map((section, idx) => (
                           <div key={idx} className="bg-white p-2 rounded border border-purple-200">
