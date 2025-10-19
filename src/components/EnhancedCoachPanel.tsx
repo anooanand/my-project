@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Send, MessageSquare, BarChart3, Lightbulb, Target, Star, TrendingUp, Award, List, BookOpen } from 'lucide-react';
+import { Send, MessageSquare, BarChart3, Lightbulb, Target, Star, TrendingUp, Award, List, BookOpen, AlertCircle } from 'lucide-react';
 import { StepByStepWritingBuilder } from './StepByStepWritingBuilder';
 import { ContextualAICoachPanel } from './ContextualAICoachPanel';
 import { ComprehensiveFeedbackDisplay } from './ComprehensiveFeedbackDisplay';
@@ -904,7 +904,7 @@ export function EnhancedCoachPanel({
 
           <button
             onClick={() => setCurrentView('detailed')}
-            className={`flex items-center justify-center space-x-1 px-2.5 py-1.5 rounded text-xs font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
+            className={`flex items-center justify-center space-x-1 px-2.5 py-1.5 rounded text-xs font-medium transition-colors whitespace-nowrap flex-shrink-0 relative ${
               currentView === 'detailed'
                 ? 'bg-white text-red-600 shadow-sm'
                 : 'bg-white/20 text-white hover:bg-white/30'
@@ -912,6 +912,12 @@ export function EnhancedCoachPanel({
           >
             <Target className="w-3 h-3" />
             <span>Detail</span>
+            {/* Grammar issues badge */}
+            {comprehensiveFeedback && comprehensiveFeedback.grammarIssues.length > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold">
+                {comprehensiveFeedback.grammarIssues.length}
+              </span>
+            )}
           </button>
         </div>
       </div>
@@ -922,6 +928,56 @@ export function EnhancedCoachPanel({
           <>
             {/* Messages Area - OPTIMIZED: More space, less padding */}
             <div className="flex-1 overflow-y-auto p-3 space-y-3" style={{ height: 'calc(100% - 70px)' }}>
+              {/* Grammar Issues Summary - Always visible if there are issues */}
+              {comprehensiveFeedback && comprehensiveFeedback.grammarIssues.length > 0 && (
+                <div className="sticky top-0 z-10 mb-3">
+                  <div className="bg-red-50 border-l-4 border-red-500 p-3 rounded shadow-sm">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center space-x-2">
+                        <AlertCircle className="w-5 h-5 text-red-600" />
+                        <span className="font-semibold text-red-800">
+                          {comprehensiveFeedback.grammarIssues.length} Grammar/Spelling Issue{comprehensiveFeedback.grammarIssues.length > 1 ? 's' : ''} Found
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => setCurrentView('detailed')}
+                        className="text-xs bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition-colors font-medium"
+                      >
+                        View Details
+                      </button>
+                    </div>
+
+                    {/* Show first 2 grammar issues as preview */}
+                    <div className="space-y-2">
+                      {comprehensiveFeedback.grammarIssues.slice(0, 2).map((issue, idx) => (
+                        <div key={idx} className="bg-white p-2 rounded border border-red-200">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs font-semibold text-red-700 uppercase">{issue.type}</span>
+                            <span className="text-xs px-2 py-0.5 rounded bg-red-100 text-red-700">{issue.severity}</span>
+                          </div>
+                          <div className="text-xs mb-1">
+                            <span className="text-red-600 font-medium">Found:</span> <span className="line-through">{issue.original}</span>
+                          </div>
+                          <div className="text-xs mb-1">
+                            <span className="text-green-600 font-medium">Correct:</span> <span className="font-semibold text-green-700">{issue.correction}</span>
+                          </div>
+                          <div className="text-xs text-gray-600">
+                            <strong>Why:</strong> {issue.explanation}
+                          </div>
+                        </div>
+                      ))}
+
+                      {comprehensiveFeedback.grammarIssues.length > 2 && (
+                        <div className="text-xs text-center text-red-700 font-medium">
+                          + {comprehensiveFeedback.grammarIssues.length - 2} more issue{comprehensiveFeedback.grammarIssues.length - 2 > 1 ? 's' : ''}
+                          {' '}(click "View Details" above)
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {messages.map((message, index) => (
                 <div key={index} className={`${message.type === 'user' ? 'ml-6' : 'mr-6'}`}>
                   {message.type === 'user' ? (
