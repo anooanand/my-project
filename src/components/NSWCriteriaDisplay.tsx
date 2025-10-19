@@ -1,6 +1,13 @@
 import React from 'react';
 import { Award, TrendingUp, CheckCircle, AlertCircle } from 'lucide-react';
-import { NSW_MARKING_CRITERIA, generateScoringGuidance, type ScoringGuidance } from '../lib/nswMarkingCriteria';
+import {
+  NSW_MARKING_CRITERIA,
+  generateScoringGuidance,
+  calculateWeightedScore,
+  calculateWeightedPercentage,
+  calculateTotalMarks,
+  type ScoringGuidance
+} from '../lib/nswMarkingCriteria';
 
 interface NSWCriteriaDisplayProps {
   scores: {
@@ -68,7 +75,7 @@ export function NSWCriteriaDisplay({ scores, wordCount, showDetailed = false }: 
                   <h4 className="font-bold text-sm">
                     {criterion.name}
                   </h4>
-                  <p className="text-xs opacity-75">NSW Code: {criterion.code}</p>
+                  <p className="text-xs opacity-75">NSW Code: {criterion.code} | Weight: {criterion.weighting}%</p>
                 </div>
               </div>
               <div className="text-center">
@@ -127,18 +134,41 @@ export function NSWCriteriaDisplay({ scores, wordCount, showDetailed = false }: 
         );
       })}
 
-      {/* Overall Score Summary */}
+      {/* Overall Score Summary with Weighting */}
       <div className="bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200 rounded-lg p-3">
-        <div className="flex items-center justify-between">
-          <div>
-            <h4 className="font-bold text-sm text-purple-900">Overall Writing Score</h4>
-            <p className="text-xs text-purple-700">Average across all NSW criteria</p>
+        <div className="mb-3">
+          <h4 className="font-bold text-sm text-purple-900 mb-1">Overall Writing Score (Weighted)</h4>
+          <p className="text-xs text-purple-700">Based on NSW rubric percentages</p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <div className="bg-white bg-opacity-50 rounded p-2">
+            <p className="text-xs text-purple-700 mb-1">Weighted Score</p>
+            <p className="text-2xl font-bold text-purple-900">
+              {calculateWeightedScore(scores).toFixed(2)}
+            </p>
+            <p className="text-xs text-purple-600">out of 4.0</p>
           </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-purple-900">
-              {(Object.values(scores).reduce((a, b) => a + b, 0) / 4).toFixed(1)}
-            </div>
-            <div className="text-xs text-purple-700">out of 4.0</div>
+
+          <div className="bg-white bg-opacity-50 rounded p-2">
+            <p className="text-xs text-purple-700 mb-1">Percentage</p>
+            <p className="text-2xl font-bold text-purple-900">
+              {calculateWeightedPercentage(scores).toFixed(1)}%
+            </p>
+            <p className="text-xs text-purple-600">of maximum</p>
+          </div>
+        </div>
+
+        <div className="bg-white bg-opacity-50 rounded p-2">
+          <p className="text-xs text-purple-700 mb-1 font-semibold">Total Mark (NSW Standard)</p>
+          <p className="text-2xl font-bold text-purple-900">
+            {calculateTotalMarks(scores).totalOutOf30.toFixed(1)} / 30
+          </p>
+          <div className="grid grid-cols-2 gap-1 mt-2 text-xs text-purple-700">
+            <div>Ideas: {calculateTotalMarks(scores).breakdown.ideasContent.toFixed(1)}/12</div>
+            <div>Structure: {calculateTotalMarks(scores).breakdown.structure.toFixed(1)}/6</div>
+            <div>Language: {calculateTotalMarks(scores).breakdown.language.toFixed(1)}/7.5</div>
+            <div>Grammar: {calculateTotalMarks(scores).breakdown.grammar.toFixed(1)}/4.5</div>
           </div>
         </div>
       </div>
@@ -146,8 +176,9 @@ export function NSWCriteriaDisplay({ scores, wordCount, showDetailed = false }: 
       {/* Help Text */}
       <div className="bg-gray-50 border border-gray-200 rounded p-2">
         <p className="text-xs text-gray-700">
-          <strong>About NSW Marking:</strong> NSW markers use these exact criteria to assess your writing.
-          Focus on improving your lowest-scoring areas first to boost your overall mark.
+          <strong>About NSW Weighting:</strong> Ideas & Content (40%), Structure (20%),
+          Language (25%), Grammar (15%). This reflects how NSW markers assess your writing.
+          Focus on Ideas & Content for the biggest impact on your total score.
         </p>
       </div>
     </div>
@@ -158,18 +189,27 @@ export function NSWCriteriaDisplay({ scores, wordCount, showDetailed = false }: 
  * Compact version for inline display
  */
 export function NSWCriteriaCompact({ scores }: { scores: NSWCriteriaDisplayProps['scores'] }) {
-  const averageScore = (Object.values(scores).reduce((a, b) => a + b, 0) / 4).toFixed(1);
+  const weightedScore = calculateWeightedScore(scores).toFixed(2);
+  const totalMark = calculateTotalMarks(scores).totalOutOf30.toFixed(1);
 
   return (
-    <div className="flex items-center space-x-3 bg-blue-50 border border-blue-200 rounded-lg p-2">
-      <Award className="w-5 h-5 text-blue-600 flex-shrink-0" />
-      <div className="flex-1">
-        <p className="text-xs font-semibold text-blue-900">NSW Criteria Score</p>
-        <p className="text-xs text-blue-700">Based on official marking rubric</p>
+    <div className="bg-blue-50 border border-blue-200 rounded-lg p-2">
+      <div className="flex items-center space-x-3 mb-2">
+        <Award className="w-5 h-5 text-blue-600 flex-shrink-0" />
+        <div className="flex-1">
+          <p className="text-xs font-semibold text-blue-900">NSW Weighted Score</p>
+          <p className="text-xs text-blue-700">Ideas 40% | Structure 20% | Language 25% | Grammar 15%</p>
+        </div>
       </div>
-      <div className="text-center">
-        <div className="text-xl font-bold text-blue-900">{averageScore}</div>
-        <div className="text-xs text-blue-700">/ 4.0</div>
+      <div className="flex justify-between items-center bg-white bg-opacity-50 rounded p-1.5">
+        <div className="text-center flex-1">
+          <div className="text-lg font-bold text-blue-900">{weightedScore}</div>
+          <div className="text-xs text-blue-700">/ 4.0</div>
+        </div>
+        <div className="text-center flex-1 border-l border-blue-200">
+          <div className="text-lg font-bold text-blue-900">{totalMark}</div>
+          <div className="text-xs text-blue-700">/ 30</div>
+        </div>
       </div>
     </div>
   );

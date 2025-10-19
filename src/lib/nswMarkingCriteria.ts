@@ -7,6 +7,7 @@ export interface NSWCriterion {
   name: string;
   code: string;
   description: string;
+  weighting: number; // Percentage weighting in NSW rubric
   levels: {
     level: number;
     descriptor: string;
@@ -35,6 +36,7 @@ export const NSW_MARKING_CRITERIA: Record<string, NSWCriterion> = {
     name: "Ideas and Content",
     code: "IC",
     description: "Quality and development of ideas, relevance to topic, depth of thinking",
+    weighting: 40, // 40% of total mark
     levels: [
       {
         level: 4,
@@ -87,6 +89,7 @@ export const NSW_MARKING_CRITERIA: Record<string, NSWCriterion> = {
     name: "Structure and Organization",
     code: "SO",
     description: "Text structure, paragraph organization, logical flow, cohesion",
+    weighting: 20, // 20% of total mark
     levels: [
       {
         level: 4,
@@ -143,6 +146,7 @@ export const NSW_MARKING_CRITERIA: Record<string, NSWCriterion> = {
     name: "Vocabulary and Language Use",
     code: "VL",
     description: "Word choice, language techniques, vocabulary sophistication, expression",
+    weighting: 25, // 25% of total mark
     levels: [
       {
         level: 4,
@@ -199,6 +203,7 @@ export const NSW_MARKING_CRITERIA: Record<string, NSWCriterion> = {
     name: "Grammar, Punctuation and Spelling",
     code: "GPS",
     description: "Sentence structure, grammar accuracy, punctuation, spelling, conventions",
+    weighting: 15, // 15% of total mark
     levels: [
       {
         level: 4,
@@ -286,9 +291,9 @@ export function generateScoringGuidance(
     criterionCode,
     criterionName: criterion.name,
     whatYouDid: `Your ${criterion.name.toLowerCase()} is at Level ${currentLevel}: ${currentLevelData.descriptor}`,
-    whyItMatters: `NSW markers assess ${criterion.name} as one of the four key criteria. ${evidence}`,
+    whyItMatters: `NSW markers assess ${criterion.name} as one of the four key criteria, weighted at ${criterion.weighting}% of your total mark. ${evidence}`,
     howToImprove: `To reach Level ${targetLevel}, focus on: ${targetLevelData.descriptor}`,
-    nswReference: `NSW Criterion: ${criterion.code} (${criterion.name}) - Currently Level ${currentLevel}/4`
+    nswReference: `NSW Criterion: ${criterion.code} (${criterion.name}) - Level ${currentLevel}/4 | Weight: ${criterion.weighting}%`
   };
 }
 
@@ -380,4 +385,110 @@ export function generateNSWAlignedFeedback(
 
 ${guidance.exampleImprovement ? `📝 Example: ${guidance.exampleImprovement}` : ''}
   `.trim();
+}
+
+/**
+ * Calculate weighted score based on NSW rubric percentages
+ * Content & Ideas: 40%
+ * Text Structure: 20%
+ * Language Features: 25%
+ * Spelling & Grammar: 15%
+ */
+export function calculateWeightedScore(scores: {
+  IDEAS_CONTENT: number;
+  STRUCTURE_ORGANIZATION: number;
+  VOCABULARY_LANGUAGE: number;
+  GRAMMAR_MECHANICS: number;
+}): number {
+  const weights = {
+    IDEAS_CONTENT: 0.40,
+    STRUCTURE_ORGANIZATION: 0.20,
+    VOCABULARY_LANGUAGE: 0.25,
+    GRAMMAR_MECHANICS: 0.15
+  };
+
+  const weightedScore =
+    (scores.IDEAS_CONTENT * weights.IDEAS_CONTENT) +
+    (scores.STRUCTURE_ORGANIZATION * weights.STRUCTURE_ORGANIZATION) +
+    (scores.VOCABULARY_LANGUAGE * weights.VOCABULARY_LANGUAGE) +
+    (scores.GRAMMAR_MECHANICS * weights.GRAMMAR_MECHANICS);
+
+  return weightedScore;
+}
+
+/**
+ * Calculate weighted percentage for display (out of 100%)
+ */
+export function calculateWeightedPercentage(scores: {
+  IDEAS_CONTENT: number;
+  STRUCTURE_ORGANIZATION: number;
+  VOCABULARY_LANGUAGE: number;
+  GRAMMAR_MECHANICS: number;
+}): number {
+  const weightedScore = calculateWeightedScore(scores);
+  return (weightedScore / 4) * 100; // Convert 4-point scale to percentage
+}
+
+/**
+ * Get contribution of each criterion to total weighted score
+ */
+export function getWeightedContributions(scores: {
+  IDEAS_CONTENT: number;
+  STRUCTURE_ORGANIZATION: number;
+  VOCABULARY_LANGUAGE: number;
+  GRAMMAR_MECHANICS: number;
+}): Record<string, { points: number; percentage: number }> {
+  return {
+    IDEAS_CONTENT: {
+      points: scores.IDEAS_CONTENT * 0.40,
+      percentage: 40
+    },
+    STRUCTURE_ORGANIZATION: {
+      points: scores.STRUCTURE_ORGANIZATION * 0.20,
+      percentage: 20
+    },
+    VOCABULARY_LANGUAGE: {
+      points: scores.VOCABULARY_LANGUAGE * 0.25,
+      percentage: 25
+    },
+    GRAMMAR_MECHANICS: {
+      points: scores.GRAMMAR_MECHANICS * 0.15,
+      percentage: 15
+    }
+  };
+}
+
+/**
+ * Calculate total marks out of 30 (NSW standard)
+ * Each criterion is scored 1-4, then weighted by percentage
+ */
+export function calculateTotalMarks(scores: {
+  IDEAS_CONTENT: number;
+  STRUCTURE_ORGANIZATION: number;
+  VOCABULARY_LANGUAGE: number;
+  GRAMMAR_MECHANICS: number;
+}): {
+  totalOutOf30: number;
+  breakdown: {
+    ideasContent: number; // out of 12 (40% of 30)
+    structure: number; // out of 6 (20% of 30)
+    language: number; // out of 7.5 (25% of 30)
+    grammar: number; // out of 4.5 (15% of 30)
+  };
+} {
+  // Calculate each criterion's contribution to total of 30
+  const ideasContent = (scores.IDEAS_CONTENT / 4) * 12; // 40% of 30 = 12
+  const structure = (scores.STRUCTURE_ORGANIZATION / 4) * 6; // 20% of 30 = 6
+  const language = (scores.VOCABULARY_LANGUAGE / 4) * 7.5; // 25% of 30 = 7.5
+  const grammar = (scores.GRAMMAR_MECHANICS / 4) * 4.5; // 15% of 30 = 4.5
+
+  return {
+    totalOutOf30: ideasContent + structure + language + grammar,
+    breakdown: {
+      ideasContent,
+      structure,
+      language,
+      grammar
+    }
+  };
 }
