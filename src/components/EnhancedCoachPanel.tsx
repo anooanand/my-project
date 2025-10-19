@@ -978,6 +978,152 @@ export function EnhancedCoachPanel({
                 </div>
               )}
 
+              {/* Show, Don't Tell Teaching - Explicit guidance */}
+              {comprehensiveFeedback && comprehensiveFeedback.showDontTellExamples.length > 0 && (
+                <div className="mb-3">
+                  <div className="bg-yellow-50 border-l-4 border-yellow-500 p-3 rounded shadow-sm">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center space-x-2">
+                        <Lightbulb className="w-5 h-5 text-yellow-600" />
+                        <span className="font-semibold text-yellow-800">
+                          Show, Don't Tell Opportunities
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => setCurrentView('detailed')}
+                        className="text-xs bg-yellow-600 text-white px-3 py-1 rounded hover:bg-yellow-700 transition-colors font-medium"
+                      >
+                        Learn More
+                      </button>
+                    </div>
+
+                    {/* Explicit Teaching */}
+                    <div className="bg-yellow-100 border border-yellow-300 p-2 rounded mb-2">
+                      <p className="text-xs font-semibold text-yellow-900 mb-1">💡 What is "Show, Don't Tell"?</p>
+                      <p className="text-xs text-yellow-800">
+                        Instead of telling readers how a character feels, show it through their actions, body language, and sensory details.
+                        This makes your writing more vivid and engaging.
+                      </p>
+                    </div>
+
+                    {/* First example */}
+                    <div className="bg-white p-2 rounded border border-yellow-200">
+                      <div className="text-xs mb-1">
+                        <span className="text-red-600 font-medium">❌ Telling:</span> <span className="italic line-through">{comprehensiveFeedback.showDontTellExamples[0].telling}</span>
+                      </div>
+                      <div className="text-xs mb-1">
+                        <span className="text-green-600 font-medium">✅ Showing:</span> <span className="font-semibold text-green-700">{comprehensiveFeedback.showDontTellExamples[0].showing}</span>
+                      </div>
+                      <div className="text-xs text-gray-600">
+                        <strong>Technique:</strong> {comprehensiveFeedback.showDontTellExamples[0].technique}
+                      </div>
+                    </div>
+
+                    {comprehensiveFeedback.showDontTellExamples.length > 1 && (
+                      <div className="text-xs text-center text-yellow-700 font-medium mt-2">
+                        + {comprehensiveFeedback.showDontTellExamples.length - 1} more example{comprehensiveFeedback.showDontTellExamples.length - 1 > 1 ? 's' : ''}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Story Arc/Plot Development Feedback */}
+              {comprehensiveFeedback && wordCount >= 50 && (
+                <div className="mb-3">
+                  <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded shadow-sm">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center space-x-2">
+                        <TrendingUp className="w-5 h-5 text-blue-600" />
+                        <span className="font-semibold text-blue-800">
+                          Story Structure Progress
+                        </span>
+                      </div>
+                      <div className="text-xs bg-blue-600 text-white px-2 py-1 rounded font-medium">
+                        {comprehensiveFeedback.storyArc.completeness}% Complete
+                      </div>
+                    </div>
+
+                    {/* Current Stage */}
+                    <div className="bg-blue-100 border border-blue-300 p-2 rounded mb-2">
+                      <p className="text-xs font-semibold text-blue-900 mb-1">
+                        📍 Current Stage: <span className="capitalize">{comprehensiveFeedback.storyArc.currentStage.replace('-', ' ')}</span>
+                      </p>
+                    </div>
+
+                    {/* Strengths */}
+                    {comprehensiveFeedback.storyArc.strengths.length > 0 && (
+                      <div className="bg-white p-2 rounded border border-green-200 mb-2">
+                        <p className="text-xs font-semibold text-green-700 mb-1">✅ Strengths:</p>
+                        {comprehensiveFeedback.storyArc.strengths.slice(0, 2).map((strength, idx) => (
+                          <p key={idx} className="text-xs text-gray-700">• {strength}</p>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Next Steps */}
+                    {comprehensiveFeedback.storyArc.nextSteps.length > 0 && (
+                      <div className="bg-white p-2 rounded border border-blue-200">
+                        <p className="text-xs font-semibold text-blue-700 mb-1">🎯 Next Steps:</p>
+                        {comprehensiveFeedback.storyArc.nextSteps.slice(0, 2).map((step, idx) => (
+                          <p key={idx} className="text-xs text-gray-700">• {step}</p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Engagement and Pacing Feedback */}
+              {comprehensiveFeedback && wordCount >= 30 && (
+                <div className="mb-3">
+                  <div className="bg-purple-50 border-l-4 border-purple-500 p-3 rounded shadow-sm">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center space-x-2">
+                        <BarChart3 className="w-5 h-5 text-purple-600" />
+                        <span className="font-semibold text-purple-800">
+                          Pacing & Engagement
+                        </span>
+                      </div>
+                      <div className={`text-xs px-2 py-1 rounded font-medium ${
+                        comprehensiveFeedback.pacing.overall === 'good'
+                          ? 'bg-green-600 text-white'
+                          : comprehensiveFeedback.pacing.overall === 'too-fast'
+                          ? 'bg-orange-600 text-white'
+                          : 'bg-yellow-600 text-white'
+                      }`}>
+                        {comprehensiveFeedback.pacing.overall === 'good' ? '✓ Good Pace' :
+                         comprehensiveFeedback.pacing.overall === 'too-fast' ? '⚡ Fast Pace' : '🐌 Slow Pace'}
+                      </div>
+                    </div>
+
+                    {/* Pacing Sections */}
+                    {comprehensiveFeedback.pacing.sections.length > 0 && (
+                      <div className="space-y-2">
+                        {comprehensiveFeedback.pacing.sections.slice(0, 2).map((section, idx) => (
+                          <div key={idx} className="bg-white p-2 rounded border border-purple-200">
+                            <p className="text-xs font-semibold text-purple-700 mb-1">
+                              {section.section}: <span className="font-normal text-purple-600">{section.pace}</span>
+                            </p>
+                            <p className="text-xs text-gray-700">
+                              💡 {section.recommendation}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {comprehensiveFeedback.pacing.sections.length === 0 && (
+                      <div className="bg-white p-2 rounded border border-purple-200">
+                        <p className="text-xs text-gray-700">
+                          ✓ Your pacing is well-balanced! Keep varying your sentence lengths to maintain reader engagement.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {messages.map((message, index) => (
                 <div key={index} className={`${message.type === 'user' ? 'ml-6' : 'mr-6'}`}>
                   {message.type === 'user' ? (
