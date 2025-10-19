@@ -8,6 +8,8 @@ import { ComprehensiveFeedbackAnalyzer } from '../lib/comprehensiveFeedbackAnaly
 import type { SupportLevel } from '../lib/writingBuddyService';
 import { generateDynamicExamples, formatExamplesForDisplay } from '../lib/dynamicExampleGenerator';
 import { ChatSessionService } from '../lib/chatSessionService';
+import { NSW_MARKING_CRITERIA, generateScoringGuidance, mapToNSWScores, getImprovementExamples } from '../lib/nswMarkingCriteria';
+import { NSWCriteriaCompact, NSWCriteriaDisplay } from './NSWCriteriaDisplay';
 
 /**
  * Generates time-appropriate coaching messages for 40-minute writing test
@@ -659,7 +661,7 @@ export function EnhancedCoachPanel({
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isLoadingResponse, setIsLoadingResponse] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
-  const [currentView, setCurrentView] = useState<'coach' | 'examples' | 'builder' | 'detailed'>('coach');
+  const [currentView, setCurrentView] = useState<'coach' | 'examples' | 'builder' | 'detailed' | 'nsw'>('coach');
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isLoadingSession, setIsLoadingSession] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -756,6 +758,9 @@ export function EnhancedCoachPanel({
         // Also get legacy analysis for compatibility
         const analysis = NSWCriteriaAnalyzer.analyzeContent(content, textType);
 
+        // Map to NSW scoring system
+        const nswScores = mapToNSWScores(analysis);
+
         // Add or update the latest coaching message
         setMessages(prev => {
           const filtered = prev.filter(msg => msg.type !== 'auto-coach');
@@ -764,6 +769,7 @@ export function EnhancedCoachPanel({
             content: enhancedResponse,
             timestamp: new Date(),
             analysis: analysis,
+            nswScores: nswScores,
             timeInfo: timeInfo,
             phaseInfo: phaseInfo,
             enhanced: true
@@ -1052,6 +1058,18 @@ export function EnhancedCoachPanel({
                 {comprehensiveFeedback.grammarIssues.length}
               </span>
             )}
+          </button>
+
+          <button
+            onClick={() => setCurrentView('nsw')}
+            className={`flex items-center justify-center space-x-1 px-2.5 py-1.5 rounded text-xs font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
+              currentView === 'nsw'
+                ? 'bg-white text-purple-600 shadow-sm'
+                : 'bg-white/20 text-white hover:bg-white/30'
+            }`}
+          >
+            <Award className="w-3 h-3" />
+            <span>NSW Criteria</span>
           </button>
         </div>
       </div>
@@ -1426,7 +1444,14 @@ export function EnhancedCoachPanel({
                   </div>
                 </div>
               )}
-              
+
+              {/* NSW Criteria Display */}
+              {wordCount >= 50 && messages.length > 0 && messages[messages.length - 1].nswScores && (
+                <div className="mr-6 mb-3">
+                  <NSWCriteriaCompact scores={messages[messages.length - 1].nswScores} />
+                </div>
+              )}
+
               <div ref={messagesEndRef} />
             </div>
 
@@ -1477,6 +1502,22 @@ export function EnhancedCoachPanel({
               <div className="text-center py-8 text-gray-500">
                 <Target className="w-12 h-12 mx-auto mb-3 opacity-50" />
                 <p>Write at least 20 words to see detailed feedback</p>
+              </div>
+            )}
+          </div>
+        ) : currentView === 'nsw' ? (
+          <div className="h-full overflow-y-auto p-4">
+            {messages.length > 0 && messages[messages.length - 1].nswScores ? (
+              <NSWCriteriaDisplay
+                scores={messages[messages.length - 1].nswScores}
+                wordCount={wordCount || 0}
+                showDetailed={true}
+              />
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <Award className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                <p>Start writing to see your NSW Criteria scores</p>
+                <p className="text-xs mt-2">Write at least 20 words for initial assessment</p>
               </div>
             )}
           </div>
