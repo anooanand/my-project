@@ -268,121 +268,86 @@ export function NSWEvaluationReportDisplay({ report, essayText, onClose }: NSWEv
             icon="💡"
           />
           <DomainScoreCard
-            domain={correctedReport.domains.textStructure}
+            domain={{ ...correctedReport.domains.textStructure, maxScore: 10 }}
             title="Structure & Organization"
             icon="📝"
           />
           <DomainScoreCard
-            domain={correctedReport.domains.languageFeatures}
+            domain={{ ...correctedReport.domains.languageFeatures, maxScore: 10 }}
             title="Language & Vocabulary"
-            icon="✨"
+            icon="✍️"
           />
           <DomainScoreCard
-            domain={correctedReport.domains.spellingAndGrammar}
-            title="Spelling, Punctuation & Grammar"
+            domain={{ ...correctedReport.domains.spellingAndGrammar, maxScore: 10 }}
+            title="Spelling & Grammar"
             icon="✅"
           />
         </div>
       </div>
 
-      {/* Detailed Feedback Section */}
-      <div className="mb-8">
-        <div className="flex items-center mb-6">
-          <FileText className="w-6 h-6 text-purple-600 mr-3" />
-          <h2 className="text-2xl font-bold text-purple-600">Detailed Writing Analysis</h2>
-        </div>
-
-        {/* Word Count & Sentence Variety */}
-        <div className="bg-gray-50 dark:bg-gray-800 p-5 rounded-lg shadow-sm mb-4">
-          <h3 className="font-semibold text-xl text-gray-800 dark:text-gray-200 mb-3">Word Count & Sentence Variety</h3>
-          <p className="text-gray-700 dark:text-gray-300 mb-2">Your essay contains <strong>{correctedReport.detailedFeedback.wordCount} words</strong>.</p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center mb-3">
-            <div className="p-3 bg-white dark:bg-gray-700 rounded-md shadow-sm">
-              <p className="text-lg font-bold text-blue-600">{correctedReport.detailedFeedback.sentenceVariety.simple}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Simple Sentences</p>
-            </div>
-            <div className="p-3 bg-white dark:bg-gray-700 rounded-md shadow-sm">
-              <p className="text-lg font-bold text-green-600">{correctedReport.detailedFeedback.sentenceVariety.compound}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Compound Sentences</p>
-            </div>
-            <div className="p-3 bg-white dark:bg-gray-700 rounded-md shadow-sm">
-              <p className="text-lg font-bold text-purple-600">{correctedReport.detailedFeedback.sentenceVariety.complex}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Complex Sentences</p>
-            </div>
+      {/* Overall Strengths, Areas for Growth, and Recommendations */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div className="bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800 p-6">
+          <h3 className="text-xl font-bold text-green-800 dark:text-green-200 mb-4 flex items-center">
+            <Star className="w-5 h-5 mr-2" />
+            Key Strengths
+          </h3>
+          <div className="space-y-3">
+            {correctedReport.strengths.length > 0 ? (
+              correctedReport.strengths.map((strength, index) => (
+                <div key={index} className="flex items-start">
+                  <CheckCircle className="w-5 h-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" />
+                  <span className="text-green-700 dark:text-green-300">{strength}</span>
+                </div>
+              ))
+            ) : (
+              <p className="text-green-600 dark:text-green-400">Keep working hard! Every piece of writing has potential for growth.</p>
+            )}
           </div>
-          <p className="text-gray-700 dark:text-gray-300"><strong>Analysis:</strong> {correctedReport.detailedFeedback.sentenceVariety.analysis}</p>
         </div>
 
-        {/* Vocabulary Analysis */}
-        <div className="bg-gray-50 dark:bg-gray-800 p-5 rounded-lg shadow-sm mb-4">
-          <h3 className="font-semibold text-xl text-gray-800 dark:text-gray-200 mb-3">Vocabulary Analysis</h3>
-          {correctedReport.detailedFeedback.vocabularyAnalysis.sophisticatedWords.length > 0 && (
-            <p className="text-gray-700 dark:text-gray-300 mb-2">
-              <strong>Sophisticated Words Used:</strong> {correctedReport.detailedFeedback.vocabularyAnalysis.sophisticatedWords.join(", ")}
-            </p>
-          )}
-          {correctedReport.detailedFeedback.vocabularyAnalysis.repetitiveWords.length > 0 && (
-            <p className="text-gray-700 dark:text-gray-300 mb-2">
-              <strong>Repetitive Words:</strong> {correctedReport.detailedFeedback.vocabularyAnalysis.repetitiveWords.join(", ")}
-            </p>
-          )}
-          {correctedReport.detailedFeedback.vocabularyAnalysis.suggestions.length > 0 && (
-            <div className="mt-3">
-              <h4 className="font-semibold text-gray-800 dark:text-gray-200">Suggestions:</h4>
-              <ul className="list-disc list-inside text-gray-700 dark:text-gray-300">
-                {correctedReport.detailedFeedback.vocabularyAnalysis.suggestions.map((s, i) => (
-                  <li key={i}>{s}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-
-        {/* Literary Devices */}
-        <div className="bg-gray-50 dark:bg-gray-800 p-5 rounded-lg shadow-sm mb-4">
-          <h3 className="font-semibold text-xl text-gray-800 dark:text-gray-200 mb-3">Literary Devices</h3>
-          {correctedReport.detailedFeedback.literaryDevices.identified.length > 0 ? (
-            <p className="text-gray-700 dark:text-gray-300 mb-2">
-              <strong>Identified:</strong> {correctedReport.detailedFeedback.literaryDevices.identified.join(", ")}
-            </p>
-          ) : (
-            <p className="text-gray-700 dark:text-gray-300 mb-2">No specific literary devices were prominently identified.</p>
-          )}
-          {correctedReport.detailedFeedback.literaryDevices.suggestions.length > 0 && (
-            <div className="mt-3">
-              <h4 className="font-semibold text-gray-800 dark:text-gray-200">Suggestions:</h4>
-              <ul className="list-disc list-inside text-gray-700 dark:text-gray-300">
-                {correctedReport.detailedFeedback.literaryDevices.suggestions.map((s, i) => (
-                  <li key={i}>{s}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-
-        {/* Structural Elements */}
-        <div className="bg-gray-50 dark:bg-gray-800 p-5 rounded-lg shadow-sm mb-4">
-          <h3 className="font-semibold text-xl text-gray-800 dark:text-gray-200 mb-3">Structural Elements</h3>
-          <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 mb-2">
-            <li>Introduction: <strong>{correctedReport.detailedFeedback.structuralElements.hasIntroduction ? "Present" : "Missing"}</strong></li>
-            <li>Conclusion: <strong>{correctedReport.detailedFeedback.structuralElements.hasConclusion ? "Present" : "Missing"}</strong></li>
-            <li>Paragraphs: <strong>{correctedReport.detailedFeedback.structuralElements.paragraphCount}</strong></li>
-          </ul>
-          <p className="text-gray-700 dark:text-gray-300"><strong>Coherence:</strong> {correctedReport.detailedFeedback.structuralElements.coherence}</p>
-        </div>
-
-        {/* Technical Accuracy */}
-        <div className="bg-gray-50 dark:bg-gray-800 p-5 rounded-lg shadow-sm mb-4">
-          <h3 className="font-semibold text-xl text-gray-800 dark:text-gray-200 mb-3">Technical Accuracy</h3>
-          <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 mb-2">
-            <li>Spelling Errors: <strong>{correctedReport.detailedFeedback.technicalAccuracy.spellingErrors}</strong></li>
-            {correctedReport.detailedFeedback.technicalAccuracy.grammarIssues.length > 0 && (
-              <li>Grammar Issues: {correctedReport.detailedFeedback.technicalAccuracy.grammarIssues.join(", ")}</li>
+        <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800 p-6">
+          <h3 className="text-xl font-bold text-orange-800 dark:text-orange-200 mb-4 flex items-center">
+            <Target className="w-5 h-5 mr-2" />
+            Areas for Growth
+          </h3>
+          <div className="space-y-3">
+            {correctedReport.areasForImprovement.length > 0 ? (
+              correctedReport.areasForImprovement.map((area, index) => (
+                <div key={index} className="flex items-start">
+                  {area.startsWith('❌') ? <AlertCircle className="w-5 h-5 text-red-600 mr-3 mt-0.5 flex-shrink-0" /> : 
+                   area.startsWith('⚠️') ? <AlertCircle className="w-5 h-5 text-yellow-600 mr-3 mt-0.5 flex-shrink-0" /> : 
+                   area.startsWith('📏 CRITICAL') ? <AlertCircle className="w-5 h-5 text-red-600 mr-3 mt-0.5 flex-shrink-0" /> : 
+                   area.startsWith('📏') ? <AlertCircle className="w-5 h-5 text-orange-600 mr-3 mt-0.5 flex-shrink-0" /> : 
+                   area.startsWith('🔤') ? <AlertCircle className="w-5 h-5 text-orange-600 mr-3 mt-0.5 flex-shrink-0" /> : 
+                   area.startsWith('✍️') ? <AlertCircle className="w-5 h-5 text-orange-600 mr-3 mt-0.5 flex-shrink-0" /> : 
+                   <AlertCircle className="w-5 h-5 text-orange-600 mr-3 mt-0.5 flex-shrink-0" />}
+                  <span className="text-orange-700 dark:text-orange-300">{area}</span>
+                </div>
+              ))
+            ) : (
+              <p className="text-orange-600 dark:text-orange-400">Excellent work! Continue to challenge yourself with new writing techniques.</p>
             )}
-            {correctedReport.detailedFeedback.technicalAccuracy.punctuationIssues.length > 0 && (
-              <li>Punctuation Issues: {correctedReport.detailedFeedback.technicalAccuracy.punctuationIssues.join(", ")}</li>
+          </div>
+        </div>
+
+        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 p-6">
+          <h3 className="text-xl font-bold text-blue-800 dark:text-blue-200 mb-4 flex items-center">
+            <Lightbulb className="w-5 h-5 mr-2" />
+            Personalized Recommendations
+          </h3>
+          <div className="space-y-3">
+            {correctedReport.recommendations.length > 0 ? (
+              correctedReport.recommendations.map((rec, index) => (
+                <div key={index} className="flex items-start">
+                  <TrendingUp className="w-5 h-5 text-blue-600 mr-3 mt-0.5 flex-shrink-0" />
+                  <span className="text-blue-700 dark:text-blue-300">{rec}</span>
+                </div>
+              ))
+            ) : (
+              <p className="text-blue-600 dark:text-blue-400">Keep up the excellent work! Continue practicing to maintain your high standards.</p>
             )}
-          </ul>
+          </div>
         </div>
       </div>
 
@@ -390,205 +355,117 @@ export function NSWEvaluationReportDisplay({ report, essayText, onClose }: NSWEv
       <div className="mb-8">
         <div className="flex items-center mb-6">
           <FileText className="w-6 h-6 text-purple-600 mr-3" />
-          <h2 className="text-2xl font-bold text-purple-600">Detailed Writing Analysis</h2>
+          <h2 className="text-2xl font-bold text-purple-600">Detailed Analysis</h2>
         </div>
 
-        {/* Word Count & Sentence Variety */}
-        <div className="bg-gray-50 dark:bg-gray-800 p-5 rounded-lg shadow-sm mb-4">
-          <h3 className="font-semibold text-xl text-gray-800 dark:text-gray-200 mb-3">Word Count & Sentence Variety</h3>
-          <p className="text-gray-700 dark:text-gray-300 mb-2">Your essay contains <strong>{correctedReport.detailedFeedback.wordCount} words</strong>.</p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center mb-3">
-            <div className="p-3 bg-white dark:bg-gray-700 rounded-md shadow-sm">
-              <p className="text-lg font-bold text-blue-600">{correctedReport.detailedFeedback.sentenceVariety.simple}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Simple Sentences</p>
-            </div>
-            <div className="p-3 bg-white dark:bg-gray-700 rounded-md shadow-sm">
-              <p className="text-lg font-bold text-green-600">{correctedReport.detailedFeedback.sentenceVariety.compound}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Compound Sentences</p>
-            </div>
-            <div className="p-3 bg-white dark:bg-gray-700 rounded-md shadow-sm">
-              <p className="text-lg font-bold text-purple-600">{correctedReport.detailedFeedback.sentenceVariety.complex}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Complex Sentences</p>
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Word Count */}
+          <div className="bg-gray-50 dark:bg-gray-800 p-5 rounded-lg shadow-sm mb-4">
+            <h3 className="font-semibold text-xl text-gray-800 dark:text-gray-200 mb-3">Word Count</h3>
+            <p className="text-gray-700 dark:text-gray-300">Your essay has <strong>{correctedReport.detailedFeedback.wordCount} words</strong>.</p>
+            {correctedReport.criticalWarnings && correctedReport.criticalWarnings.length > 0 && (
+              <div className="mt-3 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                <p className="font-semibold">Critical Warnings:</p>
+                <ul className="list-disc list-inside">
+                  {correctedReport.criticalWarnings.map((warning, index) => (
+                    <li key={index}>{warning}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
-          <p className="text-gray-700 dark:text-gray-300"><strong>Analysis:</strong> {correctedReport.detailedFeedback.sentenceVariety.analysis}</p>
-        </div>
 
-        {/* Vocabulary Analysis */}
-        <div className="bg-gray-50 dark:bg-gray-800 p-5 rounded-lg shadow-sm mb-4">
-          <h3 className="font-semibold text-xl text-gray-800 dark:text-gray-200 mb-3">Vocabulary Analysis</h3>
-          {correctedReport.detailedFeedback.vocabularyAnalysis.sophisticatedWords.length > 0 && (
-            <p className="text-gray-700 dark:text-gray-300 mb-2">
-              <strong>Sophisticated Words Used:</strong> {correctedReport.detailedFeedback.vocabularyAnalysis.sophisticatedWords.join(", ")}
-            </p>
-          )}
-          {correctedReport.detailedFeedback.vocabularyAnalysis.repetitiveWords.length > 0 && (
-            <p className="text-gray-700 dark:text-gray-300 mb-2">
-              <strong>Repetitive Words:</strong> {correctedReport.detailedFeedback.vocabularyAnalysis.repetitiveWords.join(", ")}
-            </p>
-          )}
-          {correctedReport.detailedFeedback.vocabularyAnalysis.suggestions.length > 0 && (
-            <div className="mt-3">
-              <h4 className="font-semibold text-gray-800 dark:text-gray-200">Suggestions:</h4>
-              <ul className="list-disc list-inside text-gray-700 dark:text-gray-300">
-                {correctedReport.detailedFeedback.vocabularyAnalysis.suggestions.map((s, i) => (
-                  <li key={i}>{s}</li>
-                ))}
-              </ul>
+          {/* Sentence Variety */}
+          <div className="bg-gray-50 dark:bg-gray-800 p-5 rounded-lg shadow-sm mb-4">
+            <h3 className="font-semibold text-xl text-gray-800 dark:text-gray-200 mb-3">Sentence Variety</h3>
+            <div className="grid grid-cols-3 gap-4 text-center mb-3">
+              <div className="p-3 bg-white dark:bg-gray-700 rounded-md shadow-sm">
+                <p className="text-lg font-bold text-blue-600">{correctedReport.detailedFeedback.sentenceVariety.simple}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Simple Sentences</p>
+              </div>
+              <div className="p-3 bg-white dark:bg-gray-700 rounded-md shadow-sm">
+                <p className="text-lg font-bold text-green-600">{correctedReport.detailedFeedback.sentenceVariety.compound}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Compound Sentences</p>
+              </div>
+              <div className="p-3 bg-white dark:bg-gray-700 rounded-md shadow-sm">
+                <p className="text-lg font-bold text-purple-600">{correctedReport.detailedFeedback.sentenceVariety.complex}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">Complex Sentences</p>
+              </div>
             </div>
-          )}
-        </div>
-
-        {/* Literary Devices */}
-        <div className="bg-gray-50 dark:bg-gray-800 p-5 rounded-lg shadow-sm mb-4">
-          <h3 className="font-semibold text-xl text-gray-800 dark:text-gray-200 mb-3">Literary Devices</h3>
-          {correctedReport.detailedFeedback.literaryDevices.identified.length > 0 ? (
-            <p className="text-gray-700 dark:text-gray-300 mb-2">
-              <strong>Identified:</strong> {correctedReport.detailedFeedback.literaryDevices.identified.join(", ")}
-            </p>
-          ) : (
-            <p className="text-gray-700 dark:text-gray-300 mb-2">No specific literary devices were prominently identified.</p>
-          )}
-          {correctedReport.detailedFeedback.literaryDevices.suggestions.length > 0 && (
-            <div className="mt-3">
-              <h4 className="font-semibold text-gray-800 dark:text-gray-200">Suggestions:</h4>
-              <ul className="list-disc list-inside text-gray-700 dark:text-gray-300">
-                {correctedReport.detailedFeedback.literaryDevices.suggestions.map((s, i) => (
-                  <li key={i}>{s}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-
-        {/* Structural Elements */}
-        <div className="bg-gray-50 dark:bg-gray-800 p-5 rounded-lg shadow-sm mb-4">
-          <h3 className="font-semibold text-xl text-gray-800 dark:text-gray-200 mb-3">Structural Elements</h3>
-          <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 mb-2">
-            <li>Introduction: <strong>{correctedReport.detailedFeedback.structuralElements.hasIntroduction ? "Present" : "Missing"}</strong></li>
-            <li>Conclusion: <strong>{correctedReport.detailedFeedback.structuralElements.hasConclusion ? "Present" : "Missing"}</strong></li>
-            <li>Paragraphs: <strong>{correctedReport.detailedFeedback.structuralElements.paragraphCount}</strong></li>
-          </ul>
-          <p className="text-gray-700 dark:text-gray-300"><strong>Coherence:</strong> {correctedReport.detailedFeedback.structuralElements.coherence}</p>
-        </div>
-
-        {/* Technical Accuracy */}
-        <div className="bg-gray-50 dark:bg-gray-800 p-5 rounded-lg shadow-sm mb-4">
-          <h3 className="font-semibold text-xl text-gray-800 dark:text-gray-200 mb-3">Technical Accuracy</h3>
-          <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 mb-2">
-            <li>Spelling Errors: <strong>{correctedReport.detailedFeedback.technicalAccuracy.spellingErrors}</strong></li>
-            {correctedReport.detailedFeedback.technicalAccuracy.grammarIssues.length > 0 && (
-              <li>Grammar Issues: {correctedReport.detailedFeedback.technicalAccuracy.grammarIssues.join(", ")}</li>
-            )}
-            {correctedReport.detailedFeedback.technicalAccuracy.punctuationIssues.length > 0 && (
-              <li>Punctuation Issues: {correctedReport.detailedFeedback.technicalAccuracy.punctuationIssues.join(", ")}</li>
-            )}
-          </ul>
-        </div>
-      </div>
-
-      {/* Detailed Feedback Section */}
-      <div className="mb-8">
-        <div className="flex items-center mb-6">
-          <FileText className="w-6 h-6 text-purple-600 mr-3" />
-          <h2 className="text-2xl font-bold text-purple-600">Detailed Writing Analysis</h2>
-        </div>
-
-        {/* Word Count & Sentence Variety */}
-        <div className="bg-gray-50 dark:bg-gray-800 p-5 rounded-lg shadow-sm mb-4">
-          <h3 className="font-semibold text-xl text-gray-800 dark:text-gray-200 mb-3">Word Count & Sentence Variety</h3>
-          <p className="text-gray-700 dark:text-gray-300 mb-2">Your essay contains <strong>{correctedReport.detailedFeedback.wordCount} words</strong>.</p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center mb-3">
-            <div className="p-3 bg-white dark:bg-gray-700 rounded-md shadow-sm">
-              <p className="text-lg font-bold text-blue-600">{correctedReport.detailedFeedback.sentenceVariety.simple}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Simple Sentences</p>
-            </div>
-            <div className="p-3 bg-white dark:bg-gray-700 rounded-md shadow-sm">
-              <p className="text-lg font-bold text-green-600">{correctedReport.detailedFeedback.sentenceVariety.compound}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Compound Sentences</p>
-            </div>
-            <div className="p-3 bg-white dark:bg-gray-700 rounded-md shadow-sm">
-              <p className="text-lg font-bold text-purple-600">{correctedReport.detailedFeedback.sentenceVariety.complex}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">Complex Sentences</p>
-            </div>
+            <p className="text-gray-700 dark:text-gray-300"><strong>Analysis:</strong> {correctedReport.detailedFeedback.sentenceVariety.analysis}</p>
           </div>
-          <p className="text-gray-700 dark:text-gray-300"><strong>Analysis:</strong> {correctedReport.detailedFeedback.sentenceVariety.analysis}</p>
-        </div>
 
-        {/* Vocabulary Analysis */}
-        <div className="bg-gray-50 dark:bg-gray-800 p-5 rounded-lg shadow-sm mb-4">
-          <h3 className="font-semibold text-xl text-gray-800 dark:text-gray-200 mb-3">Vocabulary Analysis</h3>
-          {correctedReport.detailedFeedback.vocabularyAnalysis.sophisticatedWords.length > 0 && (
-            <p className="text-gray-700 dark:text-gray-300 mb-2">
-              <strong>Sophisticated Words Used:</strong> {correctedReport.detailedFeedback.vocabularyAnalysis.sophisticatedWords.join(", ")}
-            </p>
-          )}
-          {correctedReport.detailedFeedback.vocabularyAnalysis.repetitiveWords.length > 0 && (
-            <p className="text-gray-700 dark:text-gray-300 mb-2">
-              <strong>Repetitive Words:</strong> {correctedReport.detailedFeedback.vocabularyAnalysis.repetitiveWords.join(", ")}
-            </p>
-          )}
-          {correctedReport.detailedFeedback.vocabularyAnalysis.suggestions.length > 0 && (
-            <div className="mt-3">
-              <h4 className="font-semibold text-gray-800 dark:text-gray-200">Suggestions:</h4>
-              <ul className="list-disc list-inside text-gray-700 dark:text-gray-300">
-                {correctedReport.detailedFeedback.vocabularyAnalysis.suggestions.map((s, i) => (
-                  <li key={i}>{s}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-
-        {/* Literary Devices */}
-        <div className="bg-gray-50 dark:bg-gray-800 p-5 rounded-lg shadow-sm mb-4">
-          <h3 className="font-semibold text-xl text-gray-800 dark:text-gray-200 mb-3">Literary Devices</h3>
-          {correctedReport.detailedFeedback.literaryDevices.identified.length > 0 ? (
-            <p className="text-gray-700 dark:text-gray-300 mb-2">
-              <strong>Identified:</strong> {correctedReport.detailedFeedback.literaryDevices.identified.join(", ")}
-            </p>
-          ) : (
-            <p className="text-gray-700 dark:text-gray-300 mb-2">No specific literary devices were prominently identified.</p>
-          )}
-          {correctedReport.detailedFeedback.literaryDevices.suggestions.length > 0 && (
-            <div className="mt-3">
-              <h4 className="font-semibold text-gray-800 dark:text-gray-200">Suggestions:</h4>
-              <ul className="list-disc list-inside text-gray-700 dark:text-gray-300">
-                {correctedReport.detailedFeedback.literaryDevices.suggestions.map((s, i) => (
-                  <li key={i}>{s}</li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-
-        {/* Structural Elements */}
-        <div className="bg-gray-50 dark:bg-gray-800 p-5 rounded-lg shadow-sm mb-4">
-          <h3 className="font-semibold text-xl text-gray-800 dark:text-gray-200 mb-3">Structural Elements</h3>
-          <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 mb-2">
-            <li>Introduction: <strong>{correctedReport.detailedFeedback.structuralElements.hasIntroduction ? "Present" : "Missing"}</strong></li>
-            <li>Conclusion: <strong>{correctedReport.detailedFeedback.structuralElements.hasConclusion ? "Present" : "Missing"}</strong></li>
-            <li>Paragraphs: <strong>{correctedReport.detailedFeedback.structuralElements.paragraphCount}</strong></li>
-          </ul>
-          <p className="text-gray-700 dark:text-gray-300"><strong>Coherence:</strong> {correctedReport.detailedFeedback.structuralElements.coherence}</p>
-        </div>
-
-        {/* Technical Accuracy */}
-        <div className="bg-gray-50 dark:bg-gray-800 p-5 rounded-lg shadow-sm mb-4">
-          <h3 className="font-semibold text-xl text-gray-800 dark:text-gray-200 mb-3">Technical Accuracy</h3>
-          <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 mb-2">
-            <li>Spelling Errors: <strong>{correctedReport.detailedFeedback.technicalAccuracy.spellingErrors}</strong></li>
-            {correctedReport.detailedFeedback.technicalAccuracy.grammarIssues.length > 0 && (
-              <li>Grammar Issues: {correctedReport.detailedFeedback.technicalAccuracy.grammarIssues.join(", ")}</li>
+          {/* Vocabulary Analysis */}
+          <div className="bg-gray-50 dark:bg-gray-800 p-5 rounded-lg shadow-sm mb-4">
+            <h3 className="font-semibold text-xl text-gray-800 dark:text-gray-200 mb-3">Vocabulary Analysis</h3>
+            {correctedReport.detailedFeedback.vocabularyAnalysis.sophisticatedWords.length > 0 && (
+              <p className="text-gray-700 dark:text-gray-300 mb-2">
+                <strong>Sophisticated Words Used:</strong> {correctedReport.detailedFeedback.vocabularyAnalysis.sophisticatedWords.join(", ")}
+              </p>
             )}
-            {correctedReport.detailedFeedback.technicalAccuracy.punctuationIssues.length > 0 && (
-              <li>Punctuation Issues: {correctedReport.detailedFeedback.technicalAccuracy.punctuationIssues.join(", ")}</li>
+            {correctedReport.detailedFeedback.vocabularyAnalysis.repetitiveWords.length > 0 && (
+              <p className="text-gray-700 dark:text-gray-300 mb-2">
+                <strong>Repetitive Words:</strong> {correctedReport.detailedFeedback.vocabularyAnalysis.repetitiveWords.join(", ")}
+              </p>
             )}
-          </ul>
-        </div>
-      </div>
+            {correctedReport.detailedFeedback.vocabularyAnalysis.suggestions.length > 0 && (
+              <div className="mt-3">
+                <h4 className="font-semibold text-gray-800 dark:text-gray-200">Suggestions:</h4>
+                <ul className="list-disc list-inside text-gray-700 dark:text-gray-300">
+                  {correctedReport.detailedFeedback.vocabularyAnalysis.suggestions.map((s, i) => (
+                    <li key={i}>{s}</li>
+                  ))}
+                </ul>
+              </div>
             )}
-          </ul>
+          </div>
+
+          {/* Literary Devices */}
+          <div className="bg-gray-50 dark:bg-gray-800 p-5 rounded-lg shadow-sm mb-4">
+            <h3 className="font-semibold text-xl text-gray-800 dark:text-gray-200 mb-3">Literary Devices</h3>
+            {correctedReport.detailedFeedback.literaryDevices.identified.length > 0 ? (
+              <p className="text-gray-700 dark:text-gray-300 mb-2">
+                <strong>Identified:</strong> {correctedReport.detailedFeedback.literaryDevices.identified.join(", ")}
+              </p>
+            ) : (
+              <p className="text-gray-700 dark:text-gray-300 mb-2">No specific literary devices were prominently identified.</p>
+            )}
+            {correctedReport.detailedFeedback.literaryDevices.suggestions.length > 0 && (
+              <div className="mt-3">
+                <h4 className="font-semibold text-gray-800 dark:text-gray-200">Suggestions:</h4>
+                <ul className="list-disc list-inside text-gray-700 dark:text-gray-300">
+                  {correctedReport.detailedFeedback.literaryDevices.suggestions.map((s, i) => (
+                    <li key={i}>{s}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+
+          {/* Structural Elements */}
+          <div className="bg-gray-50 dark:bg-gray-800 p-5 rounded-lg shadow-sm mb-4">
+            <h3 className="font-semibold text-xl text-gray-800 dark:text-gray-200 mb-3">Structural Elements</h3>
+            <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 mb-2">
+              <li>Introduction: <strong>{correctedReport.detailedFeedback.structuralElements.hasIntroduction ? "Present" : "Missing"}</strong></li>
+              <li>Conclusion: <strong>{correctedReport.detailedFeedback.structuralElements.hasConclusion ? "Present" : "Missing"}</strong></li>
+              <li>Paragraphs: <strong>{correctedReport.detailedFeedback.structuralElements.paragraphCount}</strong></li>
+            </ul>
+            <p className="text-gray-700 dark:text-gray-300"><strong>Coherence:</strong> {correctedReport.detailedFeedback.structuralElements.coherence}</p>
+          </div>
+
+          {/* Technical Accuracy */}
+          <div className="bg-gray-50 dark:bg-gray-800 p-5 rounded-lg shadow-sm mb-4">
+            <h3 className="font-semibold text-xl text-gray-800 dark:text-gray-200 mb-3">Technical Accuracy</h3>
+            <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 mb-2">
+              <li>Spelling Errors: <strong>{correctedReport.detailedFeedback.technicalAccuracy.spellingErrors}</strong></li>
+              {correctedReport.detailedFeedback.technicalAccuracy.grammarIssues.length > 0 && (
+                <li>Grammar Issues: {correctedReport.detailedFeedback.technicalAccuracy.grammarIssues.join(", ")}</li>
+              )}
+              {correctedReport.detailedFeedback.technicalAccuracy.punctuationIssues.length > 0 && (
+                <li>Punctuation Issues: {correctedReport.detailedFeedback.technicalAccuracy.punctuationIssues.join(", ")}</li>
+              )}
+            </ul>
+          </div>
         </div>
       </div>
 
@@ -664,136 +541,6 @@ export function NSWEvaluationReportDisplay({ report, essayText, onClose }: NSWEv
           <pre className="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300 font-sans leading-relaxed">
             {report.essayContent || essayText}
           </pre>
-        </div>
-      </div>
-
-      {/* Detailed Analysis */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Strengths */}
-        <div className="bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800 p-6">
-          <h3 className="text-xl font-bold text-green-800 dark:text-green-200 mb-4 flex items-center">
-            <Star className="w-5 h-5 mr-2" />
-            Key Strengths
-          </h3>
-          <div className="space-y-3">
-            {report.strengths.length > 0 ? (
-              report.strengths.map((strength, index) => (
-                <div key={index} className="flex items-start">
-                  <CheckCircle className="w-5 h-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" />
-                  <span className="text-green-700 dark:text-green-300">{strength}</span>
-                </div>
-              ))
-            ) : (
-              <p className="text-green-600 dark:text-green-400">Keep working hard! Every piece of writing has potential for growth.</p>
-            )}
-          </div>
-        </div>
-
-        {/* Areas for Improvement */}
-        <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800 p-6">
-          <h3 className="text-xl font-bold text-orange-800 dark:text-orange-200 mb-4 flex items-center">
-            <Target className="w-5 h-5 mr-2" />
-            Areas for Growth
-          </h3>
-          <div className="space-y-3">
-            {report.areasForImprovement.length > 0 ? (
-              report.areasForImprovement.map((area, index) => (
-                <div key={index} className="flex items-start">
-                  {area.startsWith('❌') ? <AlertCircle className="w-5 h-5 text-red-600 mr-3 mt-0.5 flex-shrink-0" /> : 
-                   area.startsWith('⚠️') ? <AlertCircle className="w-5 h-5 text-yellow-600 mr-3 mt-0.5 flex-shrink-0" /> : 
-                   area.startsWith('📏 CRITICAL') ? <AlertCircle className="w-5 h-5 text-red-600 mr-3 mt-0.5 flex-shrink-0" /> : 
-                   area.startsWith('📏') ? <AlertCircle className="w-5 h-5 text-orange-600 mr-3 mt-0.5 flex-shrink-0" /> : 
-                   area.startsWith('🔤') ? <AlertCircle className="w-5 h-5 text-orange-600 mr-3 mt-0.5 flex-shrink-0" /> : 
-                   area.startsWith('✍️') ? <AlertCircle className="w-5 h-5 text-orange-600 mr-3 mt-0.5 flex-shrink-0" /> : 
-                   <AlertCircle className="w-5 h-5 text-orange-600 mr-3 mt-0.5 flex-shrink-0" />}
-                  <span className="text-orange-700 dark:text-orange-300">{area}</span>
-                </div>
-              ))
-            ) : (
-              <p className="text-orange-600 dark:text-orange-400">Excellent work! Continue to challenge yourself with new writing techniques.</p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Personalized Learning Recommendations */}
-      <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800 p-6 mb-8">
-        <h3 className="text-xl font-bold text-purple-800 dark:text-purple-200 mb-4 flex items-center">
-          <Lightbulb className="w-5 h-5 mr-2" />
-          Personalized Learning Recommendations
-        </h3>
-        <div className="space-y-4">
-          {report.recommendations.length > 0 ? (
-            report.recommendations.map((recommendation, index) => (
-              <div key={index} className="flex items-start bg-white dark:bg-gray-800 rounded-lg p-4 border border-purple-100 dark:border-purple-700">
-                <div className="bg-purple-100 dark:bg-purple-800 rounded-full p-2 mr-4 flex-shrink-0">
-                  <span className="text-purple-600 dark:text-purple-300 font-bold text-sm">
-                    {index + 1}
-                  </span>
-                </div>
-                <span className="text-purple-700 dark:text-purple-300">{recommendation}</span>
-              </div>
-            ))
-          ) : (
-            <p className="text-purple-600 dark:text-purple-400">Keep up the excellent work! Continue practicing to maintain your high standards.</p>
-          )}
-        </div>
-      </div>
-
-      {/* Detailed Technical Analysis */}
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-        <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center">
-          <TrendingUp className="w-5 h-5 mr-2" />
-          Detailed Technical Analysis
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Word Count */}
-          <div className="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm">
-            <h4 className="font-semibold text-lg mb-2">Word Count</h4>
-            <p className="text-gray-700 dark:text-gray-300">Total words: <span className="font-bold">{report.detailedFeedback.wordCount}</span></p>
-            {report.detailedFeedback.wordCount < 400 && (
-              <p className="text-red-500 text-sm mt-1">Consider expanding your essay to meet the 400-500 word requirement.</p>
-            )}
-          </div>
-
-          {/* Sentence Variety */}
-          <div className="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm">
-            <h4 className="font-semibold text-lg mb-2">Sentence Variety</h4>
-            <p className="text-gray-700 dark:text-gray-300">Simple: {report.detailedFeedback.sentenceVariety.simple}, Compound: {report.detailedFeedback.sentenceVariety.compound}, Complex: {report.detailedFeedback.sentenceVariety.complex}</p>
-            <p className="text-gray-700 dark:text-gray-300 mt-1">Analysis: {report.detailedFeedback.sentenceVariety.analysis}</p>
-          </div>
-
-          {/* Vocabulary Analysis */}
-          <div className="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm">
-            <h4 className="font-semibold text-lg mb-2">Vocabulary Analysis</h4>
-            <p className="text-gray-700 dark:text-gray-300">Sophisticated words: {report.detailedFeedback.vocabularyAnalysis.sophisticatedWords.join(', ') || 'N/A'}</p>
-            <p className="text-gray-700 dark:text-gray-300 mt-1">Repetitive words: {report.detailedFeedback.vocabularyAnalysis.repetitiveWords.join(', ') || 'N/A'}</p>
-            <p className="text-gray-700 dark:text-gray-300 mt-1">Suggestions: {report.detailedFeedback.vocabularyAnalysis.suggestions.join(', ') || 'N/A'}</p>
-          </div>
-
-          {/* Literary Devices */}
-          <div className="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm">
-            <h4 className="font-semibold text-lg mb-2">Literary Devices</h4>
-            <p className="text-gray-700 dark:text-gray-300">Identified: {report.detailedFeedback.literaryDevices.identified.join(', ') || 'None'}</p>
-            <p className="text-gray-700 dark:text-gray-300 mt-1">Suggestions: {report.detailedFeedback.literaryDevices.suggestions.join(', ') || 'N/A'}</p>
-          </div>
-
-          {/* Structural Elements */}
-          <div className="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm">
-            <h4 className="font-semibold text-lg mb-2">Structural Elements</h4>
-            <p className="text-gray-700 dark:text-gray-300">Introduction: {report.detailedFeedback.structuralElements.hasIntroduction ? 'Yes' : 'No'}</p>
-            <p className="text-gray-700 dark:text-gray-300">Conclusion: {report.detailedFeedback.structuralElements.hasConclusion ? 'Yes' : 'No'}</p>
-            <p className="text-gray-700 dark:text-gray-300">Paragraphs: {report.detailedFeedback.structuralElements.paragraphCount}</p>
-            <p className="text-gray-700 dark:text-gray-300 mt-1">Coherence: {report.detailedFeedback.structuralElements.coherence}</p>
-          </div>
-
-          {/* Technical Accuracy */}
-          <div className="bg-white dark:bg-gray-700 rounded-lg p-4 shadow-sm">
-            <h4 className="font-semibold text-lg mb-2">Technical Accuracy</h4>
-            <p className="text-gray-700 dark:text-gray-300">Spelling errors: {report.detailedFeedback.technicalAccuracy.spellingErrors}</p>
-            <p className="text-gray-700 dark:text-gray-300 mt-1">Grammar issues: {report.detailedFeedback.technicalAccuracy.grammarIssues.join(', ') || 'None'}</p>
-            <p className="text-gray-700 dark:text-gray-300 mt-1">Punctuation issues: {report.detailedFeedback.technicalAccuracy.punctuationIssues.join(', ') || 'None'}</p>
-          </div>
         </div>
       </div>
     </div>
