@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Send, MessageSquare, BarChart3, Lightbulb, Target, Star, TrendingUp, Award, List, BookOpen, AlertCircle } from 'lucide-react';
+import { Send, MessageSquare, BarChart3, Lightbulb, Target, Star, TrendingUp, Award, List, BookOpen, AlertCircle, Loader2 } from 'lucide-react';
 import { StepByStepWritingBuilder } from './StepByStepWritingBuilder';
 import { ContextualAICoachPanel } from './ContextualAICoachPanel';
 import { ComprehensiveFeedbackDisplay } from './ComprehensiveFeedbackDisplay';
@@ -7,6 +7,7 @@ import { generateIntelligentResponse, type EnhancedCoachResponse } from '../lib/
 import { ComprehensiveFeedbackAnalyzer } from '../lib/comprehensiveFeedbackAnalyzer';
 import type { SupportLevel } from '../lib/writingBuddyService';
 import { generateDynamicExamples, formatExamplesForDisplay } from '../lib/dynamicExampleGenerator';
+import { ChatSessionService } from '../lib/chatSessionService';
 
 /**
  * Generates time-appropriate coaching messages for 40-minute writing test
@@ -656,8 +657,13 @@ export function EnhancedCoachPanel({
   const [messages, setMessages] = useState<any[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isLoadingResponse, setIsLoadingResponse] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
   const [currentView, setCurrentView] = useState<'coach' | 'examples' | 'builder' | 'detailed'>('coach');
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [isLoadingSession, setIsLoadingSession] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const responseStartTime = useRef<number>(0);
 
   // Generate comprehensive feedback
   const comprehensiveFeedback = useMemo(() => {
@@ -671,6 +677,67 @@ export function EnhancedCoachPanel({
       (supportLevel as SupportLevel) || 'Medium Support'
     );
   }, [content, textType, supportLevel]);
+
+  // Session restoration and initialization
+  useEffect(() => {
+    const initializeSession = async () => {
+      if (!user?.id) {
+        setIsLoadingSession(false);
+        return;
+      }
+
+      try {
+        const latestSession = await ChatSessionService.getLatestSession(user.id);
+
+        if (latestSession && Date.now() - new Date(latestSession.last_accessed_at).getTime() < 24 * 60 * 60 * 1000) {
+          const savedMessages = await ChatSessionService.getMessages(latestSession.session_id);
+
+          if (savedMessages.length > 0) {
+            console.log('✅ Restored', savedMessages.length, 'messages from previous session');
+            setMessages(savedMessages);
+            setSessionId(latestSession.session_id);
+          } else {
+            const newSessionId = await ChatSessionService.createSession(
+              user.id,
+              textType,
+              writingPrompt || '',
+              content
+            );
+            setSessionId(newSessionId);
+          }
+        } else {
+          const newSessionId = await ChatSessionService.createSession(
+            user.id,
+            textType,
+            writingPrompt || '',
+            content
+          );
+          setSessionId(newSessionId);
+        }
+      } catch (error) {
+        console.error('Error initializing session:', error);
+      } finally {
+        setIsLoadingSession(false);
+      }
+    };
+
+    initializeSession();
+  }, [user?.id]);
+
+  // Update session when content changes
+  useEffect(() => {
+    if (sessionId && user?.id && content) {
+      const debounceTimer = setTimeout(() => {
+        ChatSessionService.updateSession(sessionId, {
+          userText: content,
+          textType: textType,
+          prompt: writingPrompt || ''
+        });
+      }, 2000);
+
+      return () => clearTimeout(debounceTimer);
+    }
+  }, [content, sessionId, user?.id, textType, writingPrompt]);
 
   // Analyze content and generate coaching response
   useEffect(() => {
@@ -735,19 +802,40 @@ export function EnhancedCoachPanel({
     const userMessageContent = inputValue.trim();
     setInputValue('');
 
+    responseStartTime.current = Date.now();
+    setIsLoadingResponse(true);
+    setLoadingProgress(0);
+
+    const messageCount = messages.length;
+
     // Add user message
-    setMessages(prev => [...prev, {
+    const userMessage = {
       type: 'user',
       content: userMessageContent,
       timestamp: new Date()
-    }]);
+    };
+    setMessages(prev => [...prev, userMessage]);
 
-    // Add loading message
+    if (sessionId && user?.id) {
+      await ChatSessionService.saveMessage(
+        sessionId,
+        user.id,
+        'user',
+        userMessageContent,
+        messageCount
+      );
+    }
+
+    // Add loading message with progress simulation
     setMessages(prev => [...prev, {
       type: 'loading',
       content: 'Thinking...',
       timestamp: new Date()
     }]);
+
+    const progressInterval = setInterval(() => {
+      setLoadingProgress(prev => Math.min(prev + 10, 90));
+    }, 200);
 
     // Skip API call in development - use local feedback instead
     const isDevelopment = window.location.hostname === 'localhost' ||
@@ -755,21 +843,42 @@ export function EnhancedCoachPanel({
 
     if (isDevelopment) {
       // Remove loading and add local response
-      setTimeout(() => {
+      setTimeout(async () => {
+        clearInterval(progressInterval);
+        setLoadingProgress(100);
+
+        const responseTime = Date.now() - responseStartTime.current;
+        console.log(`✅ Response generated in ${responseTime}ms`);
+
+        const assistantMessage = {
+          type: 'response',
+          content: {
+            encouragement: "Great question!",
+            nswFocus: "Writing Tip",
+            suggestion: "I see you're asking: '" + userMessageContent + "'. Use the automatic feedback above for real-time tips!",
+            example: "",
+            nextStep: "Keep writing and watch for suggestions in the panels"
+          },
+          timestamp: new Date()
+        };
+
         setMessages(prev => {
           const filtered = prev.filter(m => m.type !== 'loading');
-          return [...filtered, {
-            type: 'response',
-            content: {
-              encouragement: "Great question!",
-              nswFocus: "Writing Tip",
-              suggestion: "I see you're asking: '" + userMessageContent + "'. Use the automatic feedback above for real-time tips!",
-              example: "",
-              nextStep: "Keep writing and watch for suggestions in the panels"
-            },
-            timestamp: new Date()
-          }];
+          return [...filtered, assistantMessage];
         });
+
+        if (sessionId && user?.id) {
+          await ChatSessionService.saveMessage(
+            sessionId,
+            user.id,
+            'assistant',
+            assistantMessage.content,
+            messageCount + 1
+          );
+        }
+
+        setIsLoadingResponse(false);
+        setLoadingProgress(0);
       }, 500);
       return;
     }
@@ -799,23 +908,48 @@ export function EnhancedCoachPanel({
 
       const data = await response.json();
 
+      clearInterval(progressInterval);
+      setLoadingProgress(100);
+
+      const responseTime = Date.now() - responseStartTime.current;
+      console.log(`✅ Response received in ${responseTime}ms`);
+
+      const assistantMessage = {
+        type: 'response',
+        content: {
+          encouragement: "",
+          nswFocus: "AI Writing Buddy",
+          suggestion: data.response || "I'm here to help with your writing!",
+          example: "",
+          nextStep: ""
+        },
+        timestamp: new Date()
+      };
+
       // Remove loading message and add AI response
       setMessages(prev => {
         const filtered = prev.filter(m => m.type !== 'loading');
-        return [...filtered, {
-          type: 'response',
-          content: {
-            encouragement: "",
-            nswFocus: "AI Writing Buddy",
-            suggestion: data.response || "I'm here to help with your writing!",
-            example: "",
-            nextStep: ""
-          },
-          timestamp: new Date()
-        }];
+        return [...filtered, assistantMessage];
       });
 
+      if (sessionId && user?.id) {
+        await ChatSessionService.saveMessage(
+          sessionId,
+          user.id,
+          'assistant',
+          assistantMessage.content,
+          messageCount + 1
+        );
+      }
+
+      setIsLoadingResponse(false);
+      setLoadingProgress(0);
+
     } catch (error) {
+      clearInterval(progressInterval);
+      setLoadingProgress(0);
+      setIsLoadingResponse(false);
+
       // Silently handle the error - chat function not available in dev mode
       // Remove loading message and add fallback response
       setMessages(prev => {
@@ -1129,6 +1263,23 @@ export function EnhancedCoachPanel({
                   {message.type === 'user' ? (
                     <div className="bg-blue-500 text-white p-2 rounded-lg rounded-br-none text-sm">
                       {message.content}
+                    </div>
+                  ) : message.type === 'loading' ? (
+                    <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-3 rounded-lg rounded-bl-none border border-blue-200">
+                      <div className="flex items-center space-x-3">
+                        <Loader2 className="w-5 h-5 text-blue-600 animate-spin" />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-700 mb-1">Thinking...</p>
+                          {isLoadingResponse && (
+                            <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
+                              <div
+                                className="bg-gradient-to-r from-blue-500 to-purple-500 h-1.5 rounded-full transition-all duration-300"
+                                style={{ width: `${loadingProgress}%` }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   ) : (
                     <div className="bg-gray-100 p-3 rounded-lg rounded-bl-none">
