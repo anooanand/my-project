@@ -98,9 +98,28 @@ export const ComprehensiveFeedbackDisplay: React.FC<ComprehensiveFeedbackDisplay
                     <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                       <strong>Why:</strong> {issue.explanation}
                     </div>
-                    <div className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'} italic`}>
-                      Location: {issue.location}
-                    </div>
+
+                    {/* Before & After Examples */}
+                    {issue.beforeExample && issue.afterExample && (
+                      <div className={`mt-3 p-2 rounded ${darkMode ? 'bg-gray-700' : 'bg-blue-50'} border-l-4 border-blue-500`}>
+                        <p className="text-xs font-semibold mb-1">Before & After:</p>
+                        <p className="text-xs mb-1">
+                          <span className="text-red-600">Before:</span> <span className="line-through opacity-75">{issue.beforeExample}</span>
+                        </p>
+                        <p className="text-xs">
+                          <span className="text-green-600">After:</span> <span className="font-medium">{issue.afterExample}</span>
+                        </p>
+                      </div>
+                    )}
+
+                    {/* NSW Tip */}
+                    {issue.nswTip && (
+                      <div className={`mt-2 p-2 rounded ${darkMode ? 'bg-blue-900 bg-opacity-30' : 'bg-blue-100'} border border-blue-300`}>
+                        <p className="text-xs text-blue-800 dark:text-blue-200">
+                          <strong>NSW Tip:</strong> {issue.nswTip}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -282,7 +301,7 @@ export const ComprehensiveFeedbackDisplay: React.FC<ComprehensiveFeedbackDisplay
           {expandedSections.has('vocabulary') && (
             <div className="px-4 pb-4 space-y-3">
               {feedback.vocabularyEnhancements.map((enhancement, idx) => (
-                <div key={idx} className={`p-3 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-purple-50'}`}>
+                <div key={idx} className={`p-3 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-purple-50'} border-l-4 border-purple-500`}>
                   <div className="mb-2">
                     <span className="text-xs font-medium text-purple-700 dark:text-purple-300">Replace:</span>
                     <p className="text-sm font-semibold">{enhancement.original}</p>
@@ -291,13 +310,35 @@ export const ComprehensiveFeedbackDisplay: React.FC<ComprehensiveFeedbackDisplay
                     <span className="text-xs font-medium text-purple-700 dark:text-purple-300">With:</span>
                     <div className="flex flex-wrap gap-2 mt-1">
                       {enhancement.suggestions.map((suggestion, sidx) => (
-                        <span key={sidx} className="px-2 py-1 bg-purple-200 text-purple-900 text-sm rounded">
+                        <span key={sidx} className="px-2 py-1 bg-purple-200 text-purple-900 text-sm rounded font-medium">
                           {suggestion}
                         </span>
                       ))}
                     </div>
                   </div>
-                  <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{enhancement.reasoning}</p>
+                  <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-2`}>{enhancement.reasoning}</p>
+
+                  {/* Before & After Examples */}
+                  {enhancement.beforeExample && enhancement.afterExample && (
+                    <div className={`mt-3 p-2 rounded ${darkMode ? 'bg-gray-800' : 'bg-white'} border border-purple-300`}>
+                      <p className="text-xs font-semibold mb-1 text-purple-700 dark:text-purple-300">Before & After:</p>
+                      <p className="text-xs mb-1">
+                        <span className="text-red-600">Before:</span> <span className="opacity-75">{enhancement.beforeExample}</span>
+                      </p>
+                      <p className="text-xs">
+                        <span className="text-green-600">After:</span> <span className="font-medium text-green-700">{enhancement.afterExample}</span>
+                      </p>
+                    </div>
+                  )}
+
+                  {/* NSW Alignment */}
+                  {enhancement.nswAlignment && (
+                    <div className={`mt-2 p-2 rounded ${darkMode ? 'bg-purple-900 bg-opacity-30' : 'bg-purple-100'} border border-purple-300`}>
+                      <p className="text-xs text-purple-800 dark:text-purple-200">
+                        <strong>NSW Alignment:</strong> {enhancement.nswAlignment}
+                      </p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -327,7 +368,7 @@ export const ComprehensiveFeedbackDisplay: React.FC<ComprehensiveFeedbackDisplay
           {expandedSections.has('showdonttell') && (
             <div className="px-4 pb-4 space-y-3">
               {feedback.showDontTellExamples.map((example, idx) => (
-                <div key={idx} className={`p-3 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-yellow-50'}`}>
+                <div key={idx} className={`p-3 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-yellow-50'} border-l-4 border-yellow-500`}>
                   <div className="mb-2">
                     <span className="text-xs font-medium text-red-700 dark:text-red-300">❌ Telling:</span>
                     <p className="text-sm italic line-through opacity-75">{example.telling}</p>
@@ -339,9 +380,39 @@ export const ComprehensiveFeedbackDisplay: React.FC<ComprehensiveFeedbackDisplay
                   <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-1`}>
                     <strong>Technique:</strong> {example.technique}
                   </div>
-                  <div className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'} italic`}>
+                  <div className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'} italic mb-2`}>
                     {example.explanation}
                   </div>
+
+                  {/* Teaching Point */}
+                  {example.teachingPoint && (
+                    <div className={`mt-3 p-2 rounded ${darkMode ? 'bg-yellow-900 bg-opacity-30' : 'bg-yellow-100'} border border-yellow-400`}>
+                      <p className="text-xs font-semibold mb-1 text-yellow-800 dark:text-yellow-200">💡 What is "Show, Don't Tell"?</p>
+                      <p className="text-xs text-yellow-800 dark:text-yellow-200">{example.teachingPoint}</p>
+                    </div>
+                  )}
+
+                  {/* Before & After Full Sentence */}
+                  {example.beforeSentence && example.afterSentence && (
+                    <div className={`mt-3 p-2 rounded ${darkMode ? 'bg-gray-800' : 'bg-white'} border border-yellow-300`}>
+                      <p className="text-xs font-semibold mb-1 text-yellow-700 dark:text-yellow-300">Before & After in Context:</p>
+                      <p className="text-xs mb-1">
+                        <span className="text-red-600">Before:</span> <span className="opacity-75">{example.beforeSentence}</span>
+                      </p>
+                      <p className="text-xs">
+                        <span className="text-green-600">After:</span> <span className="font-medium text-green-700">{example.afterSentence}</span>
+                      </p>
+                    </div>
+                  )}
+
+                  {/* NSW Relevance */}
+                  {example.nswRelevance && (
+                    <div className={`mt-2 p-2 rounded ${darkMode ? 'bg-blue-900 bg-opacity-30' : 'bg-blue-100'} border border-blue-300`}>
+                      <p className="text-xs text-blue-800 dark:text-blue-200">
+                        <strong>NSW Relevance:</strong> {example.nswRelevance}
+                      </p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

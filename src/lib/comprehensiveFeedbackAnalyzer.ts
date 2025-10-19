@@ -7,6 +7,9 @@ export interface GrammarIssue {
   explanation: string;
   location: string;
   severity: 'high' | 'medium' | 'low';
+  beforeExample?: string;
+  afterExample?: string;
+  nswTip?: string;
 }
 
 export interface VocabularyEnhancement {
@@ -15,6 +18,9 @@ export interface VocabularyEnhancement {
   context: string;
   reasoning: string;
   sophisticationLevel: 'basic' | 'intermediate' | 'advanced';
+  beforeExample: string;
+  afterExample: string;
+  nswAlignment: string;
 }
 
 export interface SentenceStructureIssue {
@@ -30,6 +36,10 @@ export interface ShowDontTellExample {
   showing: string;
   explanation: string;
   technique: string;
+  beforeSentence: string;
+  afterSentence: string;
+  teachingPoint: string;
+  nswRelevance: string;
 }
 
 export interface StoryArcFeedback {
@@ -107,13 +117,17 @@ export class ComprehensiveFeedbackAnalyzer {
     spellingPatterns.forEach(({ pattern, correct, explanation }) => {
       let match;
       while ((match = pattern.exec(text)) !== null) {
+        const sentence = this.getSentenceContaining(text, match.index);
         issues.push({
           type: 'spelling',
           original: match[0],
           correction: correct,
           explanation,
           location: this.getContext(text, match.index),
-          severity: 'high'
+          severity: 'high',
+          beforeExample: sentence,
+          afterExample: sentence.replace(match[0], correct),
+          nswTip: 'NSW Selective Test: Accurate spelling demonstrates attention to detail in the Mechanics criterion'
         });
       }
     });
@@ -150,13 +164,17 @@ export class ComprehensiveFeedbackAnalyzer {
     grammarPatterns.forEach(({ pattern, correct, explanation }) => {
       let match;
       while ((match = pattern.exec(text)) !== null) {
+        const sentence = this.getSentenceContaining(text, match.index);
         issues.push({
           type: 'grammar',
           original: match[0],
           correction: correct,
           explanation,
           location: this.getContext(text, match.index),
-          severity: 'high'
+          severity: 'high',
+          beforeExample: sentence,
+          afterExample: sentence.replace(match[0], correct),
+          nswTip: 'NSW Selective Test: Correct grammar shows mastery of language conventions in the Mechanics criterion'
         });
       }
     });
@@ -188,13 +206,17 @@ export class ComprehensiveFeedbackAnalyzer {
     punctuationPatterns.forEach(({ pattern, correct, explanation }) => {
       let match;
       while ((match = pattern.exec(text)) !== null) {
+        const sentence = this.getSentenceContaining(text, match.index);
         issues.push({
           type: 'punctuation',
           original: match[0],
           correction: correct,
           explanation,
           location: this.getContext(text, match.index),
-          severity: 'medium'
+          severity: 'medium',
+          beforeExample: sentence,
+          afterExample: sentence.replace(match[0], correct),
+          nswTip: 'NSW Selective Test: Proper punctuation improves clarity and readability in the Mechanics criterion'
         });
       }
     });
@@ -234,12 +256,17 @@ export class ComprehensiveFeedbackAnalyzer {
       const pattern = new RegExp(`\\b${word}\\b`, 'gi');
       let match;
       while ((match = pattern.exec(text)) !== null) {
+        const sentence = this.getSentenceContaining(text, match.index);
+        const betterWord = suggestions[0];
         enhancements.push({
           original: match[0],
           suggestions,
           context: this.getContext(text, match.index),
           reasoning: `Consider using more ${context === 'dialogue tags' ? 'expressive' : 'descriptive'} words for ${context}`,
-          sophisticationLevel: supportLevel === 'High Support' ? 'basic' : supportLevel === 'Medium Support' ? 'intermediate' : 'advanced'
+          sophisticationLevel: supportLevel === 'High Support' ? 'basic' : supportLevel === 'Medium Support' ? 'intermediate' : 'advanced',
+          beforeExample: sentence,
+          afterExample: sentence.replace(new RegExp(`\\b${word}\\b`, 'i'), betterWord),
+          nswAlignment: 'NSW Selective Test Language criterion rewards sophisticated vocabulary and varied word choice'
         });
       }
     });
@@ -334,11 +361,19 @@ export class ComprehensiveFeedbackAnalyzer {
       let match;
       while ((match = pattern.exec(text)) !== null) {
         const emotion = match[2];
+        const fullMatch = match[0];
+        const sentence = this.getSentenceContaining(text, match.index);
+        const showingExample = this.generateShowingExample(emotion);
+
         examples.push({
-          telling: match[0],
-          showing: this.generateShowingExample(emotion),
+          telling: fullMatch,
+          showing: showingExample,
           explanation: `Instead of ${telling}, ${showing}`,
-          technique
+          technique,
+          beforeSentence: sentence,
+          afterSentence: sentence.replace(fullMatch, showingExample),
+          teachingPoint: `'Show, Don't Tell' means demonstrating emotions through actions, body language, and sensory details rather than stating them directly. This makes your writing more vivid and engaging.`,
+          nswRelevance: 'NSW Selective Test Ideas criterion rewards vivid, sensory details that bring writing to life'
         });
       }
     });
@@ -349,7 +384,11 @@ export class ComprehensiveFeedbackAnalyzer {
         telling: 'The weather was cold',
         showing: 'Her breath misted in the air as she pulled her coat tighter',
         explanation: 'Show the effect of weather on characters rather than stating it',
-        technique: 'Use sensory details to convey setting'
+        technique: 'Use sensory details to convey setting',
+        beforeSentence: 'The weather was cold.',
+        afterSentence: 'Her breath misted in the air as she pulled her coat tighter against the icy wind.',
+        teachingPoint: 'Instead of telling readers about the setting, show how the setting affects characters. Use what they see, hear, feel, smell, and taste.',
+        nswRelevance: 'NSW Selective Test rewards descriptive language that creates atmosphere through sensory details'
       });
     }
 
@@ -387,15 +426,20 @@ export class ComprehensiveFeedbackAnalyzer {
     if (hasResolution) strengths.push('Provides closure or resolution');
     else gaps.push('Story needs a clearer ending or resolution');
 
-    // Generate next steps
+    // Generate next steps with NSW-specific guidance
     if (!hasConflict && wordCount < 100) {
-      nextSteps.push('Introduce a problem or challenge for your character');
+      nextSteps.push('Introduce a problem or challenge for your character to create tension (NSW Structure criterion)');
     }
     if (hasConflict && !hasClimax && wordCount > 100) {
-      nextSteps.push('Build toward a climax - the most exciting or important moment');
+      nextSteps.push('Build toward a climax - the most exciting or important moment that keeps readers engaged (NSW Ideas criterion)');
     }
     if (hasClimax && !hasResolution) {
-      nextSteps.push('Wrap up your story with a satisfying resolution');
+      nextSteps.push('Wrap up your story with a satisfying resolution that provides closure (NSW Structure criterion)');
+    }
+
+    // Add engagement tips
+    if (wordCount > 50 && !text.match(/\b(suddenly|unexpectedly|amazed|shocked|realized)\b/i)) {
+      nextSteps.push('Add surprising moments or realizations to maintain reader engagement');
     }
 
     return {
@@ -424,7 +468,13 @@ export class ComprehensiveFeedbackAnalyzer {
       sections.push({
         section: 'Opening',
         pace: 'Fast-paced with short sentences',
-        recommendation: 'Consider adding more descriptive details to hook the reader'
+        recommendation: 'Consider adding more descriptive details to hook the reader and set the scene (NSW Ideas criterion)'
+      });
+    } else if (openingAvg > 18) {
+      sections.push({
+        section: 'Opening',
+        pace: 'Slow-paced with long sentences',
+        recommendation: 'Start with a punchy hook to grab attention immediately (NSW Structure criterion)'
       });
     }
 
@@ -436,9 +486,24 @@ export class ComprehensiveFeedbackAnalyzer {
         sections.push({
           section: 'Middle',
           pace: 'Slow-paced with long sentences',
-          recommendation: 'Vary sentence length to maintain reader engagement'
+          recommendation: 'Vary sentence length to maintain reader engagement. Mix short, punchy sentences with longer, descriptive ones (NSW Language criterion)'
+        });
+      } else if (middleAvg < 8) {
+        sections.push({
+          section: 'Middle',
+          pace: 'Very fast-paced with choppy sentences',
+          recommendation: 'Combine some short sentences to create better flow and add more details (NSW Language criterion)'
         });
       }
+    }
+
+    // Add overall engagement tip
+    if (overall === 'too-slow') {
+      sections.push({
+        section: 'Overall Engagement',
+        pace: 'May lose reader attention',
+        recommendation: 'Add action, dialogue, or unexpected moments to keep readers engaged throughout'
+      });
     }
 
     return { overall, sections };
@@ -505,11 +570,12 @@ export class ComprehensiveFeedbackAnalyzer {
       },
       overallScore,
       nswGuidance: [
-        'NSW Selective Test values originality and imagination in Ideas',
-        'Clear structure with introduction, development, and conclusion is essential',
-        'Advanced vocabulary demonstrates language sophistication',
-        'Accuracy in mechanics shows attention to detail',
-        `Aim for 250+ words for best scores (currently ${wordCount} words)`
+        '🎯 NSW Ideas Criterion: Show originality and creativity. Use unexpected twists, vivid descriptions, and "show, don\'t tell" techniques',
+        '📝 NSW Structure Criterion: Create a clear beginning (hook), middle (conflict/climax), and end (resolution). Use paragraphs to organize ideas',
+        '💬 NSW Language Criterion: Use sophisticated vocabulary, varied sentence structures, and expressive language. Avoid repetitive words',
+        '✓ NSW Mechanics Criterion: Check spelling, grammar, and punctuation carefully. Use dialogue punctuation correctly',
+        `📊 Word Count Tip: Aim for 250-300 words for best scores (currently ${wordCount} words)`,
+        '⭐ Top Tip: Read your writing aloud to catch errors and improve flow'
       ]
     };
   }
@@ -520,6 +586,30 @@ export class ComprehensiveFeedbackAnalyzer {
     const before = text.substring(start, position);
     const after = text.substring(position, end);
     return `...${before}[HERE]${after}...`;
+  }
+
+  private static getSentenceContaining(text: string, position: number): string {
+    // Find sentence boundaries
+    const beforeText = text.substring(0, position);
+    const afterText = text.substring(position);
+
+    const sentenceStart = Math.max(
+      beforeText.lastIndexOf('. ') + 2,
+      beforeText.lastIndexOf('! ') + 2,
+      beforeText.lastIndexOf('? ') + 2,
+      0
+    );
+
+    const sentenceEndDot = afterText.indexOf('. ');
+    const sentenceEndExclaim = afterText.indexOf('! ');
+    const sentenceEndQuestion = afterText.indexOf('? ');
+
+    let sentenceEnd = afterText.length;
+    if (sentenceEndDot !== -1) sentenceEnd = Math.min(sentenceEnd, sentenceEndDot + position);
+    if (sentenceEndExclaim !== -1) sentenceEnd = Math.min(sentenceEnd, sentenceEndExclaim + position);
+    if (sentenceEndQuestion !== -1) sentenceEnd = Math.min(sentenceEnd, sentenceEndQuestion + position);
+
+    return text.substring(sentenceStart, sentenceEnd + 1).trim();
   }
 
   private static generateShowingExample(emotion: string): string {
