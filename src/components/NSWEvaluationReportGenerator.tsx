@@ -60,7 +60,7 @@ export class NSWEvaluationReportGenerator {
       throw new Error(
         `❌ Your original content is only ${cleanedWordCount} words.\n` +
         `You need ${targetWordCountMin} words of YOUR OWN creative story.\n` +
-        `(The prompt text doesn\\'t count toward your word count!)`
+        `(The prompt text doesn\\\"t count toward your word count!)`
       );
     }
 
@@ -129,7 +129,7 @@ export class NSWEvaluationReportGenerator {
       }
     }
 
-    // If more than 50% of prompt sentences found in essay, it\\\'s copied
+    // If more than 50% of prompt sentences found in essay, it\\\"s copied
     if (promptSentences.length > 0 && matchedSentences / promptSentences.length > 0.5) {
       return {
         isCopied: true,
