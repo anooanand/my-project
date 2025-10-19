@@ -474,79 +474,99 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
 
         {/* Main Action Cards */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-          {/* Start Writing Card */}
-          <div
+          {/* Start Writing Card - Redesigned for Kids */}
+          <button
             onClick={handleStartWriting}
-            className="group relative bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 rounded-2xl p-8 cursor-pointer overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+            className="group relative bg-white rounded-3xl p-1.5 cursor-pointer overflow-hidden transform transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl w-full text-left active:scale-[0.98]"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-6">
-                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                  <Edit3 className="h-8 w-8 text-white" />
-                </div>
-                <ArrowRight className="h-6 w-6 text-white/70 group-hover:text-white group-hover:translate-x-1 transition-all duration-300" />
-              </div>
-              
-              <h2 className="text-2xl font-bold text-white mb-3">Start Writing</h2>
-              <p className="text-white text-lg mb-6 leading-relaxed">
-                Begin a new writing session with AI-powered guidance and real-time feedback
-              </p>
+            {/* Gradient border effect */}
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-400 via-blue-500 to-purple-500 rounded-3xl"></div>
 
-              <div className="flex items-center space-x-4 text-white">
-                <div className="flex items-center space-x-2">
-                  <Brain className="h-4 w-4" />
-                  <span className="text-sm">AI Assistance</span>
+            {/* Inner content */}
+            <div className="relative bg-gradient-to-br from-blue-500 via-blue-600 to-purple-600 rounded-[22px] p-8">
+              {/* Animated background effect */}
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-[22px]"></div>
+
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center shadow-lg transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                    <Edit3 className="h-10 w-10 text-blue-600" />
+                  </div>
+                  <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2.5 text-white font-bold text-sm flex items-center space-x-2 group-hover:bg-white group-hover:text-blue-600 transition-all shadow-lg">
+                    <span>Click Me!</span>
+                    <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-all duration-300" />
+                  </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Zap className="h-4 w-4" />
-                  <span className="text-sm">Real-time Feedback</span>
+
+                <h2 className="text-3xl font-bold text-white mb-3 group-hover:text-yellow-300 transition-colors">Start Writing ✨</h2>
+                <p className="text-white/95 text-lg mb-6 leading-relaxed font-medium">
+                  Begin a new writing session with AI-powered guidance and real-time feedback
+                </p>
+
+                <div className="flex flex-wrap gap-3 text-white/95">
+                  <div className="flex items-center space-x-2 bg-white/15 backdrop-blur-sm px-4 py-2.5 rounded-full font-medium shadow-md">
+                    <Brain className="h-5 w-5" />
+                    <span className="text-sm">AI Assistance</span>
+                  </div>
+                  <div className="flex items-center space-x-2 bg-white/15 backdrop-blur-sm px-4 py-2.5 rounded-full font-medium shadow-md">
+                    <Zap className="h-5 w-5" />
+                    <span className="text-sm">Real-time Feedback</span>
+                  </div>
                 </div>
               </div>
+
+              {/* Decorative elements */}
+              <div className="absolute -bottom-6 -right-6 w-40 h-40 bg-purple-400/20 rounded-full blur-3xl group-hover:bg-purple-300/30 transition-all"></div>
+              <div className="absolute -top-6 -left-6 w-32 h-32 bg-blue-300/20 rounded-full blur-3xl group-hover:bg-blue-200/30 transition-all"></div>
             </div>
-            
-            {/* Decorative Elements */}
-            <div className="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
-            <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-indigo-400/20 rounded-full blur-xl"></div>
-          </div>
+          </button>
 
-          {/* Practice Exam Card */}
-          <div
+          {/* Practice Exam Card - Redesigned for Kids */}
+          <button
             onClick={handlePracticeExam}
-            className="group relative bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800 rounded-2xl p-8 cursor-pointer overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+            className="group relative bg-white rounded-3xl p-1.5 cursor-pointer overflow-hidden transform transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl w-full text-left active:scale-[0.98]"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-6">
-                <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                  <Timer className="h-8 w-8 text-white" />
-                </div>
-                <ArrowRight className="h-6 w-6 text-white/70 group-hover:text-white group-hover:translate-x-1 transition-all duration-300" />
-              </div>
-              
-              <h2 className="text-2xl font-bold text-white mb-3">Practice Exam</h2>
-              <p className="text-white text-lg mb-6 leading-relaxed">
-                Test your skills with timed practice sessions under real exam conditions
-              </p>
+            {/* Gradient border effect */}
+            <div className="absolute inset-0 bg-gradient-to-br from-orange-400 via-orange-500 to-pink-500 rounded-3xl"></div>
 
-              <div className="flex items-center space-x-4 text-white">
-                <div className="flex items-center space-x-2">
-                  <Clock className="h-4 w-4" />
-                  <span className="text-sm">Timed Sessions</span>
+            {/* Inner content */}
+            <div className="relative bg-gradient-to-br from-orange-500 via-orange-600 to-pink-600 rounded-[22px] p-8">
+              {/* Animated background effect */}
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-white/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-[22px]"></div>
+
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center shadow-lg transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                    <Timer className="h-10 w-10 text-orange-600" />
+                  </div>
+                  <div className="bg-white/20 backdrop-blur-sm rounded-full px-4 py-2.5 text-white font-bold text-sm flex items-center space-x-2 group-hover:bg-white group-hover:text-orange-600 transition-all shadow-lg">
+                    <span>Click Me!</span>
+                    <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-all duration-300" />
+                  </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <Target className="h-4 w-4" />
-                  <span className="text-sm">NSW Aligned</span>
+
+                <h2 className="text-3xl font-bold text-white mb-3 group-hover:text-yellow-300 transition-colors">Practice Exam 🎯</h2>
+                <p className="text-white/95 text-lg mb-6 leading-relaxed font-medium">
+                  Test your skills with timed practice sessions under real exam conditions
+                </p>
+
+                <div className="flex flex-wrap gap-3 text-white/95">
+                  <div className="flex items-center space-x-2 bg-white/15 backdrop-blur-sm px-4 py-2.5 rounded-full font-medium shadow-md">
+                    <Clock className="h-5 w-5" />
+                    <span className="text-sm">Timed Sessions</span>
+                  </div>
+                  <div className="flex items-center space-x-2 bg-white/15 backdrop-blur-sm px-4 py-2.5 rounded-full font-medium shadow-md">
+                    <Target className="h-5 w-5" />
+                    <span className="text-sm">NSW Aligned</span>
+                  </div>
                 </div>
               </div>
+
+              {/* Decorative elements */}
+              <div className="absolute -bottom-6 -right-6 w-40 h-40 bg-pink-400/20 rounded-full blur-3xl group-hover:bg-pink-300/30 transition-all"></div>
+              <div className="absolute -top-6 -left-6 w-32 h-32 bg-orange-300/20 rounded-full blur-3xl group-hover:bg-orange-200/30 transition-all"></div>
             </div>
-            
-            {/* Decorative Elements */}
-            <div className="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
-            <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-teal-400/20 rounded-full blur-xl"></div>
-          </div>
+          </button>
         </div>
 
         {/* Tools & Tips Section */}
