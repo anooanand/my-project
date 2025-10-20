@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Save, Clock, FileText, AlertCircle, Zap, Star, Sparkles, PenTool } from 'lucide-react';
-import { AutoSave } from './AutoSave';
+import React, { useState, useEffect } from \'react\';
+import { Save, Clock, FileText, AlertCircle, Zap, Star, Sparkles, PenTool } from \'lucide-react\';
+import { AutoSave } from \'./AutoSave\';
 
 interface WritingStatusBarProps {
 
@@ -27,8 +27,8 @@ export function WritingStatusBar({
   onToggleHighlights,
   onEvaluate,
   onShowPlanning,
-  content = '',
-  textType = '',
+  content = \'\',
+  textType = \'\',
   onRestore,
   examMode = false,
   examDurationMinutes = 30,
@@ -66,7 +66,7 @@ export function WritingStatusBar({
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
-    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+    return `${minutes.toString().padStart(2, \'0\')}:${remainingSeconds.toString().padStart(2, \'0\')}`;
   };
 
   return (
