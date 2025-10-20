@@ -18,7 +18,7 @@ export default function WritingWorkspaceFixed() {
   const [status, setStatus] = React.useState<"idle"|"loading"|"success"|"error">("idle");
   const [err, setErr] = React.useState<string|undefined>(undefined);
   const [currentText, setCurrentText] = React.useState<string>("");
-  const [textType, setTextType] = React.useState<'narrative' | 'persuasive' | 'informative'>('narrative');
+  const [textType, setTextType] = React.useState<\"narrative\" | \"persuasive\" | \"informative\">(\"narrative\");
   const [targetWordCount, setTargetWordCount] = React.useState<number>(300);
   const [wordCount, setWordCount] = React.useState<number>(0);
   const [showNSWEvaluation, setShowNSWEvaluation] = React.useState<boolean>(false);
@@ -36,14 +36,14 @@ export default function WritingWorkspaceFixed() {
   // Listen for submit events from AppContent
   React.useEffect(() => {
     const handleSubmitEvent = (event: CustomEvent) => {
-      console.log('📨 WritingWorkspace: Received submit event:', event.detail);
+      console.log(\'📨 WritingWorkspace: Received submit event:\', event.detail);
       onNSWSubmit();
     };
 
-    window.addEventListener('submitForEvaluation', handleSubmitEvent as EventListener);
+    window.addEventListener(\'submitForEvaluation\', handleSubmitEvent as EventListener);
     
     return () => {
-      window.removeEventListener('submitForEvaluation', handleSubmitEvent as EventListener);
+      window.removeEventListener(\'submitForEvaluation\', handleSubmitEvent as EventListener);
     };
   }, []);
 
@@ -73,7 +73,7 @@ export default function WritingWorkspaceFixed() {
 
   // NSW Evaluation Submit Handler
   async function onNSWSubmit() {
-    console.log('🎯 NSW Submit triggered');
+    console.log(\'🎯 NSW Submit triggered\');
     setStatus("loading");
     setErr(undefined);
     setShowNSWEvaluation(true);
@@ -91,7 +91,7 @@ export default function WritingWorkspaceFixed() {
       });
       
     } catch (e: any) {
-      console.error('NSW Submit error:', e);
+      console.error(\'NSW Submit error:\', e);
       setStatus("error");
       setErr(e?.message || "Failed to initiate NSW evaluation");
       setShowNSWEvaluation(false);
@@ -147,7 +147,7 @@ export default function WritingWorkspaceFixed() {
   }
 
   function onProgressUpdate(metrics: any) {
-    console.log('Progress updated:', metrics);
+    console.log(\'Progress updated:\', metrics);
   }
 
   // Simple autosave
@@ -178,15 +178,15 @@ export default function WritingWorkspaceFixed() {
     }
   }, []);
 
-  const prompt = "The Secret Door in the Library: During a rainy afternoon, you decide to explore the dusty old library in your town that you've never visited before. As you wander through the aisles, you discover a hidden door behind a bookshelf. It's slightly ajar, and a faint, warm light spills out from the crack. What happens when you push the door open? Describe the world you enter and the adventures that await you inside. Who do you meet, and what challenges do you face? How does this experience change you by the time you return to the library? Let your imagination run wild as you take your reader on a journey through this mysterious door!";
+  const prompt = "The Secret Door in the Library: During a rainy afternoon, you decide to explore the dusty old library in your town that you\\'ve never visited before. As you wander through the aisles, you discover a hidden door behind a bookshelf. It\\'s slightly ajar, and a faint, warm light spills out from the crack. What happens when you push the door open? Describe the world you enter and the adventures that await you inside. Who do you meet, and what challenges do you face? How does this experience change you by the time you return to the library? Let your imagination run wild as you take your reader on a journey through this mysterious door!";
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
+    <div className="h-screen flex flex-col bg-gray-50 overflow-hidden">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
+      <div className="bg-white border-b border-gray-200 px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <h1 className="text-2xl font-bold text-gray-900">NSW Selective Writing</h1>
+            <h1 className="text-lg font-bold text-gray-900">NSW Selective Writing</h1>
             <div className="flex items-center space-x-2">
               <span className="text-sm text-gray-600">Text Type:</span>
               <select 
@@ -211,15 +211,14 @@ export default function WritingWorkspaceFixed() {
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Left Panel - Writing Area */}
-        <div className="flex-1 flex flex-col">
-          {/* Prompt */}
-          <div className="bg-blue-50 border-b border-blue-200 p-4">
-            <h2 className="font-semibold text-blue-900 mb-2">Your Writing Prompt</h2>
-            <p className="text-sm text-blue-800 leading-relaxed">{prompt}</p>
-          </div>
+                {/* Left Panel - Prompt */}
+        <div className="w-1/3 flex flex-col bg-blue-50 border-r border-blue-200 p-4 overflow-y-auto">
+          <h2 className="font-semibold text-blue-900 mb-2">Your Writing Prompt</h2>
+          <p className="text-sm text-blue-800 leading-relaxed flex-1">{prompt}</p>
+        </div>
 
-          {/* Writing Area */}
+        {/* Right Panel - Writing Area */}
+        <div className="flex-1 flex flex-col">
           <div className="flex-1 p-6 flex flex-col">
             <div className="flex-1 bg-white rounded-lg border border-gray-200 shadow-sm relative">
               <InteractiveTextEditor
@@ -228,30 +227,30 @@ export default function WritingWorkspaceFixed() {
                 onProgressUpdate={onProgressUpdate}
                 className="h-full"
               />
-              </div>
-            </div>
-            {/* Submit Button */}
-            <div className="p-6 pt-0">
-              <button
-                onClick={onNSWSubmit}
-                disabled={status === "loading"}
-                className={`w-full py-3 px-6 rounded-lg font-semibold text-white transition-all duration-200 ${
-                  status === "loading" 
-                    ? 'bg-gray-400 cursor-not-allowed' 
-                    : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-lg hover:shadow-xl'
-                }`}
-              >
-                {status === "loading" ? (
-                  <div className="flex items-center justify-center">
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3"></div>
-                    Generating NSW Assessment Report...
-                  </div>
-                ) : (
-                  `Submit for NSW Evaluation`
-                )}
-              </button>
             </div>
           </div>
+          {/* Submit Button */}
+          <div className="p-6 pt-0">
+            <button
+              onClick={onNSWSubmit}
+              disabled={status === "loading"}
+              className={`w-full py-3 px-6 rounded-lg font-semibold text-white transition-all duration-200 ${
+                status === "loading" 
+                  ? \'bg-gray-400 cursor-not-allowed\' 
+                  : \'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-lg hover:shadow-xl\'
+              }`}
+            >
+              {status === "loading" ? (
+                <div className="flex items-center justify-center">
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3"></div>
+                  Generating NSW Assessment Report...
+                </div>
+              ) : (
+                `Submit for NSW Evaluation`
+              )}
+            </button>
+          </div>
+        </div>
         </div>
 
         {/* Right Panel - Coach & Analysis */}
