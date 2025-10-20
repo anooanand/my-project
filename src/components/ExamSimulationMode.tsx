@@ -12,9 +12,8 @@ interface ExamSimulationModeProps {
 export function ExamSimulationMode({ onExit, textType, prompt }: ExamSimulationModeProps) {
   const navigate = useNavigate();
   const [timeRemaining, setTimeRemaining] = useState(30 * 60); // 30 minutes in seconds
-  const [isActive, setIsActive] = useState(false);
+  const [isActive, setIsActive] = useState(true); // Start timer automatically
   const [content, setContent] = useState('');
-  const [wordCount, setWordCount] = useState(0);
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
@@ -42,24 +41,10 @@ export function ExamSimulationMode({ onExit, textType, prompt }: ExamSimulationM
     };
   }, [isActive, timeRemaining]);
 
-  // Update word count when content changes
-  useEffect(() => {
-    const words = content.trim().split(/\s+/).filter(word => word.length > 0);
-    setWordCount(words.length);
-  }, [content]);
-
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const handleStartExam = () => {
-    setIsActive(true);
-  };
-
-  const handlePauseExam = () => {
-    setIsActive(false);
   };
 
   const handleSubmit = () => {
@@ -96,7 +81,6 @@ export function ExamSimulationMode({ onExit, textType, prompt }: ExamSimulationM
     
     console.log('Exam essay submitted:', {
       content,
-      wordCount,
       timeUsed: 30 * 60 - timeRemaining
     });
   };
@@ -146,17 +130,10 @@ export function ExamSimulationMode({ onExit, textType, prompt }: ExamSimulationM
             <p className="text-green-100 text-lg">Your practice exam has been completed</p>
           </div>
           <div className="p-8">
-            <div className="grid grid-cols-2 gap-4 mb-8">
-              <div className="bg-blue-50 rounded-xl p-4 text-center">
-                <p className="text-sm text-gray-600 mb-1">Word Count</p>
-                <p className="text-3xl font-bold text-gray-900">{wordCount}</p>
-                <p className="text-xs text-gray-500">words</p>
-              </div>
-              <div className="bg-purple-50 rounded-xl p-4 text-center">
-                <p className="text-sm text-gray-600 mb-1">Time Used</p>
-                <p className="text-3xl font-bold text-gray-900">{formatTime(30 * 60 - timeRemaining)}</p>
-                <p className="text-xs text-gray-500">minutes</p>
-              </div>
+            <div className="bg-purple-50 rounded-xl p-4 text-center mb-8">
+              <p className="text-sm text-gray-600 mb-1">Time Used</p>
+              <p className="text-3xl font-bold text-gray-900">{formatTime(30 * 60 - timeRemaining)}</p>
+              <p className="text-xs text-gray-500">minutes</p>
             </div>
             <button
               onClick={onExit}
@@ -173,7 +150,7 @@ export function ExamSimulationMode({ onExit, textType, prompt }: ExamSimulationM
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Header */}
-      <div className="bg-white/80 backdrop-blur-md shadow-lg border-b border-gray-200 sticky top-0 z-10">
+      <div className="bg-white/80 backdrop-blur-md shadow-lg border-b border-gray-200 sticky top-0 z-20">
         <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-3">
@@ -198,51 +175,18 @@ export function ExamSimulationMode({ onExit, textType, prompt }: ExamSimulationM
 
       <div className="max-w-6xl mx-auto p-6">
         {/* Timer and Controls */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200 p-6 mb-6">
-          <div className="flex flex-col md:flex-row md:justify-between md:items-center space-y-4 md:space-y-0">
-            <div className="flex items-center space-x-6">
-              <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl flex items-center justify-center">
-                  <Clock className="w-6 h-6 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Time Remaining</p>
-                  <p className={`text-3xl font-bold ${getTimeColor()}`}>
-                    {formatTime(timeRemaining)}
-                  </p>
-                </div>
+        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200 p-6 mb-6 sticky top-20 z-10">
+          <div className="flex justify-end items-center">
+            <div className="flex items-center space-x-3">
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl flex items-center justify-center">
+                <Clock className="w-6 h-6 text-blue-600" />
               </div>
-              <div className="h-12 w-px bg-gray-300"></div>
               <div>
-                <p className="text-sm text-gray-600">Word Count</p>
-                <p className="text-3xl font-bold text-gray-900">{wordCount}</p>
+                <p className="text-sm text-gray-600">Time Remaining</p>
+                <p className={`text-3xl font-bold ${getTimeColor()}`}>
+                  {formatTime(timeRemaining)}
+                </p>
               </div>
-            </div>
-            <div className="flex space-x-3">
-              {!isActive && timeRemaining > 0 && !isSubmitted && (
-                <button
-                  onClick={handleStartExam}
-                  className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-semibold hover:from-green-700 hover:to-emerald-700 transition-all transform hover:scale-105 shadow-lg"
-                >
-                  {timeRemaining === 30 * 60 ? 'Start Exam' : 'Resume'}
-                </button>
-              )}
-              {isActive && (
-                <button
-                  onClick={handlePauseExam}
-                  className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-semibold hover:from-amber-600 hover:to-orange-600 transition-all transform hover:scale-105 shadow-lg"
-                >
-                  Pause
-                </button>
-              )}
-              {content.trim().length > 0 && !isSubmitted && (
-                <button
-                  onClick={handleSubmit}
-                  className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all transform hover:scale-105 shadow-lg"
-                >
-                  Submit Essay
-                </button>
-              )}
             </div>
           </div>
         </div>
@@ -255,7 +199,7 @@ export function ExamSimulationMode({ onExit, textType, prompt }: ExamSimulationM
             </div>
             <h2 className="text-xl font-bold text-gray-900">Writing Prompt</h2>
           </div>
-          <div className="bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-blue-200 rounded-xl p-6">
+          <div className="bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-blue-200 rounded-xl p-6 flex-1 min-h-[400px]">
             <p className="text-gray-800 leading-relaxed">
               <strong className="text-lg text-blue-900">Persuasive Writing Task:</strong>  
   
@@ -289,11 +233,24 @@ export function ExamSimulationMode({ onExit, textType, prompt }: ExamSimulationM
             disabled={!isActive}
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            className="w-full h-96 p-6 bg-gray-50/50 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none text-lg leading-relaxed text-gray-800 placeholder-gray-400"
+            className="w-full h-[600px] p-6 bg-gray-50/50 rounded-xl border-2 border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none text-lg leading-relaxed text-gray-800 placeholder-gray-400"
             placeholder={isActive ? "Start writing your response here..." : "Click Start Exam to begin"}
           />
         </div>
       </div>
+
+      {content.trim().length > 0 && !isSubmitted && (
+        <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md p-4 border-t border-gray-200 shadow-lg z-20">
+          <div className="max-w-6xl mx-auto">
+            <button
+              onClick={handleSubmit}
+              className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all transform hover:scale-105 shadow-lg"
+            >
+              Submit Essay
+            </button>
+          </div>
+        </div>
+      )}
 
       {showSubmitConfirm && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
