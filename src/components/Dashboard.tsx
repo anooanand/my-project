@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { isEmailVerified, hasAnyAccess, getUserAccessStatus } from '../lib/supabase';
+import { isEmailVerified, hasAnyAccess, getUserAccessStatus, supabase } from '../lib/supabase';
 import { WritingTypeSelectionModal } from './WritingTypeSelectionModal';
 import { PromptOptionsModal } from './PromptOptionsModal';
 import { CustomPromptModal } from './CustomPromptModal';
@@ -166,6 +166,68 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
     setShowPromptOptionsModal(true);
   };
 
+  // Helper function to save writing session to database
+  const saveWritingSessionToDatabase = async (prompt: string, textType: string) => {
+    if (!user?.id) return;
+
+    try {
+      // Check if there's an active session
+      const { data: existingSessions } = await supabase
+        .from('chat_sessions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('last_accessed_at', { ascending: false })
+        .limit(1);
+
+      const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+      if (existingSessions && existingSessions.length > 0) {
+        // Update existing session
+        const { error } = await supabase
+          .from('chat_sessions')
+          .update({
+            prompt: prompt,
+            text_type: textType,
+            last_accessed_at: new Date().toISOString(),
+            metadata: {
+              ...existingSessions[0].metadata,
+              lastPromptUpdate: new Date().toISOString()
+            }
+          })
+          .eq('id', existingSessions[0].id);
+
+        if (error) {
+          console.error('Error updating session:', error);
+        } else {
+          console.log('✅ Session updated in database');
+        }
+      } else {
+        // Create new session
+        const { error } = await supabase
+          .from('chat_sessions')
+          .insert({
+            user_id: user.id,
+            session_id: sessionId,
+            text_type: textType,
+            prompt: prompt,
+            user_text: '',
+            metadata: {
+              startedAt: new Date().toISOString(),
+              promptType: 'generated'
+            }
+          });
+
+        if (error) {
+          console.error('Error creating session:', error);
+        } else {
+          console.log('✅ New session created in database');
+        }
+      }
+    } catch (error) {
+      console.error('Error saving to database:', error);
+    }
+  };
+
   // FIXED: Step 3 - Handle prompt generation with timestamp, then navigate to writing area
   const handleGeneratePrompt = async () => {
     console.log('🎯 Dashboard: Generating prompt for:', selectedWritingType);
@@ -187,6 +249,9 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
         localStorage.setItem("promptType", "generated");
 
         console.log('✅ Prompt saved to localStorage with timestamp');
+
+        // Save to database for persistence
+        await saveWritingSessionToDatabase(prompt, selectedWritingType);
 
         // Dispatch custom event to notify other components
         window.dispatchEvent(new CustomEvent('promptGenerated', {
@@ -228,6 +293,9 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
       localStorage.setItem('selectedWritingType', selectedWritingType);
       localStorage.setItem('promptType', 'generated');
 
+      // Save to database for persistence
+      await saveWritingSessionToDatabase(fallbackPrompt, selectedWritingType);
+
       // Close prompt options modal
       setShowPromptOptionsModal(false);
 
@@ -254,7 +322,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
   };
 
   // Handle custom prompt submission and navigate to writing area
-  const handleCustomPromptSubmit = (prompt: string) => {
+  const handleCustomPromptSubmit = async (prompt: string) => {
     console.log('✏️ Dashboard: Custom prompt submitted:', prompt.substring(0, 50) + '...');
 
     // FIXED: Clear generated prompt and save custom prompt with timestamp
@@ -262,6 +330,9 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
     localStorage.removeItem("generatedPromptTimestamp");
     localStorage.setItem("customPrompt", prompt);
     localStorage.setItem("customPromptTimestamp", new Date().toISOString());
+
+    // Save to database for persistence
+    await saveWritingSessionToDatabase(prompt, selectedWritingType);
 
     console.log('✅ Custom prompt saved to localStorage with timestamp');
 

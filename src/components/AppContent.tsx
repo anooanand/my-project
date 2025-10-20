@@ -94,15 +94,15 @@ function AppContent() {
   }, [timerStarted]);
   const [focusMode, setFocusMode] = useState(false);
 
-  // CRITICAL FIX: Load prompt from localStorage when component mounts or when navigating to writing page
+  // CRITICAL FIX: Load prompt from localStorage AND database when component mounts
   useEffect(() => {
-    const loadPromptFromStorage = () => {
+    const loadPromptFromStorage = async () => {
       try {
-        // Check for generated prompt first
+        // First try localStorage
         const generatedPrompt = localStorage.getItem('generatedPrompt');
         const customPrompt = localStorage.getItem('customPrompt');
         const storedTextType = localStorage.getItem('selectedWritingType');
-        
+
         console.log('🔍 Loading prompt from localStorage:', {
           generatedPrompt: generatedPrompt ? generatedPrompt.substring(0, 50) + '...' : null,
           customPrompt: customPrompt ? customPrompt.substring(0, 50) + '...' : null,
@@ -112,10 +112,30 @@ function AppContent() {
         // Set the prompt (prioritize generated over custom)
         if (generatedPrompt) {
           setPrompt(generatedPrompt);
-          console.log('✅ Loaded generated prompt');
+          console.log('✅ Loaded generated prompt from localStorage');
         } else if (customPrompt) {
           setPrompt(customPrompt);
-          console.log('✅ Loaded custom prompt');
+          console.log('✅ Loaded custom prompt from localStorage');
+        } else if (user?.id) {
+          // If no localStorage prompt, try loading from database
+          console.log('🔍 No localStorage prompt found, checking database...');
+          const { supabase } = await import('../lib/supabase');
+          const { data: sessions } = await supabase
+            .from('chat_sessions')
+            .select('prompt, text_type')
+            .eq('user_id', user.id)
+            .order('last_accessed_at', { ascending: false })
+            .limit(1);
+
+          if (sessions && sessions.length > 0 && sessions[0].prompt) {
+            setPrompt(sessions[0].prompt);
+            setTextType(sessions[0].text_type || 'narrative');
+            console.log('✅ Loaded prompt from database');
+
+            // Also update localStorage for faster future access
+            localStorage.setItem('generatedPrompt', sessions[0].prompt);
+            localStorage.setItem('selectedWritingType', sessions[0].text_type || 'narrative');
+          }
         }
 
         // Set the text type if available
@@ -131,7 +151,7 @@ function AppContent() {
         }
 
       } catch (error) {
-        console.error('❌ Error loading prompt from localStorage:', error);
+        console.error('❌ Error loading prompt:', error);
       }
     };
 

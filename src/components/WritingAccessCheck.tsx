@@ -124,6 +124,9 @@ export const WritingAccessCheck: React.FC<WritingAccessCheckProps> = ({
             Please verify your email address to access the writing tools.
           </p>
           <div className="space-y-3">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+              Check your email inbox for the verification link.
+            </p>
             <button
               onClick={() => onNavigate('dashboard')}
               className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors"
