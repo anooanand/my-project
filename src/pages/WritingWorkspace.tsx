@@ -10,6 +10,7 @@ import { evaluateEssay, saveDraft } from "../lib/api";
 import { validateDetailedFeedback } from "../types/feedback.validate";
 import { eventBus } from "../lib/eventBus";
 import { detectNewParagraphs } from "../lib/paragraphDetection";
+import { ChevronDown, Clock, BookOpen } from "lucide-react";
 
 export default function WritingWorkspaceFixed() {
   const editorRef = React.useRef<EditorHandle>(null);
@@ -18,10 +19,11 @@ export default function WritingWorkspaceFixed() {
   const [status, setStatus] = React.useState<"idle"|"loading"|"success"|"error">("idle");
   const [err, setErr] = React.useState<string|undefined>(undefined);
   const [currentText, setCurrentText] = React.useState<string>("");
-  const [textType, setTextType] = React.useState<\"narrative\" | \"persuasive\" | \"informative\">(\"narrative\");
+  const [textType, setTextType] = React.useState<"narrative" | "persuasive" | "informative">("narrative");
   const [targetWordCount, setTargetWordCount] = React.useState<number>(300);
   const [wordCount, setWordCount] = React.useState<number>(0);
   const [showNSWEvaluation, setShowNSWEvaluation] = React.useState<boolean>(false);
+  const [promptExpanded, setPromptExpanded] = React.useState<boolean>(true);
   const prevTextRef = React.useRef<string>("");
 
   const draftId = React.useRef<string>(
@@ -36,14 +38,14 @@ export default function WritingWorkspaceFixed() {
   // Listen for submit events from AppContent
   React.useEffect(() => {
     const handleSubmitEvent = (event: CustomEvent) => {
-      console.log(\'📨 WritingWorkspace: Received submit event:\', event.detail);
+      console.log('📨 WritingWorkspace: Received submit event:', event.detail);
       onNSWSubmit();
     };
 
-    window.addEventListener(\'submitForEvaluation\', handleSubmitEvent as EventListener);
+    window.addEventListener('submitForEvaluation', handleSubmitEvent as EventListener);
     
     return () => {
-      window.removeEventListener(\'submitForEvaluation\', handleSubmitEvent as EventListener);
+      window.removeEventListener('submitForEvaluation', handleSubmitEvent as EventListener);
     };
   }, []);
 
@@ -73,7 +75,7 @@ export default function WritingWorkspaceFixed() {
 
   // NSW Evaluation Submit Handler
   async function onNSWSubmit() {
-    console.log(\'🎯 NSW Submit triggered\');
+    console.log('🎯 NSW Submit triggered');
     setStatus("loading");
     setErr(undefined);
     setShowNSWEvaluation(true);
@@ -91,7 +93,7 @@ export default function WritingWorkspaceFixed() {
       });
       
     } catch (e: any) {
-      console.error(\'NSW Submit error:\', e);
+      console.error('NSW Submit error:', e);
       setStatus("error");
       setErr(e?.message || "Failed to initiate NSW evaluation");
       setShowNSWEvaluation(false);
@@ -147,7 +149,7 @@ export default function WritingWorkspaceFixed() {
   }
 
   function onProgressUpdate(metrics: any) {
-    console.log(\'Progress updated:\', metrics);
+    console.log('Progress updated:', metrics);
   }
 
   // Simple autosave
@@ -178,135 +180,193 @@ export default function WritingWorkspaceFixed() {
     }
   }, []);
 
-  const prompt = "The Secret Door in the Library: During a rainy afternoon, you decide to explore the dusty old library in your town that you\\'ve never visited before. As you wander through the aisles, you discover a hidden door behind a bookshelf. It\\'s slightly ajar, and a faint, warm light spills out from the crack. What happens when you push the door open? Describe the world you enter and the adventures that await you inside. Who do you meet, and what challenges do you face? How does this experience change you by the time you return to the library? Let your imagination run wild as you take your reader on a journey through this mysterious door!";
+  const prompt = "The Secret Door in the Library: During a rainy afternoon, you decide to explore the dusty old library in your town that you've never visited before. As you wander through the aisles, you discover a hidden door behind a bookshelf. It's slightly ajar, and a faint, warm light spills out from the crack. What happens when you push the door open? Describe the world you enter and the adventures that await you inside. Who do you meet, and what challenges do you face? How does this experience change you by the time you return to the library? Let your imagination run wild as you take your reader on a journey through this mysterious door!";
 
   return (
     <div className="h-screen flex flex-col bg-gray-50 overflow-hidden">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <h1 className="text-lg font-bold text-gray-900">NSW Selective Writing</h1>
-            <div className="flex items-center space-x-2">
-              <span className="text-sm text-gray-600">Text Type:</span>
-              <select 
-                value={textType} 
-                onChange={(e) => setTextType(e.target.value as any)}
-                className="px-3 py-1 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="narrative">Narrative</option>
-                <option value="persuasive">Persuasive</option>
-                <option value="informative">Informative</option>
-              </select>
-            </div>
+      {/* NARROWER HEADER */}
+      <div className="bg-white border-b border-gray-200 px-6 py-2 flex items-center justify-between h-16">
+        {/* Left: Title and Text Type */}
+        <div className="flex items-center space-x-6">
+          <div className="flex items-center space-x-2">
+            <BookOpen className="w-5 h-5 text-blue-600" />
+            <h1 className="text-base font-bold text-gray-900">NSW Selective Writing</h1>
           </div>
-          <div className="flex items-center space-x-4">
-            <WritingStatusBar 
-              status={status}
-              examMode={true}
-            />
+          <div className="flex items-center space-x-2 border-l border-gray-300 pl-6">
+            <span className="text-xs text-gray-600 font-medium">TEXT TYPE:</span>
+            <select 
+              value={textType} 
+              onChange={(e) => setTextType(e.target.value as any)}
+              className="px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            >
+              <option value="narrative">Narrative</option>
+              <option value="persuasive">Persuasive</option>
+              <option value="informative">Informative</option>
+            </select>
           </div>
+        </div>
+
+        {/* Right: Status and Word Count */}
+        <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2 text-xs text-gray-600">
+            <span className="font-medium">Words:</span>
+            <span className="font-bold text-gray-900">{wordCount}</span>
+          </div>
+          <WritingStatusBar 
+            status={status}
+            examMode={true}
+          />
         </div>
       </div>
 
-      {/* Main Content */}
+      {/* MAIN LAYOUT: Left Prompt Panel + Right Content Area */}
       <div className="flex-1 flex overflow-hidden">
-                {/* Left Panel - Prompt */}
-        <div className="w-1/3 flex flex-col bg-blue-50 border-r border-blue-200 p-4 overflow-y-auto">
-          <h2 className="font-semibold text-blue-900 mb-2">Your Writing Prompt</h2>
-          <p className="text-sm text-blue-800 leading-relaxed flex-1">{prompt}</p>
-        </div>
-
-        {/* Right Panel - Writing Area */}
-        <div className="flex-1 flex flex-col">
-          <div className="flex-1 p-6 flex flex-col">
-            <div className="flex-1 bg-white rounded-lg border border-gray-200 shadow-sm relative">
-              <InteractiveTextEditor
-                ref={editorRef}
-                onTextChange={setCurrentText}
-                onProgressUpdate={onProgressUpdate}
-                className="h-full"
-              />
+        
+        {/* LEFT PANEL - VERTICAL PROMPT */}
+        <div className="w-72 flex flex-col bg-gradient-to-b from-blue-50 to-blue-25 border-r border-blue-200 overflow-hidden">
+          {/* Prompt Header */}
+          <div 
+            onClick={() => setPromptExpanded(!promptExpanded)}
+            className="px-4 py-3 bg-blue-100 border-b border-blue-200 cursor-pointer hover:bg-blue-150 transition-colors flex items-center justify-between"
+          >
+            <div className="flex items-center space-x-2">
+              <BookOpen className="w-4 h-4 text-blue-700" />
+              <h2 className="font-semibold text-sm text-blue-900">Writing Prompt</h2>
             </div>
+            <ChevronDown 
+              className={`w-4 h-4 text-blue-700 transition-transform ${promptExpanded ? 'rotate-180' : ''}`}
+            />
           </div>
-          {/* Submit Button */}
-          <div className="p-6 pt-0">
-            <button
-              onClick={onNSWSubmit}
-              disabled={status === "loading"}
-              className={`w-full py-3 px-6 rounded-lg font-semibold text-white transition-all duration-200 ${
-                status === "loading" 
-                  ? \'bg-gray-400 cursor-not-allowed\' 
-                  : \'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-lg hover:shadow-xl\'
-              }`}
-            >
-              {status === "loading" ? (
-                <div className="flex items-center justify-center">
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3"></div>
-                  Generating NSW Assessment Report...
-                </div>
-              ) : (
-                `Submit for NSW Evaluation`
-              )}
-            </button>
-          </div>
-        </div>
-        </div>
 
-        {/* Right Panel - Coach & Analysis */}
-        <div className="w-96 border-l border-gray-200 bg-white flex flex-col">
-          {showNSWEvaluation ? (
-            /* NSW Evaluation System */
-            <div className="h-full p-4">
-              <div className="h-full bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg border border-purple-200">
-                <div className="p-4 border-b border-purple-200">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-purple-800">NSW Assessment</h3>
-                    <button
-                      onClick={() => setShowNSWEvaluation(false)}
-                      className="text-purple-600 hover:text-purple-800 text-sm"
-                    >
-                      ← Back to Coach
-                    </button>
-                  </div>
+          {/* Prompt Content */}
+          {promptExpanded && (
+            <div className="flex-1 overflow-y-auto p-4">
+              <p className="text-sm text-blue-800 leading-relaxed whitespace-pre-wrap">
+                {prompt}
+              </p>
+              
+              {/* Quick Stats */}
+              <div className="mt-6 pt-4 border-t border-blue-200 space-y-3">
+                <div className="bg-white bg-opacity-60 rounded p-3">
+                  <p className="text-xs font-semibold text-blue-900 mb-1">Target Word Count</p>
+                  <p className="text-sm text-blue-700">300-500 words</p>
                 </div>
-                <div className="h-full overflow-auto">
-                  <NSWStandaloneSubmitSystem
-                    content={currentText}
-                    wordCount={wordCount}
-                    targetWordCountMin={100}
-                    targetWordCountMax={400}
-                    textType={textType}
-                    prompt={prompt}
-                    onSubmissionComplete={onNSWEvaluationComplete}
-                  />
+                <div className="bg-white bg-opacity-60 rounded p-3">
+                  <p className="text-xs font-semibold text-blue-900 mb-1">Time Limit</p>
+                  <p className="text-sm text-blue-700">30 minutes</p>
                 </div>
               </div>
             </div>
-          ) : (
-            /* Coach Panel */
-            <div className="h-full">
-              <EnhancedCoachPanel 
-                content={currentText}
-                textType={textType}
-              />
+          )}
+
+          {/* Collapsed State - Show Icon Only */}
+          {!promptExpanded && (
+            <div className="flex-1 flex items-center justify-center">
+              <BookOpen className="w-8 h-8 text-blue-300" />
             </div>
           )}
         </div>
+
+        {/* RIGHT PANEL - WRITING AREA + COACH */}
+        <div className="flex-1 flex overflow-hidden">
+          
+          {/* WRITING AREA */}
+          <div className="flex-1 flex flex-col bg-white">
+            {/* Editor Container */}
+            <div className="flex-1 flex flex-col p-4 overflow-hidden">
+              <div className="flex-1 bg-white rounded-lg border border-gray-200 shadow-sm relative overflow-hidden">
+                <InteractiveTextEditor
+                  ref={editorRef}
+                  onTextChange={setCurrentText}
+                  onProgressUpdate={onProgressUpdate}
+                  className="h-full"
+                />
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <div className="px-4 pb-4">
+              <button
+                onClick={onNSWSubmit}
+                disabled={status === "loading"}
+                className={`w-full py-2.5 px-4 rounded-lg font-semibold text-white text-sm transition-all duration-200 ${
+                  status === "loading" 
+                    ? 'bg-gray-400 cursor-not-allowed' 
+                    : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-md hover:shadow-lg'
+                }`}
+              >
+                {status === "loading" ? (
+                  <div className="flex items-center justify-center">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    Generating Assessment...
+                  </div>
+                ) : (
+                  'Submit for NSW Evaluation'
+                )}
+              </button>
+            </div>
+          </div>
+
+          {/* COACH/ASSESSMENT PANEL */}
+          <div className="w-80 border-l border-gray-200 bg-white flex flex-col overflow-hidden">
+            {showNSWEvaluation ? (
+              /* NSW Evaluation System */
+              <div className="h-full flex flex-col">
+                <div className="px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-blue-50">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-sm text-gray-900">NSW Assessment</h3>
+                    <button
+                      onClick={() => setShowNSWEvaluation(false)}
+                      className="text-gray-600 hover:text-gray-900 text-xs font-medium"
+                    >
+                      ← Back
+                    </button>
+                  </div>
+                </div>
+                <div className="flex-1 overflow-auto">
+                  <div className="p-4">
+                    <NSWStandaloneSubmitSystem
+                      content={currentText}
+                      wordCount={wordCount}
+                      targetWordCountMin={100}
+                      targetWordCountMax={400}
+                      textType={textType}
+                      prompt={prompt}
+                      onSubmissionComplete={onNSWEvaluationComplete}
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* Coach Panel */
+              <div className="h-full flex flex-col">
+                <div className="px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-amber-50 to-orange-50">
+                  <h3 className="font-semibold text-sm text-gray-900">Writing Coach</h3>
+                </div>
+                <div className="flex-1 overflow-auto">
+                  <div className="p-4">
+                    <EnhancedCoachPanel 
+                      content={currentText}
+                      textType={textType}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* Error Display */}
+      {/* ERROR DISPLAY */}
       {err && (
-        <div className="bg-red-50 border-t border-red-200 px-6 py-3">
-          <div className="flex items-center">
+        <div className="bg-red-50 border-t border-red-200 px-6 py-2">
+          <div className="flex items-center space-x-3">
             <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+              <svg className="h-4 w-4 text-red-400" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
               </svg>
             </div>
-            <div className="ml-3">
-              <p className="text-sm text-red-800">{err}</p>
-            </div>
+            <p className="text-xs text-red-800">{err}</p>
           </div>
         </div>
       )}
