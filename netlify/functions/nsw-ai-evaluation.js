@@ -121,6 +121,59 @@ Return ONLY valid JSON matching the specified format.`;
 
   try {
     const feedback = JSON.parse(response);
+
+    // CRITICAL: Enforce NSW weighting - Override AI if it returns wrong values
+    if (feedback.criteriaScores) {
+      const scores = feedback.criteriaScores;
+
+      // Force correct maximum values (NSW rubric: 40-20-25-15)
+      if (scores.ideasContent && scores.ideasContent.outOf !== 12) {
+        console.warn(`Correcting ideasContent outOf from ${scores.ideasContent.outOf} to 12`);
+        // Recalculate score proportionally
+        const percentage = scores.ideasContent.score / scores.ideasContent.outOf;
+        scores.ideasContent.outOf = 12;
+        scores.ideasContent.score = Math.round(percentage * 12 * 10) / 10;
+      }
+
+      if (scores.structureOrganization && scores.structureOrganization.outOf !== 6) {
+        console.warn(`Correcting structureOrganization outOf from ${scores.structureOrganization.outOf} to 6`);
+        const percentage = scores.structureOrganization.score / scores.structureOrganization.outOf;
+        scores.structureOrganization.outOf = 6;
+        scores.structureOrganization.score = Math.round(percentage * 6 * 10) / 10;
+      }
+
+      if (scores.languageVocab && scores.languageVocab.outOf !== 7.5) {
+        console.warn(`Correcting languageVocab outOf from ${scores.languageVocab.outOf} to 7.5`);
+        const percentage = scores.languageVocab.score / scores.languageVocab.outOf;
+        scores.languageVocab.outOf = 7.5;
+        scores.languageVocab.score = Math.round(percentage * 7.5 * 10) / 10;
+      }
+
+      if (scores.spellingGrammar && scores.spellingGrammar.outOf !== 4.5) {
+        console.warn(`Correcting spellingGrammar outOf from ${scores.spellingGrammar.outOf} to 4.5`);
+        const percentage = scores.spellingGrammar.score / scores.spellingGrammar.outOf;
+        scores.spellingGrammar.outOf = 4.5;
+        scores.spellingGrammar.score = Math.round(percentage * 4.5 * 10) / 10;
+      }
+
+      // Recalculate total score
+      feedback.totalScore =
+        scores.ideasContent.score +
+        scores.structureOrganization.score +
+        scores.languageVocab.score +
+        scores.spellingGrammar.score;
+
+      feedback.totalScore = Math.round(feedback.totalScore * 10) / 10;
+
+      console.log('✅ NSW weighting enforced:', {
+        ideasContent: `${scores.ideasContent.score}/${scores.ideasContent.outOf}`,
+        structure: `${scores.structureOrganization.score}/${scores.structureOrganization.outOf}`,
+        language: `${scores.languageVocab.score}/${scores.languageVocab.outOf}`,
+        grammar: `${scores.spellingGrammar.score}/${scores.spellingGrammar.outOf}`,
+        total: feedback.totalScore
+      });
+    }
+
     feedback.timings = { modelLatencyMs: latency };
     feedback.modelVersion = "gpt-4o-mini";
     feedback.generatedAt = new Date().toISOString();
