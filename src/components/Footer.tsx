@@ -32,7 +32,7 @@ export function Footer({ onNavigate }: FooterProps) {
                 <PenTool className="w-6 h-6 text-white" />
               </div>
               <span className="text-2xl font-bold text-gray-900 dark:text-white">
-                InstaChat AI
+                Writing Mate
               </span>
             </div>
             <p className="text-gray-600 dark:text-gray-400 text-base leading-relaxed">
@@ -119,7 +119,7 @@ export function Footer({ onNavigate }: FooterProps) {
               </li>
               <li>
                 <a
-                  href="mailto:support@instachatai.co"
+                  href="mailto:support@writingmate.co"
                   className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-base transition-colors duration-300 font-medium flex items-center group"
                 >
                   <Mail className="h-5 w-5 mr-2 group-hover:text-indigo-600 transition-colors duration-300" />
@@ -217,7 +217,7 @@ export function Footer({ onNavigate }: FooterProps) {
               </a>
             </div>
             <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">
-              © {currentYear} InstaChat AI. All rights reserved.
+              © {currentYear} Writing Mate. All rights reserved.
             </p>
           </div>
         </div>

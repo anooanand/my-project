@@ -85,7 +85,7 @@ const comparisonFeatures: ComparisonFeature[] = [
 const uniqueFeatures = [
   {
     title: 'Teaching vs. Generating',
-    description: 'Unlike generic AI that writes for you, InstaChat AI teaches you HOW to write better.',
+    description: 'Unlike generic AI that writes for you, Writing Mate teaches you HOW to write better.',
     icon: <BookOpen className="w-8 h-8 text-blue-600" />
   },
   {
@@ -114,10 +114,10 @@ export function FeatureComparisonSection() {
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900 dark:text-white">
-            How InstaChat AI Stands Out
+            How Writing Mate Stands Out
           </h2>
           <p className="text-lg text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-            See why InstaChat AI is different from generic AI chatbots and other writing tools. We don't just generate answers - we teach you to become a better writer.
+            See why Writing Mate is different from generic AI chatbots and other writing tools. We don't just generate answers - we teach you to become a better writer.
           </p>
         </div>
 
@@ -154,7 +154,7 @@ export function FeatureComparisonSection() {
                     Feature
                   </th>
                   <th className="px-6 py-4 text-center text-sm font-semibold text-blue-600 dark:text-blue-400">
-                    InstaChat AI
+                    Writing Mate
                   </th>
                   <th className="px-6 py-4 text-center text-sm font-semibold text-gray-600 dark:text-gray-400">
                     Generic AI Chatbots
@@ -199,7 +199,7 @@ export function FeatureComparisonSection() {
         <div className="mt-16 text-center">
           <div className="bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl p-8 text-white">
             <h3 className="text-2xl md:text-3xl font-bold mb-4">
-              Experience the InstaChat AI Difference
+              Experience the Writing Mate Difference
             </h3>
             <p className="text-lg mb-6 opacity-90">
               Join thousands of students who are improving their writing skills with our unique teaching approach.

@@ -117,20 +117,20 @@ export const FAQPage: React.FC = () => {
           />
           
           <FAQItem
-            question="What is InstaChat AI Writing Mate?"
+            question="What is Writing Mate?"
             answer={
               <p>
-                InstaChat AI Writing Mate is an AI-powered writing coach specifically designed to help students prepare for NSW Selective School exams. It provides personalized guidance, real-time feedback, and structured practice for various writing types required in the exam.
+                Writing Mate is an AI-powered writing coach specifically designed to help students prepare for NSW Selective School exams. It provides personalized guidance, real-time feedback, and structured practice for various writing types required in the exam.
               </p>
             }
           />
           
           <FAQItem
-            question="How does InstaChat AI differ from other AI writing tools?"
+            question="How does Writing Mate differ from other AI writing tools?"
             answer={
               <div>
                 <p className="mb-2">
-                  Unlike generic AI chatbots that simply generate content, InstaChat AI:
+                  Unlike generic AI chatbots that simply generate content, Writing Mate:
                 </p>
                 <ul className="list-disc pl-5 space-y-1">
                   <li>Provides step-by-step writing guidance following NSW curriculum standards</li>
@@ -292,7 +292,7 @@ export const FAQPage: React.FC = () => {
           <h2 className="text-2xl font-semibold mb-4 text-gray-800 dark:text-white">Using the Platform</h2>
           
           <FAQItem
-            question="How do I get started with InstaChat AI Writing Mate?"
+            question="How do I get started with Writing Mate?"
             answer={
               <div>
                 <p className="mb-2">Getting started is easy:</p>
@@ -337,7 +337,7 @@ export const FAQPage: React.FC = () => {
             question="Is there a free trial available?"
             answer={
               <p>
-                Yes, we offer a free trial that allows you to experience the core features of InstaChat AI Writing Mate, including access to a limited number of practice essays and basic AI feedback. This is a great way to see how our platform can benefit your child's writing skills before committing to a subscription.
+                Yes, we offer a free trial that allows you to experience the core features of Writing Mate, including access to a limited number of practice essays and basic AI feedback. This is a great way to see how our platform can benefit your child's writing skills before committing to a subscription.
               </p>
             }
           />
@@ -346,7 +346,7 @@ export const FAQPage: React.FC = () => {
             question="How can I get help if I have questions?"
             answer={
               <p>
-                Our support team is available to help with any questions. You can contact us through the Help Center in your account, or email support@instachatai.co for assistance.
+                Our support team is available to help with any questions. You can contact us through the Help Center in your account, or email support@writingmate.co for assistance.
               </p>
             }
           />

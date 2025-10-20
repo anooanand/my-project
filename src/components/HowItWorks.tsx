@@ -40,7 +40,7 @@ export function HowItWorks() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 via-purple-600 to-orange-600">
-            How InstaChat AI Helps Students Succeed in Writing
+            How Writing Mate Helps Students Succeed in Writing
           </h2>
           <p className="mt-4 text-lg text-gray-600 dark:text-gray-300">
             Our AI-powered platform guides students step-by-step, helping them master key writing formats
@@ -52,7 +52,7 @@ export function HowItWorks() {
         <div className="grid md:grid-cols-2 gap-12 mb-16">
           <div>
             <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-              🚀 How InstaChat AI Works
+              🚀 How Writing Mate Works
             </h3>
             <div className="space-y-6">
               <div className="flex items-start space-x-4">
@@ -144,7 +144,7 @@ export function HowItWorks() {
         {/* Feature Comparison Section */}
         <div className="mb-16">
           <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-            💡 How InstaChat AI Stands Out from Other AI Writing Tools
+            💡 How Writing Mate Stands Out from Other AI Writing Tools
           </h3>
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden border border-gray-200 dark:border-gray-700">
             <div className="px-6 py-4 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
@@ -155,7 +155,7 @@ export function HowItWorks() {
             <div className="divide-y divide-gray-200 dark:divide-gray-700">
               <div className="grid grid-cols-3 px-6 py-3 text-sm font-medium text-gray-700 dark:text-gray-300">
                 <div>Feature</div>
-                <div className="text-center">InstaChat AI</div>
+                <div className="text-center">Writing Mate</div>
                 <div className="text-center">Generic AI Chatbots</div>
               </div>
               {features.map((feature, index) => (
@@ -183,7 +183,7 @@ export function HowItWorks() {
             </div>
           </div>
           <p className="mt-4 text-gray-600 dark:text-gray-400 text-sm">
-            📌 Unlike generic AI chatbots, InstaChat AI teaches students how to write better, rather than just generating answers.
+            📌 Unlike generic AI chatbots, Writing Mate teaches students how to write better, rather than just generating answers.
           </p>
         </div>
 

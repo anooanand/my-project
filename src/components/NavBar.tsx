@@ -122,9 +122,9 @@ export function NavBar({
               className="flex items-center space-x-2 text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-700 bg-clip-text text-transparent hover:scale-105 transition-transform duration-300"
             >
               <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-700 rounded-lg flex items-center justify-center text-white font-bold text-sm">
-                AI
+                WM
               </div>
-              <span>InstaChat AI</span>
+              <span>Writing Mate</span>
             </button>
           </div>
 

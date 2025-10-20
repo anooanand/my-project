@@ -318,7 +318,7 @@ function DemoModal({ onClose }: { onClose: () => void }) {
         <div className="p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-              InstaChat AI Demo
+              Writing Mate Demo
             </h3>
             <button
               onClick={onClose}

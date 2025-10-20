@@ -27,7 +27,7 @@ const testimonials: Testimonial[] = [
     name: 'Emma Chen',
     age: 11,
     school: 'Sydney Grammar School',
-    quote: 'InstaChat AI helped me write better stories! My teacher said my writing improved so much. The AI buddy gives really helpful tips.',
+    quote: 'Writing Mate helped me write better stories! My teacher said my writing improved so much. The AI buddy gives really helpful tips.',
     improvement: 'Writing score improved from 65% to 89%',
     rating: 5,
     avatar: '👧'
@@ -85,7 +85,7 @@ const successMetrics: SuccessMetric[] = [
     id: 'students',
     value: '10,000+',
     label: 'Happy Students',
-    description: 'Students across NSW have improved their writing skills with InstaChat AI',
+    description: 'Students across NSW have improved their writing skills with Writing Mate',
     icon: <Users className="w-8 h-8" />,
     color: 'purple'
   },
@@ -111,7 +111,7 @@ export function StudentSuccessSection() {
             Amazing Student Success Stories
           </h2>
           <p className="text-lg text-gray-700 dark:text-gray-200 max-w-3xl mx-auto">
-            See how InstaChat AI has helped thousands of students improve their writing skills and ace their selective exams.
+            See how Writing Mate has helped thousands of students improve their writing skills and ace their selective exams.
           </p>
         </div>
 

@@ -5,13 +5,13 @@ export const AboutPage: React.FC = () => {
     <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50 min-h-screen py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl md:text-5xl font-bold text-center mb-8">
-          About <span className="bg-gradient-to-r from-blue-600 to-purple-700 bg-clip-text text-transparent">InstaChat AI</span>
+          About <span className="bg-gradient-to-r from-blue-600 to-purple-700 bg-clip-text text-transparent">Writing Mate</span>
         </h1>
         
         <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6 mb-8">
           <h2 className="text-2xl font-semibold mb-4 text-gray-800 dark:text-white">Our Mission</h2>
           <p className="text-gray-700 dark:text-gray-300 mb-6">
-            InstaChat AI Writing Mate was created with a clear mission: to help students master the writing skills needed to excel in NSW Selective School exams and beyond. We believe that every student deserves personalized guidance that adapts to their unique learning journey.
+            Writing Mate was created with a clear mission: to help students master the writing skills needed to excel in NSW Selective School exams and beyond. We believe that every student deserves personalized guidance that adapts to their unique learning journey.
           </p>
           <p className="text-gray-700 dark:text-gray-300 mb-6">
             Unlike generic AI tools that simply generate content, our platform teaches students how to become better writers through structured guidance, real-time feedback, and practice aligned with NSW curriculum standards.
@@ -49,7 +49,7 @@ export const AboutPage: React.FC = () => {
         <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6 mb-8">
           <h2 className="text-2xl font-semibold mb-4 text-gray-800 dark:text-white">Our Results</h2>
           <p className="text-gray-700 dark:text-gray-300 mb-6">
-            Students using InstaChat AI Writing Mate have reported significant improvements in their writing skills and confidence:
+            Students using Writing Mate have reported significant improvements in their writing skills and confidence:
           </p>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">

@@ -55,11 +55,11 @@ export function EnhancedSuccessSection() {
         </div>
       </div>
 
-      {/* How InstaChat AI Helps Students Section */}
+      {/* How Writing Mate Helps Students Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-20">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900 dark:text-white">
-            How InstaChat AI Helps Students Succeed in Writing
+            How Writing Mate Helps Students Succeed in Writing
           </h2>
           <p className="text-lg text-gray-600 dark:text-gray-300 max-w-4xl mx-auto">
             Our AI-powered platform guides students step-by-step, helping them master key writing formats required for NSW Selective School exams and school assignments.
@@ -67,12 +67,12 @@ export function EnhancedSuccessSection() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 mb-16">
-          {/* How InstaChat AI Works */}
+          {/* How Writing Mate Works */}
           <div className="bg-white dark:bg-gray-800 rounded-2xl p-8 shadow-lg">
             <div className="flex items-center mb-6">
               <div className="text-2xl mr-3">🚀</div>
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-                How InstaChat AI Works
+                How Writing Mate Works
               </h3>
             </div>
 
@@ -159,7 +159,7 @@ export function EnhancedSuccessSection() {
           <div className="flex items-center mb-6">
             <div className="text-2xl mr-3">💡</div>
             <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-              How InstaChat AI Stands Out from Other AI Writing Tools
+              How Writing Mate Stands Out from Other AI Writing Tools
             </h3>
           </div>
 
@@ -176,7 +176,7 @@ export function EnhancedSuccessSection() {
                 <thead>
                   <tr className="border-b-2 border-gray-200 dark:border-gray-700">
                     <th className="text-left py-4 px-4 font-semibold text-gray-900 dark:text-white">Feature</th>
-                    <th className="text-center py-4 px-4 font-semibold text-green-600">InstaChat AI</th>
+                    <th className="text-center py-4 px-4 font-semibold text-green-600">Writing Mate</th>
                     <th className="text-center py-4 px-4 font-semibold text-gray-600 dark:text-gray-400">Generic AI Chatbots</th>
                   </tr>
                 </thead>
@@ -243,7 +243,7 @@ export function EnhancedSuccessSection() {
               <div className="flex items-start">
                 <div className="text-xl mr-3">📌</div>
                 <p className="text-gray-700 dark:text-gray-300">
-                  Unlike generic AI chatbots, InstaChat AI teaches students how to write better, rather than just generating answers.
+                  Unlike generic AI chatbots, Writing Mate teaches students how to write better, rather than just generating answers.
                 </p>
               </div>
             </div>
