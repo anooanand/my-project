@@ -3,7 +3,7 @@ import { Save, Clock, FileText, AlertCircle, Zap, Star, Sparkles, PenTool } from
 import { AutoSave } from './AutoSave';
 
 interface WritingStatusBarProps {
-  wordCount?: number;
+
   lastSaved?: Date | null;
   isSaving?: boolean;
   showHighlights?: boolean;
@@ -21,7 +21,6 @@ interface WritingStatusBarProps {
 }
 
 export function WritingStatusBar({
-  wordCount = 0,
   lastSaved,
   isSaving = false,
   showHighlights = true,
@@ -43,31 +42,7 @@ export function WritingStatusBar({
   const [timeLeft, setTimeLeft] = useState(examDurationMinutes * 60);
   const [timerActive, setTimerActive] = useState(false);
 
-  // Calculate statistics
-  useEffect(() => {
-    const words = content && content.trim() ? content.trim().split(/\s+/).filter(Boolean) : [];
 
-    if (content && content.length > 0 && typingStartTime === null) {
-      setTypingStartTime(Date.now());
-    } else if (!content || content.length === 0) {
-      setTypingStartTime(null);
-      setWordsPerMinute(0);
-    }
-
-    if (typingStartTime !== null && words.length > 0) {
-      const timeElapsedSeconds = (Date.now() - typingStartTime) / 1000;
-      if (timeElapsedSeconds > 5) { // Only calculate WPM after 5 seconds of typing
-        const minutes = timeElapsedSeconds / 60;
-        setWordsPerMinute(Math.round(words.length / minutes));
-      }
-    }
-    
-    if (examMode) {
-      setShowWordCountWarning(words.length < targetWordCountMin || words.length > targetWordCountMax);
-    } else {
-      setShowWordCountWarning(words.length < 100 || words.length > 500);
-    }
-  }, [content, examMode, targetWordCountMin, targetWordCountMax, typingStartTime]);
 
   // Timer logic
   useEffect(() => {
@@ -95,7 +70,7 @@ export function WritingStatusBar({
   };
 
   return (
-    <div className="flex flex-wrap justify-between items-center p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-t-4 border-blue-200 dark:border-blue-800 rounded-b-xl text-sm">
+    <div className="fixed bottom-0 left-0 right-0 z-50 flex flex-wrap justify-between items-center p-4 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-t-4 border-blue-200 dark:border-blue-800 rounded-t-xl text-sm shadow-lg">
       <div className="flex items-center space-x-6 text-gray-700 dark:text-gray-300">
         {examMode && (
           <div className="flex items-center bg-red-100 text-red-700 px-3 py-1.5 rounded-full shadow-sm font-bold text-lg animate-pulse">
@@ -104,22 +79,7 @@ export function WritingStatusBar({
           </div>
         )}
 
-        <div className="flex items-center bg-white bg-opacity-70 px-3 py-1.5 rounded-full shadow-sm">
-          <FileText className="w-5 h-5 mr-2 text-blue-500" />
-          <span className="font-bold">{wordCount} words</span>
-          {examMode && (
-            <span className="ml-2 text-gray-500 dark:text-gray-400">({targetWordCountMin}-{targetWordCountMax} words)</span>
-          )}
-          
-          {showWordCountWarning && (
-            <div className="ml-2 flex items-center">
-              <div className="bg-amber-100 text-amber-700 px-2 py-1 rounded-full text-xs font-bold flex items-center">
-                <AlertCircle className="w-3 h-3 mr-1" />
-                {wordCount < targetWordCountMin ? 'Write more!' : 'Word count exceeded!'}
-              </div>
-            </div>
-          )}
-        </div>
+
         
         <div className="flex items-center bg-white bg-opacity-70 px-3 py-1.5 rounded-full shadow-sm">
           <Clock className="w-5 h-5 mr-2 text-orange-500" />
