@@ -38,14 +38,14 @@ export default function WritingWorkspaceFixed() {
   // Listen for submit events from AppContent
   React.useEffect(() => {
     const handleSubmitEvent = (event: CustomEvent) => {
-      console.log('📨 WritingWorkspace: Received submit event:', event.detail);
+      console.log(\'📨 WritingWorkspace: Received submit event:\', event.detail);
       onNSWSubmit();
     };
 
-    window.addEventListener('submitForEvaluation', handleSubmitEvent as EventListener);
+    window.addEventListener(\'submitForEvaluation\', handleSubmitEvent as EventListener);
     
     return () => {
-      window.removeEventListener('submitForEvaluation', handleSubmitEvent as EventListener);
+      window.removeEventListener(\'submitForEvaluation\', handleSubmitEvent as EventListener);
     };
   }, []);
 
@@ -75,7 +75,7 @@ export default function WritingWorkspaceFixed() {
 
   // NSW Evaluation Submit Handler
   async function onNSWSubmit() {
-    console.log('🎯 NSW Submit triggered');
+    console.log(\'🎯 NSW Submit triggered\');
     setStatus("loading");
     setErr(undefined);
     setShowNSWEvaluation(true);
@@ -93,7 +93,7 @@ export default function WritingWorkspaceFixed() {
       });
       
     } catch (e: any) {
-      console.error('NSW Submit error:', e);
+      console.error(\'NSW Submit error:\', e);
       setStatus("error");
       setErr(e?.message || "Failed to initiate NSW evaluation");
       setShowNSWEvaluation(false);
@@ -149,7 +149,7 @@ export default function WritingWorkspaceFixed() {
   }
 
   function onProgressUpdate(metrics: any) {
-    console.log('Progress updated:', metrics);
+    console.log(\'Progress updated:\', metrics);
   }
 
   // Simple autosave
@@ -180,7 +180,7 @@ export default function WritingWorkspaceFixed() {
     }
   }, []);
 
-  const prompt = "The Secret Door in the Library: During a rainy afternoon, you decide to explore the dusty old library in your town that you've never visited before. As you wander through the aisles, you discover a hidden door behind a bookshelf. It's slightly ajar, and a faint, warm light spills out from the crack. What happens when you push the door open? Describe the world you enter and the adventures that await you inside. Who do you meet, and what challenges do you face? How does this experience change you by the time you return to the library? Let your imagination run wild as you take your reader on a journey through this mysterious door!";
+  const prompt = "The Secret Door in the Library: During a rainy afternoon, you decide to explore the dusty old library in your town that you\'ve never visited before. As you wander through the aisles, you discover a hidden door behind a bookshelf. It\'s slightly ajar, and a faint, warm light spills out from the crack. What happens when you push the door open? Describe the world you enter and the adventures that await you inside. Who do you meet, and what challenges do you face? How does this experience change you by the time you return to the library? Let your imagination run wild as you take your reader on a journey through this mysterious door!";
 
   return (
     <div className="h-screen flex flex-col bg-gray-50 overflow-hidden">
@@ -234,7 +234,7 @@ export default function WritingWorkspaceFixed() {
               <h2 className="font-semibold text-sm text-blue-900">Writing Prompt</h2>
             </div>
             <ChevronDown 
-              className={`w-4 h-4 text-blue-700 transition-transform ${promptExpanded ? 'rotate-180' : ''}`}
+              className={`w-4 h-4 text-blue-700 transition-transform ${promptExpanded ? \'rotate-180\' : \'\'}`}
             />
           </div>
 
@@ -291,8 +291,8 @@ export default function WritingWorkspaceFixed() {
                 disabled={status === "loading"}
                 className={`w-full py-2.5 px-4 rounded-lg font-semibold text-white text-sm transition-all duration-200 ${
                   status === "loading" 
-                    ? 'bg-gray-400 cursor-not-allowed' 
-                    : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-md hover:shadow-lg'
+                    ? \'bg-gray-400 cursor-not-allowed\' 
+                    : \'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-md hover:shadow-lg\'
                 }`}
               >
                 {status === "loading" ? (
@@ -301,7 +301,7 @@ export default function WritingWorkspaceFixed() {
                     Generating Assessment...
                   </div>
                 ) : (
-                  'Submit for NSW Evaluation'
+                  \'Submit for NSW Evaluation\'
                 )}
               </button>
             </div>
