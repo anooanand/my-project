@@ -25,11 +25,11 @@ export default function WritingWorkspaceFixed() {
   const prevTextRef = React.useRef<string>("");
 
   const draftId = React.useRef<string>(
-    `draft-${
+    `draft-${(
       (globalThis.crypto && typeof globalThis.crypto.randomUUID === "function")
         ? globalThis.crypto.randomUUID()
         : (Date.now().toString(36) + Math.random().toString(36).slice(2))
-    }`
+    )}`
   );
   const [version, setVersion] = React.useState(0);
 
@@ -202,9 +202,8 @@ export default function WritingWorkspaceFixed() {
           </div>
           <div className="flex items-center space-x-4">
             <WritingStatusBar 
-              wordCount={wordCount}
-              targetWordCount={targetWordCount}
               status={status}
+              examMode={true}
             />
           </div>
         </div>
@@ -221,38 +220,36 @@ export default function WritingWorkspaceFixed() {
           </div>
 
           {/* Writing Area */}
-          <div className="flex-1 p-6">
-            <div className="h-full bg-white rounded-lg border border-gray-200 shadow-sm relative">
+          <div className="flex-1 p-6 flex flex-col">
+            <div className="flex-1 bg-white rounded-lg border border-gray-200 shadow-sm relative">
               <InteractiveTextEditor
                 ref={editorRef}
                 onTextChange={setCurrentText}
                 onProgressUpdate={onProgressUpdate}
                 className="h-full"
               />
-              
-              {/* Manual Submit Button - For direct testing */}
-              <div className="absolute bottom-4 left-4 right-4">
-                <button
-                  onClick={onNSWSubmit}
-                  disabled={status === "loading" || wordCount < 50}
-                  className={`w-full py-3 px-6 rounded-lg font-semibold text-white transition-all duration-200 ${
-                    status === "loading" 
-                      ? 'bg-gray-400 cursor-not-allowed' 
-                      : wordCount < 50
-                      ? 'bg-gray-300 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-lg hover:shadow-xl'
-                  }`}
-                >
-                  {status === "loading" ? (
-                    <div className="flex items-center justify-center">
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3"></div>
-                      Generating NSW Assessment Report...
-                    </div>
-                  ) : (
-                    `Submit for NSW Evaluation (${wordCount} words)`
-                  )}
-                </button>
               </div>
+            </div>
+            {/* Submit Button */}
+            <div className="p-6 pt-0">
+              <button
+                onClick={onNSWSubmit}
+                disabled={status === "loading"}
+                className={`w-full py-3 px-6 rounded-lg font-semibold text-white transition-all duration-200 ${
+                  status === "loading" 
+                    ? 'bg-gray-400 cursor-not-allowed' 
+                    : 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-lg hover:shadow-xl'
+                }`}
+              >
+                {status === "loading" ? (
+                  <div className="flex items-center justify-center">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-3"></div>
+                    Generating NSW Assessment Report...
+                  </div>
+                ) : (
+                  `Submit for NSW Evaluation`
+                )}
+              </button>
             </div>
           </div>
         </div>
