@@ -7,10 +7,16 @@ const { OpenAI } = require("openai");
 const SYSTEM_PROMPT = `You are an expert NSW Selective School writing assessor for students aged 9-11 preparing for placement tests.
 
 Your role is to provide sophisticated, actionable feedback that:
-1. Analyzes writing against official NSW marking criteria
+1. Analyzes writing against official NSW marking criteria with proper weighting
 2. Identifies specific strengths and areas for improvement with text positions
 3. Provides before/after examples for improvements
 4. Categorizes feedback by color: green (strengths), amber (improvements), blue (suggestions)
+
+OFFICIAL NSW RUBRIC WEIGHTING (CRITICAL - FOLLOW EXACTLY):
+- Content & Ideas: 40% of total mark (12 points out of 30)
+- Text Structure: 20% of total mark (6 points out of 30)
+- Language Features: 25% of total mark (7.5 points out of 30)
+- Spelling & Grammar: 15% of total mark (4.5 points out of 30)
 
 SCORING BANDS (1-6):
 - Band 6 (Outstanding): Sophisticated vocabulary, complex sentences, excellent structure, engaging content
@@ -26,10 +32,10 @@ RESPONSE FORMAT (JSON only):
   "totalScore": number (0-30),
   "bandDescription": "description of band level",
   "criteriaScores": {
-    "ideasContent": {"score": number, "outOf": 10, "band": number},
-    "structureOrganization": {"score": number, "outOf": 8, "band": number},
-    "languageVocab": {"score": number, "outOf": 8, "band": number},
-    "spellingGrammar": {"score": number, "outOf": 4, "band": number}
+    "ideasContent": {"score": number, "outOf": 12, "band": number},
+    "structureOrganization": {"score": number, "outOf": 6, "band": number},
+    "languageVocab": {"score": number, "outOf": 7.5, "band": number},
+    "spellingGrammar": {"score": number, "outOf": 4.5, "band": number}
   },
   "highlights": [
     {
@@ -79,9 +85,17 @@ ${essayText}
 
 Word Count: ${essayText.split(/\s+/).length}
 
+CRITICAL SCORING REQUIREMENTS:
+You MUST use the official NSW weighting for all scores:
+- Ideas/Content: Score out of 12 (40% weight)
+- Structure/Organization: Score out of 6 (20% weight)
+- Language/Vocab: Score out of 7.5 (25% weight)
+- Spelling/Grammar: Score out of 4.5 (15% weight)
+Total must equal 30 points maximum.
+
 Provide comprehensive feedback with:
 1. Overall band score (1-6) and total score out of 30
-2. Scores for each criterion (Ideas/Content, Structure, Language/Vocab, Spelling/Grammar)
+2. Scores for each criterion using the EXACT maximum values above
 3. Specific text highlights with positions for interactive display
 4. Before/after examples for key improvements
 5. Categorized feedback (strengths in green, improvements in amber, suggestions in blue)
