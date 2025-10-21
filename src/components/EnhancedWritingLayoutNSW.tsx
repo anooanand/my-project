@@ -719,19 +719,29 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
             )}
 
 
-            {/* Toggle AI Coach Button */}
-            <button
-              onClick={() => setPanelVisible && setPanelVisible(!panelVisible)}
-              className={`flex items-center space-x-1 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
-                panelVisible
-                  ? darkMode ? 'bg-blue-600 text-white' : 'bg-blue-600 text-white'
-                  : darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'
-              }`}
-              title={panelVisible ? "Hide Writing Buddy" : "Show Writing Buddy"}
-            >
-              {panelVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              <span>{panelVisible ? 'Hide Buddy' : 'Show Buddy'}</span>
-            </button>
+            {/* Toggle Writing Mate Panel */}
+            <div className="flex items-center space-x-2">
+              <span className={`text-xs font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                Writing Mate
+              </span>
+              <button
+                onClick={() => setPanelVisible && setPanelVisible(!panelVisible)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                  panelVisible
+                    ? 'bg-blue-600'
+                    : darkMode ? 'bg-gray-700' : 'bg-gray-300'
+                }`}
+                title={panelVisible ? "Hide Writing Mate" : "Show Writing Mate"}
+                role="switch"
+                aria-checked={panelVisible}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200 ${
+                    panelVisible ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
 
             {/* Settings Button */}
             <button
