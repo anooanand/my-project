@@ -157,13 +157,30 @@ export function NSWEvaluationReportDisplay({ report, essayText, onClose }: NSWEv
     return 'text-red-600 bg-red-50 border-red-200';
   };
 
-  const getGradeColor = (grade: string) => {
+  const getGradeColor = (grade?: string) => {
+    if (!grade) return 'text-blue-600 bg-blue-100';
     if (grade.startsWith('A')) return 'text-green-600 bg-green-100';
     if (grade.startsWith('B')) return 'text-blue-600 bg-blue-100';
     if (grade.startsWith('C')) return 'text-yellow-600 bg-yellow-100';
     if (grade.startsWith('D')) return 'text-orange-600 bg-orange-100';
     return 'text-red-600 bg-red-100';
   };
+
+  const calculateGrade = (score: number): string => {
+    if (score >= 9) return 'A+';
+    if (score >= 8.5) return 'A';
+    if (score >= 8) return 'A-';
+    if (score >= 7.5) return 'B+';
+    if (score >= 7) return 'B';
+    if (score >= 6.5) return 'B-';
+    if (score >= 6) return 'C+';
+    if (score >= 5.5) return 'C';
+    if (score >= 5) return 'C-';
+    if (score >= 4) return 'D';
+    return 'E';
+  };
+
+  const overallGrade = report.overallGrade || calculateGrade(report.overallScore / 10);
 
   const downloadReport = () => {
     const reportContent = generateReportText(correctedReport, essayText);
@@ -179,8 +196,9 @@ export function NSWEvaluationReportDisplay({ report, essayText, onClose }: NSWEv
   };
 
   const generateReportText = (report: EvaluationReport, essayText: string): string => {
+    const grade = report.overallGrade || calculateGrade(report.overallScore / 10);
     let text = `NSW Selective Writing Assessment Report\n\n`;
-    text += `Overall Grade: ${report.overallGrade} (Score: ${report.overallScore}/100)\n\n`;
+    text += `Overall Grade: ${grade} (Score: ${report.overallScore.toFixed(1)}/10)\n\n`;
 
     text += `--- Domain Scores ---\n`;
     for (const domainKey in report.domains) {
@@ -191,7 +209,7 @@ export function NSWEvaluationReportDisplay({ report, essayText, onClose }: NSWEv
     text += `\n`;
 
     text += `--- Key Strengths ---\n`;
-    if (report.strengths.length > 0) {
+    if (report.strengths && report.strengths.length > 0) {
       report.strengths.forEach(s => text += `- ${s}\n`);
     } else {
       text += `- No specific strengths identified. Keep working hard!\n`;
@@ -199,7 +217,7 @@ export function NSWEvaluationReportDisplay({ report, essayText, onClose }: NSWEv
     text += `\n`;
 
     text += `--- Areas for Growth ---\n`;
-    if (report.areasForImprovement.length > 0) {
+    if (report.areasForImprovement && report.areasForImprovement.length > 0) {
       report.areasForImprovement.forEach(a => text += `- ${a}\n`);
     } else {
       text += `- Excellent work! Continue to challenge yourself with new writing techniques.\n`;
@@ -207,7 +225,7 @@ export function NSWEvaluationReportDisplay({ report, essayText, onClose }: NSWEv
     text += `\n`;
 
     text += `--- Personalized Learning Recommendations ---\n`;
-    if (report.recommendations.length > 0) {
+    if (report.recommendations && report.recommendations.length > 0) {
       report.recommendations.forEach((r, i) => text += `${i + 1}. ${r}\n`);
     } else {
       text += `- Keep up the excellent work! Continue practicing to maintain your high standards.\n`;
@@ -240,8 +258,8 @@ export function NSWEvaluationReportDisplay({ report, essayText, onClose }: NSWEv
               <div className="text-center">
                 <div className="text-6xl font-bold mb-2">{report.overallScore}</div>
                 <div className="text-sm text-blue-100">/100</div>
-                <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-bold mt-2 ${getGradeColor(report.overallGrade)}`}>
-                  {report.overallGrade}
+                <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-bold mt-2 ${getGradeColor(overallGrade)}`}>
+                  {overallGrade}
                 </div>
                 <div className="flex items-center justify-center mt-2">
                   <span className="text-yellow-300 text-2xl">⭐</span>
@@ -293,7 +311,7 @@ export function NSWEvaluationReportDisplay({ report, essayText, onClose }: NSWEv
             Key Strengths
           </h3>
           <div className="space-y-3">
-            {correctedReport.strengths.length > 0 ? (
+            {correctedReport.strengths && correctedReport.strengths.length > 0 ? (
               correctedReport.strengths.map((strength, index) => (
                 <div key={index} className="flex items-start">
                   <CheckCircle className="w-5 h-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" />
@@ -312,15 +330,15 @@ export function NSWEvaluationReportDisplay({ report, essayText, onClose }: NSWEv
             Areas for Growth
           </h3>
           <div className="space-y-3">
-            {correctedReport.areasForImprovement.length > 0 ? (
+            {correctedReport.areasForImprovement && correctedReport.areasForImprovement.length > 0 ? (
               correctedReport.areasForImprovement.map((area, index) => (
                 <div key={index} className="flex items-start">
-                  {area.startsWith('❌') ? <AlertCircle className="w-5 h-5 text-red-600 mr-3 mt-0.5 flex-shrink-0" /> : 
-                   area.startsWith('⚠️') ? <AlertCircle className="w-5 h-5 text-yellow-600 mr-3 mt-0.5 flex-shrink-0" /> : 
-                   area.startsWith('📏 CRITICAL') ? <AlertCircle className="w-5 h-5 text-red-600 mr-3 mt-0.5 flex-shrink-0" /> : 
-                   area.startsWith('📏') ? <AlertCircle className="w-5 h-5 text-orange-600 mr-3 mt-0.5 flex-shrink-0" /> : 
-                   area.startsWith('🔤') ? <AlertCircle className="w-5 h-5 text-orange-600 mr-3 mt-0.5 flex-shrink-0" /> : 
-                   area.startsWith('✍️') ? <AlertCircle className="w-5 h-5 text-orange-600 mr-3 mt-0.5 flex-shrink-0" /> : 
+                  {(area && typeof area === 'string' && area.startsWith('❌')) ? <AlertCircle className="w-5 h-5 text-red-600 mr-3 mt-0.5 flex-shrink-0" /> :
+                   (area && typeof area === 'string' && area.startsWith('⚠️')) ? <AlertCircle className="w-5 h-5 text-yellow-600 mr-3 mt-0.5 flex-shrink-0" /> :
+                   (area && typeof area === 'string' && area.startsWith('📏 CRITICAL')) ? <AlertCircle className="w-5 h-5 text-red-600 mr-3 mt-0.5 flex-shrink-0" /> :
+                   (area && typeof area === 'string' && area.startsWith('📏')) ? <AlertCircle className="w-5 h-5 text-orange-600 mr-3 mt-0.5 flex-shrink-0" /> :
+                   (area && typeof area === 'string' && area.startsWith('🔤')) ? <AlertCircle className="w-5 h-5 text-orange-600 mr-3 mt-0.5 flex-shrink-0" /> :
+                   (area && typeof area === 'string' && area.startsWith('✍️')) ? <AlertCircle className="w-5 h-5 text-orange-600 mr-3 mt-0.5 flex-shrink-0" /> :
                    <AlertCircle className="w-5 h-5 text-orange-600 mr-3 mt-0.5 flex-shrink-0" />}
                   <span className="text-orange-700 dark:text-orange-300">{area}</span>
                 </div>
@@ -337,7 +355,7 @@ export function NSWEvaluationReportDisplay({ report, essayText, onClose }: NSWEv
             Personalized Recommendations
           </h3>
           <div className="space-y-3">
-            {correctedReport.recommendations.length > 0 ? (
+            {correctedReport.recommendations && correctedReport.recommendations.length > 0 ? (
               correctedReport.recommendations.map((rec, index) => (
                 <div key={index} className="flex items-start">
                   <TrendingUp className="w-5 h-5 text-blue-600 mr-3 mt-0.5 flex-shrink-0" />
