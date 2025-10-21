@@ -200,7 +200,7 @@ export function KidDashboard({ user: propUser }: KidDashboardProps) {
               
               {/* Character Selection */}
               <div className="text-center">
-                <p className="text-sm font-bold text-gray-700 mb-3">Choose Your Writing Buddy:</p>
+                <p className="text-sm font-bold text-gray-700 mb-3">Choose Your Writing Mate:</p>
                 <div className="grid grid-cols-2 gap-2">
                   {Object.entries(characters).map(([key, char]) => (
                     <button
