@@ -532,7 +532,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
         <div className={`h-16 flex items-center justify-between px-6 border-b shadow-lg ${
           darkMode
             ? 'bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 border-gray-700'
-            : 'bg-gradient-to-r from-blue-600 via-blue-500 to-teal-600 border-blue-700'
+            : 'bg-gradient-to-r from-blue-600 to-blue-700 border-blue-700'
         }`}>
           <div className="flex items-center space-x-4">
             <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
