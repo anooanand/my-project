@@ -394,6 +394,7 @@ export class NSWEvaluationReportGenerator {
   private static scoreStructureAndOrganization(essayContent: string, wordCount: number): DomainScore {
     let score = 0;
     const paragraphs = essayContent.split(/\n\s*\n/).filter(p => p.trim().length > 0);
+    const words = essayContent.split(/\s+/).filter(w => w.length > 0);
 
     // Basic paragraph structure
     if (paragraphs.length >= 3) score += 3; // Introduction, body, conclusion
@@ -401,7 +402,6 @@ export class NSWEvaluationReportGenerator {
 
     // Paragraph length consistency (simple check)
     const avgParagraphLength = words.length / paragraphs.length;
-    const words = essayContent.split(/\s+/).filter(w => w.length > 0);
 
     let consistentLength = true;
     for (const p of paragraphs) {
