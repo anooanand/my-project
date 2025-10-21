@@ -8,7 +8,6 @@ import { VocabularyEnhancementPanel } from './VocabularyEnhancementPanel';
 import { SentenceStructurePanel } from './SentenceStructurePanel';
 import { generateIntelligentResponse, type EnhancedCoachResponse } from '../lib/enhancedIntelligentResponseGenerator';
 import { ComprehensiveFeedbackAnalyzer } from '../lib/comprehensiveFeedbackAnalyzer';
-import type { SupportLevel } from '../lib/writingBuddyService';
 import { generateDynamicExamples, formatExamplesForDisplay } from '../lib/dynamicExampleGenerator';
 import { ChatSessionService } from '../lib/chatSessionService';
 import { NSW_MARKING_CRITERIA, generateScoringGuidance, mapToNSWScores, getImprovementExamples } from '../lib/nswMarkingCriteria';
@@ -636,8 +635,6 @@ interface EnhancedCoachPanelProps {
   openAIConnected?: boolean;
   openAILoading?: boolean;
   onSubmitForEvaluation?: () => void;
-  supportLevel?: string;
-  onSupportLevelChange?: () => void;
 }
 
 export function EnhancedCoachPanel({
@@ -656,8 +653,6 @@ export function EnhancedCoachPanel({
   openAIConnected,
   openAILoading,
   onSubmitForEvaluation,
-  supportLevel = 'Medium Support',
-  onSupportLevelChange,
 }: EnhancedCoachPanelProps) {
   const [messages, setMessages] = useState<any[]>([]);
   const [inputValue, setInputValue] = useState('');
@@ -678,10 +673,9 @@ export function EnhancedCoachPanel({
     return ComprehensiveFeedbackAnalyzer.generateComprehensiveFeedback(
       content,
       currentWordCount,
-      textType || 'narrative',
-      (supportLevel as SupportLevel) || 'Medium Support'
+      textType || 'narrative'
     );
-  }, [content, textType, supportLevel]);
+  }, [content, textType]);
 
   // Session restoration and initialization
   useEffect(() => {
@@ -905,7 +899,6 @@ export function EnhancedCoachPanel({
           textType: textType || 'narrative',
           currentContent: content || '',
           wordCount: wordCount || 0,
-          supportLevel: supportLevel,
           stage: stage,
           sessionId: `session-${Date.now()}`
         }),
@@ -992,19 +985,6 @@ export function EnhancedCoachPanel({
             </div>
           </div>
 
-          {/* Middle Row: Support Level Selector */}
-          <div className="flex items-center">
-            <button
-              onClick={() => onSupportLevelChange?.()}
-              className="flex items-center space-x-1 text-xs px-2 py-1 bg-white/20 rounded-md backdrop-blur-sm text-white font-medium hover:bg-white/30 transition-all cursor-pointer"
-              title="Change Support Level"
-            >
-              <span>{supportLevel}</span>
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-          </div>
         </div>
 
         {/* Tab Buttons Row */}

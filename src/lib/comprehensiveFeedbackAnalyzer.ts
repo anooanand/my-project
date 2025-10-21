@@ -1,4 +1,3 @@
-import { SupportLevel } from './writingBuddyService';
 
 export interface GrammarIssue {
   type: 'spelling' | 'grammar' | 'punctuation';
@@ -96,7 +95,6 @@ export interface ComprehensiveFeedback {
   storyArc: StoryArcFeedback;
   pacing: PacingFeedback;
   nswCriteria: NSWCriteriaFeedback;
-  supportLevel: SupportLevel;
 }
 
 export class ComprehensiveFeedbackAnalyzer {
@@ -224,35 +222,20 @@ export class ComprehensiveFeedbackAnalyzer {
     return issues;
   }
 
-  static analyzeVocabulary(text: string, supportLevel: SupportLevel): VocabularyEnhancement[] {
+  static analyzeVocabulary(text: string): VocabularyEnhancement[] {
     const enhancements: VocabularyEnhancement[] = [];
 
-    const vocabularyReplacements = {
-      'High Support': [
-        { word: 'said', suggestions: ['asked', 'shouted', 'whispered', 'replied'], context: 'dialogue tags' },
-        { word: 'went', suggestions: ['walked', 'ran', 'rushed', 'strolled'], context: 'movement verbs' },
-        { word: 'big', suggestions: ['huge', 'large', 'enormous', 'giant'], context: 'size descriptions' },
-        { word: 'good', suggestions: ['great', 'wonderful', 'excellent', 'fantastic'], context: 'positive adjectives' },
-        { word: 'bad', suggestions: ['terrible', 'awful', 'horrible', 'dreadful'], context: 'negative adjectives' },
-      ],
-      'Medium Support': [
-        { word: 'said', suggestions: ['exclaimed', 'murmured', 'proclaimed', 'retorted'], context: 'expressive dialogue tags' },
-        { word: 'went', suggestions: ['ventured', 'journeyed', 'traversed', 'proceeded'], context: 'advanced movement' },
-        { word: 'big', suggestions: ['colossal', 'immense', 'substantial', 'monumental'], context: 'sophisticated size words' },
-        { word: 'looked', suggestions: ['gazed', 'peered', 'observed', 'examined'], context: 'seeing verbs' },
-        { word: 'very', suggestions: ['extremely', 'remarkably', 'exceptionally', 'particularly'], context: 'intensifiers' },
-      ],
-      'Low Support': [
-        { word: 'said', suggestions: ['articulated', 'enunciated', 'vocalized', 'intimated'], context: 'sophisticated dialogue' },
-        { word: 'showed', suggestions: ['demonstrated', 'illustrated', 'manifested', 'exhibited'], context: 'advanced showing' },
-        { word: 'felt', suggestions: ['experienced', 'perceived', 'sensed', 'discerned'], context: 'nuanced emotions' },
-        { word: 'made', suggestions: ['crafted', 'constructed', 'fashioned', 'engineered'], context: 'creation verbs' },
-      ],
-    };
+    const vocabularyReplacements = [
+      { word: 'said', suggestions: ['asked', 'shouted', 'whispered', 'replied', 'exclaimed', 'murmured'], context: 'dialogue tags' },
+      { word: 'went', suggestions: ['walked', 'ran', 'rushed', 'strolled', 'ventured', 'journeyed'], context: 'movement verbs' },
+      { word: 'big', suggestions: ['huge', 'large', 'enormous', 'giant', 'colossal', 'immense'], context: 'size descriptions' },
+      { word: 'good', suggestions: ['great', 'wonderful', 'excellent', 'fantastic'], context: 'positive adjectives' },
+      { word: 'bad', suggestions: ['terrible', 'awful', 'horrible', 'dreadful'], context: 'negative adjectives' },
+      { word: 'looked', suggestions: ['gazed', 'peered', 'observed', 'examined'], context: 'seeing verbs' },
+      { word: 'very', suggestions: ['extremely', 'remarkably', 'exceptionally', 'particularly'], context: 'intensifiers' },
+    ];
 
-    const levelReplacements = vocabularyReplacements[supportLevel] || vocabularyReplacements['Medium Support'];
-
-    levelReplacements.forEach(({ word, suggestions, context }) => {
+    vocabularyReplacements.forEach(({ word, suggestions, context }) => {
       const pattern = new RegExp(`\\b${word}\\b`, 'gi');
       let match;
       while ((match = pattern.exec(text)) !== null) {
@@ -263,7 +246,7 @@ export class ComprehensiveFeedbackAnalyzer {
           suggestions,
           context: this.getContext(text, match.index),
           reasoning: `Consider using more ${context === 'dialogue tags' ? 'expressive' : 'descriptive'} words for ${context}`,
-          sophisticationLevel: supportLevel === 'High Support' ? 'basic' : supportLevel === 'Medium Support' ? 'intermediate' : 'advanced',
+          sophisticationLevel: 'intermediate',
           beforeExample: sentence,
           afterExample: sentence.replace(new RegExp(`\\b${word}\\b`, 'i'), betterWord),
           nswAlignment: 'NSW Selective Test Language criterion rewards sophisticated vocabulary and varied word choice'
@@ -630,12 +613,11 @@ export class ComprehensiveFeedbackAnalyzer {
   static generateComprehensiveFeedback(
     text: string,
     wordCount: number,
-    textType: string,
-    supportLevel: SupportLevel
+    textType: string
   ): ComprehensiveFeedback {
     return {
       grammarIssues: this.analyzeGrammar(text),
-      vocabularyEnhancements: this.analyzeVocabulary(text, supportLevel),
+      vocabularyEnhancements: this.analyzeVocabulary(text),
       sentenceStructureIssues: this.analyzeSentenceStructure(text),
       showDontTellExamples: this.analyzeShowDontTell(text),
       storyArc: this.analyzeStoryArc(text, wordCount),
