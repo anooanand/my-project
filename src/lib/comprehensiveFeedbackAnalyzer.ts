@@ -622,8 +622,7 @@ export class ComprehensiveFeedbackAnalyzer {
       showDontTellExamples: this.analyzeShowDontTell(text),
       storyArc: this.analyzeStoryArc(text, wordCount),
       pacing: this.analyzePacing(text, wordCount),
-      nswCriteria: this.analyzeNSWCriteria(text, wordCount),
-      supportLevel
+      nswCriteria: this.analyzeNSWCriteria(text, wordCount)
     };
   }
 }
