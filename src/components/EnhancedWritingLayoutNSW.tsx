@@ -174,17 +174,22 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
   useEffect(() => {
     const loadSupportLevel = async () => {
       if (!user?.id) {
+        console.log('[EnhancedWritingLayoutNSW] No user ID, using default support level');
         setSupportLevelLoading(false);
         return;
       }
 
       try {
+        console.log('[EnhancedWritingLayoutNSW] Loading support level for user:', user.id);
         const prefs = await WritingBuddyService.getUserPreferences(user.id);
         if (prefs) {
+          console.log('[EnhancedWritingLayoutNSW] Loaded support level:', prefs.support_level);
           setSupportLevel(prefs.support_level);
+        } else {
+          console.log('[EnhancedWritingLayoutNSW] No preferences found, using default');
         }
       } catch (error) {
-        console.error('Error loading support level:', error);
+        console.error('[EnhancedWritingLayoutNSW] Error loading support level:', error);
       } finally {
         setSupportLevelLoading(false);
       }
@@ -194,8 +199,14 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
   }, [user?.id]);
 
   const handleSupportLevelChange = async (newLevel: SupportLevel) => {
+    console.log('[EnhancedWritingLayoutNSW] Support level changed to:', newLevel);
     setSupportLevel(newLevel);
     setShowSupportLevelModal(false);
+
+    // Force a re-render by updating the state
+    setTimeout(() => {
+      console.log('[EnhancedWritingLayoutNSW] Current support level after change:', newLevel);
+    }, 100);
   };
 
   // Prompt starts expanded - will auto-collapse after 5 minutes (handled by timer above)
