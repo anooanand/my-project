@@ -528,6 +528,31 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
   return (
     <div className={`flex h-screen w-full ${darkMode ? 'bg-slate-900 text-gray-100' : 'bg-gray-100 text-gray-900'}`}>
       <div className="flex flex-col flex-1">
+        {/* Enhanced Header with Stunning Gradient and Professional Styling */}
+        <div className={`h-16 flex items-center justify-between px-6 border-b shadow-lg ${
+          darkMode
+            ? 'bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800 border-gray-700'
+            : 'bg-gradient-to-r from-blue-600 via-blue-500 to-teal-600 border-blue-700'
+        }`}>
+          <div className="flex items-center space-x-4">
+            <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
+              <BookOpen className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex items-center space-x-3">
+              <span className="text-white font-semibold text-lg">Text Type:</span>
+              <span className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-white text-sm font-medium border border-white/30">
+                {textType}
+              </span>
+            </div>
+          </div>
+          <button
+            onClick={() => window.location.href = '/'}
+            className="flex items-center space-x-2 px-6 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-lg transition-all duration-200 text-white font-medium border border-white/20 hover:border-white/40"
+          >
+            <span>🏠 Home</span>
+          </button>
+        </div>
+
         {/* Prompt Section */}
         <div className={`flex-shrink-0 border-b ${darkMode ? 'bg-slate-800 border-gray-700' : 'bg-white border-gray-200'}`}>
           {/* Prompt Header */}
