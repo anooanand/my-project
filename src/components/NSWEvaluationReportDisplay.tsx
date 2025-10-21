@@ -1,5 +1,5 @@
-import React from 'react';
-import { Award, BarChart3, CheckCircle, AlertCircle, Target, Lightbulb, Download, FileText, TrendingUp, Star, Heart } from 'lucide-react';
+import React, { useState } from 'react';
+import { Award, BarChart3, CheckCircle, AlertCircle, Target, Lightbulb, Download, FileText, TrendingUp, Star, Heart, X } from 'lucide-react';
 
 interface EvaluationReport {
   overallScore: number;
@@ -239,326 +239,276 @@ export function NSWEvaluationReportDisplay({ report, essayText, onClose }: NSWEv
     return text;
   };
 
+  const [activeTab, setActiveTab] = useState<'overview' | 'detailed'>('overview');
+
   return (
-    <div className="max-w-6xl mx-auto p-6 bg-white dark:bg-gray-900">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-6 mb-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold mb-2 text-white">NSW Writing Assessment Report</h1>
-            <p className="text-white opacity-90">Your Personal Writing Journey Report</p>
-          </div>
-          <div className="text-right">
-            <div className="flex items-center space-x-4">
-              <div>
-                <p className="text-white opacity-90 text-sm">Student: Student</p>
-                <p className="text-white opacity-90 text-sm">Date: 10/9/2025</p>
-                <p className="text-white opacity-75 text-xs">Report ID: nsw-1760000950368</p>
-              </div>
-              <div className="text-center">
-                <div className="text-6xl font-bold mb-2 text-white">{report.overallScore.toFixed(2)}</div>
-                <div className="text-sm text-white opacity-90">/10</div>
-                <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-bold mt-2 ${getGradeColor(overallGrade)}`}>
-                  {overallGrade}
-                </div>
-                <div className="flex items-center justify-center mt-2">
-                  <span className="text-yellow-300 text-2xl">⭐</span>
-                  <span className="text-white ml-2 font-semibold">Great Job!</span>
-                </div>
-              </div>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+      <div className="bg-white rounded-lg shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 sticky top-0 z-10">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold mb-2 text-white">NSW Writing Assessment Report</h1>
+              <p className="text-white opacity-90 text-sm">Your Personal Writing Journey Report</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={downloadReport}
+                className="flex items-center gap-2 bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors font-semibold"
+              >
+                <Download className="w-4 h-4" />
+                Download
+              </button>
+              {onClose && (
+                <button
+                  onClick={onClose}
+                  className="text-white hover:bg-white hover:bg-opacity-20 transition-all p-2 rounded-lg"
+                  aria-label="Close report"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              )}
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Your Writing Skills Breakdown Section */}
-      <div className="mb-8">
-        <div className="flex items-center mb-6">
-          <BarChart3 className="w-6 h-6 text-purple-600 mr-3" />
-          <h2 className="text-2xl font-bold text-purple-600">Your Writing Skills Breakdown</h2>
-        </div>
+        {/* Overall Score Section */}
+        <div className="p-6 bg-gray-50 border-b">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="text-center">
+              <div className={`inline-flex items-center justify-center w-24 h-24 rounded-full text-3xl font-bold ${getGradeColor(overallGrade)} shadow-lg`}>
+                {overallGrade}
+              </div>
+              <h3 className="text-lg font-semibold text-gray-800 mt-3">Overall Grade</h3>
+              <p className="text-sm text-gray-600 mt-1">Achievement Level</p>
+            </div>
 
-        {/* Domain Scores with Individual Progress Bars */}
-        <div className="space-y-4">
-          <DomainScoreCard
-            domain={correctedReport.domains.contentAndIdeas}
-            title="Ideas & Content"
-            icon="💡"
-          />
-          <DomainScoreCard
-            domain={{ ...correctedReport.domains.textStructure, maxScore: 10 }}
-            title="Structure & Organization"
-            icon="📝"
-          />
-          <DomainScoreCard
-            domain={{ ...correctedReport.domains.languageFeatures, maxScore: 10 }}
-            title="Language & Vocabulary"
-            icon="✍️"
-          />
-          <DomainScoreCard
-            domain={{ ...correctedReport.domains.spellingAndGrammar, maxScore: 10 }}
-            title="Spelling & Grammar"
-            icon="✅"
-          />
-        </div>
-      </div>
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-blue-100 text-blue-800 text-2xl font-bold border-4 border-blue-200 shadow-lg">
+                {report.overallScore.toFixed(1)}/10
+              </div>
+              <h3 className="text-lg font-semibold text-gray-800 mt-3">Total Score</h3>
+              <p className="text-sm text-gray-600 mt-1">NSW Standard</p>
+            </div>
 
-      {/* Overall Strengths, Areas for Growth, and Recommendations */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <div className="bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800 p-6">
-          <h3 className="text-xl font-bold text-green-800 dark:text-green-200 mb-4 flex items-center">
-            <Star className="w-5 h-5 mr-2" />
-            Key Strengths
-          </h3>
-          <div className="space-y-3">
-            {correctedReport.strengths && correctedReport.strengths.length > 0 ? (
-              correctedReport.strengths.map((strength, index) => (
-                <div key={index} className="flex items-start">
-                  <CheckCircle className="w-5 h-5 text-green-600 mr-3 mt-0.5 flex-shrink-0" />
-                  <span className="text-green-700 dark:text-green-300">{strength}</span>
-                </div>
-              ))
-            ) : (
-              <p className="text-green-600 dark:text-green-400">Keep working hard! Every piece of writing has potential for growth.</p>
-            )}
+            <div className="text-center">
+              <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gray-100 text-purple-600 text-2xl font-bold border-4 border-gray-200 shadow-lg">
+                {Math.round((report.overallScore / 10) * 100)}%
+              </div>
+              <h3 className="text-lg font-semibold text-gray-800 mt-3">Percentage</h3>
+              <p className="text-sm text-gray-600 mt-1">Achievement Level</p>
+            </div>
           </div>
         </div>
 
-        <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800 p-6">
-          <h3 className="text-xl font-bold text-orange-800 dark:text-orange-200 mb-4 flex items-center">
-            <Target className="w-5 h-5 mr-2" />
-            Areas for Growth
+        {/* Criteria Breakdown */}
+        <div className="p-6 border-b">
+          <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+            <Target className="w-5 h-5 text-blue-600" />
+            Criteria Breakdown
           </h3>
-          <div className="space-y-3">
-            {correctedReport.areasForImprovement && correctedReport.areasForImprovement.length > 0 ? (
-              correctedReport.areasForImprovement.map((area, index) => (
-                <div key={index} className="flex items-start">
-                  {(area && typeof area === 'string' && area.startsWith('❌')) ? <AlertCircle className="w-5 h-5 text-red-600 mr-3 mt-0.5 flex-shrink-0" /> :
-                   (area && typeof area === 'string' && area.startsWith('⚠️')) ? <AlertCircle className="w-5 h-5 text-yellow-600 mr-3 mt-0.5 flex-shrink-0" /> :
-                   (area && typeof area === 'string' && area.startsWith('📏 CRITICAL')) ? <AlertCircle className="w-5 h-5 text-red-600 mr-3 mt-0.5 flex-shrink-0" /> :
-                   (area && typeof area === 'string' && area.startsWith('📏')) ? <AlertCircle className="w-5 h-5 text-orange-600 mr-3 mt-0.5 flex-shrink-0" /> :
-                   (area && typeof area === 'string' && area.startsWith('🔤')) ? <AlertCircle className="w-5 h-5 text-orange-600 mr-3 mt-0.5 flex-shrink-0" /> :
-                   (area && typeof area === 'string' && area.startsWith('✍️')) ? <AlertCircle className="w-5 h-5 text-orange-600 mr-3 mt-0.5 flex-shrink-0" /> :
-                   <AlertCircle className="w-5 h-5 text-orange-600 mr-3 mt-0.5 flex-shrink-0" />}
-                  <span className="text-orange-700 dark:text-orange-300">{area}</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {Object.entries(correctedReport.domains).map(([key, domain]) => {
+              const titles: { [key: string]: string } = {
+                contentAndIdeas: 'Ideas & Content',
+                textStructure: 'Structure & Organization',
+                languageFeatures: 'Language & Vocabulary',
+                spellingAndGrammar: 'Spelling & Grammar'
+              };
+              const percentage = (domain.score / domain.maxScore) * 100;
+              return (
+                <div key={key} className="border rounded-lg p-4 bg-white shadow-sm">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-semibold text-gray-800">{titles[key]}</h4>
+                    <span className="text-xl font-bold text-blue-600">
+                      {domain.score.toFixed(1)}/{domain.maxScore}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="flex-1 bg-gray-200 rounded-full h-2">
+                      <div
+                        className={`h-2 rounded-full transition-all ${percentage >= 80 ? 'bg-emerald-500' : percentage >= 60 ? 'bg-blue-500' : percentage >= 40 ? 'bg-yellow-500' : 'bg-orange-500'}`}
+                        style={{ width: `${percentage}%` }}
+                      />
+                    </div>
+                    <span className="text-sm text-gray-600">{Math.round(percentage)}%</span>
+                  </div>
+                  <span className="inline-block px-2 py-1 text-xs font-semibold rounded bg-blue-100 text-blue-800">
+                    Band {domain.band}
+                  </span>
                 </div>
-              ))
-            ) : (
-              <p className="text-orange-600 dark:text-orange-400">Excellent work! Continue to challenge yourself with new writing techniques.</p>
-            )}
+              );
+            })}
           </div>
         </div>
 
-        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 p-6">
-          <h3 className="text-xl font-bold text-blue-800 dark:text-blue-200 mb-4 flex items-center">
-            <Lightbulb className="w-5 h-5 mr-2" />
-            Personalized Recommendations
-          </h3>
-          <div className="space-y-3">
-            {correctedReport.recommendations && correctedReport.recommendations.length > 0 ? (
-              correctedReport.recommendations.map((rec, index) => (
-                <div key={index} className="flex items-start">
-                  <TrendingUp className="w-5 h-5 text-blue-600 mr-3 mt-0.5 flex-shrink-0" />
-                  <span className="text-blue-700 dark:text-blue-300">{rec}</span>
-                </div>
-              ))
-            ) : (
-              <p className="text-blue-600 dark:text-blue-400">Keep up the excellent work! Continue practicing to maintain your high standards.</p>
-            )}
+        {/* Tabs */}
+        <div className="border-b">
+          <div className="flex">
+            <button
+              onClick={() => setActiveTab('overview')}
+              className={`flex-1 py-3 px-4 font-semibold transition-colors ${activeTab === 'overview' ? 'border-b-2 border-blue-600 text-blue-600 bg-blue-50' : 'text-gray-600 hover:bg-gray-50'}`}
+            >
+              Overview
+            </button>
+            <button
+              onClick={() => setActiveTab('detailed')}
+              className={`flex-1 py-3 px-4 font-semibold transition-colors ${activeTab === 'detailed' ? 'border-b-2 border-blue-600 text-blue-600 bg-blue-50' : 'text-gray-600 hover:bg-gray-50'}`}
+            >
+              Detailed Analysis
+            </button>
           </div>
         </div>
-      </div>
 
-      {/* Detailed Feedback Section */}
-      <div className="mb-8">
-        <div className="flex items-center mb-6">
-          <FileText className="w-6 h-6 text-purple-600 mr-3" />
-          <h2 className="text-2xl font-bold text-purple-600">Detailed Analysis</h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Word Count */}
-          <div className="bg-gray-50 dark:bg-gray-800 p-5 rounded-lg shadow-sm mb-4">
-            <h3 className="font-semibold text-xl text-gray-800 dark:text-gray-200 mb-3">Word Count</h3>
-            <p className="text-gray-700 dark:text-gray-300">Your essay has <strong>{correctedReport.detailedFeedback.wordCount} words</strong>.</p>
-            {correctedReport.criticalWarnings && correctedReport.criticalWarnings.length > 0 && (
-              <div className="mt-3 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
-                <p className="font-semibold">Critical Warnings:</p>
-                <ul className="list-disc list-inside">
-                  {correctedReport.criticalWarnings.map((warning, index) => (
-                    <li key={index}>{warning}</li>
-                  ))}
+        {/* Tab Content */}
+        <div className="p-6">
+          {activeTab === 'overview' && (
+            <div className="space-y-6">
+              {/* Strengths */}
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <h4 className="font-semibold text-green-800 mb-3 flex items-center gap-2">
+                  <Star className="w-5 h-5" />
+                  Key Strengths
+                </h4>
+                <ul className="space-y-2">
+                  {correctedReport.strengths && correctedReport.strengths.length > 0 ? (
+                    correctedReport.strengths.map((strength, i) => (
+                      <li key={i} className="flex items-start gap-2 text-gray-700">
+                        <span className="text-green-600 mt-1">✓</span>
+                        <span>{strength}</span>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="text-green-600">Keep working hard! Every piece of writing has potential for growth.</li>
+                  )}
                 </ul>
               </div>
-            )}
-          </div>
 
-          {/* Sentence Variety */}
-          <div className="bg-gray-50 dark:bg-gray-800 p-5 rounded-lg shadow-sm mb-4">
-            <h3 className="font-semibold text-xl text-gray-800 dark:text-gray-200 mb-3">Sentence Variety</h3>
-            <div className="grid grid-cols-3 gap-4 text-center mb-3">
-              <div className="p-3 bg-white dark:bg-gray-700 rounded-md shadow-sm">
-                <p className="text-lg font-bold text-blue-600">{correctedReport.detailedFeedback.sentenceVariety.simple}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Simple Sentences</p>
+              {/* Areas to Improve */}
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <h4 className="font-semibold text-amber-800 mb-3 flex items-center gap-2">
+                  <Target className="w-5 h-5" />
+                  Areas for Growth
+                </h4>
+                <ul className="space-y-2">
+                  {correctedReport.areasForImprovement && correctedReport.areasForImprovement.length > 0 ? (
+                    correctedReport.areasForImprovement.map((area, i) => (
+                      <li key={i} className="flex items-start gap-2 text-gray-700">
+                        <span className="text-amber-600 mt-1">→</span>
+                        <span>{area}</span>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="text-amber-600">Excellent work! Continue to challenge yourself.</li>
+                  )}
+                </ul>
               </div>
-              <div className="p-3 bg-white dark:bg-gray-700 rounded-md shadow-sm">
-                <p className="text-lg font-bold text-green-600">{correctedReport.detailedFeedback.sentenceVariety.compound}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Compound Sentences</p>
-              </div>
-              <div className="p-3 bg-white dark:bg-gray-700 rounded-md shadow-sm">
-                <p className="text-lg font-bold text-purple-600">{correctedReport.detailedFeedback.sentenceVariety.complex}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Complex Sentences</p>
+
+              {/* Recommendations */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h4 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
+                  <Lightbulb className="w-5 h-5" />
+                  Next Steps
+                </h4>
+                <ul className="space-y-2">
+                  {correctedReport.recommendations && correctedReport.recommendations.length > 0 ? (
+                    correctedReport.recommendations.map((rec, i) => (
+                      <li key={i} className="flex items-start gap-2 text-gray-700">
+                        <span className="text-blue-600 mt-1">{i + 1}.</span>
+                        <span>{rec}</span>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="text-blue-600">Keep up the excellent work!</li>
+                  )}
+                </ul>
               </div>
             </div>
-            <p className="text-gray-700 dark:text-gray-300"><strong>Analysis:</strong> {correctedReport.detailedFeedback.sentenceVariety.analysis}</p>
-          </div>
+          )}
 
-          {/* Vocabulary Analysis */}
-          <div className="bg-gray-50 dark:bg-gray-800 p-5 rounded-lg shadow-sm mb-4">
-            <h3 className="font-semibold text-xl text-gray-800 dark:text-gray-200 mb-3">Vocabulary Analysis</h3>
-            {correctedReport.detailedFeedback.vocabularyAnalysis.sophisticatedWords.length > 0 && (
-              <p className="text-gray-700 dark:text-gray-300 mb-2">
-                <strong>Sophisticated Words Used:</strong> {correctedReport.detailedFeedback.vocabularyAnalysis.sophisticatedWords.join(", ")}
-              </p>
-            )}
-            {correctedReport.detailedFeedback.vocabularyAnalysis.repetitiveWords.length > 0 && (
-              <p className="text-gray-700 dark:text-gray-300 mb-2">
-                <strong>Repetitive Words:</strong> {correctedReport.detailedFeedback.vocabularyAnalysis.repetitiveWords.join(", ")}
-              </p>
-            )}
-            {correctedReport.detailedFeedback.vocabularyAnalysis.suggestions.length > 0 && (
-              <div className="mt-3">
-                <h4 className="font-semibold text-gray-800 dark:text-gray-200">Suggestions:</h4>
-                <ul className="list-disc list-inside text-gray-700 dark:text-gray-300">
-                  {correctedReport.detailedFeedback.vocabularyAnalysis.suggestions.map((s, i) => (
-                    <li key={i}>{s}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
+          {activeTab === 'detailed' && (
+            <div className="space-y-6">
+              {/* Domain-specific Feedback */}
+              {Object.entries(correctedReport.domains).map(([key, domain]) => {
+                const titles: { [key: string]: string } = {
+                  contentAndIdeas: 'Ideas & Content',
+                  textStructure: 'Structure & Organization',
+                  languageFeatures: 'Language & Vocabulary',
+                  spellingAndGrammar: 'Spelling & Grammar'
+                };
+                return (
+                  <div key={key} className="border border-gray-200 rounded-lg p-4 bg-white">
+                    <h4 className="font-semibold text-gray-800 mb-3">{titles[key]}</h4>
+                    {domain.childFriendlyExplanation && (
+                      <div className="bg-blue-50 p-3 rounded-lg mb-3 flex items-start gap-2">
+                        <Heart className="w-4 h-4 text-pink-500 mt-0.5 flex-shrink-0" />
+                        <p className="text-sm text-gray-700">{domain.childFriendlyExplanation}</p>
+                      </div>
+                    )}
+                    <ul className="space-y-2">
+                      {domain.feedback.map((feedback, i) => (
+                        <li key={i} className="flex items-start gap-2 text-gray-700 text-sm">
+                          <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
+                          <span>{feedback}</span>
+                        </li>
+                      ))}
+                    </ul>
+                    {domain.specificExamples && domain.specificExamples.length > 0 && (
+                      <div className="mt-3 pt-3 border-t border-gray-200">
+                        <p className="text-xs font-semibold text-gray-600 mb-2">Examples from your writing:</p>
+                        {domain.specificExamples.map((example, i) => (
+                          <p key={i} className="text-xs text-gray-500 italic mb-1">&quot;...{example}...&quot;</p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
 
-          {/* Literary Devices */}
-          <div className="bg-gray-50 dark:bg-gray-800 p-5 rounded-lg shadow-sm mb-4">
-            <h3 className="font-semibold text-xl text-gray-800 dark:text-gray-200 mb-3">Literary Devices</h3>
-            {correctedReport.detailedFeedback.literaryDevices.identified.length > 0 ? (
-              <p className="text-gray-700 dark:text-gray-300 mb-2">
-                <strong>Identified:</strong> {correctedReport.detailedFeedback.literaryDevices.identified.join(", ")}
-              </p>
-            ) : (
-              <p className="text-gray-700 dark:text-gray-300 mb-2">No specific literary devices were prominently identified.</p>
-            )}
-            {correctedReport.detailedFeedback.literaryDevices.suggestions.length > 0 && (
-              <div className="mt-3">
-                <h4 className="font-semibold text-gray-800 dark:text-gray-200">Suggestions:</h4>
-                <ul className="list-disc list-inside text-gray-700 dark:text-gray-300">
-                  {correctedReport.detailedFeedback.literaryDevices.suggestions.map((s, i) => (
-                    <li key={i}>{s}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-
-          {/* Structural Elements */}
-          <div className="bg-gray-50 dark:bg-gray-800 p-5 rounded-lg shadow-sm mb-4">
-            <h3 className="font-semibold text-xl text-gray-800 dark:text-gray-200 mb-3">Structural Elements</h3>
-            <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 mb-2">
-              <li>Introduction: <strong>{correctedReport.detailedFeedback.structuralElements.hasIntroduction ? "Present" : "Missing"}</strong></li>
-              <li>Conclusion: <strong>{correctedReport.detailedFeedback.structuralElements.hasConclusion ? "Present" : "Missing"}</strong></li>
-              <li>Paragraphs: <strong>{correctedReport.detailedFeedback.structuralElements.paragraphCount}</strong></li>
-            </ul>
-            <p className="text-gray-700 dark:text-gray-300"><strong>Coherence:</strong> {correctedReport.detailedFeedback.structuralElements.coherence}</p>
-          </div>
-
-          {/* Technical Accuracy */}
-          <div className="bg-gray-50 dark:bg-gray-800 p-5 rounded-lg shadow-sm mb-4">
-            <h3 className="font-semibold text-xl text-gray-800 dark:text-gray-200 mb-3">Technical Accuracy</h3>
-            <ul className="list-disc list-inside text-gray-700 dark:text-gray-300 mb-2">
-              <li>Spelling Errors: <strong>{correctedReport.detailedFeedback.technicalAccuracy.spellingErrors}</strong></li>
-              {correctedReport.detailedFeedback.technicalAccuracy.grammarIssues.length > 0 && (
-                <li>Grammar Issues: {correctedReport.detailedFeedback.technicalAccuracy.grammarIssues.join(", ")}</li>
-              )}
-              {correctedReport.detailedFeedback.technicalAccuracy.punctuationIssues.length > 0 && (
-                <li>Punctuation Issues: {correctedReport.detailedFeedback.technicalAccuracy.punctuationIssues.join(", ")}</li>
-              )}
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex space-x-3">
-          <button
-            onClick={downloadReport}
-            className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            <Download className="w-4 h-4 mr-2" />
-            Download Report
-          </button>
-        </div>
-        {onClose && (
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-          >
-            Close
-          </button>
-        )}
-      </div>
-
-      {/* Critical Warnings Section */}
-      {report.criticalWarnings && report.criticalWarnings.length > 0 && (
-        <div className="bg-red-50 dark:bg-red-900/20 rounded-lg border-2 border-red-400 dark:border-red-600 p-6 mb-8">
-          <h3 className="text-xl font-bold text-red-800 dark:text-red-200 mb-4 flex items-center">
-            <AlertCircle className="w-6 h-6 mr-2" />
-            🚨 Critical Issues Requiring Immediate Attention
-          </h3>
-          <div className="space-y-3">
-            {report.criticalWarnings.map((warning, index) => (
-              <div key={index} className="flex items-start bg-white dark:bg-gray-800 rounded-lg p-4 border-2 border-red-300 dark:border-red-700 shadow-lg">
-                <div className="bg-red-500 dark:bg-red-700 rounded-full p-2 mr-4 flex-shrink-0">
-                  <span className="text-white font-bold text-lg">!</span>
+              {/* Writing Metrics */}
+              <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                <h4 className="font-semibold text-gray-800 mb-3">Writing Metrics</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Word Count</p>
+                    <p className="text-lg font-bold text-gray-800">{correctedReport.detailedFeedback.wordCount}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Paragraphs</p>
+                    <p className="text-lg font-bold text-gray-800">{correctedReport.detailedFeedback.structuralElements.paragraphCount}</p>
+                  </div>
                 </div>
-                <span className="text-red-800 dark:text-red-200 font-semibold leading-relaxed text-base">
-                  {warning}
-                </span>
-              </div>
-            ))}
-          </div>
-          <div className="mt-4 bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-400 dark:border-yellow-600 rounded-lg p-3">
-            <p className="text-yellow-800 dark:text-yellow-200 text-sm font-medium">
-              💡 <strong>Action Required:</strong> Please address these critical issues before your next practice essay.
-              These are the most important areas that will significantly impact your exam performance.
-            </p>
-          </div>
-        </div>
-      )}
 
-      {/* Student's Original Essay Section */}
-      <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 p-6 mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-bold text-blue-800 dark:text-blue-200 flex items-center">
-            <FileText className="w-5 h-5 mr-2" />
-            Your Original Essay
-          </h3>
-          <div className={`px-4 py-2 rounded-full font-bold text-sm ${
-            report.detailedFeedback.wordCount < 300 ? 'bg-red-100 text-red-700 border-2 border-red-400' :
-            report.detailedFeedback.wordCount < 400 ? 'bg-yellow-100 text-yellow-700 border-2 border-yellow-400' :
-            report.detailedFeedback.wordCount <= 550 ? 'bg-green-100 text-green-700 border-2 border-green-400' :
-            'bg-orange-100 text-orange-700 border-2 border-orange-400'
-          }`}>
-            {report.detailedFeedback.wordCount} words
-            {report.detailedFeedback.wordCount < 400 && ' ⚠️ Too Short'}
-            {report.detailedFeedback.wordCount >= 400 && report.detailedFeedback.wordCount <= 550 && ' ✅ Good Length'}
-            {report.detailedFeedback.wordCount > 550 && ' ⚠️ Too Long'}
-          </div>
-        </div>
-        <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border">
-          <pre className="whitespace-pre-wrap text-sm text-gray-700 dark:text-gray-300 font-sans leading-relaxed">
-            {report.essayContent || essayText}
-          </pre>
+                {/* Sentence Variety */}
+                <div className="mt-4 pt-4 border-t border-gray-300">
+                  <p className="text-sm font-semibold text-gray-700 mb-2">Sentence Variety</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="text-center p-2 bg-white rounded">
+                      <p className="text-lg font-bold text-blue-600">{correctedReport.detailedFeedback.sentenceVariety.simple}</p>
+                      <p className="text-xs text-gray-500">Simple</p>
+                    </div>
+                    <div className="text-center p-2 bg-white rounded">
+                      <p className="text-lg font-bold text-green-600">{correctedReport.detailedFeedback.sentenceVariety.compound}</p>
+                      <p className="text-xs text-gray-500">Compound</p>
+                    </div>
+                    <div className="text-center p-2 bg-white rounded">
+                      <p className="text-lg font-bold text-purple-600">{correctedReport.detailedFeedback.sentenceVariety.complex}</p>
+                      <p className="text-xs text-gray-500">Complex</p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-2">{correctedReport.detailedFeedback.sentenceVariety.analysis}</p>
+                </div>
+
+                {/* Vocabulary */}
+                {correctedReport.detailedFeedback.vocabularyAnalysis.sophisticatedWords.length > 0 && (
+                  <div className="mt-4 pt-4 border-t border-gray-300">
+                    <p className="text-sm font-semibold text-gray-700 mb-2">Sophisticated Vocabulary</p>
+                    <p className="text-sm text-gray-600">{correctedReport.detailedFeedback.vocabularyAnalysis.sophisticatedWords.join(', ')}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
