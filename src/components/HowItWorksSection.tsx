@@ -219,30 +219,19 @@ export function HowItWorksSection() {
           </div>
         </div>
 
-        {/* Success Stats */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 text-white text-center">
-          <h3 className="text-2xl md:text-3xl font-bold mb-4">
-            See Results in Just Weeks!
+        {/* CTA Section */}
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-8 text-white text-center shadow-xl">
+          <h3 className="text-2xl md:text-3xl font-bold mb-4 text-white">
+            Ready to Start Your Writing Journey?
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-6">
-            <div>
-              <div className="text-3xl font-bold mb-2">87%</div>
-              <div className="text-blue-100">Average Score Improvement</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold mb-2">10,000+</div>
-              <div className="text-blue-100">Students Helped</div>
-            </div>
-            <div>
-              <div className="text-3xl font-bold mb-2">4.9/5</div>
-              <div className="text-blue-100">Parent Satisfaction</div>
-            </div>
-          </div>
+          <p className="text-lg mb-6 text-white max-w-2xl mx-auto">
+            Get instant AI-powered feedback and personalized guidance to improve your writing skills.
+          </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <button className="px-8 py-4 bg-white text-blue-600 font-bold rounded-xl hover:bg-gray-100 transition-colors duration-300 shadow-lg">
               Start Your Free Trial
             </button>
-            <button 
+            <button
               onClick={() => setShowDemo(true)}
               className="px-8 py-4 border-2 border-white text-white font-bold rounded-xl hover:bg-white hover:text-blue-600 transition-colors duration-300 flex items-center justify-center"
             >
