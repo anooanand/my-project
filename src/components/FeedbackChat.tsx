@@ -89,7 +89,7 @@ export function FeedbackChat({
       {/* Chat Header */}
       <div className="flex items-center space-x-2 p-3 bg-gradient-to-r from-blue-50 to-purple-50 border-b border-gray-200">
         <Bot className="h-5 w-5 text-blue-600" />
-        <h3 className="text-sm font-semibold text-gray-800">Writing Buddy Chat</h3>
+        <h3 className="text-sm font-semibold text-gray-800">Writing Mate Chat</h3>
         <div className="flex-1"></div>
         {isLoading && (
           <div className="flex items-center space-x-1 text-xs text-blue-600">
@@ -166,7 +166,7 @@ export function FeedbackChat({
                   <div className="rounded-full bg-blue-300 h-2 w-2"></div>
                   <div className="rounded-full bg-blue-300 h-2 w-2"></div>
                 </div>
-                <span className="text-xs text-gray-500">Writing Buddy is thinking...</span>
+                <span className="text-xs text-gray-500">Writing Mate is thinking...</span>
               </div>
             </div>
           </div>

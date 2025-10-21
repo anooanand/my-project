@@ -80,9 +80,9 @@ export const TieredFeedbackChat: React.FC<TieredFeedbackChatProps> = ({
   const addWelcomeMessage = () => {
     const welcomeMessages: Record<SupportLevel, string> = {
       'High Support':
-        "Hi there! 👋 I'm your Writing Buddy! I'm here to help you write an amazing story. Ask me anything, and I'll guide you step by step! 🌟",
+        "Hi there! 👋 I'm your Writing Mate! I'm here to help you write an amazing story. Ask me anything, and I'll guide you step by step! 🌟",
       'Medium Support':
-        "Hello! 😊 I'm your AI Writing Buddy. I'm here to help you improve your writing with suggestions and examples. What would you like to work on?",
+        "Hello! 😊 I'm your AI Writing Mate. I'm here to help you improve your writing with suggestions and examples. What would you like to work on?",
       'Low Support':
         "Welcome! I'm your writing coach. Feel free to ask about any aspect of your writing, and I'll provide thoughtful guidance to help you refine your work.",
     };
@@ -245,7 +245,7 @@ export const TieredFeedbackChat: React.FC<TieredFeedbackChatProps> = ({
         <div className="text-center py-8">
           <Bot className="w-12 h-12 text-gray-300 mx-auto mb-3" />
           <p className="text-sm text-gray-600">
-            Please sign in to chat with your Writing Buddy
+            Please sign in to chat with your Writing Mate
           </p>
         </div>
       </div>
@@ -259,7 +259,7 @@ export const TieredFeedbackChat: React.FC<TieredFeedbackChatProps> = ({
       <div className="flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-purple-50 border-b border-gray-200">
         <div className="flex items-center space-x-2">
           <Bot className="w-5 h-5 text-blue-600" />
-          <h3 className="font-semibold text-gray-900">Writing Buddy</h3>
+          <h3 className="font-semibold text-gray-900">Writing Mate</h3>
         </div>
         {preferences && (
           <div
@@ -303,7 +303,7 @@ export const TieredFeedbackChat: React.FC<TieredFeedbackChatProps> = ({
                 <div className="flex items-center mb-2">
                   {getSupportLevelIcon(message.supportLevel)}
                   <span className="ml-2 text-xs font-medium text-gray-600">
-                    Writing Buddy
+                    Writing Mate
                   </span>
                 </div>
               )}
@@ -360,7 +360,7 @@ export const TieredFeedbackChat: React.FC<TieredFeedbackChatProps> = ({
                   <div className="rounded-full bg-blue-400 h-2 w-2"></div>
                 </div>
                 <span className="text-xs text-gray-600">
-                  Writing Buddy is thinking...
+                  Writing Mate is thinking...
                 </span>
               </div>
             </div>

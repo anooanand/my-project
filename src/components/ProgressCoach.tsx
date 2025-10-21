@@ -164,7 +164,7 @@ const ProgressCoach: React.FC<ProgressCoachProps> = ({
   const [chatMessages, setChatMessages] = useState<FeedbackMessage[]>([
     {
       id: '1',
-      text: 'Hi I\'m your AI Writing Buddy! 🤖 I\'m here to help you write amazing stories. Ask me anything about writing, or just start typing and I\'ll give you feedback!',
+      text: 'Hi I\'m your AI Writing Mate! 🤖 I\'m here to help you write amazing stories. Ask me anything about writing, or just start typing and I\'ll give you feedback!',
       timestamp: new Date(),
       isUser: false
     }
@@ -277,7 +277,7 @@ const ProgressCoach: React.FC<ProgressCoachProps> = ({
         <div className="p-4 border-b border-blue-200">
           <div className="flex items-center space-x-2">
             <Bot className="h-5 w-5 text-blue-600" />
-            <h3 className="font-semibold text-blue-800">💬 Writing Buddy Chat</h3>
+            <h3 className="font-semibold text-blue-800">💬 Writing Mate Chat</h3>
           </div>
         </div>
         

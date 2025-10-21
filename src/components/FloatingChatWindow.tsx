@@ -51,7 +51,7 @@ export function FloatingChatWindow({
       <button
         className="floating-chat-toggle fixed bottom-4 right-4 bg-purple-600 hover:bg-purple-700 text-white p-3 rounded-full shadow-lg transition-all duration-200 z-50"
         onClick={toggleVisibility}
-        title="Open Writing Buddy"
+        title="Open Writing Mate"
       >
         <MessageSquare className="w-5 h-5" />
       </button>
@@ -69,7 +69,7 @@ export function FloatingChatWindow({
         {!isMinimized && !isCollapsed && (
           <div className="flex items-center gap-2">
             <MessageSquare className="w-4 h-4 text-purple-600" />
-            <h3 className="text-sm font-medium">Writing Buddy</h3>
+            <h3 className="text-sm font-medium">Writing Mate</h3>
           </div>
         )}
 
@@ -112,7 +112,7 @@ export function FloatingChatWindow({
             <div className="flex flex-col items-center justify-center h-full p-2">
               <MessageSquare className="w-6 h-6 text-purple-600 mb-2" />
               <div className="writing-vertical-text text-xs text-gray-500 dark:text-gray-400 transform rotate-90 whitespace-nowrap">
-                Writing Buddy
+                Writing Mate
               </div>
             </div>
           )}

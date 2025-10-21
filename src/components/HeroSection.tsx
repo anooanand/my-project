@@ -30,11 +30,11 @@ export function HeroSection({ onGetStarted }: HeroSectionProps) {
               <span className="absolute -top-6 -right-6 text-3xl animate-bounce">✨</span>
             </span>
             <br />
-            <span className="text-gray-900 dark:text-white">with Your AI Writing Buddy</span>
+            <span className="text-gray-900 dark:text-white">with Your AI Writing Mate</span>
           </h1>
 
           <p className="text-body-xl max-w-3xl mx-auto mb-10 font-medium text-gray-800 dark:text-gray-200">
-            Create amazing stories, learn cool writing tricks, and have fun with your AI writing buddy! Perfect for NSW Selective exam practice.
+            Create amazing stories, learn cool writing tricks, and have fun with your AI writing mate! Perfect for NSW Selective exam practice.
           </p>
 
           <div className="flex flex-col sm:flex-row justify-center gap-6 sm:gap-8">

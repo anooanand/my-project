@@ -88,7 +88,7 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
   useEffect(() => {
     const welcomeMessage: ChatMessage = {
       id: 'welcome-' + Date.now(),
-      text: "Hi! I'm your AI Writing Buddy! 🤖 I'm here to help you write amazing stories. Ask me anything about writing, or just start typing and I'll give you feedback!",
+      text: "Hi! I'm your AI Writing Mate! 🤖 I'm here to help you write amazing stories. Ask me anything about writing, or just start typing and I'll give you feedback!",
       isUser: false,
       timestamp: new Date()
     };
@@ -552,7 +552,7 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
         <div className="flex items-center justify-between">
           <h3 className="font-semibold text-gray-800 flex items-center">
             <MessageSquare className="w-4 h-4 mr-2 text-purple-600" />
-            Writing Buddy Chat
+            Writing Mate Chat
           </h3>
           <div className="flex items-center space-x-2">
             <div className={`w-2 h-2 rounded-full ${aiStatus.connected ? 'bg-green-500' : 'bg-red-500'}`}></div>
