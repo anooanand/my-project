@@ -6,7 +6,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Lightbulb, BookOpen, Target, TrendingUp, AlertCircle, CheckCircle, Eye, Sparkles } from 'lucide-react';
+import { Lightbulb, BookOpen, Target, TrendingUp, AlertCircle, CheckCircle, Eye, Sparkles, X } from 'lucide-react';
 import { generateCoachFeedback, type ContextualExample } from '../lib/contextualAICoach';
 import { generateShowDontTellFeedback } from '../lib/showDontTellAnalyzer';
 import { getRubricForType } from '../lib/nswRubricCriteria';
@@ -128,7 +128,7 @@ export function ContextualAICoachPanel({ content, textType, prompt }: Contextual
                 <div className="flex items-start mb-3">
                   <Sparkles className="w-5 h-5 text-purple-600 dark:text-purple-400 mr-2 flex-shrink-0 mt-0.5" />
                   <div>
-                    <h4 className="font-semibold text-purple-900 dark:text-purple-100 mb-1">
+                    <h4 className="text-sm font-semibold text-purple-900 dark:text-purple-100 mb-1">
                       {content.trim().length === 0 ? 'Ideas to Get Started' : 'Build on Your Progress'}
                     </h4>
                     <p className="text-xs text-purple-700 dark:text-purple-300 mb-3">
@@ -140,7 +140,7 @@ export function ContextualAICoachPanel({ content, textType, prompt }: Contextual
                 <div className="space-y-3">
                   {dynamicExamples.map((example, index) => (
                     <div key={index} className="bg-white dark:bg-gray-800 rounded-lg p-3 border border-purple-200 dark:border-purple-700">
-                      <p className="text-sm text-gray-800 dark:text-gray-200 italic mb-2">
+                      <p className="text-xs text-gray-800 dark:text-gray-200 italic mb-2">
                         "{example.text}"
                       </p>
                       {example.description && (
@@ -155,7 +155,7 @@ export function ContextualAICoachPanel({ content, textType, prompt }: Contextual
               </div>
             )}
 
-            <h4 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center">
+            <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center">
               <BookOpen className="w-4 h-4 mr-2" />
               Contextual Examples for Your Writing
             </h4>
@@ -171,24 +171,37 @@ export function ContextualAICoachPanel({ content, textType, prompt }: Contextual
               feedback.contextualExamples.map((example: ContextualExample, index: number) => (
                 <div
                   key={index}
-                  className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
-                  onClick={() => setSelectedExample(selectedExample?.suggestion === example.suggestion ? null : example)}
+                  className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition-shadow"
                 >
                   <div className="flex items-start justify-between">
-                    <div className="flex-1">
+                    <div className="flex-1 cursor-pointer" onClick={() => setSelectedExample(selectedExample?.suggestion === example.suggestion ? null : example)}>
                       <div className="flex items-center mb-2">
                         <Lightbulb className="w-4 h-4 text-yellow-500 mr-2" />
-                        <h5 className="font-semibold text-gray-900 dark:text-gray-100">{example.category}</h5>
+                        <h5 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{example.category}</h5>
                       </div>
-                      <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">{example.suggestion}</p>
+                      <p className="text-xs text-gray-700 dark:text-gray-300 mb-2">{example.suggestion}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400 italic">{example.relevanceToPrompt}</p>
                     </div>
-                    <div className="ml-3">
-                      {selectedExample?.suggestion === example.suggestion ? (
-                        <span className="text-green-600 dark:text-green-400 text-xs">▼</span>
-                      ) : (
-                        <span className="text-gray-400 text-xs">▶</span>
+                    <div className="ml-3 flex items-start space-x-1">
+                      {selectedExample?.suggestion === example.suggestion && (
+                        <button
+                          onClick={() => setSelectedExample(null)}
+                          className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                          title="Close"
+                        >
+                          <X className="w-4 h-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200" />
+                        </button>
                       )}
+                      <button
+                        onClick={() => setSelectedExample(selectedExample?.suggestion === example.suggestion ? null : example)}
+                        className="p-1"
+                      >
+                        {selectedExample?.suggestion === example.suggestion ? (
+                          <span className="text-green-600 dark:text-green-400 text-xs">▼</span>
+                        ) : (
+                          <span className="text-gray-400 text-xs">▶</span>
+                        )}
+                      </button>
                     </div>
                   </div>
 

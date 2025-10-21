@@ -225,15 +225,15 @@ export function StepByStepWritingBuilder({
             </div>
 
             {/* Active Prompts */}
-            <div className="bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 p-4 rounded-lg border-2 border-purple-200 dark:border-purple-800">
-              <h4 className="text-sm font-bold text-purple-900 dark:text-purple-200 mb-3 flex items-center gap-2">
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-4 rounded-lg border-2 border-blue-500">
+              <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
                 <AlertCircle className="w-4 h-4" />
                 Answer these questions as you write:
               </h4>
               <ol className="space-y-2">
                 {stage.prompts.map((prompt, idx) => (
-                  <li key={idx} className="flex items-start gap-2 text-sm text-purple-900 dark:text-purple-200">
-                    <span className="font-bold text-purple-600 dark:text-purple-400 flex-shrink-0">
+                  <li key={idx} className="flex items-start gap-2 text-sm text-white">
+                    <span className="font-bold text-white flex-shrink-0">
                       {idx + 1}.
                     </span>
                     <span className="font-medium">{prompt}</span>

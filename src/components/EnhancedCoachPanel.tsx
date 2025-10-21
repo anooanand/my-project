@@ -785,7 +785,7 @@ export function EnhancedCoachPanel({
       setMessages([{
         type: 'auto-coach',
         content: {
-          encouragement: "Hello! I'm your AI Writing Buddy! 🤖",
+          encouragement: "Hello! I'm your AI Writing Mate! 🤖",
           nswFocus: "Getting Started",
           suggestion: "I'm here to help you write amazing stories. Start typing and I'll give you feedback!",
           example: "Try beginning with the prompt about the mysterious key in grandmother's attic.",
@@ -924,7 +924,7 @@ export function EnhancedCoachPanel({
         type: 'response',
         content: {
           encouragement: "",
-          nswFocus: "AI Writing Buddy",
+          nswFocus: "AI Writing Mate",
           suggestion: data.response || "I'm here to help with your writing!",
           example: "",
           nextStep: ""
@@ -983,7 +983,7 @@ export function EnhancedCoachPanel({
         <div className="flex flex-col space-y-2">
           {/* Top Row: Title and Word Count */}
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-white">✨ Writing Buddy</h2>
+            <h2 className="text-base font-bold text-white">✨ Writing Mate</h2>
             <div className="text-xs text-white opacity-90 font-medium">
               {content.trim() ? `${content.trim().split(/\s+/).length} words` : '0 words'}
             </div>
