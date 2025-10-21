@@ -166,43 +166,39 @@ export function PricingPage() {
           </div>
         )}
 
-        {/* Pricing Cards */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {products.map((product, index) => (
+        {/* Pricing Card - Single Centered Plan */}
+        <div className="max-w-lg mx-auto">
+          {products.map((product) => (
             <div
               key={product.id}
-              className={`relative bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden transform hover:scale-105 transition-all duration-300 ${
-                index === 1 ? 'ring-4 ring-blue-500 ring-opacity-50' : ''
-              }`}
+              className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden border-4 border-blue-500"
             >
-              {index === 1 && (
-                <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-center py-2 text-sm font-semibold">
-                  Most Popular
-                </div>
-              )}
-              
-              <div className="p-8">
+              <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-center py-3 text-base font-semibold">
+                Most Popular
+              </div>
+
+              <div className="p-10 pt-16">
                 <div className="text-center mb-8">
-                  <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                  <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
                     {product.name}
                   </h3>
-                  <div className="flex items-center justify-center mb-4">
-                    <span className="text-4xl font-bold text-gray-900 dark:text-white">
+                  <div className="flex items-baseline justify-center mb-4">
+                    <span className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-700 bg-clip-text text-transparent">
                       {product.price}
                     </span>
-                    <span className="text-gray-500 dark:text-gray-400 ml-2">
-                      /{product.interval}
+                    <span className="text-gray-500 dark:text-gray-400 ml-2 text-lg">
+                      /{product.interval || 'month'}
                     </span>
                   </div>
-                  <p className="text-gray-600 dark:text-gray-300">
+                  <p className="text-gray-600 dark:text-gray-300 text-lg">
                     {product.description}
                   </p>
                 </div>
 
-                <ul className="space-y-4 mb-8">
+                <ul className="space-y-3 mb-8">
                   {product.features.map((feature, featureIndex) => (
                     <li key={featureIndex} className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mt-0.5 mr-3 flex-shrink-0" />
+                      <Check className="h-5 w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
                       <span className="text-gray-700 dark:text-gray-300">{feature}</span>
                     </li>
                   ))}
@@ -211,12 +207,10 @@ export function PricingPage() {
                 <button
                   onClick={() => handleSubscribe(product.priceId)}
                   disabled={!user || !emailVerified}
-                  className={`w-full py-3 px-6 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center ${
+                  className={`w-full py-4 px-6 rounded-xl font-bold text-lg transition-all duration-200 flex items-center justify-center ${
                     !user || !emailVerified
                       ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      : index === 1
-                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 shadow-lg hover:shadow-xl'
-                      : 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:bg-gray-800 dark:hover:bg-gray-100'
+                      : 'bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 shadow-lg hover:shadow-xl transform hover:scale-105'
                   }`}
                 >
                   {!user ? 'Sign In to Subscribe' : !emailVerified ? 'Verify Email First' : 'Get Started'}
