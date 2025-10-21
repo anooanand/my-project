@@ -4,19 +4,56 @@ import { useNavigate } from 'react-router-dom';
 import { evaluateEssay } from '../lib/openai';
 
 interface ExamSimulationModeProps {
-  textType: string;
-  prompt: string;
-  onExit: () => void;
+  content?: string;
+  onChange?: (content: string) => void;
+  textType?: string;
+  initialPrompt?: string;
+  wordCount?: number;
+  onWordCountChange?: () => void;
+  darkMode?: boolean;
+  isTimerRunning?: boolean;
+  elapsedTime?: number;
+  onStartTimer?: () => void;
+  onPauseTimer?: () => void;
+  onResetTimer?: () => void;
+  onSubmit?: () => void;
+  user?: any;
+  openAIConnected?: boolean | null;
+  openAILoading?: boolean;
+  onExit?: () => void;
+  prompt?: string;
 }
 
-export function ExamSimulationMode({ onExit, textType, prompt }: ExamSimulationModeProps) {
+export function ExamSimulationMode({
+  content: initialContent = '',
+  onChange,
+  textType = 'narrative',
+  initialPrompt = '',
+  wordCount: initialWordCount = 0,
+  onWordCountChange,
+  darkMode = false,
+  isTimerRunning = false,
+  elapsedTime = 0,
+  onStartTimer,
+  onPauseTimer,
+  onResetTimer,
+  onSubmit,
+  user,
+  openAIConnected,
+  openAILoading,
+  onExit,
+  prompt: propPrompt,
+}: ExamSimulationModeProps) {
   const navigate = useNavigate();
   const [timeRemaining, setTimeRemaining] = useState(30 * 60); // 30 minutes in seconds
   const [isActive, setIsActive] = useState(true); // Start timer automatically
-  const [content, setContent] = useState('');
+  const [content, setContent] = useState(initialContent);
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [promptExpanded, setPromptExpanded] = useState(true);
+
+  // Use the prompt from props, or fall back to initialPrompt
+  const displayPrompt = propPrompt || initialPrompt || 'Persuasive Writing Task: "Should schools replace traditional textbooks with digital devices like tablets and laptops?" In your response, you should: • Present a clear position on this issue • Support your argument with relevant examples and evidence • Consider and address opposing viewpoints • Use persuasive language techniques effectively • Organize your ideas in a logical structure Target: 300-500 words | Time: 30 minutes';
 
   // Timer effect
   useEffect(() => {
@@ -48,6 +85,13 @@ export function ExamSimulationMode({ onExit, textType, prompt }: ExamSimulationM
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const handleContentChange = (newContent: string) => {
+    setContent(newContent);
+    if (onChange) {
+      onChange(newContent);
+    }
+  };
+
   const handleSubmit = () => {
     setShowSubmitConfirm(true);
   };
@@ -70,7 +114,7 @@ export function ExamSimulationMode({ onExit, textType, prompt }: ExamSimulationM
 
     // Call evaluateEssay with isPractice flag
     try {
-      const feedbackReport = await evaluateEssay(content, textType, true);
+      const feedbackReport = await evaluateEssay(content, textType || 'narrative', true);
       console.log("Practice Exam Feedback Report:", feedbackReport);
       // Navigate to a feedback display page, passing the report
       navigate("/feedback", { state: { feedback: feedbackReport, essayContent: content, textType: textType } });
@@ -100,7 +144,7 @@ export function ExamSimulationMode({ onExit, textType, prompt }: ExamSimulationM
 
     // Call evaluateEssay with isPractice flag for auto-submit
     try {
-      const feedbackReport = await evaluateEssay(content, textType, true);
+      const feedbackReport = await evaluateEssay(content, textType || 'narrative', true);
       console.log("Practice Exam Auto-Submit Feedback Report:", feedbackReport);
       navigate("/feedback", { state: { feedback: feedbackReport, essayContent: content, textType: textType } });
     } catch (error) {
@@ -193,7 +237,7 @@ export function ExamSimulationMode({ onExit, textType, prompt }: ExamSimulationM
           {promptExpanded && (
             <div className="flex-1 overflow-y-auto p-4">
               <p className="text-sm text-blue-800 leading-relaxed whitespace-pre-wrap">
-                {prompt}
+                {displayPrompt}
               </p>
               
               {/* Quick Stats */}
@@ -237,7 +281,7 @@ export function ExamSimulationMode({ onExit, textType, prompt }: ExamSimulationM
             <textarea
               disabled={!isActive}
               value={content}
-              onChange={(e) => setContent(e.target.value)}
+              onChange={(e) => handleContentChange(e.target.value)}
               className="flex-1 p-4 bg-white rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 resize-none text-base leading-relaxed text-gray-800 placeholder-gray-400"
               placeholder={isActive ? "Start writing your response here..." : "Click Start Exam to begin"}
             />
