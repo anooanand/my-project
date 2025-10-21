@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Send, MessageSquare, BarChart3, Lightbulb, Target, Star, TrendingUp, Award, List, BookOpen, AlertCircle, Loader2 } from 'lucide-react';
+import { Send, MessageSquare, BarChart3, Lightbulb, Target, Star, TrendingUp, Award, List, BookOpen, AlertCircle, Loader2, FileCheck } from 'lucide-react';
 import { StepByStepWritingBuilder } from './StepByStepWritingBuilder';
 import { ContextualAICoachPanel } from './ContextualAICoachPanel';
 import { ComprehensiveFeedbackDisplay } from './ComprehensiveFeedbackDisplay';
+import { GrammarCorrectionPanel } from './GrammarCorrectionPanel';
 import { generateIntelligentResponse, type EnhancedCoachResponse } from '../lib/enhancedIntelligentResponseGenerator';
 import { ComprehensiveFeedbackAnalyzer } from '../lib/comprehensiveFeedbackAnalyzer';
 import type { SupportLevel } from '../lib/writingBuddyService';
@@ -661,7 +662,7 @@ export function EnhancedCoachPanel({
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isLoadingResponse, setIsLoadingResponse] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
-  const [currentView, setCurrentView] = useState<'coach' | 'examples' | 'builder' | 'detailed' | 'nsw'>('coach');
+  const [currentView, setCurrentView] = useState<'coach' | 'examples' | 'builder' | 'detailed' | 'nsw' | 'grammar'>('coach');
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isLoadingSession, setIsLoadingSession] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -1070,6 +1071,18 @@ export function EnhancedCoachPanel({
           >
             <Award className="w-3 h-3" />
             <span>NSW Criteria</span>
+          </button>
+
+          <button
+            onClick={() => setCurrentView('grammar')}
+            className={`flex items-center justify-center space-x-1 px-2.5 py-1.5 rounded text-xs font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
+              currentView === 'grammar'
+                ? 'bg-white text-orange-600 shadow-sm'
+                : 'bg-white/20 text-white hover:bg-white/30'
+            }`}
+          >
+            <FileCheck className="w-3 h-3" />
+            <span>Grammar Fix</span>
           </button>
         </div>
       </div>
@@ -1520,6 +1533,18 @@ export function EnhancedCoachPanel({
                 <p className="text-xs mt-2">Write at least 20 words for initial assessment</p>
               </div>
             )}
+          </div>
+        ) : currentView === 'grammar' ? (
+          <div className="h-full overflow-y-auto p-4">
+            <GrammarCorrectionPanel
+              text={content || ''}
+              onApplyCorrection={(start, end, correction) => {
+                if (onContentChange) {
+                  const newContent = content.substring(0, start) + correction + content.substring(end);
+                  onContentChange(newContent);
+                }
+              }}
+            />
           </div>
         ) : null}
       </div>
