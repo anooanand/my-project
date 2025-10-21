@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, X, FileText, AlertCircle, CheckCircle, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { evaluateEssay } from '../lib/openai';
+import { NSWEvaluationReportGenerator } from '../components/NSWEvaluationReportGenerator';
+import { NSWEvaluationReportDisplay } from '../components/NSWEvaluationReportDisplay';
 
 interface ExamSimulationModeProps {
   content?: string;
@@ -50,6 +51,9 @@ export function ExamSimulationMode({
   const [content, setContent] = useState(initialContent);
   const [showSubmitConfirm, setShowSubmitConfirm] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isEvaluating, setIsEvaluating] = useState(false);
+  const [evaluationReport, setEvaluationReport] = useState<any>(null);
+  const [evaluationError, setEvaluationError] = useState<string | null>(null);
   const [promptExpanded, setPromptExpanded] = useState(true);
 
   // Use the prompt from props, or fall back to initialPrompt
@@ -106,28 +110,34 @@ export function ExamSimulationMode({
     setIsSubmitted(true);
     setIsActive(false);
     setShowSubmitConfirm(false);
+    setIsEvaluating(true);
+    setEvaluationError(null);
     
     // Store the essay for evaluation
     localStorage.setItem('examEssay', content);
     localStorage.setItem('examSubmissionTime', new Date().toISOString());
     localStorage.setItem("examTimeUsed", (30 * 60 - timeRemaining).toString());
 
-    // Call evaluateEssay with isPractice flag
     try {
-      const feedbackReport = await evaluateEssay(content, textType || 'narrative', true);
-      console.log("Practice Exam Feedback Report:", feedbackReport);
-      // Navigate to a feedback display page, passing the report
-      navigate("/feedback", { state: { feedback: feedbackReport, essayContent: content, textType: textType } });
-    } catch (error) {
-      console.error("Error generating practice exam feedback:", error);
-      // Handle error, maybe navigate to an error page or show a message
-      alert("Failed to generate evaluation report. Please try again.");
+      // Generate NSW Evaluation Report
+      const report = NSWEvaluationReportGenerator.generateReport({
+        essayContent: content,
+        textType: textType || 'narrative',
+        prompt: displayPrompt,
+        wordCount: content.trim().split(/\s+/).length,
+        targetWordCountMin: 100,
+        targetWordCountMax: 500,
+      });
+
+      console.log("NSW Evaluation Report Generated:", report);
+      setEvaluationReport(report);
+      setIsEvaluating(false);
+    } catch (error: any) {
+      console.error("Error generating NSW evaluation report:", error);
+      setEvaluationError(error.message || "Failed to generate evaluation report. Please try again.");
+      setIsEvaluating(false);
+      setIsSubmitted(false);
     }
-    
-    console.log('Exam essay submitted:', {
-      content,
-      timeUsed: 30 * 60 - timeRemaining
-    });
   };
 
   const handleAutoSubmit = async () => {
@@ -142,14 +152,22 @@ export function ExamSimulationMode({
     localStorage.setItem('examSubmissionTime', new Date().toISOString());
     localStorage.setItem("examTimeUsed", (30 * 60).toString());
 
-    // Call evaluateEssay with isPractice flag for auto-submit
     try {
-      const feedbackReport = await evaluateEssay(content, textType || 'narrative', true);
-      console.log("Practice Exam Auto-Submit Feedback Report:", feedbackReport);
-      navigate("/feedback", { state: { feedback: feedbackReport, essayContent: content, textType: textType } });
-    } catch (error) {
-      console.error("Error generating practice exam auto-submit feedback:", error);
-      alert("Failed to generate evaluation report on auto-submit. Please try again.");
+      // Generate NSW Evaluation Report on auto-submit
+      const report = NSWEvaluationReportGenerator.generateReport({
+        essayContent: content,
+        textType: textType || 'narrative',
+        prompt: displayPrompt,
+        wordCount: content.trim().split(/\s+/).length,
+        targetWordCountMin: 100,
+        targetWordCountMax: 500,
+      });
+
+      console.log("NSW Evaluation Report Generated (Auto-Submit):", report);
+      setEvaluationReport(report);
+    } catch (error: any) {
+      console.error("Error generating NSW evaluation report on auto-submit:", error);
+      setEvaluationError(error.message || "Failed to generate evaluation report on auto-submit. Please try again.");
     }
   };
 
@@ -163,28 +181,86 @@ export function ExamSimulationMode({
     return 'text-red-600'; // < 5 minutes
   };
 
-  if (isSubmitted) {
+  // Show evaluation report if available
+  if (evaluationReport) {
+    return (
+      <div className="h-screen flex flex-col bg-gray-50 overflow-hidden">
+        <div className="bg-white border-b border-gray-200 px-6 py-2 flex items-center justify-between h-16">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center shadow-md">
+              <FileText className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-base font-bold text-gray-900">NSW Evaluation Report</h1>
+              <p className="text-xs text-gray-600">Practice Exam Results</p>
+            </div>
+          </div>
+          <button
+            onClick={onExit}
+            className="p-2 hover:bg-gray-100 rounded-lg transition-all duration-200"
+            aria-label="Exit exam mode"
+          >
+            <X className="w-5 h-5 text-gray-400 hover:text-gray-600" />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-auto">
+          <NSWEvaluationReportDisplay 
+            report={evaluationReport}
+            essayText={content}
+            onClose={onExit}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Show submission success screen
+  if (isSubmitted && isEvaluating) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
         <div className="max-w-2xl w-full bg-white rounded-3xl shadow-2xl border border-gray-200 overflow-hidden">
-          <div className="bg-gradient-to-r from-green-500 to-emerald-600 p-8 text-center">
-            <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-12 h-12 text-green-500" />
+          <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-8 text-center">
+            <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 animate-spin">
+              <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full"></div>
             </div>
-            <h1 className="text-3xl font-bold text-white mb-2">Essay Submitted Successfully!</h1>
-            <p className="text-green-100 text-lg">Your practice exam has been completed</p>
+            <h1 className="text-3xl font-bold text-white mb-2">Generating Report</h1>
+            <p className="text-blue-100 text-lg">Analyzing your essay...</p>
           </div>
           <div className="p-8">
-            <div className="bg-purple-50 rounded-xl p-4 text-center mb-8">
-              <p className="text-sm text-gray-600 mb-1">Time Used</p>
-              <p className="text-3xl font-bold text-gray-900">{formatTime(30 * 60 - timeRemaining)}</p>
-              <p className="text-xs text-gray-500">minutes</p>
+            <div className="bg-blue-50 rounded-xl p-4 text-center">
+              <p className="text-sm text-gray-600">Please wait while we evaluate your essay against NSW criteria</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if evaluation failed
+  if (evaluationError) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center p-4">
+        <div className="max-w-2xl w-full bg-white rounded-3xl shadow-2xl border border-gray-200 overflow-hidden">
+          <div className="bg-gradient-to-r from-red-500 to-orange-600 p-8 text-center">
+            <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="w-12 h-12 text-red-500" />
+            </div>
+            <h1 className="text-3xl font-bold text-white mb-2">Evaluation Error</h1>
+            <p className="text-red-100 text-lg">Unable to generate report</p>
+          </div>
+          <div className="p-8">
+            <div className="bg-red-50 rounded-xl p-4 mb-6 border border-red-200">
+              <p className="text-sm text-red-800">{evaluationError}</p>
             </div>
             <button
-              onClick={onExit}
-              className="w-full px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all transform hover:scale-105 shadow-lg"
+              onClick={() => {
+                setIsSubmitted(false);
+                setEvaluationError(null);
+              }}
+              className="w-full px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg"
             >
-              Return to Dashboard
+              Try Again
             </button>
           </div>
         </div>
