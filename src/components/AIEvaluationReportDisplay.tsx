@@ -105,16 +105,16 @@ export function AIEvaluationReportDisplay({ report, essayText, onClose }: AIEval
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
       <div className="bg-white rounded-lg shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 sticky top-0 z-10">
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 sticky top-0 z-10">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold mb-2">AI-Powered NSW Writing Assessment</h2>
-              <p className="text-blue-100 text-sm">Sophisticated analysis based on NSW Selective criteria</p>
+              <h2 className="text-2xl font-bold mb-2 text-white">AI-Powered NSW Writing Assessment</h2>
+              <p className="text-white opacity-90 text-sm">Sophisticated analysis based on NSW Selective criteria</p>
             </div>
             <div className="flex items-center gap-3">
               <button
                 onClick={downloadReport}
-                className="flex items-center gap-2 bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors"
+                className="flex items-center gap-2 bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 transition-colors font-semibold"
               >
                 <Download className="w-4 h-4" />
                 Download
@@ -122,7 +122,8 @@ export function AIEvaluationReportDisplay({ report, essayText, onClose }: AIEval
               {onClose && (
                 <button
                   onClick={onClose}
-                  className="text-white hover:text-blue-100 transition-colors"
+                  className="text-white hover:bg-white hover:bg-opacity-20 transition-all p-2 rounded-lg"
+                  aria-label="Close report"
                 >
                   <X className="w-6 h-6" />
                 </button>
