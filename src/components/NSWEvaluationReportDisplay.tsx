@@ -242,28 +242,28 @@ export function NSWEvaluationReportDisplay({ report, essayText, onClose }: NSWEv
   return (
     <div className="max-w-6xl mx-auto p-6 bg-white dark:bg-gray-900">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg p-6 mb-6">
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg p-6 mb-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold mb-2">NSW Writing Assessment Report</h1>
-            <p className="text-blue-100">Your Personal Writing Journey Report</p>
+            <h1 className="text-3xl font-bold mb-2 text-white">NSW Writing Assessment Report</h1>
+            <p className="text-white opacity-90">Your Personal Writing Journey Report</p>
           </div>
           <div className="text-right">
             <div className="flex items-center space-x-4">
               <div>
-                <p className="text-blue-100 text-sm">Student: Student</p>
-                <p className="text-blue-100 text-sm">Date: 10/9/2025</p>
-                <p className="text-blue-100 text-xs">Report ID: nsw-1760000950368</p>
+                <p className="text-white opacity-90 text-sm">Student: Student</p>
+                <p className="text-white opacity-90 text-sm">Date: 10/9/2025</p>
+                <p className="text-white opacity-75 text-xs">Report ID: nsw-1760000950368</p>
               </div>
               <div className="text-center">
-                <div className="text-6xl font-bold mb-2">{report.overallScore}</div>
-                <div className="text-sm text-blue-100">/100</div>
+                <div className="text-6xl font-bold mb-2 text-white">{report.overallScore.toFixed(2)}</div>
+                <div className="text-sm text-white opacity-90">/10</div>
                 <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-bold mt-2 ${getGradeColor(overallGrade)}`}>
                   {overallGrade}
                 </div>
                 <div className="flex items-center justify-center mt-2">
                   <span className="text-yellow-300 text-2xl">⭐</span>
-                  <span className="text-white ml-2">Great Job!</span>
+                  <span className="text-white ml-2 font-semibold">Great Job!</span>
                 </div>
               </div>
             </div>
