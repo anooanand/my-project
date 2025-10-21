@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Home } from 'lucide-react';
 
 interface FAQItemProps {
   question: string;
@@ -38,9 +40,22 @@ const FAQItem: React.FC<FAQItemProps> = ({ question, answer }) => {
 };
 
 export const FAQPage: React.FC = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="bg-gradient-to-br from-blue-50 via-white to-purple-50 min-h-screen py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
+        {/* Back to Home Button */}
+        <div className="mb-6">
+          <button
+            onClick={() => navigate('/')}
+            className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 border border-gray-300 rounded-lg shadow-sm transition-all hover:shadow-md text-gray-700 font-medium"
+          >
+            <Home className="w-5 h-5" />
+            Back to Home
+          </button>
+        </div>
+
         <h1 className="text-4xl md:text-5xl font-bold text-center mb-4">
           <span className="bg-gradient-to-r from-blue-600 to-purple-700 bg-clip-text text-transparent">FAQ</span>
         </h1>

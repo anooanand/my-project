@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowRight, Check, Star } from 'lucide-react';
+import { ArrowRight, Check, Star, Home } from 'lucide-react';
 import { supabase } from '../lib/supabase'; // Removed isEmailVerified import
 import { createCheckoutSession } from '../lib/stripe';
 import { products } from '../stripe-config';
@@ -133,6 +133,17 @@ export function PricingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Back to Home Button */}
+        <div className="mb-6">
+          <button
+            onClick={() => navigate('/')}
+            className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 border border-gray-300 rounded-lg shadow-sm transition-all hover:shadow-md text-gray-700 font-medium"
+          >
+            <Home className="w-5 h-5" />
+            Back to Home
+          </button>
+        </div>
+
         {/* Header */}
         <div className="text-center mb-16">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
