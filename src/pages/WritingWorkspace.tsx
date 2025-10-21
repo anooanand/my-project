@@ -38,14 +38,14 @@ export default function WritingWorkspaceFixed() {
   // Listen for submit events from AppContent
   React.useEffect(() => {
     const handleSubmitEvent = (event: CustomEvent) => {
-      console.log(\'📨 WritingWorkspace: Received submit event:\', event.detail);
+      console.log('📨 WritingWorkspace: Received submit event:', event.detail);
       onNSWSubmit();
     };
 
-    window.addEventListener(\'submitForEvaluation\', handleSubmitEvent as EventListener);
+    window.addEventListener('submitForEvaluation', handleSubmitEvent as EventListener);
     
     return () => {
-      window.removeEventListener(\'submitForEvaluation\', handleSubmitEvent as EventListener);
+      window.removeEventListener('submitForEvaluation', handleSubmitEvent as EventListener);
     };
   }, []);
 
@@ -75,7 +75,7 @@ export default function WritingWorkspaceFixed() {
 
   // NSW Evaluation Submit Handler
   async function onNSWSubmit() {
-    console.log(\'🎯 NSW Submit triggered\');
+    console.log('🎯 NSW Submit triggered');
     setStatus("loading");
     setErr(undefined);
     setShowNSWEvaluation(true);
@@ -93,7 +93,7 @@ export default function WritingWorkspaceFixed() {
       });
       
     } catch (e: any) {
-      console.error(\'NSW Submit error:\', e);
+      console.error('NSW Submit error:', e);
       setStatus("error");
       setErr(e?.message || "Failed to initiate NSW evaluation");
       setShowNSWEvaluation(false);
@@ -103,6 +103,7 @@ export default function WritingWorkspaceFixed() {
   // Handle NSW evaluation completion
   function onNSWEvaluationComplete(report: any) {
     console.log("NSW Evaluation completed:", report);
+    console.log("Report domains:", report.domains);
     setNswReport(report);
     setStatus("success");
     
@@ -111,25 +112,25 @@ export default function WritingWorkspaceFixed() {
       overallScore: report.overallScore || 0,
       criteria: {
         ideasContent: {
-          score: Math.round((report.domains?.contentAndIdeas?.score || 0) / 5),
+          score: Math.round((report.domains?.contentAndIdeas?.score || 0) / 5) || 0,
           weight: 30,
           strengths: [report.domains?.contentAndIdeas?.feedback || "Good content development"],
           improvements: report.domains?.contentAndIdeas?.improvements || []
         },
         structureOrganization: {
-          score: Math.round((report.domains?.textStructure?.score || 0) / 5),
+          score: Math.round((report.domains?.textStructure?.score || 0) / 5) || 0,
           weight: 25,
           strengths: [report.domains?.textStructure?.feedback || "Clear structure"],
           improvements: report.domains?.textStructure?.improvements || []
         },
         languageVocab: {
-          score: Math.round((report.domains?.languageFeatures?.score || 0) / 5),
+          score: Math.round((report.domains?.languageFeatures?.score || 0) / 5) || 0,
           weight: 25,
           strengths: [report.domains?.languageFeatures?.feedback || "Good language use"],
           improvements: report.domains?.languageFeatures?.improvements || []
         },
         spellingPunctuationGrammar: {
-          score: Math.round((report.domains?.conventions?.score || 0) / 5),
+          score: Math.round((report.domains?.conventions?.score || 0) / 5) || 0,
           weight: 20,
           strengths: [report.domains?.conventions?.feedback || "Accurate conventions"],
           improvements: report.domains?.conventions?.improvements || []
@@ -149,7 +150,7 @@ export default function WritingWorkspaceFixed() {
   }
 
   function onProgressUpdate(metrics: any) {
-    console.log(\'Progress updated:\', metrics);
+    console.log('Progress updated:', metrics);
   }
 
   // Simple autosave
@@ -180,7 +181,7 @@ export default function WritingWorkspaceFixed() {
     }
   }, []);
 
-  const prompt = "The Secret Door in the Library: During a rainy afternoon, you decide to explore the dusty old library in your town that you\'ve never visited before. As you wander through the aisles, you discover a hidden door behind a bookshelf. It\'s slightly ajar, and a faint, warm light spills out from the crack. What happens when you push the door open? Describe the world you enter and the adventures that await you inside. Who do you meet, and what challenges do you face? How does this experience change you by the time you return to the library? Let your imagination run wild as you take your reader on a journey through this mysterious door!";
+  const prompt = "The Secret Door in the Library: During a rainy afternoon, you decide to explore the dusty old library in your town that you've never visited before. As you wander through the aisles, you discover a hidden door behind a bookshelf. It's slightly ajar, and a faint, warm light spills out from the crack. What happens when you push the door open? Describe the world you enter and the adventures that await you inside. Who do you meet, and what challenges do you face? How does this experience change you by the time you return to the library? Let your imagination run wild as you take your reader on a journey through this mysterious door!";
 
   return (
     <div className="h-screen flex flex-col bg-gray-50 overflow-hidden">
@@ -234,7 +235,7 @@ export default function WritingWorkspaceFixed() {
               <h2 className="font-semibold text-sm text-blue-900">Writing Prompt</h2>
             </div>
             <ChevronDown 
-              className={`w-4 h-4 text-blue-700 transition-transform ${promptExpanded ? \'rotate-180\' : \'\'}`}
+              className={`w-4 h-4 text-blue-700 transition-transform ${promptExpanded ? 'rotate-180' : ''}`}
             />
           </div>
 
@@ -262,114 +263,56 @@ export default function WritingWorkspaceFixed() {
           {/* Collapsed State - Show Icon Only */}
           {!promptExpanded && (
             <div className="flex-1 flex items-center justify-center">
-              <BookOpen className="w-8 h-8 text-blue-300" />
+              <BookOpen className="w-8 h-8 text-blue-400" />
             </div>
           )}
         </div>
 
-        {/* RIGHT PANEL - WRITING AREA + COACH */}
-        <div className="flex-1 flex overflow-hidden">
-          
-          {/* WRITING AREA */}
-          <div className="flex-1 flex flex-col bg-white">
-            {/* Editor Container */}
-            <div className="flex-1 flex flex-col p-4 overflow-hidden">
-              <div className="flex-1 bg-white rounded-lg border border-gray-200 shadow-sm relative overflow-hidden">
+        {/* RIGHT PANEL - EDITOR AND COACH */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <CoachProvider>
+            <div className="flex-1 flex overflow-hidden">
+              {/* Main Content: Editor */}
+              <div className="flex-1 flex flex-col relative">
                 <InteractiveTextEditor
                   ref={editorRef}
-                  onTextChange={setCurrentText}
-                  onProgressUpdate={onProgressUpdate}
-                  className="h-full"
+                  analysis={analysis}
+                  onApplyFix={onApplyFix}
+                  className="flex-1 p-8 bg-white text-lg leading-relaxed focus:outline-none overflow-y-auto"
+                />
+                {showNSWEvaluation && (
+                  <div className="absolute inset-0 bg-white bg-opacity-95 z-10 flex items-center justify-center">
+                    <NSWStandaloneSubmitSystem 
+                      text={currentText}
+                      textType={textType}
+                      wordCount={wordCount}
+                      onEvaluationComplete={onNSWEvaluationComplete}
+                      onClose={() => setShowNSWEvaluation(false)}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Right Sidebar: Coach Panel */}
+              <div className="w-80 bg-gray-50 border-l border-gray-200 overflow-y-auto">
+                <EnhancedCoachPanel 
+                  analysis={analysis}
+                  onApplyFix={onApplyFix} 
                 />
               </div>
             </div>
 
-            {/* Submit Button */}
-            <div className="px-4 pb-4">
-              <button
-                onClick={onNSWSubmit}
-                disabled={status === "loading"}
-                className={`w-full py-2.5 px-4 rounded-lg font-semibold text-white text-sm transition-all duration-200 ${
-                  status === "loading" 
-                    ? \'bg-gray-400 cursor-not-allowed\' 
-                    : \'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 shadow-md hover:shadow-lg\'
-                }`}
-              >
-                {status === "loading" ? (
-                  <div className="flex items-center justify-center">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                    Generating Assessment...
-                  </div>
-                ) : (
-                  \'Submit for NSW Evaluation\'
-                )}
-              </button>
+            {/* Footer with Progress Coach */}
+            <div className="bg-white border-t border-gray-200 p-4">
+              <ProgressCoach 
+                wordCount={wordCount}
+                targetWordCount={targetWordCount}
+                onUpdate={onProgressUpdate}
+              />
             </div>
-          </div>
-
-          {/* COACH/ASSESSMENT PANEL */}
-          <div className="w-80 border-l border-gray-200 bg-white flex flex-col overflow-hidden">
-            {showNSWEvaluation ? (
-              /* NSW Evaluation System */
-              <div className="h-full flex flex-col">
-                <div className="px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-blue-50">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-sm text-gray-900">NSW Assessment</h3>
-                    <button
-                      onClick={() => setShowNSWEvaluation(false)}
-                      className="text-gray-600 hover:text-gray-900 text-xs font-medium"
-                    >
-                      ← Back
-                    </button>
-                  </div>
-                </div>
-                <div className="flex-1 overflow-auto">
-                  <div className="p-4">
-                    <NSWStandaloneSubmitSystem
-                      content={currentText}
-                      wordCount={wordCount}
-                      targetWordCountMin={100}
-                      targetWordCountMax={400}
-                      textType={textType}
-                      prompt={prompt}
-                      onSubmissionComplete={onNSWEvaluationComplete}
-                    />
-                  </div>
-                </div>
-              </div>
-            ) : (
-              /* Coach Panel */
-              <div className="h-full flex flex-col">
-                <div className="px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-amber-50 to-orange-50">
-                  <h3 className="font-semibold text-sm text-gray-900">Writing Coach</h3>
-                </div>
-                <div className="flex-1 overflow-auto">
-                  <div className="p-4">
-                    <EnhancedCoachPanel 
-                      content={currentText}
-                      textType={textType}
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+          </CoachProvider>
         </div>
       </div>
-
-      {/* ERROR DISPLAY */}
-      {err && (
-        <div className="bg-red-50 border-t border-red-200 px-6 py-2">
-          <div className="flex items-center space-x-3">
-            <div className="flex-shrink-0">
-              <svg className="h-4 w-4 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <p className="text-xs text-red-800">{err}</p>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
