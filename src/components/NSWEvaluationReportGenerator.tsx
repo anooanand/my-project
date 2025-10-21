@@ -72,7 +72,7 @@ export class NSWEvaluationReportGenerator {
       throw new Error(
         `❌ Your original content is only ${cleanedWordCount} words.\n` +
         `You need ${targetWordCountMin} words of YOUR OWN creative story.\n` +
-        `(The prompt text doesn\"t count toward your word count!)`
+        `(The prompt text doesn\'t count toward your word count!)`
       );
     }
 
@@ -121,7 +121,7 @@ export class NSWEvaluationReportGenerator {
 
   private static detectPromptCopying(essayContent: string, prompt: string): PromptCheckResult {
     const normalizedEssay = essayContent.trim().toLowerCase();
-    const normalizedPrompt = prompt.trim().toLowerCase();
+    const normalizedPrompt = (prompt || "").trim().toLowerCase();
 
     // Split prompt into sentences
     const promptSentences = normalizedPrompt.split(/[.!?]+/).filter(s => s.trim().length > 20);
@@ -141,7 +141,7 @@ export class NSWEvaluationReportGenerator {
       }
     }
 
-    // If more than 50% of prompt sentences found in essay, it\"s copied
+    // If more than 50% of prompt sentences found in essay, it\'s copied
     if (promptSentences.length > 0 && matchedSentences / promptSentences.length > 0.5) {
       return {
         isCopied: true,
@@ -179,9 +179,9 @@ export class NSWEvaluationReportGenerator {
 
 
   private static removePromptFromEssay(essayContent: string, prompt: string): string {
-    const normalizedPrompt = prompt.toLowerCase();
+    const normalizedPrompt = (prompt || "").toLowerCase();
     const essayWords = essayContent.split(/\s+/);
-    const promptWords = prompt.split(/\s+/);
+    const promptWords = (prompt || "").split(/\s+/);
 
     let startIndex = 0;
 
@@ -287,136 +287,250 @@ export class NSWEvaluationReportGenerator {
     else if (errorCount <= 12) score = 1;
     else score = 0;
 
-    const finalScore = score;
-    const maxScore = 10;
-    const weight = 15; // As per overallScore calculation (0.15)
-    const percentage = (finalScore / maxScore) * 100;
-    const band = NSWEvaluationReportGenerator.getBand(finalScore);
-    const feedback: string[] = []; // Populate with actual feedback
-    const specificExamples: string[] = []; // Populate with actual examples
-    const childFriendlyExplanation = "This score checks your spelling and grammar to make sure your writing is clear and easy to read.";
+    const feedback: string[] = [];
+    const specificExamples: string[] = [];
 
-    return {
-      score: finalScore,
-      maxScore: maxScore,
-      percentage: percentage,
-      band: band,
-      weight: weight,
-      weightedScore: finalScore * (weight / 100),
-      feedback: feedback,
-      specificExamples: specificExamples,
-      childFriendlyExplanation: childFriendlyExplanation,
-    };
-  }
-
-  private static scoreContentAndIdeas(
-    cleanedEssay: string,
-    fullEssayContent: string,
-    prompt: string,
-    wordCount: number,
-    targetWordCountMin: number,
-    promptCheck: PromptCheckResult
-  ): DomainScore {
-    if (promptCheck.isCopied) {
-      // Return a default DomainScore object for copied content
-      return {
-        score: 0,
-        maxScore: 10,
-        percentage: 0,
-        band: "Band 1",
-        weight: 40,
-        weightedScore: 0,
-        feedback: ["Content copied from prompt."],
-        specificExamples: [],
-        childFriendlyExplanation: "Your essay contains too much of the prompt text. Please write your own original story.",
-      };
+    if (errorCount > 5) {
+      feedback.push("Your essay contains several spelling and grammar errors that make it difficult to read. Focus on correct word usage and sentence structure.");
+    } else if (errorCount > 0) {
+      feedback.push("A few spelling and grammar mistakes were found. Proofread carefully to catch these errors.");
+    } else {
+      feedback.push("Excellent control over spelling and grammar. Your writing is clear and precise.");
     }
-    const lowerContent = cleanedEssay.toLowerCase();
-    let score = 10;
-    
-    // **FIX**: Adjusted scoring for shorter essays
-    if (wordCount < targetWordCountMin * 0.8) score -= 2; // Scaled penalty
-    if (!lowerContent.includes("story") && !lowerContent.includes("character")) score -= 1; // Scaled penalty
-    const finalScore = Math.max(0, score);
-    const maxScore = 10;
-    const weight = 40; // As per overallScore calculation (0.4)
-    const percentage = (finalScore / maxScore) * 100;
-    const band = NSWEvaluationReportGenerator.getBand(finalScore);
-    const feedback: string[] = []; // Populate with actual feedback
-    const specificExamples: string[] = []; // Populate with actual examples
-    const childFriendlyExplanation = "This score shows how well your ideas match the prompt and how interesting your story is.";
+
+    if (nonsenseWords > 0) {
+      specificExamples.push(`Detected ${nonsenseWords} words that appear to be nonsense or incorrectly spelled. Double-check words like '${words.filter(w => !/[aeiou]/i.test(w.replace(/[^a-z]/gi, "")) && w.replace(/[^a-z]/gi, "").length > 3).join(", ")}'.`);
+    }
+    if (articleErrors > 0) {
+      specificExamples.push(`Found ${articleErrors} instances of incorrect article usage (e.g., 'a' before a vowel sound). Review your use of 'a' and 'an'.`);
+    }
+
+    const childFriendlyExplanation = score >= 7 ? 
+      "You used words correctly and your sentences made sense. Great job!" :
+      "Some of your words had mistakes, or your sentences were a little mixed up. Keep practicing to make your writing super clear!";
 
     return {
-      score: finalScore,
-      maxScore: maxScore,
-      percentage: percentage,
-      band: band,
-      weight: weight,
-      weightedScore: finalScore * (weight / 100),
+      score: score,
+      maxScore: 10,
+      percentage: (score / 10) * 100,
+      band: NSWEvaluationReportGenerator.getBand(score),
+      weight: 0.25,
+      weightedScore: score * 0.25,
       feedback: feedback,
       specificExamples: specificExamples,
       childFriendlyExplanation: childFriendlyExplanation,
     };
   }
 
-  private static scoreStructureAndOrganization(cleanedEssay: string, wordCount: number): DomainScore {
-    const paragraphs = cleanedEssay.split("\n").filter(p => p.trim().length > 10).length;
-    
-    // **FIX**: More lenient scoring for shorter essays
-    let score;
-    if (paragraphs < 2) score = 4;
-    else if (paragraphs < 3) score = 6;
-    else if (paragraphs < 4) score = 8;
-    else score = 10;
+  private static scoreLanguageAndVocabulary(essayContent: string): DomainScore {
+    let score = 0;
+    const words = essayContent.split(/\s+/).filter(w => w.length > 0);
+    const uniqueWords = new Set(words.map(word => word.toLowerCase()));
 
-    const maxScore = 10;
-    const weight = 20; // As per overallScore calculation (0.2)
-    const percentage = (score / maxScore) * 100;
-    const band = NSWEvaluationReportGenerator.getBand(score);
-    const feedback: string[] = []; // Populate with actual feedback
-    const specificExamples: string[] = []; // Populate with actual examples
-    const childFriendlyExplanation = "This score shows how well your essay is organized with clear paragraphs and a good flow.";
+    // Vocabulary richness (simple metric: unique words / total words)
+    const vocabularyRatio = uniqueWords.size / words.length;
+    if (vocabularyRatio > 0.6) score += 3; // Very rich
+    else if (vocabularyRatio > 0.4) score += 2; // Good
+    else score += 1; // Basic
+
+    // Use of varied sentence structures (simple check for commas, conjunctions)
+    const complexSentenceIndicators = (essayContent.match(/[,;]|\band\b|\bbut\b|\bor\b|\bso\b|\bbecause\b/gi) || []).length;
+    if (complexSentenceIndicators > words.length * 0.05) score += 3; // Good variety
+    else if (complexSentenceIndicators > words.length * 0.02) score += 2; // Some variety
+    else score += 1; // Limited variety
+
+    // Use of descriptive language (adjectives, adverbs - simple count)
+    const descriptiveWords = (essayContent.match(/\b(?:very|really|quite|extremely|beautiful|ugly|quickly|slowly|suddenly|happily|sadly)\b/gi) || []).length;
+    if (descriptiveWords > words.length * 0.03) score += 2; // Good descriptive language
+    else if (descriptiveWords > words.length * 0.01) score += 1; // Some descriptive language
+
+    // Check for clichés or overused phrases (example)
+    const cliches = ["once upon a time", "happily ever after", "in a galaxy far, far away"];
+    let clicheCount = 0;
+    cliches.forEach(cliche => {
+      if (essayContent.toLowerCase().includes(cliche)) {
+        clicheCount++;
+      }
+    });
+    if (clicheCount > 0) score -= clicheCount;
+
+    // Ensure score is not negative and capped at 10
+    score = Math.max(0, Math.min(10, score));
+
+    const feedback: string[] = [];
+    const specificExamples: string[] = [];
+
+    if (vocabularyRatio > 0.5) {
+      feedback.push("Your vocabulary is strong and varied, making your writing engaging.");
+    } else if (vocabularyRatio > 0.3) {
+      feedback.push("You use a good range of words, but try to introduce more sophisticated vocabulary.");
+    } else {
+      feedback.push("Consider expanding your vocabulary to make your writing more interesting and precise.");
+    }
+
+    if (complexSentenceIndicators > words.length * 0.04) {
+      feedback.push("You effectively use varied sentence structures, which adds flow and complexity to your essay.");
+    } else {
+      feedback.push("Vary your sentence structures to avoid monotony. Try combining shorter sentences or using more complex clauses.");
+    }
+
+    const childFriendlyExplanation = score >= 7 ? 
+      "You used lots of interesting words and different kinds of sentences. Your writing sounds really good!" :
+      "Try using some new and exciting words, and mix up your sentences so they don't all sound the same.";
 
     return {
       score: score,
-      maxScore: maxScore,
-      percentage: percentage,
-      band: band,
-      weight: weight,
-      weightedScore: score * (weight / 100),
+      maxScore: 10,
+      percentage: (score / 10) * 100,
+      band: NSWEvaluationReportGenerator.getBand(score),
+      weight: 0.25,
+      weightedScore: score * 0.25,
       feedback: feedback,
       specificExamples: specificExamples,
       childFriendlyExplanation: childFriendlyExplanation,
     };
   }
 
-  private static scoreLanguageAndVocabulary(cleanedEssay: string): DomainScore {
-    const words = cleanedEssay.split(/\s+/);
-    const uniqueWords = new Set(words);
-    const lexicalDensity = uniqueWords.size / words.length;
-    
-    // **FIX**: More lenient scoring for shorter essays
-    let score;
-    if (lexicalDensity > 0.6) score = 10;
-    else if (lexicalDensity > 0.5) score = 8;
-    else if (lexicalDensity > 0.4) score = 6;
-    else score = 4;
+  private static scoreStructureAndOrganization(essayContent: string, wordCount: number): DomainScore {
+    let score = 0;
+    const paragraphs = essayContent.split(/\n\s*\n/).filter(p => p.trim().length > 0);
 
-    const maxScore = 10;
-    const weight = 25; // As per overallScore calculation (0.25)
-    const percentage = (score / maxScore) * 100;
-    const band = NSWEvaluationReportGenerator.getBand(score);
-    const feedback: string[] = []; // Populate with actual feedback
-    const specificExamples: string[] = []; // Populate with actual examples
-    const childFriendlyExplanation = "This score looks at how many different and interesting words you use, and how well you put them together.";
+    // Basic paragraph structure
+    if (paragraphs.length >= 3) score += 3; // Introduction, body, conclusion
+    else if (paragraphs.length >= 1) score += 1;
+
+    // Paragraph length consistency (simple check)
+    const avgParagraphLength = words.length / paragraphs.length;
+    const words = essayContent.split(/\s+/).filter(w => w.length > 0);
+
+    let consistentLength = true;
+    for (const p of paragraphs) {
+      const pWords = p.split(/\s+/).filter(w => w.length > 0);
+      if (pWords.length < avgParagraphLength * 0.5 || pWords.length > avgParagraphLength * 1.5) {
+        consistentLength = false;
+        break;
+      }
+    }
+    if (consistentLength && paragraphs.length > 1) score += 2;
+
+    // Use of transition words (simple check for common transitions)
+    const transitionWords = ["firstly", "secondly", "finally", "in conclusion", "however", "therefore", "additionally", "moreover"];
+    let transitionCount = 0;
+    const lowerContent = essayContent.toLowerCase();
+    transitionWords.forEach(word => {
+      if (lowerContent.includes(word)) {
+        transitionCount++;
+      }
+    });
+    if (transitionCount >= 3) score += 3;
+    else if (transitionCount >= 1) score += 1;
+
+    // Logical flow (placeholder for more advanced analysis)
+    // For now, assume good flow if structure and transitions are present
+    if (paragraphs.length >= 3 && transitionCount >= 2) score += 2;
+
+    score = Math.max(0, Math.min(10, score));
+
+    const feedback: string[] = [];
+    const specificExamples: string[] = [];
+
+    if (paragraphs.length < 3) {
+      feedback.push("Your essay could benefit from a clearer structure with distinct introduction, body, and conclusion paragraphs.");
+      specificExamples.push(`Currently, your essay has ${paragraphs.length} paragraphs. Aim for at least three to clearly separate your ideas.`);
+    } else {
+      feedback.push("Your essay has a clear and well-organized structure.");
+    }
+
+    if (!consistentLength && paragraphs.length > 1) {
+      feedback.push("Some of your paragraphs vary significantly in length. Try to develop each idea more evenly.");
+    }
+
+    if (transitionCount < 3) {
+      feedback.push("Incorporate more transition words and phrases to improve the flow between your ideas and paragraphs.");
+      specificExamples.push("Words like 'however', 'therefore', 'in addition', or 'consequently' can help guide the reader.");
+    }
+
+    const childFriendlyExplanation = score >= 7 ? 
+      "Your story has a great beginning, middle, and end, and all your ideas fit together nicely!" :
+      "Think about making your story have a clear start, middle, and end. Use special words to connect your ideas, like 'first', 'next', and 'finally'.";
 
     return {
       score: score,
-      maxScore: maxScore,
-      percentage: percentage,
-      band: band,
-      weight: weight,
-      weightedScore: score * (weight / 100),
+      maxScore: 10,
+      percentage: (score / 10) * 100,
+      band: NSWEvaluationReportGenerator.getBand(score),
+      weight: 0.25,
+      weightedScore: score * 0.25,
+      feedback: feedback,
+      specificExamples: specificExamples,
+      childFriendlyExplanation: childFriendlyExplanation,
+    };
+  }
+
+  private static scoreContentAndIdeas(essayForScoring: string, originalEssay: string, prompt: string, wordCount: number, targetWordCountMin: number, promptCheck: PromptCheckResult): DomainScore {
+    let score = 0;
+    const lowerEssay = essayForScoring.toLowerCase();
+    const lowerPrompt = prompt.toLowerCase();
+
+    // Adherence to prompt (basic keyword matching for now)
+    let promptKeywords = lowerPrompt.split(/\s+/).filter(w => w.length > 3 && !["the", "a", "an", "is", "are", "was", "were", "to", "of", "in", "on", "and", "or", "but"].includes(w));
+    let matchedKeywords = 0;
+    promptKeywords.forEach(keyword => {
+      if (lowerEssay.includes(keyword)) {
+        matchedKeywords++;
+      }
+    });
+
+    if (matchedKeywords / promptKeywords.length > 0.7) score += 3; // Strong adherence
+    else if (matchedKeywords / promptKeywords.length > 0.4) score += 2; // Moderate adherence
+    else score += 1; // Limited adherence
+
+    // Originality/Creativity (based on prompt check and unique words - placeholder)
+    if (!promptCheck.isCopied && wordCount >= targetWordCountMin) score += 3; // Original and sufficient length
+    else if (!promptCheck.isCopied) score += 2; // Original but might be short
+    else score += 0; // Copied content
+
+    // Development of ideas (simple check for essay length vs target)
+    if (wordCount >= targetWordCountMin * 1.2) score += 2; // Well-developed
+    else if (wordCount >= targetWordCountMin) score += 1; // Sufficiently developed
+
+    // Engagement (placeholder - hard to measure programmatically)
+    // For now, assume good engagement if other scores are high
+    if (score >= 6) score += 2; // Engaging
+
+    score = Math.max(0, Math.min(10, score));
+
+    const feedback: string[] = [];
+    const specificExamples: string[] = [];
+
+    if (promptCheck.isCopied) {
+      feedback.push(promptCheck.reason);
+    } else if (matchedKeywords / promptKeywords.length < 0.5) {
+      feedback.push("Your essay does not fully address the prompt. Ensure all aspects of the prompt are covered.");
+      specificExamples.push("Review the prompt and identify key themes or questions you might have missed.");
+    } else {
+      feedback.push("Your essay directly addresses the prompt and develops relevant ideas effectively.");
+    }
+
+    if (wordCount < targetWordCountMin) {
+      feedback.push(`Your essay is a bit short. Try to elaborate more on your ideas to reach the target word count of ${targetWordCountMin}.`);
+    } else if (wordCount >= targetWordCountMin * 1.2) {
+      feedback.push("Your ideas are well-developed and supported with sufficient detail.");
+    } else {
+      feedback.push("Your ideas are present, but could be further developed with more examples or explanations.");
+    }
+
+    const childFriendlyExplanation = score >= 7 ? 
+      "You understood the story task perfectly and had lots of great, new ideas!" :
+      "Make sure your story is all about the task, and try to think of more of your own special ideas.";
+
+    return {
+      score: score,
+      maxScore: 10,
+      percentage: (score / 10) * 100,
+      band: NSWEvaluationReportGenerator.getBand(score),
+      weight: 0.25,
+      weightedScore: score * 0.25,
       feedback: feedback,
       specificExamples: specificExamples,
       childFriendlyExplanation: childFriendlyExplanation,
