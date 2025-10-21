@@ -8,7 +8,7 @@ try {
     throw new Error('STRIPE_SECRET_KEY environment variable is not set');
   }
   stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-    apiVersion: '2022-11-15',
+    apiVersion: '2024-12-18.acacia',
   });
 } catch (error) {
   console.error('Failed to initialize Stripe:', error);
@@ -45,6 +45,8 @@ const handler: Handler = async (event) => {
     console.log('=== STRIPE CHECKOUT SESSION CREATION ===');
     console.log('Event headers:', JSON.stringify(event.headers, null, 2));
     console.log('Event body:', event.body);
+    console.log('Stripe Secret Key present:', !!process.env.STRIPE_SECRET_KEY);
+    console.log('Stripe Secret Key starts with:', process.env.STRIPE_SECRET_KEY?.substring(0, 7));
 
     // Check if Stripe is initialized
     if (!stripe) {
@@ -52,9 +54,9 @@ const handler: Handler = async (event) => {
       return {
         statusCode: 500,
         headers,
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           error: 'Payment system not configured',
-          message: 'Stripe secret key is missing'
+          message: 'Stripe secret key is missing. Please contact support.'
         }),
       };
     }
