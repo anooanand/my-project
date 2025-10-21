@@ -66,34 +66,34 @@ const testimonials: Testimonial[] = [
 
 const successMetrics: SuccessMetric[] = [
   {
-    id: 'improvement',
-    value: '87%',
-    label: 'Average Score Improvement',
-    description: 'Students see significant writing score improvements within 4 weeks',
+    id: 'feedback',
+    value: 'Instant',
+    label: 'AI-Powered Feedback',
+    description: 'Get detailed writing feedback in real-time as you write',
     icon: <TrendingUp className="w-8 h-8" />,
     color: 'green'
   },
   {
-    id: 'confidence',
-    value: '92%',
-    label: 'Confidence Boost',
-    description: 'Students report feeling more confident about writing after using our platform',
+    id: 'criteria',
+    value: 'NSW Aligned',
+    label: 'Official Criteria',
+    description: 'Based on NSW Department of Education marking rubric',
     icon: <Award className="w-8 h-8" />,
     color: 'blue'
   },
   {
-    id: 'students',
-    value: '10,000+',
-    label: 'Happy Students',
-    description: 'Students across NSW have improved their writing skills with Writing Mate',
+    id: 'progress',
+    value: 'Track Progress',
+    label: 'Monitor Growth',
+    description: 'See your writing skills improve over time with detailed analytics',
     icon: <Users className="w-8 h-8" />,
     color: 'purple'
   },
   {
-    id: 'satisfaction',
-    value: '4.9/5',
-    label: 'Parent Satisfaction',
-    description: 'Parents love seeing their children\'s writing progress and enthusiasm',
+    id: 'support',
+    value: '24/7',
+    label: 'Always Available',
+    description: 'Practice and get feedback anytime, anywhere you need it',
     icon: <Star className="w-8 h-8" />,
     color: 'amber'
   }
@@ -108,10 +108,10 @@ export function StudentSuccessSection() {
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900 dark:text-white">
-            Amazing Student Success Stories
+            Why Choose Writing Mate?
           </h2>
           <p className="text-lg text-gray-700 dark:text-gray-200 max-w-3xl mx-auto">
-            See how Writing Mate has helped thousands of students improve their writing skills and ace their selective exams.
+            Experience professional-grade writing coaching powered by AI, tailored for NSW Selective Exam success.
           </p>
         </div>
 
@@ -135,12 +135,12 @@ export function StudentSuccessSection() {
         </div>
 
         {/* Call to Action */}
-        <div className="text-center bg-gradient-to-r from-blue-600 to-purple-700 rounded-2xl p-8 text-white">
-          <h3 className="text-2xl md:text-3xl font-bold mb-4">
-            Join Thousands of Successful Students!
+        <div className="text-center bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-8 text-white shadow-xl">
+          <h3 className="text-2xl md:text-3xl font-bold mb-4 text-white">
+            Start Your Writing Journey Today!
           </h3>
-          <p className="text-lg mb-6 opacity-95">
-            Start your writing journey today and see amazing results in just weeks.
+          <p className="text-lg mb-6 text-white">
+            Get instant feedback and personalized guidance to improve your writing skills.
           </p>
           <button className="px-8 py-4 bg-white text-blue-700 font-bold rounded-xl hover:bg-gray-100 transition-colors duration-300 shadow-lg">
             Start Your Free Trial
@@ -180,19 +180,19 @@ function SuccessMetricCard({ metric }: SuccessMetricCardProps) {
   };
 
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-6 border-2 ${colorClasses[metric.color].border} transform hover:scale-105`}>
+    <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 p-6 border-2 ${colorClasses[metric.color].border} transform hover:scale-105`}>
       <div className={`${colorClasses[metric.color].bg} p-3 rounded-lg w-fit mb-4`}>
         <div className={colorClasses[metric.color].text}>
           {metric.icon}
         </div>
       </div>
-      <div className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+      <div className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
         {metric.value}
       </div>
-      <div className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-2">
+      <div className="text-base font-semibold text-gray-800 dark:text-gray-100 mb-2">
         {metric.label}
       </div>
-      <div className="text-sm text-gray-700 dark:text-gray-300">
+      <div className="text-sm text-gray-600 dark:text-gray-300">
         {metric.description}
       </div>
     </div>

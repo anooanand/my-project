@@ -92,14 +92,6 @@ export function Footer({ onNavigate }: FooterProps) {
                   Start Writing
                 </button>
               </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-base transition-colors duration-300 font-medium"
-                >
-                  API Documentation
-                </a>
-              </li>
             </ul>
           </div>
 
@@ -134,14 +126,6 @@ export function Footer({ onNavigate }: FooterProps) {
                   Help Center
                 </a>
               </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-base transition-colors duration-300 font-medium"
-                >
-                  Status Page
-                </a>
-              </li>
             </ul>
           </div>
 
@@ -158,30 +142,6 @@ export function Footer({ onNavigate }: FooterProps) {
                 >
                   About Us
                 </button>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-base transition-colors duration-300 font-medium"
-                >
-                  Blog
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-base transition-colors duration-300 font-medium"
-                >
-                  Careers
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#"
-                  className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-base transition-colors duration-300 font-medium"
-                >
-                  Press Kit
-                </a>
               </li>
             </ul>
           </div>
@@ -231,7 +191,7 @@ export function Footer({ onNavigate }: FooterProps) {
                   Ready to improve your writing?
                 </h4>
                 <p className="text-base text-blue-700 dark:text-blue-300">
-                  Join thousands of students preparing for NSW Selective School exams.
+                  Start your NSW Selective School exam preparation today.
                 </p>
               </div>
               <button

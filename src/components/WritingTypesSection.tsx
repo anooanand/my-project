@@ -14,8 +14,8 @@ export function WritingTypesSection() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          <WritingTypeCard 
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <WritingTypeCard
             icon={<PenTool className="w-5 h-5 text-blue-700 dark:text-blue-300" />}
             title="Storytelling & Creative Writing"
             description="Master the art of creative storytelling and narrative techniques"
@@ -27,7 +27,7 @@ export function WritingTypesSection() {
             color="blue"
           />
 
-          <WritingTypeCard 
+          <WritingTypeCard
             icon={<Target className="w-5 h-5 text-purple-700 dark:text-purple-300" />}
             title="Argument & Debate Writing"
             description="Learn to craft compelling arguments and balanced discussions"
@@ -38,20 +38,7 @@ export function WritingTypesSection() {
             color="purple"
           />
 
-          <WritingTypeCard 
-            icon={<Award className="w-5 h-5 text-green-700 dark:text-green-300" />}
-            title="Essay Scorer"
-            description="Get detailed feedback and scores based on NSW marking criteria"
-            features={[
-              { name: "Detailed Analysis", description: "Comprehensive feedback on content, structure, and language" },
-              { name: "NSW Criteria", description: "Aligned with Selective School marking standards" },
-              { name: "Improvement Tips", description: "Actionable suggestions for better scores" },
-              { name: "Score Tracking", description: "Monitor your progress over time" }
-            ]}
-            color="green"
-          />
-
-          <WritingTypeCard 
+          <WritingTypeCard
             icon={<BookOpen className="w-5 h-5 text-blue-700 dark:text-blue-300" />}
             title="Informative & Reflective Writing"
             description="Develop clear explanations and thoughtful reflections"
@@ -62,7 +49,7 @@ export function WritingTypesSection() {
             color="blue"
           />
 
-          <WritingTypeCard 
+          <WritingTypeCard
             icon={<Sparkles className="w-5 h-5 text-orange-700 dark:text-orange-300" />}
             title="Descriptive & Expressive Writing"
             description="Paint vivid pictures with words and express emotions"
@@ -71,6 +58,21 @@ export function WritingTypesSection() {
               { name: "Diary Entry Writing", description: "Express personal thoughts and feelings effectively" }
             ]}
             color="orange"
+          />
+        </div>
+
+        <div className="max-w-2xl mx-auto">
+          <WritingTypeCard
+            icon={<Award className="w-5 h-5 text-green-700 dark:text-green-300" />}
+            title="Essay Scorer"
+            description="Get detailed feedback and scores based on NSW marking criteria"
+            features={[
+              { name: "Detailed Analysis", description: "Comprehensive feedback on content, structure, and language" },
+              { name: "NSW Criteria", description: "Aligned with Selective School marking standards" },
+              { name: "Improvement Tips", description: "Actionable suggestions for better scores" },
+              { name: "Score Tracking", description: "Monitor your progress over time" }
+            ]}
+            color="green"
           />
         </div>
       </div>
