@@ -1414,6 +1414,49 @@ export function EnhancedCoachPanel({
                           <div className="text-yellow-700 whitespace-pre-line">{message.content.example}</div>
                         </div>
 
+                        {/* Quick Links to Tools based on NSW Focus */}
+                        {message.content.nswFocus && (
+                          <div className="bg-purple-50 p-2 rounded border border-purple-200">
+                            <div className="font-medium text-purple-800 text-xs mb-1.5">🔧 Quick Tools:</div>
+                            <div className="flex flex-wrap gap-1.5">
+                              {(message.content.nswFocus.includes('Grammar') || message.content.nswFocus.includes('Spelling')) && (
+                                <button
+                                  onClick={() => setCurrentView('grammar')}
+                                  className="px-2 py-1 bg-orange-100 hover:bg-orange-200 border border-orange-300 rounded text-xs font-medium text-orange-800 transition-colors flex items-center gap-1"
+                                >
+                                  <FileCheck className="w-3 h-3" />
+                                  Fix Grammar & Spelling
+                                </button>
+                              )}
+                              {(message.content.nswFocus.includes('Language') || message.content.nswFocus.includes('Vocabulary')) && (
+                                <button
+                                  onClick={() => setCurrentView('vocabulary')}
+                                  className="px-2 py-1 bg-pink-100 hover:bg-pink-200 border border-pink-300 rounded text-xs font-medium text-pink-800 transition-colors flex items-center gap-1"
+                                >
+                                  <Sparkles className="w-3 h-3" />
+                                  Enhance Vocabulary
+                                </button>
+                              )}
+                              {message.content.nswFocus.includes('Structure') && (
+                                <button
+                                  onClick={() => setCurrentView('sentences')}
+                                  className="px-2 py-1 bg-indigo-100 hover:bg-indigo-200 border border-indigo-300 rounded text-xs font-medium text-indigo-800 transition-colors flex items-center gap-1"
+                                >
+                                  <AlignLeft className="w-3 h-3" />
+                                  Check Sentences
+                                </button>
+                              )}
+                              <button
+                                onClick={() => setCurrentView('detailed')}
+                                className="px-2 py-1 bg-blue-100 hover:bg-blue-200 border border-blue-300 rounded text-xs font-medium text-blue-800 transition-colors flex items-center gap-1"
+                              >
+                                <BarChart3 className="w-3 h-3" />
+                                Full Analysis
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
                         {/* Contextual Examples (Enhanced) */}
                         {message.content.contextualExamples && message.content.contextualExamples.length > 0 && (
                           <div className="bg-teal-50 p-2 rounded border-l-2 border-teal-400">
