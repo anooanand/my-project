@@ -12,6 +12,7 @@ import {
   XCircle,
   Award,
   Sparkles,
+  X,
 } from 'lucide-react';
 import type { ComprehensiveFeedback } from '../lib/comprehensiveFeedbackAnalyzer';
 
@@ -25,6 +26,7 @@ export const ComprehensiveFeedbackDisplay: React.FC<ComprehensiveFeedbackDisplay
   darkMode = false,
 }) => {
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['grammar', 'nsw']));
+  const [dismissedIssues, setDismissedIssues] = useState<Set<number>>(new Set());
 
   const toggleSection = (section: string) => {
     const newExpanded = new Set(expandedSections);
@@ -34,6 +36,12 @@ export const ComprehensiveFeedbackDisplay: React.FC<ComprehensiveFeedbackDisplay
       newExpanded.add(section);
     }
     setExpandedSections(newExpanded);
+  };
+
+  const dismissIssue = (index: number) => {
+    const newDismissed = new Set(dismissedIssues);
+    newDismissed.add(index);
+    setDismissedIssues(newDismissed);
   };
 
   const getSeverityColor = (severity: 'high' | 'medium' | 'low') => {
@@ -75,12 +83,19 @@ export const ComprehensiveFeedbackDisplay: React.FC<ComprehensiveFeedbackDisplay
 
           {expandedSections.has('grammar') && (
             <div className="px-4 pb-4 space-y-3">
-              {feedback.grammarIssues.map((issue, idx) => (
+              {feedback.grammarIssues.filter((_, idx) => !dismissedIssues.has(idx)).map((issue, idx) => (
                 <div
                   key={idx}
-                  className={`p-3 rounded-lg border ${getSeverityColor(issue.severity)}`}
+                  className={`p-3 rounded-lg border ${getSeverityColor(issue.severity)} relative`}
                 >
-                  <div className="flex items-start justify-between mb-2">
+                  <button
+                    onClick={() => dismissIssue(idx)}
+                    className="absolute top-2 right-2 p-1 hover:bg-gray-200 rounded-full transition-colors"
+                    title="Dismiss"
+                  >
+                    <X className="w-4 h-4 text-gray-500 hover:text-gray-700" />
+                  </button>
+                  <div className="flex items-start justify-between mb-2 pr-8">
                     <span className="text-xs font-medium uppercase">{issue.type}</span>
                     <span className={`text-xs px-2 py-0.5 rounded ${getSeverityColor(issue.severity)}`}>
                       {issue.severity}
