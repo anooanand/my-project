@@ -1,7 +1,11 @@
 import React from 'react';
 import { BookOpen, Clock, Brain, Sparkles, ArrowRight, BarChart2, Zap, Target, PenTool, Award } from 'lucide-react';
 
-export function WritingTypesSection() {
+interface WritingTypesSectionProps {
+  onSignInClick: () => void;
+}
+
+export function WritingTypesSection({ onSignInClick }: WritingTypesSectionProps) {
   return (
     <section className="py-12 bg-white dark:bg-gray-900" id="writing-types">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -25,6 +29,7 @@ export function WritingTypesSection() {
               { name: "Recount Writing", description: "Share personal or historical experiences effectively" }
             ]}
             color="blue"
+            onSignInClick={onSignInClick}
           />
 
           <WritingTypeCard
@@ -36,6 +41,7 @@ export function WritingTypesSection() {
               { name: "Discursive Writing", description: "Explore different viewpoints on complex topics" }
             ]}
             color="purple"
+            onSignInClick={onSignInClick}
           />
 
           <WritingTypeCard
@@ -47,6 +53,7 @@ export function WritingTypesSection() {
               { name: "Reflective Writing", description: "Share personal insights and learning experiences" }
             ]}
             color="blue"
+            onSignInClick={onSignInClick}
           />
 
           <WritingTypeCard
@@ -58,6 +65,7 @@ export function WritingTypesSection() {
               { name: "Diary Entry Writing", description: "Express personal thoughts and feelings effectively" }
             ]}
             color="orange"
+            onSignInClick={onSignInClick}
           />
         </div>
 
@@ -73,6 +81,7 @@ export function WritingTypesSection() {
               { name: "Score Tracking", description: "Monitor your progress over time" }
             ]}
             color="green"
+            onSignInClick={onSignInClick}
           />
         </div>
       </div>
@@ -87,9 +96,10 @@ interface WritingTypeCardProps {
   types?: Array<{name: string, description: string}>;
   features?: Array<{name: string, description: string}>;
   color: 'blue' | 'purple' | 'green' | 'orange';
+  onSignInClick: () => void;
 }
 
-function WritingTypeCard({ icon, title, description, types, features, color }: WritingTypeCardProps) {
+function WritingTypeCard({ icon, title, description, types, features, color, onSignInClick }: WritingTypeCardProps) {
   const colorClasses = {
     blue: {
       border: 'border-blue-300 dark:border-blue-700',
@@ -141,12 +151,12 @@ function WritingTypeCard({ icon, title, description, types, features, color }: W
               </span>
             </div>
             <p className="text-xs text-gray-600 dark:text-gray-300 mb-2">{type.description}</p>
-            <button className={`flex items-center text-xs font-medium ${colorClasses[color].text}`}>
+            <button onClick={onSignInClick} className={`flex items-center text-xs font-medium ${colorClasses[color].text}`}>
               Sign In to Start
               <ArrowRight className="ml-1 w-3 h-3" />
             </button>
           </div>
-         ))}
+          ))}
         
         {features && features.map((feature, index) => (
           <div key={index} className="mb-3 last:mb-0">
@@ -166,7 +176,7 @@ function WritingTypeCard({ icon, title, description, types, features, color }: W
         ))}
         
         {features && (
-          <button className={`mt-3 w-full py-2 px-3 rounded-md bg-green-700 hover:bg-green-800 text-white text-sm font-medium flex items-center justify-center`}>
+          <button onClick={onSignInClick} className={`mt-3 w-full py-2 px-3 rounded-md bg-green-700 hover:bg-green-800 text-white text-sm font-medium flex items-center justify-center`}>
             Sign In to Score Essays
             <ArrowRight className="ml-2 w-3 h-3" />
           </button>
