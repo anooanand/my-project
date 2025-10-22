@@ -68,8 +68,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSignInClick })
               </div>
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-100 shadow-sm">
                 <BookOpen className="w-8 h-8 text-purple-600 mx-auto mb-2" />
-                <div className="text-sm font-semibold text-gray-900 mb-1">NSW Aligned with official NSW Department of Education rubric</div>
-                <div className="text-xs text-gray-600">Curriculum specific, following the official NSW Department of Education rubric</div>
+                <div className="text-sm font-semibold text-gray-900 mb-1">NSW Aligned Curriculum</div>
+                <div className="text-xs text-gray-600">Official NSW Department of Education rubric</div>
               </div>
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-100 shadow-sm">
                 <Target className="w-8 h-8 text-green-600 mx-auto mb-2" />
@@ -99,23 +99,32 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSignInClick })
             <div className="relative aspect-video bg-black">
               <video
                 src="https://files.manuscdn.com/user_upload_by_module/session_file/113184588/uelvKSMHlXhPbBxk.mp4"
-                controls
                 className="w-full h-full"
                 poster="https://files.manuscdn.com/user_upload_by_module/session_file/92567668/vDkqoyrtydNvcdzk.png"
+                onClick={() => setIsVideoPlaying(!isVideoPlaying)}
+                autoPlay={isVideoPlaying}
+                loop
+                muted
+                playsInline
               >
                 Your browser does not support the video tag.
               </video>
+              {!isVideoPlaying && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 cursor-pointer" onClick={() => setIsVideoPlaying(true)}>
+                  <Play className="w-20 h-20 text-white" />
+                </div>
+              )}
             </div>
 
             {/* Video Info */}
             <div className="bg-gradient-to-r from-blue-600 to-purple-700 px-8 py-6 text-white">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-2xl font-bold mb-2 text-white">Complete Platform Demo</h3>
-                  <p className="text-white">Learn how to get started with Writing Mate and unlock your writing potential</p>
+                  <h3 className="text-2xl font-bold mb-2 text-gray-100">Complete Platform Demo</h3>
+                  <p className="text-gray-200">Learn how to get started with Writing Mate and unlock your writing potential</p>
                 </div>
                 <div className="text-right">
-                  <div className="text-sm font-semibold text-white mb-2">Duration: 2:18</div>
+                  <div className="text-sm font-semibold text-gray-200 mb-2">Duration: 2:18</div>
                 </div>
               </div>
             </div>
@@ -165,7 +174,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSignInClick })
           <div className="grid md:grid-cols-3 gap-8 mb-12">
             <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
               <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center mb-4">
-                <span className="text-2xl">😰</span>
+                <Users className="w-6 h-6 text-red-600" />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">No Instant Feedback</h3>
               <p className="text-gray-600">Wait days for tutor feedback, missing crucial practice time before exams.</p>
@@ -173,7 +182,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSignInClick })
 
             <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
               <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center mb-4">
-                <span className="text-2xl">💸</span>
+                <Award className="w-6 h-6 text-red-600" />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">Expensive Tutoring</h3>
               <p className="text-gray-600">Private tutors cost $60-120/hour with inconsistent quality and availability.</p>
@@ -181,7 +190,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSignInClick })
 
             <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
               <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center mb-4">
-                <span className="text-2xl">📚</span>
+                <BookOpen className="w-6 h-6 text-red-600" />
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-3">Generic Advice</h3>
               <p className="text-gray-600">One-size-fits-all guidance doesn't address your specific weaknesses.</p>
@@ -193,9 +202,12 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSignInClick })
             <h3 className="text-3xl md:text-4xl font-bold mb-4 text-white">
               Get Unlimited AI Coaching for Less Than One Tutoring Session
             </h3>
-            <p className="text-xl text-white mb-8 max-w-2xl mx-auto">
-              Instant feedback • Available 24/7 • Personalized to your needs • NSW curriculum aligned
-            </p>
+            <div className="grid grid-cols-2 gap-4 text-white text-lg mb-8 max-w-2xl mx-auto">
+              <div className="flex items-center justify-center"><CheckCircle className="w-5 h-5 mr-2" /> Instant feedback</div>
+              <div className="flex items-center justify-center"><CheckCircle className="w-5 h-5 mr-2" /> Available 24/7</div>
+              <div className="flex items-center justify-center"><CheckCircle className="w-5 h-5 mr-2" /> Personalized to your needs</div>
+              <div className="flex items-center justify-center"><CheckCircle className="w-5 h-5 mr-2" /> NSW curriculum aligned</div>
+            </div>
             <button
               onClick={( ) => onNavigate(user ? 'dashboard' : 'pricing')}
               className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold bg-white text-purple-700 rounded-xl hover:shadow-xl transform hover:scale-105 transition-all duration-200"
