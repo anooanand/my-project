@@ -411,7 +411,10 @@ function AppContent() {
                 onForceSignOut={handleForceSignOut}
               />
               <div className="main-route-content">
-                <HomePage onNavigate={handleNavigation} />
+                <HomePage onNavigate={handleNavigation} onSignInClick={() => {
+                  setAuthModalMode("signin");
+                  setShowAuthModal(true);
+                }} />
               </div>
             </>
           } />
@@ -436,7 +439,10 @@ function AppContent() {
                 onForceSignOut={handleForceSignOut}
               />
               <div className="main-route-content">
-                <HomePage onNavigate={handleNavigation} />
+                <HomePage onNavigate={handleNavigation} onSignInClick={() => {
+                  setAuthModalMode("signin");
+                  setShowAuthModal(true);
+                }} />
               </div>
             </>
           } />
