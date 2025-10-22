@@ -10,9 +10,10 @@ import { ArrowRight, CheckCircle, Star, Users, Zap, BookOpen, Award, Target, Pla
 
 interface HomePageProps {
   onNavigate: (page: string, type?: string) => void;
+  onSignInClick: () => void;
 }
 
-export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
+export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSignInClick }) => {
   const { user } = useAuth();
   const [isVideoPlaying, setIsVideoPlaying] = React.useState(false);
 
@@ -111,9 +112,10 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-2xl font-bold mb-2 text-white">Complete Platform Demo</h3>
-                <p className="text-white">Learn how to get started with Writing Mate and unlock your writing potential</p>                </div>
+                  <p className="text-white">Learn how to get started with Writing Mate and unlock your writing potential</p>
+                </div>
                 <div className="text-right">
-               <div className="text-sm font-semibold text-white mb-2">Duration: 2:18</div>
+                  <div className="text-sm font-semibold text-white mb-2">Duration: 2:18</div>
                 </div>
               </div>
             </div>
@@ -214,7 +216,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
       </div>
 
       {/* Writing Types */}
-      <WritingTypesSection onNavigate={onNavigate} />
+      <WritingTypesSection onSignInClick={onSignInClick} />
 
       {/* Student Success */}
       <StudentSuccessSection />
