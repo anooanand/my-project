@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { HeroSection } from './HeroSection';
 import { FeaturesSection } from './FeaturesSection';
@@ -15,7 +15,19 @@ interface HomePageProps {
 
 export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSignInClick }) => {
   const { user } = useAuth();
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [isVideoPlaying, setIsVideoPlaying] = React.useState(false);
+
+  const handlePlayPause = () => {
+    if (videoRef.current) {
+      if (isVideoPlaying) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play();
+      }
+      setIsVideoPlaying(!isVideoPlaying);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -101,8 +113,9 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSignInClick })
                 src="https://files.manuscdn.com/user_upload_by_module/session_file/113184588/uelvKSMHlXhPbBxk.mp4"
                 className="w-full h-full"
                 poster="https://files.manuscdn.com/user_upload_by_module/session_file/92567668/vDkqoyrtydNvcdzk.png"
-                onClick={() => setIsVideoPlaying(!isVideoPlaying)}
-                autoPlay={isVideoPlaying}
+                ref={videoRef}
+                onPlay={( ) => setIsVideoPlaying(true)}
+                onPause={() => setIsVideoPlaying(false)}
                 loop
                 muted
                 playsInline
@@ -110,7 +123,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSignInClick })
                 Your browser does not support the video tag.
               </video>
               {!isVideoPlaying && (
-                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 cursor-pointer" onClick={() => setIsVideoPlaying(true)}>
+                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 cursor-pointer" onClick={handlePlayPause}>
                   <Play className="w-20 h-20 text-white" />
                 </div>
               )}
@@ -209,7 +222,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSignInClick })
               <div className="flex items-center justify-center"><CheckCircle className="w-5 h-5 mr-2" /> NSW curriculum aligned</div>
             </div>
             <button
-              onClick={( ) => onNavigate(user ? 'dashboard' : 'pricing')}
+              onClick={() => onNavigate(user ? 'dashboard' : 'pricing')}
               className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold bg-white text-purple-700 rounded-xl hover:shadow-xl transform hover:scale-105 transition-all duration-200"
             >
               {user ? 'Start Writing Now' : 'View Pricing'}
