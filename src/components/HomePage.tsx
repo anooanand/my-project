@@ -100,7 +100,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
                 src="https://files.manuscdn.com/user_upload_by_module/session_file/113184588/uelvKSMHlXhPbBxk.mp4"
                 controls
                 className="w-full h-full"
-                poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 675'%3E%3Crect fill='%23111827' width='1200' height='675'/%3E%3C/svg%3E"
+                poster="https://files.manuscdn.com/user_upload_by_module/session_file/92567668/vDkqoyrtydNvcdzk.png"
               >
                 Your browser does not support the video tag.
               </video>
@@ -195,7 +195,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
               Instant feedback • Available 24/7 • Personalized to your needs • NSW curriculum aligned
             </p>
             <button
-              onClick={() => onNavigate(user ? 'dashboard' : 'pricing')}
+              onClick={( ) => onNavigate(user ? 'dashboard' : 'pricing')}
               className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold bg-white text-purple-700 rounded-xl hover:shadow-xl transform hover:scale-105 transition-all duration-200"
             >
               {user ? 'Start Writing Now' : 'View Pricing'}
