@@ -15,12 +15,12 @@ const steps: Step[] = [
   {
     id: 'choose-type',
     title: 'Choose Your Writing Type',
-    description: 'Select from 11 different text types designed for NSW selective exams',
+    description: 'Select from 15 different text types designed for NSW selective exams',
     details: 'Start by selecting the writing type you want to master. Our platform offers a wide range of text types aligned with NSW selective exams, providing tailored templates and guidance for each. This ensures you focus on the specific skills needed for success.',
     icon: <BookOpen className="w-8 h-8" />,
     color: 'blue',
     features: [
-      '11 different text types',
+      '15 different text types',
       'NSW exam-specific templates',
       'Clear structure guidelines',
       'Example prompts included'
@@ -180,7 +180,7 @@ export function HowItWorksSection() {
               </div>
 
               <button
-                onClick={() => window.location.href = `/demo?step=${activeStepData.id}`}
+                onClick={() => setShowDemo(true)}
                 className={`w-full ${colorClasses[activeStepData.color].button} text-white py-3 px-6 rounded-xl font-semibold transition-colors duration-300 flex items-center justify-center`}
               >
                 <Zap className="w-5 h-5 mr-2" />
