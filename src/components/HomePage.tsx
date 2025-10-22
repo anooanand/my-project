@@ -97,7 +97,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
             {/* Video Player */}
             <div className="relative aspect-video bg-black">
               <video
-                src="https://files.manuscdn.com/user_upload_by_module/session_file/113184588/JFEyWjKVbiQwTaRo.mp4"
+                src="https://files.manuscdn.com/user_upload_by_module/session_file/113184588/uelvKSMHlXhPbBxk.mp4"
                 controls
                 className="w-full h-full"
                 poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 675'%3E%3Crect fill='%23111827' width='1200' height='675'/%3E%3C/svg%3E"
@@ -110,11 +110,10 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
             <div className="bg-gradient-to-r from-blue-600 to-purple-700 px-8 py-6 text-white">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-2xl font-bold mb-2">Complete Platform Demo</h3>
-                  <p className="text-blue-100">Learn how to get started with Writing Mate and unlock your writing potential</p>
-                </div>
+                  <h3 className="text-2xl font-bold mb-2 text-white">Complete Platform Demo</h3>
+                <p className="text-white">Learn how to get started with Writing Mate and unlock your writing potential</p>                </div>
                 <div className="text-right">
-                  <div className="text-sm font-semibold text-blue-100 mb-2">Duration: 5:32</div>
+               <div className="text-sm font-semibold text-white mb-2">Duration: 2:18</div>
                 </div>
               </div>
             </div>
