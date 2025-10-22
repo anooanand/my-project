@@ -662,6 +662,7 @@ export function EnhancedCoachPanel({
   const [currentView, setCurrentView] = useState<'coach' | 'examples' | 'builder' | 'detailed' | 'nsw' | 'grammar' | 'vocabulary' | 'sentences'>('coach');
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isLoadingSession, setIsLoadingSession] = useState(true);
+  const [showQuestions, setShowQuestions] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const responseStartTime = useRef<number>(0);
 
@@ -1043,17 +1044,6 @@ export function EnhancedCoachPanel({
             )}
           </button>
 
-          <button
-            onClick={() => setCurrentView('nsw')}
-            className={`flex items-center justify-center space-x-1 px-2.5 py-1.5 rounded text-xs font-medium transition-colors whitespace-nowrap flex-shrink-0 ${
-              currentView === 'nsw'
-                ? 'bg-white text-purple-600 shadow-sm'
-                : 'bg-white/20 text-white hover:bg-white/30'
-            }`}
-          >
-            <Award className="w-3 h-3" />
-            <span>NSW Criteria</span>
-          </button>
 
           <button
             onClick={() => setCurrentView('grammar')}
@@ -1507,34 +1497,70 @@ export function EnhancedCoachPanel({
                 </div>
               )}
 
-              {/* NSW Criteria Display */}
-              {wordCount >= 50 && messages.length > 0 && messages[messages.length - 1].nswScores && (
-                <div className="mr-6 mb-3">
-                  <NSWCriteriaCompact scores={messages[messages.length - 1].nswScores} />
-                </div>
-              )}
 
               <div ref={messagesEndRef} />
             </div>
 
             {/* OPTIMIZED: Compact Input Area */}
-            <div className="p-3 border-t bg-gray-50">
-              <div className="flex space-x-2">
-                <input
-                  type="text"
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                  placeholder="Ask me anything about your writing..."
-                  className="flex-1 px-2 py-1 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+            <div className="border-t bg-gray-50">
+              {/* Prepopulated Questions - Collapsible */}
+              <div className="border-b border-gray-200">
                 <button
-                  onClick={handleSendMessage}
-                  disabled={!inputValue.trim()}
-                  className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={() => setShowQuestions(!showQuestions)}
+                  className="w-full px-3 py-2 flex items-center justify-between hover:bg-gray-100 transition-colors"
                 >
-                  <Send className="w-3 h-3" />
+                  <span className="text-xs font-medium text-gray-700">Quick Questions</span>
+                  {showQuestions ? (
+                    <ChevronUp className="w-4 h-4 text-gray-500" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4 text-gray-500" />
+                  )}
                 </button>
+
+                {showQuestions && (
+                  <div className="px-3 pb-3 space-y-1">
+                    {[
+                      "How can I make my opening more engaging?",
+                      "What words can I use instead of 'said'?",
+                      "How do I show, not tell, emotions?",
+                      "Can you help me improve this sentence?",
+                      "What's a good way to end my story?",
+                      "How can I add more description?"
+                    ].map((question, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          setInputValue(question);
+                          setShowQuestions(false);
+                        }}
+                        className="w-full text-left px-3 py-2 text-xs bg-white border border-gray-200 rounded hover:bg-blue-50 hover:border-blue-300 transition-colors text-gray-700"
+                      >
+                        {question}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Input Box */}
+              <div className="p-3">
+                <div className="flex space-x-2">
+                  <input
+                    type="text"
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                    placeholder="Ask me anything about your writing..."
+                    className="flex-1 px-2 py-1 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <button
+                    onClick={handleSendMessage}
+                    disabled={!inputValue.trim()}
+                    className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Send className="w-3 h-3" />
+                  </button>
+                </div>
               </div>
             </div>
           </>
@@ -1564,22 +1590,6 @@ export function EnhancedCoachPanel({
               <div className="text-center py-8 text-gray-500">
                 <Target className="w-12 h-12 mx-auto mb-3 opacity-50" />
                 <p>Write at least 20 words to see detailed feedback</p>
-              </div>
-            )}
-          </div>
-        ) : currentView === 'nsw' ? (
-          <div className="h-full overflow-y-auto p-4">
-            {messages.length > 0 && messages[messages.length - 1].nswScores ? (
-              <NSWCriteriaDisplay
-                scores={messages[messages.length - 1].nswScores}
-                wordCount={wordCount || 0}
-                showDetailed={true}
-              />
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <Award className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>Start writing to see your NSW Criteria scores</p>
-                <p className="text-xs mt-2">Write at least 20 words for initial assessment</p>
               </div>
             )}
           </div>
