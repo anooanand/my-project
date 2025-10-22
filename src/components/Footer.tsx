@@ -103,7 +103,7 @@ export function Footer({ onNavigate }: FooterProps) {
             <ul className="space-y-4">
               <li>
                 <button
-                  onClick={() => handleNavigation('faq')}
+                  onClick={() => handleNavigation("faq")}
                   className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-base transition-colors duration-300 font-medium"
                 >
                   FAQ
@@ -120,7 +120,7 @@ export function Footer({ onNavigate }: FooterProps) {
               </li>
               <li>
                 <a
-                  href="#"
+                  href="#faq"
                   className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-base transition-colors duration-300 font-medium"
                 >
                   Help Center
@@ -152,25 +152,25 @@ export function Footer({ onNavigate }: FooterProps) {
           <div className="flex flex-col lg:flex-row justify-between items-center space-y-6 lg:space-y-0">
             <div className="flex flex-wrap justify-center lg:justify-start gap-8">
               <a
-                href="#"
+                href="#faq"
                 className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm transition-colors duration-300 font-medium"
               >
                 Privacy Policy
               </a>
               <a
-                href="#"
+                href="#faq"
                 className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm transition-colors duration-300 font-medium"
               >
                 Terms of Service
               </a>
               <a
-                href="#"
+                href="#faq"
                 className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm transition-colors duration-300 font-medium"
               >
                 Cookie Policy
               </a>
               <a
-                href="#"
+                href="#faq"
                 className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white text-sm transition-colors duration-300 font-medium"
               >
                 Accessibility
