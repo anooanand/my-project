@@ -4,7 +4,7 @@ interface WritingTypesSectionProps {
   onSignInClick: () => void;
 }
 
-export function WritingTypesSectionEnhanced({ onSignInClick }: WritingTypesSectionProps) {
+export function WritingTypesSection({ onSignInClick }: WritingTypesSectionProps) {
   return (
     <section className="py-16 bg-white dark:bg-gray-900" id="writing-types">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
