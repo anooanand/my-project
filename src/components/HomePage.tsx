@@ -6,7 +6,7 @@ import { HowItWorksSection } from './HowItWorksSection';
 import { StudentSuccessSection } from './StudentSuccessSection';
 import { PricingPage } from './PricingPage';
 import { WritingTypesSection } from './WritingTypesSection';
-import { ArrowRight, CheckCircle, Star, Users, Zap, BookOpen, Award, Target } from 'lucide-react';
+import { ArrowRight, CheckCircle, Star, Users, Zap, BookOpen, Award, Target, Play } from 'lucide-react';
 
 interface HomePageProps {
   onNavigate: (page: string, type?: string) => void;
@@ -14,6 +14,7 @@ interface HomePageProps {
 
 export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
   const { user } = useAuth();
+  const [isVideoPlaying, setIsVideoPlaying] = React.useState(false);
 
   return (
     <div className="min-h-screen bg-white">
@@ -74,6 +75,75 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate }) => {
                 <div className="text-sm font-semibold text-gray-900 mb-1">Personalized</div>
                 <div className="text-xs text-gray-600">Adapts to your level</div>
               </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Demo Video Section - NEWLY ADDED */}
+      <section className="py-24 bg-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+              See Writing Mate in Action
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Watch how our AI-powered platform helps students master writing skills and achieve top marks in NSW Selective exams.
+            </p>
+          </div>
+
+          {/* Video Container */}
+          <div className="relative bg-gray-900 rounded-3xl overflow-hidden shadow-2xl">
+            {/* Video Player */}
+            <div className="relative aspect-video bg-black">
+              <video
+                src="https://files.manuscdn.com/user_upload_by_module/session_file/113184588/JFEyWjKVbiQwTaRo.mp4"
+                controls
+                className="w-full h-full"
+                poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 675'%3E%3Crect fill='%23111827' width='1200' height='675'/%3E%3C/svg%3E"
+              >
+                Your browser does not support the video tag.
+              </video>
+            </div>
+
+            {/* Video Info */}
+            <div className="bg-gradient-to-r from-blue-600 to-purple-700 px-8 py-6 text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-2xl font-bold mb-2">Complete Platform Demo</h3>
+                  <p className="text-blue-100">Learn how to get started with Writing Mate and unlock your writing potential</p>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm font-semibold text-blue-100 mb-2">Duration: 5:32</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Video Benefits */}
+          <div className="grid md:grid-cols-3 gap-8 mt-16">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Play className="w-8 h-8 text-blue-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Platform Overview</h3>
+              <p className="text-gray-600">Get a complete walkthrough of all features and tools available to help you improve your writing.</p>
+            </div>
+
+            <div className="text-center">
+              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Star className="w-8 h-8 text-purple-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Real Examples</h3>
+              <p className="text-gray-600">See real examples of how the AI feedback works and how students use it to improve their writing.</p>
+            </div>
+
+            <div className="text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Zap className="w-8 h-8 text-green-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Quick Start Guide</h3>
+              <p className="text-gray-600">Learn how to get started in just a few minutes and begin your writing improvement journey today.</p>
             </div>
           </div>
         </div>
