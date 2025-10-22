@@ -117,7 +117,6 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSignInClick })
                 onPlay={( ) => setIsVideoPlaying(true)}
                 onPause={() => setIsVideoPlaying(false)}
                 loop
-                muted
                 playsInline
               >
                 Your browser does not support the video tag.
