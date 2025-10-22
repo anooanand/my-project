@@ -100,7 +100,7 @@ export function PromptOptionsModal({
                 </div>
                 <div className="prompt-option-text-content">
                   <h3 className="prompt-option-title">
-                    Use My Own Idea 🎨
+                    Use my own Prompt
                   </h3>
                   <p className="prompt-option-description">
                     Type in your own {textType} writing prompt or topic. Great for when you have a specific idea!
