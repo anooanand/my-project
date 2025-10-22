@@ -15,12 +15,12 @@ const steps: Step[] = [
   {
     id: 'choose-type',
     title: 'Choose Your Writing Type',
-    description: 'Select from 15 different text types designed for NSW selective exams',
-    details: 'Start by choosing the type of writing you want to practice. Our platform covers all text types commonly found in NSW selective exams, including narrative, persuasive, informative, descriptive, and more. Each type comes with specific templates and guidance.',
+    description: 'Select from 11 different text types designed for NSW selective exams',
+    details: 'Start by selecting the writing type you want to master. Our platform offers a wide range of text types aligned with NSW selective exams, providing tailored templates and guidance for each. This ensures you focus on the specific skills needed for success.',
     icon: <BookOpen className="w-8 h-8" />,
     color: 'blue',
     features: [
-      '15 different text types',
+      '11 different text types',
       'NSW exam-specific templates',
       'Clear structure guidelines',
       'Example prompts included'
@@ -86,6 +86,7 @@ const steps: Step[] = [
 
 export function HowItWorksSection() {
   const [activeStep, setActiveStep] = useState(steps[0].id);
+  const [showDemo, setShowDemo] = useState(false);
 
   const activeStepData = steps.find(step => step.id === activeStep) || steps[0];
 
@@ -165,11 +166,11 @@ export function HowItWorksSection() {
               </h3>
               
               <p className="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
-                {activeStepData.details}
+                {activeStepData.description}
               </p>
 
               <div className="space-y-3 mb-8">
-                <h4 className="font-semibold text-gray-900 dark:text-white">Key Features:</h4>
+                <h4 className="font-semibold text-gray-900 dark:text-white">What you'll learn:</h4>
                 {activeStepData.features.map((feature, index) => (
                   <div key={index} className="flex items-center">
                     <CheckCircle className={`w-5 h-5 mr-3 ${colorClasses[activeStepData.color].text}`} />
@@ -179,11 +180,11 @@ export function HowItWorksSection() {
               </div>
 
               <button
-                onClick={() => document.getElementById('demo-section')?.scrollIntoView({ behavior: 'smooth' })}
+                onClick={() => window.location.href = `/demo?step=${activeStepData.id}`}
                 className={`w-full ${colorClasses[activeStepData.color].button} text-white py-3 px-6 rounded-xl font-semibold transition-colors duration-300 flex items-center justify-center`}
               >
-                <Play className="w-5 h-5 mr-2" />
-                Try This Step
+                <Zap className="w-5 h-5 mr-2" />
+                Try This Step Now
               </button>
             </div>
           </div>
@@ -231,7 +232,7 @@ export function HowItWorksSection() {
               Start Your Free Trial
             </button>
             <button
-              onClick={() => document.getElementById('demo-section')?.scrollIntoView({ behavior: 'smooth' })}
+              onClick={() => setShowDemo(true)}
               className="px-8 py-4 border-2 border-white text-white font-bold rounded-xl hover:bg-white hover:text-blue-600 transition-colors duration-300 flex items-center justify-center"
             >
               <Play className="w-5 h-5 mr-2" />
@@ -240,6 +241,11 @@ export function HowItWorksSection() {
           </div>
         </div>
       </div>
+
+      {/* Demo Modal */}
+      {showDemo && (
+        <DemoModal onClose={() => setShowDemo(false)} />
+      )}
     </section>
   );
 }
@@ -273,19 +279,66 @@ function StepCard({ step, index, isActive, onClick, colorClasses }: StepCardProp
             <span className={`text-sm font-bold px-2 py-1 rounded-full mr-3 ${
               isActive 
                 ? `${colorClasses[step.color].text} ${colorClasses[step.color].bg}` 
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+                : 'text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700'
             }`}>
               Step {index + 1}
             </span>
-            <h4 className="font-bold text-lg text-gray-900 dark:text-white">
-              {step.title}
-            </h4>
           </div>
-          <p className="text-gray-600 dark:text-gray-400">
+          <h3 className={`text-lg font-semibold mb-2 ${
+            isActive ? 'text-gray-900 dark:text-white' : 'text-gray-700 dark:text-gray-300'
+          }`}>
+            {step.title}
+          </h3>
+          <p className={`text-sm ${
+            isActive ? 'text-gray-700 dark:text-gray-300' : 'text-gray-600 dark:text-gray-400'
+          }`}>
             {step.description}
           </p>
         </div>
       </div>
     </button>
+  );
+}
+
+function DemoModal({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between">
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+              Writing Mate Demo
+            </h3>
+            <button
+              onClick={onClose}
+              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+        <div className="p-6">
+          <div className="aspect-video bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900 to-purple-900 rounded-xl flex items-center justify-center mb-6">
+            <div className="text-center">
+              <Play className="w-16 h-16 text-blue-600 dark:text-blue-400 mx-auto mb-4" />
+              <h4 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                Interactive Demo Coming Soon!
+              </h4>
+              <p className="text-gray-600 dark:text-gray-300">
+                Experience our step-by-step writing guidance in action
+              </p>
+            </div>
+          </div>
+          <div className="text-center">
+            <button
+              onClick={onClose}
+              className="px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors duration-300"
+            >
+              Start Your Free Trial Instead
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
