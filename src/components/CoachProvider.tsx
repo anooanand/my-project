@@ -55,7 +55,7 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
   });
 
   // UI state
-  const [showQuickQuestions, setShowQuickQuestions] = useState(true);
+  const [showQuickQuestions, setShowQuickQuestions] = useState(false);
 
   const [lastFeedbackTime, setLastFeedbackTime] = useState<number>(0);
   const [feedbackCount, setFeedbackCount] = useState<number>(0);
@@ -546,22 +546,22 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
   ];
 
   return (
-    <div className="h-full flex flex-col bg-white rounded-lg">
+    <div className="h-full flex flex-col bg-white dark:bg-slate-800 rounded-lg">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200">
+      <div className="p-4 border-b border-gray-200 dark:border-slate-700">
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-gray-800 flex items-center">
+          <h3 className="font-semibold text-gray-800 dark:text-gray-100 flex items-center">
             <MessageSquare className="w-4 h-4 mr-2 text-purple-600" />
             Writing Mate Chat
           </h3>
           <div className="flex items-center space-x-2">
             <div className={`w-2 h-2 rounded-full ${aiStatus.connected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-gray-500 dark:text-gray-400">
               {aiStatus.loading ? 'Checking...' : aiStatus.connected ? 'Online' : 'Offline'}
             </span>
             <button
               onClick={checkAIConnection}
-              className="p-1 hover:bg-gray-100 rounded"
+              className="p-1 hover:bg-gray-100 dark:hover:bg-slate-700 rounded"
               disabled={aiStatus.loading}
             >
               <RefreshCw className={`w-3 h-3 text-gray-400 ${aiStatus.loading ? 'animate-spin' : ''}`} />
@@ -569,7 +569,7 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
           </div>
         </div>
         {/* ENHANCED: Memory status indicator */}
-        <div className="mt-2 text-xs text-gray-500">
+        <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
           Focus areas: {feedbackMemory.focusAreas.join(', ') || 'Getting to know your writing...'}
         </div>
       </div>
@@ -586,8 +586,8 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
                 message.isUser
                   ? 'bg-purple-600 text-white'
                   : message.isFeedback
-                  ? 'bg-green-50 text-green-800 border border-green-200'
-                  : 'bg-gray-100 text-gray-800'
+                  ? 'bg-green-50 dark:bg-green-900 text-green-800 dark:text-green-100 border border-green-200 dark:border-green-700'
+                  : 'bg-gray-100 dark:bg-slate-700 text-gray-800 dark:text-gray-100'
               }`}
             >
               <div className="flex items-start space-x-2">
@@ -615,34 +615,38 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
         <div ref={chatEndRef} />
       </div>
 
-      {/* Quick Questions */}
-      {showQuickQuestions && (
-        <div className="p-4 border-t border-gray-200 bg-gray-50">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-gray-600">Quick questions to get started:</span>
-            <button
-              onClick={() => setShowQuickQuestions(false)}
-              className="text-gray-400 hover:text-gray-600"
-            >
-              <ChevronUp className="w-4 h-4" />
-            </button>
+      {/* Quick Questions - Collapsible */}
+      <div className="border-t border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800">
+        <button
+          onClick={() => setShowQuickQuestions(!showQuickQuestions)}
+          className="w-full p-4 flex items-center justify-between text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+        >
+          <span>Quick Questions</span>
+          {showQuickQuestions ? (
+            <ChevronUp className="w-4 h-4" />
+          ) : (
+            <ChevronDown className="w-4 h-4" />
+          )}
+        </button>
+        {showQuickQuestions && (
+          <div className="px-4 pb-4">
+            <div className="flex flex-wrap gap-2">
+              {quickQuestions.map((question, index) => (
+                <button
+                  key={index}
+                  onClick={() => setInputMessage(question)}
+                  className="text-xs px-3 py-1 bg-white dark:bg-slate-700 dark:text-gray-200 border border-gray-200 dark:border-slate-600 rounded-full hover:bg-purple-50 dark:hover:bg-slate-600 hover:border-purple-200 dark:hover:border-purple-500 transition-colors"
+                >
+                  {question}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {quickQuestions.map((question, index) => (
-              <button
-                key={index}
-                onClick={() => setInputMessage(question)}
-                className="text-xs px-3 py-1 bg-white border border-gray-200 rounded-full hover:bg-purple-50 hover:border-purple-200 transition-colors"
-              >
-                {question}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Input Area */}
-      <div className="p-4 border-t border-gray-200">
+      <div className="p-4 border-t border-gray-200 dark:border-slate-700">
         <div className="flex space-x-2">
           <input
             ref={inputRef}
@@ -651,7 +655,7 @@ export function CoachProvider({ content = '', onContentChange }: CoachProviderPr
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
             placeholder="Ask me anything about writing..."
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm"
+            className="flex-1 px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-sm bg-white dark:bg-slate-700 dark:text-gray-100"
             disabled={isAITyping}
           />
           <button
