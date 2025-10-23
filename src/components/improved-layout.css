@@ -14,6 +14,11 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
+.dark .writing-area-enhanced {
+  background: #0f172a;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
 .writing-textarea {
   font-size: 15px !important;
   line-height: 1.6 !important;
@@ -53,6 +58,7 @@
 /* Dark mode support */
 .dark .writing-textarea {
   color: #f9fafb !important;
+  background: #0f172a !important;
   scrollbar-color: #4b5563 #374151;
 }
 
