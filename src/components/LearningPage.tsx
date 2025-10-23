@@ -23,7 +23,7 @@ export function LearningPage({ state, onStateChange, onNavigateToWriting }: Lear
   const assistanceLevel = state?.assistanceLevel || 'detailed';
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-900">
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <header className="mb-8">
@@ -35,35 +35,35 @@ export function LearningPage({ state, onStateChange, onNavigateToWriting }: Lear
                 </svg>
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">NSW Selective Essay Coach</h1>
-                <p className="text-gray-600 mt-1">Master essay writing with our structured learning system</p>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">NSW Selective Essay Coach</h1>
+                <p className="text-gray-600 dark:text-gray-300 mt-1">Master essay writing with our structured learning system</p>
               </div>
             </div>
             
             {/* Quick Stats */}
-            <div className="flex items-center space-x-6 bg-white rounded-lg p-4 shadow-sm">
+            <div className="flex items-center space-x-6 bg-white dark:bg-slate-800 rounded-lg p-4 shadow-sm">
               <div className="text-center">
                 <div className="text-2xl font-bold text-blue-600">{progress.completedLessons.length}</div>
-                <div className="text-xs text-gray-500">Completed</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">Completed</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-green-600">{progress.currentStreak}</div>
-                <div className="text-xs text-gray-500">Day Streak</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">Day Streak</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-purple-600">{progress.totalPoints}</div>
-                <div className="text-xs text-gray-500">Points</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">Points</div>
               </div>
             </div>
           </div>
           
           {/* Navigation Tabs */}
-          <div className="flex border-b border-gray-200 mt-6">
+          <div className="flex border-b border-gray-200 dark:border-slate-700 mt-6">
             <button
               className={`py-3 px-6 font-medium text-sm transition-colors ${
                 activeView === 'plan'
-                  ? 'bg-blue-50 border-b-2 border-blue-500 text-blue-600'
-                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                  ? 'bg-blue-50 dark:bg-blue-900/30 border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-800'
               }`}
               onClick={() => setActiveView('plan')}
             >
@@ -72,8 +72,8 @@ export function LearningPage({ state, onStateChange, onNavigateToWriting }: Lear
             <button
               className={`py-3 px-6 font-medium text-sm transition-colors ${
                 activeView === 'progress'
-                  ? 'bg-blue-50 border-b-2 border-blue-500 text-blue-600'
-                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                  ? 'bg-blue-50 dark:bg-blue-900/30 border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-800'
               }`}
               onClick={() => setActiveView('progress')}
             >
@@ -81,7 +81,7 @@ export function LearningPage({ state, onStateChange, onNavigateToWriting }: Lear
             </button>
             <button
               className={`py-3 px-6 font-medium text-sm ml-auto ${
-                'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-800'
               }`}
               onClick={onNavigateToWriting}
             >
@@ -93,11 +93,11 @@ export function LearningPage({ state, onStateChange, onNavigateToWriting }: Lear
           {onStateChange && (
             <div className="flex flex-wrap gap-4 mt-4 items-center">
               <div className="flex items-center space-x-2">
-                <label className="text-sm font-medium text-gray-700">Writing Type:</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Writing Type:</label>
                 <select
                   value={textType}
                   onChange={(e) => onStateChange({ textType: e.target.value })}
-                  className="rounded-md border-gray-300 py-1.5 pl-3 pr-10 text-sm focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
+                  className="rounded-md border-gray-300 dark:border-slate-600 py-1.5 pl-3 pr-10 text-sm focus:ring-2 focus:ring-blue-600 focus:border-blue-600 bg-white dark:bg-slate-800 dark:text-gray-100"
                 >
                   <option value="">Select writing type...</option>
                   <option value="narrative">Narrative</option>
@@ -114,11 +114,11 @@ export function LearningPage({ state, onStateChange, onNavigateToWriting }: Lear
               </div>
               
               <div className="flex items-center space-x-2">
-                <label className="text-sm font-medium text-gray-700">Assistance Level:</label>
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Assistance Level:</label>
                 <select
                   value={assistanceLevel}
                   onChange={(e) => onStateChange({ assistanceLevel: e.target.value })}
-                  className="rounded-md border-gray-300 py-1.5 pl-3 pr-10 text-sm focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
+                  className="rounded-md border-gray-300 dark:border-slate-600 py-1.5 pl-3 pr-10 text-sm focus:ring-2 focus:ring-blue-600 focus:border-blue-600 bg-white dark:bg-slate-800 dark:text-gray-100"
                 >
                   <option value="detailed">Detailed Assistance</option>
                   <option value="moderate">Moderate Guidance</option>

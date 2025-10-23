@@ -148,8 +148,8 @@ export function EnhancedLearningPlan() {
   return (
     <div className="space-y-6">
       {/* Category Filter */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Learning Categories</h2>
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-6">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">Learning Categories</h2>
         <div className="flex flex-wrap gap-3">
           {categories.map((category) => {
             const IconComponent = category.icon;
@@ -159,8 +159,8 @@ export function EnhancedLearningPlan() {
                 onClick={() => setSelectedCategory(category.name)}
                 className={`flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all ${
                   selectedCategory === category.name
-                    ? 'bg-blue-100 text-blue-700 border-2 border-blue-300'
-                    : 'bg-gray-50 text-gray-600 hover:bg-gray-100 border-2 border-transparent'
+                    ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-2 border-blue-300 dark:border-blue-600'
+                    : 'bg-gray-50 dark:bg-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-600 border-2 border-transparent'
                 }`}
               >
                 <IconComponent className={`w-4 h-4 ${category.color}`} />
@@ -215,12 +215,12 @@ export function EnhancedLearningPlan() {
       </div>
 
       {/* Lessons Grid */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-6">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-gray-900">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
             {selectedCategory === 'All' ? 'All Lessons' : `${selectedCategory} Lessons`}
           </h2>
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-gray-500 dark:text-gray-400">
             {filteredLessons.length} lesson{filteredLessons.length !== 1 ? 's' : ''}
           </span>
         </div>
@@ -229,12 +229,12 @@ export function EnhancedLearningPlan() {
           {filteredLessons.map((lesson) => (
             <div
               key={lesson.id}
-              className={`relative bg-white border-2 rounded-xl p-6 transition-all hover:shadow-lg ${
+              className={`relative bg-white dark:bg-slate-800 border-2 rounded-xl p-6 transition-all hover:shadow-lg ${
                 lesson.isCompleted
-                  ? 'border-green-200 bg-green-50'
+                  ? 'border-green-200 dark:border-green-700 bg-green-50 dark:bg-green-900/20'
                   : lesson.isLocked
-                  ? 'border-gray-200 bg-gray-50 opacity-60'
-                  : 'border-gray-200 hover:border-blue-300'
+                  ? 'border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-900 opacity-60'
+                  : 'border-gray-200 dark:border-slate-700 hover:border-blue-300 dark:hover:border-blue-600'
               }`}
             >
               {/* Status Icons */}
@@ -249,12 +249,12 @@ export function EnhancedLearningPlan() {
               {/* Lesson Content */}
               <div className="space-y-4">
                 <div>
-                  <h3 className="font-bold text-lg text-gray-900 pr-8">{lesson.title}</h3>
-                  <p className="text-gray-600 text-sm mt-2">{lesson.description}</p>
+                  <h3 className="font-bold text-lg text-gray-900 dark:text-gray-100 pr-8">{lesson.title}</h3>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm mt-2">{lesson.description}</p>
                 </div>
 
                 <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center space-x-2 text-gray-500">
+                  <div className="flex items-center space-x-2 text-gray-500 dark:text-gray-400">
                     <Clock className="w-4 h-4" />
                     <span>{lesson.duration}</span>
                   </div>
@@ -268,20 +268,20 @@ export function EnhancedLearningPlan() {
                     <Star className="w-4 h-4 fill-current" />
                     <span className="text-sm font-medium">{lesson.points} pts</span>
                   </div>
-                  <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                  <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-slate-700 px-2 py-1 rounded">
                     {lesson.category}
                   </span>
                 </div>
 
                 {/* Prerequisites */}
                 {lesson.prerequisites && lesson.prerequisites.length > 0 && (
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
                     <span className="font-medium">Prerequisites:</span>
                     <div className="mt-1">
                       {lesson.prerequisites.map((prereq) => {
                         const prereqLesson = mockLessons.find(l => l.id === prereq);
                         return (
-                          <span key={prereq} className="inline-block bg-gray-100 px-2 py-1 rounded mr-1 mb-1">
+                          <span key={prereq} className="inline-block bg-gray-100 dark:bg-slate-700 dark:text-gray-300 px-2 py-1 rounded mr-1 mb-1">
                             {prereqLesson?.title || prereq}
                           </span>
                         );
