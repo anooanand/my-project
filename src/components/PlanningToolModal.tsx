@@ -23,7 +23,7 @@ export function PlanningToolModal({
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
       <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+        <div className="fixed inset-0 bg-gray-500 dark:bg-gray-900 bg-opacity-75 dark:bg-opacity-80 transition-opacity" aria-hidden="true"></div>
         <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
         
         <div className="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full">
@@ -39,7 +39,7 @@ export function PlanningToolModal({
             </div>
           </div>
           
-          <div className="px-6 py-4 max-h-[70vh] overflow-y-auto">
+          <div className="px-6 py-4 max-h-[70vh] overflow-y-auto bg-white dark:bg-gray-800">
             <PlanningTool textType={textType} onSavePlan={onSavePlan} />
           </div>
           

@@ -117,7 +117,7 @@ export const TipsModal: React.FC<TipsModalProps> = ({ isOpen, onClose, textType 
   );
 
   return (
-    <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div className="fixed inset-0 bg-gray-600 dark:bg-gray-900 bg-opacity-50 dark:bg-opacity-80 overflow-y-auto h-full w-full z-50">
       <div className="relative top-10 mx-auto p-5 border border-gray-200 dark:border-gray-700 w-11/12 md:w-4/5 lg:w-3/4 xl:w-2/3 shadow-lg rounded-md bg-white dark:bg-gray-800 max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center pb-3 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center space-x-2">

@@ -284,7 +284,7 @@ export function PlanningTool({ textType, onSavePlan }: PlanningToolProps) {
   const prompts = getTextTypeSpecificPrompts();
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
+    <div className="rounded-lg p-4">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-medium text-gray-900 dark:text-white">Planning Tool</h2>
         <div className="flex space-x-2">
