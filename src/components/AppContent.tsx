@@ -48,7 +48,7 @@ import { AdminButton } from './AdminButton';
 
 function AppContent() {
   const { user, loading: isLoading, paymentCompleted, emailVerified, authSignOut } = useAuth();
-  const { darkMode } = useTheme();
+  const { isDark: darkMode } = useTheme();
   const [activePage, setActivePage] = useState('home');
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin');
