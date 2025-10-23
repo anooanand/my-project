@@ -36,7 +36,7 @@ export const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ onNavi
             </h1>
 
             {/* Subheadline */}
-            <p className="text-xl md:text-2xl text-gray-700 dark:text-slate-300 mb-4 leading-relaxed font-bold">
+            <p className="text-xl md:text-2xl text-gray-700 dark:text-slate-300 mb-4 leading-relaxed font-bold ml-12">
               with AI-Powered Practice & Feedback
             </p>
 
