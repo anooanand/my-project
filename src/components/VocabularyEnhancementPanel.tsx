@@ -183,15 +183,15 @@ export const VocabularyEnhancementPanel: React.FC<VocabularyEnhancementPanelProp
 
   if (enhancements.length === 0 && overusedWords.length === 0) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-6">
         <div className="text-center">
-          <Award className="w-16 h-16 mx-auto mb-4 text-green-500" />
-          <h3 className="text-xl font-bold text-gray-900 mb-2">Excellent Vocabulary!</h3>
-          <p className="text-gray-600">
+          <Award className="w-16 h-16 mx-auto mb-4 text-green-500 dark:text-green-400" />
+          <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">Excellent Vocabulary!</h3>
+          <p className="text-gray-600 dark:text-gray-400">
             Your word choice is strong and varied. No basic words detected that need enhancement.
           </p>
-          <div className="mt-4 p-4 bg-green-50 rounded-lg">
-            <p className="text-sm text-green-800">
+          <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+            <p className="text-sm text-green-800 dark:text-green-300">
               <strong>Vocabulary Score: </strong>
               <span className="text-2xl font-bold">{vocabularyScore}/100</span>
             </p>
@@ -202,41 +202,41 @@ export const VocabularyEnhancementPanel: React.FC<VocabularyEnhancementPanelProp
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4">
+    <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-4">
       <div className="mb-4">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-            <BookOpen className="w-5 h-5 text-blue-600" />
+          <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+            <BookOpen className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             Vocabulary Enhancement
           </h3>
           <div className="text-right">
             <div className={`text-2xl font-bold ${getScoreColor(vocabularyScore)}`}>
               {vocabularyScore}/100
             </div>
-            <div className="text-xs text-gray-500">Vocabulary Score</div>
+            <div className="text-xs text-gray-500 dark:text-gray-400">Vocabulary Score</div>
           </div>
         </div>
-        <p className="text-sm text-gray-600 mb-2">{getScoreFeedback(vocabularyScore)}</p>
-        <p className="text-sm text-gray-700">
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{getScoreFeedback(vocabularyScore)}</p>
+        <p className="text-sm text-gray-700 dark:text-gray-300">
           Found <strong>{enhancements.length}</strong> words that can be enhanced with more sophisticated alternatives
         </p>
       </div>
 
       {/* Overused Words Warning */}
       {overusedWords.length > 0 && (
-        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+        <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg">
           <div className="flex items-start gap-2">
-            <Lightbulb className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+            <Lightbulb className="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="font-semibold text-yellow-900 text-sm mb-2">Overused Words Detected:</p>
+              <p className="font-semibold text-yellow-900 dark:text-yellow-300 text-sm mb-2">Overused Words Detected:</p>
               <div className="flex flex-wrap gap-2">
                 {overusedWords.map(({ word, count }) => (
-                  <span key={word} className="px-2 py-1 bg-white border border-yellow-300 rounded text-xs font-medium text-yellow-800">
+                  <span key={word} className="px-2 py-1 bg-white dark:bg-slate-700 border border-yellow-300 dark:border-yellow-600 rounded text-xs font-medium text-yellow-800 dark:text-yellow-300">
                     "{word}" used {count} times
                   </span>
                 ))}
               </div>
-              <p className="text-xs text-yellow-700 mt-2">
+              <p className="text-xs text-yellow-700 dark:text-yellow-400 mt-2">
                 Try to vary your word choice and use these words less frequently.
               </p>
             </div>
@@ -258,8 +258,8 @@ export const VocabularyEnhancementPanel: React.FC<VocabularyEnhancementPanelProp
             </div>
 
             <div className="mb-2">
-              <span className="text-xs text-gray-600">Current word:</span>
-              <div className="mt-1 font-mono text-sm bg-white px-2 py-1 rounded border border-gray-300 inline-block">
+              <span className="text-xs text-gray-600 dark:text-gray-400">Current word:</span>
+              <div className="mt-1 font-mono text-sm bg-white dark:bg-slate-700 px-2 py-1 rounded border border-gray-300 dark:border-slate-600 inline-block dark:text-gray-200">
                 "{enhancement.word}"
               </div>
             </div>

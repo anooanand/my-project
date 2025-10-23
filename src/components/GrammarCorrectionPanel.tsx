@@ -46,13 +46,13 @@ export const GrammarCorrectionPanel: React.FC<GrammarCorrectionPanelProps> = ({
 
   const getErrorTypeColor = (type: string): string => {
     switch (type) {
-      case 'grammar': return 'text-red-600 bg-red-50 border-red-200';
-      case 'spelling': return 'text-orange-600 bg-orange-50 border-orange-200';
-      case 'punctuation': return 'text-blue-600 bg-blue-50 border-blue-200';
-      case 'capitalization': return 'text-purple-600 bg-purple-50 border-purple-200';
-      case 'word-choice': return 'text-green-600 bg-green-50 border-green-200';
-      case 'style': return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-      default: return 'text-gray-600 bg-gray-50 border-gray-200';
+      case 'grammar': return 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700';
+      case 'spelling': return 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-700';
+      case 'punctuation': return 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700';
+      case 'capitalization': return 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-700';
+      case 'word-choice': return 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700';
+      case 'style': return 'text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-700';
+      default: return 'text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700';
     }
   };
 
@@ -83,12 +83,12 @@ export const GrammarCorrectionPanel: React.FC<GrammarCorrectionPanelProps> = ({
 
   if (visibleErrors.length === 0) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <div className="flex items-center justify-center space-x-3 text-green-600">
+      <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-6">
+        <div className="flex items-center justify-center space-x-3 text-green-600 dark:text-green-400">
           <CheckCircle className="w-6 h-6" />
-          <p className="font-medium">No grammar, spelling, or punctuation errors detected!</p>
+          <p className="font-medium dark:text-gray-200">No grammar, spelling, or punctuation errors detected!</p>
         </div>
-        <p className="text-center text-gray-500 text-sm mt-2">
+        <p className="text-center text-gray-500 dark:text-gray-400 text-sm mt-2">
           Your writing looks great! Keep up the good work.
         </p>
       </div>
@@ -104,12 +104,12 @@ export const GrammarCorrectionPanel: React.FC<GrammarCorrectionPanelProps> = ({
   }, {} as Record<string, GrammarError[]>);
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4">
+    <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-4">
       <div className="mb-4">
-        <h3 className="text-lg font-bold text-gray-900 mb-2">
+        <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">
           Grammar & Spelling Corrections
         </h3>
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-gray-600 dark:text-gray-400">
           Found {visibleErrors.length} {visibleErrors.length === 1 ? 'issue' : 'issues'} that can be improved
         </p>
       </div>
@@ -117,11 +117,11 @@ export const GrammarCorrectionPanel: React.FC<GrammarCorrectionPanelProps> = ({
       <div className="space-y-4 max-h-96 overflow-y-auto">
         {Object.entries(errorsByType).map(([type, typeErrors]) => (
           <div key={type} className="space-y-2">
-            <div className="flex items-center space-x-2 text-sm font-semibold text-gray-700">
+            <div className="flex items-center space-x-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
               <span className={`px-2 py-1 rounded-full ${getErrorTypeColor(type)}`}>
                 {getErrorTypeLabel(type)}
               </span>
-              <span className="text-gray-500">({typeErrors.length})</span>
+              <span className="text-gray-500 dark:text-gray-400">({typeErrors.length})</span>
             </div>
 
             {typeErrors.map((error, index) => (
@@ -134,21 +134,21 @@ export const GrammarCorrectionPanel: React.FC<GrammarCorrectionPanelProps> = ({
                     {getErrorIcon(error.severity)}
                     <div className="flex-1">
                       <div className="flex items-center space-x-2 mb-1">
-                        <span className="font-mono text-sm bg-white px-2 py-0.5 rounded border border-gray-300">
+                        <span className="font-mono text-sm bg-white dark:bg-slate-700 px-2 py-0.5 rounded border border-gray-300 dark:border-slate-600 dark:text-gray-200">
                           "{getErrorText(error)}"
                         </span>
                       </div>
-                      <p className="text-sm text-gray-700 mb-2">{error.message}</p>
+                      <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">{error.message}</p>
 
                       {error.suggestions && error.suggestions.length > 0 && (
                         <div className="mt-2">
-                          <p className="text-xs font-semibold text-gray-600 mb-1">Suggestions:</p>
+                          <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-1">Suggestions:</p>
                           <div className="flex flex-wrap gap-2">
                             {error.suggestions.map((suggestion, idx) => (
                               <button
                                 key={idx}
                                 onClick={() => handleApplyCorrection(error, suggestion)}
-                                className="px-3 py-1 bg-white border border-gray-300 rounded-md text-sm hover:bg-blue-50 hover:border-blue-400 transition-colors font-medium text-gray-700"
+                                className="px-3 py-1 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-md text-sm hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:border-blue-400 dark:hover:border-blue-600 transition-colors font-medium text-gray-700 dark:text-gray-200"
                               >
                                 {suggestion}
                               </button>
