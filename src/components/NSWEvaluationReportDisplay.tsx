@@ -68,11 +68,11 @@ interface NSWEvaluationReportDisplayProps {
 
 const DomainScoreCard: React.FC<{ domain: DomainScore; title: string; icon: string }> = ({ domain, title, icon }) => {
   const getScoreColor = (score: number) => {
-    if (score >= 9) return 'text-green-600 bg-green-50 border-green-200';
-    if (score >= 7) return 'text-blue-600 bg-blue-50 border-blue-200';
-    if (score >= 5) return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-    if (score >= 3) return 'text-orange-600 bg-orange-50 border-orange-200';
-    return 'text-red-600 bg-red-50 border-red-200';
+    if (score >= 9) return 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-700';
+    if (score >= 7) return 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700';
+    if (score >= 5) return 'text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-700';
+    if (score >= 3) return 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/30 border-orange-200 dark:border-orange-700';
+    return 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-700';
   };
 
   // FIXED: Get proper bar color based on score instead of using bg-current
@@ -108,10 +108,10 @@ const DomainScoreCard: React.FC<{ domain: DomainScore; title: string; icon: stri
       <div className="text-sm font-medium mb-2">
         Band: {domain.band}
       </div>
-      <div className="bg-white/50 rounded-lg p-3 mb-3">
+      <div className="bg-white/50 dark:bg-slate-700/50 rounded-lg p-3 mb-3">
         <div className="flex items-start">
-          <Heart className="w-4 h-4 mr-2 mt-0.5 text-pink-500" />
-          <p className="text-sm font-medium text-gray-700">
+          <Heart className="w-4 h-4 mr-2 mt-0.5 text-pink-500 dark:text-pink-400" />
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
             {domain.childFriendlyExplanation}
           </p>
         </div>
@@ -120,14 +120,14 @@ const DomainScoreCard: React.FC<{ domain: DomainScore; title: string; icon: stri
         {domain.feedback.map((feedback, index) => (
           <div key={index} className="flex items-start">
             <CheckCircle className="w-4 h-4 mr-2 mt-0.5 text-green-500 flex-shrink-0" />
-            <span>{feedback}</span>
+            <span className="dark:text-gray-200">{feedback}</span>
           </div>
         ))}
         {domain.specificExamples && domain.specificExamples.length > 0 && (
-          <div className="mt-2 pt-2 border-t border-gray-200">
-            <h4 className="font-semibold text-xs text-gray-600 mb-1">Examples:</h4>
+          <div className="mt-2 pt-2 border-t border-gray-200 dark:border-slate-600">
+            <h4 className="font-semibold text-xs text-gray-600 dark:text-gray-400 mb-1">Examples:</h4>
             {domain.specificExamples.map((example, index) => (
-              <p key={index} className="text-xs text-gray-500 italic">"...{example}..."</p>
+              <p key={index} className="text-xs text-gray-500 dark:text-gray-400 italic">"...{example}..."</p>
             ))}
           </div>
         )}
@@ -150,20 +150,20 @@ export function NSWEvaluationReportDisplay({ report, essayText, onClose }: NSWEv
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 9) return 'text-green-600 bg-green-50 border-green-200';
-    if (score >= 7) return 'text-blue-600 bg-blue-50 border-blue-200';
-    if (score >= 5) return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-    if (score >= 3) return 'text-orange-600 bg-orange-50 border-orange-200';
-    return 'text-red-600 bg-red-50 border-red-200';
+    if (score >= 9) return 'text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-700';
+    if (score >= 7) return 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700';
+    if (score >= 5) return 'text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/30 border-yellow-200 dark:border-yellow-700';
+    if (score >= 3) return 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/30 border-orange-200 dark:border-orange-700';
+    return 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/30 border-red-200 dark:border-red-700';
   };
 
   const getGradeColor = (grade?: string) => {
-    if (!grade) return 'text-blue-600 bg-blue-100';
-    if (grade.startsWith('A')) return 'text-green-600 bg-green-100';
-    if (grade.startsWith('B')) return 'text-blue-600 bg-blue-100';
-    if (grade.startsWith('C')) return 'text-yellow-600 bg-yellow-100';
-    if (grade.startsWith('D')) return 'text-orange-600 bg-orange-100';
-    return 'text-red-600 bg-red-100';
+    if (!grade) return 'text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30';
+    if (grade.startsWith('A')) return 'text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30';
+    if (grade.startsWith('B')) return 'text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30';
+    if (grade.startsWith('C')) return 'text-yellow-600 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/30';
+    if (grade.startsWith('D')) return 'text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/30';
+    return 'text-red-600 dark:text-red-400 bg-red-100 dark:bg-red-900/30';
   };
 
   const calculateGrade = (score: number): string => {
@@ -242,8 +242,8 @@ export function NSWEvaluationReportDisplay({ report, essayText, onClose }: NSWEv
   const [activeTab, setActiveTab] = useState<'overview' | 'detailed'>('overview');
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-white rounded-lg shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-black/70 flex items-center justify-center z-50 p-4 overflow-y-auto">
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 sticky top-0 z-10">
           <div className="flex items-center justify-between">
@@ -273,38 +273,38 @@ export function NSWEvaluationReportDisplay({ report, essayText, onClose }: NSWEv
         </div>
 
         {/* Overall Score Section */}
-        <div className="p-6 bg-gray-50 border-b">
+        <div className="p-6 bg-gray-50 dark:bg-slate-900 border-b dark:border-slate-700">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="text-center">
               <div className={`inline-flex items-center justify-center w-24 h-24 rounded-full text-3xl font-bold ${getGradeColor(overallGrade)} shadow-lg`}>
                 {overallGrade}
               </div>
-              <h3 className="text-lg font-semibold text-gray-800 mt-3">Overall Grade</h3>
-              <p className="text-sm text-gray-600 mt-1">Achievement Level</p>
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mt-3">Overall Grade</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Achievement Level</p>
             </div>
 
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-blue-100 text-blue-800 text-2xl font-bold border-4 border-blue-200 shadow-lg">
+              <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-400 text-2xl font-bold border-4 border-blue-200 dark:border-blue-700 shadow-lg">
                 {report.overallScore.toFixed(1)}/10
               </div>
-              <h3 className="text-lg font-semibold text-gray-800 mt-3">Total Score</h3>
-              <p className="text-sm text-gray-600 mt-1">NSW Standard</p>
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mt-3">Total Score</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">NSW Standard</p>
             </div>
 
             <div className="text-center">
-              <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gray-100 text-purple-600 text-2xl font-bold border-4 border-gray-200 shadow-lg">
+              <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-gray-100 dark:bg-slate-700 text-purple-600 dark:text-purple-400 text-2xl font-bold border-4 border-gray-200 dark:border-slate-600 shadow-lg">
                 {Math.round((report.overallScore / 10) * 100)}%
               </div>
-              <h3 className="text-lg font-semibold text-gray-800 mt-3">Percentage</h3>
-              <p className="text-sm text-gray-600 mt-1">Achievement Level</p>
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mt-3">Percentage</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Achievement Level</p>
             </div>
           </div>
         </div>
 
         {/* Criteria Breakdown */}
-        <div className="p-6 border-b">
-          <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-            <Target className="w-5 h-5 text-blue-600" />
+        <div className="p-6 border-b dark:border-slate-700">
+          <h3 className="text-xl font-bold text-gray-800 dark:text-gray-200 mb-4 flex items-center gap-2">
+            <Target className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             Criteria Breakdown
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -317,23 +317,23 @@ export function NSWEvaluationReportDisplay({ report, essayText, onClose }: NSWEv
               };
               const percentage = (domain.score / domain.maxScore) * 100;
               return (
-                <div key={key} className="border rounded-lg p-4 bg-white shadow-sm">
+                <div key={key} className="border dark:border-slate-700 rounded-lg p-4 bg-white dark:bg-slate-900 shadow-sm">
                   <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-semibold text-gray-800">{titles[key]}</h4>
-                    <span className="text-xl font-bold text-blue-600">
+                    <h4 className="font-semibold text-gray-800 dark:text-gray-200">{titles[key]}</h4>
+                    <span className="text-xl font-bold text-blue-600 dark:text-blue-400">
                       {domain.score.toFixed(1)}/{domain.maxScore}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="flex-1 bg-gray-200 rounded-full h-2">
+                    <div className="flex-1 bg-gray-200 dark:bg-slate-700 rounded-full h-2">
                       <div
                         className={`h-2 rounded-full transition-all ${percentage >= 80 ? 'bg-emerald-500' : percentage >= 60 ? 'bg-blue-500' : percentage >= 40 ? 'bg-yellow-500' : 'bg-orange-500'}`}
                         style={{ width: `${percentage}%` }}
                       />
                     </div>
-                    <span className="text-sm text-gray-600">{Math.round(percentage)}%</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">{Math.round(percentage)}%</span>
                   </div>
-                  <span className="inline-block px-2 py-1 text-xs font-semibold rounded bg-blue-100 text-blue-800">
+                  <span className="inline-block px-2 py-1 text-xs font-semibold rounded bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
                     Band {domain.band}
                   </span>
                 </div>
@@ -343,17 +343,17 @@ export function NSWEvaluationReportDisplay({ report, essayText, onClose }: NSWEv
         </div>
 
         {/* Tabs */}
-        <div className="border-b">
+        <div className="border-b dark:border-slate-700">
           <div className="flex">
             <button
               onClick={() => setActiveTab('overview')}
-              className={`flex-1 py-3 px-4 font-semibold transition-colors ${activeTab === 'overview' ? 'border-b-2 border-blue-600 text-blue-600 bg-blue-50' : 'text-gray-600 hover:bg-gray-50'}`}
+              className={`flex-1 py-3 px-4 font-semibold transition-colors ${activeTab === 'overview' ? 'border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-700'}`}
             >
               Overview
             </button>
             <button
               onClick={() => setActiveTab('detailed')}
-              className={`flex-1 py-3 px-4 font-semibold transition-colors ${activeTab === 'detailed' ? 'border-b-2 border-blue-600 text-blue-600 bg-blue-50' : 'text-gray-600 hover:bg-gray-50'}`}
+              className={`flex-1 py-3 px-4 font-semibold transition-colors ${activeTab === 'detailed' ? 'border-b-2 border-blue-600 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-700'}`}
             >
               Detailed Analysis
             </button>
@@ -365,61 +365,61 @@ export function NSWEvaluationReportDisplay({ report, essayText, onClose }: NSWEv
           {activeTab === 'overview' && (
             <div className="space-y-6">
               {/* Strengths */}
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <h4 className="font-semibold text-green-800 mb-3 flex items-center gap-2">
+              <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-4">
+                <h4 className="font-semibold text-green-800 dark:text-green-300 mb-3 flex items-center gap-2">
                   <Star className="w-5 h-5" />
                   Key Strengths
                 </h4>
                 <ul className="space-y-2">
                   {correctedReport.strengths && correctedReport.strengths.length > 0 ? (
                     correctedReport.strengths.map((strength, i) => (
-                      <li key={i} className="flex items-start gap-2 text-gray-700">
-                        <span className="text-green-600 mt-1">✓</span>
+                      <li key={i} className="flex items-start gap-2 text-gray-700 dark:text-gray-300">
+                        <span className="text-green-600 dark:text-green-400 mt-1">✓</span>
                         <span>{strength}</span>
                       </li>
                     ))
                   ) : (
-                    <li className="text-green-600">Keep working hard! Every piece of writing has potential for growth.</li>
+                    <li className="text-green-600 dark:text-green-400">Keep working hard! Every piece of writing has potential for growth.</li>
                   )}
                 </ul>
               </div>
 
               {/* Areas to Improve */}
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                <h4 className="font-semibold text-amber-800 mb-3 flex items-center gap-2">
+              <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-4">
+                <h4 className="font-semibold text-amber-800 dark:text-amber-300 mb-3 flex items-center gap-2">
                   <Target className="w-5 h-5" />
                   Areas for Growth
                 </h4>
                 <ul className="space-y-2">
                   {correctedReport.areasForImprovement && correctedReport.areasForImprovement.length > 0 ? (
                     correctedReport.areasForImprovement.map((area, i) => (
-                      <li key={i} className="flex items-start gap-2 text-gray-700">
-                        <span className="text-amber-600 mt-1">→</span>
-                        <span>{area}</span>
+                      <li key={i} className="flex items-start gap-2 text-gray-700 dark:text-gray-300">
+                        <span className="text-amber-600 dark:text-amber-400 mt-1">→</span>
+                        <span className="dark:text-gray-300">{area}</span>
                       </li>
                     ))
                   ) : (
-                    <li className="text-amber-600">Excellent work! Continue to challenge yourself.</li>
+                    <li className="text-amber-600 dark:text-amber-400">Excellent work! Continue to challenge yourself.</li>
                   )}
                 </ul>
               </div>
 
               {/* Recommendations */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h4 className="font-semibold text-blue-800 mb-3 flex items-center gap-2">
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
+                <h4 className="font-semibold text-blue-800 dark:text-blue-300 mb-3 flex items-center gap-2">
                   <Lightbulb className="w-5 h-5" />
                   Next Steps
                 </h4>
                 <ul className="space-y-2">
                   {correctedReport.recommendations && correctedReport.recommendations.length > 0 ? (
                     correctedReport.recommendations.map((rec, i) => (
-                      <li key={i} className="flex items-start gap-2 text-gray-700">
-                        <span className="text-blue-600 mt-1">{i + 1}.</span>
-                        <span>{rec}</span>
+                      <li key={i} className="flex items-start gap-2 text-gray-700 dark:text-gray-300">
+                        <span className="text-blue-600 dark:text-blue-400 mt-1">{i + 1}.</span>
+                        <span className="dark:text-gray-300">{rec}</span>
                       </li>
                     ))
                   ) : (
-                    <li className="text-blue-600">Keep up the excellent work!</li>
+                    <li className="text-blue-600 dark:text-blue-400">Keep up the excellent work!</li>
                   )}
                 </ul>
               </div>
@@ -437,27 +437,27 @@ export function NSWEvaluationReportDisplay({ report, essayText, onClose }: NSWEv
                   spellingAndGrammar: 'Spelling & Grammar'
                 };
                 return (
-                  <div key={key} className="border border-gray-200 rounded-lg p-4 bg-white">
-                    <h4 className="font-semibold text-gray-800 mb-3">{titles[key]}</h4>
+                  <div key={key} className="border border-gray-200 dark:border-slate-700 rounded-lg p-4 bg-white dark:bg-slate-900">
+                    <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3">{titles[key]}</h4>
                     {domain.childFriendlyExplanation && (
-                      <div className="bg-blue-50 p-3 rounded-lg mb-3 flex items-start gap-2">
-                        <Heart className="w-4 h-4 text-pink-500 mt-0.5 flex-shrink-0" />
-                        <p className="text-sm text-gray-700">{domain.childFriendlyExplanation}</p>
+                      <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg mb-3 flex items-start gap-2">
+                        <Heart className="w-4 h-4 text-pink-500 dark:text-pink-400 mt-0.5 flex-shrink-0" />
+                        <p className="text-sm text-gray-700 dark:text-gray-300">{domain.childFriendlyExplanation}</p>
                       </div>
                     )}
                     <ul className="space-y-2">
                       {domain.feedback.map((feedback, i) => (
-                        <li key={i} className="flex items-start gap-2 text-gray-700 text-sm">
-                          <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                          <span>{feedback}</span>
+                        <li key={i} className="flex items-start gap-2 text-gray-700 dark:text-gray-300 text-sm">
+                          <CheckCircle className="w-4 h-4 text-green-500 dark:text-green-400 mt-0.5 flex-shrink-0" />
+                          <span className="dark:text-gray-300">{feedback}</span>
                         </li>
                       ))}
                     </ul>
                     {domain.specificExamples && domain.specificExamples.length > 0 && (
-                      <div className="mt-3 pt-3 border-t border-gray-200">
-                        <p className="text-xs font-semibold text-gray-600 mb-2">Examples from your writing:</p>
+                      <div className="mt-3 pt-3 border-t border-gray-200 dark:border-slate-600">
+                        <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">Examples from your writing:</p>
                         {domain.specificExamples.map((example, i) => (
-                          <p key={i} className="text-xs text-gray-500 italic mb-1">&quot;...{example}...&quot;</p>
+                          <p key={i} className="text-xs text-gray-500 dark:text-gray-400 italic mb-1">&quot;...{example}...&quot;</p>
                         ))}
                       </div>
                     )}
@@ -466,12 +466,12 @@ export function NSWEvaluationReportDisplay({ report, essayText, onClose }: NSWEv
               })}
 
               {/* Writing Metrics */}
-              <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                <h4 className="font-semibold text-gray-800 mb-3">Writing Metrics</h4>
+              <div className="border border-gray-200 dark:border-slate-700 rounded-lg p-4 bg-gray-50 dark:bg-slate-900">
+                <h4 className="font-semibold text-gray-800 dark:text-gray-200 mb-3">Writing Metrics</h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <p className="text-sm text-gray-600">Word Count</p>
-                    <p className="text-lg font-bold text-gray-800">{correctedReport.detailedFeedback.wordCount}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Word Count</p>
+                    <p className="text-lg font-bold text-gray-800 dark:text-gray-200">{correctedReport.detailedFeedback.wordCount}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Paragraphs</p>

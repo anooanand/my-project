@@ -540,23 +540,23 @@ Report generated on ${new Date().toLocaleString()}
                 </div>
                 <div className="bg-white dark:bg-slate-700 p-4 rounded-lg border border-pink-100 dark:border-pink-700">
                   <h4 className="font-semibold text-purple-700 dark:text-purple-300 mb-2">Structure & Organization ({data.criteria.structureOrganization.score}/10) </h4>
-                  <p className="text-sm text-gray-700 dark:text-gray-300">{generateChildFriendlyExplanation("Structure & Organization", data.criteria.structureOrganization.score)}</p>
+                  <p className="text-sm text-gray-700">{generateChildFriendlyExplanation("Structure & Organization", data.criteria.structureOrganization.score)}</p>
                 </div>
-                <div className="bg-white dark:bg-slate-700 p-4 rounded-lg border border-pink-100 dark:border-pink-700">
-                  <h4 className="font-semibold text-purple-700 dark:text-purple-300 mb-2">Language & Vocabulary ({data.criteria.languageVocab.score}/10) </h4>
-                  <p className="text-sm text-gray-700 dark:text-gray-300">{generateChildFriendlyExplanation("Language & Vocabulary", data.criteria.languageVocab.score)}</p>
+                <div className="bg-white p-4 rounded-lg border border-pink-100">
+                  <h4 className="font-semibold text-purple-700 mb-2">Language & Vocabulary ({data.criteria.languageVocab.score}/10) </h4>
+                  <p className="text-sm text-gray-700">{generateChildFriendlyExplanation("Language & Vocabulary", data.criteria.languageVocab.score)}</p>
                 </div>
-                <div className="bg-white dark:bg-slate-700 p-4 rounded-lg border border-pink-100 dark:border-pink-700">
-                  <h4 className="font-semibold text-purple-700 dark:text-purple-300 mb-2">Spelling & Grammar ({data.criteria.spellingPunctuationGrammar.score}/10) </h4>
-                  <p className="text-sm text-gray-700 dark:text-gray-300">{generateChildFriendlyExplanation("Spelling, Punctuation & Grammar", data.criteria.spellingPunctuationGrammar.score)}</p>
+                <div className="bg-white p-4 rounded-lg border border-pink-100">
+                  <h4 className="font-semibold text-purple-700 mb-2">Spelling & Grammar ({data.criteria.spellingPunctuationGrammar.score}/10) </h4>
+                  <p className="text-sm text-gray-700">{generateChildFriendlyExplanation("Spelling, Punctuation & Grammar", data.criteria.spellingPunctuationGrammar.score)}</p>
                 </div>
               </div>
             </div>
 
             {/* Criteria Overview with Enhanced Visuals */}
-            <div className="bg-gray-50 dark:bg-slate-900 p-6 rounded-lg">
-              <h3 className="font-bold mb-6 text-xl flex items-center dark:text-gray-200">
-                <BarChart3 className="w-6 h-6 mr-2 text-blue-600 dark:text-blue-400" />
+            <div className="bg-gray-50 p-6 rounded-lg">
+              <h3 className="font-bold mb-6 text-xl flex items-center">
+                <BarChart3 className="w-6 h-6 mr-2 text-blue-600" />
                 Your Writing Skills Breakdown
               </h3>
               <ScoreBar 
@@ -583,8 +583,8 @@ Report generated on ${new Date().toLocaleString()}
 
             {/* Enhanced Strengths Section */}
             {specificStrengths.length > 0 && (
-              <div className="bg-green-50 dark:bg-green-900/20 p-6 rounded-lg border border-green-200 dark:border-green-700">
-                <h3 className="font-bold mb-4 text-xl flex items-center text-green-800 dark:text-green-300">
+              <div className="bg-green-50 p-6 rounded-lg border border-green-200">
+                <h3 className="font-bold mb-4 text-xl flex items-center text-green-800">
                   <CheckCircle className="w-6 h-6 mr-2" />
                   Your Amazing Strengths! 🌟
                 </h3>
