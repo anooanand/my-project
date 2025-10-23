@@ -8,6 +8,8 @@ import { StudentSuccessSection } from './StudentSuccessSection';
 import { PricingPage } from './PricingPage';
 import { WritingTypesSection } from './WritingTypesSection';
 import { Footer } from './Footer';
+import { SuccessMetricsSection } from './SuccessMetricsSection';
+import { ComparisonSection } from './ComparisonSection';
 import { ArrowRight, CheckCircle, Star, Users, Zap, BookOpen, Award, Target, Play } from 'lucide-react';
 
 interface HomePageProps {
@@ -38,6 +40,10 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSignInClick })
 
       {/* Enhanced Hero Section */}
       <EnhancedHeroSection onNavigate={onNavigate} />
+
+      {/* Success Metrics Section - NEW */}
+      <SuccessMetricsSection />
+
       {/* Original hero replaced with EnhancedHeroSection above */}
       <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 pt-20 pb-32" style={{display: 'none'}}>
         <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))] bg-[size:32px_32px]"></div>
@@ -265,6 +271,9 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSignInClick })
 
       {/* Features Section */}
       <FeaturesSection />
+
+      {/* Comparison Section - NEW */}
+      <ComparisonSection />
 
       {/* How It Works */}
       <div id="how-it-works">
