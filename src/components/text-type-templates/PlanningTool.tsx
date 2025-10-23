@@ -284,20 +284,20 @@ export function PlanningTool({ textType, onSavePlan }: PlanningToolProps) {
   const prompts = getTextTypeSpecificPrompts();
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-4">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-lg font-medium text-gray-900">Planning Tool</h2>
+        <h2 className="text-lg font-medium text-gray-900 dark:text-white">Planning Tool</h2>
         <div className="flex space-x-2">
           <button
             onClick={() => setShowTimer(!showTimer)}
-            className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            className="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 text-xs font-medium rounded text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           >
             <Clock className="h-4 w-4 mr-1" />
             {showTimer ? 'Hide Timer' : 'Show Timer'}
           </button>
           <button
             onClick={handleSavePlan}
-            className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded shadow-sm text-white bg-indigo-600 dark:bg-indigo-500 hover:bg-indigo-700 dark:hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           >
             Save Plan
           </button>
@@ -305,9 +305,9 @@ export function PlanningTool({ textType, onSavePlan }: PlanningToolProps) {
       </div>
 
       {showTimer && (
-        <div className="mb-4 p-3 bg-blue-50 rounded-md">
+        <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-md">
           <div className="flex items-center justify-between">
-            <div className="text-blue-800 font-medium">Planning Timer: {String(planningMinutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}</div>
+            <div className="text-blue-800 dark:text-blue-200 font-medium">Planning Timer: {String(planningMinutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}</div>
             <div className="flex space-x-2">
               {!timerActive ? (
                 <button
@@ -332,19 +332,19 @@ export function PlanningTool({ textType, onSavePlan }: PlanningToolProps) {
               </button>
             </div>
           </div>
-          <div className="mt-2 text-xs text-blue-600">
+          <div className="mt-2 text-xs text-blue-600 dark:text-blue-300">
             Recommendation: Spend 5 minutes planning before you start writing
           </div>
         </div>
       )}
 
       <div className="mb-4">
-        <div className="flex border-b border-gray-200">
+        <div className="flex border-b border-gray-200 dark:border-gray-700">
           <button
             className={`py-2 px-4 font-medium text-sm ${
-              activeTab === 'outline' 
-                ? 'bg-indigo-50 border-b-2 border-indigo-500 text-indigo-600' 
-                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+              activeTab === 'outline'
+                ? 'bg-indigo-50 dark:bg-indigo-900/30 border-b-2 border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
             }`}
             onClick={() => setActiveTab('outline')}
           >
@@ -353,9 +353,9 @@ export function PlanningTool({ textType, onSavePlan }: PlanningToolProps) {
           </button>
           <button
             className={`py-2 px-4 font-medium text-sm ${
-              activeTab === 'mindmap' 
-                ? 'bg-indigo-50 border-b-2 border-indigo-500 text-indigo-600' 
-                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+              activeTab === 'mindmap'
+                ? 'bg-indigo-50 dark:bg-indigo-900/30 border-b-2 border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
             }`}
             onClick={() => setActiveTab('mindmap')}
           >
@@ -364,9 +364,9 @@ export function PlanningTool({ textType, onSavePlan }: PlanningToolProps) {
           </button>
           <button
             className={`py-2 px-4 font-medium text-sm ${
-              activeTab === 'checklist' 
-                ? 'bg-indigo-50 border-b-2 border-indigo-500 text-indigo-600' 
-                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+              activeTab === 'checklist'
+                ? 'bg-indigo-50 dark:bg-indigo-900/30 border-b-2 border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
             }`}
             onClick={() => setActiveTab('checklist')}
           >
@@ -379,18 +379,18 @@ export function PlanningTool({ textType, onSavePlan }: PlanningToolProps) {
       <div className="overflow-y-auto max-h-96 p-1">
         {activeTab === 'outline' && (
           <div className="space-y-4">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-300">
               Fill in the outline for your {textType.toLowerCase()} writing:
             </p>
             {structure.map((item, index) => (
               <div key={index} className="space-y-1">
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   {item.section}
                 </label>
                 <textarea
                   value={item.content}
                   onChange={(e) => handleStructureChange(index, e.target.value)}
-                  className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                  className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   rows={2}
                   placeholder={`What will you include in your ${item.section.toLowerCase()}?`}
                 />
@@ -402,7 +402,7 @@ export function PlanningTool({ textType, onSavePlan }: PlanningToolProps) {
         {activeTab === 'mindmap' && (
           <div className="space-y-6">
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 {prompts.mainIdeasPrompt}
               </label>
               {mainIdeas.map((idea, index) => (
@@ -411,14 +411,14 @@ export function PlanningTool({ textType, onSavePlan }: PlanningToolProps) {
                   type="text"
                   value={idea}
                   onChange={(e) => handleMainIdeaChange(index, e.target.value)}
-                  className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                  className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   placeholder={`Idea ${index + 1}`}
                 />
               ))}
             </div>
             
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 {prompts.keyPointsPrompt}
               </label>
               {keyPoints.map((point, index) => (
@@ -427,14 +427,14 @@ export function PlanningTool({ textType, onSavePlan }: PlanningToolProps) {
                   type="text"
                   value={point}
                   onChange={(e) => handleKeyPointChange(index, e.target.value)}
-                  className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                  className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   placeholder={`Detail ${index + 1}`}
                 />
               ))}
             </div>
             
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                 {prompts.vocabularyPrompt}
               </label>
               {vocabulary.map((word, index) => (
@@ -443,7 +443,7 @@ export function PlanningTool({ textType, onSavePlan }: PlanningToolProps) {
                   type="text"
                   value={word}
                   onChange={(e) => handleVocabularyChange(index, e.target.value)}
-                  className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
+                  className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   placeholder={`Word/Phrase ${index + 1}`}
                 />
               ))}
@@ -453,19 +453,19 @@ export function PlanningTool({ textType, onSavePlan }: PlanningToolProps) {
 
         {activeTab === 'checklist' && (
           <div className="space-y-4">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-300">
               Use this checklist to ensure your {textType.toLowerCase()} writing meets all requirements:
             </p>
             
             <div className="space-y-2">
-              <h3 className="text-sm font-medium text-gray-900">Content</h3>
+              <h3 className="text-sm font-medium text-gray-900 dark:text-white">Content</h3>
               <div className="ml-2 space-y-2">
                 <div className="flex items-start">
                   <input
                     type="checkbox"
                     className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded mt-0.5"
                   />
-                  <label className="ml-2 text-sm text-gray-700">
+                  <label className="ml-2 text-sm text-gray-700 dark:text-gray-300">
                     My writing addresses the prompt/topic directly
                   </label>
                 </div>
@@ -474,7 +474,7 @@ export function PlanningTool({ textType, onSavePlan }: PlanningToolProps) {
                     type="checkbox"
                     className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded mt-0.5"
                   />
-                  <label className="ml-2 text-sm text-gray-700">
+                  <label className="ml-2 text-sm text-gray-700 dark:text-gray-300">
                     I have included all required elements for this text type
                   </label>
                 </div>
@@ -483,7 +483,7 @@ export function PlanningTool({ textType, onSavePlan }: PlanningToolProps) {
                     type="checkbox"
                     className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded mt-0.5"
                   />
-                  <label className="ml-2 text-sm text-gray-700">
+                  <label className="ml-2 text-sm text-gray-700 dark:text-gray-300">
                     My ideas are creative and original
                   </label>
                 </div>
@@ -491,14 +491,14 @@ export function PlanningTool({ textType, onSavePlan }: PlanningToolProps) {
             </div>
             
             <div className="space-y-2">
-              <h3 className="text-sm font-medium text-gray-900">Structure</h3>
+              <h3 className="text-sm font-medium text-gray-900 dark:text-white">Structure</h3>
               <div className="ml-2 space-y-2">
                 <div className="flex items-start">
                   <input
                     type="checkbox"
                     className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded mt-0.5"
                   />
-                  <label className="ml-2 text-sm text-gray-700">
+                  <label className="ml-2 text-sm text-gray-700 dark:text-gray-300">
                     My writing has a clear beginning, middle, and end
                   </label>
                 </div>
@@ -507,7 +507,7 @@ export function PlanningTool({ textType, onSavePlan }: PlanningToolProps) {
                     type="checkbox"
                     className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded mt-0.5"
                   />
-                  <label className="ml-2 text-sm text-gray-700">
+                  <label className="ml-2 text-sm text-gray-700 dark:text-gray-300">
                     I've organized my ideas in a logical sequence
                   </label>
                 </div>
@@ -516,7 +516,7 @@ export function PlanningTool({ textType, onSavePlan }: PlanningToolProps) {
                     type="checkbox"
                     className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded mt-0.5"
                   />
-                  <label className="ml-2 text-sm text-gray-700">
+                  <label className="ml-2 text-sm text-gray-700 dark:text-gray-300">
                     I've used paragraphs to separate different ideas
                   </label>
                 </div>
@@ -524,14 +524,14 @@ export function PlanningTool({ textType, onSavePlan }: PlanningToolProps) {
             </div>
             
             <div className="space-y-2">
-              <h3 className="text-sm font-medium text-gray-900">Language</h3>
+              <h3 className="text-sm font-medium text-gray-900 dark:text-white">Language</h3>
               <div className="ml-2 space-y-2">
                 <div className="flex items-start">
                   <input
                     type="checkbox"
                     className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded mt-0.5"
                   />
-                  <label className="ml-2 text-sm text-gray-700">
+                  <label className="ml-2 text-sm text-gray-700 dark:text-gray-300">
                     I've used interesting and varied vocabulary
                   </label>
                 </div>
@@ -540,7 +540,7 @@ export function PlanningTool({ textType, onSavePlan }: PlanningToolProps) {
                     type="checkbox"
                     className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded mt-0.5"
                   />
-                  <label className="ml-2 text-sm text-gray-700">
+                  <label className="ml-2 text-sm text-gray-700 dark:text-gray-300">
                     My sentences vary in length and structure
                   </label>
                 </div>
@@ -549,7 +549,7 @@ export function PlanningTool({ textType, onSavePlan }: PlanningToolProps) {
                     type="checkbox"
                     className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded mt-0.5"
                   />
-                  <label className="ml-2 text-sm text-gray-700">
+                  <label className="ml-2 text-sm text-gray-700 dark:text-gray-300">
                     I've checked for spelling and punctuation errors
                   </label>
                 </div>
