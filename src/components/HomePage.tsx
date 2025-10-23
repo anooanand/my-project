@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { HeroSection } from './HeroSection';
+import { HomeNavigation } from './HomeNavigation';
+import { EnhancedHeroSection } from './EnhancedHeroSection';
 import { FeaturesSection } from './FeaturesSection';
 import { HowItWorksSection } from './HowItWorksSection';
 import { StudentSuccessSection } from './StudentSuccessSection';
@@ -30,9 +31,14 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSignInClick })
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Modern Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-purple-50 pt-20 pb-32">
+    <div className="min-h-screen bg-white dark:bg-slate-900">
+      {/* Enhanced Navigation */}
+      <HomeNavigation onNavigate={onNavigate} onSignInClick={onSignInClick} />
+
+      {/* Enhanced Hero Section */}
+      <EnhancedHeroSection onNavigate={onNavigate} />
+      {/* Original hero replaced with EnhancedHeroSection above */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 pt-20 pb-32" style={{display: 'none'}}>
         <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))] bg-[size:32px_32px]"></div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
