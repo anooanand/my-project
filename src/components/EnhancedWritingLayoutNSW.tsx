@@ -39,7 +39,9 @@ import {
   PlayCircle,
   PauseCircle,
   X,
-  Sparkles
+  Sparkles,
+  Moon,
+  Sun
 } from 'lucide-react';
 
 interface EnhancedWritingLayoutNSWProps {
@@ -512,12 +514,21 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
               </span>
             </div>
           </div>
-          <button
-            onClick={() => window.location.href = '/'}
-            className="flex items-center space-x-2 px-6 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-lg transition-all duration-200 text-white font-medium border border-white/20 hover:border-white/40"
-          >
-            <span>🏠 Home</span>
-          </button>
+          <div className="flex items-center space-x-3">
+            <button
+              onClick={() => setDarkMode(!darkMode)}
+              className="flex items-center space-x-2 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-lg transition-all duration-200 text-white font-medium border border-white/20 hover:border-white/40"
+              title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
+            <button
+              onClick={() => window.location.href = '/'}
+              className="flex items-center space-x-2 px-6 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-lg transition-all duration-200 text-white font-medium border border-white/20 hover:border-white/40"
+            >
+              <span>🏠 Home</span>
+            </button>
+          </div>
         </div>
 
         {/* Prompt Section */}

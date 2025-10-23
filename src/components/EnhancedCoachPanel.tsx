@@ -662,7 +662,7 @@ export function EnhancedCoachPanel({
   const [currentView, setCurrentView] = useState<'coach' | 'examples' | 'builder' | 'detailed' | 'nsw' | 'grammar' | 'vocabulary' | 'sentences'>('coach');
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isLoadingSession, setIsLoadingSession] = useState(true);
-  const [showQuestions, setShowQuestions] = useState(true);
+  const [showQuestions, setShowQuestions] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const responseStartTime = useRef<number>(0);
 
@@ -974,7 +974,7 @@ export function EnhancedCoachPanel({
 
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-white dark:bg-slate-900">
       {/* OPTIMIZED: Single Header with Compact Toggle */}
       <div className="p-3 border-b bg-gradient-to-r from-blue-600 to-purple-600">
         <div className="flex flex-col space-y-2">
@@ -1088,7 +1088,7 @@ export function EnhancedCoachPanel({
         {currentView === 'coach' ? (
           <>
             {/* Messages Area - OPTIMIZED: More space, less padding */}
-            <div className="flex-1 overflow-y-auto p-3 space-y-3" style={{ height: 'calc(100% - 70px)' }}>
+            <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-white dark:bg-slate-900" style={{ height: 'calc(100% - 70px)' }}>
               {/* Grammar Issues Summary - Always visible if there are issues */}
               {comprehensiveFeedback && comprehensiveFeedback.grammarIssues && comprehensiveFeedback.grammarIssues.length > 0 && (
                 <div className="sticky top-0 z-10 mb-3">
@@ -1111,18 +1111,18 @@ export function EnhancedCoachPanel({
                     {/* Show first 2 grammar issues as preview */}
                     <div className="space-y-2">
                       {comprehensiveFeedback.grammarIssues.slice(0, 2).map((issue, idx) => (
-                        <div key={idx} className="bg-white p-2 rounded border border-red-200">
+                        <div key={idx} className="bg-white dark:bg-slate-800 p-2 rounded border border-red-200 dark:border-red-800">
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-xs font-semibold text-red-700 uppercase">{issue.type}</span>
+                            <span className="text-xs font-semibold text-red-700 dark:text-red-400 uppercase">{issue.type}</span>
                             <span className="text-xs px-2 py-0.5 rounded bg-red-100 text-red-700">{issue.severity}</span>
                           </div>
                           <div className="text-xs mb-1">
-                            <span className="text-red-600 font-medium">Found:</span> <span className="line-through">{issue.original}</span>
+                            <span className="text-red-600 dark:text-red-400 font-medium">Found:</span> <span className="line-through dark:text-gray-300">{issue.original}</span>
                           </div>
                           <div className="text-xs mb-1">
-                            <span className="text-green-600 font-medium">Correct:</span> <span className="font-semibold text-green-700">{issue.correction}</span>
+                            <span className="text-green-600 dark:text-green-400 font-medium">Correct:</span> <span className="font-semibold text-green-700 dark:text-green-400">{issue.correction}</span>
                           </div>
-                          <div className="text-xs text-gray-600">
+                          <div className="text-xs text-gray-600 dark:text-gray-300">
                             <strong>Why:</strong> {issue.explanation}
                           </div>
                         </div>
@@ -1262,11 +1262,11 @@ export function EnhancedCoachPanel({
                     {comprehensiveFeedback.pacing.sections && comprehensiveFeedback.pacing.sections.length > 0 && (
                       <div className="space-y-2">
                         {comprehensiveFeedback.pacing.sections.slice(0, 2).map((section, idx) => (
-                          <div key={idx} className="bg-white p-2 rounded border border-purple-200">
-                            <p className="text-xs font-semibold text-purple-700 mb-1">
-                              {section.section}: <span className="font-normal text-purple-600">{section.pace}</span>
+                          <div key={idx} className="bg-white dark:bg-slate-800 p-2 rounded border border-purple-200 dark:border-purple-800">
+                            <p className="text-xs font-semibold text-purple-700 dark:text-purple-400 mb-1">
+                              {section.section}: <span className="font-normal text-purple-600 dark:text-purple-400">{section.pace}</span>
                             </p>
-                            <p className="text-xs text-gray-700">
+                            <p className="text-xs text-gray-700 dark:text-gray-300">
                               💡 {section.recommendation}
                             </p>
                           </div>
@@ -1275,8 +1275,8 @@ export function EnhancedCoachPanel({
                     )}
 
                     {comprehensiveFeedback.pacing.sections.length === 0 && (
-                      <div className="bg-white p-2 rounded border border-purple-200">
-                        <p className="text-xs text-gray-700">
+                      <div className="bg-white dark:bg-slate-800 p-2 rounded border border-purple-200 dark:border-purple-800">
+                        <p className="text-xs text-gray-700 dark:text-gray-300">
                           ✓ Your pacing is well-balanced! Keep varying your sentence lengths to maintain reader engagement.
                         </p>
                       </div>
@@ -1309,12 +1309,12 @@ export function EnhancedCoachPanel({
                       </div>
                     </div>
                   ) : (
-                    <div className="bg-gray-100 p-3 rounded-lg rounded-bl-none">
+                    <div className="bg-gray-100 dark:bg-slate-800 p-3 rounded-lg rounded-bl-none">
                       <div className="flex items-center space-x-2 mb-2">
                         <div className="w-5 h-5 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center">
                           <span className="text-white text-xs">🤖</span>
                         </div>
-                        <span className="font-semibold text-xs text-gray-800">{message.content.encouragement}</span>
+                        <span className="font-semibold text-xs text-gray-800 dark:text-gray-200">{message.content.encouragement}</span>
                       </div>
 
                       {/* TIME AND PHASE AWARENESS SECTION */}
@@ -1502,18 +1502,18 @@ export function EnhancedCoachPanel({
             </div>
 
             {/* OPTIMIZED: Compact Input Area */}
-            <div className="border-t bg-gray-50">
+            <div className="border-t border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800">
               {/* Prepopulated Questions - Collapsible */}
-              <div className="border-b border-gray-200">
+              <div className="border-b border-gray-200 dark:border-slate-700">
                 <button
                   onClick={() => setShowQuestions(!showQuestions)}
-                  className="w-full px-3 py-2 flex items-center justify-between hover:bg-gray-100 transition-colors"
+                  className="w-full px-3 py-2 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
                 >
-                  <span className="text-xs font-medium text-gray-700">Quick Questions</span>
+                  <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Quick Questions</span>
                   {showQuestions ? (
-                    <ChevronUp className="w-4 h-4 text-gray-500" />
+                    <ChevronUp className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                   ) : (
-                    <ChevronDown className="w-4 h-4 text-gray-500" />
+                    <ChevronDown className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                   )}
                 </button>
 
@@ -1533,7 +1533,7 @@ export function EnhancedCoachPanel({
                           setInputValue(question);
                           setShowQuestions(false);
                         }}
-                        className="w-full text-left px-3 py-2 text-xs bg-white border border-gray-200 rounded hover:bg-blue-50 hover:border-blue-300 transition-colors text-gray-700"
+                        className="w-full text-left px-3 py-2 text-xs bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded hover:bg-blue-50 dark:hover:bg-slate-600 hover:border-blue-300 dark:hover:border-blue-500 transition-colors text-gray-700 dark:text-gray-200"
                       >
                         {question}
                       </button>
@@ -1551,7 +1551,7 @@ export function EnhancedCoachPanel({
                     onChange={(e) => setInputValue(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                     placeholder="Ask me anything about your writing..."
-                    className="flex-1 px-2 py-1 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="flex-1 px-2 py-1 border border-gray-300 dark:border-slate-600 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-700 dark:text-gray-100"
                   />
                   <button
                     onClick={handleSendMessage}
