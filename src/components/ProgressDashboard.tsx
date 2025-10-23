@@ -119,8 +119,8 @@ export function ProgressDashboard({ progressData }: { progressData: ProgressData
       </div>
 
       {/* Progress Chart */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold mb-4">Learning Journey</h3>
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow p-6">
+        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Learning Journey</h3>
         <div className="grid grid-cols-10 gap-2">
           {Array.from({ length: 30 }, (_, i) => {
             const day = i + 1;
@@ -139,7 +139,7 @@ export function ProgressDashboard({ progressData }: { progressData: ProgressData
                       : score >= 70
                       ? 'bg-yellow-500 text-white'
                       : 'bg-red-500 text-white'
-                    : 'bg-gray-200 text-gray-500'
+                    : 'bg-gray-200 dark:bg-slate-700 text-gray-500 dark:text-gray-400'
                 }`}
               >
                 {day}
@@ -152,20 +152,20 @@ export function ProgressDashboard({ progressData }: { progressData: ProgressData
           <div className="flex items-center"><div className="w-3 h-3 bg-blue-500 rounded mr-1"></div>80-89%</div>
           <div className="flex items-center"><div className="w-3 h-3 bg-yellow-500 rounded mr-1"></div>70-79%</div>
           <div className="flex items-center"><div className="w-3 h-3 bg-red-500 rounded mr-1"></div>&lt;70%</div>
-          <div className="flex items-center"><div className="w-3 h-3 bg-gray-200 rounded mr-1"></div>Not completed</div>
+          <div className="flex items-center text-gray-700 dark:text-gray-300"><div className="w-3 h-3 bg-gray-200 dark:bg-slate-700 rounded mr-1"></div>Not completed</div>
         </div>
       </div>
 
       {/* Recent Activity */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow p-6">
+        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">Recent Activity</h3>
         <div className="space-y-3">
           {progressData.completedLessons.slice(-5).reverse().map((day, index) => {
             const score = progressData.lessonScores[day];
             const timeAgo = `${index + 1} day${index > 0 ? 's' : ''} ago`; // Simplified
             
             return (
-              <div key={day} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div key={day} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-slate-700 rounded-lg">
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
                     <span className="text-green-600 text-sm font-bold">✓</span>
@@ -197,7 +197,7 @@ export function ProgressDashboard({ progressData }: { progressData: ProgressData
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {progressData.skillProgress.map((skill, index) => (
-          <div key={skill.skill} className="bg-white rounded-lg shadow p-6">
+          <div key={skill.skill} className="bg-white dark:bg-slate-800 rounded-lg shadow p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-semibold">{skill.skill}</h3>
               <span className="text-sm text-gray-500">Level {skill.level}/{skill.maxLevel}</span>
@@ -208,7 +208,7 @@ export function ProgressDashboard({ progressData }: { progressData: ProgressData
                 <span>Progress</span>
                 <span>{Math.round((skill.level / skill.maxLevel) * 100)}%</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2">
                 <div 
                   className="bg-blue-600 h-2 rounded-full"
                   style={{ width: `${(skill.level / skill.maxLevel) * 100}%` }}
@@ -253,14 +253,14 @@ export function ProgressDashboard({ progressData }: { progressData: ProgressData
                 <div className="flex justify-between items-center mb-2">
                   <h4 className="font-medium">{goal.title}</h4>
                   <span className={`px-2 py-1 rounded text-sm ${
-                    isCompleted ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-600'
+                    isCompleted ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-400'
                   }`}>
                     {goal.current}/{goal.target}
                   </span>
                 </div>
                 
                 <div className="mb-2">
-                  <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div className="w-full bg-gray-200 dark:bg-slate-700 rounded-full h-2">
                     <div 
                       className={`h-2 rounded-full ${
                         isCompleted ? 'bg-green-500' : 'bg-blue-500'
@@ -301,7 +301,7 @@ export function ProgressDashboard({ progressData }: { progressData: ProgressData
                 className={`p-4 rounded-lg border-2 transition-all ${
                   badge.earned 
                     ? 'bg-yellow-50 border-yellow-300 shadow-md' 
-                    : 'bg-gray-50 border-gray-200 opacity-60'
+                    : 'bg-gray-50 dark:bg-slate-700 border-gray-200 dark:border-slate-600 opacity-60'
                 }`}
               >
                 <div className="text-center">
@@ -332,7 +332,7 @@ export function ProgressDashboard({ progressData }: { progressData: ProgressData
 
   return (
     <div className="max-w-6xl mx-auto p-4">
-      <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg overflow-hidden">
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
           <h2 className="text-2xl font-bold">Your Learning Dashboard</h2>
@@ -340,7 +340,7 @@ export function ProgressDashboard({ progressData }: { progressData: ProgressData
         </div>
 
         {/* Tab Navigation */}
-        <div className="border-b">
+        <div className="border-b dark:border-slate-700">
           <nav className="flex">
             {tabs.map(tab => (
               <button
@@ -348,8 +348,8 @@ export function ProgressDashboard({ progressData }: { progressData: ProgressData
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center space-x-2 px-6 py-3 text-sm font-medium transition-colors ${
                   activeTab === tab.id
-                    ? 'border-b-2 border-blue-500 text-blue-600 bg-blue-50'
-                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                    ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-700'
                 }`}
               >
                 <span>{tab.icon}</span>

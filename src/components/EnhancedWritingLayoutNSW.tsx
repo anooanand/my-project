@@ -831,7 +831,9 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
                 <select
                   value={fontFamily}
                   onChange={(e) => onSettingsChange && onSettingsChange({ fontFamily: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className={`w-full p-2 border rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                    darkMode ? 'bg-slate-800 text-gray-100 border-slate-600' : 'bg-white text-gray-900 border-gray-300'
+                  }`}
                 >
                   <option value="Inter">Inter</option>
                   <option value="Georgia">Georgia</option>
@@ -851,7 +853,9 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
                   type="number"
                   value={fontSize}
                   onChange={(e) => onSettingsChange && onSettingsChange({ fontSize: parseInt(e.target.value) })}
-                  className="w-full p-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className={`w-full p-2 border rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                    darkMode ? 'bg-slate-800 text-gray-100 border-slate-600' : 'bg-white text-gray-900 border-gray-300'
+                  }`}
                 />
               </div>
               
@@ -865,7 +869,9 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
                   step="0.1"
                   value={lineHeight}
                   onChange={(e) => onSettingsChange && onSettingsChange({ lineHeight: parseFloat(e.target.value) })}
-                  className="w-full p-2 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-border-transparent"
+                  className={`w-full p-2 border rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+                    darkMode ? 'bg-slate-800 text-gray-100 border-slate-600' : 'bg-white text-gray-900 border-gray-300'
+                  }`}
                 />
               </div>
             </div>

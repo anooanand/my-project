@@ -35,8 +35,8 @@ export function LearningPage({ state, onStateChange, onNavigateToWriting }: Lear
                 </svg>
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">NSW Selective Essay Coach</h1>
-                <p className="text-gray-600 dark:text-gray-300 mt-1">Master essay writing with our structured learning system</p>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">NSW Selective Writing Coach</h1>
+                <p className="text-gray-600 dark:text-gray-300 mt-1">Master all writing types with our structured learning system</p>
               </div>
             </div>
             
@@ -78,14 +78,6 @@ export function LearningPage({ state, onStateChange, onNavigateToWriting }: Lear
               onClick={() => setActiveView('progress')}
             >
               📊 Progress Dashboard
-            </button>
-            <button
-              className={`py-3 px-6 font-medium text-sm ml-auto ${
-                'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-800'
-              }`}
-              onClick={onNavigateToWriting}
-            >
-              ✏️ Writing Mode
             </button>
           </div>
 

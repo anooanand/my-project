@@ -510,7 +510,27 @@ function AppContent() {
               />
             </WritingAccessCheck>
           } />
-          <Route path="/learning" element={<LearningPage />} />
+          <Route path="/learning" element={
+            <>
+              <NavBar
+                activePage={activePage}
+                onNavigate={handleNavigation}
+                user={user}
+                onSignInClick={() => {
+                  setAuthModalMode('signin');
+                  setShowAuthModal(true);
+                }}
+                onSignUpClick={() => {
+                  setAuthModalMode('signup');
+                  setShowAuthModal(true);
+                }}
+                onForceSignOut={handleForceSignOut}
+              />
+              <div className="main-route-content">
+                <LearningPage />
+              </div>
+            </>
+          } />
           <Route path="/feedback/:essayId" element={<EssayFeedbackPage />} />
           <Route path="/evaluation/:evaluationId" element={<EvaluationPage />} />
           <Route path="/auth/callback" element={<EmailVerificationHandler />} />
