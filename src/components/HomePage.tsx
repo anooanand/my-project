@@ -5,7 +5,7 @@ import { FeaturesSection } from './FeaturesSection';
 import { HowItWorksSection } from './HowItWorksSection';
 import { StudentSuccessSection } from './StudentSuccessSection';
 import { PricingPage } from './PricingPage';
-import { WritingTypesSection } from './WritingTypesSection';
+import { NewWritingTypesSection } from './NewWritingTypesSection';
 import { ArrowRight, CheckCircle, Star, Users, Zap, BookOpen, Award, Target, Play } from 'lucide-react';
 
 interface HomePageProps {
@@ -114,7 +114,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSignInClick })
                 className="w-full h-full"
                 poster="https://files.manuscdn.com/user_upload_by_module/session_file/92567668/vDkqoyrtydNvcdzk.png"
                 ref={videoRef}
-                onPlay={( ) => setIsVideoPlaying(true)}
+                onPlay={() => setIsVideoPlaying(true)}
                 onPause={() => setIsVideoPlaying(false)}
                 loop
                 playsInline
@@ -231,8 +231,10 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSignInClick })
         </div>
       </section>
 
-      {/* Features Section */}
-      <FeaturesSection />
+      {/* Features */}
+      <div id="features">
+        <FeaturesSection />
+      </div>
 
       {/* How It Works */}
       <div id="how-it-works">
@@ -240,36 +242,17 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSignInClick })
       </div>
 
       {/* Writing Types */}
-      <WritingTypesSection onSignInClick={onSignInClick} />
+      <div>
+        <NewWritingTypesSection onSignInClick={onSignInClick} />
+      </div>
 
       {/* Student Success */}
-      <StudentSuccessSection />
+      <EnhancedSuccessSection />
 
-      {/* CTA Section */}
-      <section className="py-24 bg-gradient-to-br from-blue-50 to-purple-50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-            Ready to Excel in Your Writing Exam?
-          </h2>
-          <p className="text-xl text-gray-600 mb-10">
-            Start improving your writing skills today with personalized AI-powered coaching.
-          </p>
-
-          <div className="flex flex-col sm:flex-row justify-center gap-4 mb-8">
-            <button
-              onClick={() => onNavigate(user ? 'dashboard' : 'auth')}
-              className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-700 rounded-xl hover:shadow-xl transform hover:scale-105 transition-all duration-200"
-            >
-              {user ? 'Continue Writing' : 'Start Your 3-Day Free Trial'}
-              <ArrowRight className="ml-2 w-5 h-5" />
-            </button>
-          </div>
-
-          <p className="text-sm text-gray-500">
-            No credit card required • Cancel anytime • Money-back guarantee
-          </p>
-        </div>
-      </section>
+      {/* Pricing */}
+      <div id="pricing">
+        <PricingPage onSelectPlan={(plan) => onNavigate('pricing', plan)} />
+      </div>
     </div>
   );
 };
