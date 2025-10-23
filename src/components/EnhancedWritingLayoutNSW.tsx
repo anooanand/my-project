@@ -616,7 +616,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
                 showPlanningTool
                   ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-md'
                   : darkMode
-                  ? 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200'
+                  ? 'bg-gray-700 text-blue-300 hover:bg-gray-600 border border-gray-600'
                   : 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200'
               }`}
               title="Planning Tool"
@@ -635,7 +635,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
                 showStructureModal
                   ? 'bg-green-600 text-white hover:bg-green-700 shadow-md'
                   : darkMode
-                  ? 'bg-green-50 text-green-700 hover:bg-green-100 border border-green-200'
+                  ? 'bg-gray-700 text-green-300 hover:bg-gray-600 border border-gray-600'
                   : 'bg-green-50 text-green-700 hover:bg-green-100 border border-green-200'
               }`}
               title="Structure Guide"
@@ -654,7 +654,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
                 showTipsModalLocal
                   ? 'bg-orange-600 text-white hover:bg-orange-700 shadow-md'
                   : darkMode
-                  ? 'bg-orange-50 text-orange-700 hover:bg-orange-100 border border-orange-200'
+                  ? 'bg-gray-700 text-orange-300 hover:bg-gray-600 border border-gray-600'
                   : 'bg-orange-50 text-orange-700 hover:bg-orange-100 border border-orange-200'
               }`}
               title="Writing Tips"
@@ -673,7 +673,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
                 examModeLocal
                   ? 'bg-red-600 text-white hover:bg-red-700 shadow-md'
                   : darkMode
-                  ? 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'
+                  ? 'bg-gray-700 text-red-300 hover:bg-gray-600 border border-gray-600'
                   : 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'
               }`}
               title="Exam Mode"
