@@ -1,6 +1,12 @@
 import React, { useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { ArrowRight, CheckCircle, Star, Users, Zap, BookOpen, Award, Target, Play, Pen, MessageSquare, Trophy } from 'lucide-react';
+import { HeroSection } from './HeroSection';
+import { FeaturesSection } from './FeaturesSection';
+import { HowItWorksSection } from './HowItWorksSection';
+import { StudentSuccessSection } from './StudentSuccessSection';
+import { PricingPage } from './PricingPage';
+import { WritingTypesSection } from './WritingTypesSection';
+import { ArrowRight, CheckCircle, Star, Users, Zap, BookOpen, Award, Target, Play } from 'lucide-react';
 
 interface HomePageProps {
   onNavigate: (page: string, type?: string) => void;
@@ -9,588 +15,259 @@ interface HomePageProps {
 
 export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSignInClick }) => {
   const { user } = useAuth();
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isVideoPlaying, setIsVideoPlaying] = React.useState(false);
+
+  const handlePlayPause = () => {
+    if (videoRef.current) {
+      if (isVideoPlaying) {
+        videoRef.current.pause();
+      } else {
+        videoRef.current.play();
+      }
+      setIsVideoPlaying(!isVideoPlaying);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Hero Section - Exactly matching instachatai.co */}
-      <section className="relative overflow-hidden bg-white pt-16 pb-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Modern Hero Section */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-purple-50 pt-20 pb-32">
+        <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))] bg-[size:32px_32px]"></div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center max-w-4xl mx-auto">
-            {/* Main Heading */}
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
-              <span className="text-blue-600">Boost Your Child's Selective Exam Score</span>
-              <br />
-              <span className="text-black">with AI-Powered Writing Practice</span>
+            {/* Trust Badge */}
+            <div className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-50 to-purple-50 rounded-full mb-8 border border-blue-100">
+              <Star className="w-4 h-4 text-yellow-500 fill-current mr-2" />
+              <span className="text-sm font-semibold text-gray-700">AI-Powered Writing Coach for NSW Students</span>
+            </div>
+
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6 leading-tight">
+              Master Writing for
+              <span className="block mt-2 bg-gradient-to-r from-blue-600 via-purple-600 to-purple-700 bg-clip-text text-transparent">
+                NSW Selective Exams
+              </span>
             </h1>
 
-            {/* Subheading */}
-            <p className="text-lg md:text-xl text-gray-700 mb-12 leading-relaxed max-w-3xl mx-auto">
-              Master narrative, persuasive, and creative writing with personalized AI guidance. Join thousands of students preparing for NSW Selective exams.
+            <p className="text-xl md:text-2xl text-gray-600 mb-10 leading-relaxed max-w-3xl mx-auto">
+              Get instant AI-powered feedback, personalized coaching, and proven strategies to achieve top marks in your writing exam.
             </p>
 
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row justify-center gap-4 mb-16">
+            <div className="flex flex-col sm:flex-row justify-center gap-4 mb-12">
               <button
-                onClick={() => onNavigate(user ? 'dashboard' : 'pricing')}
-                className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-purple-600 to-purple-700 rounded-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+                onClick={() => onNavigate(user ? 'dashboard' : 'auth')}
+                className="group inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-700 rounded-xl hover:shadow-xl transform hover:scale-105 transition-all duration-200"
               >
-                View Pricing
-                <span className="ml-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">10</span>
+                {user ? 'Go to Dashboard' : 'Start Free Trial'}
+                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </button>
 
               <button
-                onClick={() => onNavigate('demo')}
-                className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-blue-600 bg-white border-2 border-blue-400 rounded-lg hover:shadow-lg transition-all duration-200"
+                onClick={() => setIsVideoPlaying(true)}
+                className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-gray-700 bg-white border-2 border-gray-200 rounded-xl hover:border-purple-300 hover:shadow-lg transition-all duration-200"
               >
                 See How It Works
-                <span className="ml-2 bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded">11</span>
               </button>
+            </div>
+
+            {/* Key Features */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-3xl mx-auto">
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-100 shadow-sm">
+                <Zap className="w-8 h-8 text-blue-600 mx-auto mb-2" />
+                <div className="text-sm font-semibold text-gray-900 mb-1">Instant Feedback</div>
+                <div className="text-xs text-gray-600">Real-time AI analysis</div>
+              </div>
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-100 shadow-sm">
+                <BookOpen className="w-8 h-8 text-purple-600 mx-auto mb-2" />
+                <div className="text-sm font-semibold text-gray-900 mb-1">NSW Aligned Curriculum</div>
+                <div className="text-xs text-gray-600">Official NSW Department of Education rubric</div>
+              </div>
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-100 shadow-sm">
+                <Target className="w-8 h-8 text-green-600 mx-auto mb-2" />
+                <div className="text-sm font-semibold text-gray-900 mb-1">Personalized</div>
+                <div className="text-xs text-gray-600">Adapts to your level</div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Writing Types Section - Matching instachatai.co */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Section Header */}
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-purple-600 mb-4">
-              Writing Types for NSW Selective Exam
+      {/* Demo Video Section - NEWLY ADDED */}
+      <section className="py-24 bg-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+              See Writing Mate in Action
             </h2>
-            <p className="text-lg text-gray-700">
-              Choose from our comprehensive range of writing styles with AI-powered guidance
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Watch how our AI-powered platform helps students master writing skills and achieve top marks in NSW Selective exams.
             </p>
           </div>
 
-          {/* Writing Types Grid */}
-          <div className="grid md:grid-cols-3 gap-8">
-            {/* Card 1: Storytelling & Creative Writing */}
-            <div className="bg-white rounded-xl p-8 border-t-4 border-blue-500 shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex items-center mb-4">
-                <Pen className="w-6 h-6 text-blue-600 mr-3" />
-                <h3 className="text-xl font-bold text-gray-900">Storytelling & Creative Writing</h3>
-              </div>
-              <p className="text-gray-600 mb-6">Master the art of creative storytelling and narrative techniques</p>
-              
-              <div className="space-y-4">
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">Narrative Writing</h4>
-                  <p className="text-sm text-gray-600 mb-3">Write engaging stories with compelling plots and characters</p>
-                  <button className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors">
-                    Sign In to Start
-                  </button>
+          {/* Video Container */}
+          <div className="relative bg-gray-900 rounded-3xl overflow-hidden shadow-2xl">
+            {/* Video Player */}
+            <div className="relative aspect-video bg-black">
+              <video
+                src="https://files.manuscdn.com/user_upload_by_module/session_file/113184588/uelvKSMHlXhPbBxk.mp4"
+                className="w-full h-full"
+                poster="https://files.manuscdn.com/user_upload_by_module/session_file/92567668/vDkqoyrtydNvcdzk.png"
+                ref={videoRef}
+                onPlay={( ) => setIsVideoPlaying(true)}
+                onPause={() => setIsVideoPlaying(false)}
+                loop
+                playsInline
+              >
+                Your browser does not support the video tag.
+              </video>
+              {!isVideoPlaying && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 cursor-pointer" onClick={handlePlayPause}>
+                  <Play className="w-20 h-20 text-white" />
                 </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">Imaginative Writing</h4>
-                  <p className="text-sm text-gray-600 mb-3">Create fantastical stories and unique worlds</p>
-                  <button className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors">
-                    Sign In to Start
-                  </button>
-                </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">Recount Writing</h4>
-                  <p className="text-sm text-gray-600 mb-3">Share personal or historical experiences effectively</p>
-                  <button className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors">
-                    Sign In to Start
-                  </button>
-                </div>
-              </div>
+              )}
             </div>
 
-            {/* Card 2: Argument & Debate Writing */}
-            <div className="bg-white rounded-xl p-8 border-t-4 border-purple-500 shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex items-center mb-4">
-                <MessageSquare className="w-6 h-6 text-purple-600 mr-3" />
-                <h3 className="text-xl font-bold text-gray-900">Argument & Debate Writing</h3>
-              </div>
-              <p className="text-gray-600 mb-6">Learn to craft compelling arguments and balanced discussions</p>
-              
-              <div className="space-y-4">
+            {/* Video Info */}
+            <div className="bg-gradient-to-r from-blue-600 to-purple-700 px-8 py-6 text-white">
+              <div className="flex items-center justify-between">
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">Persuasive Writing</h4>
-                  <p className="text-sm text-gray-600 mb-3">Convince readers with strong arguments and evidence</p>
-                  <button className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors">
-                    Sign In to Start
-                  </button>
+                  <h3 className="text-2xl font-bold mb-2 text-gray-100">Complete Platform Demo</h3>
+                  <p className="text-gray-200">Learn how to get started with Writing Mate and unlock your writing potential</p>
                 </div>
-                <div>
-                  <h4 className="font-semibold text-gray-900 mb-2">Discursive Writing</h4>
-                  <p className="text-sm text-gray-600 mb-3">Explore different viewpoints on complex topics</p>
-                  <button className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors">
-                    Sign In to Start
-                  </button>
+                <div className="text-right">
+                  <div className="text-sm font-semibold text-gray-200 mb-2">Duration: 2:18</div>
                 </div>
               </div>
-            </div>
-
-            {/* Card 3: Essay Scorer */}
-            <div className="bg-white rounded-xl p-8 border-t-4 border-green-500 shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex items-center mb-4">
-                <Trophy className="w-6 h-6 text-green-600 mr-3" />
-                <h3 className="text-xl font-bold text-gray-900">Essay Scorer</h3>
-              </div>
-              <p className="text-gray-600 mb-6">Get detailed feedback and scores based on NSW marking criteria</p>
-              
-              <div className="space-y-3 mb-6">
-                <div className="flex items-start">
-                  <CheckCircle className="w-5 h-5 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Detailed Analysis</h4>
-                    <p className="text-sm text-gray-600">Comprehensive feedback on content, structure, and language</p>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <CheckCircle className="w-5 h-5 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <h4 className="font-semibold text-gray-900">NSW Criteria</h4>
-                    <p className="text-sm text-gray-600">Aligned with Selective School marking standards</p>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <CheckCircle className="w-5 h-5 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Improvement Tips</h4>
-                    <p className="text-sm text-gray-600">Actionable suggestions for better scores</p>
-                  </div>
-                </div>
-                <div className="flex items-start">
-                  <CheckCircle className="w-5 h-5 text-green-600 mr-2 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <h4 className="font-semibold text-gray-900">Score Tracking</h4>
-                    <p className="text-sm text-gray-600">Monitor your progress over time</p>
-                  </div>
-                </div>
-              </div>
-
-              <button className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors">
-                Sign In to Score Essays
-              </button>
             </div>
           </div>
 
-          {/* Pro Tip */}
-          <div className="mt-12 bg-blue-50 border-l-4 border-blue-600 p-6 rounded">
-            <p className="text-gray-800">
-              <span className="font-bold text-blue-600">Pro Tip:</span> Submit your completed essays for instant feedback and scoring based on actual NSW Selective exam criteria.
+          {/* Video Benefits */}
+          <div className="grid md:grid-cols-3 gap-8 mt-16">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Play className="w-8 h-8 text-blue-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Platform Overview</h3>
+              <p className="text-gray-600">Get a complete walkthrough of all features and tools available to help you improve your writing.</p>
+            </div>
+
+            <div className="text-center">
+              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Star className="w-8 h-8 text-purple-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Real Examples</h3>
+              <p className="text-gray-600">See real examples of how the AI feedback works and how students use it to improve their writing.</p>
+            </div>
+
+            <div className="text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Zap className="w-8 h-8 text-green-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Quick Start Guide</h3>
+              <p className="text-gray-600">Learn how to get started in just a few minutes and begin your writing improvement journey today.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Problem/Solution Section */}
+      <section className="py-24 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+              Why Students Struggle with Writing Exams
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Traditional tutoring is expensive, time-consuming, and doesn't provide instant feedback when you need it most.
             </p>
-            <p className="text-sm text-gray-600 mt-2">All essay types are aligned with NSW Selective exam requirements</p>
           </div>
 
-          {/* CTA Button */}
-          <div className="text-center mt-12">
+          <div className="grid md:grid-cols-3 gap-8 mb-12">
+            <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
+              <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center mb-4">
+                <Users className="w-6 h-6 text-red-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">No Instant Feedback</h3>
+              <p className="text-gray-600">Wait days for tutor feedback, missing crucial practice time before exams.</p>
+            </div>
+
+            <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
+              <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center mb-4">
+                <Award className="w-6 h-6 text-red-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Expensive Tutoring</h3>
+              <p className="text-gray-600">Private tutors cost $60-120/hour with inconsistent quality and availability.</p>
+            </div>
+
+            <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
+              <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center mb-4">
+                <BookOpen className="w-6 h-6 text-red-600" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Generic Advice</h3>
+              <p className="text-gray-600">One-size-fits-all guidance doesn't address your specific weaknesses.</p>
+            </div>
+          </div>
+
+          {/* Solution Highlight */}
+          <div className="bg-gradient-to-r from-blue-600 to-purple-700 rounded-3xl p-12 text-center">
+            <h3 className="text-3xl md:text-4xl font-bold mb-4 text-white">
+              Get Unlimited AI Coaching for Less Than One Tutoring Session
+            </h3>
+            <div className="grid grid-cols-2 gap-4 text-white text-lg mb-8 max-w-2xl mx-auto">
+              <div className="flex items-center justify-center"><CheckCircle className="w-5 h-5 mr-2" /> Instant feedback</div>
+              <div className="flex items-center justify-center"><CheckCircle className="w-5 h-5 mr-2" /> Available 24/7</div>
+              <div className="flex items-center justify-center"><CheckCircle className="w-5 h-5 mr-2" /> Personalized to your needs</div>
+              <div className="flex items-center justify-center"><CheckCircle className="w-5 h-5 mr-2" /> NSW curriculum aligned</div>
+            </div>
             <button
-              onClick={() => onNavigate(user ? 'dashboard' : 'auth')}
-              className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-purple-600 rounded-lg hover:bg-purple-700 transition-colors"
+              onClick={() => onNavigate(user ? 'dashboard' : 'pricing')}
+              className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold bg-white text-purple-700 rounded-xl hover:shadow-xl transform hover:scale-105 transition-all duration-200"
             >
-              Sign In to Start Writing
+              {user ? 'Start Writing Now' : 'View Pricing'}
               <ArrowRight className="ml-2 w-5 h-5" />
             </button>
           </div>
         </div>
       </section>
 
-      {/* Master Every Writing Style Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              Master Every Writing Style for Selective Success
-            </h2>
-            <p className="text-lg text-gray-700">
-              Practice under exam conditions and get feedback to improve your writing skills
-            </p>
+      {/* Features Section */}
+      <FeaturesSection />
+
+      {/* How It Works */}
+      <div id="how-it-works">
+        <HowItWorksSection />
+      </div>
+
+      {/* Writing Types */}
+      <WritingTypesSection onSignInClick={onSignInClick} />
+
+      {/* Student Success */}
+      <StudentSuccessSection />
+
+      {/* CTA Section */}
+      <section className="py-24 bg-gradient-to-br from-blue-50 to-purple-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+            Ready to Excel in Your Writing Exam?
+          </h2>
+          <p className="text-xl text-gray-600 mb-10">
+            Start improving your writing skills today with personalized AI-powered coaching.
+          </p>
+
+          <div className="flex flex-col sm:flex-row justify-center gap-4 mb-8">
+            <button
+              onClick={() => onNavigate(user ? 'dashboard' : 'auth')}
+              className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-700 rounded-xl hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+            >
+              {user ? 'Continue Writing' : 'Start Your 3-Day Free Trial'}
+              <ArrowRight className="ml-2 w-5 h-5" />
+            </button>
           </div>
 
-          {/* Writing Styles Grid */}
-          <div className="grid md:grid-cols-2 gap-8">
-            {/* Narrative Writing */}
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-8">
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Narrative Writing</h3>
-              <p className="text-gray-700 mb-4">Create engaging stories with strong plots, vivid descriptions, and memorable characters.</p>
-              <ul className="space-y-2">
-                <li className="flex items-center text-gray-700">
-                  <CheckCircle className="w-5 h-5 text-blue-600 mr-2" />
-                  Story Mountain framework
-                </li>
-                <li className="flex items-center text-gray-700">
-                  <CheckCircle className="w-5 h-5 text-blue-600 mr-2" />
-                  Character development
-                </li>
-                <li className="flex items-center text-gray-700">
-                  <CheckCircle className="w-5 h-5 text-blue-600 mr-2" />
-                  Descriptive techniques
-                </li>
-              </ul>
-            </div>
-
-            {/* Persuasive Writing */}
-            <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-8">
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Persuasive Writing</h3>
-              <p className="text-gray-700 mb-4">Master the PEEL method to construct powerful arguments that convince your readers.</p>
-              <ul className="space-y-2">
-                <li className="flex items-center text-gray-700">
-                  <CheckCircle className="w-5 h-5 text-purple-600 mr-2" />
-                  Strong thesis statements
-                </li>
-                <li className="flex items-center text-gray-700">
-                  <CheckCircle className="w-5 h-5 text-purple-600 mr-2" />
-                  Evidence-based arguments
-                </li>
-                <li className="flex items-center text-gray-700">
-                  <CheckCircle className="w-5 h-5 text-purple-600 mr-2" />
-                  Persuasive techniques
-                </li>
-              </ul>
-            </div>
-
-            {/* Informative Writing */}
-            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-8">
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Informative Writing</h3>
-              <p className="text-gray-700 mb-4">Explain complex topics clearly and effectively with structured information.</p>
-              <ul className="space-y-2">
-                <li className="flex items-center text-gray-700">
-                  <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
-                  Clear explanations
-                </li>
-                <li className="flex items-center text-gray-700">
-                  <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
-                  Logical organization
-                </li>
-                <li className="flex items-center text-gray-700">
-                  <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
-                  Supporting examples
-                </li>
-              </ul>
-            </div>
-
-            {/* Reflective Writing */}
-            <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-8">
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Reflective Writing</h3>
-              <p className="text-gray-700 mb-4">Share personal experiences and insights with meaningful reflection.</p>
-              <ul className="space-y-2">
-                <li className="flex items-center text-gray-700">
-                  <CheckCircle className="w-5 h-5 text-orange-600 mr-2" />
-                  Personal insights
-                </li>
-                <li className="flex items-center text-gray-700">
-                  <CheckCircle className="w-5 h-5 text-orange-600 mr-2" />
-                  Critical thinking
-                </li>
-                <li className="flex items-center text-gray-700">
-                  <CheckCircle className="w-5 h-5 text-orange-600 mr-2" />
-                  Learning outcomes
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Practice Tips Section */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              Practice Tips
-            </h2>
-            <p className="text-lg text-gray-700">
-              Follow these tips to make the most of your practice sessions
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-white rounded-xl p-8 text-center">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Zap className="w-8 h-8 text-blue-600" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Time Management</h3>
-              <p className="text-gray-600">Practice with the timer to improve your speed</p>
-            </div>
-
-            <div className="bg-white rounded-xl p-8 text-center">
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Target className="w-8 h-8 text-purple-600" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Regular Practice</h3>
-              <p className="text-gray-600">Set a consistent practice schedule</p>
-            </div>
-
-            <div className="bg-white rounded-xl p-8 text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <BookOpen className="w-8 h-8 text-green-600" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Self-Review</h3>
-              <p className="text-gray-600">Review your work after each session</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* AI Adaptation Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              AI That Adapts to Your Level
-            </h2>
-            <p className="text-lg text-gray-700">
-              Our AI writing coach dynamically adjusts feedback and guidance based on your skill level
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8">
-            {/* Beginner Level */}
-            <div className="bg-blue-50 rounded-xl p-8 border-l-4 border-blue-600">
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Beginner Level</h3>
-              <p className="text-gray-700 mb-4">Clear guidance and foundational support for new writers</p>
-              <ul className="space-y-2 text-gray-700">
-                <li className="flex items-start">
-                  <span className="text-blue-600 mr-2">•</span>
-                  <span>Basic writing structure explanations</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-blue-600 mr-2">•</span>
-                  <span>Step-by-step guidance for each section</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-blue-600 mr-2">•</span>
-                  <span>Simple, clear feedback on improvements</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* Intermediate Level */}
-            <div className="bg-purple-50 rounded-xl p-8 border-l-4 border-purple-600">
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Intermediate Level</h3>
-              <p className="text-gray-700 mb-4">Advanced techniques and style enhancement</p>
-              <ul className="space-y-2 text-gray-700">
-                <li className="flex items-start">
-                  <span className="text-purple-600 mr-2">•</span>
-                  <span>Vocabulary and style suggestions</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-purple-600 mr-2">•</span>
-                  <span>Detailed feedback on argument structure</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-purple-600 mr-2">•</span>
-                  <span>Advanced writing techniques coaching</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* Advanced Level */}
-            <div className="bg-green-50 rounded-xl p-8 border-l-4 border-green-600">
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">Advanced Level</h3>
-              <p className="text-gray-700 mb-4">Sophisticated writing mastery and exam excellence</p>
-              <ul className="space-y-2 text-gray-700">
-                <li className="flex items-start">
-                  <span className="text-green-600 mr-2">•</span>
-                  <span>Complex argument development</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-green-600 mr-2">•</span>
-                  <span>Exam-specific strategies and tips</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-green-600 mr-2">•</span>
-                  <span>High-level literary techniques</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          {/* Continuous Learning */}
-          <div className="mt-12 bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-8 border border-blue-200">
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">Continuous Learning & Adaptation</h3>
-            <p className="text-gray-700">
-              Our AI continuously analyzes your writing patterns and progress to provide personalized recommendations and challenges appropriate for your skill level. As you improve, the AI adjusts its feedback to help you reach the next level of writing excellence.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works Section */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              How Writing Mate Helps Students Succeed
-            </h2>
-            <p className="text-lg text-gray-700">
-              Our AI-powered platform guides students step-by-step, helping them master key writing formats required for NSW Selective School exams
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-12">
-            {/* Left Column */}
-            <div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-8">How Writing Mate Works</h3>
-              
-              <div className="space-y-8">
-                <div>
-                  <h4 className="text-xl font-bold text-gray-900 mb-3">Step-by-Step Writing Support</h4>
-                  <p className="text-gray-700 mb-3">The AI guides students through each section using an interactive, structured approach based on NSW syllabus expectations.</p>
-                  <p className="text-gray-600 italic">Example: "What is your main argument? Why do you believe this is true?"</p>
-                </div>
-
-                <div>
-                  <h4 className="text-xl font-bold text-gray-900 mb-3">Real-Time AI Feedback</h4>
-                  <ul className="space-y-2 text-gray-700">
-                    <li className="flex items-center">
-                      <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
-                      Grammar & spelling corrections
-                    </li>
-                    <li className="flex items-center">
-                      <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
-                      Sentence structure improvements
-                    </li>
-                    <li className="flex items-center">
-                      <CheckCircle className="w-5 h-5 text-green-600 mr-2" />
-                      Persuasive & narrative techniques
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column */}
-            <div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-8">Student Success Data</h3>
-              
-              <div className="space-y-8">
-                <div className="bg-white rounded-xl p-8 border-2 border-blue-200">
-                  <div className="text-4xl font-bold text-blue-600 mb-2">82%</div>
-                  <p className="text-gray-700 font-semibold">Writing Score Improvement</p>
-                </div>
-
-                <div className="bg-white rounded-xl p-8 border-2 border-purple-200">
-                  <div className="text-4xl font-bold text-purple-600 mb-2">94%</div>
-                  <p className="text-gray-700 font-semibold">Student Confidence</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Feature Comparison Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-              How Writing Mate Stands Out
-            </h2>
-            <p className="text-lg text-gray-700">
-              Unlike generic AI chatbots, Writing Mate teaches students how to write better
-            </p>
-          </div>
-
-          {/* Comparison Table */}
-          <div className="overflow-x-auto mb-12">
-            <table className="w-full border-collapse">
-              <thead>
-                <tr className="bg-gray-100 border-b-2 border-gray-300">
-                  <th className="text-left px-6 py-4 font-bold text-gray-900">Feature</th>
-                  <th className="text-center px-6 py-4 font-bold text-gray-900">Writing Mate</th>
-                  <th className="text-center px-6 py-4 font-bold text-gray-900">Generic AI Chatbots</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-b border-gray-200">
-                  <td className="px-6 py-4 text-gray-700">Step-by-step writing guidance</td>
-                  <td className="text-center px-6 py-4"><CheckCircle className="w-6 h-6 text-green-600 mx-auto" /></td>
-                  <td className="text-center px-6 py-4"><span className="text-gray-400">✗</span></td>
-                </tr>
-                <tr className="border-b border-gray-200">
-                  <td className="px-6 py-4 text-gray-700">Follows NSW writing criteria</td>
-                  <td className="text-center px-6 py-4"><CheckCircle className="w-6 h-6 text-green-600 mx-auto" /></td>
-                  <td className="text-center px-6 py-4"><span className="text-gray-400">✗</span></td>
-                </tr>
-                <tr className="border-b border-gray-200">
-                  <td className="px-6 py-4 text-gray-700">NSW exam-style feedback</td>
-                  <td className="text-center px-6 py-4"><CheckCircle className="w-6 h-6 text-green-600 mx-auto" /></td>
-                  <td className="text-center px-6 py-4"><span className="text-gray-400">✗</span></td>
-                </tr>
-                <tr className="border-b border-gray-200">
-                  <td className="px-6 py-4 text-gray-700">Real-time grammar & sentence corrections</td>
-                  <td className="text-center px-6 py-4"><CheckCircle className="w-6 h-6 text-green-600 mx-auto" /></td>
-                  <td className="text-center px-6 py-4"><span className="text-gray-400">✗</span></td>
-                </tr>
-                <tr className="border-b border-gray-200">
-                  <td className="px-6 py-4 text-gray-700">Adaptive learning based on skill level</td>
-                  <td className="text-center px-6 py-4"><CheckCircle className="w-6 h-6 text-green-600 mx-auto" /></td>
-                  <td className="text-center px-6 py-4"><span className="text-gray-400">✗</span></td>
-                </tr>
-                <tr>
-                  <td className="px-6 py-4 text-gray-700">Interactive AI coaching</td>
-                  <td className="text-center px-6 py-4"><CheckCircle className="w-6 h-6 text-green-600 mx-auto" /></td>
-                  <td className="text-center px-6 py-4"><span className="text-gray-400">✗</span></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          {/* Key Strengths */}
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-blue-50 rounded-xl p-8">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Narrative Writing</h3>
-              <p className="text-gray-700 mb-4">Uses Story Mountain framework for engaging storytelling</p>
-              <ul className="space-y-2 text-gray-700">
-                <li className="flex items-center">
-                  <span className="text-blue-600 mr-2">•</span>
-                  Character development
-                </li>
-                <li className="flex items-center">
-                  <span className="text-blue-600 mr-2">•</span>
-                  Plot structure
-                </li>
-                <li className="flex items-center">
-                  <span className="text-blue-600 mr-2">•</span>
-                  Descriptive language
-                </li>
-              </ul>
-            </div>
-
-            <div className="bg-purple-50 rounded-xl p-8">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">Persuasive Writing</h3>
-              <p className="text-gray-700 mb-4">Follows PEEEL structure for compelling arguments</p>
-              <ul className="space-y-2 text-gray-700">
-                <li className="flex items-center">
-                  <span className="text-purple-600 mr-2">•</span>
-                  Strong thesis statements
-                </li>
-                <li className="flex items-center">
-                  <span className="text-purple-600 mr-2">•</span>
-                  Evidence-based arguments
-                </li>
-                <li className="flex items-center">
-                  <span className="text-purple-600 mr-2">•</span>
-                  Logical reasoning
-                </li>
-              </ul>
-            </div>
-
-            <div className="bg-green-50 rounded-xl p-8">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">NSW Exam Alignment</h3>
-              <p className="text-gray-700 mb-4">Built specifically for NSW writing standards</p>
-              <ul className="space-y-2 text-gray-700">
-                <li className="flex items-center">
-                  <span className="text-green-600 mr-2">•</span>
-                  Selective School criteria
-                </li>
-                <li className="flex items-center">
-                  <span className="text-green-600 mr-2">•</span>
-                  NAPLAN alignment
-                </li>
-                <li className="flex items-center">
-                  <span className="text-green-600 mr-2">•</span>
-                  HSC preparation
-                </li>
-              </ul>
-            </div>
-          </div>
+          <p className="text-sm text-gray-500">
+            No credit card required • Cancel anytime • Money-back guarantee
+          </p>
         </div>
       </section>
     </div>
