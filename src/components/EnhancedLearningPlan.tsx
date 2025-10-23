@@ -131,10 +131,10 @@ export function EnhancedLearningPlan() {
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case 'Beginner': return 'bg-green-100 text-green-800';
-      case 'Intermediate': return 'bg-yellow-100 text-yellow-800';
-      case 'Advanced': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'Beginner': return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300';
+      case 'Intermediate': return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300';
+      case 'Advanced': return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300';
+      default: return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300';
     }
   };
 
@@ -326,10 +326,10 @@ export function EnhancedLearningPlan() {
       </div>
 
       {/* Learning Path Visualization */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Your Learning Journey</h2>
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-6">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">Your Learning Journey</h2>
         <div className="relative">
-          <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200"></div>
+          <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-slate-600"></div>
           <div className="space-y-6">
             {mockLessons.slice(0, 6).map((lesson, index) => (
               <div key={lesson.id} className="relative flex items-center space-x-4">
@@ -349,8 +349,8 @@ export function EnhancedLearningPlan() {
                   )}
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-medium text-gray-900">{lesson.title}</h4>
-                  <p className="text-sm text-gray-500">{lesson.duration} • {lesson.points} points</p>
+                  <h4 className="font-medium text-gray-900 dark:text-gray-100">{lesson.title}</h4>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{lesson.duration} • {lesson.points} points</p>
                 </div>
                 <div className={`px-2 py-1 rounded text-xs font-medium ${getDifficultyColor(lesson.difficulty)}`}>
                   {lesson.difficulty}
