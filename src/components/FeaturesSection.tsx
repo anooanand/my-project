@@ -18,7 +18,7 @@ const features: Feature[] = [
     title: 'AI-Powered Feedback',
     description: 'Receive instant, detailed feedback on your writing with specific suggestions to improve content, structure, and style.',
     details: 'Our advanced AI system analyzes your writing across multiple dimensions including grammar, vocabulary, sentence structure, coherence, and NSW selective exam criteria. Get personalized suggestions for improvement with explanations of why changes are recommended. The feedback is tailored specifically for students aged 9-11 preparing for selective school entrance exams, explicitly aligned with the official NSW Department of Education rubric.',
-    icon: <Brain className="w-6 h-6 text-indigo-700 dark:text-indigo-300" />,
+    icon: <Brain className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />,
     tag: 'Instant Analysis',
     color: 'indigo'
   },
@@ -27,7 +27,7 @@ const features: Feature[] = [
     title: 'Text Type Templates',
     description: 'Access templates for all text types with clear structures, examples, and guided prompts for better writing.',
     details: 'Comprehensive templates for all 11 text types commonly found in NSW selective exams: narrative, persuasive, informative, descriptive, and more. Each template includes structure guidelines, vocabulary suggestions, example paragraphs, and step-by-step writing prompts to help students understand and master different writing formats, explicitly aligned with the official NSW Department of Education rubric.',
-    icon: <BookOpen className="w-6 h-6 text-purple-700 dark:text-purple-300" />,
+    icon: <BookOpen className="w-8 h-8 text-purple-600 dark:text-purple-400" />,
     tag: '11 Types',
     color: 'purple'
   },
@@ -36,7 +36,7 @@ const features: Feature[] = [
     title: 'Timed Practice Mode',
     description: 'Practice under real exam conditions with our timer and realistic practice prompts based on past exams.',
     details: 'Simulate actual exam conditions with 30-minute timed sessions and typed responses—exactly like the actual NSW Selective Placement Test. Features include customizable timers, distraction-free writing environment, automatic saving, and post-practice analysis. Students can practice with different time limits to build confidence and improve time management skills.',
-    icon: <Clock className="w-6 h-6 text-amber-700 dark:text-amber-300" />,
+    icon: <Clock className="w-8 h-8 text-amber-600 dark:text-amber-400" />,
     tag: 'Exam Mode',
     color: 'amber'
   },
@@ -45,7 +45,7 @@ const features: Feature[] = [
     title: 'Vocabulary Enhancement',
     description: 'Improve your vocabulary with smart suggestions and alternatives to elevate your writing style.',
     details: 'Interactive vocabulary builder with age-appropriate word suggestions, synonyms, and context examples. Features include word difficulty levels, usage examples in sentences, and personalized vocabulary lists based on your writing. Helps students expand their vocabulary naturally while writing.',
-    icon: <Zap className="w-6 h-6 text-blue-700 dark:text-blue-300" />,
+    icon: <Zap className="w-8 h-8 text-blue-600 dark:text-blue-400" />,
     tag: 'Advanced',
     color: 'blue'
   },
@@ -54,7 +54,7 @@ const features: Feature[] = [
     title: 'Personalized Learning',
     description: 'Get customized learning paths based on your strengths and areas for improvement.',
     details: 'Adaptive learning system that identifies individual strengths and weaknesses through writing analysis. Creates personalized study plans with targeted exercises, recommends specific text types to practice, and adjusts difficulty based on progress. Includes goal setting and milestone tracking.',
-    icon: <Target className="w-6 h-6 text-green-700 dark:text-green-300" />,
+    icon: <Target className="w-8 h-8 text-green-600 dark:text-green-400" />,
     tag: 'Adaptive',
     color: 'green'
   },
@@ -63,7 +63,7 @@ const features: Feature[] = [
     title: 'Progress Tracking',
     description: 'Monitor your improvement over time with detailed analytics and performance metrics.',
     details: 'Comprehensive progress dashboard showing writing improvement trends, skill development across different text types, time management progress, and readiness indicators for the selective exam. Includes visual charts, achievement badges, and detailed reports for parents and teachers.',
-    icon: <BarChart className="w-6 h-6 text-rose-700 dark:text-rose-300" />,
+    icon: <BarChart className="w-8 h-8 text-rose-600 dark:text-rose-400" />,
     tag: 'Analytics',
     color: 'rose'
   }
@@ -93,17 +93,14 @@ export function FeaturesSection() {
   };
 
   return (
-    <section className="py-24 bg-white" id="features">
+    <section className="py-24 bg-white dark:bg-slate-900" id="features">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-gray-900">
-            Everything You Need to
-            <span className="block mt-2 bg-gradient-to-r from-blue-600 to-purple-700 bg-clip-text text-transparent">
-              Master Writing
-            </span>
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-gray-900 dark:text-slate-100">
+            Everything You Need to Excel
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Comprehensive AI-powered tools designed specifically for NSW Selective Exam success.
+          <p className="text-xl text-gray-600 dark:text-slate-400 max-w-3xl mx-auto">
+            Comprehensive AI-powered tools designed specifically for NSW Selective Exam success
           </p>
         </div>
 
@@ -124,7 +121,7 @@ export function FeaturesSection() {
         <div className="mt-16 text-center">
           <button
             onClick={() => handleFeatureClick('pricing')}
-            className="inline-flex items-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-700 rounded-xl hover:shadow-xl transform hover:scale-105 transition-all duration-200"
+            className="inline-flex items-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-500 dark:to-purple-500 rounded-xl hover:shadow-xl transform hover:scale-105 transition-all duration-200"
           >
             Get Started Today
             <ArrowRight className="ml-2 w-5 h-5" />
@@ -192,27 +189,37 @@ function FeatureCard({ icon, title, description, tag, color, onClick }: FeatureC
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 p-6 flex flex-col h-full">
-      <div className="flex items-center mb-4">
-        <div className={`${colorClasses[color].bg} p-3 rounded-lg mr-3`}>
-          {icon}
-        </div>
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{title}</h3>
-      </div>
-      <p className="text-gray-700 dark:text-gray-200 text-sm mb-6 flex-grow">
-        {description}
-      </p>
-      <div className="flex justify-between items-center mt-auto">
-        <button 
-          onClick={onClick}
-          className={`${colorClasses[color].text} ${colorClasses[color].hover} text-sm font-medium inline-flex items-center group transition-colors duration-200`}
-        >
-          Learn more
-          <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
-        </button>
-        <span className={`${colorClasses[color].tag} text-xs px-3 py-1 rounded-full font-medium`}>
+    <div className="group bg-white dark:bg-slate-800 rounded-2xl border border-gray-200 dark:border-slate-700 shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 p-8 flex flex-col h-full relative overflow-hidden">
+      {/* Gradient overlay on hover */}
+      <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-purple-500/5 dark:from-indigo-500/10 dark:to-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+      <div className="relative z-10">
+        {/* Badge at top right */}
+        <span className={`absolute -top-2 -right-2 ${colorClasses[color].tag} text-xs px-3 py-1 rounded-full font-bold shadow-sm`}>
           {tag}
         </span>
+
+        {/* Icon container */}
+        <div className={`w-16 h-16 ${colorClasses[color].bg} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
+          {icon}
+        </div>
+
+        {/* Title */}
+        <h3 className="text-xl font-bold text-gray-900 dark:text-slate-100 mb-3">{title}</h3>
+
+        {/* Description */}
+        <p className="text-gray-600 dark:text-slate-400 text-sm mb-6 flex-grow leading-relaxed">
+          {description}
+        </p>
+
+        {/* Learn more link */}
+        <button
+          onClick={onClick}
+          className={`inline-flex items-center gap-2 ${colorClasses[color].text} ${colorClasses[color].hover} text-sm font-semibold group/btn transition-colors duration-200`}
+        >
+          Learn more
+          <ArrowRight className="w-4 h-4 transition-transform group-hover/btn:translate-x-1" />
+        </button>
       </div>
     </div>
   );

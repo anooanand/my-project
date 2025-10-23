@@ -124,14 +124,14 @@ export function HowItWorksSection() {
   };
 
   return (
-    <section className="py-24 bg-gray-50">
+    <section className="py-24 bg-gray-50 dark:bg-slate-800" id="how-it-works">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-gray-900">
+          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-gray-900 dark:text-slate-100">
             How It Works
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-xl text-gray-600 dark:text-slate-400 max-w-3xl mx-auto">
             Our proven step-by-step system helps students master writing skills and excel in NSW Selective exams.
           </p>
         </div>
@@ -192,7 +192,7 @@ export function HowItWorksSection() {
 
         {/* Process Flow Visualization */}
         <div className="mb-16">
-          <h3 className="text-2xl font-bold text-center mb-8 text-gray-900 dark:text-white">
+          <h3 className="text-2xl font-bold text-center mb-8 text-gray-900 dark:text-slate-100">
             Your Writing Journey
           </h3>
           <div className="flex flex-col md:flex-row items-center justify-center space-y-4 md:space-y-0 md:space-x-8">
@@ -220,7 +220,7 @@ export function HowItWorksSection() {
         </div>
 
         {/* CTA Section */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-8 text-white text-center shadow-xl">
+        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-500 dark:to-purple-500 rounded-2xl p-8 text-white text-center shadow-xl">
           <h3 className="text-2xl md:text-3xl font-bold mb-4 text-white">
             Ready to Start Your Writing Journey?
           </h3>

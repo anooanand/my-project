@@ -7,6 +7,7 @@ import { HowItWorksSection } from './HowItWorksSection';
 import { StudentSuccessSection } from './StudentSuccessSection';
 import { PricingPage } from './PricingPage';
 import { WritingTypesSection } from './WritingTypesSection';
+import { Footer } from './Footer';
 import { ArrowRight, CheckCircle, Star, Users, Zap, BookOpen, Award, Target, Play } from 'lucide-react';
 
 interface HomePageProps {
@@ -296,11 +297,14 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSignInClick })
             </button>
           </div>
 
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-slate-400">
             No credit card required • Cancel anytime • Money-back guarantee
           </p>
         </div>
       </section>
+
+      {/* Footer */}
+      <Footer onNavigate={onNavigate} />
     </div>
   );
 };

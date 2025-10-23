@@ -135,14 +135,14 @@ export function StudentSuccessSection() {
         </div>
 
         {/* Call to Action */}
-        <div className="text-center bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-8 text-white shadow-xl">
+        <div className="text-center bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-500 dark:to-purple-500 rounded-2xl p-8 md:p-12 text-white shadow-xl">
           <h3 className="text-2xl md:text-3xl font-bold mb-4 text-white">
             Start Your Writing Journey Today!
           </h3>
-          <p className="text-lg mb-6 text-white">
+          <p className="text-lg mb-6 text-white/90">
             Get instant feedback and personalized guidance to improve your writing skills.
           </p>
-          <button className="px-8 py-4 bg-white text-blue-700 font-bold rounded-xl hover:bg-gray-100 transition-colors duration-300 shadow-lg">
+          <button className="px-8 py-4 bg-white text-indigo-700 dark:text-indigo-600 font-bold rounded-xl hover:bg-gray-100 hover:scale-105 transition-all duration-300 shadow-lg">
             Start Your Free Trial
           </button>
         </div>
