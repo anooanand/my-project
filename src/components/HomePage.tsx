@@ -107,13 +107,13 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSignInClick })
       </section>
 
       {/* Demo Video Section - NEWLY ADDED */}
-      <section className="py-24 bg-white">
+      <section className="py-24 bg-white dark:bg-slate-900">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-slate-100 mb-6">
               See Writing Mate in Action
             </h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-600 dark:text-slate-400 max-w-3xl mx-auto">
               Watch how our AI-powered platform helps students master writing skills and achieve top marks in NSW Selective exams.
             </p>
           </div>
@@ -185,7 +185,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSignInClick })
       </section>
 
       {/* Problem/Solution Section */}
-      <section className="py-24 bg-gray-50">
+      <section className="py-24 bg-gray-50 dark:bg-slate-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
@@ -287,12 +287,12 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSignInClick })
       <StudentSuccessSection />
 
       {/* CTA Section */}
-      <section className="py-24 bg-gradient-to-br from-blue-50 to-purple-50">
+      <section className="py-24 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-slate-800 dark:to-slate-900">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-slate-100 mb-6">
             Ready to Excel in Your Writing Exam?
           </h2>
-          <p className="text-xl text-gray-600 mb-10">
+          <p className="text-xl text-gray-600 dark:text-slate-400 mb-10">
             Start improving your writing skills today with personalized AI-powered coaching.
           </p>
 

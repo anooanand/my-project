@@ -25,6 +25,7 @@ export const HomeNavigation: React.FC<HomeNavigationProps> = ({ onNavigate, onSi
   const navItems = [
     { label: 'Features', href: '#features' },
     { label: 'How It Works', href: '#how-it-works' },
+    { label: 'Learning', onClick: () => onNavigate('learning') },
     { label: 'Pricing', href: '#pricing' },
     { label: 'About', href: '#about' }
   ];
@@ -38,7 +39,7 @@ export const HomeNavigation: React.FC<HomeNavigationProps> = ({ onNavigate, onSi
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-18">
+        <div className="flex items-center justify-between h-20 py-4">
           {/* Logo */}
           <button
             onClick={() => onNavigate('home')}
@@ -55,13 +56,23 @@ export const HomeNavigation: React.FC<HomeNavigationProps> = ({ onNavigate, onSi
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             {navItems.map((item) => (
-              <a
-                key={item.label}
-                href={item.href}
-                className="text-gray-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition-colors"
-              >
-                {item.label}
-              </a>
+              item.onClick ? (
+                <button
+                  key={item.label}
+                  onClick={item.onClick}
+                  className="text-gray-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition-colors"
+                >
+                  {item.label}
+                </button>
+              ) : (
+                <a
+                  key={item.label}
+                  href={item.href}
+                  className="text-gray-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition-colors"
+                >
+                  {item.label}
+                </a>
+              )
             ))}
           </div>
 
