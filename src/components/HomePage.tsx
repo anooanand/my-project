@@ -190,49 +190,74 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSignInClick })
           </div>
 
           <div className="grid md:grid-cols-3 gap-8 mb-12">
-            <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
-              <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center mb-4">
-                <Users className="w-6 h-6 text-red-600" />
+            <div className="bg-red-50 dark:bg-red-900/10 rounded-2xl p-8 border-2 border-red-200 dark:border-red-900/50 shadow-sm hover:border-red-300 dark:hover:border-red-800 transition-colors">
+              <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-2xl flex items-center justify-center mb-4">
+                <Users className="w-8 h-8 text-red-600 dark:text-red-400" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">No Instant Feedback</h3>
-              <p className="text-gray-600">Wait days for tutor feedback, missing crucial practice time before exams.</p>
+              <h3 className="text-2xl font-bold text-red-900 dark:text-red-100 mb-3">No Instant Feedback</h3>
+              <p className="text-red-800 dark:text-red-200">Wait days for tutor feedback, missing crucial practice time before exams.</p>
             </div>
 
-            <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
-              <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center mb-4">
-                <Award className="w-6 h-6 text-red-600" />
+            <div className="bg-red-50 dark:bg-red-900/10 rounded-2xl p-8 border-2 border-red-200 dark:border-red-900/50 shadow-sm hover:border-red-300 dark:hover:border-red-800 transition-colors">
+              <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-2xl flex items-center justify-center mb-4">
+                <Award className="w-8 h-8 text-red-600 dark:text-red-400" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Expensive Tutoring</h3>
-              <p className="text-gray-600">Private tutors cost $60-120/hour with inconsistent quality and availability.</p>
+              <h3 className="text-2xl font-bold text-red-900 dark:text-red-100 mb-3">Expensive Tutoring</h3>
+              <p className="text-red-800 dark:text-red-200">Private tutors cost $60-120/hour with inconsistent quality and availability.</p>
             </div>
 
-            <div className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
-              <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center mb-4">
-                <BookOpen className="w-6 h-6 text-red-600" />
+            <div className="bg-red-50 dark:bg-red-900/10 rounded-2xl p-8 border-2 border-red-200 dark:border-red-900/50 shadow-sm hover:border-red-300 dark:hover:border-red-800 transition-colors">
+              <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-2xl flex items-center justify-center mb-4">
+                <BookOpen className="w-8 h-8 text-red-600 dark:text-red-400" />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Generic Advice</h3>
-              <p className="text-gray-600">One-size-fits-all guidance doesn't address your specific weaknesses.</p>
+              <h3 className="text-2xl font-bold text-red-900 dark:text-red-100 mb-3">Generic Advice</h3>
+              <p className="text-red-800 dark:text-red-200">One-size-fits-all guidance doesn't address your specific weaknesses.</p>
             </div>
           </div>
 
           {/* Solution Highlight */}
-          <div className="bg-gradient-to-r from-blue-600 to-purple-700 rounded-3xl p-12 text-center">
-            <h3 className="text-3xl md:text-4xl font-bold mb-4 text-white">
-              Get Unlimited AI Coaching for Less Than One Tutoring Session
-            </h3>
-            <div className="grid grid-cols-2 gap-4 text-white text-lg mb-8 max-w-2xl mx-auto">
-              <div className="flex items-center justify-center"><CheckCircle className="w-5 h-5 mr-2" /> Instant feedback</div>
-              <div className="flex items-center justify-center"><CheckCircle className="w-5 h-5 mr-2" /> Available 24/7</div>
-              <div className="flex items-center justify-center"><CheckCircle className="w-5 h-5 mr-2" /> Personalized to your needs</div>
-              <div className="flex items-center justify-center"><CheckCircle className="w-5 h-5 mr-2" /> NSW curriculum aligned</div>
+          <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-500 dark:via-purple-500 dark:to-pink-500 rounded-3xl p-12 md:p-16 text-center relative overflow-hidden">
+            {/* Decorative grid overlay */}
+            <div className="absolute inset-0 bg-grid-white/10 [mask-image:radial-gradient(white,transparent_70%)]"></div>
+
+            <div className="relative z-10">
+              <h3 className="text-3xl md:text-5xl font-bold mb-8 text-white">
+                Get Unlimited AI Coaching for Less Than One Tutoring Session
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-white mb-10 max-w-4xl mx-auto">
+                <div className="flex flex-col items-center">
+                  <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3">
+                    <CheckCircle className="w-6 h-6" />
+                  </div>
+                  <span className="font-medium">Instant feedback</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3">
+                    <CheckCircle className="w-6 h-6" />
+                  </div>
+                  <span className="font-medium">Available 24/7</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3">
+                    <CheckCircle className="w-6 h-6" />
+                  </div>
+                  <span className="font-medium">Personalized</span>
+                </div>
+                <div className="flex flex-col items-center">
+                  <div className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center mb-3">
+                    <CheckCircle className="w-6 h-6" />
+                  </div>
+                  <span className="font-medium">NSW aligned</span>
+                </div>
+              </div>
+              <button
+                onClick={() => onNavigate(user ? 'dashboard' : 'pricing')}
+                className="inline-flex items-center justify-center px-10 py-5 text-lg font-bold bg-white text-indigo-600 dark:text-indigo-700 rounded-xl hover:shadow-2xl hover:shadow-white/50 transform hover:scale-105 transition-all duration-200"
+              >
+                {user ? 'Start Writing Now' : 'View Pricing'}
+                <ArrowRight className="ml-2 w-5 h-5" />
+              </button>
             </div>
-            <button
-              onClick={() => onNavigate(user ? 'dashboard' : 'pricing')}
-              className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold bg-white text-purple-700 rounded-xl hover:shadow-xl transform hover:scale-105 transition-all duration-200"
-            >
-              {user ? 'Start Writing Now' : 'View Pricing'}
-              <ArrowRight className="ml-2 w-5 h-5" />
-            </button>
           </div>
         </div>
       </section>
