@@ -103,7 +103,7 @@ export function ComparisonSection() {
         <div className="mt-12 bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-700 dark:to-purple-700 rounded-2xl p-8 md:p-12 text-center text-white">
           <h3 className="text-3xl font-bold mb-4">Ready to Transform Your Writing?</h3>
           <p className="text-lg text-blue-100 mb-8 max-w-2xl mx-auto">
-            Join thousands of NSW students who have improved their writing skills with Writing Mate.
+            Join students preparing for NSW Selective exams with Writing Mate.
           </p>
           <button className="inline-flex items-center px-8 py-4 bg-white text-blue-600 dark:text-blue-700 font-semibold rounded-lg hover:bg-blue-50 transition-colors duration-200">
             Start Your Free Trial Today

@@ -15,7 +15,7 @@ export function SignupPage({ onNavigate }: SignupPageProps) {
             Get Started in Minutes
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Join thousands of students improving their writing skills with our AI-powered platform
+            Join students improving their writing skills with our AI-powered platform
           </p>
         </div>
 

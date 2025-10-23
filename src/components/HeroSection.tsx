@@ -42,7 +42,7 @@ export function HeroSectionEnhanced({ onGetStarted }: HeroSectionProps) {
 
           {/* Subheading */}
           <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-10 leading-relaxed max-w-3xl mx-auto font-medium">
-            Master narrative, persuasive, and creative writing with personalized AI guidance. Join thousands of students preparing for NSW Selective exams.
+            Master narrative, persuasive, and creative writing with personalized AI guidance. Join students preparing for NSW Selective exams.
           </p>
 
           {/* CTA Buttons - Inspired by InstaChat AI */}
@@ -87,15 +87,6 @@ export function HeroSectionEnhanced({ onGetStarted }: HeroSectionProps) {
 
           {/* Social Proof */}
           <div className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-6 text-gray-800 dark:text-gray-200">
-            <div className="flex items-center bg-white/90 dark:bg-gray-800/90 px-4 py-2 rounded-full shadow-md">
-              <div className="flex mr-3">
-                {[1, 2, 3, 4, 5].map(star => (
-                  <Star key={star} className="w-5 h-5 text-yellow-500 fill-current" />
-                ))}
-              </div>
-              <span className="font-bold text-gray-900 dark:text-gray-100">5.0 (100+ reviews)</span>
-            </div>
-            <span className="hidden sm:inline-block text-gray-400">•</span>
             <div className="flex items-center bg-white/90 dark:bg-gray-800/90 px-4 py-2 rounded-full shadow-md">
               <Zap className="w-5 h-5 text-purple-600 dark:text-purple-400 mr-2" />
               <span className="font-bold text-gray-900 dark:text-gray-100">10,000+ students</span>

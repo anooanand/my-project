@@ -4,7 +4,6 @@ import { HomeNavigation } from './HomeNavigation';
 import { EnhancedHeroSection } from './EnhancedHeroSection';
 import { FeaturesSection } from './FeaturesSection';
 import { HowItWorksSection } from './HowItWorksSection';
-import { StudentSuccessSection } from './StudentSuccessSection';
 import { PricingPage } from './PricingPage';
 import { WritingTypesSection } from './WritingTypesSection';
 import { Footer } from './Footer';
@@ -283,8 +282,6 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSignInClick })
       {/* Writing Types */}
       <WritingTypesSection onSignInClick={onSignInClick} />
 
-      {/* Student Success */}
-      <StudentSuccessSection />
 
       {/* CTA Section */}
       <section className="py-24 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-slate-800 dark:to-slate-900">

@@ -27,14 +27,6 @@ export const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ onNavi
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left Column - Content */}
           <div className="text-left">
-            {/* Trust Badge */}
-            <div className="inline-flex items-center px-4 py-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-full mb-8 border border-indigo-200 dark:border-indigo-800">
-              <Target className="w-4 h-4 text-indigo-700 dark:text-indigo-300 mr-2" />
-              <span className="text-sm font-semibold text-indigo-700 dark:text-indigo-300">
-                Trusted by 2,500+ NSW Students
-              </span>
-            </div>
-
             {/* Headline */}
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 dark:text-slate-100 mb-6 leading-tight">
               Boost Your Child's{' '}
@@ -49,7 +41,7 @@ export const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ onNavi
             </p>
 
             <p className="text-lg text-gray-600 dark:text-slate-400 mb-8 leading-relaxed">
-              Master narrative, persuasive, and creative writing with personalized AI guidance. Join thousands of students preparing for NSW Selective exams.
+              Master narrative, persuasive, and creative writing with personalized AI guidance. Join students preparing for NSW Selective exams.
             </p>
 
             {/* Feature Badges */}
@@ -136,15 +128,10 @@ export const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ onNavi
 
               {/* Video Info Bar */}
               <div className="bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-500 dark:to-purple-500 px-6 py-4">
-                <div className="flex items-center justify-between text-white">
+                <div className="flex items-center text-white">
                   <div>
                     <div className="text-sm font-semibold opacity-90">Platform Demo</div>
                     <div className="text-xs opacity-75">See Writing Mate in action</div>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star key={star} className="w-4 h-4 fill-current text-yellow-400" />
-                    ))}
                   </div>
                 </div>
               </div>

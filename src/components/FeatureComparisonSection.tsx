@@ -202,7 +202,7 @@ export function FeatureComparisonSection() {
               Experience the Writing Mate Difference
             </h3>
             <p className="text-lg mb-6 opacity-90">
-              Join thousands of students who are improving their writing skills with our unique teaching approach.
+              Join students improving their writing skills with our unique teaching approach.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <button className="px-8 py-4 bg-white text-blue-600 font-bold rounded-xl hover:bg-gray-100 transition-colors duration-300 shadow-lg">

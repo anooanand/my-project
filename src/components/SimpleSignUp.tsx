@@ -149,7 +149,7 @@ export const SimpleHomePage: React.FC<SimpleHomePageProps> = ({
             Ready to Improve Your Writing?
           </h2>
           <p className="text-blue-100 mb-6 text-lg">
-            Join thousands of students who have improved their writing skills with our AI-powered platform.
+            Join students who are improving their writing skills with our AI-powered platform.
           </p>
           <button
             onClick={onStartWriting}
