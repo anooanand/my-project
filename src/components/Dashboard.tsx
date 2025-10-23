@@ -400,15 +400,15 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="relative">
             <div className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto"></div>
             <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-r-indigo-400 rounded-full animate-spin mx-auto" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
           </div>
           <div className="space-y-2">
-            <p className="text-slate-700 text-lg font-medium">Loading your dashboard...</p>
-            <p className="text-slate-500 text-sm">Preparing your writing journey</p>
+            <p className="text-slate-700 dark:text-slate-200 text-lg font-medium">Loading your dashboard...</p>
+            <p className="text-slate-500 dark:text-slate-400 text-sm">Preparing your writing journey</p>
           </div>
         </div>
       </div>
@@ -416,15 +416,15 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 relative">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 relative">
 
       {/* Welcome Message Modal - Modern Design */}
       {showWelcomeMessage && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full relative border border-slate-200">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-lg w-full relative border border-slate-200 dark:border-slate-700">
             <button
               onClick={handleDismissWelcome}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors bg-slate-100 hover:bg-slate-200 p-2 rounded-full"
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:text-slate-300 dark:hover:text-slate-100 transition-colors bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 p-2 rounded-full"
             >
               <X className="h-5 w-5" />
             </button>
@@ -434,11 +434,11 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
                 <Sparkles className="h-8 w-8 text-white" />
               </div>
               
-              <h2 className="heading-3 text-slate-900 mb-4">
+              <h2 className="heading-3 text-slate-900 dark:text-slate-100 mb-4">
                 Welcome, {getUserName()}! 🎉
               </h2>
               
-              <p className="text-slate-600 mb-6 leading-relaxed">
+              <p className="text-slate-600 dark:text-slate-300 mb-6 leading-relaxed">
                 You're all set to start your writing journey! Your AI writing buddy is ready to help you create amazing stories and essays.
               </p>
               
@@ -456,10 +456,10 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
       {/* Start Here Guide Modal */}
       {showStartHereGuide && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full relative border border-slate-200">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-2xl w-full relative border border-slate-200 dark:border-slate-700">
             <button
               onClick={handleDismissGuide}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors bg-slate-100 hover:bg-slate-200 p-2 rounded-full"
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:text-slate-300 dark:hover:text-slate-100 transition-colors bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 p-2 rounded-full"
             >
               <X className="h-5 w-5" />
             </button>
@@ -469,40 +469,40 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
                 <div className="w-20 h-20 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Lightbulb className="h-10 w-10 text-white" />
                 </div>
-                <h2 className="heading-2 text-slate-900 mb-2">Quick Start Guide</h2>
-                <p className="text-slate-600">Follow these simple steps to begin writing</p>
+                <h2 className="heading-2 text-slate-900 dark:text-slate-100 mb-2">Quick Start Guide</h2>
+                <p className="text-slate-600 dark:text-slate-300">Follow these simple steps to begin writing</p>
               </div>
               
               <div className="space-y-4 mb-8">
-                <div className="flex items-start space-x-4 p-4 bg-blue-50 rounded-xl">
+                <div className="flex items-start space-x-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
                   <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">1</div>
                   <div>
-                    <h3 className="font-semibold text-slate-900 mb-1">Start Writing</h3>
-                    <p className="text-slate-600 text-sm">Click the "Start Writing" button to begin your writing session</p>
+                    <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1">Start Writing</h3>
+                    <p className="text-slate-600 dark:text-slate-300 text-sm">Click the "Start Writing" button to begin your writing session</p>
                   </div>
                 </div>
                 
-                <div className="flex items-start space-x-4 p-4 bg-purple-50 rounded-xl">
+                <div className="flex items-start space-x-4 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
                   <div className="w-8 h-8 bg-purple-500 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">2</div>
                   <div>
-                    <h3 className="font-semibold text-slate-900 mb-1">Choose Writing Type</h3>
-                    <p className="text-slate-600 text-sm">Select from narrative, persuasive, descriptive, and more</p>
+                    <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1">Choose Writing Type</h3>
+                    <p className="text-slate-600 dark:text-slate-300 text-sm">Select from narrative, persuasive, descriptive, and more</p>
                   </div>
                 </div>
                 
-                <div className="flex items-start space-x-4 p-4 bg-emerald-50 rounded-xl">
+                <div className="flex items-start space-x-4 p-4 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl">
                   <div className="w-8 h-8 bg-emerald-500 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">3</div>
                   <div>
-                    <h3 className="font-semibold text-slate-900 mb-1">Get Your Prompt</h3>
-                    <p className="text-slate-600 text-sm">Receive an AI-generated prompt or create your own</p>
+                    <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1">Get Your Prompt</h3>
+                    <p className="text-slate-600 dark:text-slate-300 text-sm">Receive an AI-generated prompt or create your own</p>
                   </div>
                 </div>
                 
-                <div className="flex items-start space-x-4 p-4 bg-orange-50 rounded-xl">
+                <div className="flex items-start space-x-4 p-4 bg-orange-50 dark:bg-orange-900/20 rounded-xl">
                   <div className="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0">4</div>
                   <div>
-                    <h3 className="font-semibold text-slate-900 mb-1">Write & Get Feedback</h3>
-                    <p className="text-slate-600 text-sm">Start writing and receive real-time AI feedback to improve</p>
+                    <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1">Write & Get Feedback</h3>
+                    <p className="text-slate-600 dark:text-slate-300 text-sm">Start writing and receive real-time AI feedback to improve</p>
                   </div>
                 </div>
               </div>
@@ -510,7 +510,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
               <div className="flex space-x-3">
                 <button
                   onClick={handleDismissGuide}
-                  className="flex-1 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-semibold transition-colors"
+                  className="flex-1 py-3 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-xl font-semibold transition-colors"
                 >
                   Skip for Now
                 </button>
@@ -531,24 +531,34 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
 
       {/* Main Content */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Back to Home Button */}
-        <div className="mb-6">
+        {/* Navigation Buttons */}
+        <div className="mb-6 flex items-center justify-between gap-4">
           <button
             onClick={() => navigate('/')}
-            className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 border border-gray-300 rounded-lg shadow-sm transition-all hover:shadow-md text-gray-700 font-medium"
+            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-lg shadow-sm transition-all hover:shadow-md text-gray-700 dark:text-slate-200 font-medium"
           >
             <Home className="w-5 h-5" />
             Back to Home
           </button>
+
+          {onSignOut && (
+            <button
+              onClick={onSignOut}
+              className="flex items-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg shadow-sm transition-all hover:shadow-md text-red-700 dark:text-red-400 font-medium"
+            >
+              <X className="w-5 h-5" />
+              Sign Out
+            </button>
+          )}
         </div>
 
         {/* Header Section */}
         <div className="mb-12">
           <div>
-            <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 mb-3">
+            <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-slate-100 mb-3">
               Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-700">{getUserName()}</span>! 👋
             </h1>
-            <p className="text-xl text-gray-600">
+            <p className="text-xl text-gray-600 dark:text-slate-300">
               Ready to create something amazing today?
             </p>
           </div>
@@ -654,70 +664,70 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
         {/* Tools & Tips Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
           {/* Writing Tools Overview */}
-          <div className="lg:col-span-2 bg-white/80 backdrop-blur-sm rounded-2xl p-8 border border-gray-200 shadow-sm">
+          <div className="lg:col-span-2 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl p-8 border border-gray-200 dark:border-slate-700 shadow-sm">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-2xl font-bold text-gray-900">Your Writing Tools</h3>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-slate-100">Your Writing Tools</h3>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              <div className="text-center p-6 bg-blue-50 rounded-xl">
+              <div className="text-center p-6 bg-blue-50 dark:bg-blue-900/20 rounded-xl">
                 <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
                   <FileText className="h-8 w-8 text-white" />
                 </div>
-                <p className="text-gray-900 font-semibold mb-1">Multiple Text Types</p>
-                <p className="text-gray-600 text-sm">Narrative, Persuasive & More</p>
+                <p className="text-gray-900 dark:text-slate-100 font-semibold mb-1">Multiple Text Types</p>
+                <p className="text-gray-600 dark:text-slate-300 text-sm">Narrative, Persuasive & More</p>
               </div>
 
-              <div className="text-center p-6 bg-purple-50 rounded-xl">
+              <div className="text-center p-6 bg-purple-50 dark:bg-purple-900/20 rounded-xl">
                 <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-3">
                   <Brain className="h-8 w-8 text-white" />
                 </div>
-                <p className="text-gray-900 font-semibold mb-1">AI Feedback</p>
-                <p className="text-gray-600 text-sm">Real-time guidance</p>
+                <p className="text-gray-900 dark:text-slate-100 font-semibold mb-1">AI Feedback</p>
+                <p className="text-gray-600 dark:text-slate-300 text-sm">Real-time guidance</p>
               </div>
 
-              <div className="text-center p-6 bg-green-50 rounded-xl">
+              <div className="text-center p-6 bg-green-50 dark:bg-green-900/20 rounded-xl">
                 <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-3">
                   <Target className="h-8 w-8 text-white" />
                 </div>
-                <p className="text-gray-900 font-semibold mb-1">NSW Aligned</p>
-                <p className="text-gray-600 text-sm">Curriculum specific</p>
+                <p className="text-gray-900 dark:text-slate-100 font-semibold mb-1">NSW Aligned</p>
+                <p className="text-gray-600 dark:text-slate-300 text-sm">Curriculum specific</p>
               </div>
             </div>
           </div>
 
           {/* Quick Tips */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200 shadow-sm">
-            <h3 className="text-xl font-bold text-gray-900 mb-6">Writing Tips</h3>
+          <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-200 dark:border-slate-700 shadow-sm">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-slate-100 mb-6">Writing Tips</h3>
 
             <div className="space-y-4">
               <div className="flex items-start space-x-3">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center flex-shrink-0">
                   <Lightbulb className="h-4 w-4 text-blue-600" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900">Show, Don't Tell</p>
-                  <p className="text-xs text-gray-600">Use vivid descriptions</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-slate-100">Show, Don't Tell</p>
+                  <p className="text-xs text-gray-600 dark:text-slate-300">Use vivid descriptions</p>
                 </div>
               </div>
 
               <div className="flex items-start space-x-3">
-                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <div className="w-8 h-8 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center flex-shrink-0">
                   <Brain className="h-4 w-4 text-purple-600" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900">Plan First</p>
-                  <p className="text-xs text-gray-600">Structure your ideas</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-slate-100">Plan First</p>
+                  <p className="text-xs text-gray-600 dark:text-slate-300">Structure your ideas</p>
                 </div>
               </div>
 
               <div className="flex items-start space-x-3">
-                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                <div className="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center flex-shrink-0">
                   <CheckCircle className="h-4 w-4 text-green-600" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900">Edit & Revise</p>
-                  <p className="text-xs text-gray-600">Polish your work</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-slate-100">Edit & Revise</p>
+                  <p className="text-xs text-gray-600 dark:text-slate-300">Polish your work</p>
                 </div>
               </div>
             </div>
@@ -725,32 +735,32 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 border border-gray-200 shadow-sm">
-          <h3 className="text-2xl font-bold text-gray-900 mb-6">Quick Actions</h3>
+        <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl p-8 border border-gray-200 dark:border-slate-700 shadow-sm">
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-slate-100 mb-6">Quick Actions</h3>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <button className="flex flex-col items-center p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors group">
+            <button className="flex flex-col items-center p-4 rounded-xl bg-gray-50 dark:bg-slate-700/50 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors group">
               <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 group-hover:from-blue-200 group-hover:to-blue-300 rounded-xl flex items-center justify-center mb-3 transition-all">
                 <BookMarked className="h-6 w-6 text-blue-600" />
               </div>
-              <span className="text-sm font-medium text-gray-700">View Essays</span>
+              <span className="text-sm font-medium text-gray-700 dark:text-slate-200">View Essays</span>
             </button>
 
-            <button className="flex flex-col items-center p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors group">
+            <button className="flex flex-col items-center p-4 rounded-xl bg-gray-50 dark:bg-slate-700/50 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors group">
               <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-green-200 group-hover:from-green-200 group-hover:to-green-300 rounded-xl flex items-center justify-center mb-3 transition-all">
                 <BarChart3 className="h-6 w-6 text-green-600" />
               </div>
-              <span className="text-sm font-medium text-gray-700">Progress</span>
+              <span className="text-sm font-medium text-gray-700 dark:text-slate-200">Progress</span>
             </button>
 
-            <button className="flex flex-col items-center p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors group">
+            <button className="flex flex-col items-center p-4 rounded-xl bg-gray-50 dark:bg-slate-700/50 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors group">
               <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-purple-200 group-hover:from-purple-200 group-hover:to-purple-300 rounded-xl flex items-center justify-center mb-3 transition-all">
                 <Settings className="h-6 w-6 text-purple-600" />
               </div>
               <span className="text-sm font-medium text-gray-700">Settings</span>
             </button>
 
-            <button className="flex flex-col items-center p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors group">
+            <button className="flex flex-col items-center p-4 rounded-xl bg-gray-50 dark:bg-slate-700/50 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors group">
               <div className="w-12 h-12 bg-gradient-to-br from-orange-100 to-orange-200 group-hover:from-orange-200 group-hover:to-orange-300 rounded-xl flex items-center justify-center mb-3 transition-all">
                 <HelpCircle className="h-6 w-6 text-orange-600" />
               </div>

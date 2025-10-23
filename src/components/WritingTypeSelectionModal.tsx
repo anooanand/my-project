@@ -133,25 +133,25 @@ export function WritingTypeSelectionModal({ isOpen, onClose, onSelect }: Writing
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-3xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden border border-gray-200">
+      <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden border border-gray-200 dark:border-slate-700">
 
         {/* Header */}
-        <div className="px-8 py-6 border-b border-gray-200 bg-gradient-to-br from-blue-50 to-purple-50">
+        <div className="px-8 py-6 border-b border-gray-200 dark:border-slate-700 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-slate-700 dark:to-slate-800">
           <div className="flex items-start justify-between">
             <div>
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">
+              <h2 className="text-3xl font-bold text-gray-900 dark:text-slate-100 mb-2">
                 Choose Your Writing Type
               </h2>
-              <p className="text-gray-600 text-base">
+              <p className="text-gray-600 dark:text-slate-300 text-base">
                 Select the type of writing you'd like to practice today
               </p>
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-white rounded-full transition-all duration-200 group"
+              className="p-2 hover:bg-white dark:hover:bg-slate-700 rounded-full transition-all duration-200 group"
               aria-label="Close modal"
             >
-              <X className="h-6 w-6 text-gray-400 group-hover:text-gray-600" />
+              <X className="h-6 w-6 text-gray-400 dark:text-slate-400 group-hover:text-gray-600 dark:group-hover:text-slate-200" />
             </button>
           </div>
         </div>
@@ -163,7 +163,7 @@ export function WritingTypeSelectionModal({ isOpen, onClose, onSelect }: Writing
               <button
                 key={type.id}
                 onClick={() => onSelect(type.id)}
-                className="group relative p-6 text-left cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border-2 border-gray-200 hover:border-blue-400 bg-white rounded-xl"
+                className="group relative p-6 text-left cursor-pointer hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border-2 border-gray-200 dark:border-slate-700 hover:border-blue-400 dark:hover:border-blue-500 bg-white dark:bg-slate-700 rounded-xl"
               >
                 {/* Popular Badge */}
                 {type.isPopular && (
@@ -179,17 +179,17 @@ export function WritingTypeSelectionModal({ isOpen, onClose, onSelect }: Writing
                 </div>
 
                 {/* Title */}
-                <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                <h3 className="text-lg font-bold text-gray-900 dark:text-slate-100 mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                   {type.name}
                 </h3>
 
                 {/* Description */}
-                <p className="text-gray-600 text-sm leading-relaxed">
+                <p className="text-gray-600 dark:text-slate-300 text-sm leading-relaxed">
                   {type.description}
                 </p>
 
                 {/* Hover Arrow */}
-                <div className="mt-4 flex items-center text-blue-600 font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="mt-4 flex items-center text-blue-600 dark:text-blue-400 font-semibold text-sm opacity-0 group-hover:opacity-100 transition-opacity">
                   <span>Select</span>
                   <svg className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -201,13 +201,13 @@ export function WritingTypeSelectionModal({ isOpen, onClose, onSelect }: Writing
         </div>
 
         {/* Footer */}
-        <div className="px-8 py-5 border-t border-gray-200 bg-gray-50 flex items-center justify-between">
-          <p className="text-sm text-gray-500">
+        <div className="px-8 py-5 border-t border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 flex items-center justify-between">
+          <p className="text-sm text-gray-500 dark:text-slate-400">
             Need help deciding? Try one of the popular options!
           </p>
           <button
             onClick={onClose}
-            className="px-6 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+            className="px-6 py-2.5 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-200 rounded-lg font-medium hover:bg-gray-50 dark:hover:bg-slate-600 transition-colors"
           >
             Cancel
           </button>

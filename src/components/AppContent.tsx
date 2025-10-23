@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 import './layout-fix.css';
 
 // Add this import at the top with other imports
@@ -47,6 +48,7 @@ import { AdminButton } from './AdminButton';
 
 function AppContent() {
   const { user, loading: isLoading, paymentCompleted, emailVerified, authSignOut } = useAuth();
+  const { darkMode } = useTheme();
   const [activePage, setActivePage] = useState('home');
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'signin' | 'signup'>('signin');
@@ -496,7 +498,7 @@ function AppContent() {
                 initialPrompt={prompt || ''}
                 wordCount={content.split(/\s+/).filter(Boolean).length}
                 onWordCountChange={() => { /* handled internally */ }}
-                darkMode={false} // Assuming a default for exam mode
+                darkMode={darkMode}
                 isTimerRunning={false}
                 elapsedTime={elapsedTime}
                 onStartTimer={() => setTimerStarted(true)}
@@ -518,7 +520,7 @@ function AppContent() {
                 initialPrompt={prompt || ''}
                 wordCount={content.split(/\s+/).filter(Boolean).length}
                 onWordCountChange={() => { /* handled internally */ }}
-                darkMode={false} // Assuming a default for now
+                darkMode={darkMode}
                 isTimerRunning={timerStarted}
                 elapsedTime={elapsedTime}
                 onStartTimer={() => setTimerStarted(true)}
