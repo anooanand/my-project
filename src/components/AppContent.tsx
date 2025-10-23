@@ -393,60 +393,20 @@ function AppContent() {
       <div className="route-with-footer">
         <Routes>
           <Route path="/" element={
-            <>
-              <NavBar
-                activePage={activePage}
-                onNavigate={handleNavigation}
-                user={user}
-                onSignInClick={() => {
-                  console.log('AppContent: onSignInClick called');
-                  setAuthModalMode('signin');
-                  setShowAuthModal(true);
-                  console.log('AppContent: Auth modal state set to open');
-                }}
-                onSignUpClick={() => {
-                  console.log('AppContent: onSignUpClick called');
-                  setAuthModalMode('signup');
-                  setShowAuthModal(true);
-                  console.log('AppContent: Auth modal state set to open');
-                }}
-                onForceSignOut={handleForceSignOut}
-              />
-              <div className="main-route-content">
-                <HomePage onNavigate={handleNavigation} onSignInClick={() => {
-                  setAuthModalMode("signin");
-                  setShowAuthModal(true);
-                }} />
-              </div>
-            </>
+            <div className="main-route-content">
+              <HomePage onNavigate={handleNavigation} onSignInClick={() => {
+                setAuthModalMode("signin");
+                setShowAuthModal(true);
+              }} />
+            </div>
           } />
           <Route path="/home" element={
-            <>
-              <NavBar
-                activePage={activePage}
-                onNavigate={handleNavigation}
-                user={user}
-                onSignInClick={() => {
-                  console.log('AppContent: onSignInClick called');
-                  setAuthModalMode('signin');
-                  setShowAuthModal(true);
-                  console.log('AppContent: Auth modal state set to open');
-                }}
-                onSignUpClick={() => {
-                  console.log('AppContent: onSignUpClick called');
-                  setAuthModalMode('signup');
-                  setShowAuthModal(true);
-                  console.log('AppContent: Auth modal state set to open');
-                }}
-                onForceSignOut={handleForceSignOut}
-              />
-              <div className="main-route-content">
-                <HomePage onNavigate={handleNavigation} onSignInClick={() => {
-                  setAuthModalMode("signin");
-                  setShowAuthModal(true);
-                }} />
-              </div>
-            </>
+            <div className="main-route-content">
+              <HomePage onNavigate={handleNavigation} onSignInClick={() => {
+                setAuthModalMode("signin");
+                setShowAuthModal(true);
+              }} />
+            </div>
           } />
           <Route path="/features" element={
             <>

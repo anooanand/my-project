@@ -17,6 +17,7 @@ import type { DetailedFeedback, LintFix } from '../types/feedback';
 import { eventBus } from '../lib/eventBus';
 import { detectNewParagraphs } from '../lib/paragraphDetection';
 import { NSWEvaluationReportGenerator } from './NSWEvaluationReportGenerator';
+import { useTheme } from '../contexts/ThemeContext';
 import {
   PenTool,
   Play,
@@ -86,6 +87,9 @@ interface EnhancedWritingLayoutNSWProps {
 
 export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
   console.log("EnhancedWritingLayoutNSW Props:", props);
+  const { theme, toggleTheme } = useTheme();
+  const darkMode = theme === 'dark';
+
   const {
     content,
     onChange,
@@ -93,7 +97,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
     initialPrompt,
     wordCount,
     onWordCountChange,
-    darkMode = false,
+    darkMode: darkModeProp = false,
     fontFamily = 'Inter',
     fontSize = 16,
     lineHeight = 1.6,
@@ -516,7 +520,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
           </div>
           <div className="flex items-center space-x-3">
             <button
-              onClick={() => setDarkMode(!darkMode)}
+              onClick={toggleTheme}
               className="flex items-center space-x-2 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-lg transition-all duration-200 text-white font-medium border border-white/20 hover:border-white/40"
               title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
             >
