@@ -590,7 +590,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
                   </div>
                 </div>
 
-                <h2 className="text-3xl font-bold text-white mb-3 group-hover:text-yellow-300 transition-colors" style={{textShadow: '0 2px 4px rgba(0,0,0,0.2)'}}>Start Writing ✨</h2>
+                <h2 className="text-3xl font-bold !text-white mb-3 group-hover:!text-yellow-300 transition-colors" style={{textShadow: '0 2px 4px rgba(0,0,0,0.2)'}}>Start Writing ✨</h2>
                 <p className="text-white/95 text-lg mb-6 leading-relaxed font-medium">
                   Begin a new writing session with AI-powered guidance and real-time feedback
                 </p>
@@ -637,7 +637,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
                   </div>
                 </div>
 
-                <h2 className="text-3xl font-bold text-white mb-3 group-hover:text-yellow-300 transition-colors" style={{textShadow: '0 2px 4px rgba(0,0,0,0.2)'}}>Practice Exam 🎯</h2>
+                <h2 className="text-3xl font-bold !text-white mb-3 group-hover:!text-yellow-300 transition-colors" style={{textShadow: '0 2px 4px rgba(0,0,0,0.2)'}}>Practice Exam 🎯</h2>
                 <p className="text-white/95 text-lg mb-6 leading-relaxed font-medium">
                   Test your skills with timed practice sessions under real exam conditions
                 </p>
