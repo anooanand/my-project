@@ -36,12 +36,12 @@ export const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ onNavi
             </h1>
 
             {/* Subheadline */}
-            <p className="text-xl md:text-2xl text-gray-600 dark:text-slate-400 mb-4 leading-relaxed font-medium">
+            <p className="text-xl md:text-2xl text-gray-700 dark:text-slate-300 mb-4 leading-relaxed font-bold">
               with AI-Powered Practice & Feedback
             </p>
 
             <p className="text-lg text-gray-600 dark:text-slate-400 mb-8 leading-relaxed">
-              Master narrative, persuasive, and creative writing with personalized AI guidance. Join students preparing for NSW Selective exams.
+              Master all writing types including narrative, persuasive, creative, descriptive, expository, and more with personalized AI guidance. Join students preparing for NSW Selective exams.
             </p>
 
             {/* Feature Badges */}
