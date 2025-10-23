@@ -109,15 +109,17 @@ export function ContextualAICoachPanel({ content, textType, prompt }: Contextual
       {/* Content Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {/* Overall Feedback */}
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-          <div className="flex items-start">
-            <TrendingUp className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-3 flex-shrink-0 mt-0.5" />
-            <div>
-              <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Overall Progress</h4>
-              <p className="text-sm text-blue-800 dark:text-blue-200">{feedback.overallFeedback}</p>
+        {feedback && feedback.overallFeedback && (
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <div className="flex items-start">
+              <TrendingUp className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-3 flex-shrink-0 mt-0.5" />
+              <div>
+                <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Overall Progress</h4>
+                <p className="text-sm text-blue-800 dark:text-blue-200">{feedback.overallFeedback}</p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Tab Content */}
         {activeTab === 'examples' && (
@@ -241,7 +243,7 @@ export function ContextualAICoachPanel({ content, textType, prompt }: Contextual
               NSW Rubric Alignment
             </h4>
 
-            {feedback.rubricAlignment.map((alignment: any, index: number) => (
+            {feedback && feedback.rubricAlignment && feedback.rubricAlignment.map((alignment: any, index: number) => (
               <div key={index} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                 <h5 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">{alignment.criterion}</h5>
 
@@ -287,7 +289,7 @@ export function ContextualAICoachPanel({ content, textType, prompt }: Contextual
             ))}
 
             {/* Genre-Specific Feedback */}
-            {feedback.genreSpecificFeedback.length > 0 && (
+            {feedback && feedback.genreSpecificFeedback && feedback.genreSpecificFeedback.length > 0 && (
               <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4">
                 <h5 className="font-semibold text-purple-900 dark:text-purple-100 mb-3">
                   {textType.charAt(0).toUpperCase() + textType.slice(1)} Writing Focus
@@ -389,7 +391,7 @@ export function ContextualAICoachPanel({ content, textType, prompt }: Contextual
         )}
 
         {/* Next Steps */}
-        {feedback.nextSteps.length > 0 && (
+        {feedback && feedback.nextSteps && feedback.nextSteps.length > 0 && (
           <div className="bg-gradient-to-r from-green-50 to-teal-50 dark:from-green-900/20 dark:to-teal-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
             <h5 className="font-semibold text-green-900 dark:text-green-100 mb-3 flex items-center">
               <TrendingUp className="w-4 h-4 mr-2" />

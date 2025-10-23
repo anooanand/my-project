@@ -1580,21 +1580,21 @@ export function EnhancedCoachPanel({
             />
           </div>
         ) : currentView === 'detailed' ? (
-          <div className="h-full overflow-y-auto p-4">
+          <div className="h-full overflow-y-auto p-4 bg-white dark:bg-slate-900">
             {comprehensiveFeedback ? (
               <ComprehensiveFeedbackDisplay
                 feedback={comprehensiveFeedback}
-                darkMode={false}
+                darkMode={true}
               />
             ) : (
-              <div className="text-center py-8 text-gray-500">
+              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                 <Target className="w-12 h-12 mx-auto mb-3 opacity-50" />
                 <p>Write at least 20 words to see detailed feedback</p>
               </div>
             )}
           </div>
         ) : currentView === 'grammar' ? (
-          <div className="h-full overflow-y-auto p-4">
+          <div className="h-full overflow-y-auto p-4 bg-white dark:bg-slate-900">
             <GrammarCorrectionPanel
               text={content || ''}
               onApplyCorrection={(start, end, correction) => {
@@ -1606,7 +1606,7 @@ export function EnhancedCoachPanel({
             />
           </div>
         ) : currentView === 'vocabulary' ? (
-          <div className="h-full overflow-y-auto p-4">
+          <div className="h-full overflow-y-auto p-4 bg-white dark:bg-slate-900">
             <VocabularyEnhancementPanel
               text={content || ''}
               onReplaceWord={(position, originalWord, newWord) => {
@@ -1622,7 +1622,7 @@ export function EnhancedCoachPanel({
             />
           </div>
         ) : currentView === 'sentences' ? (
-          <div className="h-full overflow-y-auto p-4">
+          <div className="h-full overflow-y-auto p-4 bg-white dark:bg-slate-900">
             <SentenceStructurePanel text={content || ''} />
           </div>
         ) : null}
