@@ -37,15 +37,15 @@ export const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ onNavi
 
             {/* Headline */}
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 dark:text-slate-100 mb-6 leading-tight">
-              Boost Your Child's{' '}
+              Achieve Top Marks in{' '}
               <span className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-                Selective Exam Score
+                Selective Writing
               </span>
             </h1>
 
             {/* Subheadline */}
             <p className="text-xl md:text-2xl text-gray-600 dark:text-slate-400 mb-4 leading-relaxed font-medium">
-              with AI-Powered Writing Practice
+              with Personalized AI Coaching
             </p>
 
             <p className="text-lg text-gray-600 dark:text-slate-400 mb-8 leading-relaxed">
