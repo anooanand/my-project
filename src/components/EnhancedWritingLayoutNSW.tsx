@@ -591,7 +591,9 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
             <div className="px-3 pb-2">
               <div className={`p-2 rounded-lg border text-sm ${
                 examModeLocal
-                  ? 'bg-white border-gray-300 text-gray-800'
+                  ? darkMode
+                    ? 'bg-slate-800 border-slate-600 text-gray-200'
+                    : 'bg-white border-gray-300 text-gray-800'
                   : darkMode
                   ? 'bg-slate-900/50 border-slate-700 text-gray-100'
                   : 'bg-white border-blue-200 text-blue-900'

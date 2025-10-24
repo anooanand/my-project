@@ -1504,21 +1504,10 @@ export function EnhancedCoachPanel({
             {/* OPTIMIZED: Compact Input Area */}
             <div className="border-t border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800">
               {/* Prepopulated Questions - Collapsible */}
-              <div className="border-b border-gray-200 dark:border-slate-700">
-                <button
-                  onClick={() => setShowQuestions(!showQuestions)}
-                  className="w-full px-3 py-2 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
-                >
-                  <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Quick Questions</span>
-                  {showQuestions ? (
-                    <ChevronUp className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                  )}
-                </button>
-
+              <div className="border-b border-gray-200 dark:border-slate-700 relative">
+                {/* Dropdown appears above the button */}
                 {showQuestions && (
-                  <div className="px-3 pb-3 space-y-1">
+                  <div className="absolute bottom-full left-0 right-0 mb-1 px-3 pb-3 pt-3 space-y-1 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-t-lg shadow-lg z-10">
                     {[
                       "How can I make my opening more engaging?",
                       "What words can I use instead of 'said'?",
@@ -1540,6 +1529,18 @@ export function EnhancedCoachPanel({
                     ))}
                   </div>
                 )}
+
+                <button
+                  onClick={() => setShowQuestions(!showQuestions)}
+                  className="w-full px-3 py-2 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                >
+                  <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Quick Questions</span>
+                  {showQuestions ? (
+                    <ChevronDown className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                  ) : (
+                    <ChevronUp className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                  )}
+                </button>
               </div>
 
               {/* Input Box */}
