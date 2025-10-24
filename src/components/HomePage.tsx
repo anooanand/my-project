@@ -122,14 +122,14 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSignInClick })
             {/* Video Player */}
             <div className="relative aspect-video bg-black">
               <video
-                src="https://files.manuscdn.com/user_upload_by_module/session_file/113184588/uelvKSMHlXhPbBxk.mp4"
+                src="/Quick Start.mp4"
                 className="w-full h-full"
-                poster="https://files.manuscdn.com/user_upload_by_module/session_file/92567668/vDkqoyrtydNvcdzk.png"
                 ref={videoRef}
                 onPlay={( ) => setIsVideoPlaying(true)}
                 onPause={() => setIsVideoPlaying(false)}
                 loop
                 playsInline
+                controls
               >
                 Your browser does not support the video tag.
               </video>
