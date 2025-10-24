@@ -307,7 +307,7 @@ function DemoModal({ onClose }: { onClose: () => void }) {
         <div className="p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-              Writing Mate Demo
+              Quick Start Demo
             </h3>
             <button
               onClick={onClose}
@@ -318,16 +318,16 @@ function DemoModal({ onClose }: { onClose: () => void }) {
           </div>
         </div>
         <div className="p-6">
-          <div className="aspect-video bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900 to-purple-900 rounded-xl flex items-center justify-center mb-6">
-            <div className="text-center">
-              <Play className="w-16 h-16 text-blue-600 dark:text-blue-400 mx-auto mb-4" />
-              <h4 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                Interactive Demo Coming Soon!
-              </h4>
-              <p className="text-gray-600 dark:text-gray-300">
-                Experience our step-by-step writing guidance in action
-              </p>
-            </div>
+          <div className="relative aspect-video bg-black rounded-xl overflow-hidden shadow-2xl mb-6">
+            <video
+              src="/QuickStart.mp4"
+              controls
+              className="w-full h-full object-cover"
+              poster=""
+              playsInline
+            >
+              Your browser does not support the video tag.
+            </video>
           </div>
           <div className="text-center">
             <button
