@@ -97,8 +97,8 @@ export const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ onNavi
               <div className="relative aspect-video bg-black">
                 <video
                   ref={videoRef}
-                  src="https://files.manuscdn.com/user_upload_by_module/session_file/113184588/uelvKSMHlXhPbBxk.mp4"
-                  poster="https://files.manuscdn.com/user_upload_by_module/session_file/92567668/vDkqoyrtydNvcdzk.png"
+                  src="/QuickStart.mp4"
+                  poster=""
                   className="w-full h-full object-cover"
                   onPlay={() => setIsVideoPlaying(true)}
                   onPause={() => setIsVideoPlaying(false)}
@@ -122,7 +122,7 @@ export const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ onNavi
 
                 {/* Duration Badge */}
                 <div className="absolute bottom-4 right-4 px-3 py-1 rounded-full bg-black/80 text-white text-sm font-semibold backdrop-blur-sm">
-                  2:18
+                  1:30
                 </div>
               </div>
 
@@ -130,8 +130,8 @@ export const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ onNavi
               <div className="bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-500 dark:to-purple-500 px-6 py-4">
                 <div className="flex items-center text-white">
                   <div>
-                    <div className="text-sm font-semibold opacity-90">Platform Demo</div>
-                    <div className="text-xs opacity-75">See Writing Mate in action</div>
+                    <div className="text-sm font-semibold opacity-90">Quick Start Demo</div>
+                    <div className="text-xs opacity-75">The fastest way to get started</div>
                   </div>
                 </div>
               </div>
