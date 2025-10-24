@@ -396,18 +396,25 @@ export function ExamSimulationMode({
 
   return (
     <div className="h-screen flex flex-col bg-gray-50 dark:bg-slate-900 overflow-hidden">
-      {/* NARROWER HEADER */}
-      <div className="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 px-6 py-2 flex items-center justify-between h-16">
+      {/* HEADER with proper height and Back to Home button */}
+      <div className="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 px-6 py-3 flex items-center justify-between flex-shrink-0">
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center shadow-md">
-            <FileText className="w-5 h-5 text-white" />
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center shadow-md">
+            <FileText className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-base font-bold text-gray-900 dark:text-white">NSW Selective Writing Test</h1>
+            <h1 className="text-lg font-bold text-gray-900 dark:text-white leading-tight">NSW Selective Writing Test</h1>
             <p className="text-xs text-gray-600 dark:text-gray-400">Practice Exam Mode</p>
           </div>
         </div>
         <div className="flex items-center space-x-2">
+          <button
+            onClick={() => navigate('/')}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-all duration-200 flex items-center gap-2"
+            aria-label="Back to home"
+          >
+            Back to Home
+          </button>
           <button
             onClick={toggleTheme}
             className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition-all duration-200"

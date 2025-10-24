@@ -265,27 +265,27 @@ export const VocabularyEnhancementPanel: React.FC<VocabularyEnhancementPanelProp
             </div>
 
             <div className="mb-2">
-              <span className="text-xs text-gray-600">Context:</span>
-              <p className="text-xs italic text-gray-700 mt-1 bg-white p-2 rounded border border-gray-200">
+              <span className="text-xs text-gray-600 dark:text-gray-400">Context:</span>
+              <p className="text-xs italic text-gray-700 dark:text-gray-300 mt-1 bg-white dark:bg-slate-700 p-2 rounded border border-gray-200 dark:border-slate-600">
                 ...{enhancement.context}...
               </p>
             </div>
 
             <div className="mb-2">
               <div className="flex items-start gap-1">
-                <TrendingUp className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                <p className="text-xs text-gray-700">{enhancement.reason}</p>
+                <TrendingUp className="w-3 h-3 mt-0.5 flex-shrink-0 dark:text-gray-400" />
+                <p className="text-xs text-gray-700 dark:text-gray-300">{enhancement.reason}</p>
               </div>
             </div>
 
             <div className="mt-3">
-              <p className="text-xs font-semibold text-gray-700 mb-2">Suggested alternatives:</p>
+              <p className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Suggested alternatives:</p>
               <div className="flex flex-wrap gap-2">
                 {enhancement.suggestions.map((suggestion, idx) => (
                   <button
                     key={idx}
                     onClick={() => handleReplaceWord(enhancement, suggestion)}
-                    className="group px-3 py-1.5 bg-white border border-gray-300 rounded-md text-sm hover:bg-blue-50 hover:border-blue-400 transition-all font-medium text-gray-700 flex items-center gap-1"
+                    className="group px-3 py-1.5 bg-white dark:bg-slate-700 border border-gray-300 dark:border-slate-600 rounded-md text-sm hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:border-blue-400 dark:hover:border-blue-500 transition-all font-medium text-gray-700 dark:text-gray-200 flex items-center gap-1"
                   >
                     {suggestion}
                     <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -297,8 +297,8 @@ export const VocabularyEnhancementPanel: React.FC<VocabularyEnhancementPanelProp
         ))}
       </div>
 
-      <div className="mt-4 pt-4 border-t border-gray-200">
-        <div className="flex items-start gap-2 text-xs text-gray-600">
+      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-slate-700">
+        <div className="flex items-start gap-2 text-xs text-gray-600 dark:text-gray-400">
           <Lightbulb className="w-4 h-4 flex-shrink-0 mt-0.5" />
           <p>
             Click on any suggested word to replace it in your text. Using varied and sophisticated vocabulary makes your writing more engaging and impressive!
