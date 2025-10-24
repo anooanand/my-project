@@ -6,7 +6,7 @@ interface HeroSectionProps {
 
 export function HeroSectionEnhanced({ onGetStarted }: HeroSectionProps) {
   const handleTryDemo = () => {
-    window.location.href = '/demo';
+    document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
@@ -59,7 +59,7 @@ export function HeroSectionEnhanced({ onGetStarted }: HeroSectionProps) {
               onClick={handleTryDemo}
               className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 rounded-xl hover:border-purple-300 dark:hover:border-purple-500 hover:shadow-lg transition-all duration-200"
             >
-              See How It Works
+              Watch Quick Start Demo
               <Zap className="ml-2 w-5 h-5" />
             </button>
           </div>
