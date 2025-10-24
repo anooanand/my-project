@@ -224,27 +224,27 @@ export const SentenceStructurePanel: React.FC<SentenceStructurePanelProps> = ({ 
 
   const getTypeColor = (type: string): string => {
     switch (type) {
-      case 'simple': return 'bg-blue-50 border-blue-200 text-blue-800';
-      case 'compound': return 'bg-green-50 border-green-200 text-green-800';
-      case 'complex': return 'bg-purple-50 border-purple-200 text-purple-800';
-      case 'compound-complex': return 'bg-orange-50 border-orange-200 text-orange-800';
-      default: return 'bg-gray-50 border-gray-200 text-gray-800';
+      case 'simple': return 'bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-700 text-blue-800 dark:text-blue-300';
+      case 'compound': return 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700 text-green-800 dark:text-green-300';
+      case 'complex': return 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-700 text-purple-800 dark:text-purple-300';
+      case 'compound-complex': return 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-700 text-orange-800 dark:text-orange-300';
+      default: return 'bg-gray-50 dark:bg-slate-700 border-gray-200 dark:border-slate-600 text-gray-800 dark:text-gray-300';
     }
   };
 
   const getLengthColor = (category: string): string => {
     switch (category) {
-      case 'short': return 'bg-yellow-100 text-yellow-800';
-      case 'medium': return 'bg-green-100 text-green-800';
-      case 'long': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'short': return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300';
+      case 'medium': return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300';
+      case 'long': return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300';
+      default: return 'bg-gray-100 dark:bg-slate-700 text-gray-800 dark:text-gray-300';
     }
   };
 
   if (sentences.length === 0) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <div className="text-center text-gray-500">
+      <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-6">
+        <div className="text-center text-gray-500 dark:text-gray-400">
           <List className="w-12 h-12 mx-auto mb-3 opacity-50" />
           <p>Start writing to see sentence structure analysis</p>
         </div>
@@ -253,47 +253,47 @@ export const SentenceStructurePanel: React.FC<SentenceStructurePanelProps> = ({ 
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4">
+    <div className="bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 p-4">
       <div className="mb-4">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-            <List className="w-5 h-5 text-blue-600" />
+          <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+            <List className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             Sentence Structure Variety
           </h3>
           <div className="text-right">
             <div className={`text-2xl font-bold ${getScoreColor(varietyScore)}`}>
               {varietyScore}/100
             </div>
-            <div className="text-xs text-gray-500">Variety Score</div>
+            <div className="text-xs text-gray-500 dark:text-gray-400">Variety Score</div>
           </div>
         </div>
-        <p className="text-sm text-gray-600 mb-2">{getScoreFeedback(varietyScore)}</p>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">{getScoreFeedback(varietyScore)}</p>
       </div>
 
       {/* Statistics Overview */}
       <div className="grid grid-cols-2 gap-3 mb-4">
-        <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-          <div className="text-2xl font-bold text-blue-900">{sentences.length}</div>
-          <div className="text-xs text-blue-700">Total Sentences</div>
+        <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700">
+          <div className="text-2xl font-bold text-blue-900 dark:text-blue-300">{sentences.length}</div>
+          <div className="text-xs text-blue-700 dark:text-blue-400">Total Sentences</div>
         </div>
-        <div className="p-3 bg-green-50 rounded-lg border border-green-200">
-          <div className="text-2xl font-bold text-green-900">{averageLength}</div>
-          <div className="text-xs text-green-700">Avg Words/Sentence</div>
+        <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-700">
+          <div className="text-2xl font-bold text-green-900 dark:text-green-300">{averageLength}</div>
+          <div className="text-xs text-green-700 dark:text-green-400">Avg Words/Sentence</div>
         </div>
       </div>
 
       {/* Sentence Type Distribution */}
-      <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+      <div className="mb-4 p-3 bg-gray-50 dark:bg-slate-700 rounded-lg">
         <div className="flex items-center gap-2 mb-2">
-          <BarChart3 className="w-4 h-4 text-gray-600" />
-          <h4 className="font-semibold text-sm text-gray-900">Sentence Types:</h4>
+          <BarChart3 className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+          <h4 className="font-semibold text-sm text-gray-900 dark:text-gray-200">Sentence Types:</h4>
         </div>
         <div className="grid grid-cols-2 gap-2">
           {Object.entries(typeDistribution).map(([type, count]) => (
             count > 0 && (
               <div key={type} className="flex items-center justify-between text-xs">
-                <span className="text-gray-700 capitalize">{type}:</span>
-                <span className="font-bold text-gray-900">{count}</span>
+                <span className="text-gray-700 dark:text-gray-300 capitalize">{type}:</span>
+                <span className="font-bold text-gray-900 dark:text-gray-200">{count}</span>
               </div>
             )
           ))}
@@ -301,37 +301,37 @@ export const SentenceStructurePanel: React.FC<SentenceStructurePanelProps> = ({ 
       </div>
 
       {/* Length Distribution */}
-      <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+      <div className="mb-4 p-3 bg-gray-50 dark:bg-slate-700 rounded-lg">
         <div className="flex items-center gap-2 mb-2">
-          <TrendingUp className="w-4 h-4 text-gray-600" />
-          <h4 className="font-semibold text-sm text-gray-900">Sentence Lengths:</h4>
+          <TrendingUp className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+          <h4 className="font-semibold text-sm text-gray-900 dark:text-gray-200">Sentence Lengths:</h4>
         </div>
         <div className="grid grid-cols-3 gap-2">
           <div className="text-center">
-            <div className="text-lg font-bold text-yellow-800">{lengthDistribution.short || 0}</div>
-            <div className="text-xs text-gray-600">Short (≤8)</div>
+            <div className="text-lg font-bold text-yellow-800 dark:text-yellow-400">{lengthDistribution.short || 0}</div>
+            <div className="text-xs text-gray-600 dark:text-gray-400">Short (≤8)</div>
           </div>
           <div className="text-center">
-            <div className="text-lg font-bold text-green-800">{lengthDistribution.medium || 0}</div>
-            <div className="text-xs text-gray-600">Medium (9-18)</div>
+            <div className="text-lg font-bold text-green-800 dark:text-green-400">{lengthDistribution.medium || 0}</div>
+            <div className="text-xs text-gray-600 dark:text-gray-400">Medium (9-18)</div>
           </div>
           <div className="text-center">
-            <div className="text-lg font-bold text-blue-800">{lengthDistribution.long || 0}</div>
-            <div className="text-xs text-gray-600">Long (19+)</div>
+            <div className="text-lg font-bold text-blue-800 dark:text-blue-400">{lengthDistribution.long || 0}</div>
+            <div className="text-xs text-gray-600 dark:text-gray-400">Long (19+)</div>
           </div>
         </div>
       </div>
 
       {/* Issues and Recommendations */}
       {issues.length > 0 && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg">
           <div className="flex items-start gap-2 mb-2">
-            <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
             <div>
-              <h4 className="font-semibold text-sm text-red-900 mb-2">Areas for Improvement:</h4>
+              <h4 className="font-semibold text-sm text-red-900 dark:text-red-300 mb-2">Areas for Improvement:</h4>
               <ul className="space-y-1">
                 {issues.map((issue, index) => (
-                  <li key={index} className="text-xs text-red-800 flex items-start gap-1">
+                  <li key={index} className="text-xs text-red-800 dark:text-red-300 flex items-start gap-1">
                     <span className="mt-1">•</span>
                     <span>{issue}</span>
                   </li>
@@ -344,19 +344,19 @@ export const SentenceStructurePanel: React.FC<SentenceStructurePanelProps> = ({ 
 
       {/* Repeated Sentence Starters Warning */}
       {repeatedStarters.length > 0 && (
-        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+        <div className="mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg">
           <div className="flex items-start gap-2">
-            <Lightbulb className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+            <Lightbulb className="w-5 h-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="font-semibold text-yellow-900 text-sm mb-2">Repeated Sentence Starters:</p>
+              <p className="font-semibold text-yellow-900 dark:text-yellow-300 text-sm mb-2">Repeated Sentence Starters:</p>
               <div className="flex flex-wrap gap-2">
                 {repeatedStarters.map(({ word, count }) => (
-                  <span key={word} className="px-2 py-1 bg-white border border-yellow-300 rounded text-xs font-medium text-yellow-800">
+                  <span key={word} className="px-2 py-1 bg-white dark:bg-slate-700 border border-yellow-300 dark:border-yellow-600 rounded text-xs font-medium text-yellow-800 dark:text-yellow-300">
                     "{word}" - {count} times
                   </span>
                 ))}
               </div>
-              <p className="text-xs text-yellow-700 mt-2">
+              <p className="text-xs text-yellow-700 dark:text-yellow-400 mt-2">
                 Try starting sentences with different words or phrases for better variety.
               </p>
             </div>
@@ -366,7 +366,7 @@ export const SentenceStructurePanel: React.FC<SentenceStructurePanelProps> = ({ 
 
       {/* Individual Sentences */}
       <div className="space-y-2 max-h-64 overflow-y-auto">
-        <h4 className="font-semibold text-sm text-gray-900 mb-2">Your Sentences:</h4>
+        <h4 className="font-semibold text-sm text-gray-900 dark:text-gray-200 mb-2">Your Sentences:</h4>
         {sentences.map((sentence, index) => (
           <div key={index} className={`border rounded-lg p-2 ${getTypeColor(sentence.type)}`}>
             <div className="flex items-center justify-between mb-1">

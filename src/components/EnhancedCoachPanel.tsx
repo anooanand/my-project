@@ -1192,42 +1192,42 @@ export function EnhancedCoachPanel({
               {/* Story Arc/Plot Development Feedback */}
               {comprehensiveFeedback && comprehensiveFeedback.storyArc && wordCount >= 50 && (
                 <div className="mb-3">
-                  <div className="bg-blue-50 border-l-4 border-blue-500 p-3 rounded shadow-sm">
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500 dark:border-blue-600 p-3 rounded shadow-sm">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center space-x-2">
-                        <TrendingUp className="w-5 h-5 text-blue-600" />
-                        <span className="font-semibold text-blue-800">
+                        <TrendingUp className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                        <span className="font-semibold text-blue-800 dark:text-blue-300">
                           Story Structure Progress
                         </span>
                       </div>
-                      <div className="text-xs bg-blue-600 text-white px-2 py-1 rounded font-medium">
+                      <div className="text-xs bg-blue-600 dark:bg-blue-500 text-white px-2 py-1 rounded font-medium">
                         {comprehensiveFeedback.storyArc.completeness}% Complete
                       </div>
                     </div>
 
                     {/* Current Stage */}
-                    <div className="bg-blue-100 border border-blue-300 p-2 rounded mb-2">
-                      <p className="text-xs font-semibold text-blue-900 mb-1">
+                    <div className="bg-blue-100 dark:bg-blue-900/30 border border-blue-300 dark:border-blue-700 p-2 rounded mb-2">
+                      <p className="text-xs font-semibold text-blue-900 dark:text-blue-300 mb-1">
                         📍 Current Stage: <span className="capitalize">{comprehensiveFeedback.storyArc.currentStage.replace('-', ' ')}</span>
                       </p>
                     </div>
 
                     {/* Strengths */}
                     {comprehensiveFeedback.storyArc.strengths && comprehensiveFeedback.storyArc.strengths.length > 0 && (
-                      <div className="bg-white p-2 rounded border border-green-200 mb-2">
-                        <p className="text-xs font-semibold text-green-700 mb-1">✅ Strengths:</p>
+                      <div className="bg-white dark:bg-slate-700 p-2 rounded border border-green-200 dark:border-green-700 mb-2">
+                        <p className="text-xs font-semibold text-green-700 dark:text-green-400 mb-1">✅ Strengths:</p>
                         {comprehensiveFeedback.storyArc.strengths.slice(0, 2).map((strength, idx) => (
-                          <p key={idx} className="text-xs text-gray-700">• {strength}</p>
+                          <p key={idx} className="text-xs text-gray-700 dark:text-gray-300">• {strength}</p>
                         ))}
                       </div>
                     )}
 
                     {/* Next Steps */}
                     {comprehensiveFeedback.storyArc.nextSteps && comprehensiveFeedback.storyArc.nextSteps.length > 0 && (
-                      <div className="bg-white p-2 rounded border border-blue-200">
-                        <p className="text-xs font-semibold text-blue-700 mb-1">🎯 Next Steps:</p>
+                      <div className="bg-white dark:bg-slate-700 p-2 rounded border border-blue-200 dark:border-blue-700">
+                        <p className="text-xs font-semibold text-blue-700 dark:text-blue-400 mb-1">🎯 Next Steps:</p>
                         {comprehensiveFeedback.storyArc.nextSteps.slice(0, 2).map((step, idx) => (
-                          <p key={idx} className="text-xs text-gray-700">• {step}</p>
+                          <p key={idx} className="text-xs text-gray-700 dark:text-gray-300">• {step}</p>
                         ))}
                       </div>
                     )}
@@ -1238,11 +1238,11 @@ export function EnhancedCoachPanel({
               {/* Engagement and Pacing Feedback */}
               {comprehensiveFeedback && comprehensiveFeedback.pacing && wordCount >= 30 && (
                 <div className="mb-3">
-                  <div className="bg-purple-50 border-l-4 border-purple-500 p-3 rounded shadow-sm">
+                  <div className="bg-purple-50 dark:bg-purple-900/20 border-l-4 border-purple-500 dark:border-purple-600 p-3 rounded shadow-sm">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center space-x-2">
-                        <BarChart3 className="w-5 h-5 text-purple-600" />
-                        <span className="font-semibold text-purple-800">
+                        <BarChart3 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                        <span className="font-semibold text-purple-800 dark:text-purple-300">
                           Pacing & Engagement
                         </span>
                       </div>
