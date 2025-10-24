@@ -68,7 +68,7 @@ export const TipsModal: React.FC<TipsModalProps> = ({ isOpen, onClose, textType 
           </h4>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-xs">
             {Object.entries(phase.sensoryDetails).map(([sense, details]) => (
-              <div key={sense} className="bg-white p-2 rounded border">
+              <div key={sense} className="bg-white dark:bg-slate-700 p-2 rounded border border-gray-200 dark:border-slate-600">
                 <div className="font-medium text-yellow-800 dark:text-yellow-300 capitalize mb-1">{sense}:</div>
                 <div className="space-y-1">
                   {details.slice(0, 3).map((detail, idx) => (
