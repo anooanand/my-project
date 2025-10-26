@@ -9,13 +9,13 @@ interface ThemeContextType {
 }
 
 const ThemeContext = createContext<ThemeContextType>({
-  theme: 'light',
+  theme: 'dark',
   toggleTheme: () => {},
-  isDark: false,
+  isDark: true,
 });
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [theme, setTheme] = useState<Theme>('light');
+  const [theme, setTheme] = useState<Theme>('dark');
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('writingMateTheme') as Theme;
@@ -28,13 +28,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         document.documentElement.classList.remove('dark');
       }
     } else {
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const initialTheme = prefersDark ? 'dark' : 'light';
-      console.log('🎨 Using system preference:', initialTheme);
+      // Default to dark mode instead of system preference
+      const initialTheme = 'dark';
+      console.log('🎨 Using default theme:', initialTheme);
       setTheme(initialTheme);
-      if (initialTheme === 'dark') {
-        document.documentElement.classList.add('dark');
-      }
+      document.documentElement.classList.add('dark');
     }
   }, []);
 
