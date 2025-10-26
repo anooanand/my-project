@@ -1025,6 +1025,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
       <StructureGuideModal
         isOpen={showStructureModal}
         onClose={() => setShowStructureModal(false)}
+        textType={textType}
       />
       <TipsModal
         isOpen={showTipsModalLocal}
