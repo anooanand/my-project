@@ -1036,6 +1036,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
         <AIEvaluationReportDisplay
           report={aiEvaluationReport}
           essayText={localContent}
+          textType={textType} // Pass the writing type
           onClose={() => {
             setShowAIReport(false);
             setAiEvaluationReport(null);
