@@ -92,7 +92,7 @@ export const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ onNavi
 
           {/* Right Column - Video Card */}
           <div className="relative">
-            <div className="relative rounded-2xl border-2 border-gray-200 dark:border-slate-700 shadow-2xl overflow-hidden bg-gray-100 dark:bg-gray-900 transform hover:scale-105 transition-transform duration-300">
+            <div className="relative rounded-2xl border-2 border-gray-300 dark:border-slate-700 shadow-xl dark:shadow-2xl overflow-hidden bg-white dark:bg-gray-900 transform hover:scale-105 transition-transform duration-300">
               {/* Video Container */}
               <div className="relative aspect-video bg-gray-50 dark:bg-black">
                 <video
@@ -111,7 +111,7 @@ export const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ onNavi
                 {/* Play Button Overlay */}
                 {!isVideoPlaying && (
                   <div
-                    className="absolute inset-0 flex items-center justify-center bg-black/50 cursor-pointer group"
+                    className="absolute inset-0 flex items-center justify-center bg-gray-900/30 dark:bg-black/50 cursor-pointer group"
                     onClick={handlePlayVideo}
                   >
                     <div className="w-20 h-20 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform">
@@ -121,7 +121,7 @@ export const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ onNavi
                 )}
 
                 {/* Duration Badge */}
-                <div className="absolute bottom-4 right-4 px-3 py-1 rounded-full bg-black/80 text-white text-sm font-semibold backdrop-blur-sm">
+                <div className="absolute bottom-4 right-4 px-3 py-1 rounded-full bg-gray-800/90 dark:bg-black/80 text-white text-sm font-semibold backdrop-blur-sm">
                   2:12
                 </div>
               </div>
