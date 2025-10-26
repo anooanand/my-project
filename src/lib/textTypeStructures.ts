@@ -26,20 +26,23 @@ export interface TextTypeStructure {
 }
 
 export const TEXT_TYPE_STRUCTURES: { [key: string]: TextTypeStructure } = {
+  // ----------------------------------------------------------------------
+  // NARRATIVE: Corrected to Story Mountain (Exposition, Rising Action, Climax, Falling Action, Resolution)
+  // ----------------------------------------------------------------------
   narrative: {
-    title: "📚 Story Adventure Mission: Narrative Structure",
-    description: "Master the art of storytelling with this interactive narrative structure guide! Each section will help you craft an engaging story from beginning to end.",
-    proTip: "Use this structure as your roadmap, but don't be afraid to be creative! The best stories come alive when you add your unique voice and imagination to each section. Remember: show, don't tell, and always engage your reader's senses!",
+    title: "⛰️ Story Mountain Mission: Narrative Structure",
+    description: "Master the art of storytelling with this interactive Story Mountain guide! Each section will help you craft an engaging story from beginning to end.",
+    proTip: "Use this structure as your roadmap, but don\'t be afraid to be creative! The best stories come alive when you add your unique voice and imagination to each section. Remember: show, don\'t tell, and always engage your reader\'s senses!",
     phases: [
       {
-        id: 'introduction',
-        title: '1. Introduction: Setting the Scene',
-        description: 'Introduce your main character, the setting (where and when the story takes place), and a hint of the problem or adventure to come.',
+        id: 'exposition',
+        title: '1. Exposition: Setting the Scene',
+        description: 'Introduce your main character, the setting (where and when the story takes place), and the initial situation. This is the base of your mountain.',
         sentenceStarters: [
-          'One [adjective] morning/afternoon/evening...', 
-          'In a place where [description of setting]...', 
-          'Meet [character name], a [adjective] [noun] who...', 
-          'Little did [character name] know that today would be different...'
+          'One [adjective] morning/afternoon/evening...',
+          'In a place where [description of setting]...',
+          'Meet [character name], a [adjective] [noun] who...',
+          'Life was [adjective] until...'
         ],
         powerWords: ['suddenly', 'unexpectedly', 'curiously', 'peculiar', 'ancient', 'mysterious', 'eerie', 'sparkling', 'whispering'],
         sensoryDetails: {
@@ -48,16 +51,17 @@ export const TEXT_TYPE_STRUCTURES: { [key: string]: TextTypeStructure } = {
           touch: ['cold metal', 'rough wood', 'soft velvet', 'prickly bush', 'smooth stone'],
           smell: ['musty air', 'sweet scent', 'earthy aroma', 'faint perfume', 'smoky haze'],
           feelings: ['nervous', 'excited', 'curious', 'apprehensive', 'calm']
-        }
+        },
+        keyElements: ['Character introduction', 'Setting (time and place)', 'Initial conflict or inciting incident']
       },
       {
         id: 'rising-action',
-        title: '2. Rising Action: The Adventure Begins',
-        description: 'The main character faces challenges, makes discoveries, and the plot thickens. Build suspense and show, don\'t just tell, what happens.',
+        title: '2. Rising Action: Climbing the Mountain',
+        description: 'The main character faces a series of challenges and complications that build tension and lead toward the climax. The conflict intensifies.',
         sentenceStarters: [
-          'As [character name] ventured deeper...', 
-          'Suddenly, a [event] occurred...', 
-          'With a [sound/action], [character name] discovered...', 
+          'As [character name] ventured deeper...',
+          'Suddenly, a [event] occurred...',
+          'With a [sound/action], [character name] discovered...',
           'The journey was fraught with [challenge]...'
         ],
         powerWords: ['bravely', 'cautiously', 'desperately', 'intense', 'perilous', 'shimmering', 'enormous', 'terrifying', 'courageous'],
@@ -67,16 +71,17 @@ export const TEXT_TYPE_STRUCTURES: { [key: string]: TextTypeStructure } = {
           touch: ['sharp thorns', 'slippery rocks', 'warm embrace', 'chilling breeze', 'rough rope'],
           smell: ['fresh pine', 'salty air', 'foul odor', 'sweet blossoms', 'burning wood'],
           feelings: ['determined', 'fearful', 'hopeful', 'confused', 'exhausted']
-        }
+        },
+        keyElements: ['Complications', 'Discoveries', 'Obstacles', 'Building suspense']
       },
       {
         id: 'climax',
-        title: '3. Climax: The Turning Point',
-        description: 'This is the most exciting part of your story where the main character confronts the biggest challenge or makes a crucial decision. The tension is at its peak!',
+        title: '3. Climax: The Peak Moment',
+        description: 'This is the highest point of tension and the turning point of the story. The main character confronts the biggest challenge or makes a crucial decision.',
         sentenceStarters: [
-          'Finally, [character name] stood before...', 
-          'With a surge of [emotion], [character name]...', 
-          'This was it. The moment of truth...', 
+          'Finally, [character name] stood before...',
+          'With a surge of [emotion], [character name]...',
+          'This was it. The moment of truth...',
           'All at once, [event]...'
         ],
         powerWords: ['decisive', 'critical', 'momentous', 'shattering', 'overwhelming', 'triumphant', 'despair', 'furious', 'relentless'],
@@ -86,496 +91,335 @@ export const TEXT_TYPE_STRUCTURES: { [key: string]: TextTypeStructure } = {
           touch: ['burning heat', 'icy grip', 'shaking ground', 'painful blow', 'gentle touch'],
           smell: ['acrid smoke', 'sweet victory', 'metallic tang', 'fresh rain', 'fear in the air'],
           feelings: ['terrified', 'exhilarated', 'resolved', 'defeated', 'victorious']
-        }
+        },
+        keyElements: ['Highest point of tension', 'Major confrontation', 'Crucial decision', 'The problem is faced head-on']
       },
       {
-        id: 'resolution',
-        title: '4. Resolution: Tying Up Loose Ends',
-        description: 'Show how the character has changed and what happens after the main problem is solved. Conclude your story by reflecting on the adventure.',
+        id: 'falling-action',
+        title: '4. Falling Action: Descending the Mountain',
+        description: 'The immediate consequences of the climax are shown. The tension begins to ease, and the story moves toward its conclusion.',
         sentenceStarters: [
-          'After the dust settled...', 
-          'With a newfound sense of [emotion]...', 
-          'Life in [setting] was never the same...', 
-          'From that day forward, [character name]...'
+          'After the dust settled...',
+          'With a newfound sense of [emotion]...',
+          'The villain/problem was [resolved/defeated]...',
+          'The immediate danger had passed, and...'
         ],
-        powerWords: ['transformed', 'reflecting', 'peaceful', 'content', 'grateful', 'wiser', 'haunting', 'cherished', 'legacy'],
+        powerWords: ['calmly', 'slowly', 'peacefully', 'reflecting', 'easing', 'unraveling', 'gradually', 'eventually', 'finally'],
         sensoryDetails: {
           sight: ['calm waters', 'setting sun', 'familiar faces', 'new beginnings', 'scarred landscape'],
           sound: ['gentle breeze', 'birds chirping', 'laughter echoing', 'soft whispers', 'peaceful quiet'],
           touch: ['warm sunlight', 'comforting hug', 'soft grass', 'cool breeze', 'gentle rain'],
           smell: ['fresh baked bread', 'clean air', 'fragrant flowers', 'old memories', 'new hope'],
           feelings: ['relieved', 'satisfied', 'changed', 'thoughtful', 'hopeful']
-        }
+        },
+        keyElements: ['Immediate aftermath of the climax', 'Loose ends are tied up', 'Tension decreases']
+      },
+      {
+        id: 'resolution',
+        title: '5. Resolution: Back on Flat Ground',
+        description: 'The final outcome of the story. Show how the character has changed and what the new normal is. The main conflict is fully resolved.',
+        sentenceStarters: [
+          'Life in [setting] was never the same...',
+          'From that day forward, [character name]...',
+          'The story ended with...',
+          'Everything was finally...'
+        ],
+        powerWords: ['transformed', 'reflecting', 'peaceful', 'content', 'grateful', 'wiser', 'haunting', 'cherished', 'legacy'],
+        keyElements: ['Final outcome', 'Theme revealed', 'Character change/growth', 'The new normal']
       }
     ]
   },
 
+  // ----------------------------------------------------------------------
+  // PERSUASIVE: Corrected to PEEEL Structure
+  // ----------------------------------------------------------------------
   persuasive: {
-    title: "🎯 Persuasive Power: Argument Structure",
-    description: "Master the art of persuasion! Learn how to build compelling arguments that convince your reader to see your point of view.",
-    proTip: "Strong persuasive writing combines logical reasoning with emotional appeal. Use facts and evidence, but don't forget to connect with your reader's values and feelings!",
+    title: "🎯 Persuasive Power: PEEEL Argument Structure",
+    description: "Master the art of persuasion! Learn how to build compelling arguments that convince your reader to see your point of view using the PEEEL method.",
+    proTip: "Strong persuasive writing combines logical reasoning (Logos) with emotional appeal (Pathos) and credibility (Ethos). Use facts and evidence, but don\'t forget to connect with your reader\'s values and feelings!",
     phases: [
       {
         id: 'introduction',
-        title: '1. Hook & Position: Grab Attention',
-        description: 'Start with a compelling hook, provide background information, and clearly state your position or thesis.',
+        title: '1. Introduction: Hook & Thesis',
+        description: 'Start with a compelling hook to grab your reader\'s attention, provide brief background information, and clearly state your position in a strong thesis statement.',
         sentenceStarters: [
           'Imagine a world where...',
-          'Did you know that [statistic]...',
-          'Every day, millions of people...',
-          'The time has come to...'
+          'In a society that values... it is shocking to find that...',
+          'The time has come to address the urgent issue of...',
+          'While some may believe..., the reality is that...'
         ],
-        powerWords: ['crucial', 'essential', 'urgent', 'compelling', 'undeniable', 'revolutionary', 'significant', 'vital', 'critical'],
-        keyElements: ['Hook (question, statistic, scenario)', 'Background context', 'Clear thesis statement', 'Preview of main arguments'],
-        transitionWords: ['first', 'to begin with', 'initially', 'furthermore']
+        powerWords: ['crucial', 'essential', 'urgent', 'compelling', 'undeniable', 'vital', 'critical', 'unacceptable', 'imperative'],
+        keyElements: ['Hook (question, shocking statistic, anecdote)', 'Background context', 'Strong thesis statement', 'Outline of main points']
       },
       {
-        id: 'arguments',
-        title: '2. Main Arguments: Build Your Case',
-        description: 'Present your strongest arguments with evidence, examples, and logical reasoning. Address each main point in separate paragraphs.',
+        id: 'body-paragraph-1',
+        title: '2. Body Paragraph (PEEEL): Point 1',
+        description: 'POINT: State your first argument. EVIDENCE: Provide evidence (facts, statistics, examples). EXPLAIN: Explain how the evidence supports your point. EVALUATE: Broaden the explanation with further analysis. LINK: Link this point back to your main thesis.',
         sentenceStarters: [
-          'The primary reason is...',
-          'Evidence clearly shows that...',
-          'Research demonstrates...',
-          'Consider the fact that...'
+          'Firstly, it is clear that...',
+          'The primary reason for this is...',
+          'For instance, research from [source] shows...',
+          'This demonstrates that...',
+          'Therefore, it is evident that...'
         ],
-        powerWords: ['proven', 'documented', 'verified', 'substantial', 'overwhelming', 'conclusive', 'irrefutable', 'compelling', 'decisive'],
-        keyElements: ['Topic sentence for each argument', 'Supporting evidence', 'Examples and statistics', 'Expert opinions or quotes'],
-        transitionWords: ['moreover', 'additionally', 'furthermore', 'in addition', 'similarly', 'likewise']
+        powerWords: ['evidence', 'statistics', 'expert', 'demonstrates', 'proves', 'consequently', 'furthermore', 'significantly', 'clearly'],
+        keyElements: ['Point', 'Evidence', 'Explanation', 'Evaluation', 'Link']
       },
       {
-        id: 'counterarguments',
-        title: '3. Address Opposition: Strengthen Your Position',
-        description: 'Acknowledge opposing viewpoints and explain why your position is stronger. This shows you understand the complexity of the issue.',
+        id: 'body-paragraph-2',
+        title: '3. Body Paragraph (PEEEL): Point 2',
+        description: 'POINT: State your second argument. EVIDENCE: Provide new evidence. EXPLAIN: Explain this evidence. EVALUATE: Analyze its implications. LINK: Connect it back to your thesis.',
         sentenceStarters: [
-          'Some might argue that...',
-          'Critics often claim...',
-          'While it\'s true that...',
-          'Although opponents suggest...'
+          'Furthermore, another compelling reason is...',
+          'Additionally, consider the fact that...',
+          'A clear example of this can be seen in...',
+          'This highlights the importance of...',
+          'As such, it reinforces the argument that...'
         ],
-        powerWords: ['however', 'nevertheless', 'despite', 'although', 'admittedly', 'granted', 'nonetheless', 'conversely', 'alternatively'],
-        keyElements: ['Acknowledge opposing views', 'Explain why they are less valid', 'Provide counter-evidence', 'Reinforce your position'],
-        transitionWords: ['however', 'on the other hand', 'conversely', 'nevertheless', 'despite this']
+        powerWords: ['additionally', 'moreover', 'likewise', 'similarly', 'another', 'compelling', 'substantiates', 'validates', 'reinforces'],
+        keyElements: ['Point', 'Evidence', 'Explanation', 'Evaluation', 'Link']
+      },
+      {
+        id: 'counter-argument',
+        title: '4. Counter-Argument & Rebuttal',
+        description: 'Acknowledge a potential opposing viewpoint and then refute it. This shows you have considered other perspectives and strengthens your own argument.',
+        sentenceStarters: [
+          'Some may argue that... however, this view is flawed because...',
+          'While it is true that..., it does not negate the fact that...',
+          'Opponents might claim that..., but they fail to consider...',
+          'A common misconception is that...; in reality,...'
+        ],
+        powerWords: ['admittedly', 'however', 'nevertheless', 'despite', 'conversely', 'unconvincing', 'flawed', 'misguided', 'outweighs'],
+        keyElements: ['Acknowledge opposition', 'Provide counter-evidence', 'Explain why your position is stronger', 'Strengthen thesis']
       },
       {
         id: 'conclusion',
-        title: '4. Call to Action: Seal the Deal',
-        description: 'Summarize your main points, restate your position, and end with a powerful call to action that motivates your reader.',
+        title: '5. Conclusion: Call to Action',
+        description: 'Summarize your main arguments, restate your thesis in a new way, and end with a powerful and memorable call to action that motivates your reader.',
         sentenceStarters: [
-          'In conclusion, the evidence clearly shows...',
-          'The time for action is now...',
-          'We must act before...',
-          'The choice is clear...'
+          'In conclusion, the evidence overwhelmingly shows...',
+          'Therefore, it is imperative that we...',
+          'The choice is clear: we must act now to...',
+          'Let us work together to create a future where...'
         ],
-        powerWords: ['imperative', 'necessary', 'inevitable', 'transformative', 'groundbreaking', 'historic', 'momentous', 'decisive', 'urgent'],
-        keyElements: ['Restate thesis', 'Summarize main arguments', 'Call to action', 'Final compelling thought'],
-        transitionWords: ['in conclusion', 'therefore', 'thus', 'consequently', 'as a result']
+        powerWords: ['imperative', 'necessary', 'act now', 'transformative', 'decisive', 'unite', 'demand', 'advocate', 'support'],
+        keyElements: ['Restate thesis', 'Summarize main arguments', 'Powerful call to action', 'Final compelling thought']
       }
     ]
   },
 
+  // ----------------------------------------------------------------------
+  // EXPOSITORY: Corrected to Standard Five-Paragraph Essay Structure
+  // ----------------------------------------------------------------------
   expository: {
-    title: "📖 Information Explorer: Expository Structure",
-    description: "Master the art of explanation! Learn how to inform and educate your reader with clear, well-organized information.",
-    proTip: "Great expository writing is like being a tour guide for your reader's mind. Lead them through complex information step by step, using clear examples and logical organization!",
+    title: "📖 Information Explorer: Expository Essay Structure",
+    description: "Master the art of explanation! Learn how to inform and educate your reader with clear, well-organized information in a standard essay format.",
+    proTip: "Great expository writing is like being a tour guide for your reader\'s mind. Lead them through complex information step by step, using clear examples and logical organization!",
     phases: [
       {
         id: 'introduction',
-        title: '1. Introduction: Set the Stage',
-        description: 'Introduce your topic, provide necessary background information, and present a clear thesis that outlines what you will explain.',
+        title: '1. Introduction: Thesis & Overview',
+        description: 'Introduce your topic with a hook, provide necessary background information, and present a clear thesis statement that outlines what you will explain.',
         sentenceStarters: [
-          'Have you ever wondered...',
-          '[Topic] is a complex process that...',
-          'Understanding [topic] requires...',
-          'To fully grasp [concept]...'
+          'Have you ever wondered about...',
+          '[Topic] is a fascinating and complex subject that...',
+          'To fully understand [concept], it is essential to examine...',
+          'This essay will explore the key aspects of...'
         ],
-        powerWords: ['complex', 'fascinating', 'intricate', 'essential', 'fundamental', 'comprehensive', 'detailed', 'systematic', 'thorough'],
-        keyElements: ['Topic introduction', 'Background context', 'Clear thesis statement', 'Preview of main points'],
-        transitionWords: ['first', 'to begin', 'initially', 'primarily']
+        powerWords: ['explain', 'clarify', 'define', 'illustrate', 'analyze', 'examine', 'explore', 'reveal', 'demonstrate'],
+        keyElements: ['Hook (question, fact, definition)', 'Background context', 'Clear thesis statement', 'Preview of main points']
       },
       {
-        id: 'body-paragraphs',
-        title: '2. Body Paragraphs: Explain and Elaborate',
-        description: 'Present your information in logical order. Each paragraph should focus on one main idea with supporting details, examples, and explanations.',
+        id: 'body-paragraph-1',
+        title: '2. Body Paragraph 1: Main Point A',
+        description: 'Present your first main point with a clear topic sentence. Support it with facts, details, and examples to explain it thoroughly.',
         sentenceStarters: [
-          'The first aspect to consider is...',
-          'Another important factor is...',
-          'This process involves...',
-          'For example...'
+          'The first key aspect of [topic] is...',
+          'To begin, it is important to understand...',
+          'For example, consider...',
+          'This shows that...'
         ],
-        powerWords: ['specifically', 'particularly', 'notably', 'significantly', 'consequently', 'therefore', 'furthermore', 'additionally', 'moreover'],
-        keyElements: ['Clear topic sentences', 'Supporting details', 'Examples and illustrations', 'Logical organization'],
-        transitionWords: ['next', 'then', 'additionally', 'furthermore', 'moreover', 'also', 'similarly']
+        powerWords: ['firstly', 'initially', 'primarily', 'fundamentally', 'aspect', 'component', 'factor', 'element', 'characteristic'],
+        keyElements: ['Topic sentence', 'Supporting details', 'Examples/Evidence', 'Explanation']
+      },
+      {
+        id: 'body-paragraph-2',
+        title: '3. Body Paragraph 2: Main Point B',
+        description: 'Present your second main point. Ensure it logically follows the first and is supported by its own set of details and examples.',
+        sentenceStarters: [
+          'Another significant factor is...',
+          'In addition to [Point A], it is also crucial to note...',
+          'For instance, ...',
+          'This illustrates how...'
+        ],
+        powerWords: ['secondly', 'additionally', 'furthermore', 'moreover', 'another', 'significant', 'notably', 'equally important', 'also'],
+        keyElements: ['Topic sentence', 'Supporting details', 'Examples/Evidence', 'Explanation']
+      },
+      {
+        id: 'body-paragraph-3',
+        title: '4. Body Paragraph 3: Main Point C',
+        description: 'Present your third main point, complete with supporting evidence and explanation, to round out the body of your essay.',
+        sentenceStarters: [
+          'Finally, the third aspect to consider is...',
+          'Lastly, one must also examine...',
+          'A clear illustration of this is...',
+          'Consequently, this leads to...'
+        ],
+        powerWords: ['finally', 'lastly', 'thirdly', 'concluding', 'completing', 'critical', 'essential', 'vital', 'key'],
+        keyElements: ['Topic sentence', 'Supporting details', 'Examples/Evidence', 'Explanation']
+      },
+      {
+        id: 'conclusion',
+        title: '5. Conclusion: Summary & Final Thought',
+        description: 'Summarize your main points (A, B, and C), restate your thesis in a new way, and leave the reader with a final, insightful thought on the topic.',
+        sentenceStarters: [
+          'In summary, the key aspects of [topic] are...',
+          'To conclude, by examining..., it becomes clear that...',
+          'Ultimately, understanding [topic] is important because...',
+          'The information presented demonstrates that...'
+        ],
+        powerWords: ['summary', 'conclusion', 'ultimately', 'overall', 'comprehensive', 'enlightening', 'valuable', 'essential', 'significant'],
+        keyElements: ['Restate thesis', 'Summary of main points', 'Final insightful thought', 'Closing statement']
+      }
+    ]
+  },
+
+  // ----------------------------------------------------------------------
+  // REFLECTIVE: Corrected to Gibbs\' Reflective Cycle
+  // ----------------------------------------------------------------------
+  reflective: {
+    title: "🧠 Reflective Cycle: Personal Growth Structure",
+    description: "Use Gibbs\' Reflective Cycle to turn your experiences into valuable learning opportunities. This structure guides you through a deep, meaningful reflection process.",
+    proTip: "Reflection is a powerful tool for growth. Be honest about your feelings and critically evaluate your actions—this is how you truly learn and improve!",
+    phases: [
+      {
+        id: 'description',
+        title: '1. Description: What Happened?',
+        description: 'Describe the event or experience in detail. Focus on the facts: who was involved, where it took place, and what happened objectively.',
+        sentenceStarters: [
+          'The situation I am reflecting on is...',
+          'The event took place at... on [date/time]...',
+          'The main people involved were...',
+          'The sequence of events was as follows: first...'
+        ],
+        powerWords: ['situation', 'event', 'context', 'facts', 'details', 'setting', 'participants', 'chronology', 'objective'],
+        keyElements: ['Objective account of the event', 'Who, what, where, when']
+      },
+      {
+        id: 'feelings',
+        title: '2. Feelings: What Were You Thinking and Feeling?',
+        description: 'Explore your emotions and thoughts before, during, and after the event. Be honest about your internal experience.',
+        sentenceStarters: [
+          'Before the event, I felt...',
+          'During the experience, my thoughts were...',
+          'My immediate reaction was one of...',
+          'Afterward, I realized I was feeling... because...'
+        ],
+        powerWords: ['anxious', 'confident', 'frustrated', 'surprised', 'relieved', 'confused', 'determined', 'overwhelmed', 'satisfied'],
+        keyElements: ['Emotions before, during, and after', 'Thoughts and internal dialogue']
+      },
+      {
+        id: 'evaluation',
+        title: '3. Evaluation: What Was Good and Bad?',
+        description: 'Judge the experience. What went well, and what did not go so well? Be balanced and critical in your assessment.',
+        sentenceStarters: [
+          'The most positive aspect of the experience was...',
+          'What went well was... because...',
+          'However, the most negative aspect was...',
+          'The main challenge I faced was...'
+        ],
+        powerWords: ['successful', 'challenging', 'effective', 'ineffective', 'positive', 'negative', 'beneficial', 'detrimental', 'valuable'],
+        keyElements: ['Identification of positive outcomes', 'Identification of negative outcomes', 'Balanced perspective']
       },
       {
         id: 'analysis',
-        title: '3. Analysis: Dig Deeper',
-        description: 'Analyze the information you\'ve presented. Explain relationships, causes and effects, or significance of the information.',
+        title: '4. Analysis: What Sense Can You Make of It?',
+        description: 'Analyze the situation to understand why things happened as they did. Connect your experience to broader concepts, theories, or prior knowledge.',
         sentenceStarters: [
-          'This information reveals that...',
-          'The significance of this is...',
-          'As a result of [cause]...',
-          'This leads to...'
+          'The main reason for this outcome was likely...',
+          'This situation can be understood in the context of...',
+          'I now understand that my actions led to... because...',
+          'This experience highlights the importance of...'
         ],
-        powerWords: ['reveals', 'demonstrates', 'indicates', 'suggests', 'implies', 'confirms', 'establishes', 'proves', 'illustrates'],
-        keyElements: ['Cause and effect relationships', 'Significance of information', 'Connections between ideas', 'Deeper understanding'],
-        transitionWords: ['because', 'since', 'as a result', 'therefore', 'consequently', 'thus']
+        powerWords: ['reason', 'cause', 'effect', 'theory', 'concept', 'insight', 'understanding', 'implication', 'relationship'],
+        keyElements: ['Explanation of cause and effect', 'Linking to external knowledge', 'Deeper understanding of the event']
       },
       {
         id: 'conclusion',
-        title: '4. Conclusion: Wrap It Up',
-        description: 'Summarize the key information, restate the importance of your topic, and leave the reader with a clear understanding.',
+        title: '5. Conclusion: What Else Could You Have Done?',
+        description: 'Summarize your key learning points. What are the main takeaways from this reflection? What would you do differently if faced with a similar situation again?',
         sentenceStarters: [
-          'In summary...',
-          'To conclude...',
-          'Understanding [topic] helps us...',
-          'This information shows that...'
+          'In conclusion, the most important lesson I learned was...',
+          'If I were in this situation again, I would...',
+          'I should have considered...',
+          'This experience has taught me the value of...'
         ],
-        powerWords: ['ultimately', 'overall', 'comprehensive', 'complete', 'thorough', 'enlightening', 'informative', 'valuable', 'essential'],
-        keyElements: ['Summary of main points', 'Restatement of importance', 'Final insights', 'Clear conclusion'],
-        transitionWords: ['in conclusion', 'to summarize', 'overall', 'in summary', 'finally']
+        powerWords: ['lesson', 'takeaway', 'improvement', 'alternative', 'strategy', 'future', 'change', 'growth', 'realization'],
+        keyElements: ['Summary of key learning', 'Identification of alternative actions']
+      },
+      {
+        id: 'action-plan',
+        title: '6. Action Plan: What Will You Do Next?',
+        description: 'Develop a concrete, specific plan for how you will apply your learning in the future. This turns reflection into tangible action.',
+        sentenceStarters: [
+          'My concrete plan for the future is to...',
+          'To improve my skills in this area, I will...',
+          'The first step I will take is to... by [date]...',
+          'I will commit to practicing... in order to...'
+        ],
+        powerWords: ['plan', 'strategy', 'commit', 'implement', 'develop', 'practice', 'goal', 'step', 'actionable'],
+        keyElements: ['Specific, measurable future actions', 'Commitment to change and growth']
       }
     ]
   },
 
-  descriptive: {
-    title: "🎨 Sensory Painter: Descriptive Structure",
-    description: "Master the art of description! Learn how to paint vivid pictures with words that make your reader feel like they're experiencing what you describe.",
-    proTip: "Great descriptive writing engages all five senses and uses specific, concrete details rather than general statements. Show your reader the world through your eyes!",
-    phases: [
-      {
-        id: 'introduction',
-        title: '1. First Impression: Set the Scene',
-        description: 'Introduce what you\'re describing and create an overall impression. Give your reader a sense of what they\'re about to experience.',
-        sentenceStarters: [
-          'Picture this...',
-          'Imagine standing before...',
-          'The first thing you notice about...',
-          'Step into a world where...'
-        ],
-        powerWords: ['vivid', 'striking', 'remarkable', 'extraordinary', 'captivating', 'mesmerizing', 'breathtaking', 'stunning', 'magnificent'],
-        sensoryDetails: {
-          sight: ['vibrant colors', 'intricate patterns', 'dramatic shadows', 'gleaming surfaces', 'weathered textures'],
-          sound: ['gentle murmur', 'rhythmic beating', 'melodic harmony', 'sharp contrast', 'peaceful silence'],
-          touch: ['smooth surface', 'rough texture', 'gentle warmth', 'cool breeze', 'soft embrace'],
-          smell: ['fragrant aroma', 'crisp freshness', 'rich scent', 'subtle perfume', 'earthy essence'],
-          feelings: ['overwhelming', 'peaceful', 'energizing', 'comforting', 'inspiring']
-        }
-      },
-      {
-        id: 'detailed-description',
-        title: '2. Detailed Description: Paint the Picture',
-        description: 'Use specific sensory details to describe your subject. Move systematically through different aspects, engaging all five senses.',
-        sentenceStarters: [
-          'Looking closer, you can see...',
-          'The texture feels like...',
-          'A distinctive scent of...',
-          'The sound of... fills the air...'
-        ],
-        powerWords: ['intricate', 'delicate', 'robust', 'subtle', 'intense', 'graceful', 'rugged', 'elegant', 'pristine'],
-        sensoryDetails: {
-          sight: ['dappled sunlight', 'rich burgundy', 'crystalline clarity', 'weathered bronze', 'iridescent shimmer'],
-          sound: ['whispered secrets', 'thunderous applause', 'gentle lapping', 'crisp footsteps', 'melodious laughter'],
-          touch: ['velvety petals', 'coarse sandpaper', 'silky fabric', 'jagged edges', 'cushioned softness'],
-          smell: ['pine needles', 'fresh bread', 'ocean spray', 'blooming jasmine', 'old leather'],
-          feelings: ['nostalgic', 'invigorated', 'serene', 'excited', 'contemplative']
-        }
-      },
-      {
-        id: 'emotional-connection',
-        title: '3. Emotional Connection: Share the Feeling',
-        description: 'Explain how this subject makes you feel and why it\'s significant. Help your reader understand the emotional impact.',
-        sentenceStarters: [
-          'This place makes me feel...',
-          'Standing here, I am reminded of...',
-          'The significance of this moment...',
-          'What strikes me most is...'
-        ],
-        powerWords: ['profound', 'meaningful', 'touching', 'inspiring', 'overwhelming', 'peaceful', 'energizing', 'transformative', 'memorable'],
-        keyElements: ['Personal response', 'Emotional significance', 'Memories or associations', 'Why it matters'],
-        transitionWords: ['as I reflect', 'this reminds me', 'I feel', 'what moves me']
-      },
-      {
-        id: 'conclusion',
-        title: '4. Lasting Impression: Final Image',
-        description: 'End with a powerful final image or reflection that captures the essence of what you\'ve described.',
-        sentenceStarters: [
-          'As I take one last look...',
-          'The memory that will stay with me...',
-          'In the end, what defines this place...',
-          'Long after leaving...'
-        ],
-        powerWords: ['unforgettable', 'timeless', 'eternal', 'haunting', 'beautiful', 'perfect', 'complete', 'whole', 'lasting'],
-        keyElements: ['Final vivid image', 'Lasting impression', 'Overall significance', 'Memorable conclusion'],
-        transitionWords: ['finally', 'ultimately', 'in the end', 'as I conclude']
-      }
-    ]
-  },
-
-  reflective: {
-    title: "🪞 Inner Journey: Reflective Structure",
-    description: "Master the art of reflection! Learn how to explore your thoughts, experiences, and growth in a meaningful way.",
-    proTip: "Great reflective writing is honest and thoughtful. Don't just describe what happened—explore what it meant and how it changed you!",
-    phases: [
-      {
-        id: 'experience',
-        title: '1. The Experience: What Happened',
-        description: 'Describe the experience, event, or situation you\'re reflecting on. Set the scene and provide necessary context.',
-        sentenceStarters: [
-          'Looking back on...',
-          'I remember when...',
-          'The experience that changed me...',
-          'It all started when...'
-        ],
-        powerWords: ['significant', 'memorable', 'pivotal', 'transformative', 'challenging', 'unexpected', 'profound', 'meaningful', 'impactful'],
-        keyElements: ['Context and setting', 'Key events', 'People involved', 'Initial feelings']
-      },
-      {
-        id: 'reflection',
-        title: '2. Deep Reflection: What It Meant',
-        description: 'Analyze your thoughts and feelings about the experience. Explore different perspectives and consider the deeper meaning.',
-        sentenceStarters: [
-          'At first, I thought...',
-          'Now I realize that...',
-          'What surprised me was...',
-          'I began to understand...'
-        ],
-        powerWords: ['realized', 'discovered', 'understood', 'recognized', 'appreciated', 'acknowledged', 'comprehended', 'grasped', 'perceived'],
-        keyElements: ['Initial thoughts vs. current understanding', 'Different perspectives', 'Deeper meanings', 'Emotional responses']
-      },
-      {
-        id: 'learning',
-        title: '3. Learning: What I Gained',
-        description: 'Identify the lessons learned, skills gained, or insights discovered. Explain how this experience contributed to your growth.',
-        sentenceStarters: [
-          'This experience taught me...',
-          'I learned that...',
-          'The most important lesson was...',
-          'I gained a new understanding of...'
-        ],
-        powerWords: ['valuable', 'insightful', 'enlightening', 'educational', 'eye-opening', 'revealing', 'instructive', 'beneficial', 'enriching'],
-        keyElements: ['Specific lessons learned', 'Skills developed', 'New perspectives gained', 'Personal growth']
-      },
-      {
-        id: 'application',
-        title: '4. Moving Forward: How I\'ll Apply This',
-        description: 'Explain how this learning will influence your future actions, decisions, or perspective. Connect past experience to future growth.',
-        sentenceStarters: [
-          'Moving forward, I will...',
-          'This experience will help me...',
-          'In the future, I plan to...',
-          'I am committed to...'
-        ],
-        powerWords: ['committed', 'determined', 'motivated', 'inspired', 'prepared', 'equipped', 'ready', 'confident', 'empowered'],
-        keyElements: ['Future applications', 'Changed behaviors', 'New goals', 'Continued growth plans']
-      }
-    ]
-  },
-
+  // ----------------------------------------------------------------------
+  // RECOUNT: Corrected to Chronological Order (Orientation, Sequence of Events, Reorientation)
+  // ----------------------------------------------------------------------
   recount: {
-    title: "📅 Story Teller: Recount Structure",
-    description: "Master the art of retelling! Learn how to share events and experiences in a clear, engaging chronological order.",
-    proTip: "Great recounts feel like you're taking your reader on a journey through time. Use time connectors and vivid details to make events come alive!",
+    title: "🕰️ Time Traveler\'s Log: Recount Structure",
+    description: "Learn how to write a clear, chronological account of an event or experience. A recount tells the reader what happened, when it happened, and who was involved.",
+    proTip: "Use strong time-order words (first, next, then, finally) to guide your reader through the sequence of events. Focus on the facts and keep your tenses consistent!",
     phases: [
       {
         id: 'orientation',
-        title: '1. Orientation: Set the Scene',
-        description: 'Introduce the who, what, when, and where of your recount. Give your reader the essential background information.',
+        title: '1. Orientation: Who, What, Where, When',
+        description: 'Set the scene. Introduce the main event, the people involved, the setting (where), and the time (when) it all took place.',
         sentenceStarters: [
-          'Last [time period], I...',
-          'It was [time] when...',
-          'The event took place at...',
-          'On [date/day], my [family/friends/class] and I...'
+          'Last [day/week/year], I had a memorable experience when...',
+          'The event began on a [adjective] [day] at [location]...',
+          '[Name] and I were at... when...',
+          'I will never forget the day that...'
         ],
-        powerWords: ['memorable', 'exciting', 'unexpected', 'special', 'important', 'significant', 'remarkable', 'unforgettable', 'extraordinary'],
-        keyElements: ['Who was involved', 'What happened', 'When it occurred', 'Where it took place', 'Why it was significant'],
-        transitionWords: ['first', 'initially', 'to begin with', 'at the start']
+        powerWords: ['memorable', 'significant', 'historic', 'eventful', 'unforgettable', 'initial', 'primary', 'first', 'opening'],
+        keyElements: ['Clear statement of the event', 'Inclusion of participants', 'Setting (place and time) established']
       },
       {
-        id: 'events',
-        title: '2. Sequence of Events: What Happened Next',
-        description: 'Describe the events in chronological order. Use time connectors to help your reader follow the sequence clearly.',
+        id: 'sequence-of-events',
+        title: '2. Sequence of Events: Chronological Order',
+        description: 'Detail the events in the exact order they happened. Use time-order words (e.g., next, then, after that) to make the sequence clear for your reader.',
         sentenceStarters: [
-          'First, we...',
-          'After that...',
-          'Next, something unexpected happened...',
-          'Then, we discovered...'
+          'First, we decided to...',
+          'After that, an unexpected thing happened...',
+          'Next, I remember feeling... when...',
+          'Following this, [person] said...'
         ],
-        powerWords: ['suddenly', 'immediately', 'gradually', 'eventually', 'simultaneously', 'meanwhile', 'subsequently', 'consequently', 'finally'],
-        keyElements: ['Chronological order', 'Key events and activities', 'People\'s reactions', 'Important details'],
-        transitionWords: ['then', 'next', 'after that', 'later', 'meanwhile', 'during', 'while', 'subsequently']
+        powerWords: ['then', 'next', 'suddenly', 'meanwhile', 'afterward', 'subsequently', 'finally', 'eventually', 'later'],
+        keyElements: ['Events described in chronological order', 'Use of time-order connectives', 'Focus on actions and observations']
       },
       {
-        id: 'climax',
-        title: '3. Highlight: The Most Important Part',
-        description: 'Focus on the most significant, exciting, or memorable part of the experience. This is where you add the most detail.',
+        id: 'reorientation',
+        title: '3. Reorientation: Concluding Thoughts',
+        description: 'Conclude the recount by summarizing the event and sharing a final personal thought, feeling, or reflection on its significance.',
         sentenceStarters: [
-          'The most exciting part was when...',
-          'The highlight of the day occurred when...',
-          'What I\'ll never forget is...',
-          'The moment that stood out was...'
+          'In the end, the experience was...',
+          'Overall, I felt... because...',
+          'Looking back, the most important part was...',
+          'From this experience, I learned that...'
         ],
-        powerWords: ['thrilling', 'amazing', 'incredible', 'spectacular', 'breathtaking', 'astonishing', 'wonderful', 'fantastic', 'outstanding'],
-        keyElements: ['Most significant moment', 'Detailed description', 'Emotional responses', 'Why it was important'],
-        transitionWords: ['most importantly', 'the highlight was', 'what stood out', 'particularly memorable']
-      },
-      {
-        id: 'conclusion',
-        title: '4. Conclusion: Wrapping Up',
-        description: 'End your recount by reflecting on the overall experience and its significance. Share your final thoughts or feelings.',
-        sentenceStarters: [
-          'Overall, it was...',
-          'Looking back, I feel...',
-          'The experience was...',
-          'I will always remember...'
-        ],
-        powerWords: ['memorable', 'worthwhile', 'valuable', 'enjoyable', 'meaningful', 'special', 'important', 'unforgettable', 'significant'],
-        keyElements: ['Overall evaluation', 'Personal reflection', 'Lasting impact', 'Final thoughts'],
-        transitionWords: ['in conclusion', 'overall', 'in the end', 'finally', 'to sum up']
-      }
-    ]
-  },
-
-  technical: {
-    title: "🔧 Instruction Master: Technical Structure",
-    description: "Master the art of instruction! Learn how to write clear, step-by-step guides that help others accomplish tasks successfully.",
-    proTip: "Great technical writing is like being a helpful teacher. Be clear, be specific, and always think about what your reader needs to know to succeed!",
-    phases: [
-      {
-        id: 'overview',
-        title: '1. Overview: What We\'re Doing',
-        description: 'Introduce the task or process, explain its purpose, and provide an overview of what will be accomplished.',
-        sentenceStarters: [
-          'This guide will teach you how to...',
-          'By following these steps, you will...',
-          'The purpose of this process is to...',
-          'You will learn to...'
-        ],
-        powerWords: ['essential', 'important', 'necessary', 'required', 'fundamental', 'basic', 'key', 'critical', 'vital'],
-        keyElements: ['Clear objective', 'Purpose explanation', 'Expected outcome', 'Skill level required'],
-        transitionWords: ['to begin', 'first', 'initially', 'before starting']
-      },
-      {
-        id: 'materials',
-        title: '2. Materials & Preparation: What You\'ll Need',
-        description: 'List all materials, tools, or prerequisites needed. Include any preparation steps that should be completed first.',
-        sentenceStarters: [
-          'Before you begin, gather...',
-          'You will need the following materials...',
-          'Make sure you have...',
-          'Prepare by...'
-        ],
-        powerWords: ['required', 'necessary', 'essential', 'important', 'recommended', 'optional', 'additional', 'specific', 'appropriate'],
-        keyElements: ['Complete materials list', 'Tools required', 'Preparation steps', 'Safety considerations'],
-        transitionWords: ['before starting', 'first', 'initially', 'to prepare']
-      },
-      {
-        id: 'steps',
-        title: '3. Step-by-Step Instructions: How to Do It',
-        description: 'Provide clear, detailed instructions in logical order. Use numbered steps and include warnings or tips where needed.',
-        sentenceStarters: [
-          'Step 1: Begin by...',
-          'Next, carefully...',
-          'Now, you should...',
-          'Important: Make sure to...'
-        ],
-        powerWords: ['carefully', 'precisely', 'exactly', 'thoroughly', 'completely', 'properly', 'correctly', 'accurately', 'systematically'],
-        keyElements: ['Numbered steps', 'Clear instructions', 'Safety warnings', 'Helpful tips'],
-        transitionWords: ['first', 'next', 'then', 'after that', 'following this', 'subsequently', 'finally']
-      },
-      {
-        id: 'troubleshooting',
-        title: '4. Troubleshooting & Conclusion: Problem Solving',
-        description: 'Address common problems and their solutions. Conclude with final checks and next steps.',
-        sentenceStarters: [
-          'If you encounter problems...',
-          'Common issues include...',
-          'To verify success...',
-          'You have now completed...'
-        ],
-        powerWords: ['troubleshoot', 'resolve', 'fix', 'correct', 'adjust', 'modify', 'verify', 'confirm', 'complete'],
-        keyElements: ['Common problems', 'Solutions', 'Quality checks', 'Final verification'],
-        transitionWords: ['if problems occur', 'to troubleshoot', 'finally', 'in conclusion', 'to verify']
-      }
-    ]
-  },
-
-  creative: {
-    title: "🌟 Creative Explorer: Free Expression Structure",
-    description: "Unleash your creativity! This flexible structure supports experimental writing, poetry, creative non-fiction, and artistic expression.",
-    proTip: "Creative writing is about breaking rules and finding your unique voice. Use this structure as a starting point, but feel free to experiment and let your creativity flow!",
-    phases: [
-      {
-        id: 'inspiration',
-        title: '1. Inspiration: Spark Your Creativity',
-        description: 'Begin with what inspires you. This could be an image, feeling, memory, question, or wild idea that captures your imagination.',
-        sentenceStarters: [
-          'What if...',
-          'I imagine...',
-          'In a world where...',
-          'The feeling of... reminds me of...'
-        ],
-        powerWords: ['imagine', 'dream', 'wonder', 'envision', 'create', 'invent', 'discover', 'explore', 'experiment'],
-        keyElements: ['Initial inspiration', 'Creative spark', 'Unique perspective', 'Artistic vision'],
-        transitionWords: ['imagine', 'picture this', 'what if', 'in my mind']
-      },
-      {
-        id: 'exploration',
-        title: '2. Exploration: Develop Your Ideas',
-        description: 'Explore your inspiration from different angles. Play with language, experiment with style, and develop your creative concepts.',
-        sentenceStarters: [
-          'This idea grows into...',
-          'From another angle...',
-          'The deeper meaning might be...',
-          'Playing with this concept...'
-        ],
-        powerWords: ['transform', 'evolve', 'morph', 'shift', 'dance', 'flow', 'weave', 'spiral', 'bloom'],
-        keyElements: ['Creative development', 'Experimental language', 'Multiple perspectives', 'Artistic techniques'],
-        transitionWords: ['meanwhile', 'alternatively', 'from here', 'spiraling outward', 'diving deeper']
-      },
-      {
-        id: 'expression',
-        title: '3. Expression: Let It Flow',
-        description: 'Express your ideas freely using your chosen creative form. This is where you let your artistic voice shine through.',
-        sentenceStarters: [
-          'The words dance like...',
-          'Colors bleed into...',
-          'Time moves like...',
-          'In this space...'
-        ],
-        powerWords: ['vibrant', 'ethereal', 'luminous', 'haunting', 'electric', 'fluid', 'crystalline', 'infinite', 'transcendent'],
-        keyElements: ['Artistic expression', 'Creative language', 'Unique voice', 'Experimental form'],
-        transitionWords: ['flowing into', 'becoming', 'transforming', 'emerging as']
-      },
-      {
-        id: 'reflection',
-        title: '4. Reflection: What You\'ve Created',
-        description: 'Step back and reflect on your creative work. What have you discovered? How does it make you feel? What does it mean?',
-        sentenceStarters: [
-          'In creating this, I discovered...',
-          'This piece represents...',
-          'The journey of writing this taught me...',
-          'What emerges is...'
-        ],
-        powerWords: ['profound', 'meaningful', 'revelatory', 'transformative', 'enlightening', 'cathartic', 'liberating', 'authentic', 'powerful'],
-        keyElements: ['Creative reflection', 'Personal discovery', 'Artistic meaning', 'Growth through creation'],
-        transitionWords: ['reflecting on', 'looking back', 'in the end', 'what remains']
+        powerWords: ['finally', 'overall', 'conclusion', 'reflecting', 'memorable', 'valuable', 'realized', 'understood', 'lesson'],
+        keyElements: ['Summary of the experience', 'Personal reflection or feeling', 'Closing statement']
       }
     ]
   }
 };
-
-/**
- * Get the structure for a specific text type
- */
-export function getTextTypeStructure(textType: string): TextTypeStructure {
-  const normalizedType = textType.toLowerCase();
-  return TEXT_TYPE_STRUCTURES[normalizedType] || TEXT_TYPE_STRUCTURES.narrative;
-}
-
-/**
- * Get all available text types
- */
-export function getAllTextTypes(): string[] {
-  return Object.keys(TEXT_TYPE_STRUCTURES);
-}
