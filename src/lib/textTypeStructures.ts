@@ -32,7 +32,7 @@ export const TEXT_TYPE_STRUCTURES: { [key: string]: TextTypeStructure } = {
   narrative: {
     title: "⛰️ Story Mountain Mission: Narrative Structure",
     description: "Master the art of storytelling with this interactive Story Mountain guide! Each section will help you craft an engaging story from beginning to end.",
-    proTip: "Use this structure as your roadmap, but don\'t be afraid to be creative! The best stories come alive when you add your unique voice and imagination to each section. Remember: show, don\'t tell, and always engage your reader\'s senses!",
+    proTip: "Use this structure as your roadmap, but don't be afraid to be creative! The best stories come alive when you add your unique voice and imagination to each section. Remember: show, don't tell, and always engage your reader's senses!",
     phases: [
       {
         id: 'exposition',
@@ -136,7 +136,7 @@ export const TEXT_TYPE_STRUCTURES: { [key: string]: TextTypeStructure } = {
   persuasive: {
     title: "🎯 Persuasive Power: PEEEL Argument Structure",
     description: "Master the art of persuasion! Learn how to build compelling arguments that convince your reader to see your point of view using the PEEEL method.",
-    proTip: "Strong persuasive writing combines logical reasoning (Logos) with emotional appeal (Pathos) and credibility (Ethos). Use facts and evidence, but don\'t forget to connect with your reader\'s values and feelings!",
+    proTip: "Strong persuasive writing combines logical reasoning (Logos) with emotional appeal (Pathos) and credibility (Ethos). Use facts and evidence, but don't forget to connect with your reader's values and feelings!",
     phases: [
       {
         id: 'introduction',
@@ -214,7 +214,7 @@ export const TEXT_TYPE_STRUCTURES: { [key: string]: TextTypeStructure } = {
   expository: {
     title: "📖 Information Explorer: Expository Essay Structure",
     description: "Master the art of explanation! Learn how to inform and educate your reader with clear, well-organized information in a standard essay format.",
-    proTip: "Great expository writing is like being a tour guide for your reader\'s mind. Lead them through complex information step by step, using clear examples and logical organization!",
+    proTip: "Great expository writing is like being a tour guide for your reader's mind. Lead them through complex information step by step, using clear examples and logical organization!",
     phases: [
       {
         id: 'introduction',
@@ -285,11 +285,11 @@ export const TEXT_TYPE_STRUCTURES: { [key: string]: TextTypeStructure } = {
   },
 
   // ----------------------------------------------------------------------
-  // REFLECTIVE: Corrected to Gibbs\' Reflective Cycle
+  // REFLECTIVE: Corrected to Gibbs' Reflective Cycle
   // ----------------------------------------------------------------------
   reflective: {
     title: "🧠 Reflective Cycle: Personal Growth Structure",
-    description: "Use Gibbs\' Reflective Cycle to turn your experiences into valuable learning opportunities. This structure guides you through a deep, meaningful reflection process.",
+    description: "Use Gibbs' Reflective Cycle to turn your experiences into valuable learning opportunities. This structure guides you through a deep, meaningful reflection process.",
     proTip: "Reflection is a powerful tool for growth. Be honest about your feelings and critically evaluate your actions—this is how you truly learn and improve!",
     phases: [
       {
@@ -377,7 +377,7 @@ export const TEXT_TYPE_STRUCTURES: { [key: string]: TextTypeStructure } = {
   // RECOUNT: Corrected to Chronological Order (Orientation, Sequence of Events, Reorientation)
   // ----------------------------------------------------------------------
   recount: {
-    title: "🕰️ Time Traveler\'s Log: Recount Structure",
+    title: "🕰️ Time Traveler's Log: Recount Structure",
     description: "Learn how to write a clear, chronological account of an event or experience. A recount tells the reader what happened, when it happened, and who was involved.",
     proTip: "Use strong time-order words (first, next, then, finally) to guide your reader through the sequence of events. Focus on the facts and keep your tenses consistent!",
     phases: [
@@ -397,7 +397,7 @@ export const TEXT_TYPE_STRUCTURES: { [key: string]: TextTypeStructure } = {
       {
         id: 'sequence-of-events',
         title: '2. Sequence of Events: Chronological Order',
-        description: 'Detail the events in the exact order they happened. Use time-order words (e.g., next, then, after that) to make the sequence clear for your reader.',
+        description: 'Detail the events in the exact order they happened. Use time-order words (e.g., next, then, after that) to link your ideas and make the sequence clear for your reader.',
         sentenceStarters: [
           'First, we decided to...',
           'After that, an unexpected thing happened...',
@@ -423,3 +423,12 @@ export const TEXT_TYPE_STRUCTURES: { [key: string]: TextTypeStructure } = {
     ]
   }
 };
+
+/**
+ * Retrieves the TextTypeStructure for a given text type key.
+ * @param key The key of the text type (e.g., 'narrative', 'persuasive').
+ * @returns The TextTypeStructure object.
+ */
+export function getTextTypeStructure(key: keyof typeof TEXT_TYPE_STRUCTURES): TextTypeStructure {
+  return TEXT_TYPE_STRUCTURES[key];
+}
