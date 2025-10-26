@@ -30,8 +30,9 @@ export function WritingTypesSection({ onSignInClick }: WritingTypesSectionProps)
             color="blue"
             items={[
               "Narrative Writing",
+              "Recount Writing",
+              "Descriptive Writing",
               "Imaginative Writing",
-              "Recount Writing"
             ]}
             borderColor="border-blue-300 dark:border-blue-700"
             bgColor="bg-blue-50 dark:bg-blue-900/30"
@@ -46,7 +47,9 @@ export function WritingTypesSection({ onSignInClick }: WritingTypesSectionProps)
             color="purple"
             items={[
               "Persuasive Writing",
-              "Discursive Writing"
+              "Discursive Writing",
+              "Discussion Writing",
+              "Speech",
             ]}
             borderColor="border-purple-300 dark:border-purple-700"
             bgColor="bg-purple-50 dark:bg-purple-900/30"
@@ -61,22 +64,27 @@ export function WritingTypesSection({ onSignInClick }: WritingTypesSectionProps)
             color="teal"
             items={[
               "Expository Writing",
-              "Reflective Writing"
+              "Reflective Writing",
+              "Advice Sheet",
+              "Guide",
             ]}
             borderColor="border-teal-300 dark:border-teal-700"
             bgColor="bg-teal-50 dark:bg-teal-900/30"
             onSignInClick={onSignInClick}
           />
 
-          {/* Descriptive & Expressive Writing */}
+          {/* Functional & Expressive Writing (New Category Focus) */}
           <WritingCategoryCard
             icon={<Heart className="w-6 h-6" />}
-            title="Descriptive & Expressive Writing"
-            description="Paint vivid pictures with words and express emotions"
+            title="Functional & Expressive Writing"
+            description="Practice writing for real-world scenarios and personal expression"
             color="green"
             items={[
-              "Descriptive Writing",
-              "Diary Entry Writing"
+              "Diary Entry",
+              "Letter Writing",
+              "Advertisement",
+              "News Report",
+              "Review Writing"
             ]}
             borderColor="border-green-300 dark:border-green-700"
             bgColor="bg-green-50 dark:bg-green-900/30"
