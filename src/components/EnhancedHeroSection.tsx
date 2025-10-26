@@ -97,13 +97,13 @@ export const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ onNavi
               <div className="relative aspect-video bg-black">
                 <video
                   ref={videoRef}
-                  src="/QuickStart.mp4"
-                  poster=""
+                  src="/Quick Start.mp4"
                   className="w-full h-full object-cover"
                   onPlay={() => setIsVideoPlaying(true)}
                   onPause={() => setIsVideoPlaying(false)}
                   loop
                   playsInline
+                  controls
                 >
                   Your browser does not support the video tag.
                 </video>
@@ -122,7 +122,7 @@ export const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ onNavi
 
                 {/* Duration Badge */}
                 <div className="absolute bottom-4 right-4 px-3 py-1 rounded-full bg-black/80 text-white text-sm font-semibold backdrop-blur-sm">
-                  1:30
+                  2:12
                 </div>
               </div>
 

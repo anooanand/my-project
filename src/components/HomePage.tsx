@@ -148,7 +148,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSignInClick })
                   <p className="text-gray-200">Learn how to get started with Writing Mate and unlock your writing potential</p>
                 </div>
                 <div className="text-right">
-                  <div className="text-sm font-semibold text-gray-200 mb-2">Duration: 2:18</div>
+                  <div className="text-sm font-semibold text-gray-200 mb-2">Duration: 2:12</div>
                 </div>
               </div>
             </div>
