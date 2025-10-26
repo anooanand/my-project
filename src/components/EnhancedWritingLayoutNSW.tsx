@@ -142,6 +142,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
   const [showAIReport, setShowAIReport] = useState(false);
   const [evaluationStatus, setEvaluationStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [evaluationProgress, setEvaluationProgress] = useState("");
+  const [aiAnalysis, setAiAnalysis] = useState<any>(null);
   const [showPromptOptionsModal, setShowPromptOptionsModal] = useState(false);
   const [isLoadingPrompt, setIsLoadingPrompt] = useState(false);
   const [hidePrompt, setHidePrompt] = useState(false);
@@ -276,6 +277,43 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
       setShowPromptOptionsModal(true);
     }
   }, [effectivePrompt, popupFlowCompleted]);
+
+  // Auto-fetch AI analysis for Grammar/Vocabulary tabs (debounced)
+  useEffect(() => {
+    // Only fetch if content is substantial (50+ words)
+    const wordCount = localContent.trim().split(/\s+/).filter(w => w.length > 0).length;
+    if (wordCount < 50) {
+      return;
+    }
+
+    // Debounce: wait 3 seconds after user stops typing
+    const timeoutId = setTimeout(async () => {
+      console.log('🔄 Auto-fetching AI analysis for Writing Mate tabs...');
+      try {
+        const feedbackResponse = await fetch("/.netlify/functions/ai-feedback", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            essayText: localContent,
+            textType: textType
+          })
+        });
+
+        if (feedbackResponse.ok) {
+          const feedbackData = await feedbackResponse.json();
+          console.log('✅ Auto-fetched AI feedback:', {
+            grammar: feedbackData.grammarCorrections?.length || 0,
+            vocab: feedbackData.vocabularyEnhancements?.length || 0
+          });
+          setAiAnalysis(feedbackData);
+        }
+      } catch (error) {
+        console.error('❌ Auto-fetch error:', error);
+      }
+    }, 3000);
+
+    return () => clearTimeout(timeoutId);
+  }, [localContent, textType]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -476,6 +514,34 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
       setShowNSWEvaluation(false);
       setShowAIReport(true);
       setEvaluationStatus("success");
+
+      // CRITICAL: Also call ai-feedback endpoint to get grammar/vocabulary analysis for Writing Mate tabs
+      console.log('🔍 Calling ai-feedback for Grammar/Vocabulary analysis...');
+      try {
+        const feedbackResponse = await fetch("/.netlify/functions/ai-feedback", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            essayText: localContent,
+            textType: textType
+          })
+        });
+
+        if (feedbackResponse.ok) {
+          const feedbackData = await feedbackResponse.json();
+          console.log('✅ AI Feedback received:', feedbackData);
+          console.log('Grammar corrections:', feedbackData.grammarCorrections?.length || 0);
+          console.log('Vocabulary enhancements:', feedbackData.vocabularyEnhancements?.length || 0);
+
+          // Set analysis data for Grammar and Vocabulary tabs
+          setAiAnalysis(feedbackData);
+        } else {
+          console.warn('⚠️ ai-feedback call failed, tabs will use fallback logic');
+        }
+      } catch (feedbackError) {
+        console.error('❌ ai-feedback error:', feedbackError);
+        console.warn('⚠️ Grammar/Vocabulary tabs will use fallback logic');
+      }
 
       console.log('✅ AI Evaluation complete!');
     } catch (error) {
@@ -931,6 +997,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
           content={localContent}
           writingPrompt={initialPrompt}
           wordCount={currentWordCount}
+          analysis={aiAnalysis || analysis}
           user={user}
           darkMode={darkMode}
           openAIConnected={openAIConnected}
