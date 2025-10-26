@@ -44,10 +44,11 @@ interface AIEvaluationReport {
 interface AIEvaluationReportDisplayProps {
   report: AIEvaluationReport;
   essayText: string;
+  textType: string; // <-- Added textType prop
   onClose?: () => void;
 }
 
-export function AIEvaluationReportDisplay({ report, essayText, onClose }: AIEvaluationReportDisplayProps) {
+export function AIEvaluationReportDisplay({ report, essayText, textType, onClose }: AIEvaluationReportDisplayProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'highlighted' | 'detailed'>('highlighted');
 
   const getBandColor = (band: number) => {
@@ -286,7 +287,7 @@ export function AIEvaluationReportDisplay({ report, essayText, onClose }: AIEval
                 <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-lg p-4">
                   <h4 className="font-semibold text-purple-800 dark:text-purple-300 mb-3 flex items-center gap-2">
                     <TrendingUp className="w-5 h-5" />
-                    Narrative Structure Analysis
+                    Structure Analysis for ${textType} Writing
                   </h4>
                   <div className="grid grid-cols-2 gap-3 mb-3">
                     <div className="flex items-center gap-2">
