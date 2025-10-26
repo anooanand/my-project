@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Lightbulb, Star, PlusCircle, CheckCircle, XCircle, BookOpen } from 'lucide-react';
 
+interface AIVocabularyEnhancement {
+  original: string;
+  suggestion: string;
+  explanation: string;
+  position: { start: number; end: number };
+}
+
 interface VocabSuggestion {
   word: string;
   difficulty: 'beginner' | 'intermediate' | 'advanced';
@@ -12,6 +19,7 @@ interface VocabSuggestion {
 interface VocabSuggestionPanelProps {
   content: string;
   textType: string;
+  aiEnhancements?: AIVocabularyEnhancement[];
   onWordReplace?: (oldWord: string, newWord: string, position: number) => void;
   onAddToPersonalList?: (word: string) => void;
   className?: string;
@@ -104,24 +112,38 @@ const getDifficultyColor = (difficulty: VocabSuggestion['difficulty']) => {
 export const VocabSuggestionPanel: React.FC<VocabSuggestionPanelProps> = ({
   content,
   textType,
+  aiEnhancements,
   onWordReplace,
   onAddToPersonalList,
   className = ""
 }) => {
   const [suggestions, setSuggestions] = useState<VocabSuggestion[]>([]);
   const [overusedWords, setOverusedWords] = useState<string[]>([]);
+  const [aiSuggestions, setAiSuggestions] = useState<AIVocabularyEnhancement[]>([]);
 
   useEffect(() => {
-    // Simulate fetching suggestions based on content and textType
-    // In a real application, this would involve an API call to a language model
-    // All suggestions are now considered relevant for NSW Selective Test prep
-    setSuggestions(SAMPLE_VOCAB_SUGGESTIONS);
+    // Prioritize AI enhancements if available
+    if (aiEnhancements && aiEnhancements.length > 0) {
+      setAiSuggestions(aiEnhancements);
 
-    // Simulate detecting overused words
-    const detectedOverused = detectOverusedWords(content);
-    setOverusedWords(detectedOverused);
+      // Extract overused words from AI suggestions
+      const overused = Array.from(new Set(aiEnhancements.map(e => e.original)));
+      setOverusedWords(overused);
 
-  }, [content, textType]);
+      // Clear generic suggestions when using AI
+      setSuggestions([]);
+    } else {
+      // Fall back to hardcoded suggestions
+      setSuggestions(SAMPLE_VOCAB_SUGGESTIONS);
+
+      // Simulate detecting overused words
+      const detectedOverused = detectOverusedWords(content);
+      setOverusedWords(detectedOverused);
+
+      setAiSuggestions([]);
+    }
+
+  }, [content, textType, aiEnhancements]);
 
   const detectOverusedWords = (text: string): string[] => {
     const words = text.toLowerCase().match(/\b\w+\b/g) || [];
@@ -170,11 +192,58 @@ export const VocabSuggestionPanel: React.FC<VocabSuggestionPanelProps> = ({
           )}
         </div>
 
+        {/* AI-Powered Vocabulary Enhancements */}
+        {aiSuggestions.length > 0 && (
+          <div className="border rounded-lg p-3 bg-gradient-to-br from-purple-50 to-blue-50">
+            <div className="flex items-center space-x-2 mb-2">
+              <Lightbulb className="h-5 w-5 text-purple-600" />
+              <h4 className={`font-medium text-gray-700 text-base`}>AI-Powered Vocabulary Enhancements</h4>
+              <span className="px-2 py-0.5 bg-purple-600 text-white text-xs rounded-full">AI</span>
+            </div>
+            <div className="space-y-3">
+              {aiSuggestions.map((enhancement, index) => (
+                <div key={index} className="bg-white p-3 rounded-lg border border-purple-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-2">
+                      <span className="text-red-600 line-through font-medium">{enhancement.original}</span>
+                      <span className="text-gray-400">→</span>
+                      <span className="text-green-600 font-semibold">{enhancement.suggestion}</span>
+                    </div>
+                    {onAddToPersonalList && (
+                      <button
+                        onClick={() => onAddToPersonalList(enhancement.suggestion)}
+                        className="text-gray-500 hover:text-purple-600 transition-colors"
+                        title="Add to personal word list"
+                      >
+                        <PlusCircle className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-700 mb-2">
+                    <strong>Why:</strong> {enhancement.explanation}
+                  </p>
+                  {onWordReplace && (
+                    <div className="mt-2 flex justify-end">
+                      <button
+                        onClick={() => onWordReplace(enhancement.original, enhancement.suggestion, enhancement.position.start)}
+                        className="px-3 py-1 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700 transition-colors"
+                      >
+                        Apply Suggestion
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Contextual Suggestions */}
+        {suggestions.length > 0 && (
         <div className="border rounded-lg p-3">
           <div className="flex items-center space-x-2 mb-2">
             <Lightbulb className="h-5 w-5 text-blue-500" />
-            <h4 className={`font-medium text-gray-700 text-base`}>Contextual Vocabulary Suggestions</h4>
+            <h4 className={`font-medium text-gray-700 text-base`}>General Vocabulary Suggestions</h4>
           </div>
           {suggestions.length > 0 ? (
             <div className="space-y-3">
@@ -224,6 +293,7 @@ export const VocabSuggestionPanel: React.FC<VocabSuggestionPanelProps> = ({
             <p className={`text-sm text-gray-500 text-sm`}>Write more to get contextual vocabulary suggestions.</p>
           )}
         </div>
+        )}
 
         {/* Personal Word List (Placeholder) */}
         <div className="border rounded-lg p-3">

@@ -2,13 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { AlertCircle, CheckCircle, Lightbulb, X } from 'lucide-react';
 import { grammarSpellingChecker, GrammarError } from '../utils/grammarSpellingChecker';
 
+interface AIGrammarCorrection {
+  original: string;
+  suggestion: string;
+  explanation: string;
+  position: { start: number; end: number };
+}
+
 interface GrammarCorrectionPanelProps {
   text: string;
+  aiCorrections?: AIGrammarCorrection[];
   onApplyCorrection?: (start: number, end: number, correction: string) => void;
 }
 
 export const GrammarCorrectionPanel: React.FC<GrammarCorrectionPanelProps> = ({
   text,
+  aiCorrections,
   onApplyCorrection
 }) => {
   const [errors, setErrors] = useState<GrammarError[]>([]);
@@ -21,9 +30,24 @@ export const GrammarCorrectionPanel: React.FC<GrammarCorrectionPanelProps> = ({
       return;
     }
 
-    const detectedErrors = grammarSpellingChecker.checkText(text);
-    setErrors(detectedErrors);
-  }, [text]);
+    // Prioritize AI corrections if available
+    if (aiCorrections && aiCorrections.length > 0) {
+      const aiErrors: GrammarError[] = aiCorrections.map(correction => ({
+        type: 'grammar',
+        message: correction.explanation,
+        start: correction.position.start,
+        end: correction.position.end,
+        severity: 'high' as const,
+        suggestions: [correction.suggestion],
+        original: correction.original
+      }));
+      setErrors(aiErrors);
+    } else {
+      // Fall back to hardcoded checker if no AI corrections available
+      const detectedErrors = grammarSpellingChecker.checkText(text);
+      setErrors(detectedErrors);
+    }
+  }, [text, aiCorrections]);
 
   const handleApplyCorrection = (error: GrammarError, suggestion: string) => {
     if (onApplyCorrection) {

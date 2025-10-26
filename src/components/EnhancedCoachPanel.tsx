@@ -1598,6 +1598,7 @@ export function EnhancedCoachPanel({
           <div className="h-full overflow-y-auto p-4 bg-white dark:bg-slate-900">
             <GrammarCorrectionPanel
               text={content || ''}
+              aiCorrections={analysis?.grammarCorrections}
               onApplyCorrection={(start, end, correction) => {
                 if (onContentChange) {
                   const newContent = content.substring(0, start) + correction + content.substring(end);
@@ -1610,6 +1611,7 @@ export function EnhancedCoachPanel({
           <div className="h-full overflow-y-auto p-4 bg-white dark:bg-slate-900">
             <VocabularyEnhancementPanel
               text={content || ''}
+              aiEnhancements={analysis?.vocabularyEnhancements}
               onReplaceWord={(position, originalWord, newWord) => {
                 if (onContentChange) {
                   const lowerContent = content.toLowerCase();

@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { BookOpen, Sparkles, TrendingUp, ArrowRight, Lightbulb, Award } from 'lucide-react';
 
+interface AIVocabularyEnhancement {
+  original: string;
+  suggestion: string;
+  explanation: string;
+  position: { start: number; end: number };
+}
+
 interface VocabularyWord {
   word: string;
   position: number;
@@ -12,6 +19,7 @@ interface VocabularyWord {
 
 interface VocabularyEnhancementPanelProps {
   text: string;
+  aiEnhancements?: AIVocabularyEnhancement[];
   onReplaceWord?: (position: number, originalWord: string, newWord: string) => void;
 }
 
@@ -61,22 +69,34 @@ const OVERUSED_WORDS = ['and', 'but', 'so', 'then', 'just', 'that', 'get', 'like
 
 export const VocabularyEnhancementPanel: React.FC<VocabularyEnhancementPanelProps> = ({
   text,
+  aiEnhancements,
   onReplaceWord
 }) => {
   const [enhancements, setEnhancements] = useState<VocabularyWord[]>([]);
   const [vocabularyScore, setVocabularyScore] = useState<number>(0);
   const [overusedWords, setOverusedWords] = useState<{ word: string, count: number }[]>([]);
+  const [aiSuggestions, setAiSuggestions] = useState<AIVocabularyEnhancement[]>([]);
 
   useEffect(() => {
     if (!text || text.trim().length === 0) {
       setEnhancements([]);
       setVocabularyScore(0);
       setOverusedWords([]);
+      setAiSuggestions([]);
       return;
     }
 
-    analyzeVocabulary(text);
-  }, [text]);
+    // Prioritize AI enhancements if available
+    if (aiEnhancements && aiEnhancements.length > 0) {
+      setAiSuggestions(aiEnhancements);
+      // Don't run hardcoded analysis when we have AI suggestions
+      setEnhancements([]);
+    } else {
+      // Fall back to hardcoded analysis
+      analyzeVocabulary(text);
+      setAiSuggestions([]);
+    }
+  }, [text, aiEnhancements]);
 
   const analyzeVocabulary = (content: string) => {
     const words = content.toLowerCase().match(/\b[a-z]+\b/g) || [];
@@ -240,6 +260,46 @@ export const VocabularyEnhancementPanel: React.FC<VocabularyEnhancementPanelProp
                 Try to vary your word choice and use these words less frequently.
               </p>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* AI-Powered Vocabulary Enhancements */}
+      {aiSuggestions.length > 0 && (
+        <div className="mb-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+            <h4 className="font-semibold text-gray-900 dark:text-gray-100">AI-Powered Enhancements</h4>
+            <span className="px-2 py-0.5 bg-purple-600 text-white text-xs rounded-full">AI</span>
+          </div>
+          <div className="space-y-3">
+            {aiSuggestions.map((suggestion, index) => (
+              <div key={index} className="border border-purple-200 dark:border-purple-700 rounded-lg p-3 bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2 py-1 bg-red-100 dark:bg-red-900/40 text-red-800 dark:text-red-300 rounded text-sm font-medium line-through">
+                      {suggestion.original}
+                    </span>
+                    <ArrowRight className="w-4 h-4 text-gray-400" />
+                    <span className="px-2 py-1 bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300 rounded text-sm font-semibold">
+                      {suggestion.suggestion}
+                    </span>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
+                  <strong className="text-purple-700 dark:text-purple-300">Why:</strong> {suggestion.explanation}
+                </p>
+                {onReplaceWord && (
+                  <button
+                    onClick={() => onReplaceWord(suggestion.position.start, suggestion.original, suggestion.suggestion)}
+                    className="w-full px-3 py-2 bg-purple-600 hover:bg-purple-700 dark:bg-purple-500 dark:hover:bg-purple-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    Apply This Enhancement
+                  </button>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       )}
