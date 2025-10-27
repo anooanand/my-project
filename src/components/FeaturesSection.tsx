@@ -22,15 +22,17 @@ const features: Feature[] = [
     tag: 'Instant Analysis',
     color: 'indigo'
   },
+
   {
     id: 'templates',
     title: 'Text Type Templates',
     description: 'Access templates for all text types with clear structures, examples, and guided prompts for better writing.',
-    details: 'Comprehensive templates for all 11 text types commonly found in NSW selective exams: narrative, persuasive, informative, descriptive, and more. Each template includes structure guidelines, vocabulary suggestions, example paragraphs, and step-by-step writing prompts to help students understand and master different writing formats, explicitly aligned with the official NSW Department of Education rubric.',
+    details: 'Comprehensive templates for all 15 text types commonly found in NSW selective exams: narrative, persuasive, informative, descriptive, and more. Each template includes structure guidelines, vocabulary suggestions, example paragraphs, and step-by-step writing prompts to help students understand and master different writing formats, explicitly aligned with the official NSW Department of Education rubric.',
     icon: <BookOpen className="w-8 h-8 text-purple-600 dark:text-purple-400" />,
-    tag: '11 Types',
+    tag: '15 Types', // This is the line that was updated from '11 Types'
     color: 'purple'
   },
+
   {
     id: 'practice',
     title: 'Timed Practice Mode',
