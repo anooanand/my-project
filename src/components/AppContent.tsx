@@ -394,18 +394,26 @@ function AppContent() {
         <Routes>
           <Route path="/" element={
             <div className="main-route-content">
-              <HomePage onNavigate={handleNavigation} onSignInClick={() => {
-                setAuthModalMode("signin");
-                setShowAuthModal(true);
-              }} />
+<HomePage onNavigate={handleNavigation} onSignInClick={() => {
+	              setAuthModalMode("signin");
+	              setShowAuthModal(true);
+	            }}
+	            onSignUpClick={() => { // <--- ADDED
+	              setAuthModalMode("signup"); // <--- ADDED
+	              setShowAuthModal(true); // <--- ADDED
+	            }} />
             </div>
           } />
           <Route path="/home" element={
             <div className="main-route-content">
-              <HomePage onNavigate={handleNavigation} onSignInClick={() => {
-                setAuthModalMode("signin");
-                setShowAuthModal(true);
-              }} />
+<HomePage onNavigate={handleNavigation} onSignInClick={() => {
+	              setAuthModalMode("signin");
+	              setShowAuthModal(true);
+	            }}
+	            onSignUpClick={() => { // <--- ADDED
+	              setAuthModalMode("signup"); // <--- ADDED
+	              setShowAuthModal(true); // <--- ADDED
+	            }} />
             </div>
           } />
           <Route path="/features" element={
