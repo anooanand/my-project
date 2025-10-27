@@ -14,49 +14,92 @@ try {
   console.error("Failed to initialize OpenAI client:", error);
 }
 
-// Fallback prompts for when AI is unavailable
+// Helper function for random selection
+const randomChoice = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+// --- NSW Selective Test Thematic Lists for High Randomization ---
+// These lists ensure a wide variety of high-quality, relevant prompts across different types.
+
+const narrativeThemes = [
+  "A mysterious discovery in a familiar place (e.g., school, library, backyard)",
+  "A time-traveling object or event that changes history",
+  "A character with a secret or unusual ability (e.g., talking to animals, seeing the future)",
+  "An unexpected encounter with a magical creature or talking animal",
+  "A journey to a hidden or forgotten world (e.g., under the ocean, inside a computer)",
+  "A challenge or competition with high stakes (e.g., a race, a survival test)",
+  "A story about friendship and loyalty in a difficult situation",
+  "An adventure that begins with a strange message or phone call",
+  "The last person on Earth finds a sign of life",
+  "A character who can step into any photograph and experience that moment"
+];
+
+const persuasiveThemes = [
+  "Should school uniforms be compulsory?",
+  "Should homework be banned on weekends?",
+  "Should all students learn a second language?",
+  "Should mobile phones be allowed in primary and high schools?",
+  "Is it better to read books or watch movies based on them?",
+  "Should pets be allowed in the classroom as learning aids?",
+  "Should the school day start later?",
+  "Convince your principal to introduce a new subject or club.",
+  "Argue for or against the idea that artificial intelligence should be used in schools."
+];
+
+const expositoryThemes = [
+  "Explain the impact of social media on teenage friendships.",
+  "Describe the process of how a book becomes a bestseller, from writing to publication.",
+  "Explain why some people are naturally good at sports while others excel in academics.",
+  "How does climate change affect the Australian environment?",
+  "Explain the importance of preserving historical landmarks in your community.",
+  "Describe the life cycle of a star or a complex natural phenomenon.",
+  "Explain how a democracy works and the importance of voting.",
+  "Describe the process of making a video game, from concept to release."
+];
+
+// --- New Randomization Lists for NSW Alignment ---
+
+const stimulusTypes = [
+  "Visual Description (e.g., a strange object, a unique landscape)",
+  "Thought-Provoking Quote (e.g., 'The only way to have a friend is to be one.')",
+  "Scenario-Based Situation (e.g., 'Imagine you have been chosen to...')",
+  "A Single, Intriguing Question"
+];
+
+const narrativeFormats = [
+  "Short Story",
+  "Diary Entry",
+  "Fable/Allegory",
+  "Recount (of an imagined event)"
+];
+
+const persuasiveFormats = [
+  "Letter to the Editor",
+  "Speech to the School Assembly",
+  "Formal Essay",
+  "Open Letter to a Local Council Member"
+];
+
+const literaryDevices = [
+  "Foreshadowing",
+  "Strong Metaphor and Simile",
+  "Show, Don't Tell",
+  "Flashback",
+  "Personification"
+];
+
+// Fallback prompts for when AI is unavailable (using themes as fallback text)
 const fallbackPrompts = {
-  narrative: [
-    "Write a story about a character who discovers a mysterious door in their school that leads to an unexpected place.",
-    "Tell the story of a day when everything that could go wrong, did go wrong, but it led to something wonderful.",
-    "Write about a character who finds an old diary and discovers it belongs to someone from 100 years ago.",
-    "Create a story about a character who can hear what animals are thinking for one day.",
-    "Write about a character who discovers they have a superpower, but it only works when they're helping others."
-  ],
-  persuasive: [
-    "Should students be allowed to choose their own school subjects? Write a persuasive piece arguing your position.",
-    "Convince your school principal to introduce a new subject that you think would benefit all students.",
-    "Should mobile phones be allowed in schools? Present your argument with strong evidence.",
-    "Persuade your community to adopt a new environmental initiative.",
-    "Argue for or against the idea that homework should be banned on weekends."
-  ],
-  expository: [
-    "Explain how social media has changed the way young people communicate and form friendships.",
-    "Describe the process of how a book becomes a bestseller, from writing to publication.",
-    "Explain why some people are naturally good at sports while others excel in academics.",
-    "Describe how climate change affects different parts of the world.",
-    "Explain the importance of preserving historical landmarks in your community."
-  ],
-  informative: [
-    "Inform readers about an important historical event and its impact on today's world.",
-    "Explain how renewable energy sources work and why they're important for the future.",
-    "Describe the process of how movies are made, from script to screen.",
-    "Inform your audience about a scientific discovery that changed the world.",
-    "Explain how different cultures celebrate the same holiday in unique ways."
-  ],
-  creative: [
-    "Write a piece that begins with: 'The last person on Earth sat alone in a room. There was a knock on the door...'",
-    "Create a story told entirely through text messages between two characters.",
-    "Write about a world where colors have personalities and can talk to humans.",
-    "Imagine a day when gravity stops working for exactly one hour.",
-    "Write about a character who can step into any photograph and experience that moment."
-  ]
+  narrative: narrativeThemes,
+  persuasive: persuasiveThemes,
+  expository: expositoryThemes,
+  informative: expositoryThemes, 
+  creative: narrativeThemes 
 };
 
 function getFallbackPrompt(textType, topic) {
   const type = (textType || "narrative").toLowerCase();
   const prompts = fallbackPrompts[type] || fallbackPrompts.narrative;
-  const randomPrompt = prompts[Math.floor(Math.random() * prompts.length)];
+  const randomPrompt = randomChoice(prompts);
   
   if (topic && topic.trim()) {
     return `${randomPrompt} (Focus on: ${topic.trim()})`;
@@ -117,22 +160,58 @@ exports.handler = async (event) => {
     }
 
     try {
+      // --- Dynamic Theme Selection and System Prompt Construction ---
+      let selectedTheme = "";
+      let genreConstraint = "";
+      let literarySuggestion = "";
+      const type = textType.toLowerCase();
+      
+      // 1. Select Theme
+      if (type === 'narrative' || type === 'creative') {
+        selectedTheme = randomChoice(narrativeThemes);
+        genreConstraint = randomChoice(narrativeFormats);
+        literarySuggestion = randomChoice(literaryDevices);
+      } else if (type === 'persuasive') {
+        selectedTheme = randomChoice(persuasiveThemes);
+        genreConstraint = randomChoice(persuasiveFormats);
+      } else if (type === 'expository' || type === 'informative') {
+        selectedTheme = randomChoice(expositoryThemes);
+      }
+      
+      const themeInstruction = selectedTheme 
+        ? `The prompt MUST be based on the following randomly selected theme/topic: "${selectedTheme}".`
+        : `Generate a prompt that is highly original and engaging.`;
+
+      const stimulusInstruction = `The prompt MUST start with a stimulus element of the type: **${randomChoice(stimulusTypes)}**.`;
+      
+      const constraintInstruction = genreConstraint 
+        ? `The student must write a **${genreConstraint}** (a specific format constraint).`
+        : `The student must write a piece suitable for a high-level selective school assessment.`;
+
+      const techniqueInstruction = literarySuggestion 
+        ? `The prompt should explicitly encourage the student to use the literary technique: **${literarySuggestion}** to enhance their writing quality.`
+        : '';
+
       // Create system prompt for generating writing prompts
       const systemPrompt = `You are a creative writing prompt generator for NSW Selective School exam preparation. Generate engaging, age-appropriate prompts for students aged 10-12.
 
-REQUIREMENTS:
-- Create prompts suitable for ${textType} writing
-- Make them engaging and imaginative
-- Ensure they're appropriate for NSW Selective School level
-- Include specific details to spark creativity
-- Keep prompts between 50-150 words
-- Make them challenging but achievable
+${themeInstruction}
+${stimulusInstruction}
+${constraintInstruction}
+${techniqueInstruction}
+
+REQUIREMENTS for ${textType.toUpperCase()} Writing:
+- Create a prompt suitable for ${textType} writing.
+- Ensure the prompt is highly original, imaginative, and appropriate for NSW Selective School level.
+- Include specific details and constraints to guide the student's writing.
+- Keep the final prompt text between 100-250 words for maximum detail.
+- Make it challenging but achievable for a selective school candidate.
 
 PROMPT STRUCTURE:
-- Start with an engaging scenario
-- Include specific details or constraints
-- End with questions to guide thinking
-- Encourage creativity and personal expression`;
+- Start with the randomized stimulus element.
+- Clearly state the writing task and format (if applicable).
+- Include 2-3 specific questions or instructions to guide the student's thinking and structure (e.g., "What happens next?", "How would you address the counter-argument?").
+- The tone must be formal and align with official NSW test language.`;
 
       const userPrompt = topic && topic.trim() 
         ? `Generate a creative ${textType} writing prompt related to: ${topic.trim()}`
@@ -141,13 +220,13 @@ PROMPT STRUCTURE:
       console.log("Making OpenAI API call for prompt generation...");
       
       const completion = await client.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: "gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt }
         ],
-        max_tokens: 300,
-        temperature: 0.8
+        max_tokens: 400, 
+        temperature: 0.9 
       });
 
       const prompt = completion.choices?.[0]?.message?.content?.trim();
@@ -168,6 +247,7 @@ PROMPT STRUCTURE:
       
       // Use fallback prompt on API error
       const prompt = getFallbackPrompt(textType, topic);
+      console.log("Using fallback prompt due to API error.");
       return {
         statusCode: 200,
         headers,
