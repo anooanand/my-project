@@ -4,10 +4,10 @@ import { useAuth } from '../contexts/AuthContext';
 
 interface EnhancedHeroSectionProps {
   onNavigate: (page: string) => void;
-  onSignUpClick: () => void; // <--- ADDED
+  onSignUpClick: () => void;
 }
 
-export const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ onNavigate, onSignUpClick }) => { // <--- MODIFIED
+export const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ onNavigate, onSignUpClick }) => {
   const { user } = useAuth();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
@@ -75,7 +75,7 @@ export const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ onNavi
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row gap-4">
               <button
-                onClick={user ? () => onNavigate('dashboard') : onSignUpClick} // <--- MODIFIED
+                onClick={user ? () => onNavigate('dashboard') : onSignUpClick}
                 className="group inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200"
               >
                 {user ? 'Go to Dashboard' : 'Start Free Trial'}
