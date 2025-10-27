@@ -14,10 +14,10 @@ import { ArrowRight, CheckCircle, Star, Users, Zap, BookOpen, Award, Target, Pla
 interface HomePageProps {
   onNavigate: (page: string, type?: string) => void;
   onSignInClick: () => void;
-  onSignUpClick: () => void; // <--- ADDED
+  onSignUpClick: () => void;
 }
 
-export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSignInClick, onSignUpClick }) => { // <--- MODIFIED
+export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSignInClick, onSignUpClick }) => {
   const { user } = useAuth();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isVideoPlaying, setIsVideoPlaying] = React.useState(false);
@@ -39,7 +39,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSignInClick, o
       <HomeNavigation onNavigate={onNavigate} onSignInClick={onSignInClick} />
 
       {/* Enhanced Hero Section */}
-      <EnhancedHeroSection onNavigate={onNavigate} onSignUpClick={onSignUpClick} /> // <--- MODIFIED
+      <EnhancedHeroSection onNavigate={onNavigate} onSignUpClick={onSignUpClick} />
 
       {/* Success Metrics Section - NEW */}
       <SuccessMetricsSection />
