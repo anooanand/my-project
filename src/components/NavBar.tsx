@@ -375,18 +375,18 @@ export function NavBar({
                   >
                     Sign In
                   </button>
-                  <button
+       <button
                     onClick={(e) => {
                       e.preventDefault();
-                      e.stopPropagation();
-                      console.log('Mobile Get Started button clicked');
+                      e.stopPropagation(); // This is the critical fix
+                      console.log('Mobile Start Free Trial button clicked');
                       onSignUpClick();
                       setIsMenuOpen(false);
                     }}
                     className={`w-full ${getButtonClasses('primary')} justify-center`}
                     type="button"
                   >
-                    Get Started
+                    Start Free Trial
                   </button>
                 </div>
               )}
