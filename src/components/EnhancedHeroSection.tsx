@@ -92,7 +92,8 @@ export const EnhancedHeroSection: React.FC<EnhancedHeroSectionProps> = ({ onNavi
 
           {/* Right Column - Video Card */}
           <div className="relative">
-            <div className="relative rounded-2xl border-2 border-white dark:border-black shadow-2xl overflow-hidden bg-gray-900 transform hover:scale-105 transition-transform duration-300">
+            <div className="relative rounded-2xl border-2 border-white dark:border-slate-900 shadow-2xl overflow-hidden bg-gray-900 transform hover:scale-105 transition-transform duration-300">
+
               {/* Video Container */}
               <div className="relative aspect-video bg-black">
                 <video
