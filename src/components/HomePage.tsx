@@ -36,7 +36,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSignInClick, o
   return (
     <div className="min-h-screen bg-white dark:bg-slate-900">
       {/* Enhanced Navigation */}
-      <HomeNavigation onNavigate={onNavigate} onSignInClick={onSignInClick} />
+      <HomeNavigation onNavigate={onNavigate} onSignInClick={onSignInClick} onSignUpClick={onSignUpClick} />
 
       {/* Enhanced Hero Section */}
       <EnhancedHeroSection onNavigate={onNavigate} onSignUpClick={onSignUpClick} />
@@ -69,7 +69,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSignInClick, o
 
             <div className="flex flex-col sm:flex-row justify-center gap-4 mb-12">
               <button
-                onClick={() => onNavigate(user ? 'dashboard' : 'auth')}
+                onClick={user ? () => onNavigate('dashboard') : onSignUpClick}
                 className="group inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-700 rounded-xl hover:shadow-xl transform hover:scale-105 transition-all duration-200"
               >
                 {user ? 'Go to Dashboard' : 'Start Free Trial'}
@@ -296,7 +296,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSignInClick, o
 
           <div className="flex flex-col sm:flex-row justify-center gap-4 mb-8">
             <button
-              onClick={() => onNavigate(user ? 'dashboard' : 'auth')}
+              onClick={user ? () => onNavigate('dashboard') : onSignUpClick}
               className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-700 rounded-xl hover:shadow-xl transform hover:scale-105 transition-all duration-200"
             >
               {user ? 'Continue Writing' : 'Start Your 3-Day Free Trial'}

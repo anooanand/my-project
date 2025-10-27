@@ -6,9 +6,10 @@ import { useAuth } from '../contexts/AuthContext';
 interface HomeNavigationProps {
   onNavigate: (page: string) => void;
   onSignInClick: () => void;
+  onSignUpClick?: () => void;
 }
 
-export const HomeNavigation: React.FC<HomeNavigationProps> = ({ onNavigate, onSignInClick }) => {
+export const HomeNavigation: React.FC<HomeNavigationProps> = ({ onNavigate, onSignInClick, onSignUpClick }) => {
   const { theme, toggleTheme } = useTheme();
   const { user } = useAuth();
   const [scrolled, setScrolled] = useState(false);
@@ -103,7 +104,7 @@ export const HomeNavigation: React.FC<HomeNavigationProps> = ({ onNavigate, onSi
 
             {/* CTA Button */}
             <button
-              onClick={() => onNavigate(user ? 'dashboard' : 'auth')}
+              onClick={user ? () => onNavigate('dashboard') : (onSignUpClick || (() => onNavigate('auth')))}
               className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-semibold rounded-xl transition-all hover:shadow-lg hover:scale-105"
             >
               {user ? 'Go to Dashboard' : 'Start Free Trial'}
@@ -170,7 +171,13 @@ export const HomeNavigation: React.FC<HomeNavigationProps> = ({ onNavigate, onSi
 
               <button
                 onClick={() => {
-                  onNavigate(user ? 'dashboard' : 'auth');
+                  if (user) {
+                    onNavigate('dashboard');
+                  } else if (onSignUpClick) {
+                    onSignUpClick();
+                  } else {
+                    onNavigate('auth');
+                  }
                   setMobileMenuOpen(false);
                 }}
                 className="w-full px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl transition-colors"

@@ -1,5 +1,10 @@
 import React from 'react';
 import { Check, X, Zap, BookOpen, Target, Brain, Clock, Award } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+
+interface FeatureComparisonSectionProps {
+  onSignUpClick: () => void;
+}
 
 interface ComparisonFeature {
   feature: string;
@@ -105,7 +110,9 @@ const uniqueFeatures = [
   }
 ];
 
-export function FeatureComparisonSection() {
+export function FeatureComparisonSection({ onSignUpClick }: FeatureComparisonSectionProps) {
+  const { user } = useAuth();
+
   return (
     <section className="py-20 relative overflow-hidden bg-gradient-to-b from-blue-50 to-white dark:from-gray-800 dark:to-gray-900">
       <div className="absolute inset-0 bg-grid opacity-30"></div>
@@ -205,8 +212,11 @@ export function FeatureComparisonSection() {
               Join students improving their writing skills with our unique teaching approach.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <button className="px-8 py-4 bg-white text-blue-600 font-bold rounded-xl hover:bg-gray-100 transition-colors duration-300 shadow-lg">
-                Start Free Trial
+              <button
+                onClick={onSignUpClick}
+                className="px-8 py-4 bg-white text-blue-600 font-bold rounded-xl hover:bg-gray-100 transition-colors duration-300 shadow-lg"
+              >
+                {user ? 'Go to Dashboard' : 'Start Free Trial'}
               </button>
               <button 
                 onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
