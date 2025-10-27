@@ -251,14 +251,14 @@ export function NavBar({
                 <button
                   onClick={(e) => {
                     e.preventDefault();
-                    e.stopPropagation();
-                    console.log('Get Started button clicked');
+                    e.stopPropagation(); // This is the critical fix
+                    console.log('Start Free Trial button clicked');
                     onSignUpClick();
                   }}
                   className={getButtonClasses('primary')}
                   type="button"
                 >
-                  Get Started
+                  Start Free Trial
                 </button>
               </>
             )}
