@@ -398,9 +398,9 @@ function AppContent() {
 	              setAuthModalMode("signin");
 	              setShowAuthModal(true);
 	            }}
-	            onSignUpClick={() => { // <--- ADDED
-	              setAuthModalMode("signup"); // <--- ADDED
-	              setShowAuthModal(true); // <--- ADDED
+	            onSignUpClick={() => {
+	              setAuthModalMode("signup");
+	              setShowAuthModal(true);
 	            }} />
             </div>
           } />
@@ -410,9 +410,9 @@ function AppContent() {
 	              setAuthModalMode("signin");
 	              setShowAuthModal(true);
 	            }}
-	            onSignUpClick={() => { // <--- ADDED
-	              setAuthModalMode("signup"); // <--- ADDED
-	              setShowAuthModal(true); // <--- ADDED
+	            onSignUpClick={() => {
+	              setAuthModalMode("signup");
+	              setShowAuthModal(true);
 	            }} />
             </div>
           } />
