@@ -117,8 +117,8 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSignInClick })
             </p>
           </div>
 
-          {/* Video Container */}
-          <div className="relative bg-gray-900 rounded-3xl overflow-hidden shadow-2xl border-4 border-gray-900 dark:border-gray-800">
+                      {/* Video Container */}
+          <div className="relative bg-gray-900 rounded-3xl overflow-hidden shadow-2xl border-4 border-white dark:border-gray-900">
             {/* Video Player */}
             <div className="relative aspect-video bg-black">
               <video
