@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, createContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowRight, Check, Star, Home } from 'lucide-react';
 import { supabase } from '../lib/supabase'; // Removed isEmailVerified import
 import { createCheckoutSession } from '../lib/stripe';
