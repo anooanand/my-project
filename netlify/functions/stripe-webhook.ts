@@ -93,7 +93,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       console.error('❌ Error updating user_profiles:', profileError);
       throw profileError;
     }
-    console.log(\`✅ Updated user_profiles successfully (\${profileCount} rows affected)\`);
+    console.log('✅ Updated user_profiles successfully (' + profileCount + ' rows affected)');
 
     if (profileCount === 0) {
       console.log('⚠️ No user found with ID, attempting to create new profile...');
@@ -202,12 +202,12 @@ export async function handler(event: any) {
       process.env.STRIPE_WEBHOOK_SECRET!
     );
   } catch (err: any) {
-    console.error(\`❌ Webhook signature verification failed: \${err.message}\`);
-    return { statusCode: 400, body: \`Webhook Error: \${err.message}\` };
+    console.error('❌ Webhook signature verification failed: ' + err.message);
+    return { statusCode: 400, body: 'Webhook Error: ' + err.message };
   }
 
-  console.log(\`🎯 Processing webhook event: \${stripeEvent.type}\`);
-  console.log(\`📋 Event ID: \${stripeEvent.id}\`);
+  console.log('🎯 Processing webhook event: ' + stripeEvent.type);
+  console.log('📋 Event ID: ' + stripeEvent.id);
 
   try {
     switch (stripeEvent.type) {
@@ -232,10 +232,10 @@ export async function handler(event: any) {
         break;
         
       default:
-        console.log(\`ℹ️ Unhandled event type: \${stripeEvent.type}\`);
+        console.log('ℹ️ Unhandled event type: ' + stripeEvent.type);
     }
 
-    console.log(\`✅ Successfully processed webhook event: \${stripeEvent.type}\`);
+    console.log('✅ Successfully processed webhook event: ' + stripeEvent.type);
     return { 
       statusCode: 200, 
       body: JSON.stringify({ 
@@ -247,7 +247,7 @@ export async function handler(event: any) {
     };
     
   } catch (error) {
-    console.error(\`❌ Error processing webhook event:\`, error);
+    console.error('❌ Error processing webhook event:', error);
     return { 
       statusCode: 500, 
       body: JSON.stringify({ 
