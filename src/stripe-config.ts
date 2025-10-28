@@ -4,7 +4,7 @@ export const products = [
     id: 'prod_essential',
     name: 'Essential Plan',
     description: 'Complete writing preparation package',
-    priceId: 'price_essential_15',
+    priceId: 'price_1P8p4pRvlotczavccreigdzczo',
     price: '$15.00',
     interval: 'month',
     mode: 'subscription',
