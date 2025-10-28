@@ -30,6 +30,25 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     throw new Error('No customer email provided');
   }
 
+  // 1. Find the Supabase user by email
+  const { data: userData, error: userError } = await supabase.auth.admin.getUserByEmail(customerEmail);
+
+  if (userError || !userData.user) {
+    console.error('❌ Supabase user lookup failed for email:', customerEmail, userError);
+    // If user is not found in auth.users, we cannot proceed with profile update
+    // This is a common issue if the user hasn't signed up yet, or the email is different.
+    // For now, we will log and return a success to Stripe to avoid retries, 
+    // but the profile update will be skipped.
+    if (userError?.message === 'User not found') {
+      console.log('⚠️ User not found in auth.users, skipping profile update.');
+      return;
+    }
+    throw userError || new Error('User not found in Supabase auth.');
+  }
+
+  const userId = userData.user.id;
+  console.log('✅ Found Supabase user ID:', userId);
+
   console.log('👤 Processing payment for email:', customerEmail);
 
   let planType = 'premium_plan';
@@ -55,6 +74,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     const { error: profileError, count: profileCount } = await supabase
       .from('user_profiles')
       .update({
+        user_id: userId, // Ensure user_id is set if it's a separate column
         payment_status: 'verified',
         payment_verified: true,
         subscription_status: 'active',
@@ -67,21 +87,22 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
         temporary_access_expires: currentPeriodEnd,
         updated_at: new Date().toISOString()
       })
-      .eq('email', customerEmail);
+      .eq('id', userId); // <-- FIX: Use user ID instead of email for lookup
 
     if (profileError) {
       console.error('❌ Error updating user_profiles:', profileError);
       throw profileError;
     }
-    console.log(`✅ Updated user_profiles successfully (${profileCount} rows affected)`);
+    console.log(\`✅ Updated user_profiles successfully (\${profileCount} rows affected)\`);
 
     if (profileCount === 0) {
-      console.log('⚠️ No user found with email, attempting to create new profile...');
+      console.log('⚠️ No user found with ID, attempting to create new profile...');
       
       // Create new user profile if none exists
       const { error: createError } = await supabase
         .from('user_profiles')
         .insert({
+          id: userId, // Use user ID as primary key for user_profiles
           email: customerEmail,
           payment_status: 'verified',
           payment_verified: true,
@@ -163,7 +184,7 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
 }
 
 export async function handler(event: any) {
-  if (event.httpMethod !== 'POST') {
+  if (event.httpMethod !== 'POST' ) {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
 
@@ -181,12 +202,12 @@ export async function handler(event: any) {
       process.env.STRIPE_WEBHOOK_SECRET!
     );
   } catch (err: any) {
-    console.error(`❌ Webhook signature verification failed: ${err.message}`);
-    return { statusCode: 400, body: `Webhook Error: ${err.message}` };
+    console.error(\`❌ Webhook signature verification failed: \${err.message}\`);
+    return { statusCode: 400, body: \`Webhook Error: \${err.message}\` };
   }
 
-  console.log(`🎯 Processing webhook event: ${stripeEvent.type}`);
-  console.log(`📋 Event ID: ${stripeEvent.id}`);
+  console.log(\`🎯 Processing webhook event: \${stripeEvent.type}\`);
+  console.log(\`📋 Event ID: \${stripeEvent.id}\`);
 
   try {
     switch (stripeEvent.type) {
@@ -211,10 +232,10 @@ export async function handler(event: any) {
         break;
         
       default:
-        console.log(`ℹ️ Unhandled event type: ${stripeEvent.type}`);
+        console.log(\`ℹ️ Unhandled event type: \${stripeEvent.type}\`);
     }
 
-    console.log(`✅ Successfully processed webhook event: ${stripeEvent.type}`);
+    console.log(\`✅ Successfully processed webhook event: \${stripeEvent.type}\`);
     return { 
       statusCode: 200, 
       body: JSON.stringify({ 
@@ -226,7 +247,7 @@ export async function handler(event: any) {
     };
     
   } catch (error) {
-    console.error(`❌ Error processing webhook event:`, error);
+    console.error(\`❌ Error processing webhook event:\`, error);
     return { 
       statusCode: 500, 
       body: JSON.stringify({ 
@@ -238,4 +259,3 @@ export async function handler(event: any) {
     };
   }
 }
-
