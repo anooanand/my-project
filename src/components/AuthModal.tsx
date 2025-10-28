@@ -286,31 +286,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           )}
           
           <div className="flex flex-col space-y-4">
-            <button
-              onClick={handleVerificationCheck}
-              disabled={verificationChecking}
-              className="w-full py-3 px-4 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white text-base font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-all duration-200 transform hover:scale-105 shadow-lg"
-            >
-              {verificationChecking ? (
-                <>
-                  <Loader className="animate-spin -ml-1 mr-2 h-5 w-5" />
-                  Checking Magic...
-                </>
-              ) : (
-                <>
-                  <Star className="mr-2 h-4 w-4" />
-                  I Clicked the Magic Link!
-                </>
-              )}
-            </button>
-            
-            <button
-              onClick={handleContinueAnyway}
-              className="w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white text-base font-bold rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg"
-            >
-              <Heart className="mr-2 h-4 w-4" />
-              Continue (If Already Done)
-            </button>
+            {/* Removed: Green Button (I Clicked the Magic Link!) and Blue Button (Continue (If Already Done)) as per user request. */}
+
             
             <button
               onClick={handleResendConfirmation}
