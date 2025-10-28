@@ -74,7 +74,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     const { error: profileError, count: profileCount } = await supabase
       .from('user_profiles')
       .update({
-        user_id: userId, // Ensure user_id is set if it's a separate column
+        // user_id: userId, // Removed the non-existent or incorrect user_id field
         payment_status: 'verified',
         payment_verified: true,
         subscription_status: 'active',
@@ -87,7 +87,8 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
         temporary_access_expires: currentPeriodEnd,
         updated_at: new Date().toISOString()
       })
-      .eq('id', userId); // <-- FIX: Use user ID instead of email for lookup
+      // THE FIX: Use email for lookup to match the initial profile creation logic
+      .eq('email', customerEmail); 
 
     if (profileError) {
       console.error('❌ Error updating user_profiles:', profileError);
@@ -96,7 +97,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     console.log('✅ Updated user_profiles successfully (' + profileCount + ' rows affected)');
 
     if (profileCount === 0) {
-      console.log('⚠️ No user found with ID, attempting to create new profile...');
+      console.log('⚠️ No user found with email, attempting to create new profile...');
       
       // Create new user profile if none exists
       const { error: createError } = await supabase
@@ -184,7 +185,7 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
 }
 
 export async function handler(event: any) {
-  if (event.httpMethod !== 'POST' ) {
+  if (event.httpMethod !== 'POST'  ) {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
 
