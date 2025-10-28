@@ -117,7 +117,7 @@ export function PricingPage() {
         {/* Back to Home Button */}
         <div className="mb-6">
           <button
-            onClick={() => navigate('/')}
+            onClick={( ) => navigate('/')}
             className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 border border-gray-300 rounded-lg shadow-sm transition-all hover:shadow-md text-gray-700 font-medium"
           >
             <Home className="w-5 h-5" />
@@ -160,7 +160,8 @@ export function PricingPage() {
 
         {/* Pricing Card - Single Centered Plan */}
         <div className="max-w-lg mx-auto">
-          {products.map((product) => (
+          {/* Map removed to show only one block. We use the first product for display. */}
+		          {products.slice(0, 1).map((product) => (
             <div
               key={product.id}
               className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden border-4 border-blue-500"
@@ -176,7 +177,7 @@ export function PricingPage() {
                   </h3>
                   <div className="flex items-baseline justify-center mb-4">
                     <span className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-700 bg-clip-text text-transparent">
-                      {product.price}
+                      $25.00
                     </span>
                     <span className="text-gray-500 dark:text-gray-400 ml-2 text-lg">
                       /{product.interval || 'month'}
@@ -198,12 +199,14 @@ export function PricingPage() {
 
                 {/* Stripe Buy Button Implementation */}
                 <div className="w-full">
-                  <stripe-buy-button
-                    buy-button-id="buy_btn_1SN8blRq1JXLPYBD5pPclBAr"
-                    publishable-key="pk_test_51QuwqnRq1JXLPYBDxEWg3Us1FtE5tfm4FAXW7Aw2CHCwY7bvGkIgRIDBBlGWg61ooSB5xAC8bHuhGcUNR9AA5d8J00kRpp5TyC"
-                    className="w-full"
-                  >
-                  </stripe-buy-button>
+	<stripe-buy-button
+		                    buy-button-id="buy_btn_1SN8blRq1JXLPYBD5pPclBAr"
+		                    publishable-key="pk_test_51QuwqnRq1JXLPYBDxEWg3Us1FtE5tfm4FAXW7Aw2CHCwY7bvGkIgRIDBBlGWg61ooSB5xAC8bHuhGcUNR9AA5d8J00kRpp5TyC"
+		                    client-reference-id={user?.id}
+		                    customer-email={user?.email}
+		                    className="w-full"
+		                  >
+	                  </stripe-buy-button>
                 </div>
               </div>
             </div>
