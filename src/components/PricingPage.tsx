@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext, createContext } from 'react';
 import { ArrowRight, Check, Star, Home } from 'lucide-react';
 import { supabase } from '../lib/supabase'; // Removed isEmailVerified import
 import { createCheckoutSession } from '../lib/stripe';
 import { products } from '../stripe-config';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet'; // Import Helmet for the script tag
 
 export function PricingPage() {
   const { user, emailVerified, paymentCompleted, forceRefreshVerification } = useAuth(); // Get emailVerified and paymentCompleted from AuthContext
@@ -13,6 +14,8 @@ export function PricingPage() {
   const [isCheckingVerification, setIsCheckingVerification] = useState(false);
 
   // Local function to check payment status (can be removed if AuthContext handles all)
+// The handleSubscribe function is no longer needed as we are using the Stripe Buy Button.
+// The buy button handles the checkout process.
   const checkPaymentStatus = async (userId: string): Promise<boolean> => {
     try {
       // Check for temporary access first
@@ -60,32 +63,7 @@ export function PricingPage() {
 
   }, [user, emailVerified, paymentCompleted]); // Depend on AuthContext states
 
-  const handleSubscribe = async (priceId: string) => {
-    if (!user) {
-      alert('Please sign in to subscribe');
-      return;
-    }
-
-    if (!emailVerified) {
-      alert('Please verify your email address before subscribing');
-      return;
-    }
-
-    try {
-      console.log('🚀 Creating checkout session for price:', priceId);
-      const { url } = await createCheckoutSession(priceId, user.id);
-      
-      if (url) {
-        console.log('✅ Redirecting to Stripe checkout:', url);
-        window.location.href = url;
-      } else {
-        throw new Error('No checkout URL returned');
-      }
-    } catch (error) {
-      console.error('❌ Error creating checkout session:', error);
-      alert('Failed to create checkout session. Please try again.');
-    }
-  };
+  
 
   const getVerificationStatus = () => {
     if (!user) {
@@ -131,7 +109,11 @@ export function PricingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-12">
+    <>
+      <Helmet>
+        <script async src="https://js.stripe.com/v3/buy-button.js"></script>
+      </Helmet>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-12 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Back to Home Button */}
         <div className="mb-6">
@@ -146,10 +128,10 @@ export function PricingPage() {
 
         {/* Header */}
         <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
             Choose Your <span className="bg-gradient-to-r from-blue-600 to-purple-700 bg-clip-text text-transparent">Plan</span>
           </h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
             Unlock your writing potential with comprehensive AI-powered writing tools
           </p>
         </div>
@@ -215,18 +197,15 @@ export function PricingPage() {
                   ))}
                 </ul>
 
-                <button
-                  onClick={() => handleSubscribe(product.priceId)}
-                  disabled={!user || !emailVerified}
-                  className={`w-full py-4 px-6 rounded-xl font-bold text-lg transition-all duration-200 flex items-center justify-center ${
-                    !user || !emailVerified
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      : 'bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 shadow-lg hover:shadow-xl transform hover:scale-105'
-                  }`}
-                >
-                  {!user ? 'Sign In to Subscribe' : !emailVerified ? 'Verify Email First' : 'Get Started'}
-                  {user && emailVerified && <ArrowRight className="ml-2 h-5 w-5" />}
-                </button>
+                {/* Stripe Buy Button Implementation */}
+                <div className="w-full">
+                  <stripe-buy-button
+                    buy-button-id="buy_btn_1SN8blRq1JXLPYBD5pPclBAr"
+                    publishable-key="pk_test_51QuwqnRq1JXLPYBDxEWg3Us1FtE5tfm4FAXW7Aw2CHCwY7bvGkIgRIDBBlGWg61ooSB5xAC8bHuhGcUNR9AA5d8J00kRpp5TyC"
+                    className="w-full"
+                  >
+                  </stripe-buy-button>
+                </div>
               </div>
             </div>
           ))}
@@ -257,11 +236,9 @@ export function PricingPage() {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
 // Also export as PricingPageWithFixedVerification for backward compatibility
 export const PricingPageWithFixedVerification = PricingPage;
-
-
