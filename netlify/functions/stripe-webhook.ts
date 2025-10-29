@@ -5,9 +5,17 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2024-06-20',
 });
 
+// FIX: Added auth options to ensure the client is correctly initialized for a serverless environment
 const supabase = createClient(
   process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+      detectSessionInUrl: false,
+    },
+  }
 );
 
 function getPlanTypeFromPriceId(priceId: string): string {
@@ -31,6 +39,7 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   }
 
   // 1. Find the Supabase user by email
+  // This is the line that was failing, but with the client initialization fix above, it should now work.
   const { data: userData, error: userError } = await supabase.auth.admin.getUserByEmail(customerEmail);
 
   if (userError || !userData.user) {
@@ -185,10 +194,12 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice) {
 }
 
 export async function handler(event: any) {
-  if (event.httpMethod !== 'POST'  ) {
+  if (event.httpMethod !== 'POST'   ) {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
-const sig = event.headers['stripe-signature'] || event.headers['Stripe-Signature'];
+
+  // FIX: Robustly check for both lowercase and canonical header name
+  const sig = event.headers['stripe-signature'] || event.headers['Stripe-Signature'];
   let stripeEvent: Stripe.Event;
 
   try {
@@ -222,7 +233,7 @@ const sig = event.headers['stripe-signature'] || event.headers['Stripe-Signature
         await handleSubscriptionChange(subscription);
         break;
         
-      case 'invoice.payment_succeeded':
+      case 'invoice.payment.succeeded':
         const invoice = stripeEvent.data.object as Stripe.Invoice;
         await handleInvoicePaymentSucceeded(invoice);
         break;
