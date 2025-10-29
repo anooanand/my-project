@@ -26,10 +26,10 @@ function getPlanTypeFromPriceId(priceId: string): string {
   return planMapping[priceId] || 'premium_plan';
 }
 
+// FIX: Refactored to remove the failing supabase.auth.admin.getUserByEmail call
 async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
   console.log('🎉 Processing checkout session completed:', session.id);
   
-  // Try both ways to get customer email
   const customerEmail = session.customer_email || session.customer_details?.email;
   const stripeCustomerId = session.customer as string;
   const subscriptionId = session.subscription as string;
@@ -38,26 +38,27 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     throw new Error('No customer email provided');
   }
 
-  // 1. Find the Supabase user by email
-  // This is the line that was failing, but with the client initialization fix above, it should now work.
-  const { data: userData, error: userError } = await supabase.auth.admin.getUserByEmail(customerEmail);
+  // 1. Look up the user profile by email to ensure the user exists before proceeding.
+  // This replaces the failing auth.admin.getUserByEmail call.
+  let { data: profileData, error: profileLookupError } = await supabase
+    .from('user_profiles')
+    .select('id')
+    .eq('email', customerEmail)
+    .maybeSingle();
 
-  if (userError || !userData.user) {
-    console.error('❌ Supabase user lookup failed for email:', customerEmail, userError);
-    // If user is not found in auth.users, we cannot proceed with profile update
-    // This is a common issue if the user hasn't signed up yet, or the email is different.
-    // For now, we will log and return a success to Stripe to avoid retries, 
-    // but the profile update will be skipped.
-    if (userError?.message === 'User not found') {
-      console.log('⚠️ User not found in auth.users, skipping profile update.');
-      return;
-    }
-    throw userError || new Error('User not found in Supabase auth.');
+  if (profileLookupError) {
+    console.error('❌ Supabase profile lookup failed:', profileLookupError);
+    throw profileLookupError;
   }
 
-  const userId = userData.user.id;
-  console.log('✅ Found Supabase user ID:', userId);
-
+  if (!profileData) {
+    // If user profile is not found, we cannot proceed with the update.
+    console.log('⚠️ User profile not found for email:', customerEmail, 'Skipping update.');
+    return;
+  }
+  
+  const userId = profileData.id;
+  console.log('✅ Found Supabase user ID from profile table:', userId);
   console.log('👤 Processing payment for email:', customerEmail);
 
   let planType = 'premium_plan';
@@ -78,12 +79,11 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
   }
 
   try {
-    // Update user_profiles using ONLY fields that exist in current schema
+    // 2. Update user_profiles using the email lookup
     console.log('📝 Updating user_profiles table...');
     const { error: profileError, count: profileCount } = await supabase
       .from('user_profiles')
       .update({
-        // user_id: userId, // Removed the non-existent or incorrect user_id field
         payment_status: 'verified',
         payment_verified: true,
         subscription_status: 'active',
@@ -96,7 +96,6 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
         temporary_access_expires: currentPeriodEnd,
         updated_at: new Date().toISOString()
       })
-      // THE FIX: Use email for lookup to match the initial profile creation logic
       .eq('email', customerEmail); 
 
     if (profileError) {
@@ -106,35 +105,9 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
     console.log('✅ Updated user_profiles successfully (' + profileCount + ' rows affected)');
 
     if (profileCount === 0) {
-      console.log('⚠️ No user found with email, attempting to create new profile...');
-      
-      // Create new user profile if none exists
-      const { error: createError } = await supabase
-        .from('user_profiles')
-        .insert({
-          id: userId, // Use user ID as primary key for user_profiles
-          email: customerEmail,
-          payment_status: 'verified',
-          payment_verified: true,
-          subscription_status: 'active',
-          subscription_plan: planType,
-          stripe_customer_id: stripeCustomerId,
-          stripe_subscription_id: subscriptionId,
-          current_period_start: currentPeriodStart,
-          current_period_end: currentPeriodEnd,
-          last_payment_date: new Date().toISOString(),
-          temporary_access_expires: currentPeriodEnd,
-          role: 'user',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        });
-
-      if (createError) {
-        console.error('❌ Failed to create user profile:', createError);
-        throw createError;
-      }
-
-      console.log('✅ New user profile created');
+      // This should not happen since we checked for profileData existence above, 
+      // but it serves as a final check and avoids the original profile creation logic.
+      console.log('⚠️ No existing user profile found with email. Update failed.');
     }
 
     console.log('🎊 Checkout session processing completed successfully!');
