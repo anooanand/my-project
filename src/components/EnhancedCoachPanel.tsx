@@ -12,6 +12,7 @@ import { generateDynamicExamples, formatExamplesForDisplay } from '../lib/dynami
 import { ChatSessionService } from '../lib/chatSessionService';
 import { NSW_MARKING_CRITERIA, generateScoringGuidance, mapToNSWScores, getImprovementExamples } from '../lib/nswMarkingCriteria';
 import { NSWCriteriaCompact, NSWCriteriaDisplay } from './NSWCriteriaDisplay';
+import { WRITING_MATE_SIDEBAR_CONTENT } from '../lib/textTypeContent'; // <-- NEW IMPORT
 
 /**
  * Generates time-appropriate coaching messages for 40-minute writing test
@@ -294,57 +295,35 @@ class NSWCriteriaAnalyzer {
       return {
         score: 1,
         feedback: ["Start writing to see your structure assessment!"],
-        improvements: ["Begin writing to analyze your story structure."]
+        improvements: ["Begin writing to analyze your structure and organization."]
       };
     }
 
-    // Check for clear beginning
-    const hasGoodOpening = content.length > 50 && (
-      content.toLowerCase().includes('one day') ||
-      content.toLowerCase().includes('once') ||
-      content.toLowerCase().includes('afternoon') ||
-      content.toLowerCase().includes('while')
-    );
+    // Check for clear opening/closing (basic check)
+    const hasClearOpening = content.length > 50 && content.includes('One') || content.includes('In a place');
+    const hasClearClosing = content.length > 150 && content.includes('Finally') || content.includes('From that day forward');
 
-    if (hasGoodOpening) {
+    if (hasClearOpening) {
       score += 1;
-      feedback.push("Good story opening! You're setting the scene well.");
+      feedback.push("Your opening sets the scene well!");
     } else {
-      improvements.push("Start with a clear opening that sets the scene for your reader.");
+      improvements.push("Work on a stronger opening to hook the reader.");
     }
 
-    // Check for paragraphs (basic structure)
-    const paragraphs = content.split('\n\n').filter(p => p.trim().length > 0);
-    
-    if (paragraphs.length >= 3) {
+    if (hasClearClosing) {
       score += 1;
-      feedback.push("Good use of paragraphs to organize your ideas!");
-    } else if (paragraphs.length >= 2) {
-      improvements.push("Consider breaking your writing into more paragraphs for better organization.");
+      feedback.push("Your conclusion provides a satisfying resolution.");
     } else {
-      improvements.push("Use paragraphs to organize different parts of your story.");
+      improvements.push("Plan your ending to ensure a clear resolution to the conflict.");
     }
 
-    // Check for story progression
-    const hasMiddleDevelopment = content.length > 100 && wordCount > 50;
-    if (hasMiddleDevelopment) {
+    // Check for paragraphing
+    const paragraphs = content.split(/\n\s*\n/);
+    if (paragraphs.length > 2 && wordCount / paragraphs.length < 100) {
       score += 1;
-      feedback.push("You're developing your story well!");
+      feedback.push("Good use of paragraphing to organize your ideas.");
     } else {
-      improvements.push("Develop the middle of your story with more events and details.");
-    }
-
-    // Check for conclusion indicators
-    const hasConclusion = content.toLowerCase().includes('finally') ||
-                         content.toLowerCase().includes('in the end') ||
-                         content.toLowerCase().includes('then') ||
-                         content.length > 200;
-
-    if (hasConclusion) {
-      score += 1;
-      feedback.push("Good story development towards a conclusion!");
-    } else {
-      improvements.push("Work towards a satisfying ending for your story.");
+      improvements.push("Ensure each new idea or shift in action starts a new paragraph.");
     }
 
     return {
@@ -355,7 +334,7 @@ class NSWCriteriaAnalyzer {
   }
 
   static analyzeGrammarAndSpelling(content: string) {
-    let score = 3; // Start with average score
+    let score = 1;
     let feedback = [];
     let improvements = [];
 
@@ -367,487 +346,175 @@ class NSWCriteriaAnalyzer {
       };
     }
 
-    // Check for basic punctuation
-    const hasPunctuation = /[.!?]/.test(content);
-    if (hasPunctuation) {
-      feedback.push("Good use of punctuation to end sentences!");
+    // Basic spelling check (simulated)
+    const misspelledWords = ['teh', 'becuase', 'recieve', 'wierd'];
+    const hasMisspelling = misspelledWords.some(word => content.toLowerCase().includes(word));
+
+    if (!hasMisspelling) {
+      score += 2;
+      feedback.push("Excellent! Your spelling is accurate.");
     } else {
-      score -= 1;
-      improvements.push("Remember to use punctuation marks like periods, exclamation marks, or question marks.");
+      improvements.push("Check your spelling for common errors like 'teh' or 'becuase'.");
     }
 
-    // Check for capital letters at sentence beginnings
-    const sentences = content.split(/[.!?]+/).filter(s => s.trim().length > 0);
-    const properCapitalization = sentences.every(sentence => {
-      const trimmed = sentence.trim();
-      return trimmed.length === 0 || /^[A-Z]/.test(trimmed);
-    });
+    // Basic grammar check (simulated)
+    const grammarErrors = ['I was went', 'he go', 'they is'];
+    const hasGrammarError = grammarErrors.some(error => content.toLowerCase().includes(error));
 
-    if (properCapitalization && sentences.length > 0) {
-      feedback.push("Excellent capitalization at the start of sentences!");
-    } else if (sentences.length > 0) {
-      score -= 1;
-      improvements.push("Remember to start each sentence with a capital letter.");
-    }
-
-    // Check for common spelling patterns (basic check)
-    const commonErrors = ['teh', 'adn', 'hte', 'recieve', 'seperate'];
-    const hasCommonErrors = commonErrors.some(error => 
-      content.toLowerCase().includes(error)
-    );
-
-    if (!hasCommonErrors) {
-      score += 1;
-      feedback.push("Great spelling accuracy!");
+    if (!hasGrammarError) {
+      score += 2;
+      feedback.push("Great! Your sentence structure and grammar are strong.");
     } else {
-      improvements.push("Double-check your spelling, especially for common words.");
-    }
-
-    // Check for dialogue punctuation if present
-    if (content.includes('"')) {
-      const dialoguePattern = /"[^"]*"/g;
-      const dialogues = content.match(dialoguePattern);
-      if (dialogues) {
-        score += 1;
-        feedback.push("Nice use of dialogue in your story!");
-      }
+      improvements.push("Review your verb tenses and subject-verb agreement.");
     }
 
     return {
-      score: Math.max(1, Math.min(score, 5)),
+      score: Math.min(score, 5),
       feedback,
       improvements
     };
   }
 }
 
-// Enhanced Coach Response Generator (preserved from original)
-class EnhancedCoachResponseGenerator {
-  static generateResponse(content: string, textType: string, analysis: any) {
-    const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
-    
-    // Find the lowest scoring criterion to focus on
-    const scores = {
-      ideas: analysis.ideas.score,
-      language: analysis.language.score,
-      structure: analysis.structure.score,
-      grammar: analysis.grammar.score
-    };
-    
-    const lowestCriterion = Object.entries(scores).reduce((a, b) => 
-      scores[a[0]] <= scores[b[0]] ? a : b
-    )[0];
 
-    const responses = {
-      ideas: this.generateIdeasResponse(content, analysis.ideas, wordCount),
-      language: this.generateLanguageResponse(content, analysis.language, wordCount),
-      structure: this.generateStructureResponse(content, analysis.structure, wordCount),
-      grammar: this.generateGrammarResponse(content, analysis.grammar, wordCount)
-    };
-
-    return responses[lowestCriterion] || this.generateGeneralResponse(content, wordCount);
-  }
-
-  static generateIdeasResponse(content: string, ideasAnalysis: any, wordCount: number) {
-    if (wordCount === 0) {
-      return {
-        encouragement: "Ready to start your creative journey? 🌟",
-        nswFocus: "Ideas & Content",
-        suggestion: "Begin by thinking about the mysterious key and chest from the prompt. What makes them special?",
-        example: "Try starting with: 'The old key felt warm in my hand, as if it held ancient secrets...'",
-        nextStep: "Write your opening sentence and describe what you see in the attic."
-      };
-    }
-
-    if (ideasAnalysis.score <= 2) {
-      return {
-        encouragement: "Great start! Let's develop your ideas further. 💡",
-        nswFocus: "Ideas & Content",
-        suggestion: "Add more specific details about the key, chest, and your character's feelings.",
-        example: "Instead of 'I found a key,' try 'I discovered an ornate silver key that seemed to glow in the dusty attic light.'",
-        nextStep: "Describe what your character is thinking and feeling as they hold the key."
-      };
-    }
-
-    if (ideasAnalysis.score <= 3) {
-      return {
-        encouragement: "Your ideas are developing nicely! 🎯",
-        nswFocus: "Ideas & Content",
-        suggestion: "Expand on the mystery - what might be inside the chest? What does your character hope to find?",
-        example: "Add thoughts like: 'Could it contain grandmother's lost treasures, or something even more magical?'",
-        nextStep: "Build suspense by describing the moment before opening the chest."
-      };
-    }
-
-    return {
-      encouragement: "Excellent creative ideas! Your story is captivating! ⭐",
-      nswFocus: "Ideas & Content",
-      suggestion: "Continue developing the consequences of the discovery - how does it change your character?",
-      example: "Show the impact: 'As the chest opened, everything I thought I knew about my family changed forever.'",
-      nextStep: "Develop the resolution and what your character learns from this experience."
-    };
-  }
-
-  static generateLanguageResponse(content: string, languageAnalysis: any, wordCount: number) {
-    if (wordCount === 0) {
-      return {
-        encouragement: "Let's focus on using amazing vocabulary! 📚",
-        nswFocus: "Language & Vocabulary",
-        suggestion: "Use descriptive words to paint a picture for your readers.",
-        example: "Instead of 'old chest,' try 'ancient, weathered chest' or 'mysterious, ornate chest.'",
-        nextStep: "Choose vivid adjectives to describe the attic setting."
-      };
-    }
-
-    if (languageAnalysis.score <= 2) {
-      return {
-        encouragement: "Good start! Let's enhance your word choices. 🎨",
-        nswFocus: "Language & Vocabulary",
-        suggestion: "Replace simple words with more interesting alternatives.",
-        example: "Change 'walked' to 'crept,' 'big' to 'enormous,' or 'nice' to 'magnificent.'",
-        nextStep: "Look for one simple word in your writing and replace it with a more exciting one."
-      };
-    }
-
-    if (languageAnalysis.score <= 3) {
-      return {
-        encouragement: "Your vocabulary is improving! 🌟",
-        nswFocus: "Language & Vocabulary",
-        suggestion: "Add more sensory details - what does your character see, hear, smell, or feel?",
-        example: "Try: 'The musty smell of old books filled my nostrils as dust particles danced in the afternoon sunlight.'",
-        nextStep: "Include at least one sentence that appeals to the senses."
-      };
-    }
-
-    return {
-      encouragement: "Outstanding vocabulary choices! 🏆",
-      nswFocus: "Language & Vocabulary",
-      suggestion: "Your word variety is excellent! Consider adding figurative language like similes or metaphors.",
-      example: "Try: 'The key sparkled like a fallen star' or 'My heart pounded like thunder.'",
-      nextStep: "Add one simile or metaphor to make your writing even more vivid."
-    };
-  }
-
-  static generateStructureResponse(content: string, structureAnalysis: any, wordCount: number) {
-    if (wordCount === 0) {
-      return {
-        encouragement: "Let's build a well-organized story! 🏗️",
-        nswFocus: "Structure & Organization",
-        suggestion: "Start with a clear beginning that sets the scene.",
-        example: "Open with: 'One sunny afternoon, while exploring grandmother's dusty attic...'",
-        nextStep: "Write an opening sentence that tells when and where your story takes place."
-      };
-    }
-
-    if (structureAnalysis.score <= 2) {
-      return {
-        encouragement: "Good beginning! Let's organize your story better. 📋",
-        nswFocus: "Structure & Organization",
-        suggestion: "Use paragraphs to separate different parts of your story.",
-        example: "Start a new paragraph when you move from finding the key to opening the chest.",
-        nextStep: "Break your writing into at least 2-3 paragraphs with different ideas in each."
-      };
-    }
-
-    if (structureAnalysis.score <= 3) {
-      return {
-        encouragement: "Your story structure is developing well! 🎯",
-        nswFocus: "Structure & Organization",
-        suggestion: "Make sure your story has a clear beginning, middle, and end.",
-        example: "Beginning: Finding the key, Middle: Opening the chest, End: What happens next.",
-        nextStep: "Work on developing the middle part of your story with more events."
-      };
-    }
-
-    return {
-      encouragement: "Excellent story organization! 🌟",
-      nswFocus: "Structure & Organization",
-      suggestion: "Your structure is strong! Focus on smooth transitions between ideas.",
-      example: "Use connecting words like 'suddenly,' 'then,' 'meanwhile,' or 'finally.'",
-      nextStep: "Add transition words to help your story flow smoothly from one idea to the next."
-    };
-  }
-
-  static generateGrammarResponse(content: string, grammarAnalysis: any, wordCount: number) {
-    if (wordCount === 0) {
-      return {
-        encouragement: "Let's focus on clear, correct writing! ✏️",
-        nswFocus: "Spelling & Grammar",
-        suggestion: "Remember to start sentences with capital letters and end with punctuation.",
-        example: "Every sentence should look like: 'The mysterious key was beautiful.'",
-        nextStep: "Write your first sentence with proper capitalization and punctuation."
-      };
-    }
-
-    if (grammarAnalysis.score <= 2) {
-      return {
-        encouragement: "Good effort! Let's polish your writing mechanics. 🔧",
-        nswFocus: "Spelling & Grammar",
-        suggestion: "Check that each sentence starts with a capital letter and ends with punctuation.",
-        example: "Make sure you have: 'I found the key. It was shining brightly!'",
-        nextStep: "Read through your writing and add any missing capitals or punctuation marks."
-      };
-    }
-
-    if (grammarAnalysis.score <= 3) {
-      return {
-        encouragement: "Your grammar is improving! 📝",
-        nswFocus: "Spelling & Grammar",
-        suggestion: "Double-check your spelling, especially for longer words.",
-        example: "Common words to check: 'beautiful,' 'mysterious,' 'grandmother,' 'discovered.'",
-        nextStep: "Read your writing aloud to catch any spelling or grammar mistakes."
-      };
-    }
-
-    return {
-      encouragement: "Excellent grammar and spelling! 🏆",
-      nswFocus: "Spelling & Grammar",
-      suggestion: "Your technical accuracy is great! Try using more complex sentence structures.",
-      example: "Combine sentences: 'I found the key, and it was glowing brightly in my hand.'",
-      nextStep: "Experiment with joining two related sentences using 'and,' 'but,' or 'because.'"
-    };
-  }
-
-  static generateGeneralResponse(content: string, wordCount: number) {
-    return {
-      encouragement: "Keep up the great writing! 🌟",
-      nswFocus: "Overall Writing",
-      suggestion: "Continue developing your story with rich details and clear organization.",
-      example: "Focus on showing what happens rather than just telling.",
-      nextStep: "Keep writing and let your creativity flow!"
-    };
-  }
-}
-
-interface EnhancedCoachPanelProps {
-  content: string;
-  textType: string;
-  writingPrompt?: string;
-  onContentChange?: (content: string) => void;
-  timeElapsed?: number;
-  wordCount?: number;
-  analysis?: any;
-  onAnalysisChange?: (analysis: any) => void;
-  onApplyFix?: (fix: any) => void;
-  assistanceLevel?: string;
-  onAssistanceLevelChange?: (level: string) => void;
-  user?: any;
-  openAIConnected?: boolean;
-  openAILoading?: boolean;
-  onSubmitForEvaluation?: () => void;
-}
-
-export function EnhancedCoachPanel({
-  content,
+// Component Definition
+export const EnhancedCoachPanel = ({
   textType,
+  content,
   writingPrompt,
-  onContentChange,
-  timeElapsed = 0,
   wordCount,
   analysis,
-  onAnalysisChange,
-  onApplyFix,
-  assistanceLevel,
-  onAssistanceLevelChange,
   user,
+  darkMode,
   openAIConnected,
   openAILoading,
-  onSubmitForEvaluation,
-}: EnhancedCoachPanelProps) {
-  const [messages, setMessages] = useState<any[]>([]);
-  const [inputValue, setInputValue] = useState('');
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  onAnalysisUpdate,
+  onApplyFix,
+  selectedText,
+  isFocusMode,
+}) => {
+  const [currentView, setCurrentView] = useState<'coach' | 'chat' | 'examples' | 'builder' | 'detailed' | 'grammar' | 'vocabulary' | 'sentences'>('coach');
+  const [messages, setMessages] = useState([]);
+  const [inputMessage, setInputMessage] = useState('');
   const [isLoadingResponse, setIsLoadingResponse] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
-  const [currentView, setCurrentView] = useState<'coach' | 'examples' | 'builder' | 'detailed' | 'nsw' | 'grammar' | 'vocabulary' | 'sentences'>('coach');
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [isLoadingSession, setIsLoadingSession] = useState(true);
-  const [showQuestions, setShowQuestions] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-  const responseStartTime = useRef<number>(0);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [comprehensiveFeedback, setComprehensiveFeedback] = useState(null);
+  const messagesEndRef = useRef(null);
+  const responseStartTime = useRef(null);
+  const [sessionId, setSessionId] = useState(null);
+  const [messageCount, setMessageCount] = useState(0);
+  const [dynamicExamples, setDynamicExamples] = useState(null);
 
-  // Generate comprehensive feedback
-  const comprehensiveFeedback = useMemo(() => {
-    if (!content || content.trim().length < 20) return null;
+  // NEW: Get dynamic sidebar content based on textType
+  const sidebarContent = useMemo(() => {
+    return WRITING_MATE_SIDEBAR_CONTENT[textType as keyof typeof WRITING_MATE_SIDEBAR_CONTENT] || WRITING_MATE_SIDEBAR_CONTENT.default;
+  }, [textType]);
 
-    const currentWordCount = content.trim().split(/\s+/).length;
-    return ComprehensiveFeedbackAnalyzer.generateComprehensiveFeedback(
-      content,
-      currentWordCount,
-      textType || 'narrative'
-    );
-  }, [content, textType]);
+  // Scroll to bottom of messages
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
-  // Session restoration and initialization
+  // Load session on mount
   useEffect(() => {
-    const initializeSession = async () => {
-      if (!user?.id) {
-        setIsLoadingSession(false);
-        return;
-      }
-
-      try {
-        const latestSession = await ChatSessionService.getLatestSession(user.id);
-
-        if (latestSession && Date.now() - new Date(latestSession.last_accessed_at).getTime() < 24 * 60 * 60 * 1000) {
-          const savedMessages = await ChatSessionService.getMessages(latestSession.session_id);
-
-          if (savedMessages.length > 0) {
-            console.log('✅ Restored', savedMessages.length, 'messages from previous session');
-            setMessages(savedMessages);
-            setSessionId(latestSession.session_id);
-          } else {
-            const newSessionId = await ChatSessionService.createSession(
-              user.id,
-              textType,
-              writingPrompt || '',
-              content
-            );
-            setSessionId(newSessionId);
-          }
-        } else {
-          const newSessionId = await ChatSessionService.createSession(
-            user.id,
-            textType,
-            writingPrompt || '',
-            content
-          );
-          setSessionId(newSessionId);
-        }
-      } catch (error) {
-        console.error('Error initializing session:', error);
-      } finally {
-        setIsLoadingSession(false);
-      }
-    };
-
-    initializeSession();
-  }, [user?.id]);
-
-  // Update session when content changes
-  useEffect(() => {
-    if (sessionId && user?.id && content) {
-      const debounceTimer = setTimeout(() => {
-        ChatSessionService.updateSession(sessionId, {
-          userText: content,
-          textType: textType,
-          prompt: writingPrompt || ''
-        });
-      }, 2000);
-
-      return () => clearTimeout(debounceTimer);
+    if (user?.id) {
+      ChatSessionService.loadSession(user.id, textType).then(session => {
+        setSessionId(session.sessionId);
+        setMessages(session.messages);
+        setMessageCount(session.messages.length);
+      });
     }
-  }, [content, sessionId, user?.id, textType, writingPrompt]);
+  }, [user?.id, textType]);
 
-  // Analyze content and generate coaching response
+  // Scroll on message update
   useEffect(() => {
-    if (content.trim().length > 0) {
-      setIsAnalyzing(true);
-
-      // Debounce the analysis
-      const timer = setTimeout(() => {
-        const currentWordCount = content.trim().split(/\s+/).length;
-        const timeInfo = getTimeAwareMessage(timeElapsed, currentWordCount);
-        const phaseInfo = getWritingPhase(currentWordCount);
-
-        // Use enhanced intelligent response generator
-        const enhancedResponse = generateIntelligentResponse(content, textType);
-
-        // Also get legacy analysis for compatibility
-        const analysis = NSWCriteriaAnalyzer.analyzeContent(content, textType);
-
-        // Map to NSW scoring system
-        const nswScores = mapToNSWScores(analysis);
-
-        // Add or update the latest coaching message
-        setMessages(prev => {
-          const filtered = prev.filter(msg => msg.type !== 'auto-coach');
-          return [...filtered, {
-            type: 'auto-coach',
-            content: enhancedResponse,
-            timestamp: new Date(),
-            analysis: analysis,
-            nswScores: nswScores,
-            timeInfo: timeInfo,
-            phaseInfo: phaseInfo,
-            enhanced: true
-          }];
-        });
-
-        setIsAnalyzing(false);
-      }, 1000);
-
-      return () => clearTimeout(timer);
-    } else {
-      // Show welcome message when no content
-      setMessages([{
-        type: 'auto-coach',
-        content: {
-          encouragement: "Hello! I'm your AI Writing Mate! 🤖",
-          nswFocus: "Getting Started",
-          suggestion: "I'm here to help you write amazing stories. Start typing and I'll give you feedback!",
-          example: "Try beginning with the prompt about the mysterious key in grandmother's attic.",
-          nextStep: "Write your first sentence and I'll help you improve it!"
-        },
-        timestamp: new Date(),
-        analysis: null
-      }]);
-    }
-  }, [content, textType, timeElapsed]);
-
-  // Auto-scroll to bottom
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    scrollToBottom();
   }, [messages]);
 
+  // Simulate analysis and feedback generation
+  useEffect(() => {
+    if (content.trim().length > 10 && !isAnalyzing && !isLoadingResponse) {
+      setIsAnalyzing(true);
+      const timer = setTimeout(() => {
+        const newAnalysis = NSWCriteriaAnalyzer.analyzeContent(content, textType);
+        const newFeedback = ComprehensiveFeedbackAnalyzer.analyze(content, newAnalysis, textType);
+        setComprehensiveFeedback(newFeedback);
+        if (onAnalysisUpdate) {
+          onAnalysisUpdate(newAnalysis);
+        }
+        setIsAnalyzing(false);
+      }, 1000); // Debounce time for analysis
+      return () => clearTimeout(timer);
+    } else if (content.trim().length <= 10) {
+      setComprehensiveFeedback(null);
+      if (onAnalysisUpdate) {
+        onAnalysisUpdate(null);
+      }
+    }
+  }, [content, textType, isAnalyzing, isLoadingResponse, onAnalysisUpdate]);
+
+  // Simulate dynamic example generation
+  useEffect(() => {
+    if (comprehensiveFeedback) {
+      const timer = setTimeout(() => {
+        const examples = generateDynamicExamples(textType, comprehensiveFeedback);
+        setDynamicExamples(examples);
+      }, 500);
+      return () => clearTimeout(timer);
+    } else {
+      setDynamicExamples(null);
+    }
+  }, [comprehensiveFeedback, textType]);
+
   const handleSendMessage = async () => {
-    if (!inputValue.trim()) return;
+    if (inputMessage.trim() === '' || isLoadingResponse) return;
 
-    const userMessageContent = inputValue.trim();
-    setInputValue('');
-
-    responseStartTime.current = Date.now();
+    const userMessageContent = inputMessage.trim();
+    setInputMessage('');
     setIsLoadingResponse(true);
-    setLoadingProgress(0);
-
-    const messageCount = messages.length;
+    responseStartTime.current = Date.now();
 
     // Add user message
-    const userMessage = {
+    const newUserMessage = {
       type: 'user',
       content: userMessageContent,
       timestamp: new Date()
     };
-    setMessages(prev => [...prev, userMessage]);
+    
+    // Add loading message
+    const loadingMessage = {
+      type: 'loading',
+      content: 'Thinking...',
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, newUserMessage, loadingMessage]);
 
     if (sessionId && user?.id) {
       await ChatSessionService.saveMessage(
         sessionId,
         user.id,
         'user',
-        userMessageContent,
-        messageCount
+        newUserMessage.content,
+        messageCount + 1
       );
+      setMessageCount(prev => prev + 1);
     }
 
-    // Add loading message with progress simulation
-    setMessages(prev => [...prev, {
-      type: 'loading',
-      content: 'Thinking...',
-      timestamp: new Date()
-    }]);
-
+    // Start progress bar simulation
+    let currentProgress = 0;
     const progressInterval = setInterval(() => {
-      setLoadingProgress(prev => Math.min(prev + 10, 90));
-    }, 200);
+      currentProgress += 5;
+      if (currentProgress >= 90) {
+        clearInterval(progressInterval);
+      }
+      setLoadingProgress(currentProgress);
+    }, 100);
 
-    // Skip API call in development - use local feedback instead
-    const isDevelopment = window.location.hostname === 'localhost' ||
-                          window.location.hostname.includes('webcontainer');
-
-    if (isDevelopment) {
-      // Remove loading and add local response
-      setTimeout(async () => {
+    // Fallback for local development if AI function is not available
+    if (!openAIConnected && !openAILoading) {
+      setTimeout(() => {
         clearInterval(progressInterval);
         setLoadingProgress(100);
 
@@ -872,7 +539,7 @@ export function EnhancedCoachPanel({
         });
 
         if (sessionId && user?.id) {
-          await ChatSessionService.saveMessage(
+          ChatSessionService.saveMessage(
             sessionId,
             user.id,
             'assistant',
@@ -1089,6 +756,38 @@ export function EnhancedCoachPanel({
           <>
             {/* Messages Area - OPTIMIZED: More space, less padding */}
             <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-white dark:bg-slate-900" style={{ height: 'calc(100% - 70px)' }}>
+
+              {/* Getting Started - Dynamic Content */}
+              <div className="bg-white dark:bg-slate-700 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600">
+                <div className="flex items-center space-x-2 mb-2">
+                  <Target className="w-5 h-5 text-green-600 dark:text-green-400" />
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">🎯 Getting Started</h3>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-start space-x-3">
+                    <Lightbulb className="w-5 h-5 text-yellow-500 flex-shrink-0" />
+                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                      <span className="font-medium text-gray-900 dark:text-gray-100">Suggestion:</span>
+                      {sidebarContent.suggestion}
+                    </p>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <BookOpen className="w-5 h-5 text-blue-500 flex-shrink-0" />
+                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                      <span className="font-medium text-gray-900 dark:text-gray-100">Example:</span>
+                      {sidebarContent.example}
+                    </p>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <Star className="w-5 h-5 text-purple-500 flex-shrink-0" />
+                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                      <span className="font-medium text-gray-900 dark:text-gray-100">⭐ Next Step:</span>
+                      {sidebarContent.nextStep}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
               {/* Grammar Issues Summary - Always visible if there are issues */}
               {comprehensiveFeedback && comprehensiveFeedback.grammarIssues && comprehensiveFeedback.grammarIssues.length > 0 && (
                 <div className="sticky top-0 z-10 mb-3">
@@ -1285,6 +984,16 @@ export function EnhancedCoachPanel({
                 </div>
               )}
 
+              {/* NSW Criteria Dashboard */}
+              <div className="mb-3">
+                <NSWCriteriaDisplay
+                  analysis={analysis}
+                  darkMode={darkMode}
+                  textType={textType}
+                />
+              </div>
+
+              {/* Chat History */}
               {messages.map((message, index) => (
                 <div key={index} className={`${message.type === 'user' ? 'ml-6' : 'mr-6'}`}>
                   {message.type === 'user' ? (
@@ -1501,137 +1210,101 @@ export function EnhancedCoachPanel({
               <div ref={messagesEndRef} />
             </div>
 
-            {/* OPTIMIZED: Compact Input Area */}
-            <div className="border-t border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800">
-              {/* Prepopulated Questions - Collapsible */}
-              <div className="border-b border-gray-200 dark:border-slate-700 relative">
-                {/* Dropdown appears above the button */}
-                {showQuestions && (
-                  <div className="absolute bottom-full left-0 right-0 mb-1 px-3 pb-3 pt-3 space-y-1 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-t-lg shadow-lg z-10">
-                    {[
-                      "How can I make my opening more engaging?",
-                      "What words can I use instead of 'said'?",
-                      "How do I show, not tell, emotions?",
-                      "Can you help me improve this sentence?",
-                      "What's a good way to end my story?",
-                      "How can I add more description?"
-                    ].map((question, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => {
-                          setInputValue(question);
-                          setShowQuestions(false);
-                        }}
-                        className="w-full text-left px-3 py-2 text-xs bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded hover:bg-blue-50 dark:hover:bg-slate-600 hover:border-blue-300 dark:hover:border-blue-500 transition-colors text-gray-700 dark:text-gray-200"
-                      >
-                        {question}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
+            {/* Input Area */}
+            <div className="p-3 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex space-x-2">
+                <input
+                  type="text"
+                  className={`flex-1 p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 ${
+                    darkMode ? 'bg-slate-800 border-gray-700 text-white' : 'bg-white border-gray-300 text-gray-900'
+                  }`}
+                  placeholder="Ask the Writing Mate a question..."
+                  value={inputMessage}
+                  onChange={(e) => setInputMessage(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      handleSendMessage();
+                    }
+                  }}
+                  disabled={isLoadingResponse || isAnalyzing}
+                />
                 <button
-                  onClick={() => setShowQuestions(!showQuestions)}
-                  className="w-full px-3 py-2 flex items-center justify-between hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
+                  onClick={handleSendMessage}
+                  className={`p-2 rounded-lg transition-colors flex items-center justify-center ${
+                    isLoadingResponse || isAnalyzing
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : 'bg-blue-600 hover:bg-blue-700'
+                  }`}
+                  disabled={isLoadingResponse || isAnalyzing}
                 >
-                  <span className="text-xs font-medium text-gray-700 dark:text-gray-300">Quick Questions</span>
-                  {showQuestions ? (
-                    <ChevronDown className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                  {isLoadingResponse ? (
+                    <Loader2 className="w-5 h-5 text-white animate-spin" />
                   ) : (
-                    <ChevronUp className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                    <Send className="w-5 h-5 text-white" />
                   )}
                 </button>
-              </div>
-
-              {/* Input Box */}
-              <div className="p-3">
-                <div className="flex space-x-2">
-                  <input
-                    type="text"
-                    value={inputValue}
-                    onChange={(e) => setInputValue(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                    placeholder="Ask me anything about your writing..."
-                    className="flex-1 px-2 py-1 border border-gray-300 dark:border-slate-600 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-slate-700 dark:text-gray-100"
-                  />
-                  <button
-                    onClick={handleSendMessage}
-                    disabled={!inputValue.trim()}
-                    className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <Send className="w-3 h-3" />
-                  </button>
-                </div>
               </div>
             </div>
           </>
         ) : currentView === 'examples' ? (
-          <div className="h-full overflow-hidden">
-            <ContextualAICoachPanel
-              content={content}
-              textType={textType}
-              prompt={writingPrompt}
-            />
+          <div className="p-3 overflow-y-auto h-full">
+            <h3 className="text-lg font-bold mb-3 text-gray-900 dark:text-white">Dynamic Examples</h3>
+            <div className="space-y-4">
+              {dynamicExamples && dynamicExamples.length > 0 ? (
+                dynamicExamples.map((example, index) => (
+                  <div key={index} className="p-4 bg-white dark:bg-slate-800 rounded-lg shadow border border-gray-200 dark:border-gray-700">
+                    <h4 className="font-semibold text-blue-600 dark:text-blue-400 mb-2">{example.title}</h4>
+                    <div className="text-sm space-y-2">
+                      <p className="text-gray-700 dark:text-gray-300">
+                        <span className="font-medium text-red-600">❌ Before:</span> {example.before}
+                      </p>
+                      <p className="text-gray-700 dark:text-gray-300">
+                        <span className="font-medium text-green-600">✅ After:</span> {example.after}
+                      </p>
+                      <p className="text-xs italic text-gray-500 dark:text-gray-400">
+                        💡 {example.explanation}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-500 dark:text-gray-400 text-sm">Start writing to generate dynamic examples based on your content!</p>
+              )}
+            </div>
           </div>
         ) : currentView === 'builder' ? (
-          <div className="h-full overflow-y-auto p-4">
-            <StepByStepWritingBuilder
-              textType={textType}
-              content={content}
-            />
-          </div>
+          <StepByStepWritingBuilder
+            textType={textType}
+            darkMode={darkMode}
+          />
         ) : currentView === 'detailed' ? (
-          <div className="h-full overflow-y-auto p-4 bg-white dark:bg-slate-900">
-            {comprehensiveFeedback ? (
-              <ComprehensiveFeedbackDisplay
-                feedback={comprehensiveFeedback}
-                darkMode={true}
-              />
-            ) : (
-              <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                <Target className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                <p>Write at least 20 words to see detailed feedback</p>
-              </div>
-            )}
-          </div>
+          <ComprehensiveFeedbackDisplay
+            feedback={comprehensiveFeedback}
+            darkMode={darkMode}
+            onApplyFix={onApplyFix}
+          />
         ) : currentView === 'grammar' ? (
-          <div className="h-full overflow-y-auto p-4 bg-white dark:bg-slate-900">
-            <GrammarCorrectionPanel
-              text={content || ''}
-              aiCorrections={analysis?.grammarCorrections}
-              onApplyCorrection={(start, end, correction) => {
-                if (onContentChange) {
-                  const newContent = content.substring(0, start) + correction + content.substring(end);
-                  onContentChange(newContent);
-                }
-              }}
-            />
-          </div>
+          <GrammarCorrectionPanel
+            content={content}
+            grammarIssues={comprehensiveFeedback?.grammarIssues}
+            darkMode={darkMode}
+            onApplyFix={onApplyFix}
+          />
         ) : currentView === 'vocabulary' ? (
-          <div className="h-full overflow-y-auto p-4 bg-white dark:bg-slate-900">
-            <VocabularyEnhancementPanel
-              text={content || ''}
-              aiEnhancements={analysis?.vocabularyEnhancements}
-              onReplaceWord={(position, originalWord, newWord) => {
-                if (onContentChange) {
-                  const lowerContent = content.toLowerCase();
-                  const actualPosition = lowerContent.indexOf(originalWord.toLowerCase(), position);
-                  if (actualPosition !== -1) {
-                    const newContent = content.substring(0, actualPosition) + newWord + content.substring(actualPosition + originalWord.length);
-                    onContentChange(newContent);
-                  }
-                }
-              }}
-            />
-          </div>
+          <VocabularyEnhancementPanel
+            content={content}
+            darkMode={darkMode}
+            selectedText={selectedText}
+          />
         ) : currentView === 'sentences' ? (
-          <div className="h-full overflow-y-auto p-4 bg-white dark:bg-slate-900">
-            <SentenceStructurePanel text={content || ''} />
-          </div>
+          <SentenceStructurePanel
+            content={content}
+            darkMode={darkMode}
+          />
         ) : null}
       </div>
     </div>
   );
-}
+};
 
 export default EnhancedCoachPanel;
