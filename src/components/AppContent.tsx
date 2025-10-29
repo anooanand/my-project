@@ -59,7 +59,9 @@ function AppContent() {
 
   // Writing state
   const [content, setContent] = useState('');
-  const [textType, setTextType] = useState('');
+  // src/components/AppContent.tsx (Line 62)
+  // Before: const [textType, setTextType] = useState('');
+  const [textType, setTextType] = useState('narrative'); 
   const [assistanceLevel, setAssistanceLevel] = useState('detailed');
   const [timerStarted, setTimerStarted] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
@@ -231,7 +233,9 @@ function AppContent() {
       
       // Clear content and reset state
       setContent('');
-      setTextType('');
+      // src/components/AppContent.tsx (Line 234)
+      // Before: setTextType('');
+      setTextType('narrative'); 
       setPopupFlowCompleted(false);
       
       // If we're on the writing page, this will trigger the writing type modal
@@ -462,7 +466,7 @@ function AppContent() {
               <ExamSimulationMode
                 content={content}
                 onChange={setContent}
-                textType={textType}
+                textType={textType || 'narrativr'}
                 initialPrompt={prompt || ''}
                 wordCount={content.split(/\s+/).filter(Boolean).length}
                 onWordCountChange={() => { /* handled internally */ }}
@@ -484,7 +488,7 @@ function AppContent() {
               <EnhancedWritingLayoutNSW
                 content={content}
                 onChange={setContent}
-                textType={textType}
+                textType={textType || 'narrative'}
                 initialPrompt={prompt || ''}
                 wordCount={content.split(/\s+/).filter(Boolean).length}
                 onWordCountChange={() => { /* handled internally */ }}
