@@ -466,7 +466,7 @@ function AppContent() {
               <ExamSimulationMode
                 content={content}
                 onChange={setContent}
-                textType={textType || 'narrativr'}
+                textType={textType || 'narrative'}
                 initialPrompt={prompt || ''}
                 wordCount={content.split(/\s+/).filter(Boolean).length}
                 onWordCountChange={() => { /* handled internally */ }}
