@@ -136,28 +136,7 @@ export function PricingPage() {
           </p>
         </div>
 
-        {/* User Status */}
-        {user && (
-          <div className="max-w-2xl mx-auto mb-8">
-            <div className={`${status.bgColor} border border-gray-200 rounded-lg p-4 text-center`}>
-              <p className={`${status.color} font-medium`}>
-                Signed in as: {user.email}
-              </p>
-              <p className={`${status.color} text-sm mt-1`}>
-                {status.message}
-              </p>
-              {!emailVerified && (
-                <button
-                  onClick={forceRefreshVerification} // Use forceRefreshVerification from AuthContext
-                  disabled={isCheckingVerification}
-                  className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 text-sm"
-                >
-                  {isCheckingVerification ? 'Checking...' : 'Recheck Status'}
-                </button>
-              )}
-            </div>
-          </div>
-        )}
+        
 
         {/* Pricing Card - Single Centered Plan */}
         <div className="max-w-lg mx-auto">
