@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Mail, Lock, Loader, User } from 'lucide-react';
+import { Mail, Lock, Loader } from 'lucide-react';
 import { signUp } from '../lib/supabase';
 
 interface SimpleSignUpProps {
@@ -9,7 +9,6 @@ interface SimpleSignUpProps {
 
 // Changed from "export default function" to "export function" to match import style
 export function SignUpForm({ onSignInClick, onSignUpSuccess }: SimpleSignUpProps) {
-  const [studentName, setStudentName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -42,11 +41,6 @@ export function SignUpForm({ onSignInClick, onSignUpSuccess }: SimpleSignUpProps
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (studentName.trim() === '') {
-      setError('Please enter the Student Name');
-      return;
-    }
-
     if (!isPasswordValid) {
       setError('Please ensure your password meets all requirements');
       return;
@@ -61,7 +55,7 @@ export function SignUpForm({ onSignInClick, onSignUpSuccess }: SimpleSignUpProps
     setError('');
 
     try {
-      const result = await signUp(email, password, studentName);
+      const result = await signUp(email, password);
       
       if (result.success) {
         setSuccess(true);
@@ -113,26 +107,6 @@ export function SignUpForm({ onSignInClick, onSignUpSuccess }: SimpleSignUpProps
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* NEW FIELD: Student Name */}
-        <div>
-          <label htmlFor="signup-name" className="block text-sm font-medium text-gray-700 mb-2">
-            🧑 Student Name
-          </label>
-          <div className="relative">
-            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              id="signup-name"
-              type="text"
-              value={studentName}
-              onChange={(e) => setStudentName(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-              placeholder="e.g., Alex Smith"
-              required
-            />
-          </div>
-        </div>
-
-        {/* EXISTING FIELD: Email */}
         <div>
           <label htmlFor="signup-email" className="block text-sm font-medium text-gray-700 mb-2">
             📧 Your Email Address
@@ -151,7 +125,6 @@ export function SignUpForm({ onSignInClick, onSignUpSuccess }: SimpleSignUpProps
           </div>
         </div>
 
-        {/* EXISTING FIELD: Password */}
         <div>
           <label htmlFor="signup-password" className="block text-sm font-medium text-gray-700 mb-2">
             🔐 Create a Strong Password
@@ -198,7 +171,6 @@ export function SignUpForm({ onSignInClick, onSignUpSuccess }: SimpleSignUpProps
           )}
         </div>
 
-        {/* EXISTING FIELD: Confirm Password */}
         <div>
           <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-2">
             🔐 Confirm Your Password
