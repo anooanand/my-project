@@ -505,28 +505,6 @@ function AppContent() {
               </div>
             )}
             </WritingAccessCheck>
-          } />     onToggleFocus={handleToggleFocusMode}
-                showStructureGuide={showStructureGuide}
-                onToggleStructureGuide={handleToggleStructureGuide}
-                showTips={showTips}
-                onToggleTips={handleToggleTips}
-                analysis={null} // Placeholder for actual analysis data
-                onAnalysisChange={() => { /* handle analysis change */ }}
-                setPrompt={setPrompt}
-                assistanceLevel={assistanceLevel}
-                onAssistanceLevelChange={setAssistanceLevel}
-                onSubmit={handleSubmit}
-                selectedText={selectedText}
-                onTextTypeChange={handleTextTypeChange}
-                onPopupCompleted={handlePopupCompleted}
-                popupFlowCompleted={popupFlowCompleted}
-                user={user}
-                openAIConnected={openAIConnected}
-                openAILoading={openAILoading}
-                panelVisible={panelVisible}
-                setPanelVisible={setPanelVisible}
-              />
-            </WritingAccessCheck>
           } />
           <Route path="/learning" element={
             <>
