@@ -35,13 +35,18 @@ export const signIn = async (email: string, password: string) => {
   }
 };
 
-export const signUp = async (email: string, password: string) => {
+export const signUp = async (email: string, password: string, studentName: string) => {
   try {
     console.log('Attempting direct Supabase sign up...');
     
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          student_name: studentName,
+        },
+      },
     });
     
     if (error) {
