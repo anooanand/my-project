@@ -31,6 +31,15 @@ export const HomeNavigation: React.FC<HomeNavigationProps> = ({ onNavigate, onSi
     { label: 'About', href: '#about' }
   ];
 
+  const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>, href?: string) => {
+    if (href && href.startsWith('#')) {
+      // Use window.location.href to ensure the browser handles the anchor link
+      // This is a common fix for anchor links not working in SPAs
+      e.preventDefault();
+      window.location.href = href;
+    }
+  };
+
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -69,6 +78,7 @@ export const HomeNavigation: React.FC<HomeNavigationProps> = ({ onNavigate, onSi
                 <a
                   key={item.label}
                   href={item.href}
+                  onClick={(e) => handleLinkClick(e, item.href)}
                   className="text-gray-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition-colors"
                 >
                   {item.label}
@@ -146,14 +156,30 @@ export const HomeNavigation: React.FC<HomeNavigationProps> = ({ onNavigate, onSi
         <div className="md:hidden border-t border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-900">
           <div className="px-4 py-6 space-y-4">
             {navItems.map((item) => (
-              <a
-                key={item.label}
-                href={item.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className="block text-gray-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium py-2"
-              >
-                {item.label}
-              </a>
+              item.onClick ? (
+                <button
+                  key={item.label}
+                  onClick={() => {
+                    item.onClick && item.onClick();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="block w-full text-left text-gray-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium py-2"
+                >
+                  {item.label}
+                </button>
+              ) : (
+                <a
+                  key={item.label}
+                  href={item.href}
+                  onClick={(e) => {
+                    handleLinkClick(e, item.href);
+                    setMobileMenuOpen(false);
+                  }}
+                  className="block text-gray-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium py-2"
+                >
+                  {item.label}
+                </a>
+              )
             ))}
 
             <div className="pt-4 space-y-3 border-t border-gray-200 dark:border-slate-700">
