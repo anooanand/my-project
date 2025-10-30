@@ -222,6 +222,9 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSignInClick, o
             </div>
           </div>
 
+          {/* Pricing Anchor */}
+          <div id="pricing" className="pt-20 -mt-20"></div>
+
           {/* Solution Highlight */}
           <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 dark:from-indigo-500 dark:via-purple-500 dark:to-pink-500 rounded-3xl p-12 md:p-16 text-center relative overflow-hidden">
             {/* Decorative grid overlay */}
