@@ -43,7 +43,8 @@ export const signUp = async (email: string, password: string, studentName: strin
       email,
       password,
       options: {
-        data: {
+        // CORRECTED: Use user_metadata to pass custom data during sign up
+        user_metadata: {
           student_name: studentName,
         },
       },
