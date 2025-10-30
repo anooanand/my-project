@@ -1254,8 +1254,9 @@ export const EnhancedCoachPanel = ({
                   placeholder="Ask the Writing Mate a question..."
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
-                  onKeyPress={(e) => {
+                  onKeyDown={(e) => {
                     if (e.key === 'Enter' && !isLoadingResponse && !isAnalyzing) {
+                      e.preventDefault(); // Prevent default behavior (e.g., form submission)
                       handleSendMessage();
                     }
                   }}
