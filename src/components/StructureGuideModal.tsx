@@ -177,8 +177,8 @@ const STRUCTURE_GUIDES: { [key: string]: { title: string; points: string[] } } =
 export const StructureGuideModal: React.FC<StructureGuideModalProps> = ({ isOpen, onClose, textType }) => {
   if (!isOpen) return null;
 
-  // Normalize textType to match keys, assuming the keys are exact matches to the user's list
-  const structure = STRUCTURE_GUIDES[textType] || STRUCTURE_GUIDES.default;
+    const normalizedTextType = textType.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  const structure = STRUCTURE_GUIDES[normalizedTextType] || STRUCTURE_GUIDES.default;
 
   return (
     <div className="fixed inset-0 bg-gray-600 dark:bg-gray-900 bg-opacity-50 dark:bg-opacity-80 overflow-y-auto h-full w-full z-50">
