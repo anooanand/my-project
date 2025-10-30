@@ -84,7 +84,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
         const { data, error } = await supabase.auth.signUp({
           email,
-          password,
+          password
         });
         
         if (error) {

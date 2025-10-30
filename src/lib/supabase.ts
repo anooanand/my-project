@@ -10,7 +10,13 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 // Create and export the Supabase client
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: false
+  }
+});
 
 // Direct authentication functions (fallback if proxy fails)
 export const signIn = async (email: string, password: string) => {
