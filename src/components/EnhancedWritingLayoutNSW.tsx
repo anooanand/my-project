@@ -911,37 +911,47 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
                   <option value="Courier New">Courier New</option>
                 </select>
               </div>
-              
-              {/* Font Size */}
-              <div className="space-y-2">
-                <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  📏 Font Size
-                </label>
-                <input
-                  type="number"
-                  value={fontSize}
-                  onChange={(e) => onSettingsChange && onSettingsChange({ fontSize: parseInt(e.target.value) })}
-                  className={`w-full p-2 border rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                    darkMode ? 'bg-slate-800 text-gray-100 border-slate-600' : 'bg-white text-gray-900 border-gray-300'
-                  }`}
-                />
-              </div>
-              
-              {/* Line Height */}
-              <div className="space-y-2">
-                <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                  📐 Line Height
-                </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={lineHeight}
-                  onChange={(e) => onSettingsChange && onSettingsChange({ lineHeight: parseFloat(e.target.value) })}
-                  className={`w-full p-2 border rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
-                    darkMode ? 'bg-slate-800 text-gray-100 border-slate-600' : 'bg-white text-gray-900 border-gray-300'
-                  }`}
-                />
-              </div>
+
+
+// Font Size
+<div className="space-y-2">
+  <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+    📏 Font Size
+  </label>
+  <select
+    value={fontSize}
+    onChange={(e) => onSettingsChange && onSettingsChange({ fontSize: parseInt(e.target.value) })}
+    className={`w-full p-2 border rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+      darkMode ? 'bg-slate-800 text-gray-100 border-slate-600' : 'bg-white text-gray-900 border-gray-300'
+    }`}
+  >
+    <option value="14">14px (Small)</option>
+    <option value="16">16px (Default)</option>
+    <option value="18">18px (Medium)</option>
+    <option value="20">20px (Large)</option>
+    <option value="24">24px (Extra Large)</option>
+  </select>
+</div>
+
+// Line Height
+<div className="space-y-2">
+  <label className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+    📐 Line Height
+  </label>
+  <select
+    value={lineHeight}
+    onChange={(e) => onSettingsChange && onSettingsChange({ lineHeight: parseFloat(e.target.value) })}
+    className={`w-full p-2 border rounded text-sm focus:ring-2 focus:ring-purple-500 focus:border-transparent ${
+      darkMode ? 'bg-slate-800 text-gray-100 border-slate-600' : 'bg-white text-gray-900 border-gray-300'
+    }`}
+  >
+    <option value="1.4">1.4 (Compact)</option>
+    <option value="1.6">1.6 (Default)</option>
+    <option value="1.8">1.8 (Comfortable)</option>
+    <option value="2.0">2.0 (Double Space)</option>
+  </select>
+</div>
+
             </div>
           </div>
         )}
