@@ -1210,6 +1210,39 @@ export const EnhancedCoachPanel = ({
               <div ref={messagesEndRef} />
             </div>
 
+            {/* Quick Query Suggestions - Show when no messages */}
+            {messages.length === 0 && !isLoadingResponse && (
+              <div className="px-3 pb-2">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">💬 Quick Questions:</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => setInputMessage("How can I improve my opening?")}
+                    className="text-left p-2 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded text-xs text-blue-800 dark:text-blue-300 transition-colors"
+                  >
+                    ✨ Improve opening
+                  </button>
+                  <button
+                    onClick={() => setInputMessage("What vocabulary can I use?")}
+                    className="text-left p-2 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 border border-purple-200 dark:border-purple-800 rounded text-xs text-purple-800 dark:text-purple-300 transition-colors"
+                  >
+                    📚 Better words
+                  </button>
+                  <button
+                    onClick={() => setInputMessage("How do I add more detail?")}
+                    className="text-left p-2 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 border border-green-200 dark:border-green-800 rounded text-xs text-green-800 dark:text-green-300 transition-colors"
+                  >
+                    🎨 Add detail
+                  </button>
+                  <button
+                    onClick={() => setInputMessage("What should I write next?")}
+                    className="text-left p-2 bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/30 border border-orange-200 dark:border-orange-800 rounded text-xs text-orange-800 dark:text-orange-300 transition-colors"
+                  >
+                    🎯 What's next?
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Input Area */}
             <div className="p-3 border-t border-gray-200 dark:border-gray-700">
               <div className="flex space-x-2">
@@ -1222,7 +1255,7 @@ export const EnhancedCoachPanel = ({
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
+                    if (e.key === 'Enter' && !isLoadingResponse && !isAnalyzing) {
                       handleSendMessage();
                     }
                   }}
