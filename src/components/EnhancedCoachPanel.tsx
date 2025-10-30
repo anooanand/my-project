@@ -1311,17 +1311,35 @@ export const EnhancedCoachPanel = ({
             darkMode={darkMode}
           />
         ) : currentView === 'detailed' ? (
-          <ComprehensiveFeedbackDisplay
-            feedback={comprehensiveFeedback}
-            darkMode={darkMode}
-            onApplyFix={onApplyFix}
-          />
+          comprehensiveFeedback ? (
+            <ComprehensiveFeedbackDisplay
+              feedback={comprehensiveFeedback}
+              darkMode={darkMode}
+              onApplyFix={onApplyFix}
+            />
+          ) : (
+            <div className="p-6 text-center">
+              <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
+                <BookOpen className="w-12 h-12 text-blue-500 mx-auto mb-3" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Start Writing to See Detailed Feedback</h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-4">
+                  Once you start writing, you'll see comprehensive feedback on:
+                </p>
+                <ul className="text-left inline-block text-sm text-gray-700 dark:text-gray-300 space-y-2">
+                  <li>✓ Grammar and spelling</li>
+                  <li>✓ NSW marking criteria scores</li>
+                  <li>✓ Story structure and pacing</li>
+                  <li>✓ Vocabulary sophistication</li>
+                  <li>✓ Sentence variety</li>
+                </ul>
+              </div>
+            </div>
+          )
         ) : currentView === 'grammar' ? (
           <GrammarCorrectionPanel
-            content={content}
-            grammarIssues={comprehensiveFeedback?.grammarIssues}
-            darkMode={darkMode}
-            onApplyFix={onApplyFix}
+            text={content || ''}
+            aiCorrections={comprehensiveFeedback?.grammarIssues}
+            onApplyCorrection={onApplyFix}
           />
         ) : currentView === 'vocabulary' ? (
           <VocabularyEnhancementPanel
