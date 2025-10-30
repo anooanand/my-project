@@ -766,21 +766,21 @@ export const EnhancedCoachPanel = ({
                 <div className="space-y-3">
                   <div className="flex items-start space-x-3">
                     <Lightbulb className="w-5 h-5 text-yellow-500 flex-shrink-0" />
-                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                    <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
                       <span className="font-medium text-gray-900 dark:text-gray-100">Suggestion:</span>
                       {sidebarContent.suggestion}
                     </p>
                   </div>
                   <div className="flex items-start space-x-3">
                     <BookOpen className="w-5 h-5 text-blue-500 flex-shrink-0" />
-                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                    <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
                       <span className="font-medium text-gray-900 dark:text-gray-100">Example:</span>
                       {sidebarContent.example}
                     </p>
                   </div>
                   <div className="flex items-start space-x-3">
                     <Star className="w-5 h-5 text-purple-500 flex-shrink-0" />
-                    <p className="text-sm text-gray-700 dark:text-gray-300">
+                    <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
                       <span className="font-medium text-gray-900 dark:text-gray-100">⭐ Next Step:</span>
                       {sidebarContent.nextStep}
                     </p>
