@@ -556,7 +556,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
         <div className="mb-12">
           <div>
             <h1 className="text-4xl lg:text-5xl font-bold text-gray-900 dark:text-slate-100 mb-3">
-              Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-700">{getUserName()}</span>! 👋
+              Welcome back! 👋
             </h1>
             <p className="text-xl text-gray-600 dark:text-slate-300">
               Ready to create something amazing today?
