@@ -1,6 +1,6 @@
 // SIMPLIFIED Kid-Friendly AuthModal component
 import React, { useState, useEffect } from 'react';
-import { X, Mail, Lock, Eye, EyeOff, CheckCircle, AlertCircle, Loader, Star, Heart, Smile, User } from 'lucide-react';
+import { X, Mail, Lock, Eye, EyeOff, CheckCircle, AlertCircle, Loader, Star, Heart, Smile } from 'lucide-react';
 import { supabase, isEmailVerified } from '../lib/supabase';
 
 interface AuthModalProps {
@@ -81,10 +81,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           setCurrentStep(1);
           return;
         }
-
+        
         const { data, error } = await supabase.auth.signUp({
           email,
-          password
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback`
+          }
         });
         
         if (error) {
@@ -153,7 +156,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         setTimeout(() => setSuccess(false), 3000);
       }
     } catch (err: any) {
-      setError(getKidFriendlyError('Failed to resend confirmation email'));
+      setError(getKidFriendlyError(err.message || 'Failed to resend confirmation email'));
     } finally {
       setLoading(false);
     }
@@ -184,7 +187,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         setError("We haven't received your email confirmation yet. Please check your email and click the magic link! ✨");
       }
     } catch (err: any) {
-      setError(getKidFriendlyError('Failed to check verification status'));
+      setError(getKidFriendlyError(err.message || 'Failed to check verification status'));
     } finally {
       setVerificationChecking(false);
     }
@@ -258,11 +261,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </h2>
 
           <p className="text-base text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
-            We sent a special magic link to   
-
+            We sent a special magic link to <br />
             <strong className="text-blue-600">{confirmationEmail}</strong>
-              
-
+            <br />
             Click it to activate your account! ✨
           </p>
           
@@ -291,12 +292,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <button
               onClick={handleResendConfirmation}
               disabled={loading}
-              className="w-full py-3 px-4 bg-blue-500 hover:bg-blue-600 text-white text-base font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-all duration-200"
+              className="w-full py-3 px-4 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white text-base font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-all duration-200 transform hover:scale-105 shadow-lg"
             >
               {loading ? (
                 <>
                   <Loader className="animate-spin -ml-1 mr-2 h-5 w-5" />
-                  Sending...
+                  Sending Magic...
                 </>
               ) : (
                 <>
@@ -399,7 +400,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               />
             </div>
           </div>
-
 
           {/* Password Field */}
           <div className="mb-4">
