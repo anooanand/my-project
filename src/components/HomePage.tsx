@@ -77,7 +77,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSignInClick, o
               </button>
 
               <button
-                onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}
+                onClick={() => onNavigate('pricing')}
                 className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-gray-700 bg-white border-2 border-gray-200 rounded-xl hover:border-purple-300 hover:shadow-lg transition-all duration-200"
               >
                 See How It Works
