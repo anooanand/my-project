@@ -94,7 +94,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
             data: {
               student_name: studentName,
             },
