@@ -32,21 +32,38 @@ BEGIN
   END IF;
 END $$;
 
+-- Add student_name column to user_profiles if it doesn't exist
+DO $$ 
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'user_profiles' AND column_name = 'student_name'
+  ) THEN
+    ALTER TABLE user_profiles ADD COLUMN student_name TEXT;
+  END IF;
+END $$;
+
 -- Create index on user_id column for faster lookups
 CREATE INDEX IF NOT EXISTS idx_user_profiles_user_id ON user_profiles(user_id);
 
 -- Create index on email column for faster lookups
 CREATE INDEX IF NOT EXISTS idx_user_profiles_email ON user_profiles(email);
 
--- Update the handle_new_user function to set both id and user_id
+-- Update the handle_new_user function to set both id and user_id AND student_name
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
+DECLARE
+  _student_name TEXT;
 BEGIN
-  INSERT INTO public.user_profiles (id, user_id, email, subscription_status, payment_status, temp_access_until, role)
+  -- Extract student_name from raw_user_meta_data. This is what was causing the 500 error.
+  _student_name := NEW.raw_user_meta_data->>'student_name';
+
+  INSERT INTO public.user_profiles (id, user_id, email, student_name, subscription_status, payment_status, temp_access_until, role)
   VALUES (
     NEW.id,
     NEW.id,
     NEW.email,
+    _student_name,
     'free',
     'pending',
     NOW() + INTERVAL '24 hours',
