@@ -485,6 +485,7 @@ function AppContent() {
           } />
           <Route path="/writing" element={
             <WritingAccessCheck onNavigate={handleNavigation}>
+              {prompt ? (
               <EnhancedWritingLayoutNSW
                 content={content}
                 onChange={setContent}
@@ -497,9 +498,14 @@ function AppContent() {
                 elapsedTime={elapsedTime}
                 onStartTimer={() => setTimerStarted(true)}
                 onPauseTimer={() => setTimerStarted(false)}
-                onResetTimer={() => { setTimerStarted(false); setElapsedTime(0); }}
-                focusMode={focusMode}
-                onToggleFocus={handleToggleFocusMode}
+              onResetTimer={() => { setTimerStarted(false); setElapsedTime(0); }} />
+            ) : (
+              <div className="flex-1 flex items-center justify-center text-gray-500">
+                Please go back to the Dashboard to select a writing prompt.
+              </div>
+            )}
+            </WritingAccessCheck>
+          } />     onToggleFocus={handleToggleFocusMode}
                 showStructureGuide={showStructureGuide}
                 onToggleStructureGuide={handleToggleStructureGuide}
                 showTips={showTips}
