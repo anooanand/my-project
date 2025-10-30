@@ -10,13 +10,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 // Create and export the Supabase client
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: false
-  }
-});
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Direct authentication functions (fallback if proxy fails)
 export const signIn = async (email: string, password: string) => {
@@ -49,8 +43,7 @@ export const signUp = async (email: string, password: string, studentName: strin
       email,
       password,
       options: {
-        // CORRECTED: Use user_metadata to pass custom data during sign up
-        user_metadata: {
+        data: {
           student_name: studentName,
         },
       },
