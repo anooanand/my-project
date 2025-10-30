@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Send, MessageSquare, BarChart3, Lightbulb, Target, Star, TrendingUp, Award, List, BookOpen, AlertCircle, Loader2, FileCheck, Sparkles, AlignLeft, ChevronUp, ChevronDown } from 'lucide-react';
+import { Send, MessageSquare, BarChart3, Lightbulb, Target, Star, TrendingUp, Award, List, BookOpen, AlertCircle, Loader2, FileCheck, Sparkles, AlignLeft, ChevronUp, ChevronDown, ChevronRight } from 'lucide-react';
 import { StepByStepWritingBuilder } from './StepByStepWritingBuilder';
 import { ContextualAICoachPanel } from './ContextualAICoachPanel';
 import { ComprehensiveFeedbackDisplay } from './ComprehensiveFeedbackDisplay';
@@ -399,6 +399,7 @@ export const EnhancedCoachPanel = ({
   const [isLoadingResponse, setIsLoadingResponse] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isQuickQueriesOpen, setIsQuickQueriesOpen] = useState(false);
   const [comprehensiveFeedback, setComprehensiveFeedback] = useState(null);
   const messagesEndRef = useRef(null);
   const responseStartTime = useRef(null);
@@ -758,7 +759,7 @@ export const EnhancedCoachPanel = ({
             <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-white dark:bg-slate-900" style={{ height: 'calc(100% - 70px)' }}>
 
               {/* Getting Started - Dynamic Content */}
-              <div className="bg-white dark:bg-slate-700 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600">
+              <div className="bg-white dark:bg-slate-700 p-4 rounded-lg shadow-sm border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300">
                 <div className="flex items-center space-x-2 mb-2">
                   <Target className="w-5 h-5 text-green-600 dark:text-green-400" />
                   <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">🎯 Getting Started</h3>
@@ -965,7 +966,7 @@ export const EnhancedCoachPanel = ({
                             <p className="text-xs font-semibold text-purple-700 dark:text-purple-400 mb-1">
                               {section.section}: <span className="font-normal text-purple-600 dark:text-purple-400">{section.pace}</span>
                             </p>
-                            <p className="text-xs text-gray-700 dark:text-gray-300">
+                            <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
                               💡 {section.recommendation}
                             </p>
                           </div>
@@ -1210,38 +1211,65 @@ export const EnhancedCoachPanel = ({
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Quick Query Suggestions - Show when no messages */}
+              {/* Quick Query Suggestions - Collapsible */}
             {messages.length === 0 && !isLoadingResponse && (
               <div className="px-3 pb-2">
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">💬 Quick Questions:</p>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => setInputMessage("How can I improve my opening?")}
-                    className="text-left p-2 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded text-xs text-blue-800 dark:text-blue-300 transition-colors"
-                  >
-                    ✨ Improve opening
-                  </button>
-                  <button
-                    onClick={() => setInputMessage("What vocabulary can I use?")}
-                    className="text-left p-2 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 border border-purple-200 dark:border-purple-800 rounded text-xs text-purple-800 dark:text-purple-300 transition-colors"
-                  >
-                    📚 Better words
-                  </button>
-                  <button
-                    onClick={() => setInputMessage("How do I add more detail?")}
-                    className="text-left p-2 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 border border-green-200 dark:border-green-800 rounded text-xs text-green-800 dark:text-green-300 transition-colors"
-                  >
-                    🎨 Add detail
-                  </button>
-                  <button
-                    onClick={() => setInputMessage("What should I write next?")}
-                    className="text-left p-2 bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/30 border border-orange-200 dark:border-orange-800 rounded text-xs text-orange-800 dark:text-orange-300 transition-colors"
-                  >
-                    🎯 What's next?
-                  </button>
-                </div>
+                <button
+                  onClick={() => setIsQuickQueriesOpen(!isQuickQueriesOpen)}
+                  className={`flex items-center justify-between w-full p-2 rounded-lg text-sm font-medium transition-colors mb-2 ${
+                    darkMode
+                      ? 'bg-slate-700 hover:bg-slate-600 text-white'
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-800'
+                  }`}
+                >
+                  <span className="flex items-center space-x-2">
+                    <MessageSquare className="w-4 h-4" />
+                    <span>Quick Questions</span>
+                  </span>
+                  {isQuickQueriesOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                </button>
+                {isQuickQueriesOpen && (
+                  <div className="grid grid-cols-2 gap-2 p-2 border rounded-lg shadow-inner bg-white dark:bg-slate-800 border-gray-200 dark:border-gray-700">
+                    <button
+                      onClick={() => {
+                        handleSendMessage("How can I improve my opening?");
+                        setIsQuickQueriesOpen(false); // Close after selection
+                      }}
+                      className="text-left p-2 bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded text-xs text-blue-800 dark:text-blue-300 transition-colors"
+                    >
+                      ✨ Improve opening
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleSendMessage("What vocabulary can I use?");
+                        setIsQuickQueriesOpen(false); // Close after selection
+                      }}
+                      className="text-left p-2 bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30 border border-purple-200 dark:border-purple-800 rounded text-xs text-purple-800 dark:text-purple-300 transition-colors"
+                    >
+                      📚 Better words
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleSendMessage("How do I add more detail?");
+                        setIsQuickQueriesOpen(false); // Close after selection
+                      }}
+                      className="text-left p-2 bg-green-50 dark:bg-green-900/20 hover:bg-green-100 dark:hover:bg-green-900/30 border border-green-200 dark:border-green-800 rounded text-xs text-green-800 dark:text-green-300 transition-colors"
+                    >
+                      🎨 Add detail
+                    </button>
+                    <button
+                      onClick={() => {
+                        handleSendMessage("What should I write next?");
+                        setIsQuickQueriesOpen(false); // Close after selection
+                      }}
+                      className="text-left p-2 bg-orange-50 dark:bg-orange-900/20 hover:bg-orange-100 dark:hover:bg-orange-900/30 border border-orange-200 dark:border-orange-800 rounded text-xs text-orange-800 dark:text-orange-300 transition-colors"
+                    >
+                      🎯 What's next?
+                    </button>
+                  </div>
+                )}
               </div>
-            )}
+            )}`],path:
 
             {/* Input Area */}
             <div className="p-3 border-t border-gray-200 dark:border-gray-700">
