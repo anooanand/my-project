@@ -1,6 +1,6 @@
 // SIMPLIFIED Kid-Friendly AuthModal component
 import React, { useState, useEffect } from 'react';
-import { X, Mail, Lock, Eye, EyeOff, CheckCircle, AlertCircle, Loader, Star, Heart, Smile } from 'lucide-react';
+import { X, Mail, Lock, Eye, EyeOff, CheckCircle, AlertCircle, Loader, Star, Heart, Smile, User } from 'lucide-react';
 import { supabase, isEmailVerified } from '../lib/supabase';
 
 interface AuthModalProps {
@@ -19,6 +19,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const [mode, setMode] = useState<'signin' | 'signup' | 'confirmation'>(initialMode);
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
+  const [studentName, setStudentName] = useState<string>('');
   const [confirmPassword, setConfirmPassword] = useState<string>('');
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
@@ -81,12 +82,22 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           setCurrentStep(1);
           return;
         }
+
+        if (studentName.trim() === '') {
+          setError('Oops! Please tell us the Student Name. 🤔');
+          setLoading(false);
+          setCurrentStep(1);
+          return;
+        }
         
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback`
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
+            data: {
+              student_name: studentName,
+            },
           }
         });
         
@@ -156,7 +167,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         setTimeout(() => setSuccess(false), 3000);
       }
     } catch (err: any) {
-      setError(getKidFriendlyError(err.message || 'Failed to resend confirmation email'));
+      setError(getKidFriendlyError('Failed to resend confirmation email'));
     } finally {
       setLoading(false);
     }
@@ -187,7 +198,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         setError("We haven't received your email confirmation yet. Please check your email and click the magic link! ✨");
       }
     } catch (err: any) {
-      setError(getKidFriendlyError(err.message || 'Failed to check verification status'));
+      setError(getKidFriendlyError('Failed to check verification status'));
     } finally {
       setVerificationChecking(false);
     }
@@ -261,9 +272,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </h2>
 
           <p className="text-base text-gray-600 dark:text-gray-300 mb-4 leading-relaxed">
-            We sent a special magic link to <br />
+            We sent a special magic link to   
+
             <strong className="text-blue-600">{confirmationEmail}</strong>
-            <br />
+              
+
             Click it to activate your account! ✨
           </p>
           
@@ -292,12 +305,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             <button
               onClick={handleResendConfirmation}
               disabled={loading}
-              className="w-full py-3 px-4 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white text-base font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-all duration-200 transform hover:scale-105 shadow-lg"
+              className="w-full py-3 px-4 bg-blue-500 hover:bg-blue-600 text-white text-base font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center transition-all duration-200"
             >
               {loading ? (
                 <>
                   <Loader className="animate-spin -ml-1 mr-2 h-5 w-5" />
-                  Sending Magic...
+                  Sending...
                 </>
               ) : (
                 <>
@@ -400,6 +413,30 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               />
             </div>
           </div>
+
+          {/* Student Name Field (Sign Up only) */}
+          {mode === 'signup' && (
+            <div className="mb-4">
+              <label
+                htmlFor="studentName"
+                className="block text-base font-bold text-gray-700 dark:text-gray-300 mb-2"
+              >
+                🧑 Student Name
+              </label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="text"
+                  id="studentName"
+                  value={studentName}
+                  onChange={(e) => setStudentName(e.target.value)}
+                  className="w-full pl-10 pr-10 py-3 text-base border-2 border-gray-300 dark:border-gray-600 rounded-xl focus:ring-4 focus:ring-blue-200 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white transition-all duration-200"
+                  placeholder="e.g., Alex Smith"
+                  required
+                />
+              </div>
+            </div>
+          )}
 
           {/* Password Field */}
           <div className="mb-4">
