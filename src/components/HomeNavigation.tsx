@@ -27,7 +27,7 @@ export const HomeNavigation: React.FC<HomeNavigationProps> = ({ onNavigate, onSi
     { label: 'Features', href: '#features' },
     { label: 'How It Works', href: '#how-it-works' },
     { label: 'Learning', onClick: () => onNavigate('learning') },
-    { label: 'Pricing', href: '#pricing' },
+    { label: 'Pricing', onClick: () => onNavigate('pricing') },
     { label: 'About', href: '#about' }
   ];
 
