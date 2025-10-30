@@ -24,6 +24,11 @@ interface NSWCriteriaDisplayProps {
  * Display NSW Marking Criteria with explicit references and scoring guidance
  */
 export function NSWCriteriaDisplay({ scores, wordCount, showDetailed = false }: NSWCriteriaDisplayProps) {
+  // Handle null or undefined scores
+  if (!scores || typeof scores !== 'object') {
+    return null;
+  }
+
   const criteriaKeys = Object.keys(scores) as Array<keyof typeof scores>;
 
   const getLevelColor = (level: number) => {
