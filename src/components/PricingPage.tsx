@@ -47,6 +47,7 @@ export function PricingPage() {
   };
 
   useEffect(() => {
+    window.scrollTo(0, 0); // Scroll to the top of the page on mount
     // No need to re-check email verification here, it's handled by AuthContext
     // Just set loading state based on AuthContext's loading
     if (!user) {
