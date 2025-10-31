@@ -4,13 +4,16 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
+    "dev": "node server.js",
+    "build:client": "vite build",
+    "build:server": "vite build --config vite.config.ssr.ts",
+    "build": "npm run build:client && npm run build:server",
     "lint": "eslint .",
     "preview": "vite preview",
     "generate-lessons": "node scripts/generateLessons.js"
   },
   "dependencies": {
+    "express": "^4.19.2",
     "@netlify/functions": "^2.4.1",
     "@supabase/supabase-js": "^2.39.3",
     "lucide-react": "^0.344.0",
