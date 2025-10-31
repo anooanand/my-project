@@ -25,6 +25,7 @@ import { EnhancedSuccessSection } from './EnhancedSuccessSection';
 import { Footer } from './Footer';
 import { PaymentSuccessPage } from './PaymentSuccessPage';
 import { PricingPage } from './PricingPage';
+import { PricingPageNew } from './PricingPageNew';
 import { Dashboard } from './Dashboard';
 import { AuthModal } from './AuthModal';
 import { FAQPage } from './FAQPage';
@@ -449,7 +450,7 @@ function AppContent() {
               </div>
             </>
           } />
-          <Route path="/pricing" element={<PricingPage onNavigate={handleNavigation} />} />
+          <Route path="/pricing" element={<PricingPageNew />} />
           <Route path="/faq" element={<FAQPage onNavigate={handleNavigation} />} />
           <Route path="/about" element={<AboutPage onNavigate={handleNavigation} />} />
           <Route path="/dashboard" element={
