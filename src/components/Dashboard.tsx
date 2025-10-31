@@ -711,7 +711,8 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
         <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl p-8 border border-gray-200 dark:border-slate-700 shadow-sm">
           <h3 className="text-2xl font-bold text-gray-900 dark:text-slate-100 mb-6">Quick Actions</h3>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+            {/* View Essays */}
             <button onClick={() => navigate('/essays')} className="flex flex-col items-center p-4 rounded-xl bg-gray-50 dark:bg-slate-700/50 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors group">
               <div className="w-12 h-12 bg-gradient-to-br from-blue-100 to-blue-200 group-hover:from-blue-200 group-hover:to-blue-300 rounded-xl flex items-center justify-center mb-3 transition-all">
                 <FileText className="h-6 w-6 text-blue-600" />
@@ -719,6 +720,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
               <span className="text-sm font-medium text-gray-700 dark:text-slate-200">View Essays</span>
             </button>
 
+            {/* Progress */}
             <button onClick={() => navigate('/progress')} className="flex flex-col items-center p-4 rounded-xl bg-gray-50 dark:bg-slate-700/50 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors group">
               <div className="w-12 h-12 bg-gradient-to-br from-green-100 to-green-200 group-hover:from-green-200 group-hover:to-green-300 rounded-xl flex items-center justify-center mb-3 transition-all">
                 <BarChart3 className="h-6 w-6 text-green-600" />
@@ -726,7 +728,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
               <span className="text-sm font-medium text-gray-700 dark:text-slate-200">Progress</span>
             </button>
             
-            {/* New Billing Button */}
+            {/* Billing */}
             <button onClick={() => navigate('/settings')} className="flex flex-col items-center p-4 rounded-xl bg-gray-50 dark:bg-slate-700/50 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors group">
               <div className="w-12 h-12 bg-gradient-to-br from-teal-100 to-teal-200 group-hover:from-teal-200 group-hover:to-teal-300 rounded-xl flex items-center justify-center mb-3 transition-all">
                 <CreditCard className="h-6 w-6 text-teal-600" />
@@ -734,7 +736,7 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
               <span className="text-sm font-medium text-gray-700 dark:text-slate-200">Billing</span>
             </button>
 
-            {/* New Referral Button */}
+            {/* Referral */}
             <button onClick={() => navigate('/referral')} className="flex flex-col items-center p-4 rounded-xl bg-gray-50 dark:bg-slate-700/50 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors group">
               <div className="w-12 h-12 bg-gradient-to-br from-yellow-100 to-yellow-200 group-hover:from-yellow-200 group-hover:to-yellow-300 rounded-xl flex items-center justify-center mb-3 transition-all">
                 <Gift className="h-6 w-6 text-yellow-600" />
@@ -742,18 +744,20 @@ export function Dashboard({ user: propUser, emailVerified: propEmailVerified, pa
               <span className="text-sm font-medium text-gray-700 dark:text-slate-200">Referral</span>
             </button>
 
+            {/* Settings - FIX: Added dark:text-slate-200 */}
             <button onClick={() => navigate('/settings')} className="flex flex-col items-center p-4 rounded-xl bg-gray-50 dark:bg-slate-700/50 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors group">
               <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-purple-200 group-hover:from-purple-200 group-hover:to-purple-300 rounded-xl flex items-center justify-center mb-3 transition-all">
                 <Settings className="h-6 w-6 text-purple-600" />
               </div>
-              <span className="text-sm font-medium text-gray-700">Settings</span>
+              <span className="text-sm font-medium text-gray-700 dark:text-slate-200">Settings</span>
             </button>
 
+            {/* Help - FIX: Added dark:text-slate-200 */}
             <button onClick={() => navigate('/help')} className="flex flex-col items-center p-4 rounded-xl bg-gray-50 dark:bg-slate-700/50 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors group">
               <div className="w-12 h-12 bg-gradient-to-br from-orange-100 to-orange-200 group-hover:from-orange-200 group-hover:to-orange-300 rounded-xl flex items-center justify-center mb-3 transition-all">
                 <HelpCircle className="h-6 w-6 text-orange-600" />
               </div>
-              <span className="text-sm font-medium text-gray-700">Help</span>
+              <span className="text-sm font-medium text-gray-700 dark:text-slate-200">Help</span>
             </button>
           </div>
         </div>
