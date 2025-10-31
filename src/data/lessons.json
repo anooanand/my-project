@@ -1,0 +1,302 @@
+[
+  {
+    "id": 1,
+    "title": "NSW Selective Assessment Criteria",
+    "category": "Foundations",
+    "prerequisites": [],
+    "duration": "15 min",
+    "difficulty": "Beginner",
+    "points": 50,
+    "description": "Understanding the marking criteria and what examiners look for in your essays."
+  },
+  {
+    "id": 2,
+    "title": "Sentence Structure Mastery",
+    "category": "Grammar & Style",
+    "prerequisites": [],
+    "duration": "20 min",
+    "difficulty": "Beginner",
+    "points": 75,
+    "description": "Learn to craft varied and sophisticated sentence structures that impress examiners."
+  },
+  {
+    "id": 3,
+    "title": "Paragraph Building Techniques",
+    "category": "Structure",
+    "prerequisites": [],
+    "duration": "25 min",
+    "difficulty": "Beginner",
+    "points": 100,
+    "description": "Master the art of constructing coherent, well-developed paragraphs."
+  },
+  {
+    "id": 4,
+    "title": "Advanced Punctuation",
+    "category": "Grammar & Style",
+    "prerequisites": [2],
+    "duration": "18 min",
+    "difficulty": "Intermediate",
+    "points": 85,
+    "description": "Use punctuation strategically to enhance your writing style and clarity."
+  },
+  {
+    "id": 5,
+    "title": "Descriptive Language Techniques",
+    "category": "Creative Writing",
+    "prerequisites": [3],
+    "duration": "30 min",
+    "difficulty": "Intermediate",
+    "points": 120,
+    "description": "Create vivid imagery and engage readers with powerful descriptive writing."
+  },
+  {
+    "id": 6,
+    "title": "Narrative Structure & Plot",
+    "category": "Creative Writing",
+    "prerequisites": [3, 5],
+    "duration": "35 min",
+    "difficulty": "Intermediate",
+    "points": 150,
+    "description": "Learn to structure compelling narratives with strong plot development."
+  },
+  {
+    "id": 7,
+    "title": "Character Development",
+    "category": "Creative Writing",
+    "prerequisites": [6],
+    "duration": "28 min",
+    "difficulty": "Intermediate",
+    "points": 130,
+    "description": "Create memorable, three-dimensional characters that drive your narrative."
+  },
+  {
+    "id": 8,
+    "title": "Setting Description",
+    "category": "Creative Writing",
+    "prerequisites": [5],
+    "duration": "22 min",
+    "difficulty": "Intermediate",
+    "points": 95,
+    "description": "Techniques for creating immersive and atmospheric settings."
+  },
+  {
+    "id": 9,
+    "title": "Dialogue Writing",
+    "category": "Creative Writing",
+    "prerequisites": [4, 7],
+    "duration": "20 min",
+    "difficulty": "Intermediate",
+    "points": 110,
+    "description": "Craft natural and purposeful dialogue that reveals character and advances plot."
+  },
+  {
+    "id": 10,
+    "title": "Plot Development",
+    "category": "Creative Writing",
+    "prerequisites": [6, 7],
+    "duration": "25 min",
+    "difficulty": "Intermediate",
+    "points": 140,
+    "description": "Deep dive into plot arcs, conflict, and pacing."
+  },
+  {
+    "id": 11,
+    "title": "Show Don't Tell",
+    "category": "Creative Writing",
+    "prerequisites": [8, 9],
+    "duration": "18 min",
+    "difficulty": "Advanced",
+    "points": 160,
+    "description": "Master the fundamental principle of showing action and emotion instead of simply telling."
+  },
+  {
+    "id": 12,
+    "title": "Persuasive Writing Fundamentals",
+    "category": "Persuasive Writing",
+    "prerequisites": [3],
+    "duration": "25 min",
+    "difficulty": "Intermediate",
+    "points": 110,
+    "description": "Master the basics of persuasive writing and argumentation."
+  },
+  {
+    "id": 13,
+    "title": "Persuasive Techniques",
+    "category": "Persuasive Writing",
+    "prerequisites": [12],
+    "duration": "20 min",
+    "difficulty": "Intermediate",
+    "points": 130,
+    "description": "Explore rhetorical devices, appeals to emotion, and logical fallacies."
+  },
+  {
+    "id": 14,
+    "title": "Persuasive Essay Structure",
+    "category": "Persuasive Writing",
+    "prerequisites": [12, 13],
+    "duration": "30 min",
+    "difficulty": "Intermediate",
+    "points": 150,
+    "description": "Structuring a compelling essay using PEEEL, introduction, and conclusion techniques."
+  },
+  {
+    "id": 15,
+    "title": "Persuasive Practice",
+    "category": "Persuasive Writing",
+    "prerequisites": [14],
+    "duration": "40 min",
+    "difficulty": "Advanced",
+    "points": 200,
+    "description": "Timed practice session applying all persuasive writing skills."
+  },
+  {
+    "id": 16,
+    "title": "Descriptive Basics",
+    "category": "Creative Writing",
+    "prerequisites": [5],
+    "duration": "20 min",
+    "difficulty": "Intermediate",
+    "points": 90,
+    "description": "Revisiting the core elements of strong descriptive writing."
+  },
+  {
+    "id": 17,
+    "title": "Setting Description",
+    "category": "Creative Writing",
+    "prerequisites": [16],
+    "duration": "25 min",
+    "difficulty": "Intermediate",
+    "points": 110,
+    "description": "Advanced techniques for creating immersive and atmospheric settings."
+  },
+  {
+    "id": 18,
+    "title": "Character Description",
+    "category": "Creative Writing",
+    "prerequisites": [16],
+    "duration": "25 min",
+    "difficulty": "Intermediate",
+    "points": 110,
+    "description": "Developing vivid and memorable character portraits."
+  },
+  {
+    "id": 19,
+    "title": "Sensory Details",
+    "category": "Creative Writing",
+    "prerequisites": [17, 18],
+    "duration": "15 min",
+    "difficulty": "Advanced",
+    "points": 130,
+    "description": "Engaging all five senses to bring writing to life."
+  },
+  {
+    "id": 20,
+    "title": "Advanced Imagery",
+    "category": "Creative Writing",
+    "prerequisites": [19],
+    "duration": "20 min",
+    "difficulty": "Advanced",
+    "points": 150,
+    "description": "Using sophisticated language to paint mental pictures."
+  },
+  {
+    "id": 21,
+    "title": "Metaphors & Similes",
+    "category": "Creative Writing",
+    "prerequisites": [20],
+    "duration": "18 min",
+    "difficulty": "Advanced",
+    "points": 140,
+    "description": "Mastering the use of figurative language for impact."
+  },
+  {
+    "id": 22,
+    "title": "Personification",
+    "category": "Creative Writing",
+    "prerequisites": [20],
+    "duration": "18 min",
+    "difficulty": "Advanced",
+    "points": 140,
+    "description": "Giving human qualities to inanimate objects."
+  },
+  {
+    "id": 23,
+    "title": "Mood & Tone",
+    "category": "Creative Writing",
+    "prerequisites": [21, 22],
+    "duration": "20 min",
+    "difficulty": "Advanced",
+    "points": 160,
+    "description": "Controlling the emotional atmosphere of your writing."
+  },
+  {
+    "id": 24,
+    "title": "Descriptive Practice Exam",
+    "category": "Creative Writing",
+    "prerequisites": [23],
+    "duration": "45 min",
+    "difficulty": "Expert",
+    "points": 250,
+    "description": "Timed practice session applying all descriptive and figurative language skills."
+  },
+  {
+    "id": 25,
+    "title": "Rhetorical Questions",
+    "category": "Persuasive Writing",
+    "prerequisites": [13],
+    "duration": "15 min",
+    "difficulty": "Advanced",
+    "points": 100,
+    "description": "Using questions for persuasive effect."
+  },
+  {
+    "id": 26,
+    "title": "Counter-Arguments",
+    "category": "Persuasive Writing",
+    "prerequisites": [14, 25],
+    "duration": "25 min",
+    "difficulty": "Advanced",
+    "points": 170,
+    "description": "Techniques for acknowledging and refuting opposing viewpoints."
+  },
+  {
+    "id": 27,
+    "title": "Persuasive Language",
+    "category": "Persuasive Writing",
+    "prerequisites": [25],
+    "duration": "20 min",
+    "difficulty": "Advanced",
+    "points": 150,
+    "description": "Selecting high-impact vocabulary for maximum persuasive power."
+  },
+  {
+    "id": 28,
+    "title": "Formal vs Informal",
+    "category": "Persuasive Writing",
+    "prerequisites": [27],
+    "duration": "15 min",
+    "difficulty": "Advanced",
+    "points": 120,
+    "description": "Understanding and applying appropriate tone and register for different audiences."
+  },
+  {
+    "id": 29,
+    "title": "Persuasive Speech",
+    "category": "Persuasive Writing",
+    "prerequisites": [28],
+    "duration": "30 min",
+    "difficulty": "Expert",
+    "points": 180,
+    "description": "Structuring and delivering a compelling persuasive speech."
+  },
+  {
+    "id": 30,
+    "title": "Final Practice Exam",
+    "category": "All",
+    "prerequisites": [26, 29],
+    "duration": "60 min",
+    "difficulty": "Expert",
+    "points": 300,
+    "description": "Comprehensive timed practice session covering all writing types and skills."
+  }
+]
