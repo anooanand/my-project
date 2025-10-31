@@ -9,6 +9,9 @@ import './layout-fix.css';
 // Add this import at the top with other imports
 import { EnhancedWritingLayoutNSW } from './EnhancedWritingLayoutNSW';
 import { LearningPage } from './LearningPage';
+import { EnhancedLearningHub } from './EnhancedLearningHub';
+import { LessonDetail } from './LessonDetail';
+import { LessonCard } from './LessonCard';
 
 import { NavBar } from './NavBar';
 import { HomePage } from './HomePage';
@@ -546,7 +549,7 @@ function AppContent() {
                 onForceSignOut={handleForceSignOut}
               />
               <div className="main-route-content">
-                <LearningPage />
+                 <EnhancedLearningHub onNavigate={handleNavigation} />
               </div>
             </>
           } />
