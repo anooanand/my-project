@@ -968,7 +968,7 @@ export function EnhancedWritingLayoutNSW(props: EnhancedWritingLayoutNSWProps) {
                   ? 'bg-slate-900 text-gray-100 placeholder-gray-500 border-2 border-slate-700 focus:border-cyan-500 focus:shadow-cyan-500/20'
                   : 'bg-white text-gray-800 placeholder-gray-400 border-2 border-gray-200 focus:border-blue-500 focus:shadow-blue-500/20'
               }`}
-              style={{ fontFamily, fontSize: `${fontSize}px`, lineHeight }}
+              style={{ fontFamily, fontSize: `${fontSize}px`, lineHeight: lineHeight.toString() }}
               placeholder="Start writing your amazing story here! Let your creativity flow and bring your ideas to life..."
             />
 
