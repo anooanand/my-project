@@ -272,7 +272,8 @@ export function PricingPageNew() {
           </div>
         </div>
       </div>
-      {/* Footer */}}
+      </div>
+      {/* Footer */}
       <footer className="bg-gray-950 border-t border-gray-800 py-16">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Footer Content Grid */}
@@ -396,46 +397,6 @@ export function PricingPageNew() {
           </div>
         </div>
       </div>
-
-      {/* Animations */}
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { box-shadow: 0 0 10px rgba(139, 0, 255, 0.5), 0 0 20px rgba(139, 0, 255, 0.3); }
-          50% { box-shadow: 0 0 5px rgba(139, 0, 255, 0.2), 0 0 10px rgba(139, 0, 255, 0.1); }
-        }
-
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-
-        .animate-fadeIn {
-          animation: fadeIn 0.6s ease-out;
-        }
-
-        button:hover {
-          animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-
-        @media (max-width: 640px) {
-          h1 {
-            font-size: 2.5rem;
-          }
-          
-          .grid {
-            grid-template-columns: 1fr;
-          }
-
-          .max-w-sm {
-            max-width: 100%;
-          }
-
-          .flex.justify-center.items-center.gap-2 {
-            flex-direction: column;
-            gap: 0.5rem;
-          }
-        }
-      `}</style>
     </div>
   );
 }
