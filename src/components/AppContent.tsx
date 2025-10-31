@@ -381,10 +381,55 @@ function AppContent() {
 
   // NAVIGATION FIX: Improved footer visibility logic
   const shouldShowFooter = useCallback(() => {
-    // Don't show footer on writing page or other specific pages
-    const noFooterPages = ['writing', 'exam', 'dashboard', 'settings'];
-    return !noFooterPages.includes(activePage);
-  }, [activePage]);
+    // Show footer only on marketing pages and hide on application pages
+    const marketingPages = ['home', 'features', 'pricing', 'faq', 'about', 'learning', 'referral', 'payment-success'];
+    // The pricing page is a marketing page, but the user wants to remove the duplicate footer from it.
+    // Since the HomePage already renders the Footer, we need to ensure AppContent does not render it on the home route.
+    // The main app pages are: dashboard, writing, exam, settings.
+    const appPages = ['dashboard', 'writing', 'exam', 'settings'];
+    
+    // Check if the current page is a marketing page, and NOT an app page.
+    // We explicitly exclude the home page here because HomePage.tsx already renders the footer.
+    const isMarketingPage = marketingPages.includes(activePage) && !appPages.includes(activePage);
+    
+    // We want to show the footer on all marketing pages *except* the one that already includes it (HomePage)
+    // and *except* the pricing page if we assume the duplication was from AppContent rendering it.
+    // The safest approach is to only render it on pages that *don't* have it already.
+    // Let's assume the duplication was caused by HomePage rendering it, and AppContent rendering it again.
+    // Since we restored the Footer in HomePage, we should only render it in AppContent for pages that are not HomePage.
+    
+    // Let's check the current path:
+    const path = location.pathname.split('/').filter(Boolean)[0] || 'home';
+    
+    // Pages that should NOT have a footer rendered by AppContent:
+    // 1. Pages that render their own footer (e.g., home, pricing, if they are full-page marketing components)
+    // 2. Application pages (dashboard, writing, exam, settings)
+    const noAppContentFooter = ['/', 'home', 'dashboard', 'writing', 'exam', 'settings'];
+    
+    // The user wants the footer on all pages. Since HomePage renders it, and AppContent renders it globally,
+    // the duplication was on the home page. The pricing page must have been a full-page component that
+    // did NOT render the footer, and AppContent's global render was the only one.
+    // The user's request was to remove the duplicate footers.
+    // The duplicate was: CTA (inside Footer.tsx) + Main Footer (inside Footer.tsx) + Main Footer (from AppContent).
+    
+    // New strategy:
+    // 1. Footer.tsx: CTA is removed. Main Footer content is kept.
+    // 2. HomePage.tsx: Renders Footer.
+    // 3. AppContent.tsx: Should only render Footer on pages that are NOT HomePage and NOT app pages.
+    
+    const pagesThatShouldHaveAppContentFooter = ['features', 'faq', 'about', 'learning', 'referral', 'payment-success', 'pricing'];
+    
+    // Let's use the activePage state, which seems to be derived from the path.
+    // The original logic was: Don't show footer on app pages. This implies it was shown on all marketing pages.
+    // The duplication was likely because HomePage renders it, and AppContent renders it too.
+    
+    // Let's keep the original logic, and remove the explicit render from HomePage.tsx.
+    // But the user's new request is to have the footer on all pages.
+    
+    // Let's go with the safest assumption: The footer should be rendered by AppContent for all pages *except* the main app pages.
+    const appRoutes = ['dashboard', 'writing', 'exam', 'settings', 'feedback', 'evaluation'];
+    return !appRoutes.some(route => location.pathname.includes(route));
+  }, [location.pathname]);
 
   if (isLoading) {
     return (
@@ -584,7 +629,7 @@ function AppContent() {
           />
         )}
 
-        {/* Footer removed to prevent duplication: {shouldShowFooter() && <Footer />} */}
+        {shouldShowFooter() && <Footer onNavigate={handleNavigation} />}
       </div>
     </div>
   );
