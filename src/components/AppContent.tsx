@@ -43,6 +43,7 @@ import { WritingToolbar } from './WritingToolbar';
 import { PlanningToolModal } from './PlanningToolModal';
 import { EmailVerificationHandler } from './EmailVerificationHandler';
 import { EvaluationPage } from './EvaluationPage';
+import ReferralPage from './ReferralPage'; // New import for referral system
 import { checkOpenAIConnectionStatus } from '../lib/openai';
 import { AdminButton } from './AdminButton';
 
@@ -551,6 +552,7 @@ function AppContent() {
           } />
           <Route path="/feedback/:essayId" element={<EssayFeedbackPage />} />
           <Route path="/evaluation/:evaluationId" element={<EvaluationPage />} />
+          <Route path="/referral" element={<ReferralPage />} />
           <Route path="/auth/callback" element={<EmailVerificationHandler />} />
           <Route path="/payment-success" element={
             showPaymentSuccess ? (
