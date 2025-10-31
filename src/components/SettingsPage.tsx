@@ -1,14 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { User, Mail, Bell, Shield, Moon, Sun, Save, ArrowLeft } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { User, Mail, Bell, Shield, CreditCard, Save, ArrowLeft } from 'lucide-react';
 import { useTheme } from '../contexts/ThemeContext';
 
 interface SettingsPageProps {
   onBack?: () => void;
 }
 
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../supabaseClient';
+
 export function SettingsPage({ onBack }: SettingsPageProps) {
   const { theme, toggleTheme } = useTheme();
-  const [user, setUser] = useState<any>(null);
+  const { user: authUser } = useAuth();
+  const navigate = useNavigate();
+  const [userProfile, setUserProfile] = useState<any>(null);
   const [settings, setSettings] = useState({
     emailNotifications: true,
     marketingEmails: false,
@@ -19,12 +25,21 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    // Get user info from localStorage or Supabase
+    // Get user info from Supabase
     const loadUserData = async () => {
       try {
-        const userEmail = localStorage.getItem('userEmail');
-        if (userEmail) {
-          setUser({ email: userEmail });
+        if (authUser?.id) {
+          const { data: profileData, error: profileError } = await supabase
+            .from('user_profiles')
+            .select('*')
+            .eq('id', authUser.id)
+            .single();
+          
+          if (profileError) {
+            console.error('Error fetching user profile:', profileError);
+          } else {
+            setUserProfile(profileData);
+          }
         }
         
         // Load saved settings from localStorage
@@ -48,6 +63,37 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
       [key]: value
     }));
   };
+
+  const handleManageBilling = useCallback(async () => {
+    if (!userProfile?.stripe_customer_id) {
+      alert('Stripe customer ID not found. Please ensure you have an active subscription.');
+      return;
+    }
+
+    try {
+      const response = await fetch('/.netlify/functions/create-billing-portal-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          customerId: userProfile.stripe_customer_id,
+          returnUrl: window.location.origin + '/settings',
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error(data.error || 'Failed to get billing portal URL.');
+      }
+    } catch (error) {
+      console.error('Error managing billing:', error);
+      alert('Could not open billing portal. Please try again later.');
+    }
+  }, [userProfile]);
 
   const handleSaveSettings = async () => {
     setIsSaving(true);
@@ -111,22 +157,90 @@ export function SettingsPage({ onBack }: SettingsPageProps) {
                 </label>
                 <div className="flex items-center">
                   <Mail className="h-5 w-5 text-gray-400 mr-2" />
-                  <span className="text-gray-900 dark:text-white">
-                    {user?.email || 'Not available'}
-                  </span>
-                </div>
+<span className="text-gray-900 dark:text-white">
+                      {userProfile?.email || authUser?.email || 'Not available'}
+                    </span>
+</div>
+	          </div>
+
+            {/* Billing Section (New) */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+              <div className="flex items-center mb-6">
+                <CreditCard className="h-6 w-6 text-indigo-600 dark:text-indigo-400 mr-3" />
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Billing and Subscription</h2>
               </div>
+              
+              <div className="space-y-4">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Manage your payment methods, view invoices, and change your subscription plan via the secure Stripe Customer Portal.
+                </p>
+                <button
+                  onClick={handleManageBilling}
+                  disabled={!userProfile?.stripe_customer_id}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+                >
+                  Manage Billing
+                </button>
+                {!userProfile?.stripe_customer_id && (
+                  <p className="text-sm text-red-500 dark:text-red-400">
+                    You must have an active subscription to manage billing details.
+                  </p>
+                )}
+                <button
+                  onClick={() => navigate('/referral')}
+                  className="inline-flex items-center ml-4 px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-indigo-600 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+                >
+                  Refer & Earn Rewards
+                </button>
+              </div>
+            </div>
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Account Status
+                  Subscription Status
                 </label>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
-                  Active
-                </span>
+<span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      userProfile?.subscription_status === 'active' 
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' 
+                        : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                    }`}>
+                      {userProfile?.subscription_status || 'Free Tier'}
+                    </span>
+</div>
+	            </div>
+	          </div>
+
+            {/* Billing Section (New) */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+              <div className="flex items-center mb-6">
+                <CreditCard className="h-6 w-6 text-indigo-600 dark:text-indigo-400 mr-3" />
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Billing and Subscription</h2>
+              </div>
+              
+              <div className="space-y-4">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Manage your payment methods, view invoices, and change your subscription plan via the secure Stripe Customer Portal.
+                </p>
+                <button
+                  onClick={handleManageBilling}
+                  disabled={!userProfile?.stripe_customer_id}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+                >
+                  Manage Billing
+                </button>
+                {!userProfile?.stripe_customer_id && (
+                  <p className="text-sm text-red-500 dark:text-red-400">
+                    You must have an active subscription to manage billing details.
+                  </p>
+                )}
+                <button
+                  onClick={() => navigate('/referral')}
+                  className="inline-flex items-center ml-4 px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-indigo-600 bg-indigo-100 hover:bg-indigo-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
+                >
+                  Refer & Earn Rewards
+                </button>
               </div>
             </div>
-          </div>
 
           {/* Notification Settings */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
