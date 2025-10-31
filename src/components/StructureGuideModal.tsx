@@ -176,10 +176,10 @@ const STRUCTURE_GUIDES: { [key: string]: { title: string; points: string[] } } =
 
 export const StructureGuideModal: React.FC<StructureGuideModalProps> = ({ isOpen, onClose, textType }) => {
   if (!isOpen) return null;
-
-    const normalizedTextType = textType.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  // Normalize textType to match keys (e.g., "narrative writing" -> "Narrative Writing")
+  const normalizedTextType = textType.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
   const structure = STRUCTURE_GUIDES[normalizedTextType] || STRUCTURE_GUIDES.default;
-
+  
   return (
     <div className="fixed inset-0 bg-gray-600 dark:bg-gray-900 bg-opacity-50 dark:bg-opacity-80 overflow-y-auto h-full w-full z-50">
       <div className="relative top-20 mx-auto p-5 border border-gray-200 dark:border-gray-700 w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white dark:bg-gray-800">
