@@ -94,10 +94,10 @@ export function PricingPageNew() {
               ))}
             </ul>
 
-            {/* CTA Button */}
+            {/* CTA Button - White outlined with gray text */}
             <button
               onClick={() => navigate('/auth')}
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/50 active:scale-95 animate-pulse-on-hover"
+              className="w-full bg-transparent border-2 border-white text-gray-300 font-bold py-3 px-6 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/50 active:scale-95 hover:bg-purple-600 hover:text-white hover:border-purple-600"
             >
               Start trial
             </button>
@@ -105,25 +105,53 @@ export function PricingPageNew() {
         </div>
       </div>
 
-      {/* Referral Teaser Section */}
+      {/* Referral Teaser Section - Improved */}
       <div className="max-w-sm mx-auto px-4 sm:px-6 lg:px-8 pb-16">
         <div className="bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 rounded-2xl p-6 backdrop-blur-sm animate-fadeIn">
-          <div className="flex items-start gap-4">
-            <div className="text-4xl flex-shrink-0">🏆</div>
-            <div className="flex-1">
-              <h3 className="text-purple-400 font-bold text-lg mb-2">
-                🎁 Refer & Earn Rewards
-              </h3>
-              <p className="text-gray-400 text-sm mb-4 leading-relaxed">
-                Share Writing Mate with friends after signup—earn FREE months! <span className="block mt-2 text-yellow-400 font-semibold">1 Referral = 1 Free Month | 2 = $5 Off for 3 Months | 3 = $10 Off for 5 Months</span>
-              </p>
-              <button
-                onClick={() => navigate('/auth')}
-                className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg transition-all text-sm"
-              >
-                Sign Up to Refer & Earn
-              </button>
+          {/* Centered Trophy Icon */}
+          <div className="text-center mb-4">
+            <div className="text-5xl">🏆</div>
+          </div>
+          
+          {/* Centered Heading */}
+          <h3 className="text-purple-400 font-bold text-lg text-center mb-4">
+            🎁 Refer & Earn Rewards
+          </h3>
+          
+          {/* Improved Centered Subtitle with Better Alignment */}
+          <div className="text-center mb-6">
+            <p className="text-gray-400 text-sm leading-relaxed mb-3">
+              Share Writing Mate with friends after signup—earn FREE months!
+            </p>
+            
+            {/* Referral Tiers - Centered Multi-line List */}
+            <div className="space-y-2 text-sm text-gray-300">
+              <div className="flex justify-center items-center gap-2">
+                <span className="text-yellow-400 font-semibold">1 Referral</span>
+                <span className="text-gray-500">=</span>
+                <span>1 Free Month</span>
+              </div>
+              <div className="flex justify-center items-center gap-2">
+                <span className="text-yellow-400 font-semibold">2 Referrals</span>
+                <span className="text-gray-500">=</span>
+                <span>$5 Off for 6 Months</span>
+              </div>
+              <div className="flex justify-center items-center gap-2">
+                <span className="text-yellow-400 font-semibold">3 Referrals</span>
+                <span className="text-gray-500">=</span>
+                <span>$10 Off for 6 Months</span>
+              </div>
             </div>
+          </div>
+
+          {/* CTA Button - Centered */}
+          <div className="flex justify-center">
+            <button
+              onClick={() => navigate('/auth')}
+              className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-6 rounded-lg transition-all text-sm"
+            >
+              Sign Up to Refer & Earn
+            </button>
           </div>
         </div>
       </div>
@@ -195,7 +223,7 @@ export function PricingPageNew() {
               </ul>
             </div>
 
-            {/* Company Column (Only About Us ) */}
+            {/* Company Column (Only About Us) */}
             <div>
               <h4 className="text-white font-semibold mb-4">COMPANY</h4>
               <ul className="space-y-2">
@@ -245,7 +273,7 @@ export function PricingPageNew() {
             </p>
             <button
               onClick={() => navigate('/auth')}
-              className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/50 active:scale-95 animate-pulse-on-hover"
+              className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/50 active:scale-95"
             >
               Get Started
             </button>
@@ -269,7 +297,7 @@ export function PricingPageNew() {
           animation: fadeIn 0.6s ease-out;
         }
 
-        .animate-pulse-on-hover:hover {
+        button:hover {
           animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
 
@@ -284,6 +312,11 @@ export function PricingPageNew() {
 
           .max-w-sm {
             max-width: 100%;
+          }
+
+          .flex.justify-center.items-center.gap-2 {
+            flex-direction: column;
+            gap: 0.5rem;
           }
         }
       `}</style>
