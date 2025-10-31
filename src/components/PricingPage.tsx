@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Check, Home, Sparkle, BarChart, Target, Star } from 'lucide-react'; // Keep icons imported for feature list, but remove FeatureIcon component
+import { Check, Home } from 'lucide-react'; // Only keep Check and Home
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -34,34 +34,6 @@ const FEATURE_LIST = [
   "Progress tracking",
 ];
 
-// Feature cards data (Icons will be ignored in the render logic)
-const FEATURE_CARDS = [
-  { 
-    Icon: Sparkle, 
-    title: 'AI Writing Coach', 
-    desc: 'Get instant feedback on your essays', 
-    gradient: 'from-pink-500 to-orange-500' // Pink to orange
-  },
-  { 
-    Icon: BarChart, 
-    title: 'Progress Tracking', 
-    desc: 'Monitor your improvement over time', 
-    gradient: 'from-red-500 via-yellow-500 to-blue-500' // Rainbow/multicolor approximation
-  },
-  { 
-    Icon: Target, 
-    title: 'Targeted Practice', 
-    desc: 'Focus on your weak areas', 
-    gradient: 'from-pink-500 to-purple-500' // Pink to purple
-  },
-  { 
-    Icon: Star, 
-    title: 'Expert Tips', 
-    desc: 'Learn from IELTS professionals', 
-    color: COLORS.YELLOW_GOLD // Solid yellow/gold
-  },
-];
-
 
 export function PricingPage() {
   const { user, emailVerified, paymentCompleted } = useAuth();
@@ -76,12 +48,6 @@ export function PricingPage() {
       setIsLoading(false);
     }
   }, [emailVerified, paymentCompleted]);
-
-  // --- Helper Components for Reusability ---
-
-  // Removed GradientText component as it's no longer used for the main title
-
-  // Removed FeatureIcon component as icons are no longer displayed in the feature cards
 
   // --- Main Component Render ---
 
@@ -243,25 +209,8 @@ export function PricingPage() {
           </div>
         </div>
 
-        {/* Features Section */}
-        <div className="mt-20 md:mt-32">
-          <h2 className="text-4xl font-bold text-center mb-16" style={{ color: COLORS.WHITE }}>
-            Everything You Need to Succeed
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {FEATURE_CARDS.map((feature, index) => (
-              <div key={index} className="text-center p-6 rounded-lg transition-transform duration-300 hover:scale-[1.02]">
-                {/* Removed FeatureIcon component here */}
-                <h3 className="text-xl font-bold mb-2" style={{ color: COLORS.WHITE }}>
-                  {feature.title}
-                </h3>
-                <p className="text-base" style={{ color: COLORS.LIGHT_GRAY }}>
-                  {feature.desc}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
+        {/* Removed Features Section */}
+
       </div>
     </div>
   );
