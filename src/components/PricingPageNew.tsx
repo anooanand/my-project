@@ -16,7 +16,7 @@ export function PricingPageNew() {
   return (
     <div className="min-h-screen bg-black text-white font-sans overflow-x-hidden">
       {/* Back to Home Button */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 flex justify-start">
         <button
           onClick={() => navigate('/')}
           className="flex items-center gap-2 px-4 py-2 bg-white text-black hover:bg-gray-200 border border-white rounded-full transition-all hover:shadow-lg font-medium"
@@ -43,14 +43,7 @@ export function PricingPageNew() {
       {/* Plan Card */}
       <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8 pb-12">
         <div className="relative bg-gradient-to-br from-blue-600/20 to-purple-600/20 border border-purple-500/30 rounded-3xl p-8 backdrop-blur-sm">
-          {/* Most Popular Badge */}
-          <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-            <div className="bg-purple-600 text-white px-6 py-2 rounded-full text-sm font-semibold">
-              Most Popular
-            </div>
-          </div>
-
-          <div className="pt-8">
+          <div className="pt-0">
             {/* Plan Title */}
             <h2 className="text-3xl font-bold text-white text-center mb-4">
               Essential Plan
@@ -62,15 +55,10 @@ export function PricingPageNew() {
                 $20.00
               </div>
               <p className="text-gray-400">/month</p>
-              <p className="text-gray-500 text-sm mt-3">
+              <p className="text-gray-300 text-base font-semibold mt-3">
                 First 7 days free • Cancel anytime
               </p>
             </div>
-
-            {/* Package Description */}
-            <p className="text-center text-white mb-8">
-              Complete writing preparation package
-            </p>
 
             {/* Features List */}
             <ul className="space-y-4 mb-10">
@@ -223,7 +211,7 @@ export function PricingPageNew() {
               </ul>
             </div>
 
-            {/* Company Column (Only About Us) */}
+            {/* Company Column (Only About Us ) */}
             <div>
               <h4 className="text-white font-semibold mb-4">COMPANY</h4>
               <ul className="space-y-2">
