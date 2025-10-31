@@ -6,7 +6,7 @@ import './styles/kid-theme.css';
 import { AuthProvider } from './contexts/AuthContext';
 import { LearningProvider } from './contexts/LearningContext';
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+ReactDOM.hydrateRoot(document.getElementById('root')!,
   <React.StrictMode>
     <AuthProvider>
       <LearningProvider>
