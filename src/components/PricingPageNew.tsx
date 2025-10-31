@@ -14,12 +14,12 @@ export function PricingPageNew() {
   }, []);
 
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-black' : 'bg-black'} text-white font-sans`}>
+    <div className="min-h-screen bg-black text-white font-sans overflow-x-hidden">
       {/* Back to Home Button */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
         <button
           onClick={() => navigate('/')}
-          className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-full transition-all hover:shadow-lg text-white font-medium"
+          className="flex items-center gap-2 px-4 py-2 bg-white text-black hover:bg-gray-200 border border-white rounded-full transition-all hover:shadow-lg font-medium"
         >
           <Home className="w-5 h-5" />
           Back to Home
@@ -28,11 +28,14 @@ export function PricingPageNew() {
 
       {/* Hero Section */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
-        <h1 className="text-5xl md:text-6xl font-bold mb-4">
-          The Essential Plan
-          <div className="h-1 w-32 bg-gradient-to-r from-purple-600 to-pink-500 mx-auto mt-4"></div>
-        </h1>
-        <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+        <div className="mb-6">
+          <h1 className="text-5xl md:text-6xl font-bold mb-4 text-white">
+            The Essential Plan
+          </h1>
+          {/* Pinkish-purple underline below the text */}
+          <div className="h-1 w-48 bg-gradient-to-r from-pink-500 to-purple-600 mx-auto"></div>
+        </div>
+        <p className="text-lg text-gray-400 max-w-2xl mx-auto leading-relaxed">
           Unlock your writing potential with comprehensive AI-powered writing tools
         </p>
       </div>
@@ -94,7 +97,7 @@ export function PricingPageNew() {
             {/* CTA Button */}
             <button
               onClick={() => navigate('/auth')}
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/50 active:scale-95"
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/50 active:scale-95 animate-pulse-on-hover"
             >
               Start trial
             </button>
@@ -103,25 +106,22 @@ export function PricingPageNew() {
       </div>
 
       {/* Referral Teaser Section */}
-      <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-        <div className="bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 rounded-2xl p-6 backdrop-blur-sm">
+      <div className="max-w-sm mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+        <div className="bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 rounded-2xl p-6 backdrop-blur-sm animate-fadeIn">
           <div className="flex items-start gap-4">
-            <div className="text-4xl">🏆</div>
+            <div className="text-4xl flex-shrink-0">🏆</div>
             <div className="flex-1">
               <h3 className="text-purple-400 font-bold text-lg mb-2">
                 🎁 Refer & Earn Rewards
               </h3>
-              <p className="text-gray-400 text-sm mb-4">
-                Share Writing Mate with friends after signup—earn FREE months! 
-                <span className="block mt-2 text-yellow-400">
-                  1 Referral = 1 Free Month | 2 = $5 Off for 3 Months | 3 = $10 Off for 5 Months
-                </span>
+              <p className="text-gray-400 text-sm mb-4 leading-relaxed">
+                Share Writing Mate with friends after signup—earn FREE months! <span className="block mt-2 text-yellow-400 font-semibold">1 Referral = 1 Free Month | 2 = $5 Off for 3 Months | 3 = $10 Off for 5 Months</span>
               </p>
               <button
-                onClick={() => navigate('/referral')}
+                onClick={() => navigate('/auth')}
                 className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-lg transition-all text-sm"
               >
-                Learn More
+                Sign Up to Refer & Earn
               </button>
             </div>
           </div>
@@ -129,7 +129,7 @@ export function PricingPageNew() {
       </div>
 
       {/* Footer */}
-      <footer className={`${isDark ? 'bg-gray-900' : 'bg-gray-950'} border-t border-gray-800 py-16`}>
+      <footer className="bg-gray-950 border-t border-gray-800 py-16">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Footer Content Grid */}
           <div className="grid md:grid-cols-4 gap-12 mb-12">
@@ -139,9 +139,21 @@ export function PricingPageNew() {
                 <div className="w-8 h-8 bg-purple-600 rounded-lg"></div>
                 <span className="text-white font-bold text-lg">Writing Mate</span>
               </div>
-              <p className="text-gray-500 text-sm">
+              <p className="text-gray-500 text-sm leading-relaxed">
                 AI-powered writing coach for NSW Selective School exam preparation. Master essay writing with personalized feedback and guidance.
               </p>
+              {/* Social Icons */}
+              <div className="flex gap-4 mt-6">
+                <a href="https://twitter.com" className="text-gray-500 hover:text-purple-400 transition-colors">
+                  <Twitter className="w-5 h-5" />
+                </a>
+                <a href="https://discord.com" className="text-gray-500 hover:text-purple-400 transition-colors">
+                  <MessageCircle className="w-5 h-5" />
+                </a>
+                <a href="https://linkedin.com" className="text-gray-500 hover:text-purple-400 transition-colors">
+                  <Linkedin className="w-5 h-5" />
+                </a>
+              </div>
             </div>
 
             {/* Product Column */}
@@ -183,7 +195,7 @@ export function PricingPageNew() {
               </ul>
             </div>
 
-            {/* Company Column */}
+            {/* Company Column (Only About Us ) */}
             <div>
               <h4 className="text-white font-semibold mb-4">COMPANY</h4>
               <ul className="space-y-2">
@@ -192,45 +204,33 @@ export function PricingPageNew() {
                     About Us
                   </a>
                 </li>
-                <li>
-                  <a href="/privacy" className="text-gray-500 hover:text-purple-400 transition-colors">
-                    Privacy Policy
-                  </a>
-                </li>
-                <li>
-                  <a href="/terms" className="text-gray-500 hover:text-purple-400 transition-colors">
-                    Terms of Service
-                  </a>
-                </li>
-                <li>
-                  <a href="/cookies" className="text-gray-500 hover:text-purple-400 transition-colors">
-                    Cookie Policy
-                  </a>
-                </li>
-                <li>
-                  <a href="/accessibility" className="text-gray-500 hover:text-purple-400 transition-colors">
-                    Accessibility
-                  </a>
-                </li>
               </ul>
             </div>
           </div>
 
-          {/* Social Icons */}
-          <div className="flex justify-center gap-6 mb-8 border-t border-gray-800 pt-8">
-            <a href="https://twitter.com" className="text-gray-500 hover:text-purple-400 transition-colors">
-              <Twitter className="w-6 h-6" />
-            </a>
-            <a href="https://discord.com" className="text-gray-500 hover:text-purple-400 transition-colors">
-              <MessageCircle className="w-6 h-6" />
-            </a>
-            <a href="https://linkedin.com" className="text-gray-500 hover:text-purple-400 transition-colors">
-              <Linkedin className="w-6 h-6" />
-            </a>
+          {/* Horizontal Links */}
+          <div className="border-t border-gray-800 pt-8 mb-8">
+            <div className="flex flex-wrap gap-4 justify-center text-sm">
+              <a href="/privacy" className="text-gray-500 hover:text-purple-400 transition-colors">
+                Privacy Policy
+              </a>
+              <span className="text-gray-700">•</span>
+              <a href="/terms" className="text-gray-500 hover:text-purple-400 transition-colors">
+                Terms of Service
+              </a>
+              <span className="text-gray-700">•</span>
+              <a href="/cookies" className="text-gray-500 hover:text-purple-400 transition-colors">
+                Cookie Policy
+              </a>
+              <span className="text-gray-700">•</span>
+              <a href="/accessibility" className="text-gray-500 hover:text-purple-400 transition-colors">
+                Accessibility
+              </a>
+            </div>
           </div>
 
           {/* Copyright */}
-          <div className="text-center text-gray-600 text-sm border-t border-gray-800 pt-8">
+          <div className="text-center text-gray-600 text-sm">
             © 2025 Writing Mate. All rights reserved.
           </div>
         </div>
@@ -245,7 +245,7 @@ export function PricingPageNew() {
             </p>
             <button
               onClick={() => navigate('/auth')}
-              className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/50 active:scale-95"
+              className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/50 active:scale-95 animate-pulse-on-hover"
             >
               Get Started
             </button>
@@ -256,8 +256,8 @@ export function PricingPageNew() {
       {/* Animations */}
       <style>{`
         @keyframes pulse {
-          0%, 100% { opacity: 1; }
-          50% { opacity: 0.8; }
+          0%, 100% { box-shadow: 0 0 10px rgba(139, 0, 255, 0.5), 0 0 20px rgba(139, 0, 255, 0.3); }
+          50% { box-shadow: 0 0 5px rgba(139, 0, 255, 0.2), 0 0 10px rgba(139, 0, 255, 0.1); }
         }
 
         @keyframes fadeIn {
@@ -265,11 +265,11 @@ export function PricingPageNew() {
           to { opacity: 1; transform: translateY(0); }
         }
 
-        button {
+        .animate-fadeIn {
           animation: fadeIn 0.6s ease-out;
         }
 
-        button:hover {
+        .animate-pulse-on-hover:hover {
           animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
 
@@ -280,6 +280,10 @@ export function PricingPageNew() {
           
           .grid {
             grid-template-columns: 1fr;
+          }
+
+          .max-w-sm {
+            max-width: 100%;
           }
         }
       `}</style>
