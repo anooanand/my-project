@@ -18,6 +18,67 @@ const supabase = createClient(
   }
 );
 
+async function applyReferralReward(paidReferralsCount: number, subscriptionId: string) {
+  let couponId: string | null = null;
+
+  try {
+    switch (paidReferralsCount) {
+      case 1:
+        // Tier 1: 1 Free Month (100% off for 1 month)
+        console.log('🎁 Applying Tier 1 Reward: 1 Free Month');
+        const couponTier1 = await stripe.coupons.create({
+          percent_off: 100,
+          duration: 'once',
+          name: 'Tier 1 Referral Reward',
+        });
+        couponId = couponTier1.id;
+        break;
+
+      case 2:
+        // Tier 2: $5 Off for 3 Months
+        console.log('🎁 Applying Tier 2 Reward: $5 Off for 3 Months');
+        const couponTier2 = await stripe.coupons.create({
+          amount_off: 500, // $5.00 in cents
+          duration: 'repeating',
+          duration_in_months: 3,
+          currency: 'usd',
+          name: 'Tier 2 Referral Reward',
+        });
+        couponId = couponTier2.id;
+        break;
+
+      case 5:
+        // Tier 3: $10 Off for 5 Months
+        console.log('🎁 Applying Tier 3 Reward: $10 Off for 5 Months');
+        const couponTier3 = await stripe.coupons.create({
+          amount_off: 1000, // $10.00 in cents
+          duration: 'repeating',
+          duration_in_months: 5,
+          currency: 'usd',
+          name: 'Tier 3 Referral Reward',
+        });
+        couponId = couponTier3.id;
+        break;
+
+      default:
+        console.log(`📈 Referral count is ${paidReferralsCount}, no reward to apply.`);
+        return;
+    }
+
+    if (couponId && subscriptionId) {
+      await stripe.subscriptions.update(subscriptionId, {
+        coupon: couponId,
+      });
+      console.log(`✅ Applied coupon ${couponId} to subscription ${subscriptionId}`);
+    } else if (!subscriptionId) {
+        console.error('❌ Cannot apply coupon, subscription ID is missing for the referrer.');
+    }
+
+  } catch (error) {
+    console.error('❌ Error applying referral reward:', error);
+  }
+}
+
 function getPlanTypeFromPriceId(priceId: string): string {
   const planMapping: { [key: string]: string } = {
     'price_1RXEqERtcrDpOK7ME3QH9uzu': 'premium_plan',
@@ -109,6 +170,38 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
       // but it serves as a final check and avoids the original profile creation logic.
       console.log('⚠️ No existing user profile found with email. Update failed.');
     }
+
+        // START: Tiered Referral Logic
+    const referrerId = session.metadata?.referrerId;
+    if (referrerId) {
+      console.log(`📈 Referred by user: ${referrerId}. Incrementing count.`);
+
+      // Atomically increment the referrer's paid_referrals_count
+      const { data: rpcData, error: rpcError } = await supabase.rpc('increment_referral_count', {
+        user_id: referrerId,
+      });
+
+      if (rpcError) {
+        console.error('❌ Error calling increment_referral_count RPC:', rpcError);
+      } else {
+        const newReferralCount = rpcData;
+        console.log(`✅ Referrer's new count: ${newReferralCount}`);
+
+        // Fetch the referrer's Stripe customer ID to apply the reward
+        const { data: referrerProfile, error: referrerError } = await supabase
+          .from('user_profiles')
+          .select('stripe_customer_id, stripe_subscription_id')
+          .eq('id', referrerId)
+          .single();
+
+        if (referrerError || !referrerProfile) {
+          console.error('❌ Error fetching referrer profile:', referrerError);
+        } else {
+          await applyReferralReward(newReferralCount, referrerProfile.stripe_subscription_id);
+        }
+      }
+    }
+    // END: Tiered Referral Logic
 
     console.log('🎊 Checkout session processing completed successfully!');
 
