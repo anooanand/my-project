@@ -27,20 +27,6 @@ const WEAK_WORDS = [
   'got', 'get', 'gets', 'getting'
 ];
 
-// Common spelling errors (basic list)
-const COMMON_MISSPELLINGS: Record<string, string> = {
-  'teh': 'the',
-  'recieve': 'receive',
-  'seperate': 'separate',
-  'definately': 'definitely',
-  'occured': 'occurred',
-  'occuring': 'occurring',
-  'untill': 'until',
-  'thier': 'their',
-  'wierd': 'weird',
-  'beleive': 'believe'
-};
-
 // Detect weak words
 export function detectWeakWords(text: string): TextHighlight[] {
   const highlights: TextHighlight[] = [];
@@ -194,91 +180,29 @@ export function detectSentenceIssues(text: string): TextHighlight[] {
   return highlights;
 }
 
-// Detect basic spelling errors
-export function detectSpellingErrors(text: string): TextHighlight[] {
-  const highlights: TextHighlight[] = [];
-
-  Object.entries(COMMON_MISSPELLINGS).forEach(([wrong, correct]) => {
-    const regex = new RegExp(`\\b${wrong}\\b`, 'gi');
-    let match;
-    while ((match = regex.exec(text)) !== null) {
-      highlights.push({
-        start: match.index,
-        end: match.index + match[0].length,
-        color: '#ffd700',
-        type: 'spelling',
-        message: `Possible spelling error. Did you mean "${correct}"?`,
-        severity: 'error'
-      });
-    }
-  });
-
-  return highlights;
-}
-
-// Detect basic grammar errors
-export function detectGrammarErrors(text: string): TextHighlight[] {
-  const highlights: TextHighlight[] = [];
-
-  // Common grammar patterns
-  const grammarPatterns = [
-    // Double negatives
-    { pattern: /\b(don't|doesn't|didn't|won't|wouldn't|can't|couldn't)\s+(no|nothing|nobody|never)\b/gi, message: 'Double negative detected' },
-    // Subject-verb agreement: "He don't" instead of "He doesn't"
-    { pattern: /\b(he|she|it)\s+don't\b/gi, message: 'Subject-verb agreement error. Use "doesn\'t" instead of "don\'t"' },
-    // "Could of" instead of "could have"
-    { pattern: /\b(could|would|should|might|must)\s+of\b/gi, message: 'Use "have" instead of "of"' },
-    // Run-on with comma splice
-    { pattern: /[a-z]+,\s*[a-z]+\s+(and|but|or)\s+[a-z]+,\s*[a-z]+/gi, message: 'Possible run-on sentence or comma splice' },
-    // Their/There/They're confusion
-    { pattern: /\btheir\s+(going|coming|doing|running|walking)\b/gi, message: 'Did you mean "they\'re" (they are)?' },
-    { pattern: /\bthere\s+(going|coming|doing|running|walking)\b/gi, message: 'Did you mean "they\'re" (they are)?' },
-    // Your/You're confusion
-    { pattern: /\byour\s+(going|coming|doing|running|walking)\b/gi, message: 'Did you mean "you\'re" (you are)?' },
-    // Its/It's confusion
-    { pattern: /\bits\s+(going|coming|doing|running|walking)\b/gi, message: 'Did you mean "it\'s" (it is)?' }
-  ];
-
-  grammarPatterns.forEach(({ pattern, message }) => {
-    let match;
-    while ((match = pattern.exec(text)) !== null) {
-      highlights.push({
-        start: match.index,
-        end: match.index + match[0].length,
-        color: '#ff4444',
-        type: 'grammar',
-        message,
-        severity: 'error'
-      });
-    }
-  });
-
-  return highlights;
-}
-
 // Main analysis function
 export function analyzeText(text: string): { highlights: TextHighlight[], stats: AnalysisStats } {
   const highlights: TextHighlight[] = [];
 
   // Run all detection algorithms
-  highlights.push(...detectGrammarErrors(text));
+  // Grammar and Spelling are now handled by the backend service's robust LanguageTool integration.
   highlights.push(...detectWeakWords(text));
   highlights.push(...detectPassiveVoice(text));
   highlights.push(...detectExcessiveAdjectives(text));
   highlights.push(...detectSentenceIssues(text));
-  highlights.push(...detectSpellingErrors(text));
 
   // Sort by position
   highlights.sort((a, b) => a.start - b.start);
 
   // Calculate statistics
   const stats: AnalysisStats = {
-    grammar: highlights.filter(h => h.type.includes('grammar')).length,
+    // Grammar and Spelling counts are now handled by the backend service.
+    grammar: 0, 
     weakWords: highlights.filter(h => h.type === 'weak-word').length,
     passiveVoice: highlights.filter(h => h.type === 'passive-voice').length,
     excessiveAdjectives: highlights.filter(h => h.type === 'excessive-adjectives').length,
     sentenceIssues: highlights.filter(h => h.type.includes('sentence') || h.type === 'repetitive-start').length,
-    spelling: highlights.filter(h => h.type === 'spelling').length
+    spelling: 0
   };
 
   return { highlights, stats };
