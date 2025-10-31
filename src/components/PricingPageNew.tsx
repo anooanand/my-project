@@ -1,8 +1,160 @@
 import React, { useState, useEffect } from 'react';
-import { Home, Check, Twitter, Linkedin, MessageCircle } from 'lucide-react';
+import { Home, Check, X, Twitter, Linkedin, MessageCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
+
+// --- Pricing Data Structure ---
+
+const CORE_FEATURES = [
+  { name: 'Basic Writing Tools', free: true, monthly: true, annual: true },
+  { name: 'Basic Text Type Templates', free: true, monthly: true, annual: true },
+  { name: 'Basic Progress Tracking', free: true, monthly: true, annual: true },
+  { name: 'Email Support', free: true, monthly: true, annual: true },
+];
+
+const PRO_FEATURES = [
+  { name: 'Unlimited AI Coaching & Feedback', free: false, monthly: true, annual: true },
+  { name: 'Full Access to All 15+ Templates', free: false, monthly: true, annual: true },
+  { name: 'Unlimited Practice Essays & Exams', free: false, monthly: true, annual: true },
+  { name: 'Advanced Writing Analysis', free: false, monthly: true, annual: true },
+  { name: 'Priority Technical Support', free: false, monthly: true, annual: true },
+];
+
+const ALL_FEATURES = [...CORE_FEATURES, ...PRO_FEATURES];
+
+const PLANS = [
+  {
+    name: 'Basic',
+    price: 'Free',
+    interval: 'Forever',
+    description: 'Start your writing journey with essential tools.',
+    isPopular: false,
+    cta: 'Start Free',
+    ctaLink: '/auth',
+    priceId: null,
+    isFree: true,
+  },
+  {
+    name: 'Pro Monthly',
+    price: '$20',
+    interval: 'per month',
+    description: 'The complete, all-in-one solution for exam prep.',
+    isPopular: false,
+    cta: 'Start 7-Day Free Trial',
+    ctaLink: '/auth',
+    priceId: 'price_monthly_id', // Placeholder - replace with actual Stripe Price ID
+    isFree: false,
+  },
+  {
+    name: 'Pro Annual',
+    price: '$199',
+    interval: 'per year',
+    description: 'Best value for long-term, focused exam preparation.',
+    isPopular: true,
+    cta: 'Start 7-Day Free Trial',
+    ctaLink: '/auth',
+    priceId: 'price_annual_id', // Placeholder - replace with actual Stripe Price ID
+    isFree: false,
+  },
+];
+
+// --- Helper Components ---
+
+const FeatureItem = ({ feature, planType }) => {
+  const isIncluded = feature[planType];
+  return (
+    <li className="flex items-start gap-3">
+      {isIncluded ? (
+        <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+      ) : (
+        <X className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+      )}
+      <span className="text-gray-300">{feature.name}</span>
+    </li>
+  );
+};
+
+const PricingCard = ({ plan, planType }) => {
+  const navigate = useNavigate();
+  const isAnnual = planType === 'annual';
+  const isMonthly = planType === 'monthly';
+  const isFree = planType === 'free';
+  const isPopular = plan.isPopular;
+
+  const cardClasses = isPopular
+    ? 'relative bg-gradient-to-br from-blue-600/30 to-purple-600/30 border-2 border-purple-500 rounded-3xl p-8 backdrop-blur-sm shadow-2xl transform scale-105 transition-all duration-300'
+    : 'relative bg-gradient-to-br from-blue-600/20 to-purple-600/20 border border-purple-500/30 rounded-3xl p-8 backdrop-blur-sm';
+
+  const ctaClasses = isPopular
+    ? 'w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/50 active:scale-95'
+    : 'w-full bg-transparent border-2 border-white text-gray-300 font-bold py-3 px-6 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/50 active:scale-95 hover:bg-purple-600 hover:text-white hover:border-purple-600';
+
+  return (
+    <div className={cardClasses}>
+      {isPopular && (
+        <div className="absolute top-0 right-0 -mt-4 -mr-4 px-4 py-1 bg-yellow-500 text-black text-sm font-bold rounded-full shadow-lg transform rotate-3">
+          Most Popular
+        </div>
+      )}
+      <div className="pt-0">
+        {/* Plan Title */}
+        <h2 className="text-3xl font-bold text-white text-center mb-2">
+          {plan.name}
+        </h2>
+        <p className="text-gray-400 text-center mb-6">{plan.description}</p>
+
+        {/* Price */}
+        <div className="text-center mb-6">
+          <div className="text-6xl font-bold text-purple-400 mb-1">
+            {plan.price}
+          </div>
+          <p className="text-gray-400 text-lg">{plan.interval}</p>
+          {!isFree && (
+            <p className="text-gray-300 text-sm font-semibold mt-3">
+              First 7 days free • Cancel anytime
+            </p>
+          )}
+          {isAnnual && (
+            <p className="text-yellow-400 text-sm font-semibold mt-1">
+              Save 17% compared to monthly
+            </p>
+          )}
+        </div>
+
+        {/* Value Justification Section - Added for clarity */}
+        {!isFree && (
+          <div className="text-center mb-6 pt-4 border-t border-gray-700/50">
+            <p className="text-sm font-semibold mb-2 text-gray-400">
+              Less than the cost of a single hour of private tutoring
+            </p>
+            <p className="text-lg font-bold text-yellow-400">
+              {plan.price}{plan.interval.includes('month') ? '/month' : ''} vs $60-$120/hour for a tutor
+            </p>
+          </div>
+        )}
+
+        {/* CTA Button */}
+        <button
+          onClick={() => navigate(plan.ctaLink)}
+          className={ctaClasses}
+        >
+          {plan.cta}
+        </button>
+
+        {/* Features List */}
+        <div className="mt-8 pt-6 border-t border-gray-700/50">
+          <h3 className="text-lg font-semibold text-white mb-4">What's Included</h3>
+          <ul className="space-y-4">
+            {ALL_FEATURES.map((feature, index) => (
+              <FeatureItem key={index} feature={feature} planType={planType} />
+            ))}
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export function PricingPageNew() {
   const navigate = useNavigate();
@@ -30,76 +182,48 @@ export function PricingPageNew() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
         <div className="mb-6">
           <h1 className="text-5xl md:text-6xl font-bold mb-4 text-white">
-            The Unlimited Success Plan
+            Choose Your Path to Selective School Success
           </h1>
           {/* Pinkish-purple underline below the text */}
           <div className="h-1 w-48 bg-gradient-to-r from-pink-500 to-purple-600 mx-auto"></div>
         </div>
         <p className="text-lg text-gray-400 max-w-2xl mx-auto leading-relaxed">
-          The complete, all-in-one solution to master the NSW Selective School Writing Exam.
+          Find the perfect plan to boost your child's writing score with personalized AI coaching.
         </p>
       </div>
 
-      {/* Plan Card */}
-      <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8 pb-12">
-        <div className="relative bg-gradient-to-br from-blue-600/20 to-purple-600/20 border border-purple-500/30 rounded-3xl p-8 backdrop-blur-sm">
-          <div className="pt-0">
-            {/* Plan Title */}
-            <h2 className="text-3xl font-bold text-white text-center mb-4">
-              Unlimited Success Plan
-            </h2>
+      {/* Pricing Tiers Section */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3 lg:gap-10">
+          {/* Free Plan */}
+          <PricingCard plan={PLANS[0]} planType="free" />
 
-            {/* Price */}
-            <div className="text-center mb-6">
-              <div className="text-5xl font-bold text-purple-400 mb-2">
-                $20.00
-              </div>
-              <p className="text-gray-400">/month</p>
-              <p className="text-gray-300 text-base font-semibold mt-3">
-                First 7 days free • Cancel anytime
-              </p>
-            </div>
+          {/* Monthly Plan */}
+          <PricingCard plan={PLANS[1]} planType="monthly" />
 
-            {/* Features List */}
-            <ul className="space-y-4 mb-10">
-              {[
-                'Unlimited AI Coaching & Feedback on all essay types',
-                'Full Access to All 15+ Text Type Templates',
-                'Unlimited Practice Essays & Exam Simulations',
-                'Advanced Writing Analysis (Style, Structure, Rubric Alignment)',
-                'Personalized Progress Tracking & Analytics',
-                'Priority Technical Support'
-              ].map((feature, index) => (
-                <li key={index} className="flex items-start gap-3">
-                  <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                  <span className="text-gray-300">{feature}</span>
-                </li>
-              ))}
-            </ul>
+          {/* Annual Plan (Most Popular) */}
+          <PricingCard plan={PLANS[2]} planType="annual" />
+        </div>
 
-            {/* Value Justification Section - Added for clarity */}
-            <div className="text-center mb-6 pt-4 border-t border-gray-700/50">
-              <p className="text-sm font-semibold mb-2 text-gray-400">
-                Less than the cost of a single hour of private tutoring
-              </p>
-              <p className="text-lg font-bold text-yellow-400">
-                $20/month vs $60-$120/hour for a tutor
-              </p>
-            </div>
+        {/* Value Comparison Table (Optional: for a future phase) */}
+        <div className="mt-16 text-center">
+          <h2 className="text-3xl font-bold text-white mb-4">Detailed Feature Comparison</h2>
+          <p className="text-gray-400 max-w-2xl mx-auto mb-8">See exactly what you get with each plan.</p>
 
-            {/* CTA Button - White outlined with gray text */}
-            <button
-              onClick={() => navigate('/auth')}
-              className="w-full bg-transparent border-2 border-white text-gray-300 font-bold py-3 px-6 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/50 active:scale-95 hover:bg-purple-600 hover:text-white hover:border-purple-600"
-            >
-              Start trial
-            </button>
-          </div>
+          {/* Feature Table Placeholder - Implementing a full comparison table is complex and can be a future task. */}
+          {/* For now, the cards show the comparison clearly. We will use a simple CTA to a full comparison if needed. */}
+          <button
+            onClick={() => navigate('/features')} // Assuming a features page exists
+            className="bg-gray-800 hover:bg-gray-700 text-white font-semibold py-3 px-8 rounded-xl transition-all duration-300"
+          >
+            See All Features in Detail
+          </button>
         </div>
       </div>
 
       {/* Referral Teaser Section - Improved */}
-      <div className="max-w-sm mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 flex justify-center">
+        <div className="max-w-lg w-full">
         <div className="bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 rounded-2xl p-6 backdrop-blur-sm animate-fadeIn">
           {/* Centered Trophy Icon */}
           <div className="text-center mb-4">
@@ -148,8 +272,7 @@ export function PricingPageNew() {
           </div>
         </div>
       </div>
-
-      {/* Footer */}
+      {/* Footer */}}
       <footer className="bg-gray-950 border-t border-gray-800 py-16">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Footer Content Grid */}
