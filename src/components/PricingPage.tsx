@@ -1,216 +1,285 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowRight, Check, Star, Home } from 'lucide-react';
-import { supabase } from '../lib/supabase'; // Removed isEmailVerified import
-import { createCheckoutSession } from '../lib/stripe';
-import { products } from '../stripe-config';
+import { Check, Home, Sparkle, BarChart, Target, Star } from 'lucide-react'; // Added Sparkle, BarChart, Target, Star for feature icons
+import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet'; // Import Helmet for the script tag
+import { Helmet } from 'react-helmet';
+import { products } from '../stripe-config'; // Assuming products is still needed for data
+
+// Define the colors and features based on the user's guidance
+const COLORS = {
+  NAVY_BACKGROUND: '#0F1419',
+  CARD_BACKGROUND: '#1E293B',
+  PURPLE_START: '#8B5CF6', // Indigo-500
+  PURPLE_END: '#A855F7', // Violet-500
+  BLUE: '#3B82F6', // Blue-500
+  GREEN_CHECK: '#10B981', // Emerald-500
+  LIGHT_GRAY: '#D1D5DB', // Gray-300
+  WHITE: '#FFFFFF',
+  YELLOW_GOLD: '#FCD34D', // Amber-300
+};
+
+// Features list from the guidance
+const FEATURE_LIST = [
+  "Access to basic writing tools",
+  "Limited AI feedback",
+  "Basic text type templates",
+  "Email support",
+  "Unlimited AI feedback",
+  "All text type templates",
+  "Unlimited Practice Essays",
+  "Advanced writing analysis",
+  "Practice exam simulations",
+  "Priority support",
+  "Progress tracking",
+];
+
+// Feature cards data
+const FEATURE_CARDS = [
+  { 
+    Icon: Sparkle, 
+    title: 'AI Writing Coach', 
+    desc: 'Get instant feedback on your essays', 
+    gradient: 'from-pink-500 to-orange-500' // Pink to orange
+  },
+  { 
+    Icon: BarChart, 
+    title: 'Progress Tracking', 
+    desc: 'Monitor your improvement over time', 
+    gradient: 'from-red-500 via-yellow-500 to-blue-500' // Rainbow/multicolor approximation
+  },
+  { 
+    Icon: Target, 
+    title: 'Targeted Practice', 
+    desc: 'Focus on your weak areas', 
+    gradient: 'from-pink-500 to-purple-500' // Pink to purple
+  },
+  { 
+    Icon: Star, 
+    title: 'Expert Tips', 
+    desc: 'Learn from IELTS professionals', 
+    color: COLORS.YELLOW_GOLD // Solid yellow/gold
+  },
+];
+
 
 export function PricingPage() {
-  const { user, emailVerified, paymentCompleted, forceRefreshVerification } = useAuth(); // Get emailVerified and paymentCompleted from AuthContext
+  const { user, emailVerified, paymentCompleted } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
-  const [isCheckingVerification, setIsCheckingVerification] = useState(false);
 
-  // Local function to check payment status (can be removed if AuthContext handles all)
-// The handleSubscribe function is no longer needed as we are using the Stripe Buy Button.
-// The buy button handles the checkout process.
-  const checkPaymentStatus = async (userId: string): Promise<boolean> => {
-    try {
-      // Check for temporary access first
-      const tempAccess = localStorage.getItem('temp_access_granted');
-      const tempUntil = localStorage.getItem('temp_access_until');
-      
-      if (tempAccess === 'true' && tempUntil) {
-        const tempDate = new Date(tempUntil);
-        if (tempDate > new Date()) {
-          console.log('✅ User has valid 24-hour temporary access');
-          return true; // Has valid temporary access
-        }
-      }
-      
-      // Check database for payment verification
-      const { data } = await supabase
-        .from('user_profiles')
-        .select('payment_verified, subscription_status, manual_override')
-        .eq('id', userId) // Use 'id' consistently
-        .single();
-      
-      return data?.payment_verified === true || 
-             data?.subscription_status === 'active' ||
-             data?.manual_override === true;
-    } catch (error) {
-      console.error('Error checking payment status:', error);
-      return false;
-    }
-  };
-
+  // Simplified loading logic, assuming AuthContext handles the heavy lifting
   useEffect(() => {
-    window.scrollTo(0, 0); // Scroll to the top of the page on mount
-    // No need to re-check email verification here, it's handled by AuthContext
-    // Just set loading state based on AuthContext's loading
-    if (!user) {
-      setIsLoading(false);
-      return;
-    }
-
-    // If AuthContext is still loading, keep PricingPage loading
-    if (typeof emailVerified === 'undefined' || typeof paymentCompleted === 'undefined') {
-      setIsLoading(true);
-    } else {
+    window.scrollTo(0, 0);
+    // Check if AuthContext has finished loading its essential states
+    if (typeof emailVerified !== 'undefined' && typeof paymentCompleted !== 'undefined') {
       setIsLoading(false);
     }
+  }, [emailVerified, paymentCompleted]);
 
-  }, [user, emailVerified, paymentCompleted]); // Depend on AuthContext states
+  // --- Helper Components for Reusability ---
 
-  
+  // Custom component for the gradient text
+  const GradientText = ({ text, className = '' }: { text: string, className?: string }) => (
+    <span 
+      className={`bg-clip-text text-transparent ${className}`}
+      style={{ backgroundImage: `linear-gradient(to right, ${COLORS.PURPLE_START}, ${COLORS.BLUE})` }}
+    >
+      {text}
+    </span>
+  );
 
-  const getVerificationStatus = () => {
-    if (!user) {
-      return { message: 'Please sign in to continue', color: 'text-gray-600', bgColor: 'bg-gray-100' };
+  // Custom component for the feature card icons
+  const FeatureIcon = ({ Icon, gradient, color }: typeof FEATURE_CARDS[0]) => {
+    if (color) {
+      return <Icon className="w-10 h-10 mx-auto" style={{ color }} />;
     }
-    
-    if (!emailVerified) {
-      return { 
-        message: 'Please verify your email address before subscribing', 
-        color: 'text-blue-600', 
-        bgColor: 'bg-blue-50' 
-      };
-    }
-    
-    if (paymentCompleted) {
-      return { 
-        message: '✅ Email verified and payment completed!', 
-        color: 'text-green-600', 
-        bgColor: 'bg-green-50' 
-      };
-    }
-    
-    return { 
-      message: '✅ Email verified - Ready to subscribe!', 
-      color: 'text-green-600', 
-      bgColor: 'bg-green-50' 
-    };
+    return (
+      <div className={`p-3 rounded-full inline-block mb-4 bg-gradient-to-br ${gradient}`}>
+        <Icon className="w-6 h-6 text-white" />
+      </div>
+    );
   };
 
-  const status = getVerificationStatus();
+  // --- Main Component Render ---
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600 dark:text-gray-300">Loading pricing information...</p>
-          </div>
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: COLORS.NAVY_BACKGROUND }}>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-300">Loading pricing information...</p>
         </div>
       </div>
     );
   }
 
+  // Use the first product for data, as per the original component logic
+  const product = products[0] || { 
+    id: 'default', 
+    name: 'Essential Plan', 
+    description: 'Complete writing preparation package', 
+    price: 2500, // Price in cents
+    interval: 'month',
+    features: FEATURE_LIST // Use the new list
+  };
+  const priceDisplay = (product.price / 100).toFixed(2);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-12 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
+    <div 
+      className="min-h-screen py-16" 
+      style={{ backgroundColor: COLORS.NAVY_BACKGROUND }}
+    >
       <Helmet>
         <script async src="https://js.stripe.com/v3/buy-button.js"></script>
       </Helmet>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
         {/* Back to Home Button */}
-        <div className="mb-6">
+        <div className="mb-12">
           <button
-            onClick={( ) => navigate('/')}
-            className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 border border-gray-300 rounded-lg shadow-sm transition-all hover:shadow-md text-gray-700 font-medium"
+            onClick={() => navigate('/')}
+            className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-100 rounded-full shadow-lg transition-all text-gray-800 font-medium text-sm"
           >
-            <Home className="w-5 h-5" />
+            <Home className="w-4 h-4 text-gray-600" />
             Back to Home
           </button>
         </div>
 
         {/* Header */}
-        <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
-            Choose Your <span className="bg-gradient-to-r from-blue-600 to-purple-700 bg-clip-text text-transparent">Plan</span>
+        <div className="text-center mb-20">
+          <h1 className="text-5xl md:text-6xl font-extrabold mb-4">
+            <span 
+              className="bg-clip-text text-transparent"
+              style={{ backgroundImage: `linear-gradient(to right, ${COLORS.PURPLE_START}, ${COLORS.PURPLE_END})` }}
+            >
+              Choose Your
+            </span>
+            <span 
+              className="ml-3" 
+              style={{ color: COLORS.BLUE }}
+            >
+              Plan
+            </span>
           </h1>
-          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+          <p className="text-xl max-w-3xl mx-auto" style={{ color: COLORS.LIGHT_GRAY }}>
             Unlock your writing potential with comprehensive AI-powered writing tools
           </p>
         </div>
 
         
-
         {/* Pricing Card - Single Centered Plan */}
-        <div className="max-w-lg mx-auto">
-          {/* Map removed to show only one block. We use the first product for display. */}
-		          {products.slice(0, 1).map((product) => (
-            <div
-              key={product.id}
-              className="relative bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden border-4 border-blue-500"
+        <div className="max-w-sm mx-auto" style={{ width: '380px' }}>
+          <div
+            className="relative rounded-[20px] p-[2px] shadow-2xl"
+            style={{ 
+              background: `linear-gradient(to bottom right, ${COLORS.BLUE}, ${COLORS.PURPLE_START})`,
+            }}
+          >
+            <div 
+              className="bg-white rounded-[18px] overflow-hidden" 
+              style={{ backgroundColor: COLORS.CARD_BACKGROUND }}
             >
-              <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-center py-3 text-base font-semibold">
+              
+              {/* Card Header - Most Popular Badge */}
+              <div 
+                className="text-white text-center py-3 text-lg font-semibold rounded-t-[18px]"
+                style={{ backgroundImage: `linear-gradient(to right, ${COLORS.BLUE}, ${COLORS.PURPLE_START})` }}
+              >
                 Most Popular
               </div>
 
-              <div className="p-10 pt-16">
+              <div className="p-8">
+                
+                {/* Card Content */}
                 <div className="text-center mb-8">
-                  <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
+                  <h3 className="text-3xl font-bold mb-3" style={{ color: COLORS.WHITE }}>
                     {product.name}
                   </h3>
-                  <div className="flex items-baseline justify-center mb-4">
-                    <span className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-700 bg-clip-text text-transparent">
-                      $25.00
+                  <div className="flex items-baseline justify-center mb-2">
+                    <span 
+                      className="text-6xl font-extrabold bg-clip-text text-transparent"
+                      style={{ backgroundImage: `linear-gradient(to right, ${COLORS.PURPLE_START}, ${COLORS.BLUE})` }}
+                    >
+                      ${priceDisplay}
                     </span>
-                    <span className="text-gray-500 dark:text-gray-400 ml-2 text-lg">
+                    <span 
+                      className="ml-2 text-xl" 
+                      style={{ color: COLORS.LIGHT_GRAY }}
+                    >
                       /{product.interval || 'month'}
                     </span>
                   </div>
-                  <p className="text-gray-600 dark:text-gray-300 text-lg">
+                  <p className="text-base" style={{ color: COLORS.LIGHT_GRAY }}>
                     {product.description}
                   </p>
                 </div>
 
+                {/* Features List */}
                 <ul className="space-y-3 mb-8">
-                  {product.features.map((feature, featureIndex) => (
-                    <li key={featureIndex} className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mt-1 mr-3 flex-shrink-0" />
-                      <span className="text-gray-700 dark:text-gray-300">{feature}</span>
+                  {FEATURE_LIST.map((feature, index) => (
+                    <li key={index} className="flex items-start">
+                      <Check 
+                        className="h-5 w-5 mt-1 mr-3 flex-shrink-0" 
+                        style={{ color: COLORS.GREEN_CHECK }} 
+                      />
+                      <span className="text-base" style={{ color: COLORS.WHITE }}>
+                        {feature}
+                      </span>
                     </li>
                   ))}
                 </ul>
 
-                {/* Stripe Buy Button Implementation */}
+                {/* Call-to-Action Button */}
+                {/* Re-using the existing stripe-buy-button structure and applying new styles */}
                 <div className="w-full">
-	<stripe-buy-button
-		                    buy-button-id="buy_btn_1SN8blRq1JXLPYBD5pPclBAr"
-		                    publishable-key="pk_test_51QuwqnRq1JXLPYBDxEWg3Us1FtE5tfm4FAXW7Aw2CHCwY7bvGkIgRIDBBlGWg61ooSB5xAC8bHuhGcUNR9AA5d8J00kRpp5TyC"
-		                    client-reference-id={user?.id}
-		                    customer-email={user?.email}
-		                    className="w-full"
-		                  >
-	                  </stripe-buy-button>
+                  <style>{`
+                    .stripe-buy-button-container button {
+                      width: 100%;
+                      padding: 12px 0;
+                      border-radius: 10px;
+                      font-weight: 600;
+                      color: ${COLORS.WHITE};
+                      background-image: linear-gradient(to right, ${COLORS.PURPLE_START}, ${COLORS.PURPLE_END});
+                      transition: all 0.3s ease;
+                      border: none;
+                      cursor: pointer;
+                    }
+                    .stripe-buy-button-container button:hover {
+                      opacity: 0.9;
+                      box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+                    }
+                  `}</style>
+                  <div className="stripe-buy-button-container">
+                    <stripe-buy-button
+                      buy-button-id="buy_btn_1SN8blRq1JXLPYBD5pPclBAr" // Preserving existing ID
+                      publishable-key="pk_test_51QuwqnRq1JXLPYBDxEWg3Us1FtE5tfm4FAXW7Aw2CHCwY7bvGkIgRIDBBlGWg61ooSB5xAC8bHuhGcUNR9AA5d8J00kRpp5TyC" // Preserving existing key
+                      client-reference-id={user?.id}
+                      customer-email={user?.email}
+                      className="w-full"
+                    >
+                      Start trial
+                    </stripe-buy-button>
+                  </div>
                 </div>
               </div>
             </div>
-          ))}
+          </div>
         </div>
 
-        {/* Features Grid */}
-        <div className="mt-20">
-          <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-12">
+        {/* Features Section */}
+        <div className="mt-20 md:mt-32">
+          <h2 className="text-4xl font-bold text-center mb-16" style={{ color: COLORS.WHITE }}>
             Everything You Need to Succeed
           </h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-              { icon: '📝', title: 'AI Writing Coach', desc: 'Get instant feedback on your essays' },
-              { icon: '📊', title: 'Progress Tracking', desc: 'Monitor your improvement over time' },
-              { icon: '🎯', title: 'Targeted Practice', desc: 'Focus on your weak areas' },
-              { icon: '⭐', title: 'Expert Tips', desc: 'Learn from IELTS professionals' }
-            ].map((feature, index) => (
-              <div key={index} className="text-center">
-                <div className="text-4xl mb-4">{feature.icon}</div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            {FEATURE_CARDS.map((feature, index) => (
+              <div key={index} className="text-center p-6 rounded-lg transition-transform duration-300 hover:scale-[1.02]">
+                <FeatureIcon {...feature} />
+                <h3 className="text-xl font-bold mb-2" style={{ color: COLORS.WHITE }}>
                   {feature.title}
                 </h3>
-                <p className="text-gray-600 dark:text-gray-300">
+                <p className="text-base" style={{ color: COLORS.LIGHT_GRAY }}>
                   {feature.desc}
                 </p>
               </div>
