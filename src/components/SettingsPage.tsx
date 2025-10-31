@@ -8,7 +8,8 @@ interface SettingsPageProps {
 }
 
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../supabaseClient';
+import { supabase } from '../lib/supabase';
+
 
 export function SettingsPage({ onBack }: SettingsPageProps) {
   const { theme, toggleTheme } = useTheme();
