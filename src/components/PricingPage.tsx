@@ -19,19 +19,14 @@ const COLORS = {
   YELLOW_GOLD: '#FCD34D', // Amber-300
 };
 
-// Features list from the guidance
+// Streamlined and outcome-focused feature list
 const FEATURE_LIST = [
-  "Access to basic writing tools",
-  "Limited AI feedback",
-  "Basic text type templates",
-  "Email support",
-  "Unlimited AI feedback",
-  "All text type templates",
-  "Unlimited Practice Essays",
-  "Advanced writing analysis",
-  "Practice exam simulations",
-  "Priority support",
-  "Progress tracking",
+  "Unlimited AI Coaching & Feedback on all essay types",
+  "Full Access to All 15+ Text Type Templates",
+  "Unlimited Practice Essays & Exam Simulations",
+  "Advanced Writing Analysis (Style, Structure, Rubric Alignment)",
+  "Personalized Progress Tracking & Analytics",
+  "Priority Technical Support",
 ];
 
 
@@ -98,10 +93,10 @@ export function PricingPage() {
         {/* Header - Updated for Single Plan */}
         <div className="text-center mb-20">
           <h1 className="text-5xl md:text-6xl font-extrabold mb-4" style={{ color: COLORS.WHITE }}>
-            The Essential Plan
+            The Unlimited Success Plan
           </h1>
           <p className="text-xl max-w-3xl mx-auto" style={{ color: COLORS.LIGHT_GRAY }}>
-            Unlock your writing potential with comprehensive AI-powered writing tools
+            The complete, all-in-one solution to master the NSW Selective School Writing Exam.
           </p>
         </div>
 
@@ -119,12 +114,12 @@ export function PricingPage() {
               style={{ backgroundColor: COLORS.CARD_BACKGROUND }}
             >
               
-              {/* Card Header - Most Popular Badge */}
+              {// Card Header - Best Value Badge */}
               <div 
                 className="text-white text-center py-3 text-lg font-semibold rounded-t-[18px]"
                 style={{ backgroundImage: `linear-gradient(to right, ${COLORS.BLUE}, ${COLORS.PURPLE_START})` }}
               >
-                Most Popular
+                Best Value
               </div>
 
               <div className="p-8">
@@ -153,7 +148,7 @@ export function PricingPage() {
                     First 7 days free • Cancel anytime
                   </p>
                   <p className="text-base" style={{ color: COLORS.LIGHT_GRAY }}>
-                    {product.description}
+                    Complete writing preparation package
                   </p>
                 </div>
 
@@ -173,6 +168,17 @@ export function PricingPage() {
                 </ul>
 
                 {/* Call-to-Action Button */}
+                
+                {/* Value Justification Section */}
+                <div className="mt-8 pt-6 border-t border-gray-700 text-center">
+                  <p className="text-sm font-semibold mb-2" style={{ color: COLORS.LIGHT_GRAY }}>
+                    Less than the cost of a single hour of private tutoring
+                  </p>
+                  <p className="text-lg font-bold" style={{ color: COLORS.YELLOW_GOLD }}>
+                    $20/month vs $60-$120/hour for a tutor
+                  </p>
+                </div>
+                
                 {/* Re-using the existing stripe-buy-button structure and applying new styles */}
                 <div className="w-full">
                   <style>{`
