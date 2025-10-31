@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Check, Home, Sparkle, BarChart, Target, Star } from 'lucide-react'; // Added Sparkle, BarChart, Target, Star for feature icons
+import { Check, Home, Sparkle, BarChart, Target, Star } from 'lucide-react'; // Keep icons imported for feature list, but remove FeatureIcon component
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -34,7 +34,7 @@ const FEATURE_LIST = [
   "Progress tracking",
 ];
 
-// Feature cards data
+// Feature cards data (Icons will be ignored in the render logic)
 const FEATURE_CARDS = [
   { 
     Icon: Sparkle, 
@@ -79,27 +79,9 @@ export function PricingPage() {
 
   // --- Helper Components for Reusability ---
 
-  // Custom component for the gradient text
-  const GradientText = ({ text, className = '' }: { text: string, className?: string }) => (
-    <span 
-      className={`bg-clip-text text-transparent ${className}`}
-      style={{ backgroundImage: `linear-gradient(to right, ${COLORS.PURPLE_START}, ${COLORS.BLUE})` }}
-    >
-      {text}
-    </span>
-  );
+  // Removed GradientText component as it's no longer used for the main title
 
-  // Custom component for the feature card icons
-  const FeatureIcon = ({ Icon, gradient, color }: typeof FEATURE_CARDS[0]) => {
-    if (color) {
-      return <Icon className="w-10 h-10 mx-auto" style={{ color }} />;
-    }
-    return (
-      <div className={`p-3 rounded-full inline-block mb-4 bg-gradient-to-br ${gradient}`}>
-        <Icon className="w-6 h-6 text-white" />
-      </div>
-    );
-  };
+  // Removed FeatureIcon component as icons are no longer displayed in the feature cards
 
   // --- Main Component Render ---
 
@@ -115,15 +97,16 @@ export function PricingPage() {
   }
 
   // Use the first product for data, as per the original component logic
+  // NOTE: We hardcode the price to $20 as requested, regardless of 'products' data
   const product = products[0] || { 
     id: 'default', 
     name: 'Essential Plan', 
     description: 'Complete writing preparation package', 
-    price: 2500, // Price in cents
+    price: 2000, // Hardcoded to 2000 cents ($20.00)
     interval: 'month',
     features: FEATURE_LIST // Use the new list
   };
-  const priceDisplay = (product.price / 100).toFixed(2);
+  const priceDisplay = (2000 / 100).toFixed(2); // Hardcoded $20.00
 
   return (
     <div 
@@ -146,21 +129,10 @@ export function PricingPage() {
           </button>
         </div>
 
-        {/* Header */}
+        {/* Header - Updated for Single Plan */}
         <div className="text-center mb-20">
-          <h1 className="text-5xl md:text-6xl font-extrabold mb-4">
-            <span 
-              className="bg-clip-text text-transparent"
-              style={{ backgroundImage: `linear-gradient(to right, ${COLORS.PURPLE_START}, ${COLORS.PURPLE_END})` }}
-            >
-              Choose Your
-            </span>
-            <span 
-              className="ml-3" 
-              style={{ color: COLORS.BLUE }}
-            >
-              Plan
-            </span>
+          <h1 className="text-5xl md:text-6xl font-extrabold mb-4" style={{ color: COLORS.WHITE }}>
+            The Essential Plan
           </h1>
           <p className="text-xl max-w-3xl mx-auto" style={{ color: COLORS.LIGHT_GRAY }}>
             Unlock your writing potential with comprehensive AI-powered writing tools
@@ -196,7 +168,7 @@ export function PricingPage() {
                   <h3 className="text-3xl font-bold mb-3" style={{ color: COLORS.WHITE }}>
                     {product.name}
                   </h3>
-                  <div className="flex items-baseline justify-center mb-2">
+                  <div className="flex items-baseline justify-center mb-1">
                     <span 
                       className="text-6xl font-extrabold bg-clip-text text-transparent"
                       style={{ backgroundImage: `linear-gradient(to right, ${COLORS.PURPLE_START}, ${COLORS.BLUE})` }}
@@ -210,6 +182,10 @@ export function PricingPage() {
                       /{product.interval || 'month'}
                     </span>
                   </div>
+                  {/* New Price Subtitle */}
+                  <p className="text-sm font-medium mb-4" style={{ color: COLORS.LIGHT_GRAY }}>
+                    First 7 days free • Cancel anytime
+                  </p>
                   <p className="text-base" style={{ color: COLORS.LIGHT_GRAY }}>
                     {product.description}
                   </p>
@@ -275,7 +251,7 @@ export function PricingPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {FEATURE_CARDS.map((feature, index) => (
               <div key={index} className="text-center p-6 rounded-lg transition-transform duration-300 hover:scale-[1.02]">
-                <FeatureIcon {...feature} />
+                {/* Removed FeatureIcon component here */}
                 <h3 className="text-xl font-bold mb-2" style={{ color: COLORS.WHITE }}>
                   {feature.title}
                 </h3>
