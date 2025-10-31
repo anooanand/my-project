@@ -6,6 +6,7 @@ import { FeaturesSection } from './FeaturesSection';
 import { HowItWorksSection } from './HowItWorksSection';
 import { PricingPage } from './PricingPage';
 import { WritingTypesSection } from './WritingTypesSection';
+// import { Footer } from './Footer'; // Removed to avoid duplication
 import { SuccessMetricsSection } from './SuccessMetricsSection';
 import { ComparisonSection } from './ComparisonSection';
 import { ArrowRight, CheckCircle, Star, Users, Zap, BookOpen, Award, Target, Play } from 'lucide-react';
@@ -312,7 +313,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSignInClick, o
         </div>
       </section>
 
-      {/* Footer */}
+      {/* Footer is now rendered globally in AppContent.tsx to ensure it appears on all marketing pages. */}
     </div>
   );
 };
