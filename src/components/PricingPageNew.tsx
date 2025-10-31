@@ -30,13 +30,13 @@ export function PricingPageNew() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
         <div className="mb-6">
           <h1 className="text-5xl md:text-6xl font-bold mb-4 text-white">
-            The Essential Plan
+            The Unlimited Success Plan
           </h1>
           {/* Pinkish-purple underline below the text */}
           <div className="h-1 w-48 bg-gradient-to-r from-pink-500 to-purple-600 mx-auto"></div>
         </div>
         <p className="text-lg text-gray-400 max-w-2xl mx-auto leading-relaxed">
-          Unlock your writing potential with comprehensive AI-powered writing tools
+          The complete, all-in-one solution to master the NSW Selective School Writing Exam.
         </p>
       </div>
 
@@ -46,7 +46,7 @@ export function PricingPageNew() {
           <div className="pt-0">
             {/* Plan Title */}
             <h2 className="text-3xl font-bold text-white text-center mb-4">
-              Essential Plan
+              Unlimited Success Plan
             </h2>
 
             {/* Price */}
@@ -63,17 +63,12 @@ export function PricingPageNew() {
             {/* Features List */}
             <ul className="space-y-4 mb-10">
               {[
-                'Access to basic writing tools',
-                'Limited AI feedback',
-                'Basic text type templates',
-                'Email support',
-                'Unlimited AI feedback',
-                'All text type templates',
-                'Unlimited Practice Essays',
-                'Advanced writing analysis',
-                'Practice exam simulations',
-                'Priority support',
-                'Progress tracking'
+                'Unlimited AI Coaching & Feedback on all essay types',
+                'Full Access to All 15+ Text Type Templates',
+                'Unlimited Practice Essays & Exam Simulations',
+                'Advanced Writing Analysis (Style, Structure, Rubric Alignment)',
+                'Personalized Progress Tracking & Analytics',
+                'Priority Technical Support'
               ].map((feature, index) => (
                 <li key={index} className="flex items-start gap-3">
                   <Check className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
@@ -81,6 +76,16 @@ export function PricingPageNew() {
                 </li>
               ))}
             </ul>
+
+            {/* Value Justification Section - Added for clarity */}
+            <div className="text-center mb-6 pt-4 border-t border-gray-700/50">
+              <p className="text-sm font-semibold mb-2 text-gray-400">
+                Less than the cost of a single hour of private tutoring
+              </p>
+              <p className="text-lg font-bold text-yellow-400">
+                $20/month vs $60-$120/hour for a tutor
+              </p>
+            </div>
 
             {/* CTA Button - White outlined with gray text */}
             <button
