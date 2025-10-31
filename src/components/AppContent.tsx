@@ -584,7 +584,7 @@ function AppContent() {
           />
         )}
 
-        {shouldShowFooter() && <Footer />}
+        {/* Footer removed to prevent duplication: {shouldShowFooter() && <Footer />} */}
       </div>
     </div>
   );
