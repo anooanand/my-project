@@ -59,7 +59,7 @@ export function Footer({ onNavigate }: FooterProps) {
                 <Github className="h-6 w-6" />
               </a>
               <a
-                href="https://linkedin.com"
+                href="https://www.linkedin.com/company/109644196/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors duration-300"
