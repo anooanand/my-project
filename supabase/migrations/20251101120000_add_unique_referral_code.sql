@@ -1,11 +1,10 @@
 -- 20251101120000_add_unique_referral_code.sql
 
--- 1. Add the referral_code column to user_profiles
-ALTER TABLE public.user_profiles
-ADD COLUMN referral_code TEXT UNIQUE;
+-- This migration consolidates and fixes the referral system logic.
+-- It assumes the user_profiles columns (referral_count, referral_code, referred_by) and the referral_log table
+-- were created in the previous migration (20251101100000_add_referral_system.sql).
 
--- 2. Create a function to generate a unique, short referral code
--- We will use a combination of characters and numbers for a short, human-readable code.
+-- 1. Create a function to generate a unique, short referral code
 CREATE OR REPLACE FUNCTION public.generate_unique_referral_code()
 RETURNS TEXT AS $$
 DECLARE
@@ -16,7 +15,6 @@ BEGIN
     LOOP
         attempt := attempt + 1;
         -- Generate a 6-character alphanumeric code (e.g., A1B2C3)
-        -- Using a mix of uppercase letters and numbers to increase space
         new_code := UPPER(SUBSTRING(MD5(RANDOM()::TEXT) FROM 1 FOR 6));
 
         -- Check if the code already exists
@@ -32,18 +30,23 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql VOLATILE;
 
--- 3. Update the handle_new_user function to generate and insert the referral code
+-- 2. Update the handle_new_user function to generate referral code, set referred_by, and create a pending log entry
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 DECLARE
   v_student_name TEXT;
   v_referral_code TEXT;
+  v_referrer_id UUID;
+  v_referrer_code_used TEXT;
 BEGIN
   -- Extract student_name from metadata, default to empty string if not present
   v_student_name := COALESCE(NEW.raw_user_meta_data->>'student_name', '');
   
   -- Generate a unique referral code
   v_referral_code := public.generate_unique_referral_code();
+  
+  -- Check for referrer code in metadata
+  v_referrer_code_used := NEW.raw_user_meta_data->>'referrer_code';
 
   -- Try to insert the user profile
   BEGIN
@@ -56,7 +59,8 @@ BEGIN
       manual_override,
       subscription_status,
       temp_access_until,
-      referral_code -- New column
+      referral_code, -- New column
+      referred_by    -- New column
     )
     VALUES (
       NEW.id,
@@ -67,7 +71,8 @@ BEGIN
       false,
       'free',
       NOW() + INTERVAL '24 hours',
-      v_referral_code -- New value
+      v_referral_code, -- New value
+      v_referrer_code_used -- Set referred_by if present
     )
     ON CONFLICT (id) DO UPDATE 
     SET 
@@ -76,7 +81,8 @@ BEGIN
         ELSE user_profiles.student_name 
       END,
       email = EXCLUDED.email,
-      referral_code = COALESCE(user_profiles.referral_code, EXCLUDED.referral_code) -- Ensure code is only set once
+      referral_code = COALESCE(user_profiles.referral_code, EXCLUDED.referral_code), -- Ensure code is only set once
+      referred_by = COALESCE(user_profiles.referred_by, EXCLUDED.referred_by) -- Ensure referred_by is only set once
     RETURNING referral_code INTO v_referral_code; -- Retrieve the code in case of update
 
   EXCEPTION
@@ -85,29 +91,37 @@ BEGIN
       RAISE WARNING 'Error inserting user profile for user %: %', NEW.id, SQLERRM;
   END;
 
-  -- If a referrer ID is passed in the metadata, record the referral
-  -- This part assumes the referrer's code is passed in the signup metadata, e.g., 'referrer_code'
-  IF NEW.raw_user_meta_data->>'referrer_code' IS NOT NULL THEN
-    INSERT INTO public.referrals (
-      referrer_id,
-      referred_id,
-      referred_email
-    )
-    SELECT 
-      up.id,
-      NEW.id,
-      NEW.email
+  -- If a referrer code was used, create a pending entry in the referral_log
+  IF v_referrer_code_used IS NOT NULL THEN
+    -- Find the referrer's ID using the referral code
+    SELECT id INTO v_referrer_id
     FROM public.user_profiles up
-    WHERE up.referral_code = NEW.raw_user_meta_data->>'referrer_code'
-    ON CONFLICT DO NOTHING; -- Prevent duplicate referral entries
+    WHERE up.referral_code = v_referrer_code_used;
+
+    IF v_referrer_id IS NOT NULL THEN
+      INSERT INTO public.referral_log (
+        referrer_id,
+        referred_user_id,
+        referral_code_used,
+        status
+      )
+      VALUES (
+        v_referrer_id,
+        NEW.id,
+        v_referrer_code_used,
+        'pending'
+      )
+      ON CONFLICT (referred_user_id) DO NOTHING; -- Prevent duplicate pending entries
+    ELSE
+      RAISE WARNING 'Referrer not found for code % used by user %', v_referrer_code_used, NEW.id;
+    END IF;
   END IF;
 
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 4. Backfill existing users with a referral code
--- This is important for existing users to have a code to share.
+-- 3. Backfill existing users with a referral code (re-run this part to ensure all users have a code)
 DO $$
 DECLARE
     user_record RECORD;
