@@ -72,6 +72,8 @@ export function generateReferralLink(referralCode: string): string {
  * Determines the reward tier based on the number of referrals.
  * @param count The number of successful referrals.
  * @returns A string describing the reward.
+ * 
+ * FIX: Updated to match the reward tiers from the provided image (1, 2, 3 referrals).
  */
 export function getRewardTier(count: number): { tier: number, reward: string, description: string } {
   if (count >= 3) {
@@ -80,16 +82,22 @@ export function getRewardTier(count: number): { tier: number, reward: string, de
       reward: '$10 Off for 6 Months', 
       description: 'You have unlocked the highest reward tier!' 
     };
-  } else if (count >= 1) {
+  } else if (count >= 2) {
     return { 
       tier: 2, 
       reward: '$5 Off for 6 Months', 
       description: 'Keep going! One more referral to the top tier.' 
     };
-  } else {
+  } else if (count >= 1) {
     return { 
       tier: 1, 
       reward: '1 Free Month', 
+      description: 'Refer your first friend to unlock your first reward.' 
+    };
+  } else {
+    return { 
+      tier: 0, 
+      reward: 'No Reward Yet', 
       description: 'Refer your first friend to unlock your first reward.' 
     };
   }
