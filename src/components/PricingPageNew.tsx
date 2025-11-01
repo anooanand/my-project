@@ -7,10 +7,12 @@ import { useTheme } from '../contexts/ThemeContext';
 // --- Pricing Data Structure ---
 
 const CORE_FEATURES = [
-  { name: 'Basic Writing Tools', free: true, monthly: true, annual: true },
-  { name: 'Basic Text Type Templates', free: true, monthly: true, annual: true },
-  { name: 'Basic Progress Tracking', free: true, monthly: true, annual: true },
-  { name: 'Email Support', free: true, monthly: true, annual: true },
+  { name: 'Practice Exam', free: true, monthly: true, annual: true },
+  { name: 'AI Feedback Report', free: true, monthly: true, annual: true },
+  { name: 'Writing Tools', free: false, monthly: true, annual: true },
+  { name: 'Text Type Templates', free: false, monthly: true, annual: true },
+  { name: 'Progress Tracking', free: false, monthly: true, annual: true },
+  { name: 'Email Support', free: false, monthly: true, annual: true },
 ];
 
 const PRO_FEATURES = [
@@ -25,7 +27,7 @@ const ALL_FEATURES = [...CORE_FEATURES, ...PRO_FEATURES];
 
 const PLANS = [
   {
-    name: 'Basic',
+    name: 'Free',
     price: 'Free',
     interval: 'Forever',
     description: 'Start your writing journey with essential tools.',
@@ -221,57 +223,45 @@ export function PricingPageNew() {
         </div>
       </div>
 
-      {/* Referral Teaser Section - Improved */}
+      {/* Referral Teaser Section - Updated Design */}
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 flex justify-center">
-        <div className="max-w-lg w-full">
-        <div className="bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border border-yellow-500/30 rounded-2xl p-6 backdrop-blur-sm animate-fadeIn">
-          {/* Centered Trophy Icon */}
-          <div className="text-center mb-4">
-            <div className="text-5xl">🏆</div>
-          </div>
-          
-          {/* Centered Heading */}
-          <h3 className="text-purple-400 font-bold text-lg text-center mb-4">
-            🎁 Refer & Earn Rewards
-          </h3>
-          
-          {/* Improved Centered Subtitle with Better Alignment */}
-          <div className="text-center mb-6">
-            <p className="text-gray-400 text-sm leading-relaxed mb-3">
-              Share Writing Mate with friends after signup—earn FREE months!
-            </p>
-            
-            {/* Referral Tiers - Centered Multi-line List */}
-            <div className="space-y-2 text-sm text-gray-300">
-              <div className="flex justify-center items-center gap-2">
-                <span className="text-yellow-400 font-semibold">1 Referral</span>
-                <span className="text-gray-500">=</span>
-                <span>1 Free Month</span>
+        <div className="max-w-2xl w-full">
+          <div className="bg-gray-900 border border-purple-500/50 rounded-3xl p-8 shadow-2xl shadow-purple-900/50">
+            <div className="text-center">
+              <div className="text-6xl mb-4">🤝</div>
+              <h2 className="text-4xl font-extrabold text-white mb-2">
+                Refer a Friend, Get Rewarded
+              </h2>
+              <p className="text-gray-400 text-lg mb-8 max-w-md mx-auto">
+                Share the success with your friends and earn free months of Pro access.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center mb-8">
+              <div className="p-4 rounded-xl bg-gray-800/50 border border-purple-500/30">
+                <p className="text-3xl font-bold text-yellow-400">1</p>
+                <p className="text-sm text-gray-300 mt-1">Referral = 1 Free Month</p>
               </div>
-              <div className="flex justify-center items-center gap-2">
-                <span className="text-yellow-400 font-semibold">2 Referrals</span>
-                <span className="text-gray-500">=</span>
-                <span>$5 Off for 6 Months</span>
+              <div className="p-4 rounded-xl bg-gray-800/50 border border-purple-500/30">
+                <p className="text-3xl font-bold text-yellow-400">2</p>
+                <p className="text-sm text-gray-300 mt-1">Referrals = $5 Off for 6 Months</p>
               </div>
-              <div className="flex justify-center items-center gap-2">
-                <span className="text-yellow-400 font-semibold">3 Referrals</span>
-                <span className="text-gray-500">=</span>
-                <span>$10 Off for 6 Months</span>
+              <div className="p-4 rounded-xl bg-gray-800/50 border border-purple-500/30">
+                <p className="text-3xl font-bold text-yellow-400">3</p>
+                <p className="text-sm text-gray-300 mt-1">Referrals = $10 Off for 6 Months</p>
               </div>
             </div>
-          </div>
 
-          {/* CTA Button - Centered */}
-          <div className="flex justify-center">
-            <button
-              onClick={() => navigate('/auth')}
-              className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-6 rounded-lg transition-all text-sm"
-            >
-              Sign Up to Refer & Earn
-            </button>
+            <div className="flex justify-center">
+              <button
+                onClick={() => navigate('/auth')}
+                className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/50 active:scale-95"
+              >
+                Sign Up to Start Referring
+              </button>
+            </div>
           </div>
         </div>
-      </div>
       </div>
       {/* Footer */}
       <footer className="bg-gray-950 border-t border-gray-800 py-16">
