@@ -16,6 +16,7 @@ const CORE_FEATURES = [
 ];
 
 const PRO_FEATURES = [
+  { name: 'Option to write on your prompt (based on Essay type)', free: false, monthly: true, annual: true },
   { name: 'Unlimited AI Coaching & Feedback', free: false, monthly: true, annual: true },
   { name: 'Full Access to All 15+ Templates', free: false, monthly: true, annual: true },
   { name: 'Unlimited Practice Essays & Exams', free: false, monthly: true, annual: true },
@@ -207,20 +208,7 @@ export function PricingPageNew() {
           <PricingCard plan={PLANS[2]} planType="annual" />
         </div>
 
-        {/* Value Comparison Table (Optional: for a future phase) */}
-        <div className="mt-16 text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">Detailed Feature Comparison</h2>
-          <p className="text-gray-400 max-w-2xl mx-auto mb-8">See exactly what you get with each plan.</p>
-
-          {/* Feature Table Placeholder - Implementing a full comparison table is complex and can be a future task. */}
-          {/* For now, the cards show the comparison clearly. We will use a simple CTA to a full comparison if needed. */}
-          <button
-            onClick={() => navigate('/features')} // Assuming a features page exists
-            className="bg-gray-800 hover:bg-gray-700 text-white font-semibold py-3 px-8 rounded-xl transition-all duration-300"
-          >
-            See All Features in Detail
-          </button>
-        </div>
+        {/* Detailed Feature Comparison Section Removed as requested by user */}
       </div>
 
       {/* Referral Teaser Section - Updated Design */}
@@ -232,9 +220,9 @@ export function PricingPageNew() {
               <h2 className="text-4xl font-extrabold text-white mb-2">
                 Refer a Friend, Get Rewarded
               </h2>
-              <p className="text-gray-400 text-lg mb-8 max-w-md mx-auto">
-                Share the success with your friends and earn free months of Pro access.
-              </p>
+                <p className="text-gray-400 text-lg mb-8 max-w-md mx-auto">
+                  After successful sign up, you have the opportunity to refer friends and earn rewards.
+                </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center mb-8">
