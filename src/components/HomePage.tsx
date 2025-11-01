@@ -355,13 +355,13 @@ export const HomePage: React.FC<HomePageProps> = ({ onNavigate, onSignInClick, o
               onClick={user ? () => onNavigate('dashboard') : onSignUpClick}
               className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-blue-600 to-purple-700 rounded-xl hover:shadow-xl transform hover:scale-105 transition-all duration-200"
             >
-              {user ? 'Continue Writing' : 'Start Your 3-Day Free Trial'}
+              {user ? 'Continue Writing' : 'Start your 7 day trial'}
               <ArrowRight className="ml-2 w-5 h-5" />
             </button>
           </div>
 
           <p className="text-sm text-gray-500 dark:text-slate-400">
-            No credit card required • Cancel anytime • Money-back guarantee
+            • Cancel anytime •
           </p>
         </div>
       </section>
