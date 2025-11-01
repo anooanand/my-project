@@ -23,7 +23,7 @@ import { HowItWorksSection } from './HowItWorksSection';
 import { EnhancedSuccessSection } from './EnhancedSuccessSection';
 import { Footer } from './Footer';
 import { PaymentSuccessPage } from './PaymentSuccessPage';
-mport { PricingPageNew } from './PricingPageNew';
+import { PricingPageNew } from './PricingPageNew';
 import { Dashboard } from './Dashboard';
 import { AuthModal } from './AuthModal';
 import { FAQPage } from './FAQPage';
