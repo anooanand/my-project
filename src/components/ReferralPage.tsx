@@ -15,7 +15,7 @@ interface UserProfile {
   id: string;
   email: string;
   paid_referrals_count: number;
-  referral_code: string | null; // <-- ADDED
+  referral_code: string | null;
   // Add other necessary fields
 }
 
@@ -49,6 +49,8 @@ const ReferralCard: React.FC<ReferralCardProps> = ({ tier, currentCount }) => {
         </span>
         <Gift className={`w-8 h-8 ${isAchieved || isPast ? 'text-yellow-400' : 'text-purple-400'}`} />
       </div>
+      
+      {/* Reward amount in bright purple/blue gradient */}
       <p className="text-2xl font-extrabold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-400">
         {tier.reward}
       </p>
@@ -73,10 +75,9 @@ const ReferralPage: React.FC = () => {
 
   // The base URL for the referral link
   const referralBaseUrl = 'https://writingmate.co/signup'; 
-  // MODIFIED: Use the unique referral_code from the profile
   const referralLink = profile?.referral_code ? `${referralBaseUrl}?ref=${profile.referral_code}` : 'Loading...';
 
-  useEffect(( ) => {
+  useEffect(() => {
     const fetchProfile = async () => {
       if (!user) {
         setLoading(false);
@@ -85,7 +86,6 @@ const ReferralPage: React.FC = () => {
 
       const { data, error } = await supabase
         .from('user_profiles')
-        // MODIFIED: Include referral_code in the select statement
         .select('id, email, paid_referrals_count, referral_code')
         .eq('id', user.id)
         .single();
