@@ -99,57 +99,121 @@ export function LearningProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('learningProgress');
   };
 
-  const calculateStreak = (completedLessons: number[]): number => {
-    const sortedLessons = completedLessons.sort((a, b) => a - b);
-    let streak = 0;
-    let expectedDay = Math.max(...sortedLessons);
-    
-    for (let i = sortedLessons.length - 1; i >= 0; i--) {
-      if (sortedLessons[i] === expectedDay) {
-        streak++;
-        expectedDay--;
-      } else {
-        break;
+
+
+
+
+const calculateStreak = (completedLessons: number[]): number => {
+  const sortedLessons = completedLessons.sort((a, b) => a - b);
+  let streak = 0;
+  let expectedDay = Math.max(...sortedLessons);
+  
+  for (let i = sortedLessons.length - 1; i >= 0; i--) {
+    if (sortedLessons[i] === expectedDay) {
+      streak++;
+      expectedDay--;
+    } else {
+      break;
+    }
+  }
+  
+  return streak;
+};
+
+// Define lesson prerequisites (based on lessons.json)
+const prerequisites: { [key: number]: number[] } = {
+  4: [2],
+  5: [3],
+  6: [3, 5],
+  7: [6],
+  8: [5],
+  9: [4, 7],
+  10: [6, 7],
+  11: [8, 9],
+  12: [3],
+  13: [12],
+  14: [12, 13],
+  15: [14],
+  16: [5],
+  17: [16],
+  18: [16],
+  19: [17, 18],
+  20: [19],
+  21: [20],
+  22: [20],
+  23: [21, 22],
+  24: [23],
+  25: [13],
+  26: [14, 25],
+  27: [25],
+  28: [27],
+  29: [28],
+  30: [26, 29]
+};
+
+export function LearningProvider({ children }: { children: ReactNode }) {
+  const [progress, setProgress] = useState<LearningProgress>(initialProgress);
+
+  // Load progress from localStorage on mount
+  useEffect(() => {
+    const savedProgress = localStorage.getItem('learningProgress');
+    if (savedProgress) {
+      try {
+        const parsed = JSON.parse(savedProgress);
+        setProgress({
+          ...parsed,
+          lastActivity: new Date(parsed.lastActivity)
+        });
+      } catch (error) {
+        console.error('Error loading learning progress:', error);
       }
     }
-    
-    return streak;
+  }, []);
+
+  // Save progress to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('learningProgress', JSON.stringify(progress));
+  }, [progress]);
+
+  const updateProgress = (updates: Partial<LearningProgress>) => {
+    setProgress(prev => ({ ...prev, ...updates, lastActivity: new Date() }));
+  };
+
+  const completeLesson = (day: number, score: number, timeSpent: number) => {
+    setProgress(prev => {
+      const newCompletedLessons = [...new Set([...prev.completedLessons, day])];
+      const newLessonScores = { ...prev.lessonScores, [day]: score };
+      const newTimeSpent = { ...prev.timeSpent, [day]: timeSpent };
+      const pointsEarned = Math.round(score * 0.5); // Convert percentage to points
+      
+      return {
+        ...prev,
+        completedLessons: newCompletedLessons,
+        lessonScores: newLessonScores,
+        timeSpent: newTimeSpent,
+        totalPoints: prev.totalPoints + pointsEarned,
+        currentStreak: calculateStreak(newCompletedLessons),
+        lastActivity: new Date()
+      };
+    });
+  };
+
+  const earnBadge = (badgeId: string) => {
+    setProgress(prev => ({
+      ...prev,
+      earnedBadges: [...new Set([...prev.earnedBadges, badgeId])],
+      lastActivity: new Date()
+    }));
+  };
+
+  const resetProgress = () => {
+    setProgress(initialProgress);
+    localStorage.removeItem('learningProgress');
   };
 
   const getRecommendations = (): number[] => {
     const completed = progress.completedLessons;
     const available = [];
-    
-    // Define lesson prerequisites (based on lessons.json)
-    const prerequisites: { [key: number]: number[] } = {
-      4: [2],
-      5: [3],
-      6: [3, 5],
-      7: [6],
-      8: [5],
-      9: [4, 7],
-      10: [6, 7],
-      11: [8, 9],
-      12: [3],
-      13: [12],
-      14: [12, 13],
-      15: [14],
-      16: [5],
-      17: [16],
-      18: [16],
-      19: [17, 18],
-      20: [19],
-      21: [20],
-      22: [20],
-      23: [21, 22],
-      24: [23],
-      25: [13],
-      26: [14, 25],
-      27: [25],
-      28: [27],
-      29: [28],
-      30: [26, 29]
-    };
     
     for (let day = 1; day <= 30; day++) {
       if (!completed.includes(day)) {
@@ -186,28 +250,3 @@ export function useLearning() {
   }
   return context;
 }
-
-// Utility functions for progress calculations
-const calculateCompletionRate = (completedLessons: number[]): number => {
-  return Math.round((completedLessons.length / 30) * 100);
-};
-
-const calculateAverageScore = (lessonScores: { [key: number]: number }): number => {
-  const scores = Object.values(lessonScores);
-  if (scores.length === 0) return 0;
-  return Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length);
-};
-
-const getTotalTimeSpent = (timeSpent: { [key: number]: number }): number => {
-  return Object.values(timeSpent).reduce((sum, time) => sum + time, 0);
-};
-
-const formatTimeSpent = (seconds: number): string => {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  
-  if (hours > 0) {
-    return `${hours}h ${minutes}m`;
-  }
-  return `${minutes}m`;
-};
