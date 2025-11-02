@@ -184,9 +184,7 @@ export function useLearning() {
   if (context === undefined) {
     throw new Error('useLearning must be used within a LearningProvider');
   }
-  // Destructure all properties from the context object before returning it.
-  // This is a common fix for issues where minification/bundling renames properties
-  // and causes them to be lost when accessing them directly from the context object.
+  // FIX: Destructure all properties to prevent minification from breaking access.
   const { progress, updateProgress, completeLesson, earnBadge, resetProgress, getRecommendations } = context;
   return { progress, updateProgress, completeLesson, earnBadge, resetProgress, getRecommendations };
 }
