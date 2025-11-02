@@ -14,7 +14,7 @@ async function createServer() {
   const vite = await createViteServer({
     server: { middlewareMode: true },
     appType: 'custom',
-    configFile: path.resolve(__dirname, 'vite.config.ts') // FIX: Removed 'project-bolt/project/'
+    configFile: path.resolve(__dirname, 'vite.config.ts')
   });
 
   // Use vite's connect instance as middleware
@@ -63,7 +63,7 @@ async function createServer() {
   });
 
   app.listen(5173, () => {
-    console.log('Server listening on http://localhost:5173'  );
+    console.log('Server listening on http://localhost:5173'   );
   });
 }
 
