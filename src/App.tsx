@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
+import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { AppProvider } from './contexts/AppContext';
@@ -39,11 +40,18 @@ function App() {
       <AuthProvider>
         <AppProvider>
           <LearningProvider>
-            <Router>
+            {/* Only use BrowserRouter on the client side */}
+            {typeof window !== 'undefined' ? (
+              <BrowserRouter>
+                <ReferralHandler>
+                  <AppContent />
+                </ReferralHandler>
+              </BrowserRouter>
+            ) : (
               <ReferralHandler>
                 <AppContent />
               </ReferralHandler>
-            </Router>
+            )}
           </LearningProvider>
         </AppProvider>
       </AuthProvider>
