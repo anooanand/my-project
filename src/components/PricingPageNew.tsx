@@ -4,6 +4,37 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 
+// --- Stripe Buy Button Codes ---
+const STRIPE_BUTTONS = {
+  monthly: `
+    <script async src="https://js.stripe.com/v3/buy-button.js"></script>
+    <stripe-buy-button
+      buy-button-id="buy_btn_1SOeH0Rq1JXLPYBDWqxitwUc"
+      publishable-key="pk_test_51QuwqnRq1JXLPYBDxEWg3Us1FtE5tfm4FAXW7Aw2CHCwY7bvGkIgRIDBBlGWg61ooSB5xAC8bHuhGcUNR9AA5d8J00kRpp5TyC"
+      style="width: 100%;"
+    >
+    </stripe-buy-button>
+  `,
+  annual: `
+    <script async src="https://js.stripe.com/v3/buy-button.js"></script>
+    <stripe-buy-button
+      buy-button-id="buy_btn_1SOeNqRq1JXLPYBDfIO0np8u"
+      publishable-key="pk_test_51QuwqnRq1JXLPYBDxEWg3Us1FtE5tfm4FAXW7Aw2CHCwY7bvGkIgRIDBBlGWg61ooSB5xAC8bHuhGcUNR9AA5d8J00kRpp5TyC"
+      style="width: 100%;"
+    >
+    </stripe-buy-button>
+  `,
+  free: `
+    <script async src="https://js.stripe.com/v3/buy-button.js"></script>
+    <stripe-buy-button
+      buy-button-id="buy_btn_1SOeTgRq1JXLPYBDnXM2ibuR"
+      publishable-key="pk_test_51QuwqnRq1JXLPYBDxEWg3Us1FtE5tfm4FAXW7Aw2CHCwY7bvGkIgRIDBBlGWg61ooSB5xAC8bHuhGcUNR9AA5d8J00kRpp5TyC"
+      style="width: 100%;"
+    >
+    </stripe-buy-button>
+  `,
+};
+
 // --- Pricing Data Structure ---
 
 const CORE_FEATURES = [
@@ -78,7 +109,7 @@ const FeatureItem = ({ feature, planType }) => {
   );
 };
 
-const PricingCard = ({ plan, planType }) => {
+const PricingCard = ({ plan, planType, stripeButtonCode }) => {
   const navigate = useNavigate();
   const isAnnual = planType === 'annual';
   const isMonthly = planType === 'monthly';
@@ -89,6 +120,7 @@ const PricingCard = ({ plan, planType }) => {
     ? 'relative bg-gradient-to-br from-blue-600/30 to-purple-600/30 border-2 border-purple-500 rounded-3xl p-8 backdrop-blur-sm shadow-2xl transform scale-105 transition-all duration-300'
     : 'relative bg-gradient-to-br from-blue-600/20 to-purple-600/20 border border-purple-500/30 rounded-3xl p-8 backdrop-blur-sm';
 
+  // The Stripe Buy Button will handle the actual checkout, but we keep the classes for styling the wrapper
   const ctaClasses = isPopular
     ? 'w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/50 active:scale-95'
     : 'w-full bg-transparent border-2 border-white text-gray-300 font-bold py-3 px-6 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/50 active:scale-95 hover:bg-purple-600 hover:text-white hover:border-purple-600';
@@ -137,13 +169,11 @@ const PricingCard = ({ plan, planType }) => {
           </div>
         )}
 
-        {/* CTA Button */}
-        <button
-          onClick={() => navigate(plan.ctaLink)}
-          className={ctaClasses}
-        >
-          {plan.cta}
-        </button>
+        {/* CTA Button - Replaced with Stripe Buy Button */}
+        <div className={ctaClasses}>
+          {/* dangerouslySetInnerHTML is used to inject the raw Stripe script and custom element */}
+          <div dangerouslySetInnerHTML={{ __html: stripeButtonCode }} />
+        </div>
 
         {/* Features List */}
         <div className="mt-8 pt-6 border-t border-gray-700/50">
@@ -199,13 +229,13 @@ export function PricingPageNew() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3 lg:gap-10">
           {/* Free Plan */}
-          <PricingCard plan={PLANS[0]} planType="free" />
+          <PricingCard plan={PLANS[0]} planType="free" stripeButtonCode={STRIPE_BUTTONS.free} />
 
           {/* Monthly Plan */}
-          <PricingCard plan={PLANS[1]} planType="monthly" />
+          <PricingCard plan={PLANS[1]} planType="monthly" stripeButtonCode={STRIPE_BUTTONS.monthly} />
 
           {/* Annual Plan (Most Popular) */}
-          <PricingCard plan={PLANS[2]} planType="annual" />
+          <PricingCard plan={PLANS[2]} planType="annual" stripeButtonCode={STRIPE_BUTTONS.annual} />
         </div>
 
         {/* Detailed Feature Comparison Section Removed as requested by user */}
