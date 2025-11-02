@@ -63,7 +63,7 @@ async function createServer() {
   });
 
   app.listen(5173, () => {
-    console.log('Server listening on http://localhost:5173'   );
+    console.log('Server listening on http://localhost:5173'    );
   });
 }
 
