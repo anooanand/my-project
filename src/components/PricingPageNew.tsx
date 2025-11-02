@@ -21,7 +21,7 @@ const STRIPE_BUTTON_DATA = {
 };
 
 // --- Stripe Buy Button Component ---
-const StripeBuyButton = ({ buyButtonId, publishableKey }) => {
+const StripeBuyButton = ({ buyButtonId, publishableKey, buttonStyle }) => {
   useEffect(() => {
     // Check if the script is already loaded
     if (!document.querySelector('script[src="https://js.stripe.com/v3/buy-button.js"]')) {
@@ -37,20 +37,7 @@ const StripeBuyButton = ({ buyButtonId, publishableKey }) => {
       buy-button-id={buyButtonId}
       publishable-key={publishableKey}
       style={{ width: '100%' }}
-      // Custom styling to match the original button's appearance
-      button-style="
-        background-color: #8b5cf6; /* Tailwind purple-500/600 */
-        color: #ffffff;
-        font-size: 1.125rem; /* text-lg */
-        font-weight: 700; /* font-bold */
-        padding: 0.75rem 1.5rem; /* py-3 px-6 */
-        border-radius: 0.75rem; /* rounded-xl */
-        border: none;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1); /* shadow-lg */
-        transition: all 0.3s ease;
-        width: 100%;
-        height: 100%;
-      "
+      button-style={buttonStyle}
     />
   );
 };
@@ -136,6 +123,41 @@ const PricingCard = ({ plan, planType, stripeButtonData }) => {
   const isFree = planType === 'free';
   const isPopular = plan.isPopular;
 
+  // Define the button style based on the plan type to match the original design
+  const getButtonStyle = () => {
+    // Pro Monthly and Pro Annual buttons have a purple gradient background and shadow
+    const popularStyle = `
+      background: linear-gradient(to right, #8b5cf6, #a855f7); /* From purple-500 to purple-600 */
+      color: #ffffff;
+      font-size: 1.125rem; /* text-lg */
+      font-weight: 700; /* font-bold */
+      padding: 0.75rem 1.5rem; /* py-3 px-6 */
+      border-radius: 0.75rem; /* rounded-xl */
+      border: none;
+      box-shadow: 0 10px 15px -3px rgba(168, 85, 247, 0.5), 0 4px 6px -4px rgba(168, 85, 247, 0.5); /* Custom shadow for popular button */
+      transition: all 0.3s ease;
+      width: 100%;
+      height: 100%;
+    `;
+
+    // Free plan button has a white border and transparent background
+    const freeStyle = `
+      background-color: transparent;
+      color: #ffffff;
+      font-size: 1.125rem; /* text-lg */
+      font-weight: 700; /* font-bold */
+      padding: 0.75rem 1.5rem; /* py-3 px-6 */
+      border-radius: 0.75rem; /* rounded-xl */
+      border: 2px solid #ffffff; /* border-2 border-white */
+      box-shadow: none;
+      transition: all 0.3s ease;
+      width: 100%;
+      height: 100%;
+    `;
+
+    return isFree ? freeStyle : popularStyle;
+  };
+
   const cardClasses = isPopular
     ? 'relative bg-gradient-to-br from-blue-600/30 to-purple-600/30 border-2 border-purple-500 rounded-3xl p-8 backdrop-blur-sm shadow-2xl transform scale-105 transition-all duration-300'
     : 'relative bg-gradient-to-br from-blue-600/20 to-purple-600/20 border border-purple-500/30 rounded-3xl p-8 backdrop-blur-sm';
@@ -194,6 +216,7 @@ const PricingCard = ({ plan, planType, stripeButtonData }) => {
           <StripeBuyButton
             buyButtonId={stripeButtonData.buyButtonId}
             publishableKey={stripeButtonData.publishableKey}
+            buttonStyle={getButtonStyle()}
           />
         </div>
 
