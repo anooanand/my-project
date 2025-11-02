@@ -37,6 +37,20 @@ const StripeBuyButton = ({ buyButtonId, publishableKey }) => {
       buy-button-id={buyButtonId}
       publishable-key={publishableKey}
       style={{ width: '100%' }}
+      // Custom styling to match the original button's appearance
+      button-style="
+        background-color: #8b5cf6; /* Tailwind purple-500/600 */
+        color: #ffffff;
+        font-size: 1.125rem; /* text-lg */
+        font-weight: 700; /* font-bold */
+        padding: 0.75rem 1.5rem; /* py-3 px-6 */
+        border-radius: 0.75rem; /* rounded-xl */
+        border: none;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1); /* shadow-lg */
+        transition: all 0.3s ease;
+        width: 100%;
+        height: 100%;
+      "
     />
   );
 };
